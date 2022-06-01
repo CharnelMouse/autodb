@@ -188,7 +188,7 @@ test_that("normalize_dataframe", {
     primary_key = c('team', 'jersey_num')
   )
 
-  depdf <- list(
+  depdf <- depDF(
     deps = deps,
     df = df,
     index = get_prim_key(deps)

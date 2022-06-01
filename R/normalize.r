@@ -59,12 +59,12 @@ normalize <- function(dependencies, df) {
 #   result += child.return_dfs()
 # return result
 
-depDF <- function(deps, df, index, parent = NA) {
+depDF <- function(deps, df, index = deps$primary_key, parent = NA_character_) {
   list(
     deps = deps,
     df = df,
     index = index,
-    children = list(),
+    children = character(),
     parent = parent
   )
 }
@@ -128,20 +128,18 @@ normalize_dataframe <- function(depdf) {
   if (length(part_deps) > 0) {
     split_on <- find_most_comm(part_deps, depdf$deps, depdf$df)
     depdfs <- split_up(depdf, split_on)
-    return(setNames(
-      depdfs,
-      make.unique(vapply(depdfs, name_dataframe, character(1)))
-    ))
+    nms <- vapply(depdfs, name_dataframe, character(1))
+    stopifnot(!anyDuplicated(nms))
+    return(setNames(depdfs, make.unique(nms)))
   }
   trans_deps <- find_trans_deps(depdf$deps)
   trans_deps <- filter(trans_deps, depdf$df)
   if (length(trans_deps) > 0) {
     split_on <- find_most_comm(trans_deps, depdf$deps, depdf$df)
     depdfs <- split_up(depdf, split_on)
-    return(setNames(
-      depdfs,
-      make.unique(vapply(depdfs, name_dataframe, character(1)))
-    ))
+    nms <- vapply(depdfs, name_dataframe, character(1))
+    stopifnot(!anyDuplicated(nms))
+    return(setNames(depdfs, make.unique(nms)))
   }
   setNames(list(depdf), name_dataframe(depdf))
 }
@@ -156,16 +154,18 @@ split_up <- function(depdf, split_on) {
   pc <- split_on_dep(split_on, depdf$deps)
   parent_deps <- pc[[1]]
   child_deps <- pc[[2]]
-  child <- list(
+  child <- depDF(
     deps = child_deps,
     df = form_child(depdf$df, child_deps),
-    index = split_on
+    index = split_on,
+    parent = name_dataframe(depdf)
   )
   depdf$deps <- parent_deps
   depdf$df <- depdf$df[
     ,
     names(parent_deps$dependencies)
   ]
+  depdf$children <- c(depdf$children, name_dataframe(child))
   c(
     normalize_dataframe(depdf),
     normalize_dataframe(child)
