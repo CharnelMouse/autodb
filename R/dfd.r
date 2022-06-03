@@ -54,7 +54,7 @@ find_LHSs <- function(rhs, attrs, df, partitions, accuracy) {
   #  2 = minimal dependency
   #  3 = candidate minimal dependency
   lhs_attrs <- setdiff(attrs, rhs)
-  seeds <- sort(lhs_attrs)
+  seeds <- lhs_attrs
   nodes <- nodes_from_seeds(seeds)
   seeds <- as.list(seeds)
   min_deps <- list()

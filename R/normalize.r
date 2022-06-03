@@ -1,19 +1,5 @@
-normalize <- function(dependencies, df) {
-  # Normalizes the dependency relationships in dependencies into new
-  # groups by breaking up all partial and transitive dependencies.
-  #
-  # Arguments:
-  #     dependencies (Dependencies) : the dependencies to be split up
-  #
-  # Returns:
-  #     new_groups (list[Dependencies]) : list of new dependencies objects
-  #     representing the new groups
-  dependencies <- remove_implied_extroneous(dependencies)
-  no_part_deps <- remove_part_deps(dependencies, df)
-  no_trans_deps <- list()
-  for (grp in no_part_deps)
-    no_trans_deps <- c(no_trans_deps, list(remove_trans_deps(grp, df)))
-  no_trans_deps
+normalize <- function(x, ...) {
+  UseMethod("normalize")
 }
 
 # class DepDF(object):
@@ -59,16 +45,36 @@ normalize <- function(dependencies, df) {
 #   result += child.return_dfs()
 # return result
 
-depDF <- function(deps, df, index = deps$primary_key, parent = NA_character_) {
-  list(
+DepDF <- function(deps, df, index = deps$primary_key, parent = NA_character_) {
+  UseMethod("DepDF")
+}
+
+#' @export
+DepDF.Dependencies <- function(
+  deps,
+  df,
+  index = deps$primary_key,
+  parent = NA_character_
+) {
+  lst <- list(
     deps = deps,
     df = df,
     index = index,
     children = character(),
     parent = parent
   )
+  class(lst) <- c("DepDF", class(lst))
+  lst
 }
 
+Dependencies <- function(dependencies, primary_key = NULL) {
+  lst <- list(
+    dependencies = dependencies,
+    primary_key = primary_key
+  )
+  class(lst) <- c("Dependencies", class(lst))
+  lst
+}
 
 make_indexes <- function(depdfs) {
   # Goes through depdf, and all of its descendents, and if any have primary keys
@@ -117,34 +123,40 @@ make_indexes <- function(depdfs) {
   #   make_indexes(child)
 }
 
-normalize_dataframe <- function(depdf) {
+#' @export
+normalize.DepDF <- function(x) {
   # Normalizes the dataframe represetned by depdf, created descendents
   # as needed.
   #
   # Arguments:
   #     depdf (DepDF) : depdf to normalize
-  part_deps <- find_partial_deps(depdf$deps)
-  part_deps <- filter(part_deps, depdf$df)
+  part_deps <- find_partial_deps(x$deps)
+  part_deps <- filter(part_deps, x$df)
   if (length(part_deps) > 0) {
-    split_on <- find_most_comm(part_deps, depdf$deps, depdf$df)
-    depdfs <- split_up(depdf, split_on)
+    split_on <- find_most_comm(part_deps, x$deps, x$df)
+    depdfs <- split_up(x, split_on)
     nms <- vapply(depdfs, name_dataframe, character(1))
     stopifnot(!anyDuplicated(nms))
-    return(setNames(depdfs, make.unique(nms)))
+    return(stats::setNames(depdfs, make.unique(nms)))
   }
-  trans_deps <- find_trans_deps(depdf$deps)
-  trans_deps <- filter(trans_deps, depdf$df)
+  trans_deps <- find_trans_deps(x$deps)
+  trans_deps <- filter(trans_deps, x$df)
   if (length(trans_deps) > 0) {
-    split_on <- find_most_comm(trans_deps, depdf$deps, depdf$df)
-    depdfs <- split_up(depdf, split_on)
+    split_on <- find_most_comm(trans_deps, x$deps, x$df)
+    depdfs <- split_up(x, split_on)
     nms <- vapply(depdfs, name_dataframe, character(1))
     stopifnot(!anyDuplicated(nms))
-    return(setNames(depdfs, make.unique(nms)))
+    return(stats::setNames(depdfs, make.unique(nms)))
   }
-  setNames(list(depdf), name_dataframe(depdf))
+  stats::setNames(list(x), name_dataframe(x))
 }
 
 split_up <- function(depdf, split_on) {
+  UseMethod("split_up")
+}
+
+#' @export
+split_up.DepDF <- function(depdf, split_on) {
   # Breaks off a depdf and forms its child. Recursively calls normalize on
   # the original depdf, and its newly formed child.
   #
@@ -154,7 +166,7 @@ split_up <- function(depdf, split_on) {
   pc <- split_on_dep(split_on, depdf$deps)
   parent_deps <- pc[[1]]
   child_deps <- pc[[2]]
-  child <- depDF(
+  child <- DepDF(
     deps = child_deps,
     df = form_child(depdf$df, child_deps),
     index = split_on,
@@ -167,8 +179,8 @@ split_up <- function(depdf, split_on) {
   ]
   depdf$children <- c(depdf$children, name_dataframe(child))
   c(
-    normalize_dataframe(depdf),
-    normalize_dataframe(child)
+    normalize(depdf),
+    normalize(child)
   )
 }
 
@@ -190,6 +202,11 @@ form_child <- function(df, deps) {
 }
 
 remove_part_deps <- function(dependencies, df) {
+  UseMethod("remove_part_deps")
+}
+
+#' @export
+remove_part_deps.Dependencies <- function(dependencies, df) {
   # Breaks up the dependency relations in dependencies into new groups of
   # relations so that there are no more partial dependencies.
   #
@@ -204,13 +221,15 @@ remove_part_deps <- function(dependencies, df) {
   if (length(part_deps) == 0)
     return(dependencies)
   new_deps <- split_on_dep(find_most_comm(part_deps, dependencies), dependencies)
-  c(
-    remove_part_deps(new_deps[1], df),
-    remove_part_deps(new_deps[2], df)
-  )
+  lapply(new_deps, remove_part_deps, df)
 }
 
 remove_trans_deps <- function(dependencies, df) {
+  UseMethod("remove_trans_deps")
+}
+
+#' @export
+remove_trans_deps.Dependencies <- function(dependencies, df) {
   # Breaks up the dependency relations in dependencies into new groups of
   # relations so that there are no more transitive dependencies.
   #
@@ -223,11 +242,11 @@ remove_trans_deps <- function(dependencies, df) {
   trans_deps <- find_trans_deps(dependencies)
   trans_deps <- filter(trans_deps, df)
   if (length(trans_deps) == 0)
-    return(dependencies)
+    return(list(dependencies))
   new_deps <- split_on_dep(find_most_comm(trans_deps, dependencies), dependencies)
   c(
-    remove_trans_deps(new_deps[0], df),
-    remove_trans_deps(new_deps[1], df)
+    remove_trans_deps(new_deps[[1]], df),
+    remove_trans_deps(new_deps[[2]], df)
   )
 }
 
@@ -319,8 +338,14 @@ split_on_dep <- function(lhs_dep, dependencies) {
   }
 
   list(
-    list(dependencies = old_deps, primary_key = get_prim_key(dependencies)),
-    list(dependencies = new_deps, primary_key = lhs_dep)
+    Dependencies(
+      dependencies = old_deps,
+      primary_key = get_prim_key(dependencies)
+    ),
+    Dependencies(
+      dependencies = new_deps,
+      primary_key = lhs_dep
+    )
   )
 }
 
@@ -347,7 +372,7 @@ drop_primary_dups <- function(df, prim_key) {
     # new_df = new_df.append(group.mode().iloc[0], ignore_index=TRUE)
   }
   result <- `rownames<-`(
-    setNames(data.frame(Reduce(rbind, df_lst)), colnames(df)),
+    stats::setNames(data.frame(Reduce(rbind, df_lst)), colnames(df)),
     NULL
   )
   for (i in seq_along(df)) {
@@ -431,13 +456,23 @@ filter <- function(keys, df) {
 
 # Relevant methods from classes.py go here
 
-get_prim_key <- function(dependencies)
+get_prim_key <- function(dependencies) {
+  UseMethod("get_prim_key")
+}
+
+#' @export
+get_prim_key.Dependencies <- function(dependencies)
   # Gets primary key.
   # Returns:
   #     prim_key (list[str]) : the primary key
   dependencies$primary_key
 
 tuple_relations <- function(dependencies) {
+  UseMethod("tuple_relations")
+}
+
+#' @export
+tuple_relations.Dependencies <- function(dependencies) {
   # Returns the relationships stored in self as a list.
   # Returns:
   #     relations (list[(list[str], str)]) : relations stored in self
@@ -453,6 +488,11 @@ tuple_relations <- function(dependencies) {
 }
 
 remove_implied_extroneous <- function(dependencies) {
+  UseMethod("remove_implied_extroneous")
+}
+
+#' @export
+remove_implied_extroneous.Dependencies <- function(dependencies) {
   # Removes all implied extroneous attributes from relations in self.
   # Example:
   #     A --> B
@@ -485,7 +525,59 @@ remove_implied_extroneous <- function(dependencies) {
   dependencies
 }
 
+find_candidate_keys <- function(dependencies) {
+  UseMethod("find_candidate_keys")
+}
+
+#' @export
+find_candidate_keys.Dependencies <- function(dependencies) {
+# Returns all candidate keys in self. A candidate key is a minimal
+# set of attributes whose closure is all attributes in the table.
+  # Returns:
+  #   cand_keys (list[set[str]]) : list of candidate keys for self
+
+  all_attrs <- names(dependencies$dependencies)
+  rhs_attrs <- dependencies$dependencies[
+    lengths(dependencies$dependencies) > 0
+  ]
+  lhs_attrs <- as.character(unlist(dependencies$dependencies))
+  lhs_only <- setdiff(lhs_attrs, rhs_attrs)
+  rhs_only <- setdiff(rhs_attrs, lhs_attrs)
+  lhs_and_rhs <- setdiff(all_attrs, union(lhs_only, rhs_only))
+  rels <- tuple_relations(dependencies)
+
+  if (setequal(find_closure(rels, lhs_only), all_attrs))
+    return(lhs_only)
+
+  cand_keys <- list()
+
+  for (i in seq_along(lhs_and_rhs)) {
+    combos <- utils::combn(lhs_and_rhs, i, simplify = FALSE)
+    for (comb in combos) {
+      if (setequal(
+        find_closure(rels, list(union(lhs_only, comb))),
+        all_attrs
+      ))
+        cand_keys <- c(cand_keys, list(union(lhs_only, comb)))
+    }
+  }
+  for (x in cand_keys) {
+    for (y in cand_keys) {
+      if (all(y %in% x) && !identical(x, y)) {
+        cand_keys <- setdiff(cand_keys, list(x))
+        break
+      }
+    }
+  }
+  cand_keys
+}
+
 find_partial_deps <- function(dependencies) {
+  UseMethod("find_partial_deps")
+}
+
+#' @export
+find_partial_deps.Dependencies <- function(dependencies) {
   # Finds all partial dependencies within self.
   # Returns:
   #     partial_deps (list[(list[str], str)]) : partial dependencies
@@ -516,6 +608,11 @@ find_partial_deps <- function(dependencies) {
 }
 
 find_trans_deps <- function(dependencies) {
+  UseMethod("find_trans_deps")
+}
+
+#' @export
+find_trans_deps.Dependencies <- function(dependencies) {
   # Finds all transitive dependencies within self.
   # Returns:
   #     trans_deps (list[(list[str], str)]) : transitive dependencies
@@ -578,11 +675,4 @@ find_closure <- function(rel, attrs) {
     set_attr
   }
   helper(rel, attrs)
-}
-
-serialize <- function(dfdd) {
-  ser <- dfdd
-  for (rhs in names(ser))
-    ser[[rhs]] <- lapply(ser[[rhs]], list)
-  ser
 }

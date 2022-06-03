@@ -1,6 +1,26 @@
 library(R.utils)
 library(hedgehog)
 
+expect_superset_of_dependency <- function(dep1, dep2) {
+  stopifnot(sort(names(dep1)) == sort(names(dep2)))
+  dep2_in_dep1 <- mapply(
+    function(one, two) {
+      two_in_one <- all(vapply(
+        two,
+        \(two_el) {
+          any(vapply(
+            one, \(one_el) identical(sort(one_el), sort(two_el)), logical(1)
+          ))
+        },
+        logical(1)
+      ))
+    },
+    dep1,
+    dep2
+  )
+  expect_true(all(dep2_in_dep1))
+}
+
 describe("dfd", {
   it("terminates for simple logical relations", {
     gen_ncol <- gen.int(3)
@@ -60,6 +80,40 @@ describe("dfd", {
       shrink.limit = Inf
     )
   })
+  it("finds dependencies for the team data in test-normalize", {
+    df <- data.frame(
+      team = c(
+        'Red', 'Red', 'Red', 'Orange', 'Orange',
+        'Yellow', 'Yellow', 'Green', 'Green', 'Blue'
+      ),
+      jersey_num = c(
+        1, 2, 3, 1, 2,
+        1, 5, 8, 2, 2
+      ),
+      player_name = c(
+        'A', 'B', 'C', 'D', 'A',
+        'E', 'B', 'A', 'G', 'H'
+      ),
+      city = c(
+        'boston', 'boston', 'boston', 'chicago', 'chicago',
+        'honolulu', 'honolulu', 'boston', 'boston', 'austin'
+      ),
+      state = c(
+        'MA', 'MA', 'MA', 'IL', 'IL',
+        'HI', 'HI', 'MA', 'MA', 'TX'
+      )
+    )
+    deps <- dfd(df, 1)
+    expected_deps <- list(
+      team = list(c('player_name', 'jersey_num')),
+      jersey_num = list(c('player_name', 'team')),
+      player_name = list(c('team', 'jersey_num')),
+      city = list('team', 'state', c('player_name', 'jersey_num')),
+      state = list('team', c('player_name', 'jersey_num'), 'city')
+    )
+    expect_identical(lengths(deps), lengths(expected_deps))
+    expect_superset_of_dependency(deps, expected_deps)
+  })
 })
 
 describe("original tests", {
@@ -74,26 +128,6 @@ describe("original tests", {
           stopifnot(any(vapply(two, identical, logical(1), one_el)))
         }
       }
-    }
-
-    assert_at_least_dependency_dics <- function(dep1, dep2) {
-      stopifnot(sort(names(dep1)) == sort(names(dep2)))
-      dep2_in_dep1 <- mapply(
-        function(one, two) {
-          two_in_one <- all(vapply(
-            two,
-            \(two_el) {
-              any(vapply(
-                one, \(one_el) identical(one_el, two_el), logical(1)
-              ))
-            },
-            logical(1)
-          ))
-        },
-        dep1,
-        dep2
-      )
-      expect_true(all(dep2_in_dep1))
     }
 
     it("hard-coded example", {
@@ -136,7 +170,7 @@ describe("original tests", {
         G = list(c("C", "D"), "A")
       )
       res <- dfd(df_2, 0.98)
-      assert_at_least_dependency_dics(res, dep)
+      expect_superset_of_dependency(res, dep)
     })
   })
 

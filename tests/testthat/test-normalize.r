@@ -10,7 +10,7 @@ test_that("normalize", {
     E = list(c("A", "B", "C", "D")),
     F = list(c("A", "B"))
   )
-  dep <- list(
+  dep <- Dependencies(
     dependencies = dep_dic,
     primary_key = c("A", "B", "C")
   )
@@ -41,7 +41,7 @@ test_that("normalize", {
 })
 
 test_that("find_most_comm", {
-  deps <- list(
+  deps <- Dependencies(
     dependencies = list(),
     primary_key = "d"
   )
@@ -69,13 +69,13 @@ test_that("split_on_dep", {
     C = list("A", "B"),
     D = list("B")
   )
-  new <- split_on_dep('B', list(dependencies = dep_dic))
+  new <- split_on_dep('B', Dependencies(dependencies = dep_dic))
   expect_identical(new[[1]]$dependencies, list(A = list(), B = list()))
   expect_identical(new[[2]]$dependencies, list(B = list(), C = list("B"), D = list("B")))
 })
 
 test_that("drop_primary_dups", {
-  df_dic = list(
+  df_dic <- list(
     city = c(
       'honolulu', 'boston', 'honolulu', 'dallas', 'seattle',
       'honolulu', 'boston', 'honolulu', 'seattle', 'boston'
@@ -153,7 +153,7 @@ test_that("choose_index", {
   expect_identical(choose_index(keys, df), c('A', 'B'))
 })
 
-test_that("normalize_dataframe", {
+test_that("normalize.DepDF", {
   dic = list(
     team = c(
       'Red', 'Red', 'Red', 'Orange', 'Orange',
@@ -177,7 +177,7 @@ test_that("normalize_dataframe", {
     )
   )
   df <- as.data.frame(dic)
-  deps <- list(
+  deps <- Dependencies(
     dependencies = list(
       team = list(c('player_name', 'jersey_num')),
       jersey_num = list(c('player_name', 'team')),
@@ -188,12 +188,12 @@ test_that("normalize_dataframe", {
     primary_key = c('team', 'jersey_num')
   )
 
-  depdf <- depDF(
+  depdf <- DepDF(
     deps = deps,
     df = df,
     index = get_prim_key(deps)
   )
-  new_dfs <- normalize_dataframe(depdf)
+  new_dfs <- normalize(depdf)
   depdf <- new_dfs[[1]]
 
   expect_identical(length(new_dfs), 3L)
@@ -249,7 +249,7 @@ test_that("make_indexes", {
   )
 
   df <- as.data.frame(dic)
-  deps = list(
+  deps = Dependencies(
     dependencies = list(
       id = list(),
       month = list('id', c('hemisphere', 'is_winter')),
@@ -259,8 +259,8 @@ test_that("make_indexes", {
     primary_key = 'id'
   )
 
-  depdf <- depDF(deps = deps, df = df, index = get_prim_key(deps))
-  new_dfs <- normalize_dataframe(depdf)
+  depdf <- DepDF(deps = deps, df = df, index = get_prim_key(deps))
+  new_dfs <- normalize(depdf)
   depdf <- new_dfs[[1]]
   new_dfs <- make_indexes(new_dfs)
 
