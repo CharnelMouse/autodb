@@ -365,14 +365,18 @@ drop_primary_dups <- function(df, prim_key) {
   if (nrow(unique(df[, prim_key, drop = FALSE])) == nrow(df))
     return(df)
 
-  groups <- split(df, as.list(df[, c(prim_key), drop = FALSE]), drop = TRUE)
+  groups <- split(
+    df,
+    as.list(df[, c(prim_key), drop = FALSE]),
+    drop = TRUE
+  )
 
   for (group in groups) {
-    df_lst <- c(df_lst, list(lapply(group, Mode)))
+    df_lst <- c(df_lst, list(data.frame(lapply(group, Mode))))
     # new_df = new_df.append(group.mode().iloc[0], ignore_index=TRUE)
   }
   result <- `rownames<-`(
-    stats::setNames(data.frame(Reduce(rbind, df_lst)), colnames(df)),
+    stats::setNames(Reduce(rbind, df_lst), colnames(df)),
     NULL
   )
   for (i in seq_along(df)) {
@@ -536,11 +540,11 @@ find_candidate_keys.Dependencies <- function(dependencies) {
   # Returns:
   #   cand_keys (list[set[str]]) : list of candidate keys for self
 
-  all_attrs <- names(dependencies$dependencies)
-  rhs_attrs <- dependencies$dependencies[
+  all_attrs <- as.list(names(dependencies$dependencies))
+  rhs_attrs <- all_attrs[
     lengths(dependencies$dependencies) > 0
   ]
-  lhs_attrs <- as.character(unlist(dependencies$dependencies))
+  lhs_attrs <- Reduce(c, dependencies$dependencies)
   lhs_only <- setdiff(lhs_attrs, rhs_attrs)
   rhs_only <- setdiff(rhs_attrs, lhs_attrs)
   lhs_and_rhs <- setdiff(all_attrs, union(lhs_only, rhs_only))
@@ -552,21 +556,20 @@ find_candidate_keys.Dependencies <- function(dependencies) {
   cand_keys <- list()
 
   for (i in seq_along(lhs_and_rhs)) {
-    combos <- utils::combn(lhs_and_rhs, i, simplify = FALSE)
-    for (comb in combos) {
-      if (setequal(
-        find_closure(rels, list(union(lhs_only, comb))),
-        all_attrs
-      ))
-        cand_keys <- c(cand_keys, list(union(lhs_only, comb)))
-    }
-  }
-  for (x in cand_keys) {
-    for (y in cand_keys) {
-      if (all(y %in% x) && !identical(x, y)) {
-        cand_keys <- setdiff(cand_keys, list(x))
-        break
-      }
+    remaining <- setdiff(lhs_and_rhs, unlist(cand_keys))
+    if (length(remaining) < i)
+      break
+    keys <- utils::combn(unlist(remaining), i, simplify = FALSE)
+    for (key in keys) {
+      lhs_only_or_key <- unique(union(lhs_only, key))
+      if (
+        setequal(
+          unlist(find_closure(rels, lhs_only_or_key)),
+          all_attrs
+        ) &&
+        !any(vapply(cand_keys, \(x) all(x %in% lhs_only_or_key), logical(1)))
+      )
+        cand_keys <- c(cand_keys, list(lhs_only_or_key))
     }
   }
   cand_keys

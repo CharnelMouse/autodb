@@ -20,6 +20,9 @@
 #'   determinant attributes for that dependent attribute.
 #' @export
 dfd <- function(df, accuracy, index = NA, progress = FALSE) {
+  # convert all columns to integers, since easier to check for duplicates
+  # when calculating partitions
+  df <- data.frame(lapply(df, \(x) as.integer(factor(x))))
   partitions <- list()
   column_names <- colnames(df)
   non_uniq <- column_names
@@ -443,7 +446,8 @@ partition <- function(attrs, df, partitions) {
     index <- which(vapply(partitions$set, identical, logical(1), attrs_set))
     return(list(partitions$value[index], partitions))
   }
-  shape <- nrow(unique(df[, unlist(attrs), drop = FALSE]))
+  df_attrs_only <- df[, unlist(attrs), drop = FALSE]
+  shape <- nrow(df_attrs_only) - sum(duplicated(df_attrs_only))
   partitions$set <- c(partitions$set, list(sort(attrs)))
   partitions$value <- c(partitions$value, shape)
   list(shape, partitions)
@@ -458,12 +462,16 @@ approximate_dependencies <- function(lhs_set, rhs, df, accuracy) {
   n_remove <- function(x) {
     length(x) - max(tabulate(x))
   }
-  total_to_remove <- tapply(
-    factor(df[[rhs]], exclude = character()),
-    lapply(df[, lhs_set, drop = FALSE], factor, exclude = character()),
-    n_remove,
-    default = 0L
-  ) |>
-    sum()
+  splitted <- factor(df[[rhs]], exclude = character())
+  splitter <- lapply(df[, lhs_set, drop = FALSE], factor, exclude = character())
+  # total_to_remove <- tapply(
+  #   splitted,
+  #   splitter,
+  #   n_remove,
+  #   default = 0L
+  # ) |>
+  #   sum()
+  total_to_remove <- split(splitted, splitter, drop = TRUE) |>
+    Reduce(f = function(n, df) n + n_remove(df), init = 0)
   total_to_remove <= limit
 }

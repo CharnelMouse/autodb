@@ -109,7 +109,7 @@ plot_tables.EntitySet <- function(tables, to_file = FALSE) {
 
   # Initialize a new directed graph
   gv_string <- paste0(
-    "digraph ", tables$name, " {",
+    "digraph ", gsub(" ", "_", tables$name), " {\n",
     "  node [shape=record];\n"
   )
 
@@ -163,6 +163,8 @@ plot_tables.EntitySet <- function(tables, to_file = FALSE) {
 
 #' @export
 plot_tables.data.frame <- function(df, df_name, to_file = FALSE) {
+
+  df_name <- gsub(" ", "_", df_name)
 
   # Initialize a new directed graph
   gv_string <- paste0(

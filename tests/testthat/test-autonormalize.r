@@ -108,7 +108,6 @@ mock_customer <- function(
 }
 
 test_that("ft_mock_customer", {
-  skip("memory problems")
   df <- mock_customer(
     n_customers = 80,
     n_products = 50,
@@ -117,15 +116,15 @@ test_that("ft_mock_customer", {
     return_single_table = TRUE
   )
 
-  entityset <- auto_entityset(
+  exact_entityset <- auto_entityset(
     df,
-    accuracy = 0.98,
+    accuracy = 1,
     name = "Customer Transactions",
     time_index = 'transaction_time'
   )
 
-  expect_identical(
-    colnames(entityset[['transaction_id']]),
+  expect_true(setequal(
+    colnames(exact_entityset$dataframes[['transaction_id']]$df),
     c(
       'transaction_id',
       'session_id',
@@ -133,31 +132,44 @@ test_that("ft_mock_customer", {
       'product_id',
       'amount'
     )
-  )
+  ))
 
   expect_identical(
-    colnames(entityset[['product_id']]),
+    colnames(exact_entityset$dataframes[['product_id']]$df),
     c('product_id', 'brand')
   )
 
   expect_identical(
-    colnames(entityset[['session_id']]),
+    colnames(exact_entityset$dataframes[['session_id']]$df),
     c('session_id', 'customer_id', 'device', 'session_start')
   )
 
   expect_identical(
-    colnames(entityset[['customer_id']]),
+    colnames(exact_entityset$dataframes[['customer_id']]$df),
     c('customer_id', 'zip_code', 'join_date', 'birthday')
   )
 
   expect_identical(
-    vapply(entityset$relationships, toString, character(1)),
+    vapply(
+      exact_entityset$relationships,
+      \(r) paste0(r[1], ".", r[2], " -> ", r[3], ".", r[4]),
+      character(1)
+    ),
     c(
-      '<Relationship: transaction_id.session_id -> session_id.session_id>',
-      '<Relationship: transaction_id.product_id -> product_id.product_id>',
-      '<Relationship: session_id.customer_id -> customer_id.customer_id>'
+      'transaction_id.session_id -> session_id.session_id',
+      'transaction_id.product_id -> product_id.product_id',
+      'session_id.customer_id -> customer_id.customer_id'
     )
   )
+
+  approx_entityset <- auto_entityset(
+    df,
+    accuracy = 0.98,
+    name = "Customer Transactions",
+    time_index = 'transaction_time'
+  )
+
+  expect_identical(approx_entityset, exact_entityset)
 })
 
 
