@@ -1,26 +1,6 @@
 library(R.utils)
 library(hedgehog)
 
-expect_superset_of_dependency <- function(dep1, dep2) {
-  stopifnot(sort(names(dep1)) == sort(names(dep2)))
-  dep2_in_dep1 <- mapply(
-    function(one, two) {
-      two_in_one <- all(vapply(
-        two,
-        \(two_el) {
-          any(vapply(
-            one, \(one_el) identical(sort(one_el), sort(two_el)), logical(1)
-          ))
-        },
-        logical(1)
-      ))
-    },
-    dep1,
-    dep2
-  )
-  expect_true(all(dep2_in_dep1))
-}
-
 describe("dfd", {
   it("terminates for simple logical relations", {
     gen_ncol <- gen.int(3)

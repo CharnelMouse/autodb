@@ -32,11 +32,7 @@ test_that("normalize", {
     part_deps <- filter(part_deps, df)
     expect_identical(part_deps, list())
     dic <- x$dependencies
-    for (rhs in names(dic)) {
-      for (lhs in dic[[rhs]]) {
-        expect_true(list(lhs) %in% dep_dic[[rhs]])
-      }
-    }
+    expect_superset_of_dependency(dep_dic, dic)
   }
 })
 

@@ -540,11 +540,11 @@ find_candidate_keys.Dependencies <- function(dependencies) {
   # Returns:
   #   cand_keys (list[set[str]]) : list of candidate keys for self
 
-  all_attrs <- as.list(names(dependencies$dependencies))
+  all_attrs <- names(dependencies$dependencies)
   rhs_attrs <- all_attrs[
     lengths(dependencies$dependencies) > 0
   ]
-  lhs_attrs <- Reduce(c, dependencies$dependencies)
+  lhs_attrs <- unique(unlist(dependencies$dependencies, use.names = FALSE))
   lhs_only <- setdiff(lhs_attrs, rhs_attrs)
   rhs_only <- setdiff(rhs_attrs, lhs_attrs)
   lhs_and_rhs <- setdiff(all_attrs, union(lhs_only, rhs_only))
@@ -652,7 +652,7 @@ equiv_attrs <- function(dependencies, one, two) {
   # Returns:
   #     is_equiv (bool) : True if equivalent, False otherwise
   tups <- tuple_relations(dependencies)
-  identical(find_closure(tups, list(one)), find_closure(tups, list(two)))
+  identical(find_closure(tups, one), find_closure(tups, two))
 }
 
 find_closure <- function(rel, attrs) {
@@ -663,19 +663,19 @@ find_closure <- function(rel, attrs) {
   # Returns:
   #     closure (set[str]) : attrs' closure, aka the attributes that can be
   #     determined from the attributes in attrs
-  helper <- function(rel, set_attr) {
-    if (length(rel) == 0)
-      return(list(set_attr))
-    for (r in rel) {
-      dep_attrs <- r[[1]]
-      dep <- r[[2]]
-      if (is.element(list(dep_attrs), set_attr)) {
-        rel_ <- rel
-        rel_ <- setdiff(rel, list(list(dep_attrs, dep)))
-        return(helper(rel_, c(set_attr, dep)))
-      }
+  if (!is.character(attrs))
+    stop(paste("attr is", toString(class(attrs))))
+  if (length(rel) == 0)
+    return(attrs)
+  for (n in seq_along(rel)) {
+    r <- rel[[n]]
+    dep_attrs <- r[[1]]
+    dep <- r[[2]]
+    if (all(is.element(dep_attrs, attrs))) {
+      if (!is.element(dep, attrs))
+        attrs <- c(attrs, dep)
+      return(find_closure(rel[-n], attrs))
     }
-    set_attr
   }
-  helper(rel, attrs)
+  attrs
 }
