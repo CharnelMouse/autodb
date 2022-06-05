@@ -88,12 +88,21 @@ EntitySet.data.frame <- function(df, df_name, name = NA, time_index = NA) {
   es
 }
 
-plot_tables <- function(tables, ..., to_file = FALSE) {
+#' Plot dataframes with relationships
+#'
+#' @param x either a data.frame, or an entity set.
+#' @param ... additional arguments required for the given method.
+#' @param to_file a logical, indicating whether to write the plot information to
+#'   a file, as a Graphviz input, instead of plotting. Currently not
+#'   implemented.
+#'
+#' @export
+plot_tables <- function(x, ..., to_file = FALSE) {
   UseMethod("plot_tables")
 }
 
 #' @export
-plot_tables.EntitySet <- function(tables, to_file = FALSE) {
+plot_tables.EntitySet <- function(x, ..., to_file = FALSE) {
   # Create a UML diagram-ish graph of the EntitySet.
   # Args:
   #     to_file (str, optional) : Path to where the plot should be saved.
@@ -109,14 +118,14 @@ plot_tables.EntitySet <- function(tables, to_file = FALSE) {
 
   # Initialize a new directed graph
   gv_string <- paste0(
-    "digraph ", gsub(" ", "_", tables$name), " {\n",
+    "digraph ", gsub(" ", "_", x$name), " {\n",
     "  node [shape=record];\n"
   )
 
   # Draw dataframes
   df_string <- character()
-  for (df_name in names(tables$dataframes)) {
-    df <- tables$dataframes[[df_name]]
+  for (df_name in names(x$dataframes)) {
+    df <- x$dataframes[[df_name]]
     column_typing_info <- vapply(
       colnames(df$df),
       \(col_name) {
@@ -144,7 +153,7 @@ plot_tables.EntitySet <- function(tables, to_file = FALSE) {
   }
 
   # Draw relationships
-  for (rel in tables$relationships) {
+  for (rel in x$relationships) {
     rel_string <- paste0(
       "  ",
       paste(rel[1], rel[2], sep = ":"),
@@ -162,7 +171,7 @@ plot_tables.EntitySet <- function(tables, to_file = FALSE) {
 }
 
 #' @export
-plot_tables.data.frame <- function(df, df_name, to_file = FALSE) {
+plot_tables.data.frame <- function(x, df_name, ..., to_file = FALSE) {
 
   df_name <- gsub(" ", "_", df_name)
 
@@ -175,16 +184,16 @@ plot_tables.data.frame <- function(df, df_name, to_file = FALSE) {
   # Draw dataframes
   df_string <- character()
   column_typing_info <- vapply(
-    colnames(df),
+    colnames(x),
     \(col_name) {
-      col_class <- class(df[[col_name]])[[1]]
+      col_class <- class(x[[col_name]])[[1]]
       paste0("<", col_name, "> ", col_name, " : ", col_class)
     },
     character(1)
   )
   columns_string <- paste(column_typing_info, collapse = "|")
 
-  nrows <- nrow(df)
+  nrows <- nrow(x)
   label <- paste0(
     "{",
     df_name,

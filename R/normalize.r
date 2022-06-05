@@ -2,6 +2,115 @@ normalize <- function(x, ...) {
   UseMethod("normalize")
 }
 
+#' @export
+normalize.DepDF <- function(x) {
+  # Normalizes the dataframe represetned by depdf, created descendents
+  # as needed.
+  #
+  # Arguments:
+  #     depdf (DepDF) : depdf to normalize
+  part_deps <- find_partial_deps(x$deps)
+  part_deps <- filter(part_deps, x$df)
+  if (length(part_deps) > 0) {
+    split_on <- find_most_comm(part_deps, x$deps, x$df)
+    depdfs <- split_up(x, split_on)
+    nms <- vapply(depdfs, name_dataframe, character(1))
+    stopifnot(!anyDuplicated(nms))
+    return(stats::setNames(depdfs, make.unique(nms)))
+  }
+  trans_deps <- find_trans_deps(x$deps)
+  trans_deps <- filter(trans_deps, x$df)
+  if (length(trans_deps) > 0) {
+    split_on <- find_most_comm(trans_deps, x$deps, x$df)
+    depdfs <- split_up(x, split_on)
+    nms <- vapply(depdfs, name_dataframe, character(1))
+    stopifnot(!anyDuplicated(nms))
+    return(stats::setNames(depdfs, make.unique(nms)))
+  }
+  stats::setNames(list(x), name_dataframe(x))
+}
+
+#' Normalizes dependency relationships
+#'
+#' Normalizes the dependency relationships in dependencies into new
+#' groups by breaking up all partial and transitive dependencies.
+#'
+#' @param x a Dependencies object, containing the dependencies to be normalised.
+#' @inheritParams auto_entityset
+#'
+#' @return a Dependencies object, containing the normalised dependencies.
+#' @export
+normalize.Dependencies <- function(x, df) {
+  # Breaks up a set of dependency relations into groups that are normalized,
+  # meaning there are no partial or transitive dependencies within each group.
+  #
+  # Arguments:
+  #   dependencies (Dependencies) : the dependencies to be normalized
+  #
+  # Returns:
+  #   dependencies_groups (list[Dependencies]) : list of Dependencies objects each
+  # containing the relations in a new group
+  x <- remove_implied_extroneous(x)
+  no_part_deps <- remove_part_deps(x, df)
+  no_trans_deps <- list()
+  for (grp in no_part_deps)
+    no_trans_deps <- c(no_trans_deps, remove_trans_deps(grp, df))
+  no_trans_deps
+}
+
+#' Normalise a data.frame based on given dependencies
+#'
+#' @param df a data.frame, containing the data to be normalised.
+#' @param dependencies a Dependencies object, giving the dependencies to
+#'   determine normalisation with.
+#'
+#' @return a list of data.frames, containing the normalised data.
+#' @export
+normalize.data.frame <- function(df, dependencies) {
+  # Normalizes a dataframe based on the dependencies given. Keys for the newly
+  # created DataFrames can only be columns that are strings, ints, or
+  # categories. Keys are chosen according to the priority:
+  #   1) shortest lenghts 2) has "id" in some form in the name of an attribute
+  # 3) has attribute furthest to left in the table
+  #
+  # Arguments:
+  #   df (pd.DataFrame) : dataframe to split up
+  # dependencies (Dependencies) : the dependencies to be normalized
+  #
+  # Returns:
+  #   new_dfs (list[DataFrame]) : list of new dataframes
+  depdf <- DepDF(dependencies, df, get_prim_key(dependencies))
+  df_list <- normalize(depdf)
+  df_list
+}
+
+#' Normalise a given entity set
+#'
+#' @param es an EntitySet object, containing a single data.frame to be
+#'   normalised.
+#' @inheritParams auto_entityset
+#'
+#' @return The created EntitySet, containing the tables from normalising the
+#'   original data.frame.
+#' @export
+normalize.entityset <- function(es, accuracy) {
+  # TO DO: add option to pass an EntitySet with more than one dataframe, and
+  # specify which one to normalize while preserving existing relationships
+  if (length(es$dataframes) > 1)
+    stop('There is more than one dataframe in this EntitySet')
+  if (length(es$dataframes) == 0)
+    stop('This EntitySet is empty')
+
+  df <- es$dataframes[[1]]
+  auto_entityset(
+    df$df,
+    accuracy,
+    index = df$index,
+    name = es$name,
+    time_index = df$time_index
+  )
+}
+
 # class DepDF(object):
 #   """
 #     Represents dataframe and functional dependencies between columns in it.
@@ -121,34 +230,6 @@ make_indexes <- function(depdfs) {
   # }
   # for (child in depdf$children)
   #   make_indexes(child)
-}
-
-#' @export
-normalize.DepDF <- function(x) {
-  # Normalizes the dataframe represetned by depdf, created descendents
-  # as needed.
-  #
-  # Arguments:
-  #     depdf (DepDF) : depdf to normalize
-  part_deps <- find_partial_deps(x$deps)
-  part_deps <- filter(part_deps, x$df)
-  if (length(part_deps) > 0) {
-    split_on <- find_most_comm(part_deps, x$deps, x$df)
-    depdfs <- split_up(x, split_on)
-    nms <- vapply(depdfs, name_dataframe, character(1))
-    stopifnot(!anyDuplicated(nms))
-    return(stats::setNames(depdfs, make.unique(nms)))
-  }
-  trans_deps <- find_trans_deps(x$deps)
-  trans_deps <- filter(trans_deps, x$df)
-  if (length(trans_deps) > 0) {
-    split_on <- find_most_comm(trans_deps, x$deps, x$df)
-    depdfs <- split_up(x, split_on)
-    nms <- vapply(depdfs, name_dataframe, character(1))
-    stopifnot(!anyDuplicated(nms))
-    return(stats::setNames(depdfs, make.unique(nms)))
-  }
-  stats::setNames(list(x), name_dataframe(x))
 }
 
 split_up <- function(depdf, split_on) {

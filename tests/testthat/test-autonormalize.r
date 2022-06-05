@@ -171,27 +171,3 @@ test_that("ft_mock_customer", {
 
   expect_identical(approx_entityset, exact_entityset)
 })
-
-
-test_that("normalize_entityset(auto_entityset)", {
-  skip("meh")
-  df1 <- data.frame(test = 0:2)
-  df2 <- data.frame(test = 0:2)
-  accuracy <- 0.98
-
-  es <- list(name = NA, dataframes = list(), relationships = list)
-
-  error <- "^This EntitySet is empty$"
-  expect_error(normalize_entityset(es, accuracy), error)
-
-  es$dataframes <- list(df = list(df = df1))
-
-  df_out <- es$dataframes[[1]]
-
-  es <- normalize_entityset(es, accuracy)
-
-  es$dataframes <- c(es$dataframes, list(df2 = list(df = df2)))
-
-  error <- "^There is more than one dataframe in this EntitySet$"
-  expect_error(normalize_entityset(es, accuracy), error)
-})
