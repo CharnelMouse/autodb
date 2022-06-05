@@ -146,20 +146,10 @@ is_maximal <- function(node, nodes) {
 update_dependency_type <- function(node, nodes, min_deps, max_non_deps) {
   index <- node_index(node, nodes)
   children <- nodes$children[[index]]
-  children_minimal <- vapply(
-    children,
-    \(c) any(vapply(min_deps, identical, logical(1), c)),
-    logical(1)
-  )
-  if (any(children_minimal))
+  if (any(children %in% min_deps))
     return(1L)
   parents <- nodes$parents[[index]]
-  parents_maximal <- vapply(
-    parents,
-    \(p) any(vapply(max_non_deps, identical, logical(1), p)),
-    logical(1)
-  )
-  if (any(parents_maximal))
+  if (any(parents %in% max_non_deps))
     return(-1L)
   nodes$category[index]
 }
@@ -442,8 +432,8 @@ partition <- function(attrs, df, partitions) {
 # Returns the number of equivalence classes for the columns represented in attrs
 # for dataframe df.
   attrs_set <- sort(attrs)
-  if (list(attrs_set) %in% partitions$set) {
-    index <- which(vapply(partitions$set, identical, logical(1), attrs_set))
+  index <- match(list(attrs_set), partitions$set)
+  if (!is.na(index)) {
     return(list(partitions$value[index], partitions))
   }
   df_attrs_only <- df[, unlist(attrs), drop = FALSE]
