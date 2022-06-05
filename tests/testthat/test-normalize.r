@@ -67,11 +67,14 @@ test_that("split_on_dep", {
   )
   new <- split_on_dep('B', Dependencies(dependencies = dep_dic))
   expect_identical(new[[1]]$dependencies, list(A = list(), B = list()))
-  expect_identical(new[[2]]$dependencies, list(B = list(), C = list("B"), D = list("B")))
+  expect_identical(
+    new[[2]]$dependencies,
+    list(B = list(), C = list("B"), D = list("B"))
+  )
 })
 
 test_that("drop_primary_dups", {
-  df_dic <- list(
+  df <- data.frame(
     city = c(
       'honolulu', 'boston', 'honolulu', 'dallas', 'seattle',
       'honolulu', 'boston', 'honolulu', 'seattle', 'boston'
@@ -85,39 +88,23 @@ test_that("drop_primary_dups", {
       TRUE, TRUE, TRUE, TRUE, FALSE
     )
   )
-  df <- as.data.frame(df_dic)
   new_df <- drop_primary_dups(df, "city")
-
-  df_new_dic <- list(
+  df_new_dic <- data.frame(
     city = c("boston", "dallas", "honolulu", "seattle"),
     state = c("MA", "TX", "HI", "WA"),
     is_liberal = c(TRUE, FALSE, TRUE, TRUE)
   )
-  expect_equal(as.data.frame(df_new_dic), new_df)
+  expect_identical(new_df, df_new_dic)
 
   df <- data.frame(
     requires_light = c(TRUE, TRUE, FALSE, TRUE, TRUE, FALSE, TRUE),
     is_dark = c(TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, FALSE),
     light_on = c(TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE)
   )
-
   new_df <- drop_primary_dups(df, c('requires_light', 'is_dark'))
-  # compare_df = pd.DataFrame([[TRUE, FALSE, FALSE], [FALSE, TRUE, FALSE], [TRUE, TRUE, TRUE]],
-  #                           columns=["requires_light", "is_dark", "light_on"])
-  # compare_df = compare_df.sort_values(by=["requires_light", "is_dark"]).reset_index(drop=TRUE)
-
-  apply(
-    new_df,
-    1,
-    \(row) {
-      if (row['requires_light'] && !row['is_dark'])
-        expect_false(row['light_on'])
-      if (!row['requires_light'] && row['is_dark'])
-        expect_false(row['light_on'])
-      if (row['requires_light'] && row['is_dark'])
-        expect_true(row['light_on'])
-    }
-  )
+  expect_false(new_df$light_on[new_df$requires_light & !new_df$is_dark])
+  expect_false(new_df$light_on[!new_df$requires_light & new_df$is_dark])
+  expect_true(new_df$light_on[new_df$requires_light & new_df$is_dark])
 })
 
 test_that("filter", {
@@ -137,16 +124,22 @@ test_that("filter", {
   expect_identical(keys, list(list(c('C', 'D'), 'E')))
 })
 
-test_that("choose_index", {
-  keys <- list('A', 'A_id', 'B')
+describe("choose_index", {
   df <- data.frame(A = logical(), B = logical(), C = logical(), D = logical())
-  expect_identical(choose_index(keys, df), 'A_id')
+  it("priorities columns with id prefix/suffix in the name", {
+    keys <- list('A', 'A_id', 'B')
+    expect_identical(choose_index(keys, df), 'A_id')
+  })
 
-  keys <- list('B', 'C', 'A')
-  expect_identical(choose_index(keys, df), 'A')
+  it("prioritises columns earlier in the data.frame", {
+    keys <- list('B', 'C', 'A')
+    expect_identical(choose_index(keys, df), 'A')
+  })
 
-  keys <- list(c('A', 'C'), c('A', 'B'))
-  expect_identical(choose_index(keys, df), c('A', 'B'))
+  it("priorities key members earlier in the data.frame", {
+    keys <- list(c('A', 'C'), c('A', 'B'))
+    expect_identical(choose_index(keys, df), c('A', 'B'))
+  })
 })
 
 test_that("normalize.DepDF", {
