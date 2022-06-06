@@ -300,9 +300,13 @@ remove_part_deps.Dependencies <- function(dependencies, df) {
   part_deps <- find_partial_deps(dependencies)
   part_deps <- filter(part_deps, df)
   if (length(part_deps) == 0)
-    return(dependencies)
+    return(list(dependencies))
   new_deps <- split_on_dep(find_most_comm(part_deps, dependencies), dependencies)
-  lapply(new_deps, remove_part_deps, df)
+  res <- list()
+  for (dep in new_deps) {
+    res <- c(res, remove_part_deps(dep, df))
+  }
+  res
 }
 
 remove_trans_deps <- function(dependencies, df) {
@@ -485,6 +489,8 @@ choose_index <- function(keys, df) {
   # Returns:
   #     index (list[str]) : chosen key
 
+  if (length(keys) == 0)
+    return(NA_character_)
   sort_key <- keys[order(lengths(keys))]
   m <- length(sort_key[[1]])
   options <- sort_key[lengths(sort_key) == m]

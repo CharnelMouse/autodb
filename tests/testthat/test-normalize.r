@@ -1,136 +1,177 @@
 describe("normalize", {
-  it("Dependencies", {
-    # how to test that relations remain the same???
-    # check that there are no new relations?
-    # there can be less however?
-    dep_dic <- list(
-      A = list(),
-      B = list(),
-      C = list(),
-      D = list("F"),
-      E = list(c("A", "B", "C", "D")),
-      F = list(c("A", "B"))
+  it("resolves a simple bijection with no splits, if given an index", {
+    dependencies <- Dependencies(
+      list(a = "b", b = "a"),
+      primary_key = "a"
     )
-    dep <- Dependencies(
-      dependencies = dep_dic,
-      primary_key = c("A", "B", "C")
+    df <- data.frame(a = integer(), b = integer())
+
+    norm.df <- normalize.data.frame(df, dependencies)
+    norm.DepDF <- normalize.DepDF(DepDF(dependencies, df))
+    expect_identical(norm.df, norm.DepDF)
+    expect_identical(length(norm.df), 1L)
+
+    norm.Dependencies <- normalize.Dependencies(dependencies, df)
+    skip("needs two normalize approaches to be merged")
+    expect_identical(
+      lapply(norm.df, `[[`, "deps"),
+      norm.Dependencies
     )
-    df <- data.frame(
-      A = integer(),
-      B = integer(),
-      C = integer(),
-      D = integer(),
-      E = integer(),
-      F = integer()
-    )
-    new <- normalize(dep, df)
-    dep_dic <- dep$dependencies
-    for (x in new) {
-      trans_deps <- find_trans_deps(x)
-      trans_deps <- filter(trans_deps, df)
-      expect_identical(trans_deps, list())
-      part_deps <- find_partial_deps(x)
-      part_deps <- filter(part_deps, df)
-      expect_identical(part_deps, list())
-      dic <- x$dependencies
-      expect_superset_of_dependency(dep_dic, dic)
-    }
+    expect_identical(length(norm.Dependencies), 1L)
   })
-  it("DepDF", {
-    dic = list(
-      team = c(
-        'Red', 'Red', 'Red', 'Orange', 'Orange',
-        'Yellow', 'Yellow', 'Green', 'Green', 'Blue'
-      ),
-      jersey_num = c(
-        1, 2, 3, 1, 2,
-        1, 5, 8, 2, 2
-      ),
-      player_name = c(
-        'A', 'B', 'C', 'D', 'A',
-        'E', 'B', 'A', 'G', 'H'
-      ),
-      city = c(
-        'boston', 'boston', 'boston', 'chicago', 'chicago',
-        'honolulu', 'honolulu', 'boston', 'boston', 'austin'
-      ),
-      state = c(
-        'MA', 'MA', 'MA', 'IL', 'IL',
-        'HI', 'HI', 'MA', 'MA', 'TX'
-      )
+  it("resolves a simple bijection with no splits, if given no index", {
+    dependencies <- Dependencies(
+      list(a = "b", b = "a")
     )
-    df <- as.data.frame(dic)
-    deps <- Dependencies(
-      dependencies = list(
-        team = list(c('player_name', 'jersey_num')),
-        jersey_num = list(c('player_name', 'team')),
-        player_name = list(c('team', 'jersey_num')),
-        city = list('team', 'state', c('player_name', 'jersey_num')),
-        state = list('team', c('player_name', 'jersey_num'), 'city')
-      ),
-      primary_key = c('team', 'jersey_num')
+    df <- data.frame(a = integer(), b = integer())
+
+    norm.df <- normalize.data.frame(df, dependencies)
+    norm.DepDF <- normalize.DepDF(DepDF(dependencies, df))
+    expect_identical(norm.df, norm.DepDF)
+    skip("needs two normalize approaches to be merged")
+    expect_identical(length(norm.df), 1L)
+
+    norm.Dependencies <- normalize.Dependencies(dependencies, df)
+    expect_identical(
+      lapply(norm.df, `[[`, "deps"),
+      norm.Dependencies
     )
-
-    depdf <- DepDF(
-      deps = deps,
-      df = df,
-      index = get_prim_key(deps)
-    )
-    new_dfs <- normalize(depdf)
-    depdf <- new_dfs[[1]]
-
-    expect_identical(length(new_dfs), 3L)
-
-    dic_one <- list(
-      team = c(
-        'Red', 'Red', 'Red', 'Orange', 'Orange',
-        'Yellow', 'Yellow', 'Green', 'Green', 'Blue'
-      ),
-      jersey_num = c(
-        1, 2, 3, 1, 2,
-        1, 5, 8, 2, 2
-      ),
-      player_name = c(
-        'A', 'B', 'C', 'D', 'A',
-        'E', 'B', 'A', 'G', 'H'
-      )
-    )
-
-    dic_two <- list(
-      team = c('Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Blue'),
-      city = c('boston', 'chicago', 'honolulu', 'boston', 'austin', 'austin')
-    )
-
-    dic_three <- list(
-      city = c('boston', 'chicago', 'honolulu', 'austin', 'austin'),
-      state = c('MA', 'IL', 'HI', 'TX', 'TX')
-    )
-
-    expect_identical(new_dfs[[1]]$df, drop_primary_dups(as.data.frame(dic_one), c('team', 'jersey_num')))
-    expect_identical(new_dfs[[2]]$df, drop_primary_dups(as.data.frame(dic_two), 'team'))
-    expect_identical(new_dfs[[3]]$df, drop_primary_dups(as.data.frame(dic_three), 'city'))
+    expect_identical(length(norm.Dependencies), 1L)
   })
-  it("entityset", {
-    skip("meh")
-    df1 <- data.frame(test = 0:2)
-    df2 <- data.frame(test = 0:2)
-    accuracy <- 0.98
+  describe("Dependencies", {
+    it("original test", {
+      # how to test that relations remain the same???
+      # check that there are no new relations?
+      # there can be less however?
+      dep_dic <- list(
+        A = list(),
+        B = list(),
+        C = list(),
+        D = list("F"),
+        E = list(c("A", "B", "C", "D")),
+        F = list(c("A", "B"))
+      )
+      dep <- Dependencies(
+        dependencies = dep_dic,
+        primary_key = c("A", "B", "C")
+      )
+      df <- data.frame(
+        A = integer(),
+        B = integer(),
+        C = integer(),
+        D = integer(),
+        E = integer(),
+        F = integer()
+      )
+      new <- normalize(dep, df)
+      dep_dic <- dep$dependencies
+      for (x in new) {
+        trans_deps <- find_trans_deps(x)
+        trans_deps <- filter(trans_deps, df)
+        expect_identical(trans_deps, list())
+        part_deps <- find_partial_deps(x)
+        part_deps <- filter(part_deps, df)
+        expect_identical(part_deps, list())
+        dic <- x$dependencies
+        expect_superset_of_dependency(dep_dic, dic)
+      }
+    })
+    it("DepDF", {
+      dic = list(
+        team = c(
+          'Red', 'Red', 'Red', 'Orange', 'Orange',
+          'Yellow', 'Yellow', 'Green', 'Green', 'Blue'
+        ),
+        jersey_num = c(
+          1, 2, 3, 1, 2,
+          1, 5, 8, 2, 2
+        ),
+        player_name = c(
+          'A', 'B', 'C', 'D', 'A',
+          'E', 'B', 'A', 'G', 'H'
+        ),
+        city = c(
+          'boston', 'boston', 'boston', 'chicago', 'chicago',
+          'honolulu', 'honolulu', 'boston', 'boston', 'austin'
+        ),
+        state = c(
+          'MA', 'MA', 'MA', 'IL', 'IL',
+          'HI', 'HI', 'MA', 'MA', 'TX'
+        )
+      )
+      df <- as.data.frame(dic)
+      deps <- Dependencies(
+        dependencies = list(
+          team = list(c('player_name', 'jersey_num')),
+          jersey_num = list(c('player_name', 'team')),
+          player_name = list(c('team', 'jersey_num')),
+          city = list('team', 'state', c('player_name', 'jersey_num')),
+          state = list('team', c('player_name', 'jersey_num'), 'city')
+        ),
+        primary_key = c('team', 'jersey_num')
+      )
 
-    es <- list(name = NA, dataframes = list(), relationships = list)
+      depdf <- DepDF(
+        deps = deps,
+        df = df,
+        index = get_prim_key(deps)
+      )
+      new_dfs <- normalize(depdf)
+      depdf <- new_dfs[[1]]
 
-    error <- "^This EntitySet is empty$"
-    expect_error(normalize_entityset(es, accuracy), error)
+      expect_identical(length(new_dfs), 3L)
 
-    es$dataframes <- list(df = list(df = df1))
+      dic_one <- list(
+        team = c(
+          'Red', 'Red', 'Red', 'Orange', 'Orange',
+          'Yellow', 'Yellow', 'Green', 'Green', 'Blue'
+        ),
+        jersey_num = c(
+          1, 2, 3, 1, 2,
+          1, 5, 8, 2, 2
+        ),
+        player_name = c(
+          'A', 'B', 'C', 'D', 'A',
+          'E', 'B', 'A', 'G', 'H'
+        )
+      )
 
-    df_out <- es$dataframes[[1]]
+      dic_two <- list(
+        team = c('Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Blue'),
+        city = c('boston', 'chicago', 'honolulu', 'boston', 'austin', 'austin')
+      )
 
-    es <- normalize(es, accuracy)
+      dic_three <- list(
+        city = c('boston', 'chicago', 'honolulu', 'austin', 'austin'),
+        state = c('MA', 'IL', 'HI', 'TX', 'TX')
+      )
 
-    es$dataframes <- c(es$dataframes, list(df2 = list(df = df2)))
+      expect_identical(new_dfs[[1]]$df, drop_primary_dups(as.data.frame(dic_one), c('team', 'jersey_num')))
+      expect_identical(new_dfs[[2]]$df, drop_primary_dups(as.data.frame(dic_two), 'team'))
+      expect_identical(new_dfs[[3]]$df, drop_primary_dups(as.data.frame(dic_three), 'city'))
+    })
+    it("entityset", {
+      skip("meh")
+      df1 <- data.frame(test = 0:2)
+      df2 <- data.frame(test = 0:2)
+      accuracy <- 0.98
 
-    error <- "^There is more than one dataframe in this EntitySet$"
-    expect_error(normalize(es, accuracy), error)
+      es <- list(name = NA, dataframes = list(), relationships = list)
+
+      error <- "^This EntitySet is empty$"
+      expect_error(normalize_entityset(es, accuracy), error)
+
+      es$dataframes <- list(df = list(df = df1))
+
+      df_out <- es$dataframes[[1]]
+
+      es <- normalize(es, accuracy)
+
+      es$dataframes <- c(es$dataframes, list(df2 = list(df = df2)))
+
+      error <- "^There is more than one dataframe in this EntitySet$"
+      expect_error(normalize(es, accuracy), error)
+    })
   })
 })
 
