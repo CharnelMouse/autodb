@@ -4,10 +4,10 @@
 \alias{normalize.data.frame}
 \title{Normalise a data.frame based on given dependencies}
 \usage{
-\method{normalize}{data.frame}(df, dependencies)
+\method{normalize}{data.frame}(x, dependencies)
 }
 \arguments{
-\item{df}{a data.frame, containing the data to be normalised.}
+\item{x}{a data.frame, containing the data to be normalised.}
 
 \item{dependencies}{a Dependencies object, giving the dependencies to
 determine normalisation with.}

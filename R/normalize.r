@@ -4,28 +4,19 @@ normalize <- function(x, ...) {
 
 #' @export
 normalize.DepDF <- function(x) {
-  # Normalizes the dataframe represetned by depdf, created descendents
-  # as needed.
-  #
-  # Arguments:
-  #     depdf (DepDF) : depdf to normalize
-  part_deps <- find_partial_deps(x$deps)
-  part_deps <- filter(part_deps, x$df)
+  # Only splits off a descendent as needed, doesn't normalize it too.
+  # Additionally, stops after the first split, e.g. splitting for partial
+  # dependencies might leave transitive dependencies in the main data.frame.
+  # This is a silly function.
+  part_deps <- find_filtered_partial_deps(x$deps, x$df)
   if (length(part_deps) > 0) {
-    split_on <- find_most_comm(part_deps, x$deps, x$df)
-    depdfs <- split_up(x, split_on)
-    nms <- vapply(depdfs, name_dataframe, character(1))
-    stopifnot(!anyDuplicated(nms))
-    return(stats::setNames(depdfs, make.unique(nms)))
+    new_depdfs <- split_for(x, part_deps)
+    return(new_depdfs)
   }
-  trans_deps <- find_trans_deps(x$deps)
-  trans_deps <- filter(trans_deps, x$df)
+  trans_deps <- find_filtered_trans_deps(x$deps, x$df)
   if (length(trans_deps) > 0) {
-    split_on <- find_most_comm(trans_deps, x$deps, x$df)
-    depdfs <- split_up(x, split_on)
-    nms <- vapply(depdfs, name_dataframe, character(1))
-    stopifnot(!anyDuplicated(nms))
-    return(stats::setNames(depdfs, make.unique(nms)))
+    new_depdfs <- split_for(x, trans_deps)
+    return(new_depdfs)
   }
   stats::setNames(list(x), name_dataframe(x))
 }
@@ -38,18 +29,12 @@ normalize.DepDF <- function(x) {
 #' @param x a Dependencies object, containing the dependencies to be normalised.
 #' @inheritParams auto_entityset
 #'
-#' @return a Dependencies object, containing the normalised dependencies.
+#' @return a list of Dependencies objects, containing the normalised
+#'   dependencies.
 #' @export
 normalize.Dependencies <- function(x, df) {
-  # Breaks up a set of dependency relations into groups that are normalized,
-  # meaning there are no partial or transitive dependencies within each group.
-  #
-  # Arguments:
-  #   dependencies (Dependencies) : the dependencies to be normalized
-  #
-  # Returns:
-  #   dependencies_groups (list[Dependencies]) : list of Dependencies objects each
-  # containing the relations in a new group
+  # Fully breaks up the dependencies, so all normalized instead of just the
+  # original.
   x <- remove_implied_extroneous(x)
   no_part_deps <- remove_part_deps(x, df)
   no_trans_deps <- list()
@@ -60,13 +45,13 @@ normalize.Dependencies <- function(x, df) {
 
 #' Normalise a data.frame based on given dependencies
 #'
-#' @param df a data.frame, containing the data to be normalised.
+#' @param x a data.frame, containing the data to be normalised.
 #' @param dependencies a Dependencies object, giving the dependencies to
 #'   determine normalisation with.
 #'
 #' @return a list of data.frames, containing the normalised data.
 #' @export
-normalize.data.frame <- function(df, dependencies) {
+normalize.data.frame <- function(x, dependencies) {
   # Normalizes a dataframe based on the dependencies given. Keys for the newly
   # created DataFrames can only be columns that are strings, ints, or
   # categories. Keys are chosen according to the priority:
@@ -79,34 +64,34 @@ normalize.data.frame <- function(df, dependencies) {
   #
   # Returns:
   #   new_dfs (list[DataFrame]) : list of new dataframes
-  depdf <- DepDF(dependencies, df, get_prim_key(dependencies))
-  df_list <- normalize(depdf)
+  depdf <- DepDF(dependencies, x, get_prim_key(dependencies))
+  df_list <- normalize.DepDF(depdf)
   df_list
 }
 
 #' Normalise a given entity set
 #'
-#' @param es an EntitySet object, containing a single data.frame to be
+#' @param x an EntitySet object, containing a single data.frame to be
 #'   normalised.
 #' @inheritParams auto_entityset
 #'
 #' @return The created EntitySet, containing the tables from normalising the
 #'   original data.frame.
 #' @export
-normalize.entityset <- function(es, accuracy) {
+normalize.entityset <- function(x, accuracy) {
   # TO DO: add option to pass an EntitySet with more than one dataframe, and
   # specify which one to normalize while preserving existing relationships
-  if (length(es$dataframes) > 1)
+  if (length(x$dataframes) > 1)
     stop('There is more than one dataframe in this EntitySet')
-  if (length(es$dataframes) == 0)
+  if (length(x$dataframes) == 0)
     stop('This EntitySet is empty')
 
-  df <- es$dataframes[[1]]
+  df <- x$dataframes[[1]]
   auto_entityset(
     df$df,
     accuracy,
     index = df$index,
-    name = es$name,
+    name = x$name,
     time_index = df$time_index
   )
 }
@@ -297,16 +282,10 @@ remove_part_deps.Dependencies <- function(dependencies, df) {
   # Returns:
   #     new_groups (list[Dependencies]) : list of new dependencies objects
   #     representing the new groups with no partial depenencies
-  part_deps <- find_partial_deps(dependencies)
-  part_deps <- filter(part_deps, df)
+  part_deps <- find_filtered_partial_deps(dependencies, df)
   if (length(part_deps) == 0)
     return(list(dependencies))
-  new_deps <- split_on_dep(find_most_comm(part_deps, dependencies), dependencies)
-  res <- list()
-  for (dep in new_deps) {
-    res <- c(res, remove_part_deps(dep, df))
-  }
-  res
+  split_then_remove(dependencies, df, part_deps, remove_part_deps)
 }
 
 remove_trans_deps <- function(dependencies, df) {
@@ -324,15 +303,37 @@ remove_trans_deps.Dependencies <- function(dependencies, df) {
   # Returns:
   #     new_groups (list[Dependencies]): list of new dependencies objects
   #     representing the new groups with no transitive depenencies
-  trans_deps <- find_trans_deps(dependencies)
-  trans_deps <- filter(trans_deps, df)
+  trans_deps <- find_filtered_trans_deps(dependencies, df)
   if (length(trans_deps) == 0)
     return(list(dependencies))
-  new_deps <- split_on_dep(find_most_comm(trans_deps, dependencies), dependencies)
+  split_then_remove(dependencies, df, trans_deps, remove_trans_deps)
+}
+
+split_then_remove <- function(dependencies, df, unwanted_deps, remove_fn) {
+  split_on <- find_most_comm(unwanted_deps, dependencies)
+  new_deps <- split_on_dep(split_on, dependencies)
   c(
-    remove_trans_deps(new_deps[[1]], df),
-    remove_trans_deps(new_deps[[2]], df)
+    remove_fn(new_deps[[1]], df),
+    remove_fn(new_deps[[2]], df)
   )
+}
+
+split_for <- function(depdf, unwanted_deps) {
+  split_on <- find_most_comm(unwanted_deps, depdf$deps, depdf$df)
+  depdfs <- split_up(depdf, split_on)
+  nms <- vapply(depdfs, name_dataframe, character(1))
+  stopifnot(!anyDuplicated(nms))
+  stats::setNames(depdfs, make.unique(nms))
+}
+
+find_filtered_partial_deps <- function(dependencies, df) {
+  find_partial_deps(dependencies) |>
+    filter(df)
+}
+
+find_filtered_trans_deps <- function(dependencies, df) {
+  find_trans_deps(dependencies) |>
+    filter(df)
 }
 
 find_most_comm <- function(deps, dependencies, df = NA) {

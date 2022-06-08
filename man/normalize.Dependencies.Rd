@@ -12,7 +12,8 @@
 \item{df}{a data.frame, containing the data to be normalised.}
 }
 \value{
-a Dependencies object, containing the normalised dependencies.
+a list of Dependencies objects, containing the normalised
+dependencies.
 }
 \description{
 Normalizes the dependency relationships in dependencies into new

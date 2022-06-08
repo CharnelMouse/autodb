@@ -4,10 +4,10 @@
 \alias{normalize.entityset}
 \title{Normalise a given entity set}
 \usage{
-\method{normalize}{entityset}(es, accuracy)
+\method{normalize}{entityset}(x, accuracy)
 }
 \arguments{
-\item{es}{an EntitySet object, containing a single data.frame to be
+\item{x}{an EntitySet object, containing a single data.frame to be
 normalised.}
 
 \item{accuracy}{a numeric in (0, 1], giving the accuracy threshold threshold
