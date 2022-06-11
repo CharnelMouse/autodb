@@ -17,7 +17,7 @@ EntitySet.DepDF <- function(depdf, name = NA, time_index = NULL) {
   #
   # Returns:
   #   entityset (ft.EntitySet) : created entity set
-  depdf <- normalize(depdf)
+  depdf <- normalize_step(depdf)
   depdf <- make_indexes(depdf)
 
   dataframes <- list()
