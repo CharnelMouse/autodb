@@ -57,27 +57,30 @@ describe("normalize", {
         expect_superset_of_dependency(dep_dic, dic)
       }
     })
-    it("entityset", {
-      skip("meh")
+  })
+  describe("entityset", {
+    it("original test", {
       df1 <- data.frame(test = 0:2)
       df2 <- data.frame(test = 0:2)
       accuracy <- 0.98
 
-      es <- list(name = NA, dataframes = list(), relationships = list)
+      es_empty <- EntitySet.data.frame(NULL, df_name = NA)
+      es_empty$dataframes <- list()
+      expect_error(
+        normalize(es_empty, accuracy),
+        "^This EntitySet is empty$"
+      )
 
-      error <- "^This EntitySet is empty$"
-      expect_error(normalize_entityset(es, accuracy), error)
+      es_one <- EntitySet(df1, df_name = NA_character_)
+      es_norm <- normalize(es_one, accuracy)
+      expect_identical(length(es_norm$dataframes), 1L)
 
-      es$dataframes <- list(df = list(df = df1))
-
-      df_out <- es$dataframes[[1]]
-
-      es <- normalize(es, accuracy)
-
-      es$dataframes <- c(es$dataframes, list(df2 = list(df = df2)))
-
-      error <- "^There is more than one dataframe in this EntitySet$"
-      expect_error(normalize(es, accuracy), error)
+      es_two <- EntitySet.data.frame(NULL, df_name = NA)
+      es_two$dataframes <- list(df1 = df1, df2 = df2)
+      expect_error(
+        normalize(es_two, accuracy),
+        "^There is more than one dataframe in this EntitySet$"
+      )
     })
   })
 })

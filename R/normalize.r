@@ -33,7 +33,7 @@ normalize.Dependencies <- function(x, df) {
 #' @return The created EntitySet, containing the tables from normalising the
 #'   original data.frame.
 #' @export
-normalize.entityset <- function(x, accuracy) {
+normalize.EntitySet <- function(x, accuracy) {
   # TO DO: add option to pass an EntitySet with more than one dataframe, and
   # specify which one to normalize while preserving existing relationships
   if (length(x$dataframes) > 1)
@@ -236,6 +236,8 @@ find_candidate_keys.Dependencies <- function(dependencies) {
   rhs_only <- setdiff(rhs_attrs, lhs_attrs)
   lhs_and_rhs <- setdiff(all_attrs, union(lhs_only, rhs_only))
   rels <- tuple_relations(dependencies)
+  if (length(rels) == 0)
+    return(list())
 
   if (setequal(find_closure(rels, lhs_only), all_attrs))
     return(lhs_only)

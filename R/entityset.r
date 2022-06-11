@@ -1,9 +1,9 @@
-EntitySet <- function(x, name = NA, time_index = NULL) {
+EntitySet <- function(x, name = NA, time_index = NULL, ...) {
   UseMethod("EntitySet")
 }
 
 #' @export
-EntitySet.DepDF <- function(depdf, name = NA, time_index = NULL) {
+EntitySet.DepDF <- function(depdf, name = NA, time_index = NULL, ...) {
   # Creates a normalized EntitySet from df based on the dependencies given.
   # Keys for the newly created DataFrames can only be columns that are strings,
   # ints, or categories. Keys are chosen according to the priority:
@@ -66,8 +66,8 @@ EntitySet.DepDF <- function(depdf, name = NA, time_index = NULL) {
 }
 
 #' @export
-EntitySet.data.frame <- function(df, df_name, name = NA, time_index = NA) {
-  depdf <- DepDF(list(), df)
+EntitySet.data.frame <- function(df, name = NA, time_index = NA, df_name, ...) {
+  depdf <- DepDF(Dependencies(list()), df)
   if (!is.na(time_index) && time_index %in% colnames(depdf$df))
     dataframes <- list(list(
       df = depdf$df,
