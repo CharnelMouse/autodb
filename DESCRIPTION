@@ -3,7 +3,7 @@ Title: Database normalization for data frames
 Version: 0.0.0.9000
 Authors@R: 
     person("Mark", "Webster", , "markwebster204@yahoo.co.uk", role = c("aut", "cre"))
-Description: An R port of Alteryx's AutoNormalize Python library (\url{https://github.com/alteryx/autonormalize}), with various changes / improvements.
+Description: An R port of Alteryx's AutoNormalize Python library (https://github.com/alteryx/autonormalize), with various changes / improvements.
 License: BSD_3_clause + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
