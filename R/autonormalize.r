@@ -73,14 +73,3 @@ auto_entityset <- function(
   depdf <- DepDF(deps, df)
   EntitySet(depdf, name, time_index)
 }
-
-auto_normalize <- function(df, accuracy) {
-  # Normalizes dataframe via dependencies discovered in data.
-  #
-  # Arguments:
-  #   df (pd.DataFrame) : dataframe to split up
-  #
-  # Returns:
-  #   new_dfs (list[pd.DataFrame]) : list of new dataframes
-  normalize(df, find_dependencies(df, accuracy))
-}
