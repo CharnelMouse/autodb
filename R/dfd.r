@@ -1,4 +1,5 @@
 #' DFD algorithm
+#'
 #'Main loop of DFD algorithm. It returns all the dependencies represented in the
 #'data in dataframe df. Refer to section 3.2 of paper for literature. Checks
 #'each column to see if it's unique. If it is unique, it is added as the LHS of
