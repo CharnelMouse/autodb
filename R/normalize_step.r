@@ -7,7 +7,6 @@ normalize_step.DepDF <- function(x) {
   # Only splits off a descendent as needed, doesn't normalize it too.
   # Additionally, stops after the first split, e.g. splitting for partial
   # dependencies might leave transitive dependencies in the main data.frame.
-  # This is a silly function.
   part_deps <- find_filtered_partial_deps(x$deps, x$df)
   if (length(part_deps) > 0) {
     new_depdfs <- split_for(x, part_deps)
