@@ -148,7 +148,7 @@ choose_index <- function(keys, df) {
   options[[1]]
 }
 
-filter <- function(keys, df) {
+filter <- function(relations, df) {
   # Filters out any keys that contain attributes that are not strings, ints, or
   # categories from a list of relations.
   #
@@ -158,22 +158,19 @@ filter <- function(keys, df) {
   # MY NOTES: original checks class against integer, category/factor, and
   # "object", which seems to be a generic class. That seems silly, so I've
   # added character and logical instead.
-  for (ky in keys) {
-    key <- ky[[1]]
-    rhs <- ky[[2]]
-    for (attr in key) {
-      if (
-        !inherits(df[[attr]], "character") &&
-        !inherits(df[[attr]], "integer") &&
-        !inherits(df[[attr]], "factor") &&
-        !inherits(df[[attr]], "logical")
-      ) {
-        keys <- setdiff(keys, list(ky))
+  for (rel in relations) {
+    lhs <- rel[[1]]
+    for (attr in lhs) {
+      if (!inherits(
+        df[[attr]],
+        c("character", "integer", "factor", "logical")
+      )) {
+        relations <- setdiff(relations, list(rel))
         break
       }
     }
   }
-  keys
+  relations
 }
 
 get_prim_key <- function(dependencies) {
