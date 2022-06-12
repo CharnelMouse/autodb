@@ -239,31 +239,30 @@ describe("make_indexes", {
 
   new_dfs <- make_indexes(new_dfs)
 
+  apply_mask <- function(depdf, mask) {
+    depdf$df[mask, 1]
+  }
+  foreign_vals <- new_dfs[[1]]$df[, colnames(new_dfs[[2]]$df)[1]]
+
   mask <- (new_dfs[[2]]$df[['month']] == 'dec') &
     (new_dfs[[2]]$df[['hemisphere']] == 'N')
-  val <- new_dfs[[2]]$df[mask, , drop = FALSE][[colnames(new_dfs[[2]]$df)[1]]][1]
-  expect_identical(new_dfs[[1]]$df[[colnames(new_dfs[[2]]$df)[1]]][1], val)
-  expect_identical(new_dfs[[1]]$df[[colnames(new_dfs[[2]]$df)[1]]][2], val)
+  val <- apply_mask(new_dfs[[2]], mask)
+  expect_identical(foreign_vals[1:2], rep(val, 2))
 
   mask <- (new_dfs[[2]]$df[['month']] == 'jul') &
     (new_dfs[[2]]$df[['hemisphere']] == 'N')
-  val <- new_dfs[[2]]$df[mask, , drop = FALSE][[colnames(new_dfs[[2]]$df)[1]]][1]
-  expect_identical(new_dfs[[1]]$df[[colnames(new_dfs[[2]]$df)[1]]][3], val)
-  expect_identical(new_dfs[[1]]$df[[colnames(new_dfs[[2]]$df)[1]]][4], val)
-  expect_identical(new_dfs[[1]]$df[[colnames(new_dfs[[2]]$df)[1]]][10], val)
+  val <- apply_mask(new_dfs[[2]], mask)
+  expect_identical(foreign_vals[c(3, 4, 10)], rep(val, 3))
 
   mask <- (new_dfs[[2]]$df[['month']] == 'dec') &
     (new_dfs[[2]]$df[['hemisphere']] == 'S')
-  val <- new_dfs[[2]]$df[mask, , drop = FALSE][[colnames(new_dfs[[2]]$df)[1]]][1]
-  expect_identical(new_dfs[[1]]$df[[colnames(new_dfs[[2]]$df)[1]]][5], val)
-  expect_identical(new_dfs[[1]]$df[[colnames(new_dfs[[2]]$df)[1]]][9], val)
+  val <- apply_mask(new_dfs[[2]], mask)
+  expect_identical(foreign_vals[c(5, 9)], rep(val, 2))
 
   mask <- (new_dfs[[2]]$df[['month']] == 'jul') &
     (new_dfs[[2]]$df[['hemisphere']] == 'S')
-  val <- new_dfs[[2]]$df[mask, , drop = FALSE][[colnames(new_dfs[[2]]$df)[1]]][1]
-  expect_identical(new_dfs[[1]]$df[[colnames(new_dfs[[2]]$df)[1]]][6], val)
-  expect_identical(new_dfs[[1]]$df[[colnames(new_dfs[[2]]$df)[1]]][7], val)
-  expect_identical(new_dfs[[1]]$df[[colnames(new_dfs[[2]]$df)[1]]][8], val)
+  val <- apply_mask(new_dfs[[2]], mask)
+  expect_identical(foreign_vals[6:8], rep(val, 3))
 
   # Make sure new column names are sorted
   skip("wait until make_indexes implemented")
