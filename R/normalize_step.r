@@ -7,6 +7,25 @@ normalize_step.DepDF <- function(x) {
   # Only splits off a descendent as needed, doesn't normalize it too.
   # Additionally, stops after the first split, e.g. splitting for partial
   # dependencies might leave transitive dependencies in the main data.frame.
+  #
+  # Work flow:
+  # - split_for first-found partial or transitive dependencies
+  #   - find most common set of LHS attributes, priority to shorter ones
+  #   - split_up on most common set
+  #     - split_on_dep with most common set and DepDF's deps
+  #     - form child DepDF using child deps (form_child for df)
+  #     - assign as child in parent
+  #     - remove attributes in parent df not in parent dependency LHSs
+  #     - normalize_step on parent, then on child, concatenate resulting named lists
+  #   - check for / remove duplicate DepDF names
+  #   - return named DepDF list
+  # - return named DepDF list
+  # This work flow doesn't remove extroneuous attributes, and returns children
+  # in reverse order of when extracted from parent, with depth-first ordering of
+  # hierarchies.
+  # This is a different ordering than normalize, since it doesn't resolve all
+  # the partial dependencies before moving on to the transitive ones.
+
   part_deps <- find_filtered_partial_deps(x$deps, x$df)
   if (length(part_deps) > 0) {
     new_depdfs <- split_for(x, part_deps)

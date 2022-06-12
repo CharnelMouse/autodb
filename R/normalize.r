@@ -16,6 +16,25 @@ normalize <- function(x, ...) {
 normalize.Dependencies <- function(x, df) {
   # Fully breaks up the dependencies, so all normalized instead of just the
   # original.
+  # Work flow:
+  # - remove extroneous LHS attributes
+  # - remove partial dependencies
+  #   - split_then_remove on all found partial dependencies
+  #     - find most common set of LHS attributes in partial deps, prefer shortest
+  #     - split_on_dep with most common on Dependencies
+  #     - remove partial dependencies in resulting parent, then result child, concatenate
+  #     - return resulting Dependencies list
+  # - for each non-partial dependency in list, remove transitive deps
+  #   - split_then_remove on all found transitive dependencies
+  #     - find most common set of LHS attributes in transitive deps, prefer shortest
+  #     - split_on_dep with most common on Dependencies
+  #     - remove transitive dependencies in resulting parent, then result child, concatenate
+  #     - return resulting Dependencies list
+  #   - concatenate lists
+  # - return resulting Dependencies list
+  # After partial removal, tables are sorted by reverse order in which extracted
+  # from parent table for partial dependencies, depth-first.
+  # After transitive removal, same thing again.
   x <- remove_implied_extroneous(x)
   no_part_deps <- remove_part_deps(x, df)
   no_trans_deps <- list()
