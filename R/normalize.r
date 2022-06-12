@@ -197,44 +197,6 @@ tuple_relations.Dependencies <- function(dependencies) {
   result
 }
 
-remove_extraneous_attributes <- function(dependencies) {
-  UseMethod("remove_extraneous_attributes")
-}
-
-#' @export
-remove_extraneous_attributes.Dependencies <- function(dependencies) {
-  # Removes all implied extroneous attributes from relations in self.
-  # Example:
-  #     A --> B
-  #     AB --> C
-  #     becomes
-  #     A --> B
-  #     A --> C
-  rels <- tuple_relations(dependencies)
-  for (lr in rels) {
-    lhs <- lr[[1]]
-    rhs <- lr[[2]]
-    y <- lhs
-    for (attr in lhs) {
-      y_ <- setdiff(y, attr)
-      if (rhs %in% find_closure(rels, y_))
-        y <- setdiff(y, attr)
-      rels <- setdiff(rels, list(lr))
-      rels <- c(rels, list(list(y, rhs)))
-      dependencies$dependencies[[rhs]] <- setdiff(
-        dependencies$dependencies[[rhs]],
-        list(lhs)
-      )
-      dependencies$dependencies[[rhs]] <- c(
-        dependencies$dependencies[[rhs]],
-        list(y)
-      )
-    }
-  }
-  dependencies$dependencies <- lapply(dependencies$dependencies, unique)
-  dependencies
-}
-
 find_candidate_keys <- function(dependencies) {
   UseMethod("find_candidate_keys")
 }
