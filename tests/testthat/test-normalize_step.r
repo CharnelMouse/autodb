@@ -20,7 +20,7 @@ describe("normalize_step", {
     norm.df <- normalize_step.data.frame(df, dependencies)
     norm.DepDF <- normalize_step.DepDF(DepDF(dependencies, df))
     expect_identical(norm.df, norm.DepDF)
-    skip("needs two normalize approaches to be merged")
+    skip("normalize fix needed")
     expect_identical(length(norm.df), 1L)
   })
   it("correctly splits example data.frame for original make_indexes() test", {
@@ -247,7 +247,7 @@ describe("make_indexes", {
   expect_identical(new_dfs[[1]]$df[[colnames(new_dfs[[2]]$df)[1]]][8], val)
 
   # Make sure new column names are sorted
-  skip("wait until make_indexes working")
+  skip("wait until make_indexes implemented")
   expect_true(grepl(
     "hemisphere_month",
     paste(colnames(new_dfs[[1]]$df), collapse = "_"),

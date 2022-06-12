@@ -16,7 +16,7 @@ describe("normalize", {
     df <- data.frame(a = integer(), b = integer())
 
     norm.Dependencies <- normalize.Dependencies(dependencies, df)
-    skip("needs two normalize approaches to be merged")
+    skip("normalize fix needed")
     expect_identical(length(norm.Dependencies), 1L)
   })
   describe("Dependencies", {
