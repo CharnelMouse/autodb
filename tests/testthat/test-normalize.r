@@ -266,14 +266,6 @@ describe("make_indexes", {
 
   # Make sure new column names are sorted
   skip("wait until make_indexes implemented")
-  expect_true(grepl(
-    "hemisphere_month",
-    paste(colnames(new_dfs[[1]]$df), collapse = "_"),
-    fixed = TRUE
-  ))
-  expect_true(grepl(
-    "hemisphere_month",
-    paste(colnames(new_dfs[[2]]$df), collapse = "_"),
-    fixed = TRUE
-  ))
+  expect_true("hemisphere_month" %in% colnames(new_dfs[[1]]$df))
+  expect_true("hemisphere_month" %in% colnames(new_dfs[[2]]$df))
 })
