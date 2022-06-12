@@ -25,7 +25,7 @@ normalize_step.DepDF <- function(x) {
   # hierarchies.
   # This is a different ordering than normalize, since it doesn't resolve all
   # the partial dependencies before moving on to the transitive ones.
-
+  x$deps <- remove_implied_extroneous(x$deps)
   part_deps <- find_filtered_partial_deps(x$deps, x$df)
   if (length(part_deps) > 0) {
     new_depdfs <- split_for(x, part_deps)

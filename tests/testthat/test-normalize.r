@@ -1,4 +1,20 @@
 describe("normalize", {
+  it("removes extraneous dependencies", {
+    dependencies <- Dependencies(
+      list(a = character(), b = list("a"), c = list(c("a", "b"))),
+      primary_key = "a"
+    )
+    df <- data.frame(a = integer(), b = integer(), c = integer())
+    norm.dependencies <- normalize.Dependencies(dependencies, df)
+    expect_identical(length(norm.dependencies), 1L)
+    expect_identical(
+      norm.dependencies[[1]],
+      Dependencies(
+        dependencies = list(a = character(), b = list("a"), c = list("a")),
+        primary_key = "a"
+      )
+    )
+  })
   it("resolves a simple bijection with no splits, if given an index", {
     dependencies <- Dependencies(
       list(a = "b", b = "a"),
