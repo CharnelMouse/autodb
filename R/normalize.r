@@ -35,7 +35,7 @@ normalize.Dependencies <- function(x, df) {
   # After partial removal, tables are sorted by reverse order in which extracted
   # from parent table for partial dependencies, depth-first.
   # After transitive removal, same thing again.
-  x <- remove_implied_extroneous(x)
+  x <- remove_extraneous_attributes(x)
   no_part_deps <- remove_part_deps(x, df)
   no_trans_deps <- list()
   for (grp in no_part_deps)
@@ -197,12 +197,12 @@ tuple_relations.Dependencies <- function(dependencies) {
   result
 }
 
-remove_implied_extroneous <- function(dependencies) {
-  UseMethod("remove_implied_extroneous")
+remove_extraneous_attributes <- function(dependencies) {
+  UseMethod("remove_extraneous_attributes")
 }
 
 #' @export
-remove_implied_extroneous.Dependencies <- function(dependencies) {
+remove_extraneous_attributes.Dependencies <- function(dependencies) {
   # Removes all implied extroneous attributes from relations in self.
   # Example:
   #     A --> B
