@@ -190,7 +190,13 @@ name_dataframe <- function(depdf) {
 #   result += child.return_dfs()
 # return result
 
-DepDF <- function(deps, df, index = deps$primary_key, parent = NA_character_) {
+DepDF <- function(
+  deps,
+  df,
+  index = deps$primary_key,
+  parent = NA_character_,
+  children = character()
+) {
   UseMethod("DepDF")
 }
 
@@ -199,13 +205,14 @@ DepDF.Dependencies <- function(
   deps,
   df,
   index = deps$primary_key,
-  parent = NA_character_
+  parent = NA_character_,
+  children = character()
 ) {
   lst <- list(
     deps = deps,
     df = df,
     index = index,
-    children = character(),
+    children = children,
     parent = parent
   )
   class(lst) <- c("DepDF", class(lst))

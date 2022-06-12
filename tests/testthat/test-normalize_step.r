@@ -23,6 +23,77 @@ describe("normalize_step", {
     skip("needs two normalize approaches to be merged")
     expect_identical(length(norm.df), 1L)
   })
+  it("correctly splits example data.frame for original make_indexes() test", {
+    dic <- list(
+      id = c(
+        0, 1, 2, 3, 4,
+        5, 6, 7, 8, 9
+      ),
+      month = c(
+        'dec', 'dec', 'jul', 'jul', 'dec',
+        'jul', 'jul', 'jul', 'dec', 'jul'
+      ),
+      hemisphere = c(
+        'N', 'N', 'N', 'N', 'S',
+        'S', 'S', 'S', 'S', 'N'
+      ),
+      is_winter = c(
+        TRUE, TRUE, FALSE, FALSE, FALSE,
+        TRUE, TRUE, TRUE, FALSE, FALSE
+      )
+    )
+
+    df <- as.data.frame(dic)
+    deps = Dependencies(
+      dependencies = list(
+        id = list(),
+        month = list('id', c('hemisphere', 'is_winter')),
+        hemisphere = list(c('month', 'is_winter'), 'id'),
+        is_winter = list(c('month', 'hemisphere'), 'id')
+      ),
+      primary_key = 'id'
+    )
+
+    depdf <- DepDF(deps = deps, df = df, index = get_prim_key(deps))
+    new_dfs <- normalize_step(depdf)
+
+    expected_dfs <- list(
+      id = DepDF(
+        deps = Dependencies(
+          list(
+            id = list(),
+            month = list("id", c("hemisphere", "is_winter")),
+            hemisphere = list(c("month", "is_winter"), "id")
+          ),
+          primary_key = "id"
+        ),
+        df = df[, c("id", "month", "hemisphere")],
+        index = "id",
+        children = "month_hemisphere",
+        parent = NA_character_
+      ),
+      month_hemisphere = DepDF(
+        deps = Dependencies(
+          list(
+            month = list(c("hemisphere", "is_winter")),
+            hemisphere = list(c("month", "is_winter")),
+            is_winter = list(c("month", "hemisphere"))
+          ),
+          primary_key = c("month", "hemisphere")
+        ),
+        df = data.frame(
+          month = c("dec", "jul", "dec", "jul"),
+          hemisphere = c("N", "N", "S", "S"),
+          is_winter = c(TRUE, FALSE, FALSE, TRUE)
+        ),
+        index = c("month", "hemisphere"),
+        children = character(),
+        parent = "id"
+      )
+    )
+
+    expect_identical(new_dfs, expected_dfs)
+  })
   describe("Dependencies", {
     it("DepDF", {
       dic = list(
@@ -101,40 +172,52 @@ describe("normalize_step", {
   })
 })
 
-test_that("make_indexes", {
-  dic <- list(
-    id = c(
-      0, 1, 2, 3, 4,
-      5, 6, 7, 8, 9
+describe("make_indexes", {
+  new_dfs <- list(
+    id = DepDF(
+      deps = Dependencies(
+        list(
+          id = list(),
+          month = list("id", c("hemisphere", "is_winter")),
+          hemisphere = list(c("month", "is_winter"), "id")
+        ),
+        primary_key = "id"
+      ),
+      df = data.frame(
+        id = 0:9,
+        month = c(
+          "dec", "dec", "jul", "jul", "dec",
+          "jul", "jul", "jul", "dec", "jul"
+        ),
+        hemisphere = c(
+          "N", "N", "N", "N", "S",
+          "S", "S", "S", "S", "N"
+        )
+      ),
+      index = "id",
+      children = "month_hemisphere",
+      parent = NA_character_
     ),
-    month = c(
-      'dec', 'dec', 'jul', 'jul', 'dec',
-      'jul', 'jul', 'jul', 'dec', 'jul'
-    ),
-    hemisphere = c(
-      'N', 'N', 'N', 'N', 'S',
-      'S', 'S', 'S', 'S', 'N'
-    ),
-    is_winter = c(
-      TRUE, TRUE, FALSE, FALSE, FALSE,
-      TRUE, TRUE, TRUE, FALSE, FALSE
+    month_hemisphere = DepDF(
+      deps = Dependencies(
+        list(
+          month = list(c("hemisphere", "is_winter")),
+          hemisphere = list(c("month", "is_winter")),
+          is_winter = list(c("month", "hemisphere"))
+        ),
+        primary_key = c("month", "hemisphere")
+      ),
+      df = data.frame(
+        month = c("dec", "jul", "dec", "jul"),
+        hemisphere = c("N", "N", "S", "S"),
+        is_winter = c(TRUE, FALSE, FALSE, TRUE)
+      ),
+      index = c("month", "hemisphere"),
+      children = character(),
+      parent = "id"
     )
   )
 
-  df <- as.data.frame(dic)
-  deps = Dependencies(
-    dependencies = list(
-      id = list(),
-      month = list('id', c('hemisphere', 'is_winter')),
-      hemisphere = list(c('month', 'is_winter'), 'id'),
-      is_winter = list(c('month', 'hemisphere'), 'id')
-    ),
-    primary_key = 'id'
-  )
-
-  depdf <- DepDF(deps = deps, df = df, index = get_prim_key(deps))
-  new_dfs <- normalize_step(depdf)
-  depdf <- new_dfs[[1]]
   new_dfs <- make_indexes(new_dfs)
 
   mask <- (new_dfs[[2]]$df[['month']] == 'dec') &
