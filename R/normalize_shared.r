@@ -184,12 +184,12 @@ get_prim_key.Dependencies <- function(dependencies)
   #     prim_key (list[str]) : the primary key
   dependencies$primary_key
 
-remove_extraneous_attributes <- function(dependencies) {
+remove_extraneous_attributes <- function(x) {
   UseMethod("remove_extraneous_attributes")
 }
 
 #' @export
-remove_extraneous_attributes.Dependencies <- function(dependencies) {
+remove_extraneous_attributes.Dependencies <- function(x) {
   # Removes all implied extroneous attributes from relations in self.
   # Example:
   #     A --> B
@@ -197,7 +197,7 @@ remove_extraneous_attributes.Dependencies <- function(dependencies) {
   #     becomes
   #     A --> B
   #     A --> C
-  rels <- tuple_relations(dependencies)
+  rels <- tuple_relations(x)
   for (lr in rels) {
     lhs <- lr[[1]]
     rhs <- lr[[2]]
@@ -208,18 +208,38 @@ remove_extraneous_attributes.Dependencies <- function(dependencies) {
         y <- setdiff(y, attr)
       rels <- setdiff(rels, list(lr))
       rels <- c(rels, list(list(y, rhs)))
-      dependencies$dependencies[[rhs]] <- setdiff(
-        dependencies$dependencies[[rhs]],
+      x$dependencies[[rhs]] <- setdiff(
+        x$dependencies[[rhs]],
         list(lhs)
       )
-      dependencies$dependencies[[rhs]] <- c(
-        dependencies$dependencies[[rhs]],
+      x$dependencies[[rhs]] <- c(
+        x$dependencies[[rhs]],
         list(y)
       )
     }
   }
-  dependencies$dependencies <- lapply(dependencies$dependencies, unique)
-  dependencies
+  x$dependencies <- lapply(x$dependencies, unique)
+  x
+}
+
+#' @export
+remove_extraneous_attributes.list <- function(x) {
+  rels <- x
+  for (lr in x) {
+    lhs <- lr[[1]]
+    rhs <- lr[[2]]
+    y <- lhs
+    for (attr in lhs) {
+      y_ <- setdiff(y, attr)
+      if (rhs %in% find_closure(x, y_))
+        y <- setdiff(y, attr)
+      rels <- setdiff(rels, list(lr))
+      rels <- c(rels, list(list(y, rhs)))
+      x <- setdiff(x, list(list(lhs, rhs)))
+      x <- c(x, list(list(y, rhs)))
+    }
+  }
+  unique(x)
 }
 
 find_partial_deps <- function(dependencies) {

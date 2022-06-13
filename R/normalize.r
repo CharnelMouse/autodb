@@ -70,8 +70,9 @@ normalize.EntitySet <- function(x, accuracy) {
   )
 }
 
-normalize2 <- function(dependencies, df) {
-  remove_extraneous_attributes(dependencies) |>
+normalize_dependencies <- function(dependencies) {
+  dependencies |>
+    remove_extraneous_attributes() |>
     remove_extraneous_dependencies() |>
     partition_dependencies() |>
     merge_equivalent_keys() |>
@@ -80,45 +81,35 @@ normalize2 <- function(dependencies, df) {
     construct_relations()
 }
 
-remove_extraneous_dependencies <- function(dependencies) {
-  old_deps <- NULL
-  new_deps <- dependencies$dependencies
-  while (!identical(old_deps, new_deps)) {
-    old_deps <- new_deps
-    for (n in seq_along(new_deps)) {
-      LHSs <- new_deps[[n]]
-      RHS <- names(new_deps)[n]
-      other_deps <- new_deps[-n]
-      rem_left <- rep(FALSE, length(LHSs))
-      for (m in seq_along(LHSs)) {
-        LHS <- LHSs[[m]]
-        closure <- find_closure(
-          tuple_relations(Dependencies(c(
-            other_deps,
-            stats::setNames(list(LHSs[-m][!rem_left[-m]]), RHS)
-          ))),
-          LHS
-        )
-        rem_left[m] <- (RHS %in% closure)
-      }
-      new_deps[[n]] <- LHSs[!rem_left]
+remove_extraneous_dependencies <- function(relations) {
+  old_rels <- NULL
+  new_rels <- relations
+  while (!identical(old_rels, new_rels)) {
+    old_rels <- new_rels
+    rem <- rep(FALSE, length(new_rels))
+    for (n in seq_along(new_rels)) {
+      LHS <- new_rels[[n]][[1]]
+      RHS <- new_rels[[n]][[2]]
+      other_rels <- new_rels[-n]
+      other_rem <- rem[-n]
+      closure <- find_closure(other_rels[!other_rem], LHS)
+      rem[n] <- (RHS %in% closure)
     }
+    new_rels <- new_rels[!rem]
   }
-  Dependencies(new_deps, primary_key = dependencies$primary_key)
+  new_rels
 }
 
-partition_dependencies <- function(dependencies) {
-  tr <- tuple_relations(dependencies)
-  LHS_list <- lapply(tr, `[[`, 1)
+partition_dependencies <- function(relations) {
+  LHS_list <- lapply(relations, `[[`, 1)
   LHSs <- unique(LHS_list)
   partition <- list()
   for (LHS in LHSs) {
     matches <- vapply(LHS_list, identical, logical(1), LHS)
-    partition <- c(partition, list(tr[matches]))
+    partition <- c(partition, list(relations[matches]))
   }
   list(
-    dependencies = dependencies,
-    relations = tr,
+    relations = relations,
     partition = partition,
     LHSs = LHSs
   )
@@ -133,7 +124,6 @@ merge_equivalent_keys <- function(dep_partition) {
       keys = lapply(LHSs, list),
       bijections = list()
     ))
-  dependencies <- dep_partition$dependencies
   relations <- dep_partition$relations
 
   keys <- LHSs

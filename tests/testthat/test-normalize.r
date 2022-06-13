@@ -101,26 +101,25 @@ describe("normalize", {
   })
 })
 
-describe("normalize2", {
+describe("normalize_dependencies", {
   it("removes extraneous attributes", {
-    dependencies <- Dependencies(
-      list(a = list(), b = list("a"), c = list(c("a", "b"))),
-      primary_key = "a"
+    dependencies <- list(
+      list("a", "b"),
+      list(c("a", "b"), "c")
     )
-    df <- data.frame(a = integer(), b = integer(), c = integer())
-    norm.dependencies <- normalize2(dependencies, df)
+    norm.dependencies <- normalize_dependencies(dependencies)
     expect_identical(
       norm.dependencies,
       list(list(attrs = c("a", "b", "c"), keys = list("a")))
     )
   })
   it("removes extraneous dependencies", {
-    dependencies <- Dependencies(
-      list(a = list(), b = list("a"), c = list("a", "b")),
-      primary_key = "a"
+    dependencies <- list(
+      list("a", "b"),
+      list("a", "c"),
+      list("b", "c")
     )
-    df <- data.frame(a = integer(), b = integer(), c = integer())
-    norm.dependencies <- normalize2(dependencies, df)
+    norm.dependencies <- normalize_dependencies(dependencies)
     expect_identical(
       norm.dependencies,
       list(
@@ -130,11 +129,13 @@ describe("normalize2", {
     )
   })
   it("merges equivalent keys", {
-    dependencies <- Dependencies(
-      list(a = list("d"), b = list("d"), c = list(), d = list("a", c("b", "c")))
+    dependencies <- list(
+      list("d", "a"),
+      list("d", "b"),
+      list("a", "d"),
+      list(c("b", "c"), "d")
     )
-    df <- data.frame(a = integer(), b = integer(), c = integer())
-    norm.dependencies <- normalize2(dependencies, df)
+    norm.dependencies <- normalize_dependencies(dependencies)
     expect_identical(
       norm.dependencies,
       list(
@@ -144,28 +145,23 @@ describe("normalize2", {
     )
   })
   it("can handle basic bijections", {
-    # A -> C, B -> C, A -> D, B -> F, D -> E, F -> E
-    # => A <-> BCDF, D -> E, F -> E
-    dependencies <- Dependencies(list(
-      a = list("b"),
-      b = list("a"),
-      c = list("a", "b"),
-      d = list("a"),
-      e = list("d", "f"),
-      f = list("b")
-    ))
-    df <- data.frame(
-      a = integer(),
-      b = integer(),
-      c = integer(),
-      d = integer(),
-      e = integer()
+    # A -> B, B -> A, A -> C, B -> C, A -> D, B -> F, D -> E, F -> E
+    # => A <-> B, A -> CDF, D -> E, F -> E
+    dependencies <- list(
+      list("a", "b"),
+      list("b", "a"),
+      list("a", "c"),
+      list("b", "c"),
+      list("a", "d"),
+      list("b", "f"),
+      list("d", "e"),
+      list("f", "e")
     )
-    norm.dependencies <- normalize2(dependencies, df)
+    norm.dependencies <- normalize_dependencies(dependencies)
     expect_identical(
       norm.dependencies,
       list(
-        list(attrs = c("b", "a", "c", "f", "d"), keys = list("b", "a")),
+        list(attrs = c("a", "b", "d", "c", "f"), keys = list("a", "b")),
         list(attrs = c("d", "e"), keys = list("d")),
         list(attrs = c("f", "e"), keys = list("f"))
       )
@@ -173,23 +169,22 @@ describe("normalize2", {
   })
   describe("previous normalize tests", {
     it("resolves a simple bijection with no splits, if given an index", {
-      dependencies <- Dependencies(
-        list(a = "b", b = "a"),
-        primary_key = "a"
+      dependencies <- list(
+        list("a", "b"),
+        list("b", "a")
       )
-      df <- data.frame(a = integer(), b = integer())
-      norm <- normalize2(dependencies, df)
+      norm <- normalize_dependencies(dependencies)
       expect_identical(length(norm), 1L)
       norm1 <- norm[[1]]
       expect_setequal(norm1$attrs, c("a", "b"))
       expect_setequal(norm1$keys, list("a", "b"))
     })
     it("resolves a simple bijection with no splits, if given no index", {
-      dependencies <- Dependencies(
-        list(a = "b", b = "a")
+      dependencies <- list(
+        list("a", "b"),
+        list("b", "a")
       )
-      df <- data.frame(a = integer(), b = integer())
-      norm <- normalize2(dependencies, df)
+      norm <- normalize_dependencies(dependencies)
       expect_identical(length(norm), 1L)
       norm1 <- norm[[1]]
       expect_setequal(norm1$attrs, c("a", "b"))
@@ -199,27 +194,12 @@ describe("normalize2", {
       it("original test", {
         # F->D, ABCD->E, AB->F
         # => F->D, ABC->E, AB->F
-        dep_dic <- list(
-          A = list(),
-          B = list(),
-          C = list(),
-          D = list("F"),
-          E = list(c("A", "B", "C", "D")),
-          F = list(c("A", "B"))
+        dep <- list(
+          list("F", "D"),
+          list(c("A", "B", "C", "D"), "E"),
+          list(c("A", "B"), "F")
         )
-        dep <- Dependencies(
-          dependencies = dep_dic,
-          primary_key = c("A", "B", "C")
-        )
-        df <- data.frame(
-          A = integer(),
-          B = integer(),
-          C = integer(),
-          D = integer(),
-          E = integer(),
-          F = integer()
-        )
-        new <- normalize2(dep, df)
+        new <- normalize_dependencies(dep)
         expected <- list(
           list(attrs = c("A", "B", "C", "E"), keys = list(c("A", "B", "C"))),
           list(attrs = c("A", "B", "F"), keys = list(c("A", "B"))),
