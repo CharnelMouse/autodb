@@ -27,10 +27,22 @@ dfd <- function(df, accuracy, index = NA, progress = FALSE) {
   partitions <- list()
   column_names <- colnames(df)
   dependencies <- stats::setNames(rep(list(list()), ncol(df)), column_names)
-  for (i in column_names) {
+  fixed <- character()
+  nonfixed <- column_names
+  for (i in seq_along(column_names)) {
+    attr <- column_names[i]
+    if (progress)
+      cat(paste("checking if", attr, "is fixed\n"))
+    if (all(is.na(df[[attr]])) || all(df[[attr]] == df[[attr]][1])) {
+      fixed <- c(fixed, attr)
+      nonfixed <- setdiff(nonfixed, attr)
+      dependencies[[attr]] <- as.list(setdiff(column_names, attr))
+    }
+  }
+  for (i in nonfixed) {
     if (progress)
       cat(paste("dependent", i, "\n"))
-    lhss <- find_LHSs(i, column_names, df, partitions, accuracy)
+    lhss <- find_LHSs(i, nonfixed, df, partitions, accuracy)
     dependencies[[i]] <- c(dependencies[[i]], lhss)
   }
   dependencies
