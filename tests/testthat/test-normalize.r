@@ -171,6 +171,64 @@ describe("normalize2", {
       )
     )
   })
+  describe("previous normalize tests", {
+    it("resolves a simple bijection with no splits, if given an index", {
+      dependencies <- Dependencies(
+        list(a = "b", b = "a"),
+        primary_key = "a"
+      )
+      df <- data.frame(a = integer(), b = integer())
+      norm <- normalize2(dependencies, df)
+      expect_identical(length(norm), 1L)
+      norm1 <- norm[[1]]
+      expect_setequal(norm1$attrs, c("a", "b"))
+      expect_setequal(norm1$keys, list("a", "b"))
+    })
+    it("resolves a simple bijection with no splits, if given no index", {
+      dependencies <- Dependencies(
+        list(a = "b", b = "a")
+      )
+      df <- data.frame(a = integer(), b = integer())
+      norm <- normalize2(dependencies, df)
+      expect_identical(length(norm), 1L)
+      norm1 <- norm[[1]]
+      expect_setequal(norm1$attrs, c("a", "b"))
+      expect_setequal(norm1$keys, list("a", "b"))
+    })
+    describe("Dependencies", {
+      it("original test", {
+        # F->D, ABCD->E, AB->F
+        # => F->D, ABC->E, AB->F
+        dep_dic <- list(
+          A = list(),
+          B = list(),
+          C = list(),
+          D = list("F"),
+          E = list(c("A", "B", "C", "D")),
+          F = list(c("A", "B"))
+        )
+        dep <- Dependencies(
+          dependencies = dep_dic,
+          primary_key = c("A", "B", "C")
+        )
+        df <- data.frame(
+          A = integer(),
+          B = integer(),
+          C = integer(),
+          D = integer(),
+          E = integer(),
+          F = integer()
+        )
+        new <- normalize2(dep, df)
+        expected <- list(
+          list(attrs = c("A", "B", "C", "E"), keys = list(c("A", "B", "C"))),
+          list(attrs = c("A", "B", "F"), keys = list(c("A", "B"))),
+          list(attrs = c("F", "D"), keys = list("F"))
+        )
+        expect_setequal(new, expected)
+      })
+    })
+  })
 })
 
 test_that("find_most_comm", {
