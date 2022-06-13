@@ -101,6 +101,78 @@ describe("normalize", {
   })
 })
 
+describe("normalize2", {
+  it("removes extraneous attributes", {
+    dependencies <- Dependencies(
+      list(a = list(), b = list("a"), c = list(c("a", "b"))),
+      primary_key = "a"
+    )
+    df <- data.frame(a = integer(), b = integer(), c = integer())
+    norm.dependencies <- normalize2(dependencies, df)
+    expect_identical(
+      norm.dependencies,
+      list(list(attrs = c("a", "b", "c"), keys = list("a")))
+    )
+  })
+  it("removes extraneous dependencies", {
+    dependencies <- Dependencies(
+      list(a = list(), b = list("a"), c = list("a", "b")),
+      primary_key = "a"
+    )
+    df <- data.frame(a = integer(), b = integer(), c = integer())
+    norm.dependencies <- normalize2(dependencies, df)
+    expect_identical(
+      norm.dependencies,
+      list(
+        list(attrs = c("a", "b"), keys = list("a")),
+        list(attrs = c("b", "c"), keys = list("b"))
+      )
+    )
+  })
+  it("merges equivalent keys", {
+    dependencies <- Dependencies(
+      list(a = list("d"), b = list("d"), c = list(), d = list("a", c("b", "c")))
+    )
+    df <- data.frame(a = integer(), b = integer(), c = integer())
+    norm.dependencies <- normalize2(dependencies, df)
+    expect_identical(
+      norm.dependencies,
+      list(
+        list(attrs = c("d", "a", "b"), keys = list("d", "a")),
+        list(attrs = c("b", "c", "d"), keys = list(c("b", "c")))
+      )
+    )
+  })
+  it("can handle basic bijections", {
+    # A -> C, B -> C, A -> D, B -> F, D -> E, F -> E
+    # => A <-> BCDF, D -> E, F -> E
+    dependencies <- Dependencies(list(
+      a = list("b"),
+      b = list("a"),
+      c = list("a", "b"),
+      d = list("a"),
+      e = list("d", "f"),
+      f = list("b")
+    ))
+    df <- data.frame(
+      a = integer(),
+      b = integer(),
+      c = integer(),
+      d = integer(),
+      e = integer()
+    )
+    norm.dependencies <- normalize2(dependencies, df)
+    expect_identical(
+      norm.dependencies,
+      list(
+        list(attrs = c("b", "a", "c", "f", "d"), keys = list("b", "a")),
+        list(attrs = c("d", "e"), keys = list("d")),
+        list(attrs = c("f", "e"), keys = list("f"))
+      )
+    )
+  })
+})
+
 test_that("find_most_comm", {
   deps <- Dependencies(
     dependencies = list(),

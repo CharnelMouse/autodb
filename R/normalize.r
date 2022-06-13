@@ -70,6 +70,156 @@ normalize.EntitySet <- function(x, accuracy) {
   )
 }
 
+normalize2 <- function(dependencies, df) {
+  remove_extraneous_attributes(dependencies) |>
+    remove_extraneous_dependencies() |>
+    partition_dependencies() |>
+    merge_equivalent_keys() |>
+    remove_transitive_dependencies() |>
+    add_bijections() |>
+    construct_relations()
+}
+
+remove_extraneous_dependencies <- function(dependencies) {
+  old_deps <- NULL
+  new_deps <- dependencies$dependencies
+  while (!identical(old_deps, new_deps)) {
+    old_deps <- new_deps
+    for (n in seq_along(new_deps)) {
+      LHSs <- new_deps[[n]]
+      RHS <- names(new_deps)[n]
+      other_deps <- new_deps[-n]
+      rem_left <- rep(FALSE, length(LHSs))
+      for (m in seq_along(LHSs)) {
+        LHS <- LHSs[[m]]
+        closure <- find_closure(
+          tuple_relations(Dependencies(c(
+            other_deps,
+            stats::setNames(list(LHSs[-m][!rem_left[-m]]), RHS)
+          ))),
+          LHS
+        )
+        rem_left[m] <- (RHS %in% closure)
+      }
+      new_deps[[n]] <- LHSs[!rem_left]
+    }
+  }
+  Dependencies(new_deps, primary_key = dependencies$primary_key)
+}
+
+partition_dependencies <- function(dependencies) {
+  tr <- tuple_relations(dependencies)
+  LHS_list <- lapply(tr, `[[`, 1)
+  LHSs <- unique(LHS_list)
+  partition <- list()
+  for (LHS in LHSs) {
+    matches <- vapply(LHS_list, identical, logical(1), LHS)
+    partition <- c(partition, list(tr[matches]))
+  }
+  list(
+    dependencies = dependencies,
+    relations = tr,
+    partition = partition,
+    LHSs = LHSs
+  )
+}
+
+merge_equivalent_keys <- function(dep_partition) {
+  partition <- dep_partition$partition
+  LHSs <- dep_partition$LHSs
+  if (length(partition) <= 1)
+    return(list(
+      partition = partition,
+      keys = lapply(LHSs, list),
+      bijections = list()
+    ))
+  dependencies <- dep_partition$dependencies
+  relations <- dep_partition$relations
+
+  keys <- LHSs
+  bijection_rels <- list()
+  for (n in seq.int(length(partition) - 1)) {
+    grp <- partition[[n]]
+    if (length(grp) > 0) {
+      LHS <- LHSs[[n]]
+      key1 <- keys[[n]]
+      for (m in (n + 1):length(partition)) {
+        grp2 <- partition[[m]]
+        if (length(grp2) > 0) {
+          LHS2 <- LHSs[[m]]
+          key2 <- keys[[m]]
+          closure1 <- find_closure(relations, LHS)
+          closure2 <- find_closure(relations, LHS2)
+
+          if (all(key1 %in% closure2) && all(key2 %in% closure1)) {
+
+            new_bijections <- list()
+            new_bijections <- c(
+              new_bijections,
+              list(
+                list(key1, key2),
+                list(key2, key1)
+              )
+            )
+            bijection_rels <- c(bijection_rels, new_bijections)
+
+            obsolete <- vapply(
+              partition[[m]],
+              \(r) r[[2]] %in% c(key1, key2),
+              logical(1)
+            )
+            partition[[n]] <- unique(c(
+              partition[[n]],
+              lapply(partition[[m]][!obsolete], \(r) list(key1, r[[2]]))
+            ))
+
+            partition[[m]] <- list()
+          }
+        }
+      }
+    }
+  }
+  nonempty <- lengths(partition) > 0
+  list(
+    partition = partition[nonempty],
+    keys = keys[nonempty],
+    bijections = bijection_rels
+  )
+}
+
+remove_transitive_dependencies <- function(lst) {
+  lst
+}
+
+add_bijections <- function(lst) {
+  partition <- lst$partition
+  keys <- lst$keys
+  bijections <- lst$bijections
+  for (n in seq_along(keys)) {
+    key <- keys[[n]]
+    matches <- vapply(
+      bijections,
+      \(b) identical(key, b[[1]]) || identical(key, b[[2]]),
+      logical(1)
+    )
+    partition[[n]] <- c(partition[[n]], bijections[matches])
+    bijections <- bijections[!matches]
+  }
+  partition
+}
+
+construct_relations <- function(partition) {
+  lapply(
+    partition,
+    \(rels) {
+      LHSs <- unique(lapply(rels, `[[`, 1))
+      RHSs <- unique(vapply(rels, `[[`, character(1), 2))
+      all_attrs <- union(unlist(LHSs), RHSs)
+      list(attrs = all_attrs, keys = LHSs)
+    }
+  )
+}
+
 Dependencies <- function(dependencies, primary_key = NULL) {
   lst <- list(
     dependencies = dependencies,
