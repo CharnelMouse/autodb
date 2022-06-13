@@ -26,23 +26,11 @@ dfd <- function(df, accuracy, index = NA, progress = FALSE) {
   df <- data.frame(lapply(df, \(x) as.integer(factor(x))))
   partitions <- list()
   column_names <- colnames(df)
-  non_uniq <- column_names
-  unique_attrs <- list()
-  dependencies <- stats::setNames(rep(list(list()), ncol(df)), colnames(df))
-  for (i in seq_along(column_names)) {
-    attr <- column_names[i]
-    if (progress)
-      cat(paste("checking if", attr, "is unique\n"))
-    if (!anyDuplicated(df[[attr]]) || (!is.na(index) && attr == index)) {
-      unique_attrs <- c(unique_attrs, attr)
-      non_uniq <- setdiff(non_uniq, attr)
-      dependencies[-i] <- lapply(dependencies[-i], c, list(attr))
-    }
-  }
-  for (i in non_uniq) {
+  dependencies <- stats::setNames(rep(list(list()), ncol(df)), column_names)
+  for (i in column_names) {
     if (progress)
       cat(paste("dependent", i, "\n"))
-    lhss <- find_LHSs(i, non_uniq, df, partitions, accuracy)
+    lhss <- find_LHSs(i, column_names, df, partitions, accuracy)
     dependencies[[i]] <- c(dependencies[[i]], lhss)
   }
   dependencies
@@ -388,8 +376,9 @@ generate_next_seeds <- function(max_non_deps, min_deps, lhs_attrs, nodes) {
       nfd_compliment <- setdiff(lhs_attrs, nfd)
       if (length(seeds) == 0)
         seeds <- as.list(nfd_compliment)
-      else
-        seeds <- cross_intersection(seeds, nfd_compliment)
+      else {
+        seeds <- cross_intersection(seeds, nfd_compliment, lhs_attrs)
+      }
     }
     # MY NOTES: minimise new deps here
   }
@@ -401,11 +390,12 @@ generate_next_seeds <- function(max_non_deps, min_deps, lhs_attrs, nodes) {
   seeds[not_min_superset]
 }
 
-cross_intersection <- function(seeds, new_set) {
+cross_intersection <- function(seeds, new_set, lhs_attrs) {
   new_seeds <- list()
   for (seed in seeds) {
     for (new_el in new_set) {
-      sd <- sort(unique(c(seed, new_el)))
+      sd <- unique(c(seed, new_el))
+      sd <- sd[order(match(sd, lhs_attrs))]
       new_seeds <- c(new_seeds, list(sd))
     }
   }

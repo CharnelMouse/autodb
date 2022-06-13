@@ -60,6 +60,11 @@ describe("dfd", {
       shrink.limit = Inf
     )
   })
+  it("gives dependencies for unique attributes (in case don't want them as key)", {
+    df <- data.frame(A = 1:3, B = c(1, 1, 2), C = c(1, 2, 2))
+    deps <- dfd(df, 1)
+    expect_identical(deps$A, list(c("B", "C")))
+  })
   it("finds dependencies for the team data in test-normalize", {
     df <- data.frame(
       team = c(
@@ -92,6 +97,54 @@ describe("dfd", {
       state = list('team', c('player_name', 'jersey_num'), 'city')
     )
     expect_identical(lengths(deps), lengths(expected_deps))
+    expect_superset_of_dependency(deps, expected_deps)
+  })
+  it("finds dependencies for the team data in original's edit demo", {
+    df <- data.frame(
+      team = c("tigers", "elephants", "foxes", "snakes", "dolphins", "eagles"),
+      city = c("boston", "chicago", "miami", "austin", "honolulu", "houston"),
+      state = c("MA", "IL", "FL", "TX", "HI", "TX"),
+      roster_size = c(20L, 21L, 20L, 20L, 19L, 21L)
+    )
+    deps <- dfd(df, 1)
+    expected_deps <- list(
+      team = list("city"),
+      city = list("team"),
+      state = list("team", "city"),
+      roster_size = list("team", "city")
+    )
+    expect_superset_of_dependency(deps, expected_deps)
+  })
+  it("finds dependencies for Wikipedia 1NF->2NF->3NF example", {
+    df <- data.frame(
+      Title = rep(
+        c(
+          "Beginning MySQL Database Design and Optimization",
+          "The Relational Model for Database Management: Version 2"
+        ),
+        each = 2
+      ),
+      Format = c("Hardcover", "E-book", "E-book", "Paperback"),
+      Author = rep(c("Chad Russell", "E.F. Codd"), each = 2),
+      Author_Nationality = rep(c("American", "British"), each = 2),
+      Price = c(4999L, 2234L, 1388L, 3999L),
+      Thickness = "Thick",
+      Genre_ID = rep(1:2, each = 2),
+      Genre_Name = rep(c("Tutorial", "Popular science"), each = 2),
+      Publisher_ID = rep(1:2, each = 2)
+    )
+    deps <- dfd(df, 1)
+    expected_deps <- list(
+      Title = list(),
+      Format = list(),
+      Author = list("Title"),
+      Author_Nationality = list("Author"),
+      Price = list(c("Title", "Format")),
+      Thickness = list("Title"),
+      Genre_ID = list("Title"),
+      Genre_Name = list("Genre_ID"),
+      Publisher_ID = list("Title")
+    )
     expect_superset_of_dependency(deps, expected_deps)
   })
 })
