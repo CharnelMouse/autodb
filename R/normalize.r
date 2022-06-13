@@ -2,47 +2,6 @@ normalize <- function(x, ...) {
   UseMethod("normalize")
 }
 
-#' Normalizes dependency relationships
-#'
-#' Normalizes the dependency relationships in dependencies into new
-#' groups by breaking up all partial and transitive dependencies.
-#'
-#' @param x a Dependencies object, containing the dependencies to be normalised.
-#' @inheritParams auto_entityset
-#'
-#' @return a list of Dependencies objects, containing the normalised
-#'   dependencies.
-#' @export
-normalize.Dependencies <- function(x, df) {
-  # Fully breaks up the dependencies, so all normalized instead of just the
-  # original.
-  # Work flow:
-  # - remove extroneous LHS attributes
-  # - remove partial dependencies
-  #   - split_then_remove on all found partial dependencies
-  #     - find most common set of LHS attributes in partial deps, prefer shortest
-  #     - split_on_dep with most common on Dependencies
-  #     - remove partial dependencies in resulting parent, then result child, concatenate
-  #     - return resulting Dependencies list
-  # - for each non-partial dependency in list, remove transitive deps
-  #   - split_then_remove on all found transitive dependencies
-  #     - find most common set of LHS attributes in transitive deps, prefer shortest
-  #     - split_on_dep with most common on Dependencies
-  #     - remove transitive dependencies in resulting parent, then result child, concatenate
-  #     - return resulting Dependencies list
-  #   - concatenate lists
-  # - return resulting Dependencies list
-  # After partial removal, tables are sorted by reverse order in which extracted
-  # from parent table for partial dependencies, depth-first.
-  # After transitive removal, same thing again.
-  x <- remove_extraneous_attributes(x)
-  no_part_deps <- remove_part_deps(x, df)
-  no_trans_deps <- list()
-  for (grp in no_part_deps)
-    no_trans_deps <- c(no_trans_deps, remove_trans_deps(grp, df))
-  no_trans_deps
-}
-
 #' Normalise a given entity set
 #'
 #' @param x an EntitySet object, containing a single data.frame to be
@@ -70,6 +29,19 @@ normalize.EntitySet <- function(x, accuracy) {
   )
 }
 
+#' Normalizes dependency relationships
+#'
+#' Normalizes the dependency relationships in dependencies into new
+#' groups by breaking up all partial and transitive dependencies.
+#'
+#' @param dependencies a list of functional dependencies, each composed of a
+#'   list, with an element for the left-hand size and one for the right-hand
+#'   side.
+#'
+#' @return a list of lists. Each such list contains two named elements:
+#'   \code{attrs} contains the normalised dependencies, and \code{keys} contains
+#'   a list of candidate keys.
+#' @export
 normalize_dependencies <- function(dependencies) {
   dependencies |>
     remove_extraneous_attributes() |>
