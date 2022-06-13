@@ -175,8 +175,8 @@ construct_relations <- function(partition) {
     partition,
     \(rels) {
       LHSs <- unique(lapply(rels, `[[`, 1))
-      RHSs <- unique(vapply(rels, `[[`, character(1), 2))
-      all_attrs <- union(unlist(LHSs), RHSs)
+      RHSs <- unique(lapply(rels, `[[`, 2))
+      all_attrs <- union(unlist(LHSs), unlist(RHSs))
       list(attrs = all_attrs, keys = LHSs)
     }
   )
