@@ -1,109 +1,41 @@
-normalize_step <- function(x, ...) {
-  UseMethod("normalize_step")
-}
-
-#' @export
-normalize_step.DepDF <- function(x) {
-  # Only splits off a descendent as needed, doesn't normalize it too.
-  # Additionally, stops after the first split, e.g. splitting for partial
-  # dependencies might leave transitive dependencies in the main data.frame.
-  #
-  # Work flow:
-  # - split_for first-found partial or transitive dependencies
-  #   - find most common set of LHS attributes, priority to shorter ones
-  #   - split_up on most common set
-  #     - split_on_dep with most common set and DepDF's deps
-  #     - form child DepDF using child deps (form_child for df)
-  #     - assign as child in parent
-  #     - remove attributes in parent df not in parent dependency LHSs
-  #     - normalize_step on parent, then on child, concatenate resulting named lists
-  #   - check for / remove duplicate DepDF names
-  #   - return named DepDF list
-  # - return named DepDF list
-  # This work flow doesn't remove extroneuous attributes, and returns children
-  # in reverse order of when extracted from parent, with depth-first ordering of
-  # hierarchies.
-  # This is a different ordering than normalize, since it doesn't resolve all
-  # the partial dependencies before moving on to the transitive ones.
-  x$deps <- remove_extraneous_attributes(x$deps)
-  part_deps <- find_filtered_partial_deps(x$deps, x$df)
-  if (length(part_deps) > 0) {
-    new_depdfs <- split_for(x, part_deps)
-    return(new_depdfs)
-  }
-  trans_deps <- find_filtered_trans_deps(x$deps, x$df)
-  if (length(trans_deps) > 0) {
-    new_depdfs <- split_for(x, trans_deps)
-    return(new_depdfs)
-  }
-  stats::setNames(list(x), name_dataframe(x))
-}
-
 #' Normalise a data.frame based on given dependencies
 #'
-#' @param x a data.frame, containing the data to be normalised.
+#' @param df a data.frame, containing the data to be normalised.
 #' @param dependencies a Dependencies object, giving the dependencies to
 #'   determine normalisation with.
 #'
 #' @return a list of data.frames, containing the normalised data.
 #' @export
-normalize_step.data.frame <- function(x, dependencies) {
-  # Normalizes a dataframe based on the dependencies given. Keys for the newly
-  # created DataFrames can only be columns that are strings, ints, or
-  # categories. Keys are chosen according to the priority:
-  #   1) shortest lenghts 2) has "id" in some form in the name of an attribute
-  # 3) has attribute furthest to left in the table
-  #
-  # Arguments:
-  #   df (pd.DataFrame) : dataframe to split up
-  # dependencies (Dependencies) : the dependencies to be normalized
-  #
-  # Returns:
-  #   new_dfs (list[DataFrame]) : list of new dataframes
-  depdf <- DepDF(dependencies, x, get_prim_key(dependencies))
-  df_list <- normalize_step.DepDF(depdf)
-  df_list
-}
-
-split_up <- function(depdf, split_on) {
-  UseMethod("split_up")
-}
-
-#' @export
-split_up.DepDF <- function(depdf, split_on) {
-  # Breaks off a depdf and forms its child. Recursively calls normalize on
-  # the original depdf, and its newly formed child.
-  #
-  # Arguments:
-  #     split_on (list[str]) : attributes to split the dataframe on
-  #     depdf (DepDF) : the depdf ot split
-  pc <- split_on_dep(split_on, depdf$deps)
-  parent_deps <- pc[[1]]
-  child_deps <- pc[[2]]
-  child <- DepDF(
-    deps = child_deps,
-    df = form_child(depdf$df, child_deps),
-    index = split_on,
-    parent = name_dataframe(depdf)
+normalize_dataframe <- function(df, dependencies) {
+  norm_deps <- normalize_dependencies(dependencies)
+  depdf_list <- list()
+  reference_mat <- outer(
+    lapply(norm_deps, `[[`, "attrs"),
+    lapply(norm_deps, `[[`, "keys"),
+    Vectorize(\(from_attrs, to_keys) {
+      any(vapply(to_keys, \(key) all(key %in% from_attrs), logical(1)))
+    })
   )
-  depdf$deps <- parent_deps
-  depdf$df <- depdf$df[
-    ,
-    names(parent_deps$dependencies)
-  ]
-  depdf$children <- c(depdf$children, name_dataframe(child))
-  c(
-    normalize_step(depdf),
-    normalize_step(child)
-  )
-}
-
-split_for <- function(depdf, unwanted_deps) {
-  split_on <- find_most_comm(unwanted_deps, depdf$deps, depdf$df)
-  depdfs <- split_up(depdf, split_on)
-  nms <- vapply(depdfs, name_dataframe, character(1))
-  stopifnot(!anyDuplicated(nms))
-  stats::setNames(depdfs, make.unique(nms))
+  indexes <- lapply(lapply(norm_deps, `[[`, "keys"), choose_index, df)
+  for (n in seq_along(norm_deps)) {
+    norm_dep_set <- norm_deps[[n]]
+    attrs <- norm_dep_set$attrs
+    sorted_attrs <- attrs[order(match(attrs, names(df)))]
+    keys <- norm_dep_set$keys[order(match(norm_dep_set$keys, names(df)))]
+    new_depdf <- list(
+      df = unique(df[, sorted_attrs]),
+      keys = keys,
+      index = indexes[[n]]
+    )
+    depdf_list <- c(depdf_list, list(new_depdf))
+  }
+  relation_names <- vapply(depdf_list, name_dataframe, character(1))
+  for (n in seq_along(norm_deps)) {
+    refs <- reference_mat[n, ]
+    ref_names <- relation_names[setdiff(which(refs), n)]
+    depdf_list[[n]]$children <- ref_names
+  }
+  stats::setNames(depdf_list, relation_names)
 }
 
 drop_primary_dups <- function(df, prim_key) {
@@ -146,19 +78,6 @@ Mode <- function(x) {
   uniqs <- unique(x)
   tabs <- tabulate(match(x, uniqs))
   uniqs[[which.max(tabs)]]
-}
-
-form_child <- function(df, deps) {
-  # Returns a new dataframe based off of the dependencies in deps.
-  #
-  # Arguments:
-  #     df (pd.DataFrame) : dataframe to create new dataframe from
-  #     deps (Dependencies) : dependencies to base new dataframe off of
-  attrs <- names(deps$dependencies)
-  drops <- setdiff(colnames(df), attrs)
-  new_df <- df[, setdiff(colnames(df), drops)]
-  new_df <- drop_primary_dups(new_df, get_prim_key(deps))
-  new_df
 }
 
 name_dataframe <- function(depdf) {

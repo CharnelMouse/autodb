@@ -4,19 +4,13 @@
 \alias{dfd}
 \title{DFD algorithm}
 \usage{
-dfd(df, accuracy, index = NA, progress = FALSE)
+dfd(df, accuracy, progress = FALSE)
 }
 \arguments{
 \item{df}{a data.frame, the relation to evaluate.}
 
 \item{accuracy}{a numeric in (0, 1]: the accuracy threshold required in order
 to conclude a dependency.}
-
-\item{index}{a character, the name of the attribute in the
-pre-determined index for the relation. Defaults to NA for no index. This
-attribute is marked as unique on the rows, and therefore a determinant of
-the other attributes. It is excluded when searching for functional
-dependencies.}
 
 \item{progress}{a logical, for whether to display progress to the user.}
 }

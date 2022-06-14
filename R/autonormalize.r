@@ -4,7 +4,7 @@
 #'
 #' @return A list of dependencies.
 #' @export
-find_dependencies <- function(df, accuracy, index = NA) {
+find_dependencies <- function(df, accuracy) {
   # Finds dependencies within dataframe df with the DFD search algorithm.
   # Returns the dependencies as a Dependencies object.
   #
@@ -19,16 +19,7 @@ find_dependencies <- function(df, accuracy, index = NA) {
   #
   #   dependencies (Dependencies) : the dependencies found in the data
   # within the contraints provided
-  deps <- Dependencies(
-    dependencies = dfd(df, accuracy, index),
-    primary_key = index
-  )
-  if (is.na(index) || is.null(index)) {
-    prim_key <- choose_index(find_candidate_keys(deps), df)
-    deps$primary_key <- prim_key
-  }else
-    deps$primary_key <- index
-  deps
+  dfd(df, accuracy)
 }
 
 #' Creates a normalized entity set from a dataframe
@@ -36,11 +27,7 @@ find_dependencies <- function(df, accuracy, index = NA) {
 #' @param df a data.frame, containing the data to be normalised.
 #' @param accuracy a numeric in (0, 1], giving the accuracy threshold threshold
 #'   required in order to conclude a dependency.
-#' @param index a character scalar, giving the name of the columns intended as
-#'   the primary key of \code{df}. Defaults to NA, no preferred primary key.
 #' @param name a character scalar, giving the name of the created entity set.
-#' @param time_index a character scalar, giving the name of the time column in
-#'   \code{df}.
 #'
 #' @return An entity set, containing the data normalised into the required
 #'   number of tables.
@@ -48,9 +35,7 @@ find_dependencies <- function(df, accuracy, index = NA) {
 auto_entityset <- function(
   df,
   accuracy,
-  index = NA,
-  name = NA,
-  time_index = NULL
+  name = NA
 ) {
   # Creates a normalized entityset from a dataframe.
   #
@@ -69,7 +54,7 @@ auto_entityset <- function(
   # Returns:
   #
   #   entityset (ft.EntitySet) : created entity set
-  deps <- find_dependencies(df, accuracy, index)
-  depdf <- DepDF(deps, df)
-  EntitySet(depdf, name, time_index)
+  deps <- find_dependencies(df, accuracy)
+  depdf <- DepDF(Dependencies(deps), df)
+  EntitySet(depdf, name)
 }

@@ -1,9 +1,9 @@
-EntitySet <- function(x, name = NA, time_index = NULL, ...) {
+EntitySet <- function(x, name = NA, ...) {
   UseMethod("EntitySet")
 }
 
 #' @export
-EntitySet.DepDF <- function(depdf, name = NA, time_index = NULL, ...) {
+EntitySet.DepDF <- function(depdf, name = NA, ...) {
   # Creates a normalized EntitySet from df based on the dependencies given.
   # Keys for the newly created DataFrames can only be columns that are strings,
   # ints, or categories. Keys are chosen according to the priority:
@@ -17,34 +17,23 @@ EntitySet.DepDF <- function(depdf, name = NA, time_index = NULL, ...) {
   #
   # Returns:
   #   entityset (ft.EntitySet) : created entity set
-  depdf <- normalize_step(depdf)
+  dependencies <- tuple_relations(depdf$deps)
+  depdf <- normalize_dataframe(depdf$df, dependencies)
   depdf <- make_indexes(depdf)
 
-  dataframes <- list()
+  visited <- character()
   relationships <- list()
 
-  stack <- depdf[1]
+  stack <- depdf
 
   while (length(stack) > 0) {
     current_df_name <- names(stack)[1]
     current <- stack[[1]]
     stack <- stack[-1]
 
-    if (!is.null(time_index) && time_index %in% colnames(current$df))
-      dataframes[[current_df_name]] <- list(
-        df = current$df,
-        index = current$index[1],
-        time_index = time_index
-      )
-    else
-      dataframes[[current_df_name]] <- list(
-        df = current$df,
-        index = current$index[1]
-      )
+    visited <- c(visited, current_df_name)
     for (child_name in current$children) {
       child <- depdf[[child_name]]
-      # add to stack
-      stack <- c(stack, stats::setNames(list(child), child_name))
       # add relationship
       relationships <- c(
         relationships,
@@ -55,10 +44,17 @@ EntitySet.DepDF <- function(depdf, name = NA, time_index = NULL, ...) {
       )
     }
   }
+  if (!all(names(depdf) %in% visited)) {
+    stop(paste0(
+      "some normalised tables not visited\n",
+      "depdf members: ", toString(names(depdf)), "\n",
+      "visited: ", toString(visited)
+    ))
+  }
 
   es <- list(
     name = name,
-    dataframes = dataframes,
+    dataframes = depdf,
     relationships = relationships
   )
   class(es) <- c("EntitySet", class(es))
@@ -66,19 +62,9 @@ EntitySet.DepDF <- function(depdf, name = NA, time_index = NULL, ...) {
 }
 
 #' @export
-EntitySet.data.frame <- function(df, name = NA, time_index = NA, df_name, ...) {
+EntitySet.data.frame <- function(df, name = NA, df_name, ...) {
   depdf <- DepDF(Dependencies(list()), df)
-  if (!is.na(time_index) && time_index %in% colnames(depdf$df))
-    dataframes <- list(list(
-      df = depdf$df,
-      index = depdf$index[1],
-      time_index = time_index
-    ))
-  else
-    dataframes <- list(list(
-      df = depdf$df,
-      index = depdf$index[1]
-    ))
+  dataframes <- list(depdf)
   es <- list(
     name = name,
     dataframes = stats::setNames(dataframes, df_name),

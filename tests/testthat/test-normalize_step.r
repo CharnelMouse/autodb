@@ -1,46 +1,40 @@
-describe("normalize_step", {
+describe("normalize_dataframe", {
   it("removes extraneous dependencies", {
-    dependencies <- Dependencies(
-      list(a = character(), b = list("a"), c = list(c("a", "b"))),
-      primary_key = "a"
+    dependencies <- list(
+      list("a", "b"),
+      list(c("a", "b"), "c")
     )
     df <- data.frame(a = integer(), b = integer(), c = integer())
-    norm.df <- normalize_step.data.frame(df, dependencies)
-    expect_identical(length(norm.df), 1L)
+    norm.df <- normalize_dataframe(df, dependencies)
     expect_identical(
-      norm.df[[1]]$deps,
-      Dependencies(
-        dependencies = list(a = character(), b = list("a"), c = list("a")),
-        primary_key = "a"
-      )
+      norm.df,
+      list(a = list(
+        df = df,
+        keys = list("a"),
+        index = "a",
+        children = character()
+      ))
     )
   })
-  it("resolves a simple bijection with no splits, if given an index", {
-    dependencies <- Dependencies(
-      list(a = "b", b = "a"),
-      primary_key = "a"
+  it("resolves a simple bijection with no splits", {
+    dependencies <- list(
+      list("a", "b"),
+      list("b", "a")
     )
     df <- data.frame(a = integer(), b = integer())
-
-    norm.df <- normalize_step.data.frame(df, dependencies)
-    norm.DepDF <- normalize_step.DepDF(DepDF(dependencies, df))
-    expect_identical(norm.df, norm.DepDF)
-    expect_identical(length(norm.df), 1L)
-  })
-  it("resolves a simple bijection with no splits, if given no index", {
-    dependencies <- Dependencies(
-      list(a = "b", b = "a")
+    norm.df <- normalize_dataframe(df, dependencies)
+    expect_identical(
+      norm.df,
+      list(a = list(
+        df = df,
+        keys = list("a", "b"),
+        index = "a",
+        children = character()
+      ))
     )
-    df <- data.frame(a = integer(), b = integer())
-
-    norm.df <- normalize_step.data.frame(df, dependencies)
-    norm.DepDF <- normalize_step.DepDF(DepDF(dependencies, df))
-    expect_identical(norm.df, norm.DepDF)
-    skip("normalize fix needed")
-    expect_identical(length(norm.df), 1L)
   })
   it("correctly splits example data.frame for original make_indexes() test", {
-    dic <- list(
+    df <- data.frame(
       id = c(
         0, 1, 2, 3, 4,
         5, 6, 7, 8, 9
@@ -58,21 +52,16 @@ describe("normalize_step", {
         TRUE, TRUE, TRUE, FALSE, FALSE
       )
     )
-
-    df <- as.data.frame(dic)
-    deps = Dependencies(
-      dependencies = list(
-        id = list(),
-        month = list('id', c('hemisphere', 'is_winter')),
-        hemisphere = list(c('month', 'is_winter'), 'id'),
-        is_winter = list(c('month', 'hemisphere'), 'id')
-      ),
-      primary_key = 'id'
+    deps <- list(
+      list("id", "month"),
+      list("id", "hemisphere"),
+      list("id", "is_winter"),
+      list(c("month", "hemisphere"), "is_winter"),
+      list(c("month", "is_winter"), "hemisphere"),
+      list(c("hemisphere", "is_winter"), "month")
     )
-
-    depdf <- DepDF(deps = deps, df = df, index = get_prim_key(deps))
-    new_dfs <- normalize_step(depdf)
-
+    new_dfs <- normalize_dataframe(df, deps)
+    skip("do this later")
     expected_dfs <- list(
       id = DepDF(
         deps = Dependencies(
@@ -112,78 +101,61 @@ describe("normalize_step", {
   })
   describe("Dependencies", {
     it("DepDF", {
-      dic = list(
-        team = c(
-          'Red', 'Red', 'Red', 'Orange', 'Orange',
-          'Yellow', 'Yellow', 'Green', 'Green', 'Blue'
+      deps <- list(
+        list(c("player_name", "jersey_num"), "team"),
+        list(c("player_name", "team"), "jersey_num"),
+        list(c("team", "jersey_num"), "player_name"),
+        list("team", "city"),
+        list("state", "city"),
+        list(c("player_name", "jersey_num"), "city"),
+        list("team", "state"),
+        list(c("player_name", "jersey_num"), "state"),
+        list("city", "state")
+      )
+      df <- data.frame(
+        player_name = integer(),
+        jersey_num = integer(),
+        team = integer(),
+        city = integer(),
+        state = integer()
+      )
+      depdfs <- normalize_dataframe(df, deps)
+      expect_identical(length(depdfs), 3L)
+      expected_depdfs <- list(
+        player_name_jersey_num = list(
+          df = data.frame(
+            player_name = integer(),
+            jersey_num = integer(),
+            team = integer()
+          ),
+          keys = list(
+            c("player_name", "jersey_num"),
+            c("player_name", "team"),
+            c("team", "jersey_num")
+          ),
+          index = c("player_name", "jersey_num"),
+          children = "team"
         ),
-        jersey_num = c(
-          1, 2, 3, 1, 2,
-          1, 5, 8, 2, 2
+        city = list(
+          df = data.frame(
+            city = integer(),
+            state = integer()
+          ),
+          keys = list("city", "state"),
+          index = "city",
+          children = character()
         ),
-        player_name = c(
-          'A', 'B', 'C', 'D', 'A',
-          'E', 'B', 'A', 'G', 'H'
-        ),
-        city = c(
-          'boston', 'boston', 'boston', 'chicago', 'chicago',
-          'honolulu', 'honolulu', 'boston', 'boston', 'austin'
-        ),
-        state = c(
-          'MA', 'MA', 'MA', 'IL', 'IL',
-          'HI', 'HI', 'MA', 'MA', 'TX'
+        team = list(
+          df = data.frame(
+            team = integer(),
+            state = integer()
+          ),
+          keys = list("team"),
+          index = "team",
+          children = "city"
         )
       )
-      df <- as.data.frame(dic)
-      deps <- Dependencies(
-        dependencies = list(
-          team = list(c('player_name', 'jersey_num')),
-          jersey_num = list(c('player_name', 'team')),
-          player_name = list(c('team', 'jersey_num')),
-          city = list('team', 'state', c('player_name', 'jersey_num')),
-          state = list('team', c('player_name', 'jersey_num'), 'city')
-        ),
-        primary_key = c('team', 'jersey_num')
-      )
-
-      depdf <- DepDF(
-        deps = deps,
-        df = df,
-        index = get_prim_key(deps)
-      )
-      new_dfs <- normalize_step(depdf)
-      depdf <- new_dfs[[1]]
-
-      expect_identical(length(new_dfs), 3L)
-
-      dic_one <- list(
-        team = c(
-          'Red', 'Red', 'Red', 'Orange', 'Orange',
-          'Yellow', 'Yellow', 'Green', 'Green', 'Blue'
-        ),
-        jersey_num = c(
-          1, 2, 3, 1, 2,
-          1, 5, 8, 2, 2
-        ),
-        player_name = c(
-          'A', 'B', 'C', 'D', 'A',
-          'E', 'B', 'A', 'G', 'H'
-        )
-      )
-
-      dic_two <- list(
-        team = c('Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Blue'),
-        city = c('boston', 'chicago', 'honolulu', 'boston', 'austin', 'austin')
-      )
-
-      dic_three <- list(
-        city = c('boston', 'chicago', 'honolulu', 'austin', 'austin'),
-        state = c('MA', 'IL', 'HI', 'TX', 'TX')
-      )
-
-      expect_identical(new_dfs[[1]]$df, drop_primary_dups(as.data.frame(dic_one), c('team', 'jersey_num')))
-      expect_identical(new_dfs[[2]]$df, drop_primary_dups(as.data.frame(dic_two), 'team'))
-      expect_identical(new_dfs[[3]]$df, drop_primary_dups(as.data.frame(dic_three), 'city'))
+      expect_setequal(depdfs, expected_depdfs)
     })
   })
 })

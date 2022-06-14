@@ -9,18 +9,13 @@
 #' @param df a data.frame, the relation to evaluate.
 #' @param accuracy a numeric in (0, 1]: the accuracy threshold required in order
 #'   to conclude a dependency.
-#' @param index a character, the name of the attribute in the
-#'   pre-determined index for the relation. Defaults to NA for no index. This
-#'   attribute is marked as unique on the rows, and therefore a determinant of
-#'   the other attributes. It is excluded when searching for functional
-#'   dependencies.
 #' @param progress a logical, for whether to display progress to the user.
 #'
 #' @return a named list, where the names give the dependent attribute, and each
 #'   element is a list of character vectors. Each character vector is a set of
 #'   determinant attributes for that dependent attribute.
 #' @export
-dfd <- function(df, accuracy, index = NA, progress = FALSE) {
+dfd <- function(df, accuracy, progress = FALSE) {
   # convert all columns to integers, since easier to check for duplicates
   # when calculating partitions
   df <- data.frame(lapply(df, \(x) as.integer(factor(x))))

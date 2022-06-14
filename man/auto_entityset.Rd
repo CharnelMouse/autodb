@@ -4,7 +4,7 @@
 \alias{auto_entityset}
 \title{Creates a normalized entity set from a dataframe}
 \usage{
-auto_entityset(df, accuracy, index = NA, name = NA, time_index = NULL)
+auto_entityset(df, accuracy, name = NA)
 }
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
@@ -12,13 +12,7 @@ auto_entityset(df, accuracy, index = NA, name = NA, time_index = NULL)
 \item{accuracy}{a numeric in (0, 1], giving the accuracy threshold threshold
 required in order to conclude a dependency.}
 
-\item{index}{a character scalar, giving the name of the columns intended as
-the primary key of \code{df}. Defaults to NA, no preferred primary key.}
-
 \item{name}{a character scalar, giving the name of the created entity set.}
-
-\item{time_index}{a character scalar, giving the name of the time column in
-\code{df}.}
 }
 \value{
 An entity set, containing the data normalised into the required

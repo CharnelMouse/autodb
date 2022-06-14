@@ -1,31 +1,3 @@
-describe("normalize", {
-  describe("entityset", {
-    it("original test", {
-      df1 <- data.frame(test = 0:2)
-      df2 <- data.frame(test = 0:2)
-      accuracy <- 0.98
-
-      es_empty <- EntitySet.data.frame(NULL, df_name = NA)
-      es_empty$dataframes <- list()
-      expect_error(
-        normalize(es_empty, accuracy),
-        "^This EntitySet is empty$"
-      )
-
-      es_one <- EntitySet(df1, df_name = NA_character_)
-      es_norm <- normalize(es_one, accuracy)
-      expect_identical(length(es_norm$dataframes), 1L)
-
-      es_two <- EntitySet.data.frame(NULL, df_name = NA)
-      es_two$dataframes <- list(df1 = df1, df2 = df2)
-      expect_error(
-        normalize(es_two, accuracy),
-        "^There is more than one dataframe in this EntitySet$"
-      )
-    })
-  })
-})
-
 describe("normalize_dependencies", {
   it("removes extraneous attributes", {
     dependencies <- list(

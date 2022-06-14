@@ -1,13 +1,3 @@
-find_filtered_partial_deps <- function(dependencies, df) {
-  find_partial_deps(dependencies) |>
-    filter(df)
-}
-
-find_filtered_trans_deps <- function(dependencies, df) {
-  find_trans_deps(dependencies) |>
-    filter(df)
-}
-
 find_most_comm <- function(deps, dependencies, df = NA) {
   # Given a list of dependency relations, finds the most common set of
   # LHS attributes. If more than one LHS set occurs the same amount of
@@ -185,45 +175,6 @@ get_prim_key.Dependencies <- function(dependencies)
   dependencies$primary_key
 
 remove_extraneous_attributes <- function(x) {
-  UseMethod("remove_extraneous_attributes")
-}
-
-#' @export
-remove_extraneous_attributes.Dependencies <- function(x) {
-  # Removes all implied extroneous attributes from relations in self.
-  # Example:
-  #     A --> B
-  #     AB --> C
-  #     becomes
-  #     A --> B
-  #     A --> C
-  rels <- tuple_relations(x)
-  for (lr in rels) {
-    lhs <- lr[[1]]
-    rhs <- lr[[2]]
-    y <- lhs
-    for (attr in lhs) {
-      y_ <- setdiff(y, attr)
-      if (rhs %in% find_closure(rels, y_))
-        y <- setdiff(y, attr)
-      rels <- setdiff(rels, list(lr))
-      rels <- c(rels, list(list(y, rhs)))
-      x$dependencies[[rhs]] <- setdiff(
-        x$dependencies[[rhs]],
-        list(lhs)
-      )
-      x$dependencies[[rhs]] <- c(
-        x$dependencies[[rhs]],
-        list(y)
-      )
-    }
-  }
-  x$dependencies <- lapply(x$dependencies, unique)
-  x
-}
-
-#' @export
-remove_extraneous_attributes.list <- function(x) {
   rels <- x
   for (lr in x) {
     lhs <- lr[[1]]
@@ -240,77 +191,6 @@ remove_extraneous_attributes.list <- function(x) {
     }
   }
   unique(x)
-}
-
-find_partial_deps <- function(dependencies) {
-  UseMethod("find_partial_deps")
-}
-
-#' @export
-find_partial_deps.Dependencies <- function(dependencies) {
-  # Finds all partial dependencies within self.
-  # Returns:
-  #     partial_deps (list[(list[str], str)]) : partial dependencies
-  # Example:
-  #     A --> B
-  #     C --> D
-  #     DF --> E
-  #     G --> F
-  #     finds:
-  #     A --> B
-  #     C --> D
-  #     G --> F
-  partial_deps <- list()
-  cand_keys <- get_prim_key(dependencies)
-  key_attrs <- cand_keys
-  rels <- tuple_relations(dependencies)
-  for (lr in rels) {
-    lhs <- lr[[1]]
-    rhs <- lr[[2]]
-    if (!is.element(rhs, key_attrs)) {
-      lhs_cands_key_intersection <- intersect(lhs, cand_keys)
-      inter_size <- length(lhs_cands_key_intersection)
-      if (inter_size > 0 && inter_size < length(cand_keys))
-        partial_deps <- c(partial_deps, list(lr))
-    }
-  }
-  partial_deps
-}
-
-find_trans_deps <- function(dependencies) {
-  UseMethod("find_trans_deps")
-}
-
-#' @export
-find_trans_deps.Dependencies <- function(dependencies) {
-  # Finds all transitive dependencies within self.
-  # Returns:
-  #     trans_deps (list[(list[str], str)]) : transitive dependencies
-  # Example:
-  #     A --> B
-  #     C --> D
-  #     DF --> E
-  #     G --> F
-  #     finds:
-  #     DF --> E
-  trans_deps <- list()
-  cand_keys <- get_prim_key(dependencies)
-  key_attrs <- cand_keys
-  all_attrs <- names(dependencies$dependencies)
-  rels <- tuple_relations(dependencies)
-
-  for (lr in rels) {
-    lhs <- lr[[1]]
-    rhs <- lr[[2]]
-    if (!is.element(rhs, key_attrs)) {
-      if (!identical(find_closure(rels, lhs), all_attrs)) {
-        acc <- all(lhs %in% cand_keys)
-        if (!acc)
-          trans_deps <- c(trans_deps, list(lr))
-      }
-    }
-  }
-  trans_deps
 }
 
 equiv_attrs <- function(dependencies, one, two) {

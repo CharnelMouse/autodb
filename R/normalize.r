@@ -1,34 +1,3 @@
-normalize <- function(x, ...) {
-  UseMethod("normalize")
-}
-
-#' Normalise a given entity set
-#'
-#' @param x an EntitySet object, containing a single data.frame to be
-#'   normalised.
-#' @inheritParams auto_entityset
-#'
-#' @return The created EntitySet, containing the tables from normalising the
-#'   original data.frame.
-#' @export
-normalize.EntitySet <- function(x, accuracy) {
-  # TO DO: add option to pass an EntitySet with more than one dataframe, and
-  # specify which one to normalize while preserving existing relationships
-  if (length(x$dataframes) > 1)
-    stop('There is more than one dataframe in this EntitySet')
-  if (length(x$dataframes) == 0)
-    stop('This EntitySet is empty')
-
-  df <- x$dataframes[[1]]
-  auto_entityset(
-    df$df,
-    accuracy,
-    index = df$index,
-    name = x$name,
-    time_index = df$time_index
-  )
-}
-
 #' Normalizes dependency relationships
 #'
 #' Normalizes the dependency relationships in dependencies into new
@@ -238,57 +207,6 @@ make_indexes <- function(depdfs) {
   #   make_indexes(child)
 }
 
-remove_part_deps <- function(dependencies, df) {
-  UseMethod("remove_part_deps")
-}
-
-#' @export
-remove_part_deps.Dependencies <- function(dependencies, df) {
-  # Breaks up the dependency relations in dependencies into new groups of
-  # relations so that there are no more partial dependencies.
-  #
-  # Arguments:
-  #     dependencies (Dependncies) : the dependencies to be split up
-  #
-  # Returns:
-  #     new_groups (list[Dependencies]) : list of new dependencies objects
-  #     representing the new groups with no partial depenencies
-  part_deps <- find_filtered_partial_deps(dependencies, df)
-  if (length(part_deps) == 0)
-    return(list(dependencies))
-  split_then_remove(dependencies, df, part_deps, remove_part_deps)
-}
-
-remove_trans_deps <- function(dependencies, df) {
-  UseMethod("remove_trans_deps")
-}
-
-#' @export
-remove_trans_deps.Dependencies <- function(dependencies, df) {
-  # Breaks up the dependency relations in dependencies into new groups of
-  # relations so that there are no more transitive dependencies.
-  #
-  # Arguments:
-  #     dependencies (Dependencies) : the dependencies to be split up
-  #
-  # Returns:
-  #     new_groups (list[Dependencies]): list of new dependencies objects
-  #     representing the new groups with no transitive depenencies
-  trans_deps <- find_filtered_trans_deps(dependencies, df)
-  if (length(trans_deps) == 0)
-    return(list(dependencies))
-  split_then_remove(dependencies, df, trans_deps, remove_trans_deps)
-}
-
-split_then_remove <- function(dependencies, df, unwanted_deps, remove_fn) {
-  split_on <- find_most_comm(unwanted_deps, dependencies)
-  new_deps <- split_on_dep(split_on, dependencies)
-  c(
-    remove_fn(new_deps[[1]], df),
-    remove_fn(new_deps[[2]], df)
-  )
-}
-
 tuple_relations <- function(dependencies) {
   UseMethod("tuple_relations")
 }
@@ -307,52 +225,4 @@ tuple_relations.Dependencies <- function(dependencies) {
     )
   }
   result
-}
-
-find_candidate_keys <- function(dependencies) {
-  UseMethod("find_candidate_keys")
-}
-
-#' @export
-find_candidate_keys.Dependencies <- function(dependencies) {
-# Returns all candidate keys in self. A candidate key is a minimal
-# set of attributes whose closure is all attributes in the table.
-  # Returns:
-  #   cand_keys (list[set[str]]) : list of candidate keys for self
-
-  all_attrs <- names(dependencies$dependencies)
-  rhs_attrs <- all_attrs[
-    lengths(dependencies$dependencies) > 0
-  ]
-  lhs_attrs <- unique(unlist(dependencies$dependencies, use.names = FALSE))
-  lhs_only <- setdiff(lhs_attrs, rhs_attrs)
-  rhs_only <- setdiff(rhs_attrs, lhs_attrs)
-  lhs_and_rhs <- setdiff(all_attrs, union(lhs_only, rhs_only))
-  rels <- tuple_relations(dependencies)
-  if (length(rels) == 0)
-    return(list())
-
-  if (setequal(find_closure(rels, lhs_only), all_attrs))
-    return(lhs_only)
-
-  cand_keys <- list()
-
-  for (i in seq_along(lhs_and_rhs)) {
-    remaining <- setdiff(lhs_and_rhs, unlist(cand_keys))
-    if (length(remaining) < i)
-      break
-    keys <- utils::combn(unlist(remaining), i, simplify = FALSE)
-    for (key in keys) {
-      lhs_only_or_key <- unique(union(lhs_only, key))
-      if (
-        setequal(
-          unlist(find_closure(rels, lhs_only_or_key)),
-          all_attrs
-        ) &&
-        !any(vapply(cand_keys, \(x) all(x %in% lhs_only_or_key), logical(1)))
-      )
-        cand_keys <- c(cand_keys, list(lhs_only_or_key))
-    }
-  }
-  cand_keys
 }
