@@ -61,19 +61,6 @@ EntitySet.DepDF <- function(depdf, name = NA, ...) {
   es
 }
 
-#' @export
-EntitySet.data.frame <- function(df, name = NA, df_name, ...) {
-  depdf <- DepDF(Dependencies(list()), df)
-  dataframes <- list(depdf)
-  es <- list(
-    name = name,
-    dataframes = stats::setNames(dataframes, df_name),
-    relationships = list()
-  )
-  class(es) <- c("EntitySet", class(es))
-  es
-}
-
 #' Plot dataframes with relationships
 #'
 #' @param x either a data.frame, or an entity set.
@@ -101,28 +88,42 @@ plot_tables.EntitySet <- function(x, ..., to_file = FALSE) {
   #     The typing information displayed for each column is based off of the Woodwork
   #     ColumnSchema for that column and is represented as ``LogicalType; semantic_tags``,
   #     but the standard semantic tags have been removed for brevity.
+  gv_string <- plot_string_entityset(x)
+  # if (to_file)
+  #   save_graph(graph, to_file, format_)
+  DiagrammeR::grViz(gv_string)
+}
 
+#' @export
+plot_tables.data.frame <- function(x, df_name, ..., to_file = FALSE) {
+  gv_string <- plot_string_df(x, df_name)
+  # if (to_file)
+  #   save_graph(graph, to_file, format_)
+  DiagrammeR::grViz(gv_string)
+}
+
+plot_string_entityset <- function(es) {
   # Initialize a new directed graph
   gv_string <- paste0(
-    "digraph ", gsub(" ", "_", x$name), " {\n",
+    "digraph ", gsub(" ", "_", es$name), " {\n",
     "  node [shape=record];\n"
   )
 
   # Draw dataframes
   df_string <- character()
-  for (df_name in names(x$dataframes)) {
-    df <- x$dataframes[[df_name]]
+  for (df_name in names(es$dataframes)) {
+    df <- es$dataframes[[df_name]]
     column_typing_info <- vapply(
-      colnames(df$df),
+      colnames(df),
       \(col_name) {
-        col_class <- class(df$df[[col_name]])[[1]]
+        col_class <- class(df[[col_name]])[[1]]
         paste0("<", col_name, "> ", col_name, " : ", col_class)
       },
       character(1)
     )
     columns_string <- paste(column_typing_info, collapse = "|")
 
-    nrows <- nrow(df$df)
+    nrows <- nrow(df)
     label <- paste0(
       "{",
       df_name,
@@ -139,47 +140,42 @@ plot_tables.EntitySet <- function(x, ..., to_file = FALSE) {
   }
 
   # Draw relationships
-  for (rel in x$relationships) {
+  for (rel in es$relationships) {
     rel_string <- paste0(
       "  ",
       paste(rel[1], rel[2], sep = ":"),
       " -> ",
       paste(rel[3], rel[4], sep = ":"),
-      ";\n"
+      ";"
     )
     gv_string <- paste(gv_string, rel_string, sep = "\n")
   }
-  gv_string <- paste0(gv_string, "}\n")
-
-  # if (to_file)
-  #   save_graph(graph, to_file, format_)
-  DiagrammeR::grViz(gv_string)
+  gv_string <- paste0(gv_string, "\n}\n")
+  gv_string
 }
 
-#' @export
-plot_tables.data.frame <- function(x, df_name, ..., to_file = FALSE) {
-
+plot_string_df <- function(df, df_name) {
   df_name <- gsub(" ", "_", df_name)
 
   # Initialize a new directed graph
   gv_string <- paste0(
-    "digraph ", df_name, " {",
+    "digraph ", df_name, " {\n",
     "  node [shape=record];\n"
   )
 
   # Draw dataframes
   df_string <- character()
   column_typing_info <- vapply(
-    colnames(x),
+    colnames(df),
     \(col_name) {
-      col_class <- class(x[[col_name]])[[1]]
+      col_class <- class(df[[col_name]])[[1]]
       paste0("<", col_name, "> ", col_name, " : ", col_class)
     },
     character(1)
   )
   columns_string <- paste(column_typing_info, collapse = "|")
 
-  nrows <- nrow(x)
+  nrows <- nrow(df)
   label <- paste0(
     "{",
     df_name,
@@ -195,8 +191,5 @@ plot_tables.data.frame <- function(x, df_name, ..., to_file = FALSE) {
   gv_string <- paste0(gv_string, df_string)
 
   gv_string <- paste0(gv_string, "}\n")
-
-  # if (to_file)
-  #   save_graph(graph, to_file, format_)
-  DiagrammeR::grViz(gv_string)
+  gv_string
 }
