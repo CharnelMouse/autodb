@@ -44,13 +44,6 @@ EntitySet.DepDF <- function(depdf, name = NA, ...) {
       )
     }
   }
-  if (!all(names(depdf) %in% visited)) {
-    stop(paste0(
-      "some normalised tables not visited\n",
-      "depdf members: ", toString(names(depdf)), "\n",
-      "visited: ", toString(visited)
-    ))
-  }
 
   es <- list(
     name = name,
@@ -63,19 +56,13 @@ EntitySet.DepDF <- function(depdf, name = NA, ...) {
 
 #' Plot dataframes with relationships
 #'
-#' @param x either a data.frame, or an entity set.
-#' @param ... additional arguments required for the given method.
+#' @param es an entity set, to plotted as linked records.
 #' @param to_file a logical, indicating whether to write the plot information to
 #'   a file, as a Graphviz input, instead of plotting. Currently not
 #'   implemented.
 #'
 #' @export
-plot_tables <- function(x, ..., to_file = FALSE) {
-  UseMethod("plot_tables")
-}
-
-#' @export
-plot_tables.EntitySet <- function(x, ..., to_file = FALSE) {
+plot_tables <- function(es, to_file = FALSE) {
   # Create a UML diagram-ish graph of the EntitySet.
   # Args:
   #     to_file (str, optional) : Path to where the plot should be saved.
@@ -88,15 +75,23 @@ plot_tables.EntitySet <- function(x, ..., to_file = FALSE) {
   #     The typing information displayed for each column is based off of the Woodwork
   #     ColumnSchema for that column and is represented as ``LogicalType; semantic_tags``,
   #     but the standard semantic tags have been removed for brevity.
-  gv_string <- plot_string_entityset(x)
+  gv_string <- plot_string_entityset(es)
   # if (to_file)
   #   save_graph(graph, to_file, format_)
   DiagrammeR::grViz(gv_string)
 }
 
+#' Plot single dataframe
+#'
+#' @param df a data.frame, to be plotted as a record.
+#' @param df_name a character scalar, giving the name of the record.
+#' @param to_file a logical, indicating whether to write the plot information to
+#'   a file, as a Graphviz input, instead of plotting. Currently not
+#'   implemented.
+#'
 #' @export
-plot_tables.data.frame <- function(x, df_name, ..., to_file = FALSE) {
-  gv_string <- plot_string_df(x, df_name)
+plot_table <- function(df, df_name, to_file = FALSE) {
+  gv_string <- plot_string_df(df, df_name)
   # if (to_file)
   #   save_graph(graph, to_file, format_)
   DiagrammeR::grViz(gv_string)
