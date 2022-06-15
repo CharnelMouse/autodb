@@ -4,37 +4,57 @@ describe("plot_string", {
       es <- list(
         name = "Book",
         dataframes = list(
-          Book = data.frame(
-            Title = c(
-              "Beginning MySQL Database Design and Optimization",
-              "The Relational Model for Database Management: Version 2"
+          Book = list(
+            df = data.frame(
+              Title = c(
+                "Beginning MySQL Database Design and Optimization",
+                "The Relational Model for Database Management: Version 2"
+              ),
+              Author = c(
+                "Chad Russel",
+                "EF Codd"
+              ),
+              Pages = c(520L, 538L),
+              Thickness = "Thick",
+              Genre_ID = 1:2,
+              Publisher_ID = 1:2
             ),
-            Author = c(
-              "Chad Russel",
-              "EF Codd"
+            keys = list("Title"),
+            index = "Title",
+            children = c("Format_Price", "Author", "Genre")
+          ),
+          Format_Price = list(
+            df = data.frame(
+              Title = c(
+                "Beginning MySQL Database Design and Optimization",
+                "Beginning MySQL Database Design and Optimization",
+                "The Relational Model for Database Management: Version 2",
+                "The Relational Model for Database Management: Version 2"
+              ),
+              Format = c("Hardcover", "E-book", "E-book", "Paperback"),
+              Price = c(4999L, 2234L, 1388L, 3999L)
             ),
-            Pages = c(520L, 538L),
-            Thickness = "Thick",
-            Genre_ID = 1:2,
-            Publisher_ID = 1:2
+            keys = list(c("Title", "Format")),
+            index = c("Title", "Format"),
+            children = character()
           ),
-          Format_Price = data.frame(
-            Title = c(
-              "Beginning MySQL Database Design and Optimization",
-              "Beginning MySQL Database Design and Optimization",
-              "The Relational Model for Database Management: Version 2",
-              "The Relational Model for Database Management: Version 2"
+          Author = list(
+            df = data.frame(
+              Author = c("Chad Russell", "EF Codd"),
+              Author_Nationality = c("American", "British")
             ),
-            Format = c("Hardcover", "E-book", "E-book", "Paperback"),
-            Price = c(4999L, 2234L, 1388L, 3999L)
+            keys = list("Author"),
+            index = "Author",
+            children = character()
           ),
-          Author = data.frame(
-            Author = c("Chad Russell", "EF Codd"),
-            Author_Nationality = c("American", "British")
-          ),
-          Genre = data.frame(
-            Genre_ID = 1:2,
-            Genre_Name = c("Tutorial", "Popular science")
+          Genre = list(
+            df = data.frame(
+              Genre_ID = 1:2,
+              Genre_Name = c("Tutorial", "Popular science")
+            ),
+            keys = list("Genre_ID"),
+            index = "Genre_ID",
+            children = character()
           )
         ),
         relationships = list(

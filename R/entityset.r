@@ -107,7 +107,7 @@ plot_string_entityset <- function(es) {
   # Draw dataframes
   df_string <- character()
   for (df_name in names(es$dataframes)) {
-    df <- es$dataframes[[df_name]]
+    df <- es$dataframes[[df_name]]$df
     column_typing_info <- vapply(
       colnames(df),
       \(col_name) {
