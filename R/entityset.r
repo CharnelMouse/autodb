@@ -34,7 +34,6 @@ EntitySet.DepDF <- function(depdf, name = NA, ...) {
     visited <- c(visited, current_df_name)
     for (child_name in current$children) {
       child <- depdf[[child_name]]
-      # add relationship
       relationships <- c(
         relationships,
         lapply(
@@ -63,21 +62,7 @@ EntitySet.DepDF <- function(depdf, name = NA, ...) {
 #'
 #' @export
 plot_tables <- function(es, to_file = FALSE) {
-  # Create a UML diagram-ish graph of the EntitySet.
-  # Args:
-  #     to_file (str, optional) : Path to where the plot should be saved.
-  #         If set to None (as by default), the plot will not be saved.
-  # Returns:
-  #     graphviz.Digraph : Graph object that can directly be displayed in
-  #         Jupyter notebooks. Nodes of the graph correspond to the DataFrames
-  #         in the EntitySet, showing the typing information for each column.
-  # Note:
-  #     The typing information displayed for each column is based off of the Woodwork
-  #     ColumnSchema for that column and is represented as ``LogicalType; semantic_tags``,
-  #     but the standard semantic tags have been removed for brevity.
   gv_string <- plot_string_entityset(es)
-  # if (to_file)
-  #   save_graph(graph, to_file, format_)
   DiagrammeR::grViz(gv_string)
 }
 
@@ -92,19 +77,15 @@ plot_tables <- function(es, to_file = FALSE) {
 #' @export
 plot_table <- function(df, df_name, to_file = FALSE) {
   gv_string <- plot_string_df(df, df_name)
-  # if (to_file)
-  #   save_graph(graph, to_file, format_)
   DiagrammeR::grViz(gv_string)
 }
 
 plot_string_entityset <- function(es) {
-  # Initialize a new directed graph
   gv_string <- paste0(
     "digraph ", gsub(" ", "_", es$name), " {\n",
     "  node [shape=record];\n"
   )
 
-  # Draw dataframes
   df_string <- character()
   for (df_name in names(es$dataframes)) {
     df <- es$dataframes[[df_name]]$df
@@ -134,7 +115,6 @@ plot_string_entityset <- function(es) {
     gv_string <- paste0(gv_string, df_string)
   }
 
-  # Draw relationships
   for (rel in es$relationships) {
     rel_string <- paste0(
       "  ",
@@ -145,6 +125,7 @@ plot_string_entityset <- function(es) {
     )
     gv_string <- paste(gv_string, rel_string, sep = "\n")
   }
+
   gv_string <- paste0(gv_string, "\n}\n")
   gv_string
 }
@@ -152,13 +133,11 @@ plot_string_entityset <- function(es) {
 plot_string_df <- function(df, df_name) {
   df_name <- gsub(" ", "_", df_name)
 
-  # Initialize a new directed graph
   gv_string <- paste0(
     "digraph ", df_name, " {\n",
     "  node [shape=record];\n"
   )
 
-  # Draw dataframes
   df_string <- character()
   column_typing_info <- vapply(
     colnames(df),

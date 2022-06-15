@@ -2,13 +2,6 @@ find_most_comm <- function(deps, dependencies, df = NA) {
   # Given a list of dependency relations, finds the most common set of
   # LHS attributes. If more than one LHS set occurs the same amount of
   # times, chooses the set with the least number of attributes.
-  #
-  # Arguments:
-  #     deps (list[(set[str], str)]) : list of tuples representing relations
-  #     where the lhs is a set of attribute names, and the rhs is an attribute.
-  #
-  # Returns:
-  #     most_comm (set[str]) : the most common lhs set of attributes
   positions <- list()
   scores <- numeric()
 
@@ -46,18 +39,9 @@ find_most_comm <- function(deps, dependencies, df = NA) {
 }
 
 split_on_dep <- function(lhs_dep, dependencies) {
-  # Given the LHS attributes of a dependency, breaks up the dependency
-  # relations in dependencies into two groups so that the LHS given is
-  # the primary key of the new group. The old group keeps the same
-  # primary key.
-  #
-  # Arguments:
-  #     lhs_dep (list[str]) : set of attributes to be the new group's
-  #     primary key
-  #     dependencies (Dependencies) : dependency relations to be split up
-  #
-  # Returns:
-  #     new_groups ((Dependencies, Dependencies)) : the new groups
+  # Given an attribute set, breaks up the given dependencies such that the
+  # attribute set is the primary key of the new (child) dependency set. The
+  # remaining old (parent) keeps the original primary key.
   old_deps <- dependencies$dependencies
   new_rhs <- list()
   new_deps <- old_deps[lhs_dep]
@@ -98,18 +82,11 @@ split_on_dep <- function(lhs_dep, dependencies) {
 }
 
 choose_index <- function(keys, df) {
-  # Chooses key from a list of keys. Order of priority:
+  # Chooses an index / primary key from a list of keys.
+  # Order of priority:
   # 1) shortest length
-  # 2) has "id" in some form in name of an attribute
-  # 3) has attribute furthest to the left in table
-  #
-  # Arguments:
-  #     keys (list[set[str]]) : list of keys to choose from
-  #     df (pd.DataFrame) : pandas dataframe keys are for
-  #
-  # Returns:
-  #     index (list[str]) : chosen key
-
+  # 2) has "id" prefix/suffix in the name of any attribute
+  # 3) has the attribute furthest to the left in the table
   if (length(keys) == 0)
     return(NA_character_)
   sort_key <- keys[order(lengths(keys))]
@@ -139,15 +116,9 @@ choose_index <- function(keys, df) {
 }
 
 filter <- function(relations, df) {
-  # Filters out any keys that contain attributes that are not strings, ints, or
-  # categories from a list of relations.
-  #
-  # Arguments:
-  #     keys (list[(list[str], str)]) : relationships to filter out
-  #     df (pd.DataFrame) : dataframe attributes in keys are from
-  # MY NOTES: original checks class against integer, category/factor, and
-  # "object", which seems to be a generic class. That seems silly, so I've
-  # added character and logical instead.
+  # Removes functional dependencies where any determinant attributes do no
+  # contain strings, integers, factors, or logicals in the data.frame. The idea
+  # is that, for example, we don't expect floats to be part of a key.
   for (rel in relations) {
     lhs <- rel[[1]]
     for (attr in lhs) {
@@ -169,9 +140,6 @@ get_prim_key <- function(dependencies) {
 
 #' @export
 get_prim_key.Dependencies <- function(dependencies)
-  # Gets primary key.
-  # Returns:
-  #     prim_key (list[str]) : the primary key
   dependencies$primary_key
 
 remove_extraneous_attributes <- function(x) {
@@ -194,22 +162,12 @@ remove_extraneous_attributes <- function(x) {
 }
 
 equiv_attrs <- function(dependencies, one, two) {
-  # Returns True if one and two are equivalent attributes, or in another
-  # words have equivalent closures.
-  # Returns:
-  #     is_equiv (bool) : True if equivalent, False otherwise
+  # returns TRUE if attribute sets one and two have equivalent closures.
   tups <- tuple_relations(dependencies)
   identical(find_closure(tups, one), find_closure(tups, two))
 }
 
 find_closure <- function(rel, attrs) {
-  # Finds the closure of attrs under the relations in rel.
-  # Arguments:
-  #     rel (list[(list[str], str)]) : relationships to find closure under
-  #     attrs (list[str]) : attributes to find the closure of
-  # Returns:
-  #     closure (set[str]) : attrs' closure, aka the attributes that can be
-  #     determined from the attributes in attrs
   if (!is.character(attrs))
     stop(paste("attr is", toString(class(attrs))))
   if (length(rel) == 0)

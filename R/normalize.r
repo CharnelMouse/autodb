@@ -161,12 +161,9 @@ Dependencies <- function(dependencies, primary_key = NULL) {
 }
 
 make_indexes <- function(depdfs) {
-  # Goes through depdf, and all of its descendents, and if any have primary keys
-  # of more than one attribute, creates a new index column, and replaces the old
-  # primary key columns with the new column in the parent df.
-  #
-  # Arguments:
-  #     depdf (DepDF) : depDF to make indexes for
+  # Replaces any composite keys with synthetic keys.
+  # Currently not implemented, because I want to think through how to implement
+  # it nicely, without removing other dependencies in the parent table.
   depdfs
   # depdf <- depdfs[[1]]
   # prim_key <- get_prim_key(depdf$deps)
@@ -213,9 +210,9 @@ tuple_relations <- function(dependencies) {
 
 #' @export
 tuple_relations.Dependencies <- function(dependencies) {
-  # Returns the relationships stored in self as a list.
-  # Returns:
-  #     relations (list[(list[str], str)]) : relations stored in self
+  # Takes Dependencies and returns the dependencies in a flat list with
+  # (parent table, parent attr, child table, child attr)
+  # format. This throws away the index element, which I plan to remove anyway.
   result <- list()
   for (i in seq_along(dependencies$dependencies)) {
     rhs <- names(dependencies$dependencies)[i]

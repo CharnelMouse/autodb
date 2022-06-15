@@ -39,16 +39,10 @@ normalize_dataframe <- function(df, dependencies) {
 }
 
 drop_primary_dups <- function(df, prim_key) {
-  # Drops all duplicates based off of the columns in prim_key. If there isn't a
-  # unique value for the other columns, for every unique instance of columns in
-  # prim_key, keeps the "mode" of the unique instances' occurance.
-  #
-  # Arguments:
-  #     df (pd.DataFrame) : dataframe to drop duplicates of
-  #     prim_key (list[str]) : columns that form the primary key of the dataframe
-  #
-  # Returns:
-  #     new_df (pd.DataFrame) : dataframe with duplicates dropped
+  # Reduces a data.frame to have unique values of the attributes in the given
+  # primary key. If the other columns are not uniquely determined by the primary
+  # key, as can be the case for approximate dependencies, the most common value
+  # for each primary key value is used.
   df_lst <- list()
 
   if (nrow(unique(df[, prim_key, drop = FALSE])) == nrow(df))
@@ -62,7 +56,6 @@ drop_primary_dups <- function(df, prim_key) {
 
   for (group in groups) {
     df_lst <- c(df_lst, list(data.frame(lapply(group, Mode))))
-    # new_df = new_df.append(group.mode().iloc[0], ignore_index=TRUE)
   }
   result <- `rownames<-`(
     stats::setNames(Reduce(rbind, df_lst), colnames(df)),
@@ -83,49 +76,6 @@ Mode <- function(x) {
 name_dataframe <- function(depdf) {
   paste(depdf$index, collapse = "_")
 }
-
-# class DepDF(object):
-#   """
-#     Represents dataframe and functional dependencies between columns in it.
-#     Used in the normalization process.
-#
-#     Attributes:
-#         deps
-#         df
-#         parent
-#         children
-#         index
-#     """
-#
-# def __init__(self, deps, df, index, parent=None):
-#   """
-#         Creates a DepDF.
-#
-#         Arguments:
-#             deps (Dependencies) : dependenies among the df
-#             df (pd.DataFrame) : dataframe for the object
-#             index (list[str]) : index columns for dataframe
-#             parent (DepDF, optional) : parent DepDF object
-#         """
-# self.deps = deps
-# self.df = df
-# self.parent = parent
-# self.children = []
-# self.index = index
-#
-# def return_dfs(self):
-#   """
-#         Returns the dataframes stored in self and all its descendents.
-#
-#         Returns:
-#             dfs (list[pd.DataFrame]) : dataframes
-#         """
-# if self.children == []:
-#   return [self.df]
-# result = [self.df]
-# for child in self.children:
-#   result += child.return_dfs()
-# return result
 
 DepDF <- function(
   deps,

@@ -1,11 +1,11 @@
 #' DFD algorithm
 #'
-#'Main loop of DFD algorithm. It returns all the dependencies represented in the
-#'data in dataframe df. Refer to section 3.2 of paper for literature. Checks
-#'each column to see if it's unique. If it is unique, it is added as the LHS of
-#'a dependency for every other element. It then loops through all the other
-#'non-unique columns and determines all the LHS that the column depends on. (LHS
-#'--> column)
+#' The DFD algorithm finds all the minimal functional dependencies represented
+#' in a relation/table, represented here in a data.frame. Checks each column to
+#' see if it's unique. If it is unique, it is added as the LHS of a dependency
+#' for every other element. It then loops through all the other non-unique
+#' columns and determines all the LHS that the column depends on. (LHS -->
+#' column)
 #' @param df a data.frame, the relation to evaluate.
 #' @param accuracy a numeric in (0, 1]: the accuracy threshold required in order
 #'   to conclude a dependency.
@@ -16,8 +16,8 @@
 #'   determinant attributes for that dependent attribute.
 #' @export
 dfd <- function(df, accuracy, progress = FALSE) {
-  # convert all columns to integers, since easier to check for duplicates
-  # when calculating partitions
+  # convert all columns to integers, since they're checked for duplicates more
+  # quickly when calculating partitions
   df <- data.frame(lapply(df, \(x) as.integer(factor(x))))
   partitions <- list()
   column_names <- colnames(df)
@@ -190,12 +190,6 @@ node_index <- function(node, nodes) {
 }
 
 nodes_from_seeds <- function(seeds) {
-  # Returns nodes from a list of seeds. Creates nodes for each seed, and
-  # connects them, forming the lattice graph.
-  # Arguments:
-  #     seeds (set[str]) : set of column names of seeds
-  # Returns:
-  #     nodes (list[Node]) : list of base nodes for lattice graph
   lattice <- list()
   lattice_children <- list()
   lattice_parents <- list()
@@ -354,18 +348,9 @@ remove_pruned_supersets <- function(supersets, max_non_deps) {
 }
 
 generate_next_seeds <- function(max_non_deps, min_deps, lhs_attrs, nodes) {
-  # Generates seeds for the nodes that are still unchecked due to pruning.
-  # This is done based off of the knowledge that once every possibility has
-  # been considered, the compliment of hte maximal non-dependencies, minus
-  # the existing minimum dependencies is 0 (the two are equal). Thus, if this
-  # is not satisfied, the new seeds are the remaining elements.
-  # Arguments:
-  #     max_non_deps (LHSs) : discovered maximal non-dependencies
-  #     min_deps (LHSs) : discovered minimal dependencies
-  #     lhs_attrs (set[str]) : attributes being considered as parts of LHSs
-  # Returns:
-  #     seed_attributes (list[str]) : list of seeds that need to be visited
   if (length(max_non_deps) == 0) {
+    # original DFD paper doesn't mention case where no maximal non-dependencies
+    # found yet, so this approach could be inefficient
     candidate_node_lattice <- setdiff(lhs_attrs, unlist(min_deps)) |>
       nodes_from_seeds()
     candidate_indices <- vapply(
@@ -427,8 +412,9 @@ compute_partitions <- function(df, rhs, lhs_set, partitions, accuracy) {
 }
 
 partition <- function(attrs, df, partitions) {
-# Returns the number of equivalence classes for the columns represented in attrs
-# for dataframe df.
+  # This only returns |C| for the equivalence class C, not its contents. This is
+  # less demanding on memory, but we cannot efficiently calculate the
+  # equivalence class for supersets.
   attrs_set <- sort(attrs)
   index <- match(list(attrs_set), partitions$set)
   if (!is.na(index)) {
@@ -443,8 +429,7 @@ partition <- function(attrs, df, partitions) {
 
 approximate_dependencies <- function(lhs_set, rhs, df, accuracy) {
   # This is a quick working version I put together to replace the non-working
-  # original.
-  # There's probably a better way to do this, see TANE section 2.3s.
+  # original. There's a known better way to do this, see TANE section 2.3s.
   rows <- nrow(df)
   limit <- rows * (1 - accuracy)
   n_remove <- function(x) {
@@ -452,13 +437,6 @@ approximate_dependencies <- function(lhs_set, rhs, df, accuracy) {
   }
   splitted <- factor(df[[rhs]], exclude = character())
   splitter <- lapply(df[, lhs_set, drop = FALSE], factor, exclude = character())
-  # total_to_remove <- tapply(
-  #   splitted,
-  #   splitter,
-  #   n_remove,
-  #   default = 0L
-  # ) |>
-  #   sum()
   total_to_remove <- split(splitted, splitter, drop = TRUE) |>
     Reduce(f = function(n, df) n + n_remove(df), init = 0)
   total_to_remove <= limit

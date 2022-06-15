@@ -20,10 +20,10 @@ element is a list of character vectors. Each character vector is a set of
 determinant attributes for that dependent attribute.
 }
 \description{
-Main loop of DFD algorithm. It returns all the dependencies represented in the
-data in dataframe df. Refer to section 3.2 of paper for literature. Checks
-each column to see if it's unique. If it is unique, it is added as the LHS of
-a dependency for every other element. It then loops through all the other
-non-unique columns and determines all the LHS that the column depends on. (LHS
---> column)
+The DFD algorithm finds all the minimal functional dependencies represented
+in a relation/table, represented here in a data.frame. Checks each column to
+see if it's unique. If it is unique, it is added as the LHS of a dependency
+for every other element. It then loops through all the other non-unique
+columns and determines all the LHS that the column depends on. (LHS -->
+column)
 }
