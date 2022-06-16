@@ -1,3 +1,11 @@
+# Scatch pad
+# - Handle non-standard data.frame column names (spaces, slashes, etc.)
+# - First 10 lines of liqour dataset: normalisation has a problem with arrows
+# denoting a relationship for attributes that aren't there. e.g.
+# invoice_item_number.store_number -> store_number.store_number, but only latter
+# has that attribute
+# - cross-intersection: I don't think unique() is what minimising means in the paper
+
 #' DFD algorithm
 #'
 #' The DFD algorithm finds all the minimal functional dependencies represented
@@ -401,29 +409,41 @@ generate_next_seeds <- function(max_non_deps, min_deps, lhs_attr_nodes, nodes) {
   }else{
     seeds <- integer()
     for (nfd in max_non_deps) {
-      nfd_compliment <- remove_pruned_subsets(lhs_attr_nodes, nfd, nodes$bits)
+      max_non_dep_c <- remove_pruned_subsets(lhs_attr_nodes, nfd, nodes$bits)
       if (length(seeds) == 0)
-        seeds <- nfd_compliment
+        seeds <- max_non_dep_c
       else {
-        seeds <- cross_intersection(seeds, nfd_compliment)
+        seeds <- cross_intersection(seeds, max_non_dep_c, nodes$bits)
       }
     }
-    # MY NOTES: minimise new deps here
   }
   remove_pruned_supersets(seeds, min_deps, nodes$bits)
 }
 
-cross_intersection <- function(seeds, new_set) {
+cross_intersection <- function(seeds, max_non_dep, bitsets) {
   new_seeds <- integer()
-  for (seed in seeds) {
-    seed_bitset <- intToBits(seed)
-    for (new_el in new_set) {
-      new_el_bitset <- intToBits(new_el)
-      sd <- packBits(seed_bitset | new_el_bitset, "integer")
-      new_seeds <- c(new_seeds, sd)
+  for (dep in seeds) {
+    seed_bitset <- intToBits(dep)
+    for (set in max_non_dep) {
+      set_bit_index <- intToBits(set)
+      new_seed <- packBits(seed_bitset | set_bit_index, "integer")
+      new_seeds <- c(new_seeds, new_seed)
     }
   }
-  unique(new_seeds)
+  minimise_seeds(new_seeds, bitsets)
+}
+
+minimise_seeds <- function(seeds, bitsets) {
+  minimised <- integer()
+  for (n in seq_along(seeds)) {
+    current_seed <- seeds[n]
+    other_seeds <- seeds[-n]
+    minimised <- c(
+      minimised,
+      remove_pruned_subsets(current_seed, other_seeds, bitsets)
+    )
+  }
+  minimised
 }
 
 compute_partitions <- function(df, rhs, lhs_set, partitions, accuracy) {
