@@ -65,34 +65,35 @@ describe("plot_string", {
       )
       expected_string <- paste(
         "digraph Book {",
+        "  rankdir = \"LR\"",
         "  node [shape=record];",
         paste(
-          "  Book [label = \"{Book (2 rows)",
+          "  Book [label = \"Book (2 rows)",
           "<Title> Title : character",
           "<Author> Author : character",
           "<Pages> Pages : integer",
           "<Thickness> Thickness : character",
           "<Genre_ID> Genre_ID : integer",
-          "<Publisher_ID> Publisher_ID : integer}\"];",
+          "<Publisher_ID> Publisher_ID : integer\"];",
           sep = "|"
         ),
         paste(
-          "  Format_Price [label = \"{Format_Price (4 rows)",
+          "  Format_Price [label = \"Format_Price (4 rows)",
           "<Title> Title : character",
           "<Format> Format : character",
-          "<Price> Price : integer}\"];",
+          "<Price> Price : integer\"];",
           sep = "|"
         ),
         paste(
-          "  Author [label = \"{Author (2 rows)",
+          "  Author [label = \"Author (2 rows)",
           "<Author> Author : character",
-          "<Author_Nationality> Author_Nationality : character}\"];",
+          "<Author_Nationality> Author_Nationality : character\"];",
           sep = "|"
         ),
         paste(
-          "  Genre [label = \"{Genre (2 rows)",
+          "  Genre [label = \"Genre (2 rows)",
           "<Genre_ID> Genre_ID : integer",
-          "<Genre_Name> Genre_Name : character}\"];",
+          "<Genre_Name> Genre_Name : character\"];",
           sep = "|"
         ),
         "",
@@ -118,8 +119,9 @@ describe("plot_string", {
         plot_string_df(df, "table"),
         paste(
           "digraph table {",
+          "  rankdir = \"LR\"",
           "  node [shape=record];",
-          "  table [label = \"{table (2 rows)|<a> a : integer|<b> b : character}\"];",
+          "  table [label = \"table (2 rows)|<a> a : integer|<b> b : character\"];",
           "}",
           "",
           sep = "\n"
@@ -134,8 +136,9 @@ describe("plot_string", {
         plot_string_df(df, "table test"),
         paste(
           "digraph table_test {",
+          "  rankdir = \"LR\"",
           "  node [shape=record];",
-          "  table_test [label = \"{table_test (2 rows)|<a> a : integer|<b> b : character}\"];",
+          "  table_test [label = \"table_test (2 rows)|<a> a : integer|<b> b : character\"];",
           "}",
           "",
           sep = "\n"

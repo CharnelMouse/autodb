@@ -75,6 +75,7 @@ plot_table <- function(df, df_name, to_file = FALSE) {
 plot_string_entityset <- function(es) {
   gv_string <- paste0(
     "digraph ", gsub(" ", "_", es$name), " {\n",
+    "  rankdir = \"LR\"\n",
     "  node [shape=record];\n"
   )
 
@@ -93,15 +94,13 @@ plot_string_entityset <- function(es) {
 
     nrows <- nrow(df)
     label <- paste0(
-      "{",
       df_name,
       " (",
       nrows,
       " row",
       if (nrows != 1) "s",
       ")|",
-      columns_string,
-      "}"
+      columns_string
     )
     df_string <- paste0("  ", df_name, " [label = \"", label, "\"];\n")
     gv_string <- paste0(gv_string, df_string)
@@ -127,6 +126,7 @@ plot_string_df <- function(df, df_name) {
 
   gv_string <- paste0(
     "digraph ", df_name, " {\n",
+    "  rankdir = \"LR\"\n",
     "  node [shape=record];\n"
   )
 
@@ -143,15 +143,13 @@ plot_string_df <- function(df, df_name) {
 
   nrows <- nrow(df)
   label <- paste0(
-    "{",
     df_name,
     " (",
     nrows,
     " row",
     if (nrows != 1) "s",
     ")|",
-    columns_string,
-    "}"
+    columns_string
   )
   df_string <- paste0("  ", df_name, " [label = \"", label, "\"];\n")
   gv_string <- paste0(gv_string, df_string)
