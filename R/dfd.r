@@ -1,18 +1,3 @@
-# scratch pad:
-# - Use IDs instead of the character vector for naming powerset nodes. This
-# should significantly speed up dfd, since a lot of time is spent matching an
-# attribute set to find its position in the powerset structure. Integers can go
-# up to .Machine$integer.max; for the standard 2^31-1, this limits us to 31
-# columns. Numerics get this up to .Machine$double.digits columns, but how a
-# double is represented in bits can be machine-dependent. Thirty-one columns it
-# is.
-# - Implement creation of synthetic keys. I need to be careful with how it gets
-# added to other tables: if I just replace the old key with the new one, that
-# could remove dependencies based on only part of the old key.
-# - Add removal of functional dependencies back into normalisation. I'm not sure
-# yet whether it's necessary, or whether using a minimal cover has removed them
-# all.
-
 #' DFD algorithm
 #'
 #' The DFD algorithm finds all the minimal functional dependencies represented
