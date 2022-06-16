@@ -3,8 +3,8 @@
 # - First 10 lines of liqour dataset: normalisation has a problem with arrows
 # denoting a relationship for attributes that aren't there. e.g.
 # invoice_item_number.store_number -> store_number.store_number, but only latter
-# has that attribute
-# - cross-intersection: I don't think unique() is what minimising means in the paper
+# has that attribute. I think this is due to how I determine relationships, in
+# cases where one attribute name is another plus a suffix.
 
 #' DFD algorithm
 #'
