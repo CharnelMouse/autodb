@@ -5,6 +5,8 @@
 # invoice_item_number.store_number -> store_number.store_number, but only latter
 # has that attribute. I think this is due to how I determine relationships, in
 # cases where one attribute name is another plus a suffix.
+# - make.names docs: R didn't support underscores in names until 1.9.0, I need
+# to set a limit for R version in DESCRIPTION.
 
 #' DFD algorithm
 #'
