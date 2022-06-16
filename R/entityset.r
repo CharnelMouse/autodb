@@ -1,9 +1,4 @@
-EntitySet <- function(x, name = NA, ...) {
-  UseMethod("EntitySet")
-}
-
-#' @export
-EntitySet.DepDF <- function(depdf, name = NA, ...) {
+EntitySet <- function(df, deps, name = NA) {
   # Creates a normalized EntitySet from df based on the dependencies given.
   # Keys for the newly created DataFrames can only be columns that are strings,
   # ints, or categories. Keys are chosen according to the priority:
@@ -17,23 +12,21 @@ EntitySet.DepDF <- function(depdf, name = NA, ...) {
   #
   # Returns:
   #   entityset (ft.EntitySet) : created entity set
-  dependencies <- tuple_relations(depdf$deps)
-  depdf <- normalize_dataframe(depdf$df, dependencies)
-  depdf <- make_indexes(depdf)
+  dependencies <- tuple_relations(deps)
+  depdfs <- normalize_dataframe(df, dependencies)
+  depdfs <- make_indexes(depdfs)
 
-  visited <- character()
   relationships <- list()
 
-  stack <- depdf
+  stack <- depdfs
 
   while (length(stack) > 0) {
     current_df_name <- names(stack)[1]
     current <- stack[[1]]
     stack <- stack[-1]
 
-    visited <- c(visited, current_df_name)
     for (child_name in current$children) {
-      child <- depdf[[child_name]]
+      child <- depdfs[[child_name]]
       relationships <- c(
         relationships,
         lapply(
@@ -46,7 +39,7 @@ EntitySet.DepDF <- function(depdf, name = NA, ...) {
 
   es <- list(
     name = name,
-    dataframes = depdf,
+    dataframes = depdfs,
     relationships = relationships
   )
   class(es) <- c("EntitySet", class(es))

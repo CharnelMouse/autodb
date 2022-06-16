@@ -205,20 +205,15 @@ make_indexes <- function(depdfs) {
 }
 
 tuple_relations <- function(dependencies) {
-  UseMethod("tuple_relations")
-}
-
-#' @export
-tuple_relations.Dependencies <- function(dependencies) {
   # Takes Dependencies and returns the dependencies in a flat list with
   # (parent table, parent attr, child table, child attr)
-  # format. This throws away the index element, which I plan to remove anyway.
+  # format.
   result <- list()
-  for (i in seq_along(dependencies$dependencies)) {
-    rhs <- names(dependencies$dependencies)[i]
+  for (i in seq_along(dependencies)) {
+    rhs <- names(dependencies)[i]
     result <- c(
       result,
-      lapply(dependencies$dependencies[[i]], \(lhs) list(lhs, rhs))
+      lapply(dependencies[[i]], \(lhs) list(lhs, rhs))
     )
   }
   result

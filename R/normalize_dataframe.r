@@ -76,32 +76,3 @@ Mode <- function(x) {
 name_dataframe <- function(depdf) {
   paste(depdf$index, collapse = "_")
 }
-
-DepDF <- function(
-  deps,
-  df,
-  index = deps$primary_key,
-  parent = NA_character_,
-  children = character()
-) {
-  UseMethod("DepDF")
-}
-
-#' @export
-DepDF.Dependencies <- function(
-  deps,
-  df,
-  index = deps$primary_key,
-  parent = NA_character_,
-  children = character()
-) {
-  lst <- list(
-    deps = deps,
-    df = df,
-    index = index,
-    children = children,
-    parent = parent
-  )
-  class(lst) <- c("DepDF", class(lst))
-  lst
-}

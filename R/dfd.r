@@ -306,14 +306,6 @@ non_dep_superset <- function(node, nodes) {
   any(nodes$category[parents] < 0)
 }
 
-sort_key <- function(node, sorted_attrs) {
-  # Sort key for sorting lists of nodes.
-  # MY NOTES: This returns a bitset for presence in node,
-  # I don't know why it's named sort_key.
-  powers <- seq.int(length(sorted_attrs)) - 1L
-  sum(10^(powers[sorted_attrs %in% node]))
-}
-
 pick_next_node <- function(node, nodes, trace, min_deps, max_non_deps, attrs) {
   # Picks the next node to look at. If current node is a candidate minimum
   # dependency looks for unchecked subsets. If no unchecked subsets that could

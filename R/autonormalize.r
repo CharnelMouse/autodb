@@ -24,6 +24,5 @@ auto_entityset <- function(
   name = NA
 ) {
   deps <- find_dependencies(df, accuracy)
-  depdf <- DepDF(Dependencies(deps), df)
-  EntitySet(depdf, name)
+  EntitySet(df, deps, name)
 }

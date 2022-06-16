@@ -216,14 +216,11 @@ describe("choose_index", {
 
 describe("make_indexes", {
   new_dfs <- list(
-    id = DepDF(
-      deps = Dependencies(
-        list(
+    id = list(
+      deps = list(
           id = list(),
           month = list("id", c("hemisphere", "is_winter")),
           hemisphere = list(c("month", "is_winter"), "id")
-        ),
-        primary_key = "id"
       ),
       df = data.frame(
         id = 0:9,
@@ -235,28 +232,19 @@ describe("make_indexes", {
           "N", "N", "N", "N", "S",
           "S", "S", "S", "S", "N"
         )
-      ),
-      index = "id",
-      children = "month_hemisphere",
-      parent = NA_character_
+      )
     ),
-    month_hemisphere = DepDF(
-      deps = Dependencies(
-        list(
-          month = list(c("hemisphere", "is_winter")),
-          hemisphere = list(c("month", "is_winter")),
-          is_winter = list(c("month", "hemisphere"))
-        ),
-        primary_key = c("month", "hemisphere")
+    month_hemisphere = list(
+      deps = list(
+        month = list(c("hemisphere", "is_winter")),
+        hemisphere = list(c("month", "is_winter")),
+        is_winter = list(c("month", "hemisphere"))
       ),
       df = data.frame(
         month = c("dec", "jul", "dec", "jul"),
         hemisphere = c("N", "N", "S", "S"),
         is_winter = c(TRUE, FALSE, FALSE, TRUE)
-      ),
-      index = c("month", "hemisphere"),
-      children = character(),
-      parent = "id"
+      )
     )
   )
 

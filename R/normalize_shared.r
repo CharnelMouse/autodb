@@ -30,7 +30,7 @@ find_most_comm <- function(deps, dependencies, df = NA) {
   max_lhs <- choose_index(options, df)
 
   for (i in seq_along(max_lhs)) {
-    for (key in get_prim_key(dependencies)) {
+    for (key in dependencies$primary_key) {
       if (equiv_attrs(dependencies, max_lhs[i], key))
         max_lhs[i] <- key
     }
@@ -72,7 +72,7 @@ split_on_dep <- function(lhs_dep, dependencies) {
   list(
     Dependencies(
       dependencies = old_deps,
-      primary_key = get_prim_key(dependencies)
+      primary_key = dependencies$primary_key
     ),
     Dependencies(
       dependencies = new_deps,
@@ -133,14 +133,6 @@ filter <- function(relations, df) {
   }
   relations
 }
-
-get_prim_key <- function(dependencies) {
-  UseMethod("get_prim_key")
-}
-
-#' @export
-get_prim_key.Dependencies <- function(dependencies)
-  dependencies$primary_key
 
 remove_extraneous_attributes <- function(x) {
   rels <- x
