@@ -3,17 +3,17 @@ library(hedgehog)
 
 describe("dfd", {
   it("terminates for simple logical relations", {
-    gen_ncol <- gen.int(3)
-    gen_len <- gen.int(5)
+    gen_ncol_inc <- gen.int(4)
+    gen_len_inc <- gen.int(6)
     gen_df <- generate(
-      for (n_col in gen_ncol) {
+      for (n_col_inc in gen_ncol_inc) {
         generate(
-          for (n in gen_len) {
+          for (len_inc in gen_len_inc) {
             rep(
-              list(gen.sample(c(FALSE, TRUE), n, replace = TRUE)),
-              n_col
+              list(gen.sample(c(FALSE, TRUE), len_inc - 1, replace = TRUE)),
+              n_col_inc - 1
             ) |>
-              setNames(LETTERS[1:n_col])
+              setNames(make.unique(rep_len(LETTERS, n_col_inc - 1)))
           }
         )
       }

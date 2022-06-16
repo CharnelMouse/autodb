@@ -1,3 +1,18 @@
+# scratch pad:
+# - Use IDs instead of the character vector for naming powerset nodes. This
+# should significantly speed up dfd, since a lot of time is spent matching an
+# attribute set to find its position in the powerset structure. Integers can go
+# up to .Machine$integer.max; for the standard 2^31-1, this limits us to 31
+# columns. Numerics get this up to .Machine$double.digits columns, but how a
+# double is represented in bits can be machine-dependent. Thirty-one columns it
+# is.
+# - Implement creation of synthetic keys. I need to be careful with how it gets
+# added to other tables: if I just replace the old key with the new one, that
+# could remove dependencies based on only part of the old key.
+# - Add removal of functional dependencies back into normalisation. I'm not sure
+# yet whether it's necessary, or whether using a minimal cover has removed them
+# all.
+
 #' DFD algorithm
 #'
 #' The DFD algorithm finds all the minimal functional dependencies represented
@@ -16,11 +31,16 @@
 #'   determinant attributes for that dependent attribute.
 #' @export
 dfd <- function(df, accuracy, progress = FALSE) {
+  n_cols <- ncol(df)
+  column_names <- colnames(df)
+  if (n_cols == 0)
+    return(list())
+  if (n_cols == 1)
+    return(setNames(list(list()), column_names))
   # convert all columns to integers, since they're checked for duplicates more
   # quickly when calculating partitions
   df <- data.frame(lapply(df, \(x) as.integer(factor(x))))
   partitions <- list()
-  column_names <- colnames(df)
   dependencies <- stats::setNames(rep(list(list()), ncol(df)), column_names)
   fixed <- character()
   nonfixed <- column_names
@@ -37,13 +57,24 @@ dfd <- function(df, accuracy, progress = FALSE) {
   for (i in nonfixed) {
     if (progress)
       cat(paste("dependent", i, "\n"))
-    lhss <- find_LHSs(i, nonfixed, df, partitions, accuracy)
+    lhss <- find_LHSs(i, nonfixed, df, partitions, accuracy, progress)
     dependencies[[i]] <- c(dependencies[[i]], lhss)
   }
   dependencies
 }
 
-find_LHSs <- function(rhs, attrs, df, partitions, accuracy) {
+find_LHSs <- function(rhs, attrs, df, partitions, accuracy, progress = FALSE) {
+  # The original library "names" nodes with their attribute set,
+  # so finding a node involves matching a character vector against
+  # a list of character vectors. This is slow.
+  # Instead, we assign each possible attribute set an integer,
+  # by taking the integer that matches the bitset. This limits
+  # us to floor(.Machine$integer.max) attributes as potential determinants.
+  # We could use numerics to get to .Machine$double.digits determinant
+  # attributes, but these would be arbitrary floats rather than integers,
+  # so more work would be required to match indices etc.
+  # Assigning the integers per find_LHSs call allows one more column,
+  # since we don't need to include the dependent.
   # Node categories:
   # -3 = candidate maximal non-dependency
   # -2 = maximal non-dependency
@@ -53,60 +84,74 @@ find_LHSs <- function(rhs, attrs, df, partitions, accuracy) {
   #  2 = minimal dependency
   #  3 = candidate minimal dependency
   lhs_attrs <- setdiff(attrs, rhs)
-  seeds <- lhs_attrs
-  nodes <- nodes_from_seeds(seeds)
-  seeds <- as.list(seeds)
-  min_deps <- list()
-  max_non_deps <- list()
-  trace <- list()
+
+  n_attrs <- length(lhs_attrs)
+  if (n_attrs == 0)
+    return(character())
+  # using 0 would allow for one more column, but that's for a later date
+  max_attrs <- floor(log(.Machine$integer.max, 2))
+  if (n_attrs > max_attrs)
+    stop(paste(
+      "only data.frames with up to", max_attrs, "columns currently supported"
+    ))
+
+  simple_nodes <- as.integer(2^(seq.int(n_attrs) - 1))
+  seeds <- simple_nodes
+  nodes <- powerset_nodes(n_attrs)
+  min_deps <- integer()
+  max_non_deps <- integer()
+  trace <- integer()
+
   while (length(seeds) != 0) {
-    node <- sample(seeds, 1)[[1]]
-    while (!is.na(node[1])) {
-      index <- node_index(node, nodes)
-      if (nodes$visited[index]) {
-        if (nodes$category[index] == 3) { # dependency
+    node <- sample(seeds, 1)
+    while (!is.na(node)) {
+      if (nodes$visited[node]) {
+        if (nodes$category[node] == 3) { # dependency
           if (is_minimal(node, nodes)) {
-            nodes$category[index] <- 2L
-            min_deps <- c(min_deps, list(node))
+            nodes$category[node] <- 2L
+            min_deps <- c(min_deps, node)
           }
         }
-        if (nodes$category[index] == -3) { # non-dependency
+        if (nodes$category[node] == -3) { # non-dependency
           if (is_maximal(node, nodes)) {
-            nodes$category[index] <- -2L
-            max_non_deps <- c(max_non_deps, list(node))
+            nodes$category[node] <- -2L
+            max_non_deps <- c(max_non_deps, node)
           }
         }
-        nodes$category[index] <- update_dependency_type(
+        nodes$category[node] <- update_dependency_type(
           node,
           nodes,
           min_deps,
           max_non_deps
         )
+        nodes$category[node] <- nodes$category[node]
       }else{
         inferred_type <- infer_type(node, nodes)
-        if (!is.na(inferred_type))
-          nodes$category[index] <- inferred_type
-        if (nodes$category[index] == 0L) {
-          cp <- compute_partitions(df, rhs, node, partitions, accuracy)
+        if (!is.na(inferred_type)) {
+          nodes$category[node] <- inferred_type
+        }
+        if (nodes$category[node] == 0L) {
+          lhs_set <- lhs_attrs[as.logical(intToBits(node))]
+          cp <- compute_partitions(df, rhs, lhs_set, partitions, accuracy)
           result <- cp[[1]]
           partitions <- cp[[2]]
           if (result) {
             if (is_minimal(node, nodes)) {
-              min_deps <- c(min_deps, list(node))
-              nodes$category[index] <- 2L
+              min_deps <- c(min_deps, node)
+              nodes$category[node] <- 2L
             }else{
-              nodes$category[index] <- 3L
+              nodes$category[node] <- 3L
             }
           }else{
             if (is_maximal(node, nodes)) {
-              max_non_deps <- c(max_non_deps, list(node))
-              nodes$category[index] <- -2L
+              max_non_deps <- c(max_non_deps, node)
+              nodes$category[node] <- -2L
             }else{
-              nodes$category[index] <- -3L
+              nodes$category[node] <- -3L
             }
           }
         }
-        nodes$visited[index] <- TRUE
+        nodes$visited[node] <- TRUE
       }
       res <- pick_next_node(
         node,
@@ -116,38 +161,108 @@ find_LHSs <- function(rhs, attrs, df, partitions, accuracy) {
         max_non_deps,
         colnames(df)
       )
-      node <- res[[1]]
       trace <- res[[2]]
       nodes <- res[[3]]
+      if (progress)
+        cat(paste0(
+          "node: ", node, ", ",
+          "visited: ", sum(nodes$visited), ", ",
+          "not visited: ", sum(!nodes$visited), ", ",
+          "#seeds: ", length(seeds), ", ",
+          "#min_deps: ", length(min_deps), ", ",
+          "#max_non_deps: ", length(max_non_deps), ", ",
+          "trace: ", length(trace), "\n"
+        ))
+      node <- res[[1]]
     }
-    seeds <- generate_next_seeds(max_non_deps, min_deps, lhs_attrs, nodes)
+    seeds <- generate_next_seeds(max_non_deps, min_deps, simple_nodes, nodes)
+    if (progress)
+      cat(paste0(
+        "generate: ",
+        "visited: ", sum(nodes$visited), ", ",
+        "not visited: ", sum(!nodes$visited), ", ",
+        "#seeds: ", length(seeds), ", ",
+        "#min_deps: ", length(min_deps), ", ",
+        "#max_non_deps: ", length(max_non_deps), ", ",
+        "trace: ", length(trace), "\n"
+      ))
   }
-  min_deps
+  lapply(min_deps, \(md) lhs_attrs[as.logical(intToBits(md))])
+}
+
+powerset_nodes <- function(n) {
+  if (n == 0)
+    return(list(
+      bits = raw(),
+      logicals = logical(),
+      children = list(),
+      parents = list(),
+      category = integer(),
+      visited = logical()
+    ))
+  if (n == 1)
+    return(list(
+      bits = intToBits(1),
+      logicals = list(TRUE),
+      children = list(integer()),
+      parents = list(integer()),
+      category = 0L,
+      visited = FALSE
+    ))
+  n_nonempty_subsets <- 2^n - 1
+  node_bits <- lapply(seq.int(n_nonempty_subsets), intToBits)
+  children <- rep(list(integer()), n_nonempty_subsets)
+  parents <- rep(list(integer()), n_nonempty_subsets)
+  for (x in seq.int(n_nonempty_subsets - 1)) {
+    for (y in seq(x + 1L, n_nonempty_subsets)) {
+      # x | y: minimal join of sets
+      # x & y: maximal intersection of sets
+      # xor(x, y): non-shared elements
+      # x | y == x: x superset of y
+      # x & y == x: x subset of y
+      # xor(x, y) == x: y is empty
+      # sum(x != y) == 1: differ by one element
+      node_x <- node_bits[[x]]
+      node_y <- node_bits[[y]]
+      if (sum(node_x != node_y) == 1) { # differ by one element
+        if (all((node_x & node_y) == node_x)) { # x is subset
+          children[[y]] <- c(children[[y]], x)
+          parents[[x]] <- c(parents[[x]], y)
+        }else{
+          children[[x]] <- c(children[[x]], y)
+          parents[[y]] <- c(parents[[y]], x)
+        }
+      }
+    }
+  }
+  list(
+    bits = node_bits,
+    logicals = lapply(node_bits, \(x) as.logical(x)[seq.int(n)]),
+    children = children,
+    parents = parents,
+    category = rep(0L, n_nonempty_subsets),
+    visited = rep(FALSE, n_nonempty_subsets)
+  )
 }
 
 is_minimal <- function(node, nodes) {
-  index <- node_index(node, nodes)
-  children <- nodes$children[[index]]
-  children_indices <- vapply(children, node_index, integer(1), nodes)
-  all(nodes$category[children_indices] < 0)
+  children <- nodes$children[[node]]
+  all(nodes$category[children] < 0)
 }
 
 is_maximal <- function(node, nodes) {
-  index <- node_index(node, nodes)
-  parents <- nodes$parents[[index]]
-  parent_indices <- vapply(parents, node_index, integer(1), nodes)
-  all(nodes$category[parent_indices] > 0)
+  parents <- nodes$parents[[node]]
+  all(nodes$category[parents] > 0)
 }
 
 update_dependency_type <- function(node, nodes, min_deps, max_non_deps) {
-  index <- node_index(node, nodes)
-  children <- nodes$children[[index]]
+  children <- nodes$children[[node]]
   if (any(children %in% min_deps))
     return(1L)
-  parents <- nodes$parents[[index]]
+  parents <- nodes$parents[[node]]
   if (any(parents %in% max_non_deps))
     return(-1L)
-  nodes$category[index]
+  nodes$category[node]
 }
 
 infer_type <- function(node, nodes) {
@@ -163,77 +278,13 @@ infer_type <- function(node, nodes) {
 }
 
 dep_subset <- function(node, nodes) {
-  index <- node_index(node, nodes)
-  children <- nodes$children[[index]]
-  children_indices <- vapply(children, node_index, integer(1), nodes)
-  any(nodes$category[children_indices] > 0)
+  children <- nodes$children[[node]]
+  any(nodes$category[children] > 0)
 }
 
 non_dep_superset <- function(node, nodes) {
-  index <- node_index(node, nodes)
-  parents <- nodes$parent[[index]]
-  parent_indices <- vapply(parents, node_index, integer(1), nodes)
-  any(nodes$category[parent_indices] < 0)
-}
-
-node_index <- function(node, nodes) {
-  matches <- vapply(nodes$node, identical, logical(1), node)
-  ind <- which(matches)
-  if (length(ind) != 1)
-    stop(paste0(
-      "missing index: ", toString(node),
-      "\nnode class: ", toString(class(node)),
-      "\nnodes: ", toString(nodes$node),
-      "\nmatches: ", toString(matches)
-    ))
-  ind
-}
-
-nodes_from_seeds <- function(seeds) {
-  lattice <- list()
-  lattice_children <- list()
-  lattice_parents <- list()
-
-  this_level <- as.list(seeds)
-  this_children <- rep(list(list()), length(seeds))
-  this_parents <- rep(list(list()), length(seeds))
-
-  for (level in seq_along(seeds)[-1]) {
-    next_level <- utils::combn(seeds, level, simplify = FALSE)
-    next_children <- rep(list(list()), length(next_level))
-    next_parents <- rep(list(list()), length(next_level))
-    for (this_index in seq_along(this_level)) {
-      for (next_index in seq_along(next_level)) {
-        next_set <- next_level[[next_index]]
-        if (all(this_level[[this_index]] %in% next_set)) {
-          next_children[[next_index]] <- c(
-            next_children[[next_index]],
-            list(this_level[[this_index]])
-          )
-          this_parents[[this_index]] <- c(
-            this_parents[[this_index]],
-            list(next_set)
-          )
-        }
-      }
-    }
-    lattice <- c(lattice, this_level)
-    lattice_children <- c(lattice_children, this_children)
-    lattice_parents <- c(lattice_parents, this_parents)
-    this_level <- next_level
-    this_children <- next_children
-    this_parents <- next_parents
-  }
-  lattice <- c(lattice, this_level)
-  lattice_children <- c(lattice_children, this_children)
-  lattice_parents <- c(lattice_parents, this_parents)
-  list(
-    node = lattice,
-    children = lattice_children,
-    parents = lattice_parents,
-    category = rep(0L, length(lattice)),
-    visited = rep(FALSE, length(lattice))
-  )
+  parents <- nodes$parent[[node]]
+  any(nodes$category[parents] < 0)
 }
 
 sort_key <- function(node, sorted_attrs) {
@@ -254,141 +305,126 @@ pick_next_node <- function(node, nodes, trace, min_deps, max_non_deps, attrs) {
   # it must be a maximum non-dependency. Otherwise, check an unchecked superset.
   # If not a candidate, return last node on trace (go back down in graph)
   # Arguments:
-  #     node (Node) : current node just visited
-  #     trace (list[Node]) : stack of past nodes visited
-  #     min_deps (LHSs) : discovered minimum dependencies
-  #     max_non_deps (LHSs) : discovered maximum non-dependencies
+  #     node (int) : current node just visited
+  #     trace (list[int]) : stack of past nodes visited
+  #     min_deps (list[int]) : discovered minimum dependencies
+  #     max_non_deps (list[int]) : discovered maximum non-dependencies
   # Returns:
-  #     next_node (Node or None) : next node to look at, None if none left
+  #     next_node (int or NA) : next node to look at, NA if none left
   #     to check in currrent part of graph
-  srt_key <- \(s) sort_key(s, sort(attrs)) # partial curries functions
-  index <- node_index(node, nodes)
-  if (nodes$category[index] == 3) { # candidate dependency
-    s <- unchecked_subsets(index, nodes)
-    s <- remove_pruned_subsets(s, min_deps)
+  if (nodes$category[node] == 3) { # candidate dependency
+    s <- unchecked_subsets(node, nodes)
+    s <- remove_pruned_subsets(s, min_deps, nodes$bits)
     if (length(s) == 0) {
-      min_deps <- c(min_deps, list(node))
-      nodes$category[index] <- 2L
+      min_deps <- c(min_deps, node)
+      nodes$category[node] <- 2L
       return(list(NA, trace, nodes))
     }else{
-      trace <- c(list(node), trace)
-      return(list(
-        s[order(vapply(s, srt_key, numeric(1)))][[1]], # calls srt_key to decide the order
-        trace,
-        nodes
-      ))
+      trace <- c(node, trace)
+      return(list(min(s), trace, nodes))
     }
-  }else if (nodes$category[index] == -3) { # candidate non-dependency
-    s <- unchecked_supersets(index, nodes)
-    s <- remove_pruned_supersets(s, max_non_deps)
+  }else if (nodes$category[node] == -3) { # candidate non-dependency
+    s <- unchecked_supersets(node, nodes)
+    s <- remove_pruned_supersets(s, max_non_deps, nodes$bits)
     if (length(s) == 0) {
-      max_non_deps <- c(max_non_deps, list(node))
-      nodes$category[index] <- -2L
+      max_non_deps <- c(max_non_deps, node)
+      nodes$category[node] <- -2L
       return(list(NA, trace, nodes))
     }else{
-      trace <- c(list(node), trace)
-      return(list(
-        s[order(vapply(s, srt_key, numeric(1)))][[1]],
-        trace,
-        nodes
-      ))
+      trace <- c(node, trace)
+      return(list(min(s), trace, nodes))
     }
   }
   if (length(trace) == 0)
     return(list(NA, trace, nodes))
-  list(trace[[1]], trace[-1], nodes)
+  list(trace[1], trace[-1], nodes)
 }
 
 unchecked_subsets <- function(index, nodes) {
-  visited <- nodes$node[nodes$visited]
+  visited <- which(nodes$visited)
   children <- nodes$children[[index]]
   setdiff(children, visited)
 }
 
 unchecked_supersets <- function(index, nodes) {
-  visited <- nodes$node[nodes$visited]
+  visited <- which(nodes$visited)
   parents <- nodes$parents[[index]]
   setdiff(parents, visited)
 }
 
-remove_pruned_subsets <- function(subsets, min_deps) {
+remove_pruned_subsets <- function(subsets, supersets, bitsets) {
   # Removes all pruned subsets. A subset can be pruned when it is a
   # subset of an existing discovered minimum dependency (because we
   # thus know it is a non-dependency)
   # Arguments:
-  #     subsets (list[Node]) : list of subset nodes
-  #     min_deps (LHSs) : discovered minimal dependencies
-  for (subset in subsets) {
-    if (any(vapply(
-      min_deps,
-      \(min_dep) all(subset %in% min_dep),
-      logical(1)
-    )))
-      subsets <- setdiff(subsets, subset)
-  }
-  subsets
+  #     subsets (list[int]) : list of subset nodes
+  #     min_deps (list[int]) : discovered minimal dependencies
+  if (length(subsets) == 0 || length(supersets) == 0)
+    return(subsets)
+  check_pairs <- outer(
+    bitsets[subsets],
+    bitsets[supersets],
+    Vectorize(is_subset)
+  )
+  prune <- apply(check_pairs, 1, any)
+  subsets[!prune]
 }
 
-remove_pruned_supersets <- function(supersets, max_non_deps) {
+remove_pruned_supersets <- function(supersets, subsets, bitsets) {
   # Removes all pruned supersets. A superset can be pruned when it is
   # a superset of an existing discovered maximal non-dependency (because
   # we thus know it is a dependency)
   # Arguments:
-  #     supersets (list[Node]) : list of superset nodes
-  #     max_non_deps (LHSs) : discovered maximal non-dependencies
-  for (superset in supersets) {
-    if (any(vapply(
-      max_non_deps,
-      \(max_dep) all(superset %in% max_dep),
-      logical(1)
-    )))
-      supersets <- setdiff(supersets, superset)
-  }
-  supersets
+  #     supersets (list[int]) : list of superset nodes
+  #     max_non_deps (list[int]) : discovered maximal non-dependencies
+  if (length(subsets) == 0 || length(supersets) == 0)
+    return(supersets)
+  check_pairs <- outer(
+    bitsets[supersets],
+    bitsets[subsets],
+    Vectorize(is_superset)
+  )
+  prune <- rowSums(check_pairs) > 0
+  supersets[!prune]
 }
 
-generate_next_seeds <- function(max_non_deps, min_deps, lhs_attrs, nodes) {
+is_subset <- function(bits1, bits2) identical(bits1 & bits2, bits1)
+is_superset <- function(bits1, bits2) identical(bits1 & bits2, bits2)
+
+generate_next_seeds <- function(max_non_deps, min_deps, lhs_attr_nodes, nodes) {
   if (length(max_non_deps) == 0) {
     # original DFD paper doesn't mention case where no maximal non-dependencies
     # found yet, so this approach could be inefficient
-    candidate_node_lattice <- setdiff(lhs_attrs, unlist(min_deps)) |>
-      nodes_from_seeds()
-    candidate_indices <- vapply(
-      candidate_node_lattice$node,
-      node_index,
-      integer(1),
-      nodes
+    attrs_not_in_min_deps <- remove_pruned_subsets(
+      lhs_attr_nodes,
+      min_deps,
+      nodes$bits
     )
-    candidate_categories <- nodes$category[candidate_indices]
-    candidate_nodes <- candidate_node_lattice$node[candidate_categories >= 0]
-    seeds <- candidate_nodes
+    candidate_categories <- nodes$category[attrs_not_in_min_deps]
+    seeds <- attrs_not_in_min_deps[candidate_categories >= 0]
   }else{
-    seeds <- list()
+    seeds <- integer()
     for (nfd in max_non_deps) {
-      nfd_compliment <- setdiff(lhs_attrs, nfd)
+      nfd_compliment <- remove_pruned_subsets(lhs_attr_nodes, nfd, nodes$bits)
       if (length(seeds) == 0)
-        seeds <- as.list(nfd_compliment)
+        seeds <- nfd_compliment
       else {
-        seeds <- cross_intersection(seeds, nfd_compliment, lhs_attrs)
+        seeds <- cross_intersection(seeds, nfd_compliment)
       }
     }
     # MY NOTES: minimise new deps here
   }
-  not_min_superset <- vapply(
-    seeds,
-    \(seed) all(vapply(min_deps, \(md) !all(md %in% seed), logical(1))),
-    logical(1)
-  )
-  seeds[not_min_superset]
+  remove_pruned_supersets(seeds, min_deps, nodes$bits)
 }
 
-cross_intersection <- function(seeds, new_set, lhs_attrs) {
-  new_seeds <- list()
+cross_intersection <- function(seeds, new_set) {
+  new_seeds <- integer()
   for (seed in seeds) {
+    seed_bitset <- intToBits(seed)
     for (new_el in new_set) {
-      sd <- unique(c(seed, new_el))
-      sd <- sd[order(match(sd, lhs_attrs))]
-      new_seeds <- c(new_seeds, list(sd))
+      new_el_bitset <- intToBits(new_el)
+      sd <- packBits(seed_bitset | new_el_bitset, "integer")
+      new_seeds <- c(new_seeds, sd)
     }
   }
   unique(new_seeds)
@@ -403,8 +439,6 @@ compute_partitions <- function(df, rhs, lhs_set, partitions, accuracy) {
   res1 <- partition(union(lhs_set, rhs), df, partitions)
   part_rhs <- res1[[1]]
   partitions <- res1[[2]]
-  # if part_rhs > df.shape[1] * rep_percent:
-  #     return FALSE
   res2 <- partition(lhs_set, df, partitions)
   part_lhs <- res2[[1]]
   partitions <- res2[[2]]
