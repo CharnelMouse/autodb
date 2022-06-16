@@ -175,7 +175,7 @@ find_LHSs <- function(rhs, attrs, df, partitions, accuracy, progress = FALSE) {
         ))
       node <- res[[1]]
     }
-    seeds <- generate_next_seeds(max_non_deps, min_deps, simple_nodes, nodes)
+    new_seeds <- generate_next_seeds(max_non_deps, min_deps, simple_nodes, nodes)
     if (progress)
       cat(paste0(
         "generate: ",
@@ -186,6 +186,25 @@ find_LHSs <- function(rhs, attrs, df, partitions, accuracy, progress = FALSE) {
         "#max_non_deps: ", length(max_non_deps), ", ",
         "trace: ", length(trace), "\n"
       ))
+    if (progress && setequal(seeds, new_seeds))
+      cat(paste0(
+        "seed status:\n",
+        paste(
+          vapply(
+            seeds,
+            \(s) paste0(
+              "node: ", s, ", ",
+              "children: ", toString(nodes$children[[s]]), ", ",
+              "parents: ", toString(nodes$parents[[s]]), ", ",
+              "category: ", nodes$category[s], ", ",
+              "visited: ", nodes$visited[s], "\n"
+            ),
+            character(1)
+          ),
+          collapse = "\n"
+        )
+      ))
+    seeds <- new_seeds
   }
   lapply(min_deps, \(md) lhs_attrs[as.logical(intToBits(md))])
 }
