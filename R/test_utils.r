@@ -14,5 +14,5 @@ expect_superset_of_dependency <- function(dep1, dep2) {
     dep1,
     dep2
   )
-  expect_true(all(dep2_in_dep1))
+  testthat::expect_true(all(dep2_in_dep1))
 }
