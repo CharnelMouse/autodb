@@ -1,5 +1,11 @@
 # Scratch pad
-# - Handle non-standard data.frame column names (spaces, slashes, etc.)
+# - Handle non-standard data.frame column names (spaces, slashes, etc.). This
+# occurs in two places:
+#   - converting the table to all integers in DFD changes the
+# names to data.frame format defaults, e.g. spaces/slashes to periods, but they
+# can be changed back;
+#   - GraphViz can't take periods in a label, e.g. '|<a.col> a.col|' as a record
+#   entry is invalid, but '<a_col> a.col>' is not.
 # - First 10 lines of liquor dataset: normalisation has a problem with arrows
 # denoting a relationship for attributes that aren't there. e.g.
 # invoice_item_number.store_number -> store_number.store_number, but only latter
