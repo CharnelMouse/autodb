@@ -12,8 +12,7 @@ EntitySet <- function(df, deps, name = NA) {
   #
   # Returns:
   #   entityset (ft.EntitySet) : created entity set
-  dependencies <- tuple_relations(deps)
-  depdfs <- normalize_dataframe(df, dependencies)
+  depdfs <- normalize_dataframe(df, deps)
   depdfs <- make_indexes(depdfs)
 
   relationships <- list()

@@ -24,5 +24,6 @@ auto_entityset <- function(
   name = NA
 ) {
   deps <- find_dependencies(df, accuracy)
+  deps <- tuple_relations(deps)
   EntitySet(df, deps, name)
 }
