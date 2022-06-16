@@ -29,7 +29,7 @@ dfd <- function(df, accuracy, progress = FALSE) {
   if (n_cols == 0)
     return(list())
   if (n_cols == 1)
-    return(setNames(list(list()), column_names))
+    return(stats::setNames(list(list()), column_names))
   # convert all columns to integers, since they're checked for duplicates more
   # quickly when calculating partitions
   df <- data.frame(lapply(df, \(x) as.integer(factor(x))))
