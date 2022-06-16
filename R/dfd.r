@@ -1,6 +1,6 @@
-# Scatch pad
+# Scratch pad
 # - Handle non-standard data.frame column names (spaces, slashes, etc.)
-# - First 10 lines of liqour dataset: normalisation has a problem with arrows
+# - First 10 lines of liquor dataset: normalisation has a problem with arrows
 # denoting a relationship for attributes that aren't there. e.g.
 # invoice_item_number.store_number -> store_number.store_number, but only latter
 # has that attribute. I think this is due to how I determine relationships, in
