@@ -79,7 +79,7 @@ describe("plot_string", {
         "  node [shape=record];",
         paste(
           "  book [label = \"Book (2 rows)",
-          "<title> Title : character",
+          "<title> Title : character, prime",
           "<author> Author : character",
           "<pages> Pages : integer",
           "<thickness> Thickness : character",
@@ -89,20 +89,20 @@ describe("plot_string", {
         ),
         paste(
           "  format_price [label = \"Format Price (4 rows)",
-          "<title> Title : character",
-          "<format> Format : character",
+          "<title> Title : character, prime",
+          "<format> Format : character, prime",
           "<price> Price : integer\"];",
           sep = "|"
         ),
         paste(
           "  author [label = \"Author (2 rows)",
-          "<author> Author : character",
+          "<author> Author : character, prime",
           "<author_nationality> Author Nationality : character\"];",
           sep = "|"
         ),
         paste(
           "  genre [label = \"Genre (2 rows)",
-          "<genre_id> Genre ID : integer",
+          "<genre_id> Genre ID : integer, prime",
           "<genre_name> Genre Name : character\"];",
           sep = "|"
         ),
@@ -198,7 +198,7 @@ describe("plot_string", {
         "  node [shape=record];",
         paste(
           "  book [label = \"Book (2 rows)",
-          "<title> Title : character",
+          "<title> Title : character, prime",
           "<author> Author : character",
           "<pages> Pages : integer",
           "<thickness> Thickness : character",
@@ -208,20 +208,20 @@ describe("plot_string", {
         ),
         paste(
           "  format_price [label = \"Format Price (4 rows)",
-          "<title> Title : character",
-          "<format> Format : character",
+          "<title> Title : character, prime",
+          "<format> Format : character, prime",
           "<price> Price : integer\"];",
           sep = "|"
         ),
         paste(
           "  author [label = \"Author (2 rows)",
-          "<author> Author : character",
+          "<author> Author : character, prime",
           "<author_nationality> Author Nationality : character\"];",
           sep = "|"
         ),
         paste(
           "  genre [label = \"Genre (2 rows)",
-          "<genre_id> Genre ID : integer",
+          "<genre_id> Genre ID : integer, prime",
           "<genre_name> Genre Name : character\"];",
           sep = "|"
         ),

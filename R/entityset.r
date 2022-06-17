@@ -83,14 +83,22 @@ plot_string_entityset <- function(es) {
   df_string <- character()
   for (df_name in names(es$dataframes)) {
     df <- es$dataframes[[df_name]]$df
+    keys <- es$dataframes[[df_name]]$keys
     df_snake <- snakecase::to_snake_case(df_name)
     col_names <- colnames(df)
     col_snake <- snakecase::to_snake_case(col_names)
     column_typing_info <- vapply(
       seq_along(col_names),
       \(n) {
-        col_class <- class(df[[n]])[[1]]
-        paste0("<", col_snake[n], "> ", col_names[n], " : ", col_class)
+        characteristics <- c(
+          class(df[[n]])[[1]],
+          if (col_names[n] %in% unlist(keys))
+            "prime"
+        )
+        paste0(
+          "<", col_snake[n], "> ", col_names[n], " : ",
+          toString(characteristics)
+        )
       },
       character(1)
     )
