@@ -13,6 +13,9 @@
 # cases where one attribute name is another plus a suffix.
 # - make.names docs: R didn't support underscores in names until 1.9.0, I need
 # to set a limit for R version in DESCRIPTION.
+# - data.frames split off from parents aren't being checked properly for best
+# choice of index, i.e. columns to leave behind as foreign keys in the parent.
+# This might be causing the plotting problems.
 
 #' DFD algorithm
 #'
