@@ -1,4 +1,5 @@
 # Scratch pad
+# - add removal of transitive dependencies back in
 # - make.names docs: R didn't support underscores in names until 1.9.0, I need
 # to set a limit for R version in DESCRIPTION.
 # - data.frames split off from parents aren't being checked properly for best
