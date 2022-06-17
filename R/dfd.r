@@ -1,14 +1,11 @@
 # Scratch pad
-# - First 10 lines of liquor dataset: normalisation has a problem with arrows
-# denoting a relationship for attributes that aren't there. e.g.
-# invoice_item_number.store_number -> store_number.store_number, but only latter
-# has that attribute. I think this is due to how I determine relationships, in
-# cases where one attribute name is another plus a suffix.
 # - make.names docs: R didn't support underscores in names until 1.9.0, I need
 # to set a limit for R version in DESCRIPTION.
 # - data.frames split off from parents aren't being checked properly for best
 # choice of index, i.e. columns to leave behind as foreign keys in the parent.
 # This might be causing the plotting problems.
+# - keep merged attribute determinant sets when normalising dependencies, so can
+# pick by priority once given a data.frame
 
 #' DFD algorithm
 #'
