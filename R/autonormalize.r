@@ -25,7 +25,7 @@ find_dependencies <- function(df, accuracy) {
 auto_entityset <- function(
   df,
   accuracy,
-  name = NA,
+  name = NA_character_,
   filter = FALSE
 ) {
   deps <- find_dependencies(df, accuracy)

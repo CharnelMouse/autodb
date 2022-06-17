@@ -147,6 +147,12 @@ describe("dfd", {
     )
     expect_superset_of_dependency(deps, expected_deps)
   })
+  it("correctly handles attributes with non-df-standard names", {
+    df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
+      stats::setNames(c("A 1", "B 2", "C 3"))
+    deps <- dfd(df, 1)
+    expect_identical(deps$`A 1`, list(c("B 2", "C 3")))
+  })
 })
 
 describe("original tests", {

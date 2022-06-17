@@ -1,4 +1,4 @@
-EntitySet <- function(df, deps, name = NA) {
+EntitySet <- function(df, deps, name = NA_character_) {
   # Creates a normalized EntitySet from df based on the dependencies given.
   # Keys for the newly created DataFrames can only be columns that are strings,
   # ints, or categories. Keys are chosen according to the priority:
@@ -74,7 +74,7 @@ plot_table <- function(df, df_name, to_file = FALSE) {
 
 plot_string_entityset <- function(es) {
   gv_string <- paste0(
-    "digraph ", gsub(" ", "_", es$name), " {\n",
+    "digraph ", snakecase::to_snake_case(es$name), " {\n",
     "  rankdir = \"LR\"\n",
     "  node [shape=record];\n"
   )
@@ -82,11 +82,14 @@ plot_string_entityset <- function(es) {
   df_string <- character()
   for (df_name in names(es$dataframes)) {
     df <- es$dataframes[[df_name]]$df
+    df_snake <- snakecase::to_snake_case(df_name)
+    col_names <- colnames(df)
+    col_snake <- snakecase::to_snake_case(col_names)
     column_typing_info <- vapply(
-      colnames(df),
-      \(col_name) {
-        col_class <- class(df[[col_name]])[[1]]
-        paste0("<", col_name, "> ", col_name, " : ", col_class)
+      seq_along(col_names),
+      \(n) {
+        col_class <- class(df[[n]])[[1]]
+        paste0("<", col_snake[n], "> ", col_names[n], " : ", col_class)
       },
       character(1)
     )
@@ -102,16 +105,24 @@ plot_string_entityset <- function(es) {
       ")|",
       columns_string
     )
-    df_string <- paste0("  ", df_name, " [label = \"", label, "\"];\n")
+    df_string <- paste0("  ", df_snake, " [label = \"", label, "\"];\n")
     gv_string <- paste0(gv_string, df_string)
   }
 
   for (rel in es$relationships) {
     rel_string <- paste0(
       "  ",
-      paste(rel[1], rel[2], sep = ":"),
+      paste(
+        snakecase::to_snake_case(rel[1]),
+        snakecase::to_snake_case(rel[2]),
+        sep = ":"
+      ),
       " -> ",
-      paste(rel[3], rel[4], sep = ":"),
+      paste(
+        snakecase::to_snake_case(rel[3]),
+        snakecase::to_snake_case(rel[4]),
+        sep = ":"
+      ),
       ";"
     )
     gv_string <- paste(gv_string, rel_string, sep = "\n")
@@ -122,20 +133,22 @@ plot_string_entityset <- function(es) {
 }
 
 plot_string_df <- function(df, df_name) {
-  df_name <- gsub(" ", "_", df_name)
+  df_snake <- snakecase::to_snake_case(df_name)
 
   gv_string <- paste0(
-    "digraph ", df_name, " {\n",
+    "digraph ", df_snake, " {\n",
     "  rankdir = \"LR\"\n",
     "  node [shape=record];\n"
   )
 
   df_string <- character()
+  col_names <- colnames(df)
+  col_snake <- snakecase::to_snake_case(col_names)
   column_typing_info <- vapply(
-    colnames(df),
-    \(col_name) {
-      col_class <- class(df[[col_name]])[[1]]
-      paste0("<", col_name, "> ", col_name, " : ", col_class)
+    seq_along(col_names),
+    \(n) {
+      col_class <- class(df[[n]])[[1]]
+      paste0("<", col_snake[n], "> ", col_names[n], " : ", col_class)
     },
     character(1)
   )
@@ -151,7 +164,7 @@ plot_string_df <- function(df, df_name) {
     ")|",
     columns_string
   )
-  df_string <- paste0("  ", df_name, " [label = \"", label, "\"];\n")
+  df_string <- paste0("  ", df_snake, " [label = \"", label, "\"];\n")
   gv_string <- paste0(gv_string, df_string)
 
   gv_string <- paste0(gv_string, "}\n")

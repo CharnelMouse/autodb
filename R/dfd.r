@@ -1,11 +1,4 @@
 # Scratch pad
-# - Handle non-standard data.frame column names (spaces, slashes, etc.). This
-# occurs in two places:
-#   - converting the table to all integers in DFD changes the
-# names to data.frame format defaults, e.g. spaces/slashes to periods, but they
-# can be changed back;
-#   - GraphViz can't take periods in a label, e.g. '|<a.col> a.col|' as a record
-#   entry is invalid, but '<a_col> a.col>' is not.
 # - First 10 lines of liquor dataset: normalisation has a problem with arrows
 # denoting a relationship for attributes that aren't there. e.g.
 # invoice_item_number.store_number -> store_number.store_number, but only latter
@@ -43,7 +36,8 @@ dfd <- function(df, accuracy, progress = FALSE) {
     return(stats::setNames(list(list()), column_names))
   # convert all columns to integers, since they're checked for duplicates more
   # quickly when calculating partitions
-  df <- data.frame(lapply(df, \(x) as.integer(factor(x))))
+  df <- data.frame(lapply(df, \(x) as.integer(factor(x)))) |>
+    stats::setNames(column_names)
   partitions <- list()
   dependencies <- stats::setNames(rep(list(list()), ncol(df)), column_names)
   fixed <- character()
