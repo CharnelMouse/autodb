@@ -22,6 +22,7 @@ EntitySet <- function(df, deps, name = NA_character_) {
   while (length(stack) > 0) {
     current_df_name <- names(stack)[1]
     current <- stack[[1]]
+    parent_attrs <- names(current$df)
     stack <- stack[-1]
 
     for (child_name in current$children) {
@@ -29,7 +30,7 @@ EntitySet <- function(df, deps, name = NA_character_) {
       relationships <- c(
         relationships,
         lapply(
-          child$index,
+          intersect(parent_attrs, unlist(child$keys)),
           \(ind) c(current_df_name, ind, child_name, ind)
         )
       )
