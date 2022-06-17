@@ -4,7 +4,7 @@
 \alias{auto_entityset}
 \title{Creates a normalized entity set from a dataframe}
 \usage{
-auto_entityset(df, accuracy, name = NA, filter = FALSE)
+auto_entityset(df, accuracy, name = NA_character_, filter = FALSE)
 }
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
