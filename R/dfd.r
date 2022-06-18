@@ -50,16 +50,38 @@ dfd <- function(df, accuracy, progress = FALSE) {
       dependencies[[attr]] <- as.list(setdiff(column_names, attr))
     }
   }
-  for (rhs in nonfixed) {
-    if (progress)
-      cat(paste("dependent", rhs, "\n"))
-    lhss <- find_LHSs(rhs, nonfixed, df, partitions, accuracy, progress)
-    dependencies[[rhs]] <- c(dependencies[[rhs]], lhss)
+  n_lhs_attrs <- length(nonfixed) - 1L
+  # using 0 would allow for one more column, but that's for a later date
+  max_attrs <- floor(log(.Machine$integer.max, 2))
+  if (n_lhs_attrs > max_attrs)
+    stop(paste(
+      "only data.frames with up to", max_attrs, "columns currently supported"
+    ))
+  if (n_lhs_attrs > 0) {
+    nodes <- powerset_nodes(n_lhs_attrs)
+    simple_nodes <- as.integer(2^(seq.int(n_lhs_attrs) - 1))
+    for (rhs in nonfixed) {
+      if (progress)
+        cat(paste("dependent", rhs, "\n"))
+      lhs_attrs <- setdiff(nonfixed, rhs)
+      stopifnot(length(lhs_attrs) == n_lhs_attrs)
+      lhss <- find_LHSs(rhs, lhs_attrs, nodes, simple_nodes, df, partitions, accuracy, progress)
+      dependencies[[rhs]] <- c(dependencies[[rhs]], lhss)
+    }
   }
   dependencies
 }
 
-find_LHSs <- function(rhs, attrs, df, partitions, accuracy, progress = FALSE) {
+find_LHSs <- function(
+  rhs,
+  lhs_attrs,
+  nodes,
+  simple_nodes,
+  df,
+  partitions,
+  accuracy,
+  progress = FALSE
+) {
   # The original library "names" nodes with their attribute set,
   # so finding a node involves matching a character vector against
   # a list of character vectors. This is slow.
@@ -79,21 +101,7 @@ find_LHSs <- function(rhs, attrs, df, partitions, accuracy, progress = FALSE) {
   #  1 = non-minimal dependency
   #  2 = minimal dependency
   #  3 = candidate minimal dependency
-  lhs_attrs <- setdiff(attrs, rhs)
-
-  n_attrs <- length(lhs_attrs)
-  if (n_attrs == 0)
-    return(character())
-  # using 0 would allow for one more column, but that's for a later date
-  max_attrs <- floor(log(.Machine$integer.max, 2))
-  if (n_attrs > max_attrs)
-    stop(paste(
-      "only data.frames with up to", max_attrs, "columns currently supported"
-    ))
-
-  simple_nodes <- as.integer(2^(seq.int(n_attrs) - 1))
   seeds <- simple_nodes
-  nodes <- powerset_nodes(n_attrs)
   min_deps <- integer()
   max_non_deps <- integer()
   trace <- integer()
