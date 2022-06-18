@@ -50,11 +50,11 @@ dfd <- function(df, accuracy, progress = FALSE) {
       dependencies[[attr]] <- as.list(setdiff(column_names, attr))
     }
   }
-  for (i in nonfixed) {
+  for (rhs in nonfixed) {
     if (progress)
-      cat(paste("dependent", i, "\n"))
-    lhss <- find_LHSs(i, nonfixed, df, partitions, accuracy, progress)
-    dependencies[[i]] <- c(dependencies[[i]], lhss)
+      cat(paste("dependent", rhs, "\n"))
+    lhss <- find_LHSs(rhs, nonfixed, df, partitions, accuracy, progress)
+    dependencies[[rhs]] <- c(dependencies[[rhs]], lhss)
   }
   dependencies
 }
