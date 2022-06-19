@@ -1,12 +1,13 @@
 # Scratch pad
-# - add removal of transitive dependencies back in
+# - normalised dependencies don't currently account for bijections in children.
+# - I'd like dependency normalisation to either use a given ordering on the
+# attribute names, e.g. from a data.frame, or to delay decisions for which child
+# key to keep.
 # - make.names docs: R didn't support underscores in names until 1.9.0, I need
 # to set a limit for R version in DESCRIPTION.
 # - data.frames split off from parents aren't being checked properly for best
 # choice of index, i.e. columns to leave behind as foreign keys in the parent.
 # This might be causing the plotting problems.
-# - keep merged attribute determinant sets when normalising dependencies, so can
-# pick by priority once given a data.frame
 
 #' DFD algorithm
 #'
