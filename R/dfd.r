@@ -1,13 +1,18 @@
 # Scratch pad
 # - normalised dependencies don't currently account for bijections in children.
-# - I'd like dependency normalisation to either use a given ordering on the
-# attribute names, e.g. from a data.frame, or to delay decisions for which child
-# key to keep.
+# - I'd like dependency normalisation to make more sensible decisions re:
+# keeping attributes needed as foreign keys to reference tables. These often get
+# removed during removal of extraneous dependencies, since bijections make for
+# lots of extraneous dependencies before merging keys. However, when adding the
+# bijections later, we could check them against every group, and decide to swap
+# in the highest-priority key from each bijection group, if subsets of the
+# current one aren't being used as references to other things, and aren't prime.
 # - make.names docs: R didn't support underscores in names until 1.9.0, I need
 # to set a limit for R version in DESCRIPTION.
 # - data.frames split off from parents aren't being checked properly for best
 # choice of index, i.e. columns to leave behind as foreign keys in the parent.
 # This might be causing the plotting problems.
+# - randomly-generated example for original DFD tests sometimes fails.
 
 #' DFD algorithm
 #'
