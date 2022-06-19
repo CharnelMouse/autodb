@@ -168,6 +168,8 @@ find_closure <- function(rel, attrs) {
     r <- rel[[n]]
     dep_attrs <- r[[1]]
     dep <- r[[2]]
+    if (length(dep) != 1)
+      stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(r)))
     if (all(is.element(dep_attrs, attrs))) {
       if (!is.element(dep, attrs))
         attrs <- c(attrs, dep)

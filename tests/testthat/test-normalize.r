@@ -64,6 +64,40 @@ describe("normalize_dependencies", {
       )
     )
   })
+  it("removes transient dependencies after-merging keys (DFD fig. 3)", {
+    dependencies <- list(
+      list(c("x1", "x2"), "a"),
+      list(c("x1", "x2"), "d"),
+      list(c("c", "d"), "x1"),
+      list(c("c", "d"), "x2"),
+      list(c("a", "x1"), "b"),
+      list(c("b", "x2"), "c"),
+      list("c", "a")
+    )
+    norm.dep <- normalize_dependencies(dependencies)
+    expect_setequal(
+      norm.dep,
+      list(
+        list(
+          # contains a if trans_deps not removed
+          attrs = c("x1", "x2", "c", "d"),
+          keys = list(c("x1", "x2"), c("c", "d"))
+        ),
+        list(
+          attrs = c("a", "x1", "b"),
+          keys = list(c("a", "x1"))
+        ),
+        list(
+          attrs = c("b", "x2", "c"),
+          keys = list(c("b", "x2"))
+        ),
+        list(
+          attrs = c("c", "a"),
+          keys = list("c")
+        )
+      )
+    )
+  })
   describe("previous normalize tests", {
     it("resolves a simple bijection with no splits, if given an index", {
       dependencies <- list(

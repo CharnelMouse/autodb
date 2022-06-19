@@ -67,18 +67,18 @@ merge_equivalent_keys <- function(dep_partition) {
     ))
   relations <- dep_partition$relations
 
-  keys <- LHSs
+  keys <- lapply(LHSs, list)
   bijection_rels <- list()
   for (n in seq.int(length(partition) - 1)) {
     grp <- partition[[n]]
     if (length(grp) > 0) {
       LHS <- LHSs[[n]]
-      key1 <- keys[[n]]
+      key1 <- keys[[n]][[1]]
       for (m in (n + 1):length(partition)) {
         grp2 <- partition[[m]]
         if (length(grp2) > 0) {
           LHS2 <- LHSs[[m]]
-          key2 <- keys[[m]]
+          key2 <- keys[[m]][[1]]
           closure1 <- find_closure(relations, LHS)
           closure2 <- find_closure(relations, LHS2)
 
@@ -103,6 +103,7 @@ merge_equivalent_keys <- function(dep_partition) {
               partition[[n]],
               lapply(partition[[m]][!obsolete], \(r) list(key1, r[[2]]))
             ))
+            keys[[n]] <- c(keys[[n]], keys[[m]])
 
             partition[[m]] <- list()
           }
@@ -119,7 +120,43 @@ merge_equivalent_keys <- function(dep_partition) {
 }
 
 remove_transitive_dependencies <- function(lst) {
-  lst
+  # Find subset H' of partition H such that (H'+F)+ === (H+F)+,
+  # where F is bijections. A dependency is redundant, and not in H',
+  # if h: X->y is such that y is transitively dependent upon a key
+  # of some relation R_k, and is not in any key of R_k.
+  # partition format: list[list[list[key, dependent]]]
+  # keys format: list[list[attrs]], giving key list for each partition group
+  # bijections: list[list[key1, key2]]
+  flat_partition <- unlist(lst$partition, recursive = FALSE)
+  flat_groups <- factor(rep(seq_along(lst$partition), lengths(lst$partition)))
+  singular_bijections <- lapply(
+    lst$bijections,
+    \(b) lapply(b[[2]], \(r) list(b[[1]], r))
+  ) |>
+    unlist(recursive = FALSE)
+  transitive <- rep(FALSE, length(flat_partition))
+  for (n in seq_along(flat_partition)) {
+    dependency <- flat_partition[[n]]
+    LHS <- dependency[[1]]
+    closure_with <- find_closure(
+      c(flat_partition[!transitive], singular_bijections),
+      LHS
+    )
+    closure_without <- find_closure(
+      c(flat_partition[-n][!transitive[-n]], singular_bijections),
+      LHS
+    )
+    if (setequal(closure_with, closure_without))
+      transitive[n] <- TRUE
+  }
+  new_flat_partition <- flat_partition[!transitive]
+  new_flat_groups <- flat_groups[!transitive]
+  new_partition <- unname(split(new_flat_partition, new_flat_groups))
+  list(
+    partition = new_partition,
+    keys = lst$keys,
+    bijections = singular_bijections
+  )
 }
 
 add_bijections <- function(lst) {
@@ -127,10 +164,10 @@ add_bijections <- function(lst) {
   keys <- lst$keys
   bijections <- lst$bijections
   for (n in seq_along(keys)) {
-    key <- keys[[n]]
+    key_list <- keys[[n]]
     matches <- vapply(
       bijections,
-      \(b) identical(key, b[[1]]) || identical(key, b[[2]]),
+      \(b) is.element(b[1], key_list) || is.element(b[2], key_list),
       logical(1)
     )
     partition[[n]] <- c(partition[[n]], bijections[matches])
