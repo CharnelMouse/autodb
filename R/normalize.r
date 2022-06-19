@@ -120,34 +120,33 @@ merge_equivalent_keys <- function(dep_partition) {
 }
 
 remove_transitive_dependencies <- function(lst) {
-  # Find subset H' of partition H such that (H'+F)+ === (H+F)+,
-  # where F is bijections. A dependency is redundant, and not in H',
-  # if h: X->y is such that y is transitively dependent upon a key
-  # of some relation R_k, and is not in any key of R_k.
+  # DFD theorem 3: eliminate every functional dependency h in H such that the
+  # right hand side is not in any of the group's keys, and is in the closure for
+  # (H + J - {h}), where J is the bijections.
   # partition format: list[list[list[key, dependent]]]
   # keys format: list[list[attrs]], giving key list for each partition group
   # bijections: list[list[key1, key2]]
   flat_partition <- unlist(lst$partition, recursive = FALSE)
-  flat_groups <- factor(rep(seq_along(lst$partition), lengths(lst$partition)))
+  flat_groups <- rep(seq_along(lst$partition), lengths(lst$partition))
   singular_bijections <- lapply(
     lst$bijections,
     \(b) lapply(b[[2]], \(r) list(b[[1]], r))
   ) |>
     unlist(recursive = FALSE)
   transitive <- rep(FALSE, length(flat_partition))
+  attrs_in_keys <- lapply(lst$keys, \(k) unique(unlist(k)))
   for (n in seq_along(flat_partition)) {
     dependency <- flat_partition[[n]]
-    LHS <- dependency[[1]]
-    closure_with <- find_closure(
-      c(flat_partition[!transitive], singular_bijections),
-      LHS
-    )
-    closure_without <- find_closure(
-      c(flat_partition[-n][!transitive[-n]], singular_bijections),
-      LHS
-    )
-    if (setequal(closure_with, closure_without))
-      transitive[n] <- TRUE
+    RHS <- dependency[[2]]
+    key_attrs <- unique(unlist(lst$keys[[flat_groups[n]]]))
+    if (!is.element(RHS, key_attrs)) {
+      closure_without <- find_closure(
+        c(flat_partition[-n][!transitive[-n]], singular_bijections),
+        key_attrs
+      )
+      if (is.element(RHS, closure_without))
+        transitive[n] <- TRUE
+    }
   }
   new_flat_partition <- flat_partition[!transitive]
   new_flat_groups <- flat_groups[!transitive]
