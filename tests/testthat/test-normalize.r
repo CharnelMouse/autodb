@@ -194,20 +194,20 @@ test_that("filter", {
 })
 
 describe("choose_index", {
-  df <- data.frame(A = logical(), B = logical(), C = logical(), D = logical())
+  attrs <- c(LETTERS[1:4], "A_id")
   it("priorities columns with id prefix/suffix in the name", {
     keys <- list('A', 'A_id', 'B')
-    expect_identical(choose_index(keys, df), 'A_id')
+    expect_identical(choose_index(keys, attrs), 'A_id')
   })
 
   it("prioritises columns earlier in the data.frame", {
     keys <- list('B', 'C', 'A')
-    expect_identical(choose_index(keys, df), 'A')
+    expect_identical(choose_index(keys, attrs), 'A')
   })
 
   it("priorities key members earlier in the data.frame", {
     keys <- list(c('A', 'C'), c('A', 'B'))
-    expect_identical(choose_index(keys, df), c('A', 'B'))
+    expect_identical(choose_index(keys, attrs), c('A', 'B'))
   })
 })
 

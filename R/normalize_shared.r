@@ -1,9 +1,10 @@
-choose_index <- function(keys, df) {
+choose_index <- function(keys, attrs) {
   # Chooses an index / primary key from a list of keys.
   # Order of priority:
   # 1) shortest length
   # 2) has "id" prefix/suffix in the name of any attribute
-  # 3) has the attribute furthest to the left in the table
+  # 3) has the attribute furthest to the left in the given attrs
+  stopifnot(all(unlist(keys) %in% attrs))
   if (length(keys) == 0)
     return(NA_character_)
   sort_key <- keys[order(lengths(keys))]
@@ -19,10 +20,10 @@ choose_index <- function(keys, df) {
         return(key)
     }
   }
-  if (isTRUE(is.na(df)))
+  if (isTRUE(is.null(attrs)))
     return(options[[1]])
 
-  for (col in colnames(df)) {
+  for (col in attrs) {
     includes <- options[vapply(options, \(opt) col %in% opt, logical(1))]
     if (length(includes) == 1)
       return(includes[[1]])

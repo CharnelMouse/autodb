@@ -16,7 +16,7 @@ normalize_dataframe <- function(df, dependencies) {
       any(vapply(to_keys, \(key) all(key %in% from_attrs), logical(1)))
     })
   )
-  indexes <- lapply(lapply(norm_deps, `[[`, "keys"), choose_index, df)
+  indexes <- lapply(lapply(norm_deps, `[[`, "keys"), choose_index, names(df))
   for (n in seq_along(norm_deps)) {
     norm_dep_set <- norm_deps[[n]]
     attrs <- norm_dep_set$attrs
