@@ -8,28 +8,32 @@
 #' @export
 normalize_dataframe <- function(df, dependencies) {
   norm_deps <- normalize_dependencies(dependencies)
-  depdf_list <- list()
+  norm_attr_sets <- lapply(norm_deps, `[[`, "attrs")
+  norm_key_sets <- lapply(norm_deps, `[[`, "keys")
   reference_mat <- outer(
-    lapply(norm_deps, `[[`, "attrs"),
-    lapply(norm_deps, `[[`, "keys"),
+    norm_attr_sets,
+    norm_key_sets,
     Vectorize(\(from_attrs, to_keys) {
       any(vapply(to_keys, \(key) all(key %in% from_attrs), logical(1)))
     })
   )
-  indexes <- lapply(lapply(norm_deps, `[[`, "keys"), choose_index, names(df))
-  for (n in seq_along(norm_deps)) {
-    norm_dep_set <- norm_deps[[n]]
-    attrs <- norm_dep_set$attrs
-    sorted_attrs <- attrs[order(match(attrs, names(df)))]
-    keys <- norm_dep_set$keys[order(match(norm_dep_set$keys, names(df)))]
-    new_depdf <- list(
-      df = unique(df[, sorted_attrs]),
-      keys = keys,
-      index = indexes[[n]]
-    )
-    depdf_list <- c(depdf_list, list(new_depdf))
-  }
-  relation_names <- vapply(depdf_list, name_dataframe, character(1))
+  df_names <- names(df)
+  indexes <- lapply(norm_key_sets, choose_index, df_names)
+  relation_names <- vapply(indexes, name_dataframe, character(1))
+  depdf_list <- Map(
+    \(norm_dep_set, index) {
+      attrs <- norm_dep_set$attrs
+      sorted_attrs <- attrs[order(match(attrs, df_names))]
+      keys <- norm_dep_set$keys[order(match(norm_dep_set$keys, df_names))]
+      list(
+        df = unique(df[, sorted_attrs]),
+        keys = keys,
+        index = index
+      )
+    },
+    norm_deps,
+    indexes
+  )
   for (n in seq_along(norm_deps)) {
     refs <- reference_mat[n, ]
     ref_names <- relation_names[setdiff(which(refs), n)]
@@ -73,6 +77,6 @@ Mode <- function(x) {
   uniqs[[which.max(tabs)]]
 }
 
-name_dataframe <- function(depdf) {
-  paste(depdf$index, collapse = "_")
+name_dataframe <- function(index) {
+  paste(index, collapse = "_")
 }
