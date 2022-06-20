@@ -22,6 +22,25 @@ normalize_dependencies <- function(dependencies) {
     construct_relations()
 }
 
+remove_extraneous_attributes <- function(x) {
+  rels <- x
+  for (lr in x) {
+    lhs <- lr[[1]]
+    rhs <- lr[[2]]
+    y <- lhs
+    for (attr in lhs) {
+      y_ <- setdiff(y, attr)
+      if (rhs %in% find_closure(x, y_))
+        y <- setdiff(y, attr)
+      rels <- setdiff(rels, list(lr))
+      rels <- c(rels, list(list(y, rhs)))
+      x <- setdiff(x, list(list(lhs, rhs)))
+      x <- c(x, list(list(y, rhs)))
+    }
+  }
+  unique(x)
+}
+
 remove_extraneous_dependencies <- function(relations) {
   old_rels <- NULL
   new_rels <- relations
@@ -185,6 +204,26 @@ construct_relations <- function(partition) {
       list(attrs = all_attrs, keys = LHSs)
     }
   )
+}
+
+find_closure <- function(rel, attrs) {
+  if (!is.character(attrs))
+    stop(paste("attr is", toString(class(attrs))))
+  if (length(rel) == 0)
+    return(attrs)
+  for (n in seq_along(rel)) {
+    r <- rel[[n]]
+    dep_attrs <- r[[1]]
+    dep <- r[[2]]
+    if (length(dep) != 1)
+      stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(r)))
+    if (all(is.element(dep_attrs, attrs))) {
+      if (!is.element(dep, attrs))
+        attrs <- c(attrs, dep)
+      return(find_closure(rel[-n], attrs))
+    }
+  }
+  attrs
 }
 
 Dependencies <- function(dependencies, primary_key = NULL) {

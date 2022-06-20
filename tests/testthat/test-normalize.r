@@ -142,43 +142,6 @@ describe("normalize_dependencies", {
   })
 })
 
-test_that("find_most_comm", {
-  deps <- Dependencies(
-    dependencies = list(),
-    primary_key = "d"
-  )
-  rels <- list(
-    list('a', 'b'),
-    list('b', 'c'),
-    list('b', 'a'),
-    list('d', 'a')
-  )
-  expect_identical(find_most_comm(rels, deps), 'b')
-  rels <- list(
-    list(c('a', 'c'), 'b'),
-    list('b', 'c'),
-    list('b', 'a'),
-    list('d', 'a'),
-    list(c('a', 'c'), 'b')
-  )
-  expect_identical(find_most_comm(rels, deps), 'b')
-})
-
-test_that("split_on_dep", {
-  dep_dic <- list(
-    A = list(),
-    B = list(),
-    C = list("A", "B"),
-    D = list("B")
-  )
-  new <- split_on_dep('B', Dependencies(dependencies = dep_dic))
-  expect_identical(new[[1]]$dependencies, list(A = list(), B = list()))
-  expect_identical(
-    new[[2]]$dependencies,
-    list(B = list(), C = list("B"), D = list("B"))
-  )
-})
-
 test_that("drop_primary_dups", {
   df <- data.frame(
     city = c(

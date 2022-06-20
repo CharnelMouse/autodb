@@ -34,3 +34,22 @@ auto_entityset <- function(
     deps <- filter(deps, df)
   EntitySet(df, deps, name)
 }
+
+filter <- function(relations, df) {
+  # Removes functional dependencies where any determinant attributes do no
+  # contain strings, integers, factors, or logicals in the data.frame. The idea
+  # is that, for example, we don't expect floats to be part of a key.
+  for (rel in relations) {
+    lhs <- rel[[1]]
+    for (attr in lhs) {
+      if (!inherits(
+        df[[attr]],
+        c("character", "integer", "factor", "logical")
+      )) {
+        relations <- setdiff(relations, list(rel))
+        break
+      }
+    }
+  }
+  relations
+}
