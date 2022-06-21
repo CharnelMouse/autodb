@@ -25,13 +25,17 @@
 #' @param df a data.frame, the relation to evaluate.
 #' @param accuracy a numeric in (0, 1]: the accuracy threshold required in order
 #'   to conclude a dependency.
-#' @param progress a logical, for whether to display progress to the user.
+#' @param progress an integer, for whether to display progress to the user. 0
+#'   (default) displays nothing. 1 notes the start of finding each non-constant
+#'   attribute's determinant sets. 2 also briefly describes the status of the
+#'   search for an attribute's determinant sets when generating new seeds. 3
+#'   also gives the status after visiting each candidate determinant set / node.
 #'
 #' @return a named list, where the names give the dependent attribute, and each
 #'   element is a list of character vectors. Each character vector is a set of
 #'   determinant attributes for that dependent attribute.
 #' @export
-dfd <- function(df, accuracy, progress = FALSE) {
+dfd <- function(df, accuracy, progress = 0L) {
   n_cols <- ncol(df)
   column_names <- colnames(df)
   if (n_cols == 0)
@@ -48,9 +52,9 @@ dfd <- function(df, accuracy, progress = FALSE) {
   nonfixed <- column_names
   for (i in seq_along(column_names)) {
     attr <- column_names[i]
-    if (progress)
-      cat(paste("checking if", attr, "is fixed\n"))
     if (all(is.na(df[[attr]])) || all(df[[attr]] == df[[attr]][1])) {
+      if (progress)
+        cat(paste(attr, "is fixed\n"))
       fixed <- c(fixed, attr)
       nonfixed <- setdiff(nonfixed, attr)
       dependencies[[attr]] <- as.list(setdiff(column_names, attr))
@@ -86,7 +90,7 @@ find_LHSs <- function(
   df,
   partitions,
   accuracy,
-  progress = FALSE
+  progress = 0L
 ) {
   # The original library "names" nodes with their attribute set,
   # so finding a node involves matching a character vector against
@@ -173,7 +177,7 @@ find_LHSs <- function(
       )
       trace <- res[[2]]
       nodes <- res[[3]]
-      if (progress)
+      if (progress >= 3L)
         cat(paste0(
           "node: ", node, ", ",
           "visited: ", sum(nodes$visited), ", ",
@@ -186,7 +190,7 @@ find_LHSs <- function(
       node <- res[[1]]
     }
     new_seeds <- generate_next_seeds(max_non_deps, min_deps, simple_nodes, nodes)
-    if (progress)
+    if (progress >= 2L)
       cat(paste0(
         "generate: ",
         "visited: ", sum(nodes$visited), ", ",
@@ -196,24 +200,24 @@ find_LHSs <- function(
         "#max_non_deps: ", length(max_non_deps), ", ",
         "trace: ", length(trace), "\n"
       ))
-    if (progress && setequal(seeds, new_seeds))
-      cat(paste0(
-        "seed status:\n",
-        paste(
-          vapply(
-            seeds,
-            \(s) paste0(
-              "node: ", s, ", ",
-              "children: ", toString(nodes$children[[s]]), ", ",
-              "parents: ", toString(nodes$parents[[s]]), ", ",
-              "category: ", nodes$category[s], ", ",
-              "visited: ", nodes$visited[s], "\n"
-            ),
-            character(1)
-          ),
-          collapse = "\n"
-        )
-      ))
+    # if (progress >= 4L && setequal(seeds, new_seeds))
+    #   cat(paste0(
+    #     "seed status:\n",
+    #     paste(
+    #       vapply(
+    #         seeds,
+    #         \(s) paste0(
+    #           "node: ", s, ", ",
+    #           "children: ", toString(nodes$children[[s]]), ", ",
+    #           "parents: ", toString(nodes$parents[[s]]), ", ",
+    #           "category: ", nodes$category[s], ", ",
+    #           "visited: ", nodes$visited[s], "\n"
+    #         ),
+    #         character(1)
+    #       ),
+    #       collapse = "\n"
+    #     )
+    #   ))
     seeds <- new_seeds
   }
   lapply(min_deps, \(md) lhs_attrs[as.logical(intToBits(md))])

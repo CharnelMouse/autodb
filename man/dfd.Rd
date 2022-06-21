@@ -4,7 +4,7 @@
 \alias{dfd}
 \title{DFD algorithm}
 \usage{
-dfd(df, accuracy, progress = FALSE)
+dfd(df, accuracy, progress = 0L)
 }
 \arguments{
 \item{df}{a data.frame, the relation to evaluate.}
@@ -12,7 +12,11 @@ dfd(df, accuracy, progress = FALSE)
 \item{accuracy}{a numeric in (0, 1]: the accuracy threshold required in order
 to conclude a dependency.}
 
-\item{progress}{a logical, for whether to display progress to the user.}
+\item{progress}{an integer, for whether to display progress to the user. 0
+(default) displays nothing. 1 notes the start of finding each non-constant
+attribute's determinant sets. 2 also briefly describes the status of the
+search for an attribute's determinant sets when generating new seeds. 3
+also gives the status after visiting each candidate determinant set / node.}
 }
 \value{
 a named list, where the names give the dependent attribute, and each
