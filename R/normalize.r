@@ -12,7 +12,7 @@
 #'   a list of candidate keys.
 #' @export
 normalize_dependencies <- function(dependencies) {
-  dependencies |>
+  dependencies$dependencies |>
     remove_extraneous_attributes() |>
     remove_extraneous_dependencies() |>
     partition_dependencies() |>

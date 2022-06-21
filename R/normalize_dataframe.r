@@ -7,7 +7,7 @@
 #' @return a list of data.frames, containing the normalised data.
 #' @export
 normalize_dataframe <- function(df, dependencies) {
-  norm_deps <- normalize_dependencies(dependencies$dependencies)
+  norm_deps <- normalize_dependencies(dependencies)
   norm_attr_sets <- lapply(norm_deps, `[[`, "attrs")
   norm_key_sets <- lapply(norm_deps, `[[`, "keys")
   reference_mat <- outer(

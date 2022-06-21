@@ -1,8 +1,11 @@
 describe("normalize_dependencies", {
   it("removes extraneous attributes", {
     dependencies <- list(
-      list("a", "b"),
-      list(c("a", "b"), "c")
+      dependencies = list(
+        list("a", "b"),
+        list(c("a", "b"), "c")
+      ),
+      attrs = c("a", "b", "c")
     )
     norm.dependencies <- normalize_dependencies(dependencies)
     expect_identical(
@@ -12,9 +15,12 @@ describe("normalize_dependencies", {
   })
   it("removes extraneous dependencies", {
     dependencies <- list(
-      list("a", "b"),
-      list("a", "c"),
-      list("b", "c")
+      dependencies = list(
+        list("a", "b"),
+        list("a", "c"),
+        list("b", "c")
+      ),
+      attrs = c("a", "b", "c")
     )
     norm.dependencies <- normalize_dependencies(dependencies)
     expect_identical(
@@ -27,10 +33,13 @@ describe("normalize_dependencies", {
   })
   it("merges equivalent keys", {
     dependencies <- list(
-      list("d", "a"),
-      list("d", "b"),
-      list("a", "d"),
-      list(c("b", "c"), "d")
+      dependencies = list(
+        list("d", "a"),
+        list("d", "b"),
+        list("a", "d"),
+        list(c("b", "c"), "d")
+      ),
+      attrs = c("a", "b", "c", "d")
     )
     norm.dependencies <- normalize_dependencies(dependencies)
     expect_identical(
@@ -45,14 +54,17 @@ describe("normalize_dependencies", {
     # A -> B, B -> A, A -> C, B -> C, A -> D, B -> F, D -> E, F -> E
     # => A <-> B, A -> CDF, D -> E, F -> E
     dependencies <- list(
-      list("a", "b"),
-      list("b", "a"),
-      list("a", "c"),
-      list("b", "c"),
-      list("a", "d"),
-      list("b", "f"),
-      list("d", "e"),
-      list("f", "e")
+      dependencies = list(
+        list("a", "b"),
+        list("b", "a"),
+        list("a", "c"),
+        list("b", "c"),
+        list("a", "d"),
+        list("b", "f"),
+        list("d", "e"),
+        list("f", "e")
+      ),
+      attrs = c("a", "b", "c", "d", "e", "f")
     )
     norm.dependencies <- normalize_dependencies(dependencies)
     expect_identical(
@@ -66,13 +78,16 @@ describe("normalize_dependencies", {
   })
   it("removes transient dependencies after-merging keys (DFD fig. 3)", {
     dependencies <- list(
-      list(c("x1", "x2"), "a"),
-      list(c("x1", "x2"), "d"),
-      list(c("c", "d"), "x1"),
-      list(c("c", "d"), "x2"),
-      list(c("a", "x1"), "b"),
-      list(c("b", "x2"), "c"),
-      list("c", "a")
+      dependencies = list(
+        list(c("x1", "x2"), "a"),
+        list(c("x1", "x2"), "d"),
+        list(c("c", "d"), "x1"),
+        list(c("c", "d"), "x2"),
+        list(c("a", "x1"), "b"),
+        list(c("b", "x2"), "c"),
+        list("c", "a")
+      ),
+      attrs = c("x1", "x2", "a", "b", "c", "d")
     )
     norm.dep <- normalize_dependencies(dependencies)
     expect_setequal(
@@ -101,8 +116,11 @@ describe("normalize_dependencies", {
   describe("previous normalize tests", {
     it("resolves a simple bijection with no splits, if given an index", {
       dependencies <- list(
-        list("a", "b"),
-        list("b", "a")
+        dependencies = list(
+          list("a", "b"),
+          list("b", "a")
+        ),
+        attrs = c("a", "b")
       )
       norm <- normalize_dependencies(dependencies)
       expect_identical(length(norm), 1L)
@@ -112,8 +130,11 @@ describe("normalize_dependencies", {
     })
     it("resolves a simple bijection with no splits, if given no index", {
       dependencies <- list(
-        list("a", "b"),
-        list("b", "a")
+        dependencies = list(
+          list("a", "b"),
+          list("b", "a")
+        ),
+        attrs = c("a", "b")
       )
       norm <- normalize_dependencies(dependencies)
       expect_identical(length(norm), 1L)
@@ -126,9 +147,12 @@ describe("normalize_dependencies", {
         # F->D, ABCD->E, AB->F
         # => F->D, ABC->E, AB->F
         dep <- list(
-          list("F", "D"),
-          list(c("A", "B", "C", "D"), "E"),
-          list(c("A", "B"), "F")
+          dependencies = list(
+            list("F", "D"),
+            list(c("A", "B", "C", "D"), "E"),
+            list(c("A", "B"), "F")
+          ),
+          attrs = c("A", "B", "C", "D", "E", "F")
         )
         new <- normalize_dependencies(dep)
         expected <- list(
