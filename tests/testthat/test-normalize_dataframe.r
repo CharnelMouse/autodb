@@ -1,8 +1,11 @@
 describe("normalize_dataframe", {
   it("removes extraneous dependencies", {
     dependencies <- list(
-      list("a", "b"),
-      list(c("a", "b"), "c")
+      dependencies = list(
+        list("a", "b"),
+        list(c("a", "b"), "c")
+      ),
+      attrs = c("a", "b", "c")
     )
     df <- data.frame(a = integer(), b = integer(), c = integer())
     norm.df <- normalize_dataframe(df, dependencies)
@@ -18,8 +21,11 @@ describe("normalize_dataframe", {
   })
   it("resolves a simple bijection with no splits", {
     dependencies <- list(
-      list("a", "b"),
-      list("b", "a")
+      dependencies = list(
+        list("a", "b"),
+        list("b", "a")
+      ),
+      attrs = c("a", "b")
     )
     df <- data.frame(a = integer(), b = integer())
     norm.df <- normalize_dataframe(df, dependencies)
@@ -53,12 +59,15 @@ describe("normalize_dataframe", {
       )
     )
     deps <- list(
-      list("id", "month"),
-      list("id", "hemisphere"),
-      list("id", "is_winter"),
-      list(c("month", "hemisphere"), "is_winter"),
-      list(c("month", "is_winter"), "hemisphere"),
-      list(c("hemisphere", "is_winter"), "month")
+      dependencies = list(
+        list("id", "month"),
+        list("id", "hemisphere"),
+        list("id", "is_winter"),
+        list(c("month", "hemisphere"), "is_winter"),
+        list(c("month", "is_winter"), "hemisphere"),
+        list(c("hemisphere", "is_winter"), "month")
+      ),
+      attrs = c("id", "month", "hemisphere", "is_winter")
     )
     new_dfs <- normalize_dataframe(df, deps)
     skip("do this later")
@@ -90,15 +99,18 @@ describe("normalize_dataframe", {
   describe("Dependencies", {
     it("DepDF", {
       deps <- list(
-        list(c("player_name", "jersey_num"), "team"),
-        list(c("player_name", "team"), "jersey_num"),
-        list(c("team", "jersey_num"), "player_name"),
-        list("team", "city"),
-        list("state", "city"),
-        list(c("player_name", "jersey_num"), "city"),
-        list("team", "state"),
-        list(c("player_name", "jersey_num"), "state"),
-        list("city", "state")
+        dependencies = list(
+          list(c("player_name", "jersey_num"), "team"),
+          list(c("player_name", "team"), "jersey_num"),
+          list(c("team", "jersey_num"), "player_name"),
+          list("team", "city"),
+          list("state", "city"),
+          list(c("player_name", "jersey_num"), "city"),
+          list("team", "state"),
+          list(c("player_name", "jersey_num"), "state"),
+          list("city", "state")
+        ),
+        attrs = c("player_name", "jersey_num", "team", "city", "state")
       )
       df <- data.frame(
         player_name = integer(),
@@ -149,8 +161,11 @@ describe("normalize_dataframe", {
   it("correctly handles attributes with non-df-standard names", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
       stats::setNames(c("A 1", "B 2", "C 3"))
-    deps <- dfd(df, 1) |>
-      tuple_relations()
+    deps <- list(
+      dependencies = dfd(df, 1)$dependencies |>
+        tuple_relations(),
+      attrs = c("A 1", "B 2", "C 3")
+    )
     norm.df <- normalize_dataframe(df, deps)
     expect_setequal(names(norm.df[[1]]$df), c("A 1", "B 2", "C 3"))
   })

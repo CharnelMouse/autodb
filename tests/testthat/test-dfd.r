@@ -63,7 +63,7 @@ describe("dfd", {
   it("gives dependencies for unique attributes (in case don't want them as key)", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), C = c(1, 2, 2))
     deps <- dfd(df, 1)
-    expect_identical(deps$A, list(c("B", "C")))
+    expect_identical(deps$dependencies$A, list(c("B", "C")))
   })
   it("finds dependencies for the team data in test-normalize", {
     df <- data.frame(
@@ -96,8 +96,8 @@ describe("dfd", {
       city = list('team', 'state', c('player_name', 'jersey_num')),
       state = list('team', c('player_name', 'jersey_num'), 'city')
     )
-    expect_identical(lengths(deps), lengths(expected_deps))
-    expect_superset_of_dependency(deps, expected_deps)
+    expect_identical(lengths(deps$dependencies), lengths(expected_deps))
+    expect_superset_of_dependency(deps$dependencies, expected_deps)
   })
   it("finds dependencies for the team data in original's edit demo", {
     df <- data.frame(
@@ -113,7 +113,7 @@ describe("dfd", {
       state = list("team", "city"),
       roster_size = list("team", "city")
     )
-    expect_superset_of_dependency(deps, expected_deps)
+    expect_superset_of_dependency(deps$dependencies, expected_deps)
   })
   it("finds dependencies for Wikipedia 1NF->2NF->3NF example", {
     df <- data.frame(
@@ -145,13 +145,13 @@ describe("dfd", {
       Genre_Name = list("Genre_ID"),
       Publisher_ID = list("Title")
     )
-    expect_superset_of_dependency(deps, expected_deps)
+    expect_superset_of_dependency(deps$dependencies, expected_deps)
   })
   it("correctly handles attributes with non-df-standard names", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
       stats::setNames(c("A 1", "B 2", "C 3"))
     deps <- dfd(df, 1)
-    expect_identical(deps$`A 1`, list(c("B 2", "C 3")))
+    expect_identical(deps$dependencies$`A 1`, list(c("B 2", "C 3")))
   })
 })
 
@@ -183,7 +183,7 @@ describe("original tests", {
         less_than_5 = list("age", "height", "id")
       )
       solved <- dfd(df_1, 0.98)
-      assert_equal_dependency_dics(solved, dep)
+      assert_equal_dependency_dics(solved$dependencies, dep)
     })
 
     it("randomly-generated example", {
@@ -209,7 +209,7 @@ describe("original tests", {
         G = list(c("C", "D"), "A")
       )
       res <- dfd(df_2, 0.98)
-      expect_superset_of_dependency(res, dep)
+      expect_superset_of_dependency(res$dependencies, dep)
     })
   })
 
