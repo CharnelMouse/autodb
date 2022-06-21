@@ -4,7 +4,7 @@
 \alias{dfd}
 \title{DFD algorithm}
 \usage{
-dfd(df, accuracy, progress = 0L)
+dfd(df, accuracy, progress = 0L, progress_file = "")
 }
 \arguments{
 \item{df}{a data.frame, the relation to evaluate.}
@@ -17,6 +17,10 @@ to conclude a dependency.}
 attribute's determinant sets. 2 also briefly describes the status of the
 search for an attribute's determinant sets when generating new seeds. 3
 also gives the status after visiting each candidate determinant set / node.}
+
+\item{progress_file}{a scalar character or a connection. If \code{progress}
+is non-zero, determines where the progress is written to, in the same way
+as the \code{file} argument for \code{\link[base]{cat}}.}
 }
 \value{
 a named list, where the names give the dependent attribute, and each
