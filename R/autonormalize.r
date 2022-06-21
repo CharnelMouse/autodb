@@ -29,7 +29,7 @@ auto_entityset <- function(
   filter = FALSE
 ) {
   deps <- find_dependencies(df, accuracy)
-  deps$dependencies <- tuple_relations(deps$dependencies)
+  deps$dependencies <- flatten(deps$dependencies)
   if (filter)
     deps <- filter(deps, df)
   EntitySet(df, deps, name)

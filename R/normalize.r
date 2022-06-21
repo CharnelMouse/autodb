@@ -279,10 +279,10 @@ make_indexes <- function(depdfs) {
   #   make_indexes(child)
 }
 
-tuple_relations <- function(dependencies) {
-  # Takes Dependencies and returns the dependencies in a flat list with
-  # (parent table, parent attr, child table, child attr)
-  # format.
+flatten <- function(dependencies) {
+  # Takes dependencies grouped by dependent attribute, and returns the
+  # dependencies in a flat list with (parent table, parent attr, child table,
+  # child attr) format.
   result <- list()
   for (i in seq_along(dependencies)) {
     rhs <- names(dependencies)[i]

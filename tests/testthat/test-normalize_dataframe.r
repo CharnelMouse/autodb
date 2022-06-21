@@ -163,7 +163,7 @@ describe("normalize_dataframe", {
       stats::setNames(c("A 1", "B 2", "C 3"))
     deps <- list(
       dependencies = dfd(df, 1)$dependencies |>
-        tuple_relations(),
+        flatten(),
       attrs = c("A 1", "B 2", "C 3")
     )
     norm.df <- normalize_dataframe(df, deps)
