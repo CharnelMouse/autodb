@@ -20,7 +20,7 @@ normalize_dependencies <- function(dependencies) {
     merge_equivalent_keys() |>
     remove_transitive_dependencies() |>
     add_bijections() |>
-    construct_relations(seq_along(dependencies$attrs)) |>
+    construct_relations() |>
     convert_to_character_attributes(dependencies$attrs)
 }
 
@@ -39,7 +39,7 @@ remove_extraneous_attributes <- function(x) {
     y <- lhs
     for (attr in lhs) {
       y_ <- setdiff(y, attr)
-      if (rhs %in% find_closure_int(x, y_)) {
+      if (rhs %in% find_closure(x, y_)) {
         y <- y_
       }
     }
@@ -61,7 +61,7 @@ remove_extraneous_dependencies <- function(fds) {
       dets <- current_fd[[1]]
       dep <- current_fd[[2]]
       other_rem <- rem[-n]
-      closure <- find_closure_int(other_fds[!other_rem], dets)
+      closure <- find_closure(other_fds[!other_rem], dets)
       rem[n] <- (dep %in% closure)
     }
     new_fds <- new_fds[!rem]
@@ -108,8 +108,8 @@ merge_equivalent_keys <- function(lst) {
         if (length(grp2) > 0) {
           LHS2 <- determinant_sets[[m]]
           key2 <- keys[[m]][[1]]
-          closure1 <- find_closure_int(fds, LHS)
-          closure2 <- find_closure_int(fds, LHS2)
+          closure1 <- find_closure(fds, LHS)
+          closure2 <- find_closure(fds, LHS2)
 
           if (all(key1 %in% closure2) && all(key2 %in% closure1)) {
 
@@ -175,7 +175,7 @@ remove_transitive_dependencies <- function(lst) {
     RHS <- dependency[[2]]
     key_attrs <- unique(unlist(lst$keys[[flat_groups[n]]]))
     if (!is.element(RHS, key_attrs)) {
-      closure_without <- find_closure_int(
+      closure_without <- find_closure(
         c(flat_partition[-n][!transitive[-n]], singular_bijections),
         key_attrs
       )
@@ -215,9 +215,9 @@ add_bijections <- function(lst) {
   )
 }
 
-construct_relations <- function(lst, attrs) {
+construct_relations <- function(lst) {
   bijection_groups <- lst$bijection_groups
-  primaries <- lapply(bijection_groups, choose_index, attrs)
+  primaries <- lapply(bijection_groups, choose_index)
   lapply(
     lst$partition,
     \(fds) {
@@ -236,7 +236,7 @@ construct_relations <- function(lst, attrs) {
               if (all(bijection_set %in% keys[[m]])) {
                 keys[[m]] <- setdiff(keys[[m]], bijection_set)
                 keys[[m]] <- union(keys[[m]], primary)
-                keys[[m]] <- keys[[m]][order(match(keys[[m]], attrs))]
+                keys[[m]] <- keys[[m]][order(keys[[m]])]
               }
             }
           }
@@ -254,7 +254,7 @@ construct_relations <- function(lst, attrs) {
           }
         }
       }
-      nonkeys <- nonkeys[order(match(nonkeys, attrs))]
+      nonkeys <- nonkeys[order(nonkeys)]
       list(attrs = union(unlist(keys), nonkeys), keys = keys)
     }
   )
@@ -270,26 +270,6 @@ convert_to_character_attributes <- function(lst, attrs) {
 }
 
 find_closure <- function(fds, attrs) {
-  if (!is.character(attrs))
-    stop(paste("attr is", toString(class(attrs))))
-  if (length(fds) == 0)
-    return(attrs)
-  for (n in seq_along(fds)) {
-    fd <- fds[[n]]
-    det_set <- fd[[1]]
-    dep <- fd[[2]]
-    if (length(dep) != 1)
-      stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(r)))
-    if (all(is.element(det_set, attrs))) {
-      if (!is.element(dep, attrs))
-        attrs <- c(attrs, dep)
-      return(find_closure(fds[-n], attrs))
-    }
-  }
-  attrs
-}
-
-find_closure_int <- function(fds, attrs) {
   if (!is.integer(attrs))
     stop(paste("attr is", toString(class(attrs))))
   if (length(fds) == 0)
@@ -303,7 +283,7 @@ find_closure_int <- function(fds, attrs) {
     if (all(is.element(det_set, attrs))) {
       if (!is.element(dep, attrs))
         attrs <- c(attrs, dep)
-      return(find_closure_int(fds[-n], attrs))
+      return(find_closure(fds[-n], attrs))
     }
   }
   attrs
