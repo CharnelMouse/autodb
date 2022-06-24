@@ -23,84 +23,84 @@ normalize_dependencies <- function(dependencies) {
 }
 
 remove_extraneous_attributes <- function(x) {
-  rels <- x
-  for (lr in x) {
-    lhs <- lr[[1]]
-    rhs <- lr[[2]]
+  fds <- x
+  for (fd in x) {
+    lhs <- fd[[1]]
+    rhs <- fd[[2]]
     y <- lhs
     for (attr in lhs) {
       y_ <- setdiff(y, attr)
-      if (rhs %in% find_closure(x, y_))
-        y <- setdiff(y, attr)
-      rels <- setdiff(rels, list(lr))
-      rels <- c(rels, list(list(y, rhs)))
-      x <- setdiff(x, list(list(lhs, rhs)))
-      x <- c(x, list(list(y, rhs)))
+      if (rhs %in% find_closure(x, y_)) {
+        y <- y_
+      }
     }
+    fds <- setdiff(fds, list(fd))
+    fds <- c(fds, list(list(y, rhs)))
   }
-  unique(x)
+  fds
 }
 
-remove_extraneous_dependencies <- function(relations) {
-  old_rels <- NULL
-  new_rels <- relations
-  while (!identical(old_rels, new_rels)) {
-    old_rels <- new_rels
-    rem <- rep(FALSE, length(new_rels))
-    for (n in seq_along(new_rels)) {
-      LHS <- new_rels[[n]][[1]]
-      RHS <- new_rels[[n]][[2]]
-      other_rels <- new_rels[-n]
+remove_extraneous_dependencies <- function(fds) {
+  old_fds <- NULL
+  new_fds <- fds
+  while (!identical(old_fds, new_fds)) {
+    old_fds <- new_fds
+    rem <- rep(FALSE, length(new_fds))
+    for (n in seq_along(new_fds)) {
+      current_fd <- new_fds[[n]]
+      other_fds <- new_fds[-n]
+      dets <- current_fd[[1]]
+      dep <- current_fd[[2]]
       other_rem <- rem[-n]
-      closure <- find_closure(other_rels[!other_rem], LHS)
-      rem[n] <- (RHS %in% closure)
+      closure <- find_closure(other_fds[!other_rem], dets)
+      rem[n] <- (dep %in% closure)
     }
-    new_rels <- new_rels[!rem]
+    new_fds <- new_fds[!rem]
   }
-  new_rels
+  new_fds
 }
 
-partition_dependencies <- function(relations) {
-  LHS_list <- lapply(relations, `[[`, 1)
-  LHSs <- unique(LHS_list)
+partition_dependencies <- function(fds) {
+  det_sets <- lapply(fds, `[[`, 1)
+  unique_det_sets <- unique(det_sets)
   partition <- list()
-  for (LHS in LHSs) {
-    matches <- vapply(LHS_list, identical, logical(1), LHS)
-    partition <- c(partition, list(relations[matches]))
+  for (det_set in unique_det_sets) {
+    matches <- vapply(det_sets, identical, logical(1), det_set)
+    partition <- c(partition, list(fds[matches]))
   }
   list(
-    relations = relations,
+    fds = fds,
     partition = partition,
-    LHSs = LHSs
+    determinant_sets = unique_det_sets
   )
 }
 
-merge_equivalent_keys <- function(dep_partition) {
-  partition <- dep_partition$partition
-  LHSs <- dep_partition$LHSs
+merge_equivalent_keys <- function(lst) {
+  partition <- lst$partition
+  determinant_sets <- lst$determinant_sets
   if (length(partition) <= 1)
     return(list(
       partition = partition,
-      keys = lapply(LHSs, list),
+      keys = lapply(determinant_sets, list),
       bijections = list()
     ))
-  relations <- dep_partition$relations
+  fds <- lst$fds
 
-  keys <- lapply(LHSs, list)
-  bijection_rels <- list()
+  keys <- lapply(determinant_sets, list)
+  bijection_fds <- list()
   bijection_groups <- keys
   for (n in seq.int(length(partition) - 1)) {
     grp <- partition[[n]]
     if (length(grp) > 0) {
-      LHS <- LHSs[[n]]
+      LHS <- determinant_sets[[n]]
       key1 <- keys[[n]][[1]]
       for (m in (n + 1):length(partition)) {
         grp2 <- partition[[m]]
         if (length(grp2) > 0) {
-          LHS2 <- LHSs[[m]]
+          LHS2 <- determinant_sets[[m]]
           key2 <- keys[[m]][[1]]
-          closure1 <- find_closure(relations, LHS)
-          closure2 <- find_closure(relations, LHS2)
+          closure1 <- find_closure(fds, LHS)
+          closure2 <- find_closure(fds, LHS2)
 
           if (all(key1 %in% closure2) && all(key2 %in% closure1)) {
 
@@ -112,7 +112,7 @@ merge_equivalent_keys <- function(dep_partition) {
                 list(key2, key1)
               )
             )
-            bijection_rels <- c(bijection_rels, new_bijections)
+            bijection_fds <- c(bijection_fds, new_bijections)
             bijection_groups[[n]] <- c(
               bijection_groups[[n]],
               bijection_groups[[m]]
@@ -120,12 +120,12 @@ merge_equivalent_keys <- function(dep_partition) {
 
             obsolete <- vapply(
               partition[[m]],
-              \(r) r[[2]] %in% c(key1, key2),
+              \(fd) fd[[2]] %in% c(key1, key2),
               logical(1)
             )
             partition[[n]] <- unique(c(
               partition[[n]],
-              lapply(partition[[m]][!obsolete], \(r) list(key1, r[[2]]))
+              lapply(partition[[m]][!obsolete], \(fd) list(key1, fd[[2]]))
             ))
             keys[[n]] <- c(keys[[n]], keys[[m]])
 
@@ -140,7 +140,7 @@ merge_equivalent_keys <- function(dep_partition) {
   list(
     partition = partition[nonempty],
     keys = keys[nonempty],
-    bijections = bijection_rels,
+    bijections = bijection_fds,
     bijection_groups = bijection_groups[lengths(bijection_groups) > 1]
   )
 }
@@ -211,9 +211,9 @@ construct_relations <- function(lst, attrs) {
   primaries <- lapply(bijection_groups, choose_index, attrs)
   lapply(
     lst$partition,
-    \(rels) {
-      LHSs <- unique(lapply(rels, `[[`, 1))
-      RHSs <- unique(lapply(rels, `[[`, 2))
+    \(fds) {
+      LHSs <- unique(lapply(fds, `[[`, 1))
+      RHSs <- unique(lapply(fds, `[[`, 2))
       keys <- LHSs
       all_attrs <- union(unlist(keys), unlist(RHSs))
       nonkeys <- setdiff(all_attrs, unlist(keys))
@@ -251,21 +251,21 @@ construct_relations <- function(lst, attrs) {
   )
 }
 
-find_closure <- function(rel, attrs) {
+find_closure <- function(fds, attrs) {
   if (!is.character(attrs))
     stop(paste("attr is", toString(class(attrs))))
-  if (length(rel) == 0)
+  if (length(fds) == 0)
     return(attrs)
-  for (n in seq_along(rel)) {
-    r <- rel[[n]]
-    dep_attrs <- r[[1]]
-    dep <- r[[2]]
+  for (n in seq_along(fds)) {
+    fd <- fds[[n]]
+    det_set <- fd[[1]]
+    dep <- fd[[2]]
     if (length(dep) != 1)
       stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(r)))
-    if (all(is.element(dep_attrs, attrs))) {
+    if (all(is.element(det_set, attrs))) {
       if (!is.element(dep, attrs))
         attrs <- c(attrs, dep)
-      return(find_closure(rel[-n], attrs))
+      return(find_closure(fds[-n], attrs))
     }
   }
   attrs
