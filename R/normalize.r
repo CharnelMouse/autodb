@@ -19,7 +19,7 @@ normalize_dependencies <- function(dependencies) {
     merge_equivalent_keys() |>
     remove_transitive_dependencies() |>
     add_bijections() |>
-    construct_relations()
+    construct_relations(dependencies$attrs)
 }
 
 remove_extraneous_attributes <- function(x) {
@@ -88,6 +88,7 @@ merge_equivalent_keys <- function(dep_partition) {
 
   keys <- lapply(LHSs, list)
   bijection_rels <- list()
+  bijection_groups <- keys
   for (n in seq.int(length(partition) - 1)) {
     grp <- partition[[n]]
     if (length(grp) > 0) {
@@ -112,6 +113,10 @@ merge_equivalent_keys <- function(dep_partition) {
               )
             )
             bijection_rels <- c(bijection_rels, new_bijections)
+            bijection_groups[[n]] <- c(
+              bijection_groups[[n]],
+              bijection_groups[[m]]
+            )
 
             obsolete <- vapply(
               partition[[m]],
@@ -125,6 +130,7 @@ merge_equivalent_keys <- function(dep_partition) {
             keys[[n]] <- c(keys[[n]], keys[[m]])
 
             partition[[m]] <- list()
+            bijection_groups[[m]] <- list()
           }
         }
       }
@@ -134,7 +140,8 @@ merge_equivalent_keys <- function(dep_partition) {
   list(
     partition = partition[nonempty],
     keys = keys[nonempty],
-    bijections = bijection_rels
+    bijections = bijection_rels,
+    bijection_groups = bijection_groups[lengths(bijection_groups) > 1]
   )
 }
 
@@ -173,7 +180,8 @@ remove_transitive_dependencies <- function(lst) {
   list(
     partition = new_partition,
     keys = lst$keys,
-    bijections = singular_bijections
+    bijections = singular_bijections,
+    bijection_groups = lst$bijection_groups
   )
 }
 
@@ -181,6 +189,7 @@ add_bijections <- function(lst) {
   partition <- lst$partition
   keys <- lst$keys
   bijections <- lst$bijections
+  bijection_groups <- lst$bijection_groups
   for (n in seq_along(keys)) {
     key_list <- keys[[n]]
     matches <- vapply(
@@ -191,17 +200,53 @@ add_bijections <- function(lst) {
     partition[[n]] <- c(partition[[n]], bijections[matches])
     bijections <- bijections[!matches]
   }
-  partition
+  list(
+    partition = partition,
+    bijection_groups = bijection_groups
+  )
 }
 
-construct_relations <- function(partition) {
+construct_relations <- function(lst, attrs) {
+  bijection_groups <- lst$bijection_groups
+  primaries <- lapply(bijection_groups, choose_index, attrs)
   lapply(
-    partition,
+    lst$partition,
     \(rels) {
       LHSs <- unique(lapply(rels, `[[`, 1))
       RHSs <- unique(lapply(rels, `[[`, 2))
-      all_attrs <- union(unlist(LHSs), unlist(RHSs))
-      list(attrs = all_attrs, keys = LHSs)
+      keys <- LHSs
+      all_attrs <- union(unlist(keys), unlist(RHSs))
+      nonkeys <- setdiff(all_attrs, unlist(keys))
+      for (n in seq_along(bijection_groups)) {
+        grp <- bijection_groups[[n]]
+        primary <- primaries[[n]]
+
+        if (!any(vapply(keys, \(k) all(primary %in% k), logical(1)))) {
+          for (bijection_set in setdiff(grp, list(primary))) {
+            for (m in seq_along(keys)) {
+              if (all(bijection_set %in% keys[[m]])) {
+                keys[[m]] <- setdiff(keys[[m]], bijection_set)
+                keys[[m]] <- union(keys[[m]], primary)
+                keys[[m]] <- keys[[m]][order(match(keys[[m]], attrs))]
+              }
+            }
+          }
+        }
+        key_matches <- match(keys, grp)
+        if (any(!is.na(key_matches))) {
+          primary_loc <- match(list(primary), keys)
+          keys <- c(list(primary), keys[-primary_loc])
+        }
+
+        for (bijection_set in setdiff(grp, list(primary))) {
+          if (all(bijection_set %in% nonkeys)) {
+            nonkeys <- setdiff(nonkeys, bijection_set)
+            nonkeys <- union(nonkeys, primary)
+          }
+        }
+      }
+      nonkeys <- nonkeys[order(match(nonkeys, attrs))]
+      list(attrs = union(unlist(keys), nonkeys), keys = keys)
     }
   )
 }

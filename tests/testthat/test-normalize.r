@@ -45,8 +45,8 @@ describe("normalize_dependencies", {
     expect_identical(
       norm.dependencies,
       list(
-        list(attrs = c("d", "a", "b"), keys = list("d", "a")),
-        list(attrs = c("b", "c", "d"), keys = list(c("b", "c")))
+        list(attrs = c("a", "d", "b"), keys = list("a", "d")),
+        list(attrs = c("b", "c", "a"), keys = list(c("b", "c")))
       )
     )
   })
@@ -70,7 +70,7 @@ describe("normalize_dependencies", {
     expect_identical(
       norm.dependencies,
       list(
-        list(attrs = c("a", "b", "d", "c", "f"), keys = list("a", "b")),
+        list(attrs = c("a", "b", "c", "d", "f"), keys = list("a", "b")),
         list(attrs = c("d", "e"), keys = list("d")),
         list(attrs = c("f", "e"), keys = list("f"))
       )
@@ -109,6 +109,32 @@ describe("normalize_dependencies", {
         list(
           attrs = c("c", "a"),
           keys = list("c")
+        )
+      )
+    )
+  })
+  it("replaces keys / non-key attributes with their bijection set's chosen index", {
+    dependencies <- list(
+      dependencies = list(
+        list(c("A", "B"), "C"),
+        list("C", "A"),
+        list("C", "B"),
+        list("C", "D"),
+        list(c("A", "B", "E"), "F")
+      ),
+      attrs = c("A", "B", "C", "D", "E", "F")
+    )
+    norm.dep <- normalize_dependencies(dependencies)
+    expect_identical(
+      norm.dep,
+      list(
+        list(
+          attrs = c("C", "A", "B", "D"),
+          keys = list("C", c("A", "B"))
+        ),
+        list(
+          attrs = c("C", "E", "F"),
+          keys = list(c("C", "E"))
         )
       )
     )

@@ -148,14 +148,14 @@ describe("normalize_dataframe", {
         team = list(
           df = data.frame(
             team = integer(),
-            state = integer()
+            city = integer()
           ),
           keys = list("team"),
           index = "team",
           children = "city"
         )
       )
-      expect_setequal(depdfs, expected_depdfs)
+      expect_identical(depdfs, expected_depdfs)
     })
   })
   it("correctly handles attributes with non-df-standard names", {
