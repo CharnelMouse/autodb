@@ -17,17 +17,13 @@ normalize_dataframe <- function(df, dependencies) {
       any(vapply(to_keys, \(key) all(key %in% from_attrs), logical(1)))
     })
   )
-  df_names <- names(df)
-  indexes <- lapply(norm_key_sets, choose_index, df_names)
+  indexes <- lapply(norm_key_sets, `[[`, 1)
   relation_names <- vapply(indexes, name_dataframe, character(1))
   depdf_list <- Map(
     \(norm_dep_set, index) {
-      attrs <- norm_dep_set$attrs
-      sorted_attrs <- attrs[order(match(attrs, df_names))]
-      keys <- norm_dep_set$keys[order(match(norm_dep_set$keys, df_names))]
       list(
-        df = unique(df[, sorted_attrs]),
-        keys = keys,
+        df = unique(df[, norm_dep_set$attrs]),
+        keys = norm_dep_set$keys,
         index = index
       )
     },
