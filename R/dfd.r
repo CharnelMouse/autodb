@@ -13,6 +13,24 @@
 # choice of index, i.e. columns to leave behind as foreign keys in the parent.
 # This might be causing the plotting problems.
 # - randomly-generated example for original DFD tests sometimes fails.
+# - liquor dataset: we get tables
+#   - [
+#       [Store Number]
+#       [Store Name, Store Location]
+#       [Address, Store Location]
+#       [Store Name, Address]
+#       [Store Name, Zip Code]
+#       [Address, Zip Code]
+#     ]
+#   - [
+#       [Zip Code, Store Location]
+#       -> City
+#     ]
+#   - [
+#       [City, Store Location]
+#       -> County Number
+#     ]
+#   Not sure these have transitive dependencies removed
 
 #' DFD algorithm
 #'
