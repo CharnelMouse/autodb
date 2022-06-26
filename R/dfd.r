@@ -152,15 +152,22 @@ find_LHSs <- function(
     while (!is.na(node)) {
       if (nodes$visited[node]) {
         if (nodes$category[node] == 3) { # dependency
-          if (is_minimal(node, nodes)) {
+          min_infer <- is_minimal(node, nodes)
+          if (isTRUE(min_infer)) {
             nodes$category[node] <- 2L
             min_deps <- c(min_deps, node)
           }
+          if (isFALSE(min_infer))
+            nodes$category[node] <- 1L
         }
         if (nodes$category[node] == -3) { # non-dependency
-          if (is_maximal(node, nodes)) {
+          max_infer <- is_maximal(node, nodes)
+          if (isTRUE(max_infer)) {
             nodes$category[node] <- -2L
             max_non_deps <- c(max_non_deps, node)
+          }
+          if (isFALSE(max_infer)) {
+            nodes$category[node] <- -1L
           }
         }
         nodes$category[node] <- update_dependency_type(
@@ -181,19 +188,26 @@ find_LHSs <- function(
           result <- cp[[1]]
           partitions <- cp[[2]]
           if (result) {
-            if (is_minimal(node, nodes)) {
+            min_infer <- is_minimal(node, nodes)
+            if (isFALSE(min_infer))
+              nodes$category[node] <- 1L
+            if (isTRUE(min_infer)) {
               min_deps <- c(min_deps, node)
               nodes$category[node] <- 2L
-            }else{
-              nodes$category[node] <- 3L
             }
+            if (is.na(min_infer))
+              nodes$category[node] <- 3L
           }else{
-            if (is_maximal(node, nodes)) {
+            max_infer <- is_maximal(node, nodes)
+            if (isFALSE(max_infer)) {
+              nodes$category[node] <- -1L
+            }
+            if (isTRUE(max_infer)) {
               max_non_deps <- c(max_non_deps, node)
               nodes$category[node] <- -2L
-            }else{
-              nodes$category[node] <- -3L
             }
+            if (is.na(max_infer))
+              nodes$category[node] <- -3L
           }
         }
         nodes$visited[node] <- TRUE
@@ -327,12 +341,20 @@ powerset_nodes <- function(n) {
 
 is_minimal <- function(node, nodes) {
   children <- nodes$children[[node]]
-  all(nodes$category[children] < 0)
+  if (any(nodes$category[children] > 0))
+    return(FALSE)
+  if (all(nodes$category[children] < 0))
+    return(TRUE)
+  NA
 }
 
 is_maximal <- function(node, nodes) {
   parents <- nodes$parents[[node]]
-  all(nodes$category[parents] > 0)
+  if (any(nodes$category[parents] < 0))
+    return(FALSE)
+  if (all(nodes$category[parents] > 0))
+    return(TRUE)
+  NA
 }
 
 update_dependency_type <- function(node, nodes, min_deps, max_non_deps) {
