@@ -12,7 +12,6 @@
 # - data.frames split off from parents aren't being checked properly for best
 # choice of index, i.e. columns to leave behind as foreign keys in the parent.
 # This might be causing the plotting problems.
-# - randomly-generated example for original DFD tests sometimes fails.
 # - liquor dataset: we get tables
 #   - [
 #       [Store Number]
