@@ -217,7 +217,8 @@ find_LHSs <- function(
             "#seeds: ", length(seeds), ", ",
             "#min_deps: ", length(min_deps), ", ",
             "#max_non_deps: ", length(max_non_deps), ", ",
-            "trace: ", length(trace), "\n"
+            "trace: ", length(trace), ", ",
+            "category: ", nodes$category[node], "\n"
           ),
           file = progress_file,
           append = TRUE
@@ -228,13 +229,14 @@ find_LHSs <- function(
     if (progress >= 2L)
       cat(
         paste0(
-          "generate: ",
+          "generate: 0, ",
           "visited: ", sum(nodes$visited), ", ",
           "not visited: ", sum(!nodes$visited), ", ",
-          "#seeds: ", length(seeds), ", ",
+          "#seeds: ", length(new_seeds), ", ",
           "#min_deps: ", length(min_deps), ", ",
           "#max_non_deps: ", length(max_non_deps), ", ",
-          "trace: ", length(trace), "\n"
+          "trace: ", length(trace), ", ",
+          "category: ", 0, "\n"
         ),
         file = progress_file,
         append = TRUE
