@@ -274,7 +274,7 @@ powerset_nodes <- function(n) {
     ))
   if (n == 1)
     return(list(
-      bits = intToBits(1),
+      bits = list(intToBits(1)),
       logicals = list(TRUE),
       children = list(integer()),
       parents = list(integer()),
@@ -342,8 +342,6 @@ infer_type <- function(node, nodes) {
   # dependency, or if any supersets are a non-dependency.
   # TO DO: optimize, this is inefficient (or it's helper functions are)
   category <- NA
-  # Note: both the subfunctions are currently incorrect, because they only check
-  # one level of parents/children, instead of all of them
   if (has_dependency_subset(node, nodes))
     category <- 1L
   if (has_nondependency_superset(node, nodes))
@@ -352,13 +350,27 @@ infer_type <- function(node, nodes) {
 }
 
 has_dependency_subset <- function(node, nodes) {
-  children <- nodes$children[[node]]
-  any(nodes$category[children] > 0)
+  node_bits <- nodes$bits[[node]]
+  bitsets <- nodes$bits
+  subsets <- vapply(
+    bitsets,
+    \(x) is_subset(x, node_bits) && !identical(x, node_bits),
+    logical(1)
+  )
+  subset_categories <- nodes$category[subsets]
+  any(subset_categories > 0)
 }
 
 has_nondependency_superset <- function(node, nodes) {
-  parents <- nodes$parent[[node]]
-  any(nodes$category[parents] < 0)
+  node_bits <- nodes$bits[[node]]
+  bitsets <- nodes$bits
+  supersets <- vapply(
+    bitsets,
+    \(x) is_superset(x, node_bits) && !identical(x, node_bits),
+    logical(1)
+  )
+  superset_categories <- nodes$category[supersets]
+  any(superset_categories < 0)
 }
 
 pick_next_node <- function(node, nodes, trace, min_deps, max_non_deps, attrs) {
