@@ -74,11 +74,13 @@ dfd <- function(df, accuracy, progress = 0L, progress_file = "") {
   dependencies <- stats::setNames(rep(list(list()), ncol(df)), column_names)
   fixed <- character()
   nonfixed <- column_names
+  if (progress)
+    cat("starting DFD", file = progress_file, append = FALSE)
   for (i in seq_along(column_names)) {
     attr <- column_names[i]
     if (all(is.na(df[[attr]])) || all(df[[attr]] == df[[attr]][1])) {
       if (progress)
-        cat(paste(attr, "is fixed\n"), file = progress_file)
+        cat(paste(attr, "is fixed\n"), file = progress_file, append = TRUE)
       fixed <- c(fixed, attr)
       nonfixed <- setdiff(nonfixed, attr)
       dependencies[[attr]] <- as.list(setdiff(column_names, attr))
@@ -96,10 +98,10 @@ dfd <- function(df, accuracy, progress = 0L, progress_file = "") {
     simple_nodes <- as.integer(2^(seq.int(n_lhs_attrs) - 1))
     for (rhs in nonfixed) {
       if (progress)
-        cat(paste("dependent", rhs, "\n"), file = progress_file)
+        cat(paste("dependent", rhs, "\n"), file = progress_file, append = TRUE)
       lhs_attrs <- setdiff(nonfixed, rhs)
       stopifnot(length(lhs_attrs) == n_lhs_attrs)
-      lhss <- find_LHSs(rhs, lhs_attrs, nodes, simple_nodes, df, partitions, accuracy, progress)
+      lhss <- find_LHSs(rhs, lhs_attrs, nodes, simple_nodes, df, partitions, accuracy, progress, progress_file)
       dependencies[[rhs]] <- c(dependencies[[rhs]], lhss)
     }
   }
@@ -213,7 +215,8 @@ find_LHSs <- function(
             "#max_non_deps: ", length(max_non_deps), ", ",
             "trace: ", length(trace), "\n"
           ),
-          file = progress_file
+          file = progress_file,
+          append = TRUE
         )
       node <- res[[1]]
     }
@@ -229,26 +232,31 @@ find_LHSs <- function(
           "#max_non_deps: ", length(max_non_deps), ", ",
           "trace: ", length(trace), "\n"
         ),
-        file = progress_file
+        file = progress_file,
+        append = TRUE
       )
-    # if (progress >= 4L && setequal(seeds, new_seeds))
-    #   cat(paste0(
-    #     "seed status:\n",
-    #     paste(
-    #       vapply(
-    #         seeds,
-    #         \(s) paste0(
-    #           "node: ", s, ", ",
-    #           "children: ", toString(nodes$children[[s]]), ", ",
-    #           "parents: ", toString(nodes$parents[[s]]), ", ",
-    #           "category: ", nodes$category[s], ", ",
-    #           "visited: ", nodes$visited[s], "\n"
-    #         ),
-    #         character(1)
-    #       ),
-    #       collapse = "\n"
-    #     )
-    #   ))
+    if (progress >= 4L && setequal(seeds, new_seeds))
+      cat(
+        paste0(
+          "seed status:\n",
+          paste(
+            vapply(
+              seeds,
+              \(s) paste0(
+                "node: ", s, ", ",
+                "children: ", toString(nodes$children[[s]]), ", ",
+                "parents: ", toString(nodes$parents[[s]]), ", ",
+                "category: ", nodes$category[s], ", ",
+                "visited: ", nodes$visited[s], "\n"
+              ),
+              character(1)
+            ),
+            collapse = "\n"
+          )
+        ),
+        file = progress_file,
+        append = TRUE
+      )
     seeds <- new_seeds
   }
   lapply(min_deps, \(md) lhs_attrs[as.logical(intToBits(md))])
