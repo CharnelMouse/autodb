@@ -342,19 +342,19 @@ infer_type <- function(node, nodes) {
   # dependency, or if any supersets are a non-dependency.
   # TO DO: optimize, this is inefficient (or it's helper functions are)
   category <- NA
-  if (dep_subset(node, nodes))
+  if (has_dependency_subset(node, nodes))
     category <- 1L
-  if (non_dep_superset(node, nodes))
+  if (has_nondependency_superset(node, nodes))
     category <- -1L
   category
 }
 
-dep_subset <- function(node, nodes) {
+has_dependency_subset <- function(node, nodes) {
   children <- nodes$children[[node]]
   any(nodes$category[children] > 0)
 }
 
-non_dep_superset <- function(node, nodes) {
+has_nondependency_superset <- function(node, nodes) {
   parents <- nodes$parent[[node]]
   any(nodes$category[parents] < 0)
 }
