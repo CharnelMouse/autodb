@@ -79,7 +79,7 @@ dfd <- function(df, accuracy, progress = 0L, progress_file = "") {
   fixed <- character()
   nonfixed <- column_names
   if (progress)
-    cat("starting DFD", file = progress_file, append = FALSE)
+    cat("starting DFD\n", file = progress_file, append = FALSE)
   for (i in seq_along(column_names)) {
     attr <- column_names[i]
     if (all(is.na(df[[attr]])) || all(df[[attr]] == df[[attr]][1])) {
