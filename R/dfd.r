@@ -425,7 +425,6 @@ pick_next_node <- function(node, nodes, trace, min_deps, max_non_deps, attrs) {
     if (length(s) == 0) {
       min_deps <- c(min_deps, node)
       nodes$category[node] <- 2L
-      return(list(NA, trace, nodes))
     }else{
       trace <- c(node, trace)
       return(list(min(s), trace, nodes, min_deps, max_non_deps))
@@ -436,7 +435,6 @@ pick_next_node <- function(node, nodes, trace, min_deps, max_non_deps, attrs) {
     if (length(s) == 0) {
       max_non_deps <- c(max_non_deps, node)
       nodes$category[node] <- -2L
-      return(list(NA, trace, nodes))
     }else{
       trace <- c(node, trace)
       return(list(min(s), trace, nodes, min_deps, max_non_deps))
