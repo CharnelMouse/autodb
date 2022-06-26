@@ -30,6 +30,10 @@
 #       -> County Number
 #     ]
 #   Not sure these have transitive dependencies removed
+# - has_dependency_subset and has_nondependency_superset are slow, mostly due to
+# calculating all subsets/supersets. If I can make powerset generation more
+# efficient, I could do this step there.
+
 
 #' DFD algorithm
 #'
@@ -339,7 +343,6 @@ update_dependency_type <- function(node, nodes, min_deps, max_non_deps) {
 infer_type <- function(node, nodes) {
   # Attempts to infer the category of self by checking if any subsets are a
   # dependency, or if any supersets are a non-dependency.
-  # TO DO: optimize, this is inefficient (or it's helper functions are)
   category <- NA
   if (has_dependency_subset(node, nodes))
     category <- 1L
