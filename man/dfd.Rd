@@ -38,3 +38,26 @@ for every other element. It then loops through all the other non-unique
 columns and determines all the LHS that the column depends on. (LHS -->
 column)
 }
+\details{
+This implementation differs a little from the algorithm presented in the
+original paper:
+\itemize{
+\item As was done in the original Python library, there is an extra case in
+seed generation for when there are no discovered maximal non-dependencies.
+In this case, we take all of the single-attribute nodes, then filter out by
+minimal dependencies as usual. This is equivalent to taking the empty set
+as the single maximal non-dependency.
+\item There are three results when checking whether a candidate node is
+minimal/maximal. TRUE indicates the node is minimal/maximal, as usual.
+FALSE has been split into FALSE and NA. NA indicates that we can not yet
+determine whether the node is minimal/maximal. FALSE indicates that we have
+determined that it is not minimal/maximal, and we can set its category as
+such. This is done by checking whether any of its adjacent
+subsets/supersets are dependencies/non-dependencies, instead of waiting to
+exhaust the adjacent subsets/supersets to visit when picking the next node
+to visit.
+\item We do not yet preserve partitions, just their calculated sizes.
+\item We do not yet keep hashmaps to manage subset/superset relationships,
+as described in Section 3.5 of the original paper.
+}
+}
