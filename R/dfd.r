@@ -208,6 +208,8 @@ find_LHSs <- function(
       )
       trace <- res[[2]]
       nodes <- res[[3]]
+      min_deps <- res[[4]]
+      max_non_deps <- res[[5]]
       if (progress >= 3L)
         cat(
           paste0(
@@ -404,7 +406,7 @@ pick_next_node <- function(node, nodes, trace, min_deps, max_non_deps, attrs) {
       return(list(NA, trace, nodes))
     }else{
       trace <- c(node, trace)
-      return(list(min(s), trace, nodes))
+      return(list(min(s), trace, nodes, min_deps, max_non_deps))
     }
   }else if (nodes$category[node] == -3) { # candidate non-dependency
     s <- unchecked_supersets(node, nodes)
@@ -415,12 +417,12 @@ pick_next_node <- function(node, nodes, trace, min_deps, max_non_deps, attrs) {
       return(list(NA, trace, nodes))
     }else{
       trace <- c(node, trace)
-      return(list(min(s), trace, nodes))
+      return(list(min(s), trace, nodes, min_deps, max_non_deps))
     }
   }
   if (length(trace) == 0)
-    return(list(NA, trace, nodes))
-  list(trace[1], trace[-1], nodes)
+    return(list(NA, trace, nodes, min_deps, max_non_deps))
+  list(trace[1], trace[-1], nodes, min_deps, max_non_deps)
 }
 
 unchecked_subsets <- function(index, nodes) {
