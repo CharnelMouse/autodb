@@ -17,8 +17,8 @@ normalize_dependencies <- function(dependencies) {
     convert_to_vectors() |>
     remove_extraneous_attributes() |>
     remove_extraneous_dependencies() |>
-    convert_to_list() |>
     partition_dependencies() |>
+    convert_to_list() |>
     merge_equivalent_keys() |>
     remove_transitive_dependencies() |>
     add_bijections() |>
@@ -84,22 +84,34 @@ remove_extraneous_dependencies <- function(vecs) {
   vecs
 }
 
-convert_to_list <- function(vecs) {
-  Map(list, vecs$determinant_sets, vecs$dependents)
-}
-
-partition_dependencies <- function(fds) {
-  det_sets <- lapply(fds, `[[`, 1)
+partition_dependencies <- function(vecs) {
+  det_sets <- vecs$determinant_sets
   unique_det_sets <- unique(det_sets)
-  partition <- list()
+  partition_det_sets <- list()
+  partition_deps <- list()
   for (det_set in unique_det_sets) {
     matches <- vapply(det_sets, identical, logical(1), det_set)
-    partition <- c(partition, list(fds[matches]))
+    partition_det_sets <- c(partition_det_sets, list(det_sets[matches]))
+    partition_deps <- c(partition_deps, list(vecs$dependents[matches]))
   }
   list(
-    fds = fds,
-    partition = partition,
-    determinant_sets = unique_det_sets
+    determinant_sets = vecs$determinant_sets,
+    dependents = vecs$dependents,
+    partition_determinant_sets = partition_det_sets,
+    partition_dependents = partition_deps,
+    unique_determinant_sets = unique_det_sets
+  )
+}
+
+convert_to_list <- function(vecs) {
+  list(
+    fds = Map(list, vecs$determinant_sets, vecs$dependents),
+    partition = Map(
+      \(det_sets, deps) Map(list, det_sets, deps),
+      vecs$partition_determinant_sets,
+      vecs$partition_dependents
+    ),
+    determinant_sets = vecs$unique_determinant_sets
   )
 }
 
