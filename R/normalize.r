@@ -118,18 +118,12 @@ convert_to_list <- function(vecs) {
 merge_equivalent_keys <- function(lst) {
   partition <- lst$partition
   determinant_sets <- lst$determinant_sets
-  if (length(partition) <= 1)
-    return(list(
-      partition = partition,
-      keys = lapply(determinant_sets, list),
-      bijections = list()
-    ))
   fds <- lst$fds
 
   keys <- lapply(determinant_sets, list)
   bijection_fds <- list()
   bijection_groups <- keys
-  for (n in seq.int(length(partition) - 1)) {
+  for (n in seq_len(length(partition) - 1)) {
     grp <- partition[[n]]
     if (length(grp) > 0) {
       LHS <- determinant_sets[[n]]
