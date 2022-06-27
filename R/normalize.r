@@ -18,8 +18,8 @@ normalize_dependencies <- function(dependencies) {
     remove_extraneous_attributes() |>
     remove_extraneous_dependencies() |>
     partition_dependencies() |>
-    convert_to_list() |>
     merge_equivalent_keys() |>
+    convert_to_list() |>
     remove_transitive_dependencies() |>
     add_bijections() |>
     construct_relations() |>
@@ -103,80 +103,95 @@ partition_dependencies <- function(vecs) {
   )
 }
 
-convert_to_list <- function(vecs) {
-  list(
-    fds = Map(list, vecs$determinant_sets, vecs$dependents),
-    partition = Map(
-      \(det_sets, deps) Map(list, det_sets, deps),
-      vecs$partition_determinant_sets,
-      vecs$partition_dependents
-    ),
-    determinant_sets = vecs$unique_determinant_sets
-  )
-}
+merge_equivalent_keys <- function(vecs) {
+  partition_determinant_sets <- vecs$partition_determinant_sets
+  partition_dependents <- vecs$partition_dependents
+  unique_determinant_sets <- vecs$unique_determinant_sets
 
-merge_equivalent_keys <- function(lst) {
-  partition <- lst$partition
-  determinant_sets <- lst$determinant_sets
-  fds <- lst$fds
-
-  keys <- lapply(determinant_sets, list)
-  bijection_fds <- list()
-  bijection_groups <- keys
-  for (n in seq_len(length(partition) - 1)) {
-    grp <- partition[[n]]
-    if (length(grp) > 0) {
-      LHS <- determinant_sets[[n]]
+  keys <- lapply(unique_determinant_sets, list)
+  bijection_determinant_sets <- list()
+  bijection_dependent_sets <- list()
+  for (n in seq_len(length(partition_dependents) - 1)) {
+    if (length(partition_dependents[[n]]) > 0) {
+      LHS <- unique_determinant_sets[[n]]
       key1 <- keys[[n]][[1]]
-      for (m in (n + 1):length(partition)) {
-        grp2 <- partition[[m]]
-        if (length(grp2) > 0) {
-          LHS2 <- determinant_sets[[m]]
+      for (m in (n + 1):length(partition_dependents)) {
+        if (length(partition_dependents[[m]]) > 0) {
+          LHS2 <- unique_determinant_sets[[m]]
           key2 <- keys[[m]][[1]]
-          closure1 <- find_closure(fds, LHS)
-          closure2 <- find_closure(fds, LHS2)
+          closure1 <- find_closure_vec(
+            LHS,
+            vecs$determinant_sets,
+            vecs$dependents
+          )
+          closure2 <- find_closure_vec(
+            LHS2,
+            vecs$determinant_sets,
+            vecs$dependents
+          )
 
           if (all(key1 %in% closure2) && all(key2 %in% closure1)) {
 
-            new_bijections <- list()
-            new_bijections <- c(
-              new_bijections,
-              list(
-                list(key1, key2),
-                list(key2, key1)
-              )
+            bijection_determinant_sets <- c(
+              bijection_determinant_sets,
+              list(key1, key2)
             )
-            bijection_fds <- c(bijection_fds, new_bijections)
-            bijection_groups[[n]] <- c(
-              bijection_groups[[n]],
-              bijection_groups[[m]]
+            bijection_dependent_sets <- c(
+              bijection_dependent_sets,
+              list(key2, key1)
             )
-
-            obsolete <- vapply(
-              partition[[m]],
-              \(fd) fd[[2]] %in% c(key1, key2),
-              logical(1)
-            )
-            partition[[n]] <- unique(c(
-              partition[[n]],
-              lapply(partition[[m]][!obsolete], \(fd) list(key1, fd[[2]]))
-            ))
             keys[[n]] <- c(keys[[n]], keys[[m]])
 
-            partition[[m]] <- list()
-            bijection_groups[[m]] <- list()
+            obsolete <- vapply(
+              partition_dependents[[m]],
+              is.element,
+              logical(1),
+              c(key1, key2)
+            )
+            partition_determinant_sets[[n]] <- unique(c(
+              partition_determinant_sets[[n]],
+              rep(list(key1), sum(!obsolete))
+            ))
+            partition_dependents[[n]] <- unique(c(
+              partition_dependents[[n]],
+              partition_dependents[[m]][!obsolete]
+            ))
+
+            partition_determinant_sets[[m]] <- list()
+            partition_dependents[[m]] <- integer()
+            keys[[m]] <- list()
           }
         }
       }
     }
   }
-  nonempty <- lengths(partition) > 0
+  nonempty <- lengths(partition_dependents) > 0
   list(
-    partition = partition[nonempty],
+    partition_determinant_sets = partition_determinant_sets[nonempty],
+    partition_dependents = partition_dependents[nonempty],
     keys = keys[nonempty],
-    bijections = bijection_fds,
-    bijection_groups = bijection_groups[lengths(bijection_groups) > 1]
+    bijection_determinant_sets = bijection_determinant_sets,
+    bijection_dependent_sets = bijection_dependent_sets,
+    bijection_groups = keys[lengths(keys) > 1]
   )
+}
+
+convert_to_list <- function(vecs) {
+  vecs$bijections <- Map(
+    list,
+    vecs$bijection_determinant_sets,
+    vecs$bijection_dependent_sets
+  )
+  vecs$bijection_determinant_sets <- NULL
+  vecs$bijection_dependent_sets <- NULL
+  vecs$partition <- Map(
+    \(det_sets, deps) Map(list, det_sets, deps),
+    vecs$partition_determinant_sets,
+    vecs$partition_dependents
+  )
+  vecs$partition_determinant_sets <- NULL
+  vecs$partition_dependents <- NULL
+  vecs
 }
 
 remove_transitive_dependencies <- function(lst) {
