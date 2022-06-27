@@ -14,6 +14,8 @@
 normalize_dependencies <- function(dependencies) {
   dependencies$dependencies |>
     convert_to_integer_attributes(dependencies$attrs) |>
+    convert_to_vectors() |>
+    convert_to_list() |>
     remove_extraneous_attributes() |>
     remove_extraneous_dependencies() |>
     partition_dependencies() |>
@@ -29,6 +31,17 @@ convert_to_integer_attributes <- function(dependencies, attrs) {
     dependencies,
     \(fd) list(match(fd[[1]], attrs), match(fd[[2]], attrs))
   )
+}
+
+convert_to_vectors <- function(dependencies) {
+  list(
+    determinant_sets = lapply(dependencies, `[[`, 1),
+    dependents = vapply(dependencies, `[[`, integer(1), 2)
+  )
+}
+
+convert_to_list <- function(vecs) {
+  Map(list, vecs$determinant_sets, vecs$dependents)
 }
 
 remove_extraneous_attributes <- function(x) {
