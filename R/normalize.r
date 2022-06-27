@@ -16,8 +16,8 @@ normalize_dependencies <- function(dependencies) {
     convert_to_integer_attributes(dependencies$attrs) |>
     convert_to_vectors() |>
     remove_extraneous_attributes() |>
-    convert_to_list() |>
     remove_extraneous_dependencies() |>
+    convert_to_list() |>
     partition_dependencies() |>
     merge_equivalent_keys() |>
     remove_transitive_dependencies() |>
@@ -54,28 +54,38 @@ remove_extraneous_attributes <- function(vecs) {
   vecs
 }
 
-convert_to_list <- function(vecs) {
-  Map(list, vecs$determinant_sets, vecs$dependents)
-}
-
-remove_extraneous_dependencies <- function(fds) {
-  old_fds <- NULL
-  new_fds <- fds
-  while (!identical(old_fds, new_fds)) {
-    old_fds <- new_fds
-    rem <- rep(FALSE, length(new_fds))
-    for (n in seq_along(new_fds)) {
-      current_fd <- new_fds[[n]]
-      other_fds <- new_fds[-n]
-      dets <- current_fd[[1]]
-      dep <- current_fd[[2]]
+remove_extraneous_dependencies <- function(vecs) {
+  old_det_sets <- NULL
+  new_det_sets <- vecs$determinant_sets
+  old_deps <- NULL
+  new_deps <- vecs$dependents
+  while (!identical(old_deps, new_deps)) {
+    old_det_sets <- new_det_sets
+    old_deps <- new_deps
+    rem <- rep(FALSE, length(new_deps))
+    for (n in seq_along(new_deps)) {
+      det_set <- new_det_sets[[n]]
+      dep <- new_deps[n]
+      other_det_sets <- new_det_sets[-n]
+      other_deps <- new_deps[-n]
       other_rem <- rem[-n]
-      closure <- find_closure(other_fds[!other_rem], dets)
+      closure <- find_closure_vec(
+        det_set,
+        other_det_sets[!other_rem],
+        other_deps[!other_rem]
+      )
       rem[n] <- (dep %in% closure)
     }
-    new_fds <- new_fds[!rem]
+    new_det_sets <- new_det_sets[!rem]
+    new_deps <- new_deps[!rem]
   }
-  new_fds
+  vecs$determinant_sets <- new_det_sets
+  vecs$dependents <- new_deps
+  vecs
+}
+
+convert_to_list <- function(vecs) {
+  Map(list, vecs$determinant_sets, vecs$dependents)
 }
 
 partition_dependencies <- function(fds) {
