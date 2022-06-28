@@ -87,24 +87,24 @@ remove_extraneous_dependencies <- function(vecs) {
 partition_dependencies <- function(vecs) {
   det_sets <- vecs$determinant_sets
   unique_det_sets <- unique(det_sets)
-  partition_det_sets <- list()
+  partition_det_set <- list()
   partition_deps <- list()
   for (det_set in unique_det_sets) {
     matches <- vapply(det_sets, identical, logical(1), det_set)
-    partition_det_sets <- c(partition_det_sets, list(det_sets[matches]))
+    partition_det_set <- c(partition_det_set, list(det_set))
     partition_deps <- c(partition_deps, list(vecs$dependents[matches]))
   }
   list(
     determinant_sets = vecs$determinant_sets,
     dependents = vecs$dependents,
-    partition_determinant_sets = partition_det_sets,
+    partition_determinant_set = partition_det_set,
     partition_dependents = partition_deps,
     unique_determinant_sets = unique_det_sets
   )
 }
 
 merge_equivalent_keys <- function(vecs) {
-  partition_determinant_sets <- vecs$partition_determinant_sets
+  partition_determinant_set <- vecs$partition_determinant_set
   partition_dependents <- vecs$partition_dependents
   unique_determinant_sets <- vecs$unique_determinant_sets
 
@@ -148,16 +148,12 @@ merge_equivalent_keys <- function(vecs) {
               logical(1),
               c(key1, key2)
             )
-            partition_determinant_sets[[n]] <- unique(c(
-              partition_determinant_sets[[n]],
-              rep(list(key1), sum(!obsolete))
-            ))
             partition_dependents[[n]] <- unique(c(
               partition_dependents[[n]],
               partition_dependents[[m]][!obsolete]
             ))
 
-            partition_determinant_sets[[m]] <- list()
+            partition_determinant_set[[m]] <- integer()
             partition_dependents[[m]] <- integer()
             keys[[m]] <- list()
           }
@@ -167,7 +163,7 @@ merge_equivalent_keys <- function(vecs) {
   }
   nonempty <- lengths(partition_dependents) > 0
   list(
-    partition_determinant_sets = partition_determinant_sets[nonempty],
+    partition_determinant_set = partition_determinant_set[nonempty],
     partition_dependents = partition_dependents[nonempty],
     keys = keys[nonempty],
     bijection_determinant_sets = bijection_determinant_sets,
@@ -184,8 +180,8 @@ remove_transitive_dependencies <- function(vecs) {
   # keys format: list[list[attrs]], giving key list for each partition group
   # bijections: list[list[key1, key2]]
   partition <- Map(
-    \(det_sets, deps) Map(list, det_sets, deps),
-    vecs$partition_determinant_sets,
+    \(det_set, deps) lapply(deps, \(dp) list(det_set, dp)),
+    vecs$partition_determinant_set,
     vecs$partition_dependents
   )
   flat_partition <- unlist(partition, recursive = FALSE)
