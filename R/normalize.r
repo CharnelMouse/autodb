@@ -179,12 +179,16 @@ remove_transitive_dependencies <- function(vecs) {
   # partition format: list[list[list[key, dependent]]]
   # keys format: list[list[attrs]], giving key list for each partition group
   # bijections: list[list[key1, key2]]
-  partition <- Map(
-    \(det_set, deps) lapply(deps, \(dp) list(det_set, dp)),
+  flat_partition_determinant_set <- rep(
     vecs$partition_determinant_set,
-    vecs$partition_dependents
+    lengths(vecs$partition_dependents)
   )
-  flat_partition <- unlist(partition, recursive = FALSE)
+  flat_partition_dependents <- unlist(vecs$partition_dependents)
+  flat_partition <- Map(
+    list,
+    flat_partition_determinant_set,
+    flat_partition_dependents
+  )
   flat_groups <- rep(
     seq_along(vecs$partition_dependents),
     lengths(vecs$partition_dependents)
@@ -197,15 +201,13 @@ remove_transitive_dependencies <- function(vecs) {
   )
   singular_bijections <- lapply(
     bijections,
-    \(b) lapply(b[[2]], \(r) list(b[[1]], r))
+    \(b) lapply(setdiff(b[[2]], b[[1]]), \(r) list(b[[1]], r))
   ) |>
     unlist(recursive = FALSE)
 
-  transitive <- rep(FALSE, length(flat_partition))
-  attrs_in_keys <- lapply(vecs$keys, \(k) unique(unlist(k)))
-  for (n in seq_along(flat_partition)) {
-    dependency <- flat_partition[[n]]
-    RHS <- dependency[[2]]
+  transitive <- rep(FALSE, length(flat_partition_dependents))
+  for (n in seq_along(flat_partition_dependents)) {
+    RHS <- flat_partition_dependents[n]
     key_attrs <- unique(unlist(vecs$keys[[flat_groups[n]]]))
     if (!is.element(RHS, key_attrs)) {
       closure_without <- find_closure(
