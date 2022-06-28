@@ -176,44 +176,41 @@ merge_equivalent_keys <- function(vecs) {
   )
 }
 
-convert_to_list <- function(vecs) {
-  vecs$bijections <- Map(
-    list,
-    vecs$bijection_determinant_sets,
-    vecs$bijection_dependent_sets
-  )
-  vecs$bijection_determinant_sets <- NULL
-  vecs$bijection_dependent_sets <- NULL
-  vecs$partition <- Map(
-    \(det_sets, deps) Map(list, det_sets, deps),
-    vecs$partition_determinant_sets,
-    vecs$partition_dependents
-  )
-  vecs$partition_determinant_sets <- NULL
-  vecs$partition_dependents <- NULL
-  vecs
-}
-
-remove_transitive_dependencies <- function(lst) {
+remove_transitive_dependencies <- function(vecs) {
   # DFD theorem 3: eliminate every functional dependency h in H such that the
   # right hand side is not in any of the group's keys, and is in the closure for
   # (H + J - {h}), where J is the bijections.
   # partition format: list[list[list[key, dependent]]]
   # keys format: list[list[attrs]], giving key list for each partition group
   # bijections: list[list[key1, key2]]
-  flat_partition <- unlist(lst$partition, recursive = FALSE)
-  flat_groups <- rep(seq_along(lst$partition), lengths(lst$partition))
+  partition <- Map(
+    \(det_sets, deps) Map(list, det_sets, deps),
+    vecs$partition_determinant_sets,
+    vecs$partition_dependents
+  )
+  flat_partition <- unlist(partition, recursive = FALSE)
+  flat_groups <- rep(
+    seq_along(vecs$partition_dependents),
+    lengths(vecs$partition_dependents)
+  )
+
+  bijections <- Map(
+    list,
+    vecs$bijection_determinant_sets,
+    vecs$bijection_dependent_sets
+  )
   singular_bijections <- lapply(
-    lst$bijections,
+    bijections,
     \(b) lapply(b[[2]], \(r) list(b[[1]], r))
   ) |>
     unlist(recursive = FALSE)
+
   transitive <- rep(FALSE, length(flat_partition))
-  attrs_in_keys <- lapply(lst$keys, \(k) unique(unlist(k)))
+  attrs_in_keys <- lapply(vecs$keys, \(k) unique(unlist(k)))
   for (n in seq_along(flat_partition)) {
     dependency <- flat_partition[[n]]
     RHS <- dependency[[2]]
-    key_attrs <- unique(unlist(lst$keys[[flat_groups[n]]]))
+    key_attrs <- unique(unlist(vecs$keys[[flat_groups[n]]]))
     if (!is.element(RHS, key_attrs)) {
       closure_without <- find_closure(
         c(flat_partition[-n][!transitive[-n]], singular_bijections),
@@ -228,10 +225,14 @@ remove_transitive_dependencies <- function(lst) {
   new_partition <- unname(split(new_flat_partition, new_flat_groups))
   list(
     partition = new_partition,
-    keys = lst$keys,
+    keys = vecs$keys,
     bijections = singular_bijections,
-    bijection_groups = lst$bijection_groups
+    bijection_groups = vecs$bijection_groups
   )
+}
+
+convert_to_list <- function(vecs) {
+  vecs
 }
 
 add_bijections <- function(lst) {
