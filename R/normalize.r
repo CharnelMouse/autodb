@@ -274,7 +274,6 @@ construct_relations <- function(vecs) {
     partition_index <- vecs$flat_groups == n
     keys <- unique(vecs$flat_partition_determinant_set[partition_index])
     dependents <- unique(vecs$flat_partition_dependents[partition_index])
-    all_attrs <- union(unlist(keys), dependents)
     nonprimes <- setdiff(dependents, unlist(keys))
     for (n in seq_along(bijection_groups)) {
       grp <- bijection_groups[[n]]
@@ -305,7 +304,8 @@ construct_relations <- function(vecs) {
       }
     }
     nonprimes <- nonprimes[order(nonprimes)]
-    attrs <- c(attrs, list(union(unlist(keys), nonprimes)))
+    all_attrs <- union(unlist(keys), nonprimes)
+    attrs <- c(attrs, list(all_attrs))
     rel_keys <- c(rel_keys, list(keys))
   }
   list(attrs = attrs, keys = rel_keys)
@@ -330,7 +330,7 @@ find_closure <- function(attrs, determinant_sets, dependents) {
     det_set <- determinant_sets[[n]]
     dep <- dependents[n]
     if (length(dep) != 1)
-      stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(r)))
+      stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(dep)))
     if (all(is.element(det_set, attrs))) {
       if (!is.element(dep, attrs))
         attrs <- c(attrs, dep)
