@@ -321,26 +321,6 @@ convert_to_list <- function(vecs) {
   Map(list, attrs = vecs$attrs, keys = vecs$keys)
 }
 
-find_closure <- function(fds, attrs) {
-  if (!is.integer(attrs))
-    stop(paste("attr is", toString(class(attrs))))
-  if (length(fds) == 0)
-    return(attrs)
-  for (n in seq_along(fds)) {
-    fd <- fds[[n]]
-    det_set <- fd[[1]]
-    dep <- fd[[2]]
-    if (length(dep) != 1)
-      stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(r)))
-    if (all(is.element(det_set, attrs))) {
-      if (!is.element(dep, attrs))
-        attrs <- c(attrs, dep)
-      return(find_closure(fds[-n], attrs))
-    }
-  }
-  attrs
-}
-
 find_closure_vec <- function(attrs, determinant_sets, dependents) {
   if (!is.integer(attrs))
     stop(paste("attr is", toString(class(attrs))))
@@ -358,15 +338,6 @@ find_closure_vec <- function(attrs, determinant_sets, dependents) {
     }
   }
   attrs
-}
-
-Dependencies <- function(dependencies, primary_key = NULL) {
-  lst <- list(
-    dependencies = dependencies,
-    primary_key = primary_key
-  )
-  class(lst) <- c("Dependencies", class(lst))
-  lst
 }
 
 make_indexes <- function(depdfs) {
