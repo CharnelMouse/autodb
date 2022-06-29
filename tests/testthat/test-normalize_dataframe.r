@@ -183,7 +183,7 @@ describe("normalize_dependencies() replacing normalize_step()", {
     norm.df <- normalize_dependencies(dependencies)
     expect_identical(
       norm.df,
-      list(list(attrs = c("a", "b", "c"), keys = list("a")))
+      list(attrs = list(c("a", "b", "c")), keys = list(list("a")))
     )
   })
   it("resolves a simple bijection with no splits", {
@@ -197,7 +197,7 @@ describe("normalize_dependencies() replacing normalize_step()", {
     norm.df <- normalize_dependencies(dependencies)
     expect_identical(
       norm.df,
-      list(list(attrs = c("a", "b"), keys = list("a", "b")))
+      list(attrs = list(c("a", "b")), keys = list(list("a", "b")))
     )
   })
   it("correctly splits example data.frame for original make_indexes() test", {
@@ -237,25 +237,24 @@ describe("normalize_dependencies() replacing normalize_step()", {
       attrs = c("id", "month", "hemisphere"),
       keys = list("id")
     )
-    expect_identical(length(new_deps[[1]]$attrs), 3L)
-    expect_true("id" %in% new_deps[[1]]$attrs)
+    expect_identical(length(new_deps$attrs[[1]]), 3L)
+    expect_true("id" %in% new_deps$attrs[[1]])
     expect_identical(
       length(intersect(
-        new_deps[[1]]$attrs,
+        new_deps$attrs[[1]],
         c("month", "hemisphere", "is_winter")
       )),
       2L
     )
-    expect_identical(new_deps[[1]]$keys, list("id"))
-    expected_child <- list(
-      attrs = c("month", "hemisphere", "is_winter"),
-      keys = list(
-        c("month", "hemisphere"),
-        c("month", "is_winter"),
-        c("hemisphere", "is_winter")
-      )
+    expect_identical(new_deps$keys[[1]], list("id"))
+    expected_child_attrs <- c("month", "hemisphere", "is_winter")
+    expected_child_keys <- list(
+      c("month", "hemisphere"),
+      c("month", "is_winter"),
+      c("hemisphere", "is_winter")
     )
-    expect_identical(new_deps[[2]], expected_child)
+    expect_identical(new_deps$attrs[[2]], expected_child_attrs)
+    expect_identical(new_deps$keys[[2]], expected_child_keys)
   })
   it("DepDF", {
     deps <- list(
@@ -274,23 +273,26 @@ describe("normalize_dependencies() replacing normalize_step()", {
     )
     new_deps <- normalize_dependencies(deps)
     expected_deps <- list(
-      list(
-        attrs = c("player_name", "jersey_num", "team"),
-        keys = list(
+      attrs = list(
+        c("player_name", "jersey_num", "team"),
+        c("team", "state"),
+        c("state", "city")
+      ),
+      keys = list(
+        list(
           c("player_name", "jersey_num"),
           c("player_name", "team"),
           c("team", "jersey_num")
-        )
-      ),
-      list(
-        attrs = c("team", "state"),
-        keys = list("team")
-      ),
-      list(
-        attrs = c("state", "city"),
-        keys = list("state", "city")
+        ),
+        list("team"),
+        list("state", "city")
       )
     )
-    expect_setequal(new_deps, expected_deps)
+    expect_setequal(new_deps$attrs, expected_deps$attrs)
+    expect_setequal(new_deps$keys, expected_deps$keys)
+    expect_identical(
+      match(new_deps$attrs, expected_deps$attrs),
+      match(new_deps$keys, expected_deps$keys)
+    )
   })
 })

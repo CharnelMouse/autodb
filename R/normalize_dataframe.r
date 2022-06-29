@@ -8,29 +8,28 @@
 #' @export
 normalize_dataframe <- function(df, dependencies) {
   norm_deps <- normalize_dependencies(dependencies)
-  norm_attr_sets <- lapply(norm_deps, `[[`, "attrs")
-  norm_key_sets <- lapply(norm_deps, `[[`, "keys")
   reference_mat <- outer(
-    norm_attr_sets,
-    norm_key_sets,
+    norm_deps$attrs,
+    norm_deps$keys,
     Vectorize(\(from_attrs, to_keys) {
       any(vapply(to_keys, \(key) all(key %in% from_attrs), logical(1)))
     })
   )
-  indexes <- lapply(norm_key_sets, `[[`, 1)
+  indexes <- lapply(norm_deps$keys, `[[`, 1)
   relation_names <- vapply(indexes, name_dataframe, character(1))
   depdf_list <- Map(
-    \(norm_dep_set, index) {
+    \(attrs, keys, index) {
       list(
-        df = unique(df[, norm_dep_set$attrs]),
-        keys = norm_dep_set$keys,
+        df = unique(df[, attrs]),
+        keys = keys,
         index = index
       )
     },
-    norm_deps,
+    norm_deps$attrs,
+    norm_deps$keys,
     indexes
   )
-  for (n in seq_along(norm_deps)) {
+  for (n in seq_along(norm_deps$attrs)) {
     refs <- reference_mat[n, ]
     ref_names <- relation_names[setdiff(which(refs), n)]
     depdf_list[[n]]$children <- ref_names

@@ -10,7 +10,7 @@ describe("normalize_dependencies", {
     norm.dependencies <- normalize_dependencies(dependencies)
     expect_identical(
       norm.dependencies,
-      list(list(attrs = c("a", "b", "c"), keys = list("a")))
+      list(attrs = list(c("a", "b", "c")), keys = list(list("a")))
     )
   })
   it("removes extraneous dependencies", {
@@ -26,8 +26,8 @@ describe("normalize_dependencies", {
     expect_identical(
       norm.dependencies,
       list(
-        list(attrs = c("a", "b"), keys = list("a")),
-        list(attrs = c("b", "c"), keys = list("b"))
+        attrs = list(c("a", "b"), c("b", "c")),
+        keys = list(list("a"), list("b"))
       )
     )
   })
@@ -45,8 +45,8 @@ describe("normalize_dependencies", {
     expect_identical(
       norm.dependencies,
       list(
-        list(attrs = c("a", "d", "b"), keys = list("a", "d")),
-        list(attrs = c("b", "c", "a"), keys = list(c("b", "c")))
+        attrs = list(c("a", "d", "b"), c("b", "c", "a")),
+        keys = list(list("a", "d"), list(c("b", "c")))
       )
     )
   })
@@ -70,9 +70,8 @@ describe("normalize_dependencies", {
     expect_identical(
       norm.dependencies,
       list(
-        list(attrs = c("a", "b", "c", "d", "f"), keys = list("a", "b")),
-        list(attrs = c("d", "e"), keys = list("d")),
-        list(attrs = c("f", "e"), keys = list("f"))
+        attrs = list(c("a", "b", "c", "d", "f"), c("d", "e"), c("f", "e")),
+        keys = list(list("a", "b"), list("d"), list("f"))
       )
     )
   })
@@ -90,27 +89,23 @@ describe("normalize_dependencies", {
       attrs = c("x1", "x2", "a", "b", "c", "d")
     )
     norm.dep <- normalize_dependencies(dependencies)
-    expect_setequal(
-      norm.dep,
-      list(
-        list(
-          # contains a if trans_deps not removed
-          attrs = c("x1", "x2", "c", "d"),
-          keys = list(c("x1", "x2"), c("c", "d"))
-        ),
-        list(
-          attrs = c("a", "x1", "b"),
-          keys = list(c("a", "x1"))
-        ),
-        list(
-          attrs = c("b", "x2", "c"),
-          keys = list(c("b", "x2"))
-        ),
-        list(
-          attrs = c("c", "a"),
-          keys = list("c")
-        )
-      )
+    expected_attrs <- list(
+      c("x1", "x2", "c", "d"), # contains a if trans_deps not removed
+      c("a", "x1", "b"),
+      c("b", "x2", "c"),
+      c("c", "a")
+    )
+    expected_keys <- list(
+      list(c("x1", "x2"), c("c", "d")),
+      list(c("a", "x1")),
+      list(c("b", "x2")),
+      list("c")
+    )
+    expect_setequal(norm.dep$attrs, expected_attrs)
+    expect_setequal(norm.dep$keys, expected_keys)
+    expect_identical(
+      match(norm.dep$attrs, expected_attrs),
+      match(norm.dep$keys, expected_keys)
     )
   })
   it("replaces keys / non-key attributes with their bijection set's chosen index", {
@@ -128,14 +123,8 @@ describe("normalize_dependencies", {
     expect_identical(
       norm.dep,
       list(
-        list(
-          attrs = c("C", "A", "B", "D"),
-          keys = list("C", c("A", "B"))
-        ),
-        list(
-          attrs = c("C", "E", "F"),
-          keys = list(c("C", "E"))
-        )
+        attrs = list(c("C", "A", "B", "D"), c("C", "E", "F")),
+        keys = list(list("C", c("A", "B")), list(c("C", "E")))
       )
     )
   })
@@ -149,10 +138,10 @@ describe("normalize_dependencies", {
         attrs = c("a", "b")
       )
       norm <- normalize_dependencies(dependencies)
-      expect_identical(length(norm), 1L)
-      norm1 <- norm[[1]]
-      expect_setequal(norm1$attrs, c("a", "b"))
-      expect_setequal(norm1$keys, list("a", "b"))
+      expect_identical(
+        norm,
+        list(attrs = list(c("a", "b")), keys = list(list("a", "b")))
+      )
     })
     it("resolves a simple bijection with no splits, if given no index", {
       dependencies <- list(
@@ -163,10 +152,10 @@ describe("normalize_dependencies", {
         attrs = c("a", "b")
       )
       norm <- normalize_dependencies(dependencies)
-      expect_identical(length(norm), 1L)
-      norm1 <- norm[[1]]
-      expect_setequal(norm1$attrs, c("a", "b"))
-      expect_setequal(norm1$keys, list("a", "b"))
+      expect_identical(
+        norm,
+        list(attrs = list(c("a", "b")), keys = list(list("a", "b")))
+      )
     })
     describe("Dependencies", {
       it("original test", {
@@ -181,12 +170,22 @@ describe("normalize_dependencies", {
           attrs = c("A", "B", "C", "D", "E", "F")
         )
         new <- normalize_dependencies(dep)
-        expected <- list(
-          list(attrs = c("A", "B", "C", "E"), keys = list(c("A", "B", "C"))),
-          list(attrs = c("A", "B", "F"), keys = list(c("A", "B"))),
-          list(attrs = c("F", "D"), keys = list("F"))
+        expected_attrs <- list(
+          c("A", "B", "C", "E"),
+          c("A", "B", "F"),
+          c("F", "D")
         )
-        expect_setequal(new, expected)
+        expected_keys <- list(
+          list(c("A", "B", "C")),
+          list(c("A", "B")),
+          list("F")
+        )
+        expect_setequal(new$attrs, expected_attrs)
+        expect_setequal(new$keys, expected_keys)
+        expect_identical(
+          match(new$attrs, expected_attrs),
+          match(new$keys, expected_keys)
+        )
       })
     })
   })
