@@ -35,6 +35,21 @@ auto_entityset <- function(
   EntitySet(df, deps, name)
 }
 
+flatten <- function(dependencies) {
+  # Takes dependencies grouped by dependent attribute, and returns the
+  # dependencies in a flat list with (parent table, parent attr, child table,
+  # child attr) format.
+  result <- list()
+  for (i in seq_along(dependencies)) {
+    rhs <- names(dependencies)[i]
+    result <- c(
+      result,
+      lapply(dependencies[[i]], \(lhs) list(lhs, rhs))
+    )
+  }
+  result
+}
+
 filter <- function(relations, df) {
   # Removes functional dependencies where any determinant attributes do no
   # contain strings, integers, factors, or logicals in the data.frame. The idea
