@@ -269,22 +269,22 @@ construct_relations <- function(vecs) {
   primaries <- lapply(bijection_groups, choose_index)
   attrs <- list()
   rel_keys <- list()
-  for (n in seq_len(max(vecs$flat_groups))) {
-    partition_index <- vecs$flat_groups == n
+  for (group_ind in seq_len(max(vecs$flat_groups))) {
+    partition_index <- vecs$flat_groups == group_ind
     keys <- unique(vecs$flat_partition_determinant_set[partition_index])
     dependents <- unique(vecs$flat_partition_dependents[partition_index])
     nonprimes <- setdiff(dependents, unlist(keys))
-    for (n in seq_along(bijection_groups)) {
-      grp <- bijection_groups[[n]]
-      primary <- primaries[[n]]
+    for (bi_grp_ind in seq_along(bijection_groups)) {
+      grp <- bijection_groups[[bi_grp_ind]]
+      primary <- primaries[[bi_grp_ind]]
 
       if (!any(vapply(keys, \(k) all(primary %in% k), logical(1)))) {
         for (bijection_set in setdiff(grp, list(primary))) {
-          for (m in seq_along(keys)) {
-            if (all(bijection_set %in% keys[[m]])) {
-              keys[[m]] <- setdiff(keys[[m]], bijection_set)
-              keys[[m]] <- union(keys[[m]], primary)
-              keys[[m]] <- keys[[m]][order(keys[[m]])]
+          for (key_el_ind in seq_along(keys)) {
+            if (all(bijection_set %in% keys[[key_el_ind]])) {
+              keys[[key_el_ind]] <- setdiff(keys[[key_el_ind]], bijection_set)
+              keys[[key_el_ind]] <- union(keys[[key_el_ind]], primary)
+              keys[[key_el_ind]] <- keys[[key_el_ind]][order(keys[[key_el_ind]])]
             }
           }
         }
