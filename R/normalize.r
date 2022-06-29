@@ -45,7 +45,7 @@ remove_extraneous_attributes <- function(vecs) {
     rhs <- vecs$dependents[n]
     for (attr in lhs) {
       y_ <- setdiff(vecs$determinant_sets[[n]], attr)
-      if (rhs %in% find_closure_vec(y_, vecs$determinant_sets, vecs$dependents)) {
+      if (rhs %in% find_closure(y_, vecs$determinant_sets, vecs$dependents)) {
         vecs$determinant_sets[[n]] <- y_
       }
     }
@@ -68,7 +68,7 @@ remove_extraneous_dependencies <- function(vecs) {
       other_det_sets <- new_det_sets[-n]
       other_deps <- new_deps[-n]
       other_rem <- rem[-n]
-      closure <- find_closure_vec(
+      closure <- find_closure(
         det_set,
         other_det_sets[!other_rem],
         other_deps[!other_rem]
@@ -118,12 +118,12 @@ merge_equivalent_keys <- function(vecs) {
         if (length(partition_dependents[[m]]) > 0) {
           LHS2 <- unique_determinant_sets[[m]]
           key2 <- keys[[m]][[1]]
-          closure1 <- find_closure_vec(
+          closure1 <- find_closure(
             LHS,
             vecs$determinant_sets,
             vecs$dependents
           )
-          closure2 <- find_closure_vec(
+          closure2 <- find_closure(
             LHS2,
             vecs$determinant_sets,
             vecs$dependents
@@ -199,7 +199,7 @@ remove_transitive_dependencies <- function(vecs) {
     RHS <- flat_partition_dependents[n]
     key_attrs <- unique(unlist(vecs$keys[[flat_groups[n]]]))
     if (!is.element(RHS, key_attrs)) {
-      closure_without <- find_closure_vec(
+      closure_without <- find_closure(
         key_attrs,
         c(
           flat_partition_determinant_set[-n][!transitive[-n]],
@@ -321,7 +321,7 @@ convert_to_list <- function(vecs) {
   Map(list, attrs = vecs$attrs, keys = vecs$keys)
 }
 
-find_closure_vec <- function(attrs, determinant_sets, dependents) {
+find_closure <- function(attrs, determinant_sets, dependents) {
   if (!is.integer(attrs))
     stop(paste("attr is", toString(class(attrs))))
   if (length(dependents) == 0)
@@ -334,7 +334,7 @@ find_closure_vec <- function(attrs, determinant_sets, dependents) {
     if (all(is.element(det_set, attrs))) {
       if (!is.element(dep, attrs))
         attrs <- c(attrs, dep)
-      return(find_closure_vec(attrs, determinant_sets[-n], dependents[-n]))
+      return(find_closure(attrs, determinant_sets[-n], dependents[-n]))
     }
   }
   attrs
