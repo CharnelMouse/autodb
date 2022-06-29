@@ -19,8 +19,8 @@ normalize_dependencies <- function(dependencies) {
     remove_extraneous_dependencies() |>
     partition_dependencies() |>
     merge_equivalent_keys() |>
-    convert_to_list() |>
     remove_transitive_dependencies() |>
+    convert_to_list() |>
     add_bijections() |>
     construct_relations() |>
     convert_to_character_attributes(dependencies$attrs)
@@ -184,52 +184,68 @@ remove_transitive_dependencies <- function(vecs) {
     lengths(vecs$partition_dependents)
   )
   flat_partition_dependents <- unlist(vecs$partition_dependents)
-  flat_partition <- Map(
-    list,
-    flat_partition_determinant_set,
-    flat_partition_dependents
-  )
   flat_groups <- rep(
     seq_along(vecs$partition_dependents),
     lengths(vecs$partition_dependents)
   )
 
-  bijections <- Map(
-    list,
+  flat_bijection_determinant_sets <- rep(
     vecs$bijection_determinant_sets,
-    vecs$bijection_dependent_sets
+    lengths(vecs$bijection_dependent_sets)
   )
-  singular_bijections <- lapply(
-    bijections,
-    \(b) lapply(b[[2]], \(r) list(b[[1]], r))
-  ) |>
-    unlist(recursive = FALSE)
+  flat_bijection_dependents <- unlist(vecs$bijection_dependent_sets)
 
   transitive <- rep(FALSE, length(flat_partition_dependents))
   for (n in seq_along(flat_partition_dependents)) {
     RHS <- flat_partition_dependents[n]
     key_attrs <- unique(unlist(vecs$keys[[flat_groups[n]]]))
     if (!is.element(RHS, key_attrs)) {
-      closure_without <- find_closure(
-        c(flat_partition[-n][!transitive[-n]], singular_bijections),
-        key_attrs
+      closure_without <- find_closure_vec(
+        key_attrs,
+        c(
+          flat_partition_determinant_set[-n][!transitive[-n]],
+          flat_bijection_determinant_sets
+        ),
+        c(
+          flat_partition_dependents[-n][!transitive[-n]],
+          flat_bijection_dependents
+        )
       )
       if (is.element(RHS, closure_without))
         transitive[n] <- TRUE
     }
   }
-  new_flat_partition <- flat_partition[!transitive]
-  new_flat_groups <- flat_groups[!transitive]
-  new_partition <- unname(split(new_flat_partition, new_flat_groups))
   list(
-    partition = new_partition,
+    flat_partition_determinant_sets = flat_partition_determinant_set[!transitive],
+    flat_partition_dependents = flat_partition_dependents[!transitive],
+    flat_groups = flat_groups[!transitive],
     keys = vecs$keys,
-    bijections = singular_bijections,
+    bijection_determinant_sets = flat_bijection_determinant_sets,
+    bijection_dependents = flat_bijection_dependents,
     bijection_groups = vecs$bijection_groups
   )
 }
 
 convert_to_list <- function(vecs) {
+  flat_partition <- Map(
+    list,
+    vecs$flat_partition_determinant_set,
+    vecs$flat_partition_dependents
+  )
+  vecs$partition <- unname(split(
+    flat_partition,
+    vecs$flat_groups
+  ))
+  vecs$flat_partition_determinant_set <- NULL
+  vecs$flat_partition_dependents <- NULL
+  vecs$flat_groups <- NULL
+  vecs$bijections <- Map(
+    list,
+    vecs$bijection_determinant_sets,
+    vecs$bijection_dependents
+  )
+  vecs$bijection_determinant_sets <- NULL
+  vecs$bijection_dependents <- NULL
   vecs
 }
 
