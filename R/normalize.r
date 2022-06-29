@@ -20,8 +20,8 @@ normalize_dependencies <- function(dependencies) {
     partition_dependencies() |>
     merge_equivalent_keys() |>
     remove_transitive_dependencies() |>
-    convert_to_list() |>
     add_bijections() |>
+    convert_to_list() |>
     construct_relations() |>
     convert_to_character_attributes(dependencies$attrs)
 }
@@ -226,48 +226,58 @@ remove_transitive_dependencies <- function(vecs) {
   )
 }
 
+add_bijections <- function(vecs) {
+  flat_partition_determinant_set <- vecs$flat_partition_determinant_set
+  flat_partition_dependents <- vecs$flat_partition_dependents
+  flat_groups <- vecs$flat_groups
+  bijection_determinant_sets <- vecs$bijection_determinant_sets
+  bijection_dependents <- vecs$bijection_dependents
+  for (n in seq_along(vecs$keys)) {
+    key_list <- vecs$keys[[n]]
+    determinant_set_matches <- vapply(
+      bijection_determinant_sets,
+      \(ds) is.element(list(ds), key_list),
+      logical(1)
+    )
+    dependent_matches <- vapply(
+      bijection_dependents,
+      is.element,
+      logical(1),
+      key_list
+    )
+    matches <- determinant_set_matches | dependent_matches
+    flat_partition_determinant_set <- c(
+      flat_partition_determinant_set,
+      bijection_determinant_sets[matches]
+    )
+    flat_partition_dependents <- c(
+      flat_partition_dependents,
+      bijection_dependents[matches]
+    )
+    flat_groups <- c(flat_groups, rep(n, sum(matches)))
+    bijection_determinant_sets <- bijection_determinant_sets[!matches]
+    bijection_dependents <- bijection_dependents[!matches]
+  }
+  list(
+    flat_partition_determinant_set = flat_partition_determinant_set,
+    flat_partition_dependents = flat_partition_dependents,
+    flat_groups = flat_groups,
+    bijection_groups = vecs$bijection_groups
+  )
+}
+
 convert_to_list <- function(vecs) {
   flat_partition <- Map(
     list,
     vecs$flat_partition_determinant_set,
     vecs$flat_partition_dependents
   )
-  vecs$partition <- unname(split(
-    flat_partition,
-    vecs$flat_groups
-  ))
   vecs$flat_partition_determinant_set <- NULL
   vecs$flat_partition_dependents <- NULL
+  vecs$partition <- unname(split(flat_partition, vecs$flat_groups))
+  vecs$flat_partition <- NULL
   vecs$flat_groups <- NULL
-  vecs$bijections <- Map(
-    list,
-    vecs$bijection_determinant_sets,
-    vecs$bijection_dependents
-  )
-  vecs$bijection_determinant_sets <- NULL
-  vecs$bijection_dependents <- NULL
   vecs
-}
-
-add_bijections <- function(lst) {
-  partition <- lst$partition
-  keys <- lst$keys
-  bijections <- lst$bijections
-  bijection_groups <- lst$bijection_groups
-  for (n in seq_along(keys)) {
-    key_list <- keys[[n]]
-    matches <- vapply(
-      bijections,
-      \(b) is.element(b[1], key_list) || is.element(b[2], key_list),
-      logical(1)
-    )
-    partition[[n]] <- c(partition[[n]], bijections[matches])
-    bijections <- bijections[!matches]
-  }
-  list(
-    partition = partition,
-    bijection_groups = bijection_groups
-  )
 }
 
 construct_relations <- function(lst) {
