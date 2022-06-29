@@ -21,8 +21,8 @@ normalize_dependencies <- function(dependencies) {
     merge_equivalent_keys() |>
     remove_transitive_dependencies() |>
     add_bijections() |>
-    convert_to_list() |>
     construct_relations() |>
+    convert_to_list() |>
     convert_to_character_attributes(dependencies$attrs)
 }
 
@@ -266,63 +266,54 @@ add_bijections <- function(vecs) {
   )
 }
 
-convert_to_list <- function(vecs) {
-  flat_partition <- Map(
-    list,
-    vecs$flat_partition_determinant_set,
-    vecs$flat_partition_dependents
-  )
-  vecs$flat_partition_determinant_set <- NULL
-  vecs$flat_partition_dependents <- NULL
-  vecs$partition <- unname(split(flat_partition, vecs$flat_groups))
-  vecs$flat_partition <- NULL
-  vecs$flat_groups <- NULL
-  vecs
-}
-
-construct_relations <- function(lst) {
-  bijection_groups <- lst$bijection_groups
+construct_relations <- function(vecs) {
+  bijection_groups <- vecs$bijection_groups
   primaries <- lapply(bijection_groups, choose_index)
-  lapply(
-    lst$partition,
-    \(fds) {
-      LHSs <- unique(lapply(fds, `[[`, 1))
-      RHSs <- unique(lapply(fds, `[[`, 2))
-      keys <- LHSs
-      all_attrs <- union(unlist(keys), unlist(RHSs))
-      nonkeys <- setdiff(all_attrs, unlist(keys))
-      for (n in seq_along(bijection_groups)) {
-        grp <- bijection_groups[[n]]
-        primary <- primaries[[n]]
+  attrs <- list()
+  rel_keys <- list()
+  for (n in seq_len(max(vecs$flat_groups))) {
+    partition_index <- vecs$flat_groups == n
+    keys <- unique(vecs$flat_partition_determinant_set[partition_index])
+    dependents <- unique(vecs$flat_partition_dependents[partition_index])
+    all_attrs <- union(unlist(keys), dependents)
+    nonprimes <- setdiff(dependents, unlist(keys))
+    for (n in seq_along(bijection_groups)) {
+      grp <- bijection_groups[[n]]
+      primary <- primaries[[n]]
 
-        if (!any(vapply(keys, \(k) all(primary %in% k), logical(1)))) {
-          for (bijection_set in setdiff(grp, list(primary))) {
-            for (m in seq_along(keys)) {
-              if (all(bijection_set %in% keys[[m]])) {
-                keys[[m]] <- setdiff(keys[[m]], bijection_set)
-                keys[[m]] <- union(keys[[m]], primary)
-                keys[[m]] <- keys[[m]][order(keys[[m]])]
-              }
+      if (!any(vapply(keys, \(k) all(primary %in% k), logical(1)))) {
+        for (bijection_set in setdiff(grp, list(primary))) {
+          for (m in seq_along(keys)) {
+            if (all(bijection_set %in% keys[[m]])) {
+              keys[[m]] <- setdiff(keys[[m]], bijection_set)
+              keys[[m]] <- union(keys[[m]], primary)
+              keys[[m]] <- keys[[m]][order(keys[[m]])]
             }
           }
         }
-        key_matches <- match(keys, grp)
-        if (any(!is.na(key_matches))) {
-          primary_loc <- match(list(primary), keys)
-          keys <- c(list(primary), keys[-primary_loc])
-        }
+      }
+      key_matches <- match(keys, grp)
+      if (any(!is.na(key_matches))) {
+        primary_loc <- match(list(primary), keys)
+        keys <- c(list(primary), keys[-primary_loc])
+      }
 
-        for (bijection_set in setdiff(grp, list(primary))) {
-          if (all(bijection_set %in% nonkeys)) {
-            nonkeys <- setdiff(nonkeys, bijection_set)
-            nonkeys <- union(nonkeys, primary)
-          }
+      for (bijection_set in setdiff(grp, list(primary))) {
+        if (all(bijection_set %in% nonprimes)) {
+          nonprimes <- setdiff(nonprimes, bijection_set)
+          nonprimes <- union(nonprimes, primary)
         }
       }
-      nonkeys <- nonkeys[order(nonkeys)]
-      list(attrs = union(unlist(keys), nonkeys), keys = keys)
     }
-  )
+    nonprimes <- nonprimes[order(nonprimes)]
+    attrs <- c(attrs, list(union(unlist(keys), nonprimes)))
+    rel_keys <- c(rel_keys, list(keys))
+  }
+  list(attrs = attrs, keys = rel_keys)
+}
+
+convert_to_list <- function(vecs) {
+  Map(list, attrs = vecs$attrs, keys = vecs$keys)
 }
 
 convert_to_character_attributes <- function(lst, attrs) {
