@@ -165,8 +165,7 @@ merge_equivalent_keys <- function(vecs) {
     partition_dependents = partition_dependents[nonempty],
     partition_keys = partition_keys[nonempty],
     bijection_determinant_sets = bijection_determinant_sets,
-    bijection_dependent_sets = bijection_dependent_sets,
-    bijection_groups = partition_keys[lengths(partition_keys) > 1]
+    bijection_dependent_sets = bijection_dependent_sets
   )
 }
 
@@ -219,8 +218,7 @@ remove_transitive_dependencies <- function(vecs) {
     flat_groups = flat_groups[!transitive],
     partition_keys = vecs$partition_keys,
     bijection_determinant_sets = flat_bijection_determinant_sets,
-    bijection_dependents = flat_bijection_dependents,
-    bijection_groups = vecs$bijection_groups
+    bijection_dependents = flat_bijection_dependents
   )
 }
 
@@ -260,7 +258,7 @@ add_bijections <- function(vecs) {
     flat_partition_determinant_set = flat_partition_determinant_set,
     flat_partition_dependents = flat_partition_dependents,
     flat_groups = flat_groups,
-    bijection_groups = vecs$bijection_groups
+    bijection_groups = vecs$partition_keys[lengths(vecs$partition_keys) > 1]
   )
 }
 
