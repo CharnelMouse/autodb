@@ -138,7 +138,7 @@ merge_equivalent_keys <- function(vecs) {
             )
             bijection_dependent_sets <- c(
               bijection_dependent_sets,
-              list(key2, key1)
+              list(setdiff(key2, key1), setdiff(key1, key2))
             )
             keys[[n]] <- c(keys[[n]], keys[[m]])
 
@@ -201,7 +201,7 @@ remove_transitive_dependencies <- function(vecs) {
   )
   singular_bijections <- lapply(
     bijections,
-    \(b) lapply(setdiff(b[[2]], b[[1]]), \(r) list(b[[1]], r))
+    \(b) lapply(b[[2]], \(r) list(b[[1]], r))
   ) |>
     unlist(recursive = FALSE)
 
