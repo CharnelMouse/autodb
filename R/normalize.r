@@ -195,7 +195,8 @@ remove_transitive_dependencies <- function(vecs) {
   transitive <- rep(FALSE, length(flat_partition_dependents))
   for (n in seq_along(flat_partition_dependents)) {
     RHS <- flat_partition_dependents[n]
-    key_attrs <- unique(unlist(vecs$partition_keys[[flat_groups[n]]]))
+    keys <- vecs$partition_keys[[flat_groups[n]]]
+    key_attrs <- unique(unlist(keys))
     if (!is.element(RHS, key_attrs)) {
       closure_without <- find_closure(
         key_attrs,
