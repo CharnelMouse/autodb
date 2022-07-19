@@ -276,14 +276,16 @@ construct_relations <- function(vecs) {
     for (bi_grp_ind in seq_along(bijection_groups)) {
       grp <- bijection_groups[[bi_grp_ind]]
       primary <- primaries[[bi_grp_ind]]
+      nonprimary_bijection_set <- setdiff(grp, list(primary))
 
       if (!any(vapply(keys, \(k) all(primary %in% k), logical(1)))) {
-        for (bijection_set in setdiff(grp, list(primary))) {
+        for (bijection_set in nonprimary_bijection_set) {
           for (key_el_ind in seq_along(keys)) {
             if (all(bijection_set %in% keys[[key_el_ind]])) {
-              keys[[key_el_ind]] <- setdiff(keys[[key_el_ind]], bijection_set)
-              keys[[key_el_ind]] <- union(keys[[key_el_ind]], primary)
-              keys[[key_el_ind]] <- keys[[key_el_ind]][order(keys[[key_el_ind]])]
+              keys[[key_el_ind]] <- keys[[key_el_ind]] |>
+                setdiff(bijection_set) |>
+                union(primary) |>
+                sort()
             }
           }
         }
@@ -294,7 +296,7 @@ construct_relations <- function(vecs) {
         keys <- c(list(primary), keys[-primary_loc])
       }
 
-      for (bijection_set in setdiff(grp, list(primary))) {
+      for (bijection_set in nonprimary_bijection_set) {
         if (all(bijection_set %in% nonprimes)) {
           nonprimes <- setdiff(nonprimes, bijection_set)
           nonprimes <- union(nonprimes, primary)
