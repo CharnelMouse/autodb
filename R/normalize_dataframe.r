@@ -8,15 +8,71 @@
 #' @export
 normalize_dataframe <- function(df, dependencies) {
   norm_deps <- normalize_dependencies(dependencies)
-  reference_mat <- outer(
-    norm_deps$attrs,
-    norm_deps$keys,
-    Vectorize(\(from_attrs, to_keys) {
-      any(vapply(to_keys, \(key) all(key %in% from_attrs), logical(1)))
-    })
-  )
+
   indexes <- lapply(norm_deps$keys, `[[`, 1)
   relation_names <- vapply(indexes, name_dataframe, character(1))
+
+  ref_detsets <- list()
+  ref_deps <- character()
+  for (n in seq_along(indexes)) {
+    rel_n <- relation_names[n]
+    ind <- indexes[[n]]
+    for (m in seq_along(norm_deps$attrs)) {
+      rel_m <- relation_names[m]
+      if (m != n && all(ind %in% norm_deps$attrs[[m]])) {
+        for (a in ind) {
+          ref_detsets <- c(ref_detsets, paste(rel_m, a, sep = "."))
+          ref_deps <- c(ref_deps, paste(rel_n, a, sep = "."))
+        }
+      }
+    }
+  }
+  ref_attrs <- unique(c(unlist(ref_detsets), unlist(ref_deps)))
+  ref_vecs <- list(
+    determinant_sets = ref_detsets,
+    dependents = ref_deps
+  ) |>
+    convert_to_integer_attributes(ref_attrs) |>
+    remove_extraneous_dependencies()
+  # convert back to characters
+  ref_vecs$determinant_sets <- lapply(ref_vecs$determinant_sets, \(a) ref_attrs[a])
+  ref_vecs$dependents <- ref_attrs[ref_vecs$dependents]
+  ref_split <- Map(
+    c,
+    strsplit(as.character(unlist(ref_vecs$determinant_sets)), ".", fixed = TRUE),
+    strsplit(as.character(ref_vecs$dependents), ".", fixed = TRUE)
+  )
+  ref_split_from <- vapply(ref_split, `[[`, character(1), 1)
+  ref_split_deps <- vapply(ref_split, `[[`, character(1), 2)
+  ref_split_to <- vapply(ref_split, `[[`, character(1), 3)
+  ref_split_grouped <- split(ref_split_deps, paste(ref_split_from, ref_split_to, sep = "->"))
+  grps <- strsplit(names(ref_split_grouped), "->", fixed = TRUE)
+  foreign_keys <- Map(
+    \(attrs, tables) {
+      from <- tables[1]
+      to <- tables[2]
+      list(
+        attributes = attrs,
+        child = from,
+        parent = to
+      )
+    },
+    unname(ref_split_grouped),
+    grps
+  )
+
+  reference_mat <- matrix(
+    FALSE,
+    nrow = length(norm_deps$attrs),
+    ncol = length(norm_deps$keys)
+  )
+  for (ref in foreign_keys) {
+    reference_mat[
+      match(ref$child, relation_names),
+      match(ref$parent, relation_names)
+    ] <- TRUE
+  }
+
   depdf_list <- Map(
     \(attrs, keys, index) {
       list(

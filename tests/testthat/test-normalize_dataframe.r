@@ -96,6 +96,27 @@ describe("normalize_dataframe", {
 
     expect_identical(new_dfs, expected_dfs)
   })
+  it("removes transitive relationships", {
+    df <- data.frame(
+      a = 1L,
+      b = 1L,
+      c = 1L,
+      d = 1L,
+      e = 1L
+    )
+    deps <- list(
+      dependencies = list(
+        list("a", "b"),
+        list("a", "c"),
+        list(c("b", "c"), "d"),
+        list("b", "e")
+      ),
+      attrs = c("a", "b", "c", "d", "e")
+    )
+    new_dfs <- normalize_dataframe(df, deps)
+    expect_identical(new_dfs$a$children, "b_c")
+  })
+
   describe("Dependencies", {
     it("DepDF", {
       deps <- list(
