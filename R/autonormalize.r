@@ -31,7 +31,7 @@ auto_entityset <- function(
   deps <- find_dependencies(df, accuracy)
   deps$dependencies <- flatten(deps$dependencies)
   if (filter)
-    deps <- filter(deps, df)
+    deps$dependencies <- filter(deps$dependencies, df)
   EntitySet(df, deps, name)
 }
 
