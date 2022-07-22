@@ -33,6 +33,15 @@
 # - has_dependency_subset and has_nondependency_superset are slow, mostly due to
 # calculating all subsets/supersets. If I can make powerset generation more
 # efficient, I could do this step there.
+# - idea for removing transitives: for references, use n and m to build starting
+# reference matrix instead, say x, then solve(I-x, x) gives total reference
+# journeys between tables. Totals greater than one indicate transitive
+# references. Alternatively, we create all non-zero powers of x, and for all
+# powers greater than one, elements of x get set equal to (x && !power(x)).
+# might not be good if we expect matrix to be sparse, which we probably do. in
+# that case, maybe traverse which(arr.ind = TRUE) somehow instead. maybe do that
+# in dependency filtering too? probably already do... but in that case would
+# break if given a dependency cycle, i.e. bijections.
 
 
 #' DFD algorithm
