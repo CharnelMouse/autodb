@@ -11,6 +11,7 @@ normalize_dataframe <- function(df, dependencies) {
 
   indexes <- lapply(norm_deps$keys, `[[`, 1)
   relation_names <- vapply(indexes, name_dataframe, character(1))
+  stopifnot(!anyDuplicated(relation_names))
 
   reference_mat <- calculate_reference_matrix(indexes, norm_deps$attrs)
 
