@@ -18,15 +18,13 @@ describe("auto_entityset", {
       Publisher_ID = rep(1:2, each = 2)
     )
     es <- auto_entityset(df, 1)
-    skip("non-deterministic, fix next")
+    expect_true(!anyDuplicated(es))
+    expect_identical(length(es$dataframes), 3L)
+    expect_setequal(names(es$dataframes), c("Price", "Title", "Format"))
     expect_setequal(
-      names(es$dataframes),
-      c("Publisher_ID", "Price", "Format")
-    )
-    expect_identical(
       es$relationships,
       list(
-        c("Price", "Publisher_ID", "Publisher_ID", "Publisher_ID"),
+        c("Price", "Title", "Title", "Title"),
         c("Price", "Format", "Format", "Format")
       )
     )

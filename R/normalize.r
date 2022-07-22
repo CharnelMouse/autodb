@@ -231,18 +231,11 @@ add_bijections <- function(vecs) {
   bijection_dependents <- vecs$bijection_dependents
   for (n in seq_along(vecs$partition_keys)) {
     keys <- vecs$partition_keys[[n]]
-    determinant_set_matches <- vapply(
+    matches <- vapply(
       bijection_determinant_sets,
       \(ds) is.element(list(ds), keys),
       logical(1)
     )
-    dependent_matches <- vapply(
-      bijection_dependents,
-      is.element,
-      logical(1),
-      keys
-    )
-    matches <- determinant_set_matches | dependent_matches
     flat_partition_determinant_set <- c(
       flat_partition_determinant_set,
       bijection_determinant_sets[matches]
@@ -255,6 +248,7 @@ add_bijections <- function(vecs) {
     bijection_determinant_sets <- bijection_determinant_sets[!matches]
     bijection_dependents <- bijection_dependents[!matches]
   }
+  stopifnot(length(bijection_determinant_sets) == 0)
   list(
     flat_partition_determinant_set = flat_partition_determinant_set,
     flat_partition_dependents = flat_partition_dependents,
