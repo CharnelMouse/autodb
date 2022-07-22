@@ -1,35 +1,7 @@
 # Scratch pad
 # - normalised dependencies don't currently account for bijections in children.
-# - I'd like dependency normalisation to make more sensible decisions re:
-# keeping attributes needed as foreign keys to reference tables. These often get
-# removed during removal of extraneous dependencies, since bijections make for
-# lots of extraneous dependencies before merging keys. However, when adding the
-# bijections later, we could check them against every group, and decide to swap
-# in the highest-priority key from each bijection group, if subsets of the
-# current one aren't being used as references to other things, and aren't prime.
 # - make.names docs: R didn't support underscores in names until 1.9.0, I need
 # to set a limit for R version in DESCRIPTION.
-# - data.frames split off from parents aren't being checked properly for best
-# choice of index, i.e. columns to leave behind as foreign keys in the parent.
-# This might be causing the plotting problems.
-# - liquor dataset: we get tables
-#   - [
-#       [Store Number]
-#       [Store Name, Store Location]
-#       [Address, Store Location]
-#       [Store Name, Address]
-#       [Store Name, Zip Code]
-#       [Address, Zip Code]
-#     ]
-#   - [
-#       [Zip Code, Store Location]
-#       -> City
-#     ]
-#   - [
-#       [City, Store Location]
-#       -> County Number
-#     ]
-#   Not sure these have transitive dependencies removed
 # - has_dependency_subset and has_nondependency_superset are slow, mostly due to
 # calculating all subsets/supersets. If I can make powerset generation more
 # efficient, I could do this step there.
@@ -42,7 +14,7 @@
 # that case, maybe traverse which(arr.ind = TRUE) somehow instead. maybe do that
 # in dependency filtering too? probably already do... but in that case would
 # break if given a dependency cycle, i.e. bijections.
-
+# - fix filter = TRUE changing order of data.frame attributes
 
 #' DFD algorithm
 #'
