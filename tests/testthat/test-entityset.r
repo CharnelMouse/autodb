@@ -1,3 +1,22 @@
+describe("EntitySet", {
+  it("returns relations", {
+    df <- data.frame(a = integer(), b = integer(), c = integer())
+    deps <- list(
+      dependencies = list(
+        list("a", "b"),
+        list("a", "c"),
+        list("b", "c")
+      ),
+      attrs = c("a", "b", "c")
+    )
+    es <- EntitySet(df, deps)
+    expected_relations <- list(
+      c("a", "b", "b", "b")
+    )
+    expect_identical(es$relationships, expected_relations)
+  })
+})
+
 describe("plot_string", {
   describe("entityset", {
     it("creates a Graphviz record expression for the data.frame", {
