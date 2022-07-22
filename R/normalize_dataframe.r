@@ -29,7 +29,7 @@ normalize_dataframe <- function(df, dependencies) {
   for (n in seq_along(norm_deps$attrs)) {
     refs <- reference_mat[n, ]
     ref_names <- relation_names[setdiff(which(refs), n)]
-    depdf_list[[n]]$children <- ref_names
+    depdf_list[[n]]$parents <- ref_names
   }
   stats::setNames(depdf_list, relation_names)
 }

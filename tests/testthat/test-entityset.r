@@ -48,7 +48,7 @@ describe("plot_string", {
               )),
             keys = list("Title"),
             index = "Title",
-            children = c("Format Price", "Author", "Genre")
+            parents = c("Format Price", "Author", "Genre")
           ),
           `Format Price` = list(
             df = data.frame(
@@ -63,7 +63,7 @@ describe("plot_string", {
             ),
             keys = list(c("Title", "Format")),
             index = c("Title", "Format"),
-            children = character()
+            parents = character()
           ),
           Author = list(
             df = data.frame(
@@ -73,7 +73,7 @@ describe("plot_string", {
               stats::setNames(c("Author", "Author Nationality")),
             keys = list("Author"),
             index = "Author",
-            children = character()
+            parents = character()
           ),
           Genre = list(
             df = data.frame(
@@ -83,7 +83,7 @@ describe("plot_string", {
               stats::setNames(c("Genre ID", "Genre Name")),
             keys = list("Genre ID"),
             index = "Genre ID",
-            children = character()
+            parents = character()
           )
         ),
         relationships = list(
@@ -167,7 +167,7 @@ describe("plot_string", {
               )),
             keys = list("Title"),
             index = "Title",
-            children = c("Format Price", "Author", "Genre")
+            parents = c("Format Price", "Author", "Genre")
           ),
           `Format Price` = list(
             df = data.frame(
@@ -182,7 +182,7 @@ describe("plot_string", {
             ),
             keys = list(c("Title", "Format")),
             index = c("Title", "Format"),
-            children = character()
+            parents = character()
           ),
           Author = list(
             df = data.frame(
@@ -192,7 +192,7 @@ describe("plot_string", {
               stats::setNames(c("Author", "Author Nationality")),
             keys = list("Author"),
             index = "Author",
-            children = character()
+            parents = character()
           ),
           Genre = list(
             df = data.frame(
@@ -202,7 +202,7 @@ describe("plot_string", {
               stats::setNames(c("Genre ID", "Genre Name")),
             keys = list("Genre ID"),
             index = "Genre ID",
-            children = character()
+            parents = character()
           )
         ),
         relationships = list(

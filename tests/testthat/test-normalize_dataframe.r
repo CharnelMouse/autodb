@@ -15,7 +15,7 @@ describe("normalize_dataframe", {
         df = df,
         keys = list("a"),
         index = "a",
-        children = character()
+        parents = character()
       ))
     )
   })
@@ -35,7 +35,7 @@ describe("normalize_dataframe", {
         df = df,
         keys = list("a", "b"),
         index = "a",
-        children = character()
+        parents = character()
       ))
     )
   })
@@ -114,7 +114,7 @@ describe("normalize_dataframe", {
       attrs = c("a", "b", "c", "d", "e")
     )
     new_dfs <- normalize_dataframe(df, deps)
-    expect_identical(new_dfs$a$children, "b_c")
+    expect_identical(new_dfs$a$parents, "b_c")
   })
 
   describe("Dependencies", {
@@ -155,7 +155,7 @@ describe("normalize_dataframe", {
             c("team", "jersey_num")
           ),
           index = c("player_name", "jersey_num"),
-          children = "team"
+          parents = "team"
         ),
         city = list(
           df = data.frame(
@@ -164,7 +164,7 @@ describe("normalize_dataframe", {
           ),
           keys = list("city", "state"),
           index = "city",
-          children = character()
+          parents = character()
         ),
         team = list(
           df = data.frame(
@@ -173,7 +173,7 @@ describe("normalize_dataframe", {
           ),
           keys = list("team"),
           index = "team",
-          children = "city"
+          parents = "city"
         )
       )
       expect_identical(depdfs, expected_depdfs)
