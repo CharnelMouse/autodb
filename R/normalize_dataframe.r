@@ -12,66 +12,7 @@ normalize_dataframe <- function(df, dependencies) {
   indexes <- lapply(norm_deps$keys, `[[`, 1)
   relation_names <- vapply(indexes, name_dataframe, character(1))
 
-  ref_detsets <- list()
-  ref_deps <- character()
-  for (n in seq_along(indexes)) {
-    rel_n <- relation_names[n]
-    ind <- indexes[[n]]
-    for (m in seq_along(norm_deps$attrs)) {
-      rel_m <- relation_names[m]
-      if (m != n && all(ind %in% norm_deps$attrs[[m]])) {
-        for (a in ind) {
-          ref_detsets <- c(ref_detsets, paste(rel_m, a, sep = "."))
-          ref_deps <- c(ref_deps, paste(rel_n, a, sep = "."))
-        }
-      }
-    }
-  }
-  ref_attrs <- unique(c(unlist(ref_detsets), unlist(ref_deps)))
-  ref_vecs <- list(
-    determinant_sets = ref_detsets,
-    dependents = ref_deps
-  ) |>
-    convert_to_integer_attributes(ref_attrs) |>
-    remove_extraneous_dependencies()
-  # convert back to characters
-  ref_vecs$determinant_sets <- lapply(ref_vecs$determinant_sets, \(a) ref_attrs[a])
-  ref_vecs$dependents <- ref_attrs[ref_vecs$dependents]
-  ref_split <- Map(
-    c,
-    strsplit(as.character(unlist(ref_vecs$determinant_sets)), ".", fixed = TRUE),
-    strsplit(as.character(ref_vecs$dependents), ".", fixed = TRUE)
-  )
-  ref_split_from <- vapply(ref_split, `[[`, character(1), 1)
-  ref_split_deps <- vapply(ref_split, `[[`, character(1), 2)
-  ref_split_to <- vapply(ref_split, `[[`, character(1), 3)
-  ref_split_grouped <- split(ref_split_deps, paste(ref_split_from, ref_split_to, sep = "->"))
-  grps <- strsplit(names(ref_split_grouped), "->", fixed = TRUE)
-  foreign_keys <- Map(
-    \(attrs, tables) {
-      from <- tables[1]
-      to <- tables[2]
-      list(
-        attributes = attrs,
-        child = from,
-        parent = to
-      )
-    },
-    unname(ref_split_grouped),
-    grps
-  )
-
-  reference_mat <- matrix(
-    FALSE,
-    nrow = length(norm_deps$attrs),
-    ncol = length(norm_deps$keys)
-  )
-  for (ref in foreign_keys) {
-    reference_mat[
-      match(ref$child, relation_names),
-      match(ref$parent, relation_names)
-    ] <- TRUE
-  }
+  reference_mat <- calculate_reference_matrix(indexes, norm_deps$attrs)
 
   depdf_list <- Map(
     \(attrs, keys, index) {
@@ -91,6 +32,55 @@ normalize_dataframe <- function(df, dependencies) {
     depdf_list[[n]]$children <- ref_names
   }
   stats::setNames(depdf_list, relation_names)
+}
+
+calculate_reference_matrix <- function(indexes, attrs) {
+  ref_detsets <- list()
+  ref_deps <- character()
+  seq_rel <- seq_along(indexes)
+  for (n in seq_rel) {
+    for (m in seq_rel[-n]) {
+      ind <- indexes[[n]]
+      if (all(ind %in% attrs[[m]])) {
+        ref_detsets <- c(ref_detsets, paste(m, ind, sep = "."))
+        ref_deps <- c(ref_deps, paste(n, ind, sep = "."))
+      }
+    }
+  }
+
+  ref_attrs <- unique(c(unlist(ref_detsets), unlist(ref_deps)))
+  ref_vecs <- list(determinant_sets = ref_detsets, dependents = ref_deps) |>
+    convert_to_integer_attributes(ref_attrs) |>
+    remove_extraneous_dependencies()
+  # convert back to characters
+  convert_back <- function(x) {
+    ref_attrs[x] |>
+      as.character() |>
+      strsplit(".", fixed = TRUE)
+  }
+  filtered_determinant_sets <- convert_back(unlist(ref_vecs$determinant_sets))
+  filtered_dependents <- convert_back(ref_vecs$dependents)
+  rel_inds <- function(x) strtoi(vapply(x, `[[`, character(1), 1))
+  rel_attrs <- function(x) vapply(x, `[[`, character(1), 2)
+  filtered_children <- rel_inds(filtered_determinant_sets)
+  filtered_parents <- rel_inds(filtered_dependents)
+  filtered_attrs <- rel_attrs(filtered_determinant_sets)
+  stopifnot(identical(filtered_attrs, rel_attrs(filtered_dependents)))
+
+  unique_ref_splits <- !duplicated(Map(c, filtered_children, filtered_parents))
+  unique_ref_children <- filtered_children[unique_ref_splits]
+  unique_ref_parents <- filtered_parents[unique_ref_splits]
+  ref_order <- order(unique_ref_children, unique_ref_parents)
+  children <- unique_ref_children[ref_order]
+  parents <- unique_ref_parents[ref_order]
+
+  n_tables <- length(indexes)
+  reference_mat <- matrix(FALSE, nrow = n_tables, ncol = n_tables)
+  for (ref in seq_along(ref_order)) {
+    reference_mat[children[ref], parents[ref]] <- TRUE
+  }
+
+  reference_mat
 }
 
 drop_primary_dups <- function(df, prim_key) {
