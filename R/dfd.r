@@ -317,16 +317,10 @@ powerset_nodes <- function(n) {
       # x & y == x: x subset of y
       # xor(x, y) == x: y is empty
       # sum(x != y) == 1: differ by one element
-      node_x <- node_bits[[x]]
-      node_y <- node_bits[[y]]
-      if (sum(node_x != node_y) == 1) { # differ by one element
-        if (all((node_x & node_y) == node_x)) { # x is subset
-          children[[y]] <- c(children[[y]], x)
-          parents[[x]] <- c(parents[[x]], y)
-        }else{
-          children[[x]] <- c(children[[x]], y)
-          parents[[y]] <- c(parents[[y]], x)
-        }
+      if (sum(node_bits[[x]] != node_bits[[y]]) == 1) { # differ by one element
+        # x < y, so x is subset
+        children[[y]] <- c(children[[y]], x)
+        parents[[x]] <- c(parents[[x]], y)
       }
     }
   }
