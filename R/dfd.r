@@ -14,7 +14,6 @@
 # that case, maybe traverse which(arr.ind = TRUE) somehow instead. maybe do that
 # in dependency filtering too? probably already do... but in that case would
 # break if given a dependency cycle, i.e. bijections.
-# - fix filter = TRUE changing order of data.frame attributes
 
 #' DFD algorithm
 #'

@@ -297,10 +297,12 @@ construct_relations <- function(vecs) {
         }
       }
     }
+    key_ord <- keys_order(keys)
+    sorted_keys <- keys[key_ord]
     nonprimes <- nonprimes[order(nonprimes)]
-    all_attrs <- union(unlist(keys), nonprimes)
+    all_attrs <- union(unlist(sorted_keys), nonprimes)
     attrs <- c(attrs, list(all_attrs))
-    rel_keys <- c(rel_keys, list(keys))
+    rel_keys <- c(rel_keys, list(sorted_keys))
   }
   list(attrs = attrs, keys = rel_keys)
 }

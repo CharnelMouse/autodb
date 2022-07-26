@@ -1,6 +1,38 @@
 library(hedgehog)
 
 describe("normalize_dependencies", {
+  it("doesn't change relation attribute order if dependencies are reordered", {
+    df <- data.frame(
+      a = rep(1:2, each = 2),
+      b = rep(1:2, each = 2),
+      c = rep(1:2, each = 2),
+      d = rep(1:2, each = 2),
+      e = rep(1:2, each = 2),
+      f = rep(1:2, each = 2)
+    )
+    deps <- list(
+      dependencies = list(
+        a = as.list(letters[1:6][-1]),
+        b = as.list(letters[1:6][-2]),
+        c = as.list(letters[1:6][-3]),
+        d = as.list(letters[1:6][-4]),
+        e = as.list(letters[1:6][-5]),
+        f = as.list(letters[1:6][-6])
+      ),
+      attrs = letters[1:6]
+    )
+    deps$dependencies <- flatten(deps$dependencies)
+    nds <- normalize_dependencies(deps)
+    forall(
+      gen.sample(deps$dependencies, length(deps$dependencies)),
+      function(perm) {
+        new_deps <- deps
+        new_deps$dependencies <- perm
+        new_nds <- normalize_dependencies(new_deps)
+        expect_identical(nds, new_nds)
+      }
+    )
+  })
   it("removes extraneous attributes", {
     dependencies <- list(
       dependencies = list(
