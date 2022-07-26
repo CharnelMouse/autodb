@@ -1,3 +1,5 @@
+library(hedgehog)
+
 describe("normalize_dependencies", {
   it("removes extraneous attributes", {
     dependencies <- list(
@@ -319,4 +321,68 @@ describe("make_indexes", {
   skip("wait until make_indexes implemented")
   expect_true("hemisphere_month" %in% colnames(new_dfs[[1]]$df))
   expect_true("hemisphere_month" %in% colnames(new_dfs[[2]]$df))
+})
+
+describe("keys_order", {
+  it("works like order() for single-length elements", {
+    forall(
+      gen.sample.int(100, 10),
+      function(ints) {
+        expect_identical(order(ints), keys_order(ints))
+      }
+    )
+  })
+  it("gives a sorted list if applied as subsetter", {
+    forall(
+      gen.sample.int(100, 10),
+      function(ints) {
+        ord <- keys_order(ints)
+        expect_identical(seq_along(ints), keys_order(ints[ord]))
+      }
+    )
+  })
+  it("orders by length first", {
+    gen_el <- generate(for (n in gen.int(4)) {
+      generate(for (start in gen.int(10)) {
+        as.integer(start - 1L + seq_len(n))
+      })
+    })
+    gen_lst <- gen.list(gen_el, to = 10)
+    forall(
+      gen_lst,
+      function(lst) {
+        ord <- keys_order(lst)
+        ord_sorted_within_lengths <- ord |>
+          tapply(lengths(lst)[ord], sort, simplify = FALSE) |>
+          unlist(use.names = FALSE)
+        expect_identical(order(lengths(lst)), ord_sorted_within_lengths)
+      }
+    )
+  })
+  it("orders by values, in given order, within lengths", {
+    same_length_sorted <- function(lst) {
+      len <- length(lst[[1]])
+      stopifnot(all(lengths(lst) == len))
+      if (len == 0)
+        return(TRUE)
+      firsts <- vapply(lst, `[`, integer(1), 1)
+      if (is.unsorted(firsts))
+        return(FALSE)
+      rest <- lapply(lst, `[`, -1)
+      all(tapply(rest, firsts, \(x) length(x) <= 1 || same_length_sorted(x)))
+    }
+    gen_el <- generate(for (n in gen.int(5)) {
+      gen.sample.int(2, n, replace = TRUE)
+    })
+    gen_lst <- gen.list(gen_el, to = 10)
+    forall(
+      gen_lst,
+      function(lst) {
+        ord <- keys_order(lst)
+        sorted_keys <- lst[ord]
+        sorted_lengths <- lengths(lst)[ord]
+        expect_true(all(tapply(sorted_keys, sorted_lengths, same_length_sorted)))
+      }
+    )
+  })
 })

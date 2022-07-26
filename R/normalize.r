@@ -373,3 +373,28 @@ make_indexes <- function(depdfs) {
   # for (child in depdf$children)
   #   make_indexes(child)
 }
+
+keys_order_same_lengths <- function(keys) {
+  len <- length(keys[[1]])
+  stopifnot(all(lengths(keys) == len))
+  if (len == 0)
+    return(seq_len(keys))
+  els_by_place <- do.call(Map, c(c, keys))
+  do.call(order, els_by_place)
+}
+
+keys_order <- function(keys) {
+  lens <- lengths(keys)
+  length_order <- order(lens)
+  order_within_lengths <- tapply(
+    keys,
+    lens,
+    keys_order_same_lengths,
+    simplify = FALSE
+  )
+  cum_lengths <- cumsum(lengths(order_within_lengths))
+  starts <- c(0L, cum_lengths[-length(cum_lengths)])
+  flat_order <- unlist(order_within_lengths, use.names = FALSE) +
+    rep(starts, lengths(order_within_lengths))
+  length_order[flat_order]
+}
