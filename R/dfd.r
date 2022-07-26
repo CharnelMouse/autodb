@@ -309,19 +309,10 @@ powerset_nodes <- function(n) {
   children <- rep(list(integer()), n_nonempty_subsets)
   parents <- rep(list(integer()), n_nonempty_subsets)
   for (x in seq.int(n_nonempty_subsets - 1)) {
-    for (y in seq(x + 1L, n_nonempty_subsets)) {
-      # x | y: minimal join of sets
-      # x & y: maximal intersection of sets
-      # xor(x, y): non-shared elements
-      # x | y == x: x superset of y
-      # x & y == x: x subset of y
-      # xor(x, y) == x: y is empty
-      # sum(x != y) == 1: differ by one element
-      if (sum(node_bits[[x]] != node_bits[[y]]) == 1) { # differ by one element
-        # x < y, so x is subset
-        children[[y]] <- c(children[[y]], x)
-        parents[[x]] <- c(parents[[x]], y)
-      }
+    for (bit in which(node_bits[[x]][1:n] == 0)) {
+      y <- as.integer(x + 2^(bit - 1))
+      children[[y]] <- c(children[[y]], x)
+      parents[[x]] <- c(parents[[x]], y)
     }
   }
   list(
