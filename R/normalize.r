@@ -258,8 +258,11 @@ add_bijections <- function(vecs) {
 }
 
 construct_relations <- function(vecs) {
-  bijection_groups <- vecs$bijection_groups
-  primaries <- lapply(bijection_groups, choose_index)
+  sorted_bijection_groups <- lapply(
+    vecs$bijection_groups,
+    \(bg) bg[keys_order(bg)]
+  )
+  primaries <- lapply(sorted_bijection_groups, `[[`, 1)
   attrs <- list()
   rel_keys <- list()
   for (group_ind in seq_len(max(vecs$flat_groups))) {
@@ -267,8 +270,8 @@ construct_relations <- function(vecs) {
     keys <- unique(vecs$flat_partition_determinant_set[partition_index])
     dependents <- unique(vecs$flat_partition_dependents[partition_index])
     nonprimes <- setdiff(dependents, unlist(keys))
-    for (bi_grp_ind in seq_along(bijection_groups)) {
-      grp <- bijection_groups[[bi_grp_ind]]
+    for (bi_grp_ind in seq_along(sorted_bijection_groups)) {
+      grp <- sorted_bijection_groups[[bi_grp_ind]]
       primary <- primaries[[bi_grp_ind]]
       nonprimary_bijection_set <- setdiff(grp, list(primary))
 

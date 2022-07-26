@@ -276,18 +276,6 @@ test_that("filter", {
   expect_identical(keys, list(list(c('C', 'D'), 'E')))
 })
 
-describe("choose_index", {
-  it("prioritises columns earlier in the data.frame", {
-    keys <- list(2L, 3L, 1L)
-    expect_identical(choose_index(keys), 1L)
-  })
-
-  it("priorities key members earlier in the data.frame", {
-    keys <- list(c(1L, 3L), c(1L, 2L))
-    expect_identical(choose_index(keys), c(1L, 2L))
-  })
-})
-
 describe("make_indexes", {
   new_dfs <- list(
     id = list(
