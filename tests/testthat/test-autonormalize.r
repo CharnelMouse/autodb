@@ -29,7 +29,7 @@ describe("auto_entityset", {
       )
     )
   })
-  it("doesn't choose keys with incorrect types as the index", {
+  it("doesn't choose keys with incorrect types as the index if filter = TRUE", {
     df <- data.frame(
       Title = rep(
         c(
@@ -47,8 +47,24 @@ describe("auto_entityset", {
       Genre_Name = rep(c("Tutorial", "Popular science"), each = 2),
       Publisher_ID = rep(1:2, each = 2)
     )
-    es <- auto_entityset(df, 1)
-    skip("wait on key filtering")
+    es_nonfiltered <- auto_entityset(df, 1, filter = FALSE)
+    expect_setequal(
+      names(es_nonfiltered$dataframes),
+      c("Price", "Title", "Format")
+    )
+    expect_identical(
+      es_nonfiltered$dataframes$Price$keys,
+      list("Price", c("Title", "Format"))
+    )
+    es_filtered <- auto_entityset(df, 1, filter = TRUE)
+    expect_setequal(
+      names(es_filtered$dataframes),
+      c("Title_Format", "Title", "Format")
+    )
+    expect_identical(
+      es_filtered$dataframes$Title_Format$keys,
+      list(c("Title", "Format"))
+    )
   })
   it("correctly handles attributes with non-df-standard names", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>

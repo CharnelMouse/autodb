@@ -70,30 +70,29 @@ describe("normalize_dataframe", {
       attrs = c("id", "month", "hemisphere", "is_winter")
     )
     new_dfs <- normalize_dataframe(df, deps)
-    skip("do this later")
     expected_dfs <- list(
       id = list(
-        deps = list(
-          id = list(),
-          month = list("id", c("hemisphere", "is_winter")),
-          hemisphere = list(c("month", "is_winter"), "id")
-        ),
-        df = df[, c("id", "month", "hemisphere")]
+        df = df[, c("id", "month", "hemisphere")],
+        keys = list("id"),
+        index = "id",
+        parents = "month_hemisphere"
       ),
       month_hemisphere = list(
-        deps = list(
-          month = list(c("hemisphere", "is_winter")),
-          hemisphere = list(c("month", "is_winter")),
-          is_winter = list(c("month", "hemisphere"))
-        ),
         df = data.frame(
           month = c("dec", "jul", "dec", "jul"),
           hemisphere = c("N", "N", "S", "S"),
-          is_winter = c(TRUE, FALSE, FALSE, TRUE)
-        )
+          is_winter = c(TRUE, FALSE, FALSE, TRUE),
+          row.names = c(1L, 3L, 5:6)
+        ),
+        keys = list(
+          c("month", "hemisphere"),
+          c("month", "is_winter"),
+          c("hemisphere", "is_winter")
+        ),
+        index = c("month", "hemisphere"),
+        parents = character()
       )
     )
-
     expect_identical(new_dfs, expected_dfs)
   })
   it("removes transitive relationships", {
