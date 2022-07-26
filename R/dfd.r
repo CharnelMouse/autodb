@@ -309,11 +309,10 @@ powerset_nodes <- function(n) {
   children <- rep(list(integer()), n_nonempty_subsets)
   parents <- rep(list(integer()), n_nonempty_subsets)
   for (x in seq.int(n_nonempty_subsets - 1)) {
-    for (bit in which(node_bits[[x]][1:n] == 0)) {
-      y <- as.integer(x + 2^(bit - 1))
-      children[[y]] <- c(children[[y]], x)
-      parents[[x]] <- c(parents[[x]], y)
-    }
+    zeroes <- which(node_bits[[x]][1:n] == 0)
+    ys <- as.integer(x + 2^(zeroes - 1))
+    parents[[x]] <- c(parents[[x]], ys)
+    children[ys] <- lapply(children[ys], c, x)
   }
   list(
     bits = node_bits,
