@@ -2,9 +2,6 @@
 # - normalised dependencies don't currently account for bijections in children.
 # - make.names docs: R didn't support underscores in names until 1.9.0, I need
 # to set a limit for R version in DESCRIPTION.
-# - has_dependency_subset and has_nondependency_superset are slow, mostly due to
-# calculating all subsets/supersets. If I can make powerset generation more
-# efficient, I could do this step there.
 # - idea for removing transitives: for references, use n and m to build starting
 # reference matrix instead, say x, then solve(I-x, x) gives total reference
 # journeys between tables. Totals greater than one indicate transitive
@@ -367,26 +364,28 @@ infer_type <- function(node, nodes) {
 
 has_dependency_subset <- function(node, nodes) {
   node_bits <- nodes$bits[[node]]
-  bitsets <- nodes$bits
-  subsets <- vapply(
-    bitsets,
-    \(x) is_subset(x, node_bits) && !identical(x, node_bits),
-    logical(1)
-  )
-  subset_categories <- nodes$category[subsets]
-  any(subset_categories > 0)
+  dependencies <- nodes$category > 0
+  dependencies[node] <- FALSE
+  dependency_bitsets <- nodes$bits[dependencies]
+  any(vapply(
+    dependency_bitsets,
+    is_subset,
+    logical(1),
+    node_bits
+  ))
 }
 
 has_nondependency_superset <- function(node, nodes) {
   node_bits <- nodes$bits[[node]]
-  bitsets <- nodes$bits
-  supersets <- vapply(
-    bitsets,
-    \(x) is_superset(x, node_bits) && !identical(x, node_bits),
-    logical(1)
-  )
-  superset_categories <- nodes$category[supersets]
-  any(superset_categories < 0)
+  nondependencies <- nodes$category < 0
+  nondependencies[node] <- FALSE
+  nondependency_bitsets <- nodes$bits[nondependencies]
+  any(vapply(
+    nondependency_bitsets,
+    is_superset,
+    logical(1),
+    node_bits
+  ))
 }
 
 pick_next_node <- function(node, nodes, trace, min_deps, max_non_deps, attrs) {
