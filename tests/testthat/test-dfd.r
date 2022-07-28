@@ -221,7 +221,7 @@ describe("original tests", {
       8, 2, 4, 7, 0, 0, 6, 4, 6, 8
     )
     b <- as.integer(a %% 2 == 0)
-    c <- a + b < 4
+    c <- as.integer(a + b < 4) + 1L
     df <- data.frame(
       a = a,
       b = b,
@@ -241,7 +241,7 @@ describe("original tests", {
 
     it("df2", {
       df2 <- df
-      df2$c[1] <- TRUE
+      df2$c[1] <- 2L
       expect_true(
         compute_partitions(df2, 'c', c('a', 'b'), list(), 0.97)[[1]]
       )
@@ -252,8 +252,8 @@ describe("original tests", {
 
     it("df3", {
       df3 <- df
-      df3$c[1] <- TRUE
-      df3$c[36] <- FALSE
+      df3$c[1] <- 2L
+      df3$c[36] <- 1L
       expect_true(
         compute_partitions(df3, 'c', c('a', 'b'), list(), 0.95)[[1]]
       )
@@ -271,7 +271,7 @@ describe("original tests", {
       8, 2, 4, 7, 0, 0, 6, 4, 6, 8
     )
     b <- as.integer(a %% 2 == 0)
-    c <- (a + b < 4)
+    c <- as.integer((a + b < 4)) + 1L
     df <- data.frame(a = a, b = b, c = c)
     it("df", {
       expect_true(approximate_dependencies(c("a", "b"), "c", df, 1.00))
@@ -279,15 +279,15 @@ describe("original tests", {
     })
     it("is true only for accuracy up to 0.975, given one different row in forty", {
       df2 <- df
-      df2$c[1] <- TRUE
+      df2$c[1] <- 2L
       expect_true(approximate_dependencies(c("a", "b"), "c", df2, .9))
       expect_true(approximate_dependencies(c("a", "b"), "c", df2, .975))
       expect_false(approximate_dependencies(c("a", "b"), "c", df2, .98))
     })
     it("is true only for accuracy up to 0.95, given two different rows in forty", {
       df3 <- df
-      df3$c[1] <- TRUE
-      df3$c[36] <- FALSE
+      df3$c[1] <- 2L
+      df3$c[36] <- 1L
       expect_true(approximate_dependencies(c("a", "b"), "c", df3, .9))
       expect_true(approximate_dependencies(c("a", "b"), "c", df3, .95))
       expect_false(approximate_dependencies(c("a", "b"), "c", df3, .96))

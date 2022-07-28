@@ -572,8 +572,8 @@ approximate_dependencies <- function(lhs_set, rhs, df, accuracy) {
   n_remove <- function(x) {
     length(x) - max(tabulate(x))
   }
-  splitted <- factor(df[[rhs]], exclude = character())
-  splitter <- lapply(df[, lhs_set, drop = FALSE], factor, exclude = character())
+  splitted <- df[[rhs]]
+  splitter <- df[, lhs_set, drop = FALSE]
   total_to_remove <- split(splitted, splitter, drop = TRUE) |>
     Reduce(f = function(n, df) n + n_remove(df), init = 0)
   total_to_remove <= limit
