@@ -28,38 +28,15 @@ describe("dfd", {
       shrink.limit = Inf
     )
   })
-
-  # it("terminates for long tables with dependent columns", {
-  #   gen_len2 <- gen.int(10)
-  #   gen_df2 <- generate(
-  #     for (n in gen_len2) {
-  #       gen.with(
-  #         list(
-  #           A = 1:n,
-  #           B = gen.sample(0:25, n, replace = TRUE),
-  #           C = gen.sample(0:3, n, replace = TRUE),
-  #           D = gen.sample((-10):20, n, replace = TRUE)
-  #         ),
-  #         function(lst) {
-  #           df <- as.data.frame(lst)
-  #           df$E <- df$C != 1
-  #           df$F <- df$B < 10
-  #           df$G <- df$C + df$D
-  #           df
-  #         }
-  #       )
-  #     }
-  #   )
-  #   forall(
-  #     gen_df2,
-  #     function(df) {
-  #       df <- as.data.frame(df)
-  #       res <- withTimeout(dfd(df, 1), timeout = 5, onTimeout = "silent")
-  #       expect_true(!is.null(res))
-  #     },
-  #     shrink.limit = Inf
-  #   )
-  # })
+  it("terminates with trivially-dependent columns (not stuck on no MNFDs)", {
+    df <- data.frame(
+      A = 1:3,
+      B = 1:3,
+      C = 1:3
+    )
+    res <- withTimeout(dfd(df, 1), timeout = 5, onTimeout = "silent")
+    expect_true(!is.null(res))
+  })
   it("gives dependencies for unique attributes (in case don't want them as key)", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), C = c(1, 2, 2))
     deps <- dfd(df, 1)
