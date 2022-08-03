@@ -189,58 +189,7 @@ describe("original tests", {
       expect_superset_of_dependency(res$dependencies, dep)
     })
   })
-
   describe("compute_partitions", {
-    a <- c(
-      6, 2, 3, 7, 8, 1, 0, 2, 0, 3,
-      6, 0, 4, 6, 8, 7, 6, 8, 1, 5,
-      1, 3, 3, 0, 0, 4, 5, 5, 7, 0,
-      8, 2, 4, 7, 0, 0, 6, 4, 6, 8
-    )
-    b <- as.integer(a %% 2 == 0)
-    c <- as.integer(a + b < 4) + 1L
-    df <- data.frame(
-      a = a,
-      b = b,
-      c = c
-    )
-
-    it("df", {
-      expect_true(
-        compute_partitions(df, 'c', c('a', 'b'), list(), 1.00)[[1]]
-      )
-      expect_true(
-        compute_partitions(df, 'c', c('a', 'b'), list(), 0.90)[[1]]
-      )
-      expect_false(compute_partitions(df, 'a', 'c', list(), 1.00)[[1]])
-      expect_false(compute_partitions(df, 'a', 'c', list(), 0.90)[[1]])
-    })
-
-    it("df2", {
-      df2 <- df
-      df2$c[1] <- 2L
-      expect_true(
-        compute_partitions(df2, 'c', c('a', 'b'), list(), 0.97)[[1]]
-      )
-      expect_false(
-        compute_partitions(df2, 'c', c('a', 'b'), list(), 0.98)[[1]]
-      )
-    })
-
-    it("df3", {
-      df3 <- df
-      df3$c[1] <- 2L
-      df3$c[36] <- 1L
-      expect_true(
-        compute_partitions(df3, 'c', c('a', 'b'), list(), 0.95)[[1]]
-      )
-      expect_false(
-        compute_partitions(df3, 'c', c('a', 'b'), list(), 0.96)[[1]]
-      )
-    })
-  })
-
-  describe("approximate_dependencies", {
     a <- c(
       6, 2, 3, 7, 8, 1, 0, 2, 0, 3,
       6, 0, 4, 6, 8, 7, 6, 8, 1, 5,
@@ -251,23 +200,23 @@ describe("original tests", {
     c <- as.integer((a + b < 4)) + 1L
     df <- data.frame(a = a, b = b, c = c)
     it("df", {
-      expect_true(approximate_dependencies(c("a", "b"), "c", df, 1.00))
-      expect_true(approximate_dependencies(c("a", "b"), "c", df, 0.90))
+      expect_true(compute_partitions(df, "c", c("a", "b"), list(), 1)[[1]])
+      expect_true(compute_partitions(df, "c", c("a", "b"), list(), 0.9)[[1]])
     })
     it("is true only for accuracy up to 0.975, given one different row in forty", {
       df2 <- df
       df2$c[1] <- 2L
-      expect_true(approximate_dependencies(c("a", "b"), "c", df2, .9))
-      expect_true(approximate_dependencies(c("a", "b"), "c", df2, .975))
-      expect_false(approximate_dependencies(c("a", "b"), "c", df2, .98))
+      expect_true(compute_partitions(df2, "c", c("a", "b"), list(), 0.9)[[1]])
+      expect_true(compute_partitions(df2, "c", c("a", "b"), list(), 0.975)[[1]])
+      expect_false(compute_partitions(df2, "c", c("a", "b"), list(), 0.98)[[1]])
     })
     it("is true only for accuracy up to 0.95, given two different rows in forty", {
       df3 <- df
       df3$c[1] <- 2L
       df3$c[36] <- 1L
-      expect_true(approximate_dependencies(c("a", "b"), "c", df3, .9))
-      expect_true(approximate_dependencies(c("a", "b"), "c", df3, .95))
-      expect_false(approximate_dependencies(c("a", "b"), "c", df3, .96))
+      expect_true(compute_partitions(df3, "c", c("a", "b"), list(), 0.9)[[1]])
+      expect_true(compute_partitions(df3, "c", c("a", "b"), list(), 0.95)[[1]])
+      expect_false(compute_partitions(df3, "c", c("a", "b"), list(), 0.96)[[1]])
     })
   })
 })
