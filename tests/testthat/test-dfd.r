@@ -133,62 +133,6 @@ describe("dfd", {
 })
 
 describe("original tests", {
-  describe("dfd", {
-    assert_equal_dependency_dics <- function(dep1, dep2) {
-      stopifnot(sort(names(dep1)) == sort(names(dep2)))
-      for (rhs in names(dep1)) {
-        one <- dep1[[rhs]]
-        two <- dep2[[rhs]]
-        stopifnot(length(one) == length(two))
-        for (one_el in one) {
-          stopifnot(any(vapply(two, identical, logical(1), one_el)))
-        }
-      }
-    }
-
-    it("hard-coded example", {
-      df_1 <- data.frame(
-        id = c(100, 101, 102, 103, 104, 105, 106, 107, 109),
-        age = c(1, 2, 3, 4, 5, 6, 7, 5, 6),
-        height = c(4, 5, 6, 7, 8, 9, 10, 8, 9),
-        less_than_5 = c(1, 1, 1, 1, 0, 0, 0, 0, 0)
-      )
-      dep <- list(
-        id = list(),
-        age = list("height", "id"),
-        height = list("age", "id"),
-        less_than_5 = list("age", "height", "id")
-      )
-      solved <- dfd(df_1, 0.98)
-      assert_equal_dependency_dics(solved$dependencies, dep)
-    })
-
-    it("randomly-generated example", {
-      # A = index,   B = random,   C = random,   D = random,
-      # E = c != 1,   F = b < 10,   G = c + d
-      df_2 <- data.frame(
-        A = 1:1000,
-        B = sample(0:25, 1000, replace = TRUE),
-        C = sample(0:3, 1000, replace = TRUE),
-        D = sample((-10):20, 1000, replace = TRUE)
-      )
-      df_2$E <- df_2$C != 1
-      df_2$`F` <- df_2$B < 10
-      df_2$G <- df_2$C + df_2$D
-
-      dep <- list(
-        A = list(),
-        B = list("A"),
-        C = list(c("D", "G"), "A"),
-        D = list(c("C", "G"), "A"),
-        E = list("C", c("D", "G"), "A"),
-        F = list("B", "A"),
-        G = list(c("C", "D"), "A")
-      )
-      res <- dfd(df_2, 0.98)
-      expect_superset_of_dependency(res$dependencies, dep)
-    })
-  })
   describe("compute_partitions", {
     a <- c(
       6, 2, 3, 7, 8, 1, 0, 2, 0, 3,
