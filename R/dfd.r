@@ -323,6 +323,23 @@ powerset_nodes <- function(n) {
   )
 }
 
+reduce_powerset <- function(powerset, n) {
+  n_nodes <- length(powerset$category)
+  boundary <- 2^n - 1
+  if (n_nodes == boundary)
+    return(powerset)
+  if (n_nodes < boundary)
+    stop("n is larger than size of set")
+  trimmed <- lapply(
+    powerset,
+    `[`,
+    seq_len(boundary)
+  )
+  trimmed$logicals <- lapply(trimmed$logicals, `[`, seq_len(n))
+  trimmed$parents <- lapply(trimmed$parents, \(x) x[x <= boundary])
+  trimmed
+}
+
 is_minimal <- function(node, nodes) {
   children <- nodes$children[[node]]
   if (any(nodes$category[children] > 0))
