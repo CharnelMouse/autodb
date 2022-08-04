@@ -1,14 +1,17 @@
-#' Normalise a data.frame based on given dependencies
+#' Decompose a data.frame based on given normalised dependencies
 #'
 #' @param df a data.frame, containing the data to be normalised.
-#' @param dependencies a Dependencies object, giving the dependencies to
-#'   determine normalisation with.
+#' @param norm_deps a list of lists, containing normalised dependencies, as for
+#'   output from \code{\link{normalize_dependencies}}.
 #'
-#' @return a list of data.frames, containing the normalised data.
+#' @return a named list of tables, containing the normalised data. Tables are
+#'   lists with the following elements: \code{df}, the data.frame containing the
+#'   data; \code{keys}, the list of character vectors, representing (candidate)
+#'   keys for the table; \code{index}, a character vector, representing the
+#'   index / primary key of the table; \code{parents}, containing names of
+#'   parent tables, i.e. tables referenced in foreign keys.
 #' @export
-normalize_dataframe <- function(df, dependencies) {
-  norm_deps <- normalize_dependencies(dependencies)
-
+decompose <- function(df, norm_deps) {
   indexes <- lapply(norm_deps$keys, `[[`, 1)
   relation_names <- vapply(indexes, name_dataframe, character(1))
   stopifnot(!anyDuplicated(relation_names))

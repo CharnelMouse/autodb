@@ -12,7 +12,8 @@ EntitySet <- function(df, deps, name = NA_character_) {
   #
   # Returns:
   #   entityset (ft.EntitySet) : created entity set
-  depdfs <- normalize_dataframe(df, deps)
+  norm_deps <- normalize_dependencies(deps)
+  depdfs <- decompose(df, norm_deps)
   depdfs <- make_indexes(depdfs)
 
   relationships <- list()

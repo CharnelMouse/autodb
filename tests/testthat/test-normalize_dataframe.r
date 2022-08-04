@@ -1,4 +1,4 @@
-describe("normalize_dataframe", {
+describe("decompose", {
   it("removes extraneous dependencies", {
     dependencies <- list(
       dependencies = list(
@@ -8,7 +8,8 @@ describe("normalize_dataframe", {
       attrs = c("a", "b", "c")
     )
     df <- data.frame(a = integer(), b = integer(), c = integer())
-    norm.df <- normalize_dataframe(df, dependencies)
+    norm_deps <- normalize_dependencies(dependencies)
+    norm.df <- decompose(df, norm_deps)
     expect_identical(
       norm.df,
       list(a = list(
@@ -28,7 +29,8 @@ describe("normalize_dataframe", {
       attrs = c("a", "b")
     )
     df <- data.frame(a = integer(), b = integer())
-    norm.df <- normalize_dataframe(df, dependencies)
+    norm_deps <- normalize_dependencies(dependencies)
+    norm.df <- decompose(df, norm_deps)
     expect_identical(
       norm.df,
       list(a = list(
@@ -69,7 +71,8 @@ describe("normalize_dataframe", {
       ),
       attrs = c("id", "month", "hemisphere", "is_winter")
     )
-    new_dfs <- normalize_dataframe(df, deps)
+    norm_deps <- normalize_dependencies(deps)
+    new_dfs <- decompose(df, norm_deps)
     expected_dfs <- list(
       id = list(
         df = df[, c("id", "month", "hemisphere")],
@@ -112,7 +115,8 @@ describe("normalize_dataframe", {
       ),
       attrs = c("a", "b", "c", "d", "e")
     )
-    new_dfs <- normalize_dataframe(df, deps)
+    norm_deps <- normalize_dependencies(deps)
+    new_dfs <- decompose(df, norm_deps)
     expect_identical(new_dfs$a$parents, "b_c")
   })
 
@@ -139,7 +143,8 @@ describe("normalize_dataframe", {
         city = integer(),
         state = integer()
       )
-      depdfs <- normalize_dataframe(df, deps)
+      norm_deps <- normalize_dependencies(deps)
+      depdfs <- decompose(df, norm_deps)
       expect_identical(length(depdfs), 3L)
       expected_depdfs <- list(
         player_name_jersey_num = list(
@@ -186,7 +191,8 @@ describe("normalize_dataframe", {
         flatten(),
       attrs = c("A 1", "B 2", "C 3")
     )
-    norm.df <- normalize_dataframe(df, deps)
+    norm_deps <- normalize_dependencies(deps)
+    norm.df <- decompose(df, norm_deps)
     expect_setequal(names(norm.df[[1]]$df), c("A 1", "B 2", "C 3"))
   })
 })
