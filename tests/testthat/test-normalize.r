@@ -162,67 +162,6 @@ describe("normalize_dependencies", {
       )
     )
   })
-  describe("previous normalize tests", {
-    it("resolves a simple bijection with no splits, if given an index", {
-      dependencies <- list(
-        dependencies = list(
-          list("a", "b"),
-          list("b", "a")
-        ),
-        attrs = c("a", "b")
-      )
-      norm <- normalize_dependencies(dependencies)
-      expect_identical(
-        norm,
-        list(attrs = list(c("a", "b")), keys = list(list("a", "b")))
-      )
-    })
-    it("resolves a simple bijection with no splits, if given no index", {
-      dependencies <- list(
-        dependencies = list(
-          list("a", "b"),
-          list("b", "a")
-        ),
-        attrs = c("a", "b")
-      )
-      norm <- normalize_dependencies(dependencies)
-      expect_identical(
-        norm,
-        list(attrs = list(c("a", "b")), keys = list(list("a", "b")))
-      )
-    })
-    describe("Dependencies", {
-      it("original test", {
-        # F->D, ABCD->E, AB->F
-        # => F->D, ABC->E, AB->F
-        dep <- list(
-          dependencies = list(
-            list("F", "D"),
-            list(c("A", "B", "C", "D"), "E"),
-            list(c("A", "B"), "F")
-          ),
-          attrs = c("A", "B", "C", "D", "E", "F")
-        )
-        new <- normalize_dependencies(dep)
-        expected_attrs <- list(
-          c("A", "B", "C", "E"),
-          c("A", "B", "F"),
-          c("F", "D")
-        )
-        expected_keys <- list(
-          list(c("A", "B", "C")),
-          list(c("A", "B")),
-          list("F")
-        )
-        expect_setequal(new$attrs, expected_attrs)
-        expect_setequal(new$keys, expected_keys)
-        expect_identical(
-          match(new$attrs, expected_attrs),
-          match(new$keys, expected_keys)
-        )
-      })
-    })
-  })
 })
 
 test_that("drop_primary_dups", {
