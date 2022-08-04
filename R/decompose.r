@@ -16,8 +16,6 @@ decompose <- function(df, norm_deps) {
   relation_names <- vapply(indexes, name_dataframe, character(1))
   stopifnot(!anyDuplicated(relation_names))
 
-  reference_mat <- calculate_reference_matrix(indexes, norm_deps$attrs)
-
   depdf_list <- Map(
     \(attrs, keys, index) {
       list(
@@ -30,6 +28,7 @@ decompose <- function(df, norm_deps) {
     norm_deps$keys,
     indexes
   )
+  reference_mat <- calculate_reference_matrix(indexes, norm_deps$attrs)
   for (n in seq_along(norm_deps$attrs)) {
     refs <- reference_mat[n, ]
     ref_names <- relation_names[setdiff(which(refs), n)]

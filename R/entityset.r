@@ -15,9 +15,7 @@ EntitySet <- function(tables, norm_deps, name = NA_character_) {
   tables <- make_indexes(tables)
 
   relationships <- list()
-
   stack <- tables
-
   while (length(stack) > 0) {
     current_df_name <- names(stack)[1]
     current <- stack[[1]]
