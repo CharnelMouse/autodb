@@ -1,4 +1,4 @@
-EntitySet <- function(df, deps, name = NA_character_) {
+EntitySet <- function(tables, norm_deps, name = NA_character_) {
   # Creates a normalised EntitySet from df based on the dependencies given.
   # Keys for the newly created DataFrames can only be columns that are strings,
   # ints, or categories. Keys are chosen according to the priority:
@@ -12,13 +12,11 @@ EntitySet <- function(df, deps, name = NA_character_) {
   #
   # Returns:
   #   entityset (ft.EntitySet) : created entity set
-  norm_deps <- normalise(deps)
-  depdfs <- decompose(df, norm_deps)
-  depdfs <- make_indexes(depdfs)
+  tables <- make_indexes(tables)
 
   relationships <- list()
 
-  stack <- depdfs
+  stack <- tables
 
   while (length(stack) > 0) {
     current_df_name <- names(stack)[1]
@@ -27,7 +25,7 @@ EntitySet <- function(df, deps, name = NA_character_) {
     stack <- stack[-1]
 
     for (parent_name in current$parents) {
-      parent <- depdfs[[parent_name]]
+      parent <- tables[[parent_name]]
       relationships <- c(
         relationships,
         lapply(
@@ -40,7 +38,7 @@ EntitySet <- function(df, deps, name = NA_character_) {
 
   es <- list(
     name = name,
-    dataframes = depdfs,
+    dataframes = tables,
     relationships = relationships
   )
   class(es) <- c("EntitySet", class(es))

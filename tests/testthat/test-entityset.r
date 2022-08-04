@@ -9,7 +9,9 @@ describe("EntitySet", {
       ),
       attrs = c("a", "b", "c")
     )
-    es <- EntitySet(df, deps)
+    norm_deps <- normalise(deps)
+    tables <- decompose(df, norm_deps)
+    es <- EntitySet(tables, norm_deps)
     expected_relations <- list(
       c("a", "b", "b", "b")
     )
