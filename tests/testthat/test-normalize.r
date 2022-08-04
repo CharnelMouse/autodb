@@ -1,6 +1,6 @@
 library(hedgehog)
 
-describe("normalize_dependencies", {
+describe("normalize", {
   it("doesn't change relation attribute order if dependencies are reordered", {
     df <- data.frame(
       a = rep(1:2, each = 2),
@@ -22,13 +22,13 @@ describe("normalize_dependencies", {
       attrs = letters[1:6]
     )
     deps$dependencies <- flatten(deps$dependencies)
-    nds <- normalize_dependencies(deps)
+    nds <- normalize(deps)
     forall(
       gen.sample(deps$dependencies, length(deps$dependencies)),
       function(perm) {
         new_deps <- deps
         new_deps$dependencies <- perm
-        new_nds <- normalize_dependencies(new_deps)
+        new_nds <- normalize(new_deps)
         expect_identical(nds, new_nds)
       }
     )
@@ -41,7 +41,7 @@ describe("normalize_dependencies", {
       ),
       attrs = c("a", "b", "c")
     )
-    norm.dependencies <- normalize_dependencies(dependencies)
+    norm.dependencies <- normalize(dependencies)
     expect_identical(
       norm.dependencies,
       list(attrs = list(c("a", "b", "c")), keys = list(list("a")))
@@ -56,7 +56,7 @@ describe("normalize_dependencies", {
       ),
       attrs = c("a", "b", "c")
     )
-    norm.dependencies <- normalize_dependencies(dependencies)
+    norm.dependencies <- normalize(dependencies)
     expect_identical(
       norm.dependencies,
       list(
@@ -75,7 +75,7 @@ describe("normalize_dependencies", {
       ),
       attrs = c("a", "b", "c", "d")
     )
-    norm.dependencies <- normalize_dependencies(dependencies)
+    norm.dependencies <- normalize(dependencies)
     expect_identical(
       norm.dependencies,
       list(
@@ -100,7 +100,7 @@ describe("normalize_dependencies", {
       ),
       attrs = c("a", "b", "c", "d", "e", "f")
     )
-    norm.dependencies <- normalize_dependencies(dependencies)
+    norm.dependencies <- normalize(dependencies)
     expect_identical(
       norm.dependencies,
       list(
@@ -122,7 +122,7 @@ describe("normalize_dependencies", {
       ),
       attrs = c("x1", "x2", "a", "b", "c", "d")
     )
-    norm.dep <- normalize_dependencies(dependencies)
+    norm.dep <- normalize(dependencies)
     expected_attrs <- list(
       c("x1", "x2", "c", "d"), # contains a if trans_deps not removed
       c("a", "x1", "b"),
@@ -153,7 +153,7 @@ describe("normalize_dependencies", {
       ),
       attrs = c("A", "B", "C", "D", "E", "F")
     )
-    norm.dep <- normalize_dependencies(dependencies)
+    norm.dep <- normalize(dependencies)
     expect_identical(
       norm.dep,
       list(

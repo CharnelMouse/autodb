@@ -11,7 +11,7 @@
 #'   \code{attrs} contains the normalised dependencies, and \code{keys} contains
 #'   a list of candidate keys.
 #' @export
-normalize_dependencies <- function(dependencies) {
+normalize <- function(dependencies) {
   dependencies$dependencies |>
     convert_to_vectors() |>
     convert_to_integer_attributes(dependencies$attrs) |>

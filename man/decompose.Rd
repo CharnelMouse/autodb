@@ -10,7 +10,7 @@ decompose(df, norm_deps)
 \item{df}{a data.frame, containing the data to be normalised.}
 
 \item{norm_deps}{a list of lists, containing normalised dependencies, as for
-output from \code{\link{normalize_dependencies}}.}
+output from \code{\link{normalize}}.}
 }
 \value{
 a named list of tables, containing the normalised data. Tables are
