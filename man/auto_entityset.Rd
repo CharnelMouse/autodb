@@ -2,7 +2,7 @@
 % Please edit documentation in R/autonormalize.r
 \name{auto_entityset}
 \alias{auto_entityset}
-\title{Creates a normalized entity set from a dataframe}
+\title{Creates a normalised entity set from a dataframe}
 \usage{
 auto_entityset(df, accuracy, name = NA_character_, filter = FALSE)
 }
@@ -24,5 +24,5 @@ An entity set, containing the data normalised into the required
 number of tables.
 }
 \description{
-Creates a normalized entity set from a dataframe
+Creates a normalised entity set from a dataframe
 }

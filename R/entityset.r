@@ -1,18 +1,18 @@
 EntitySet <- function(df, deps, name = NA_character_) {
-  # Creates a normalized EntitySet from df based on the dependencies given.
+  # Creates a normalised EntitySet from df based on the dependencies given.
   # Keys for the newly created DataFrames can only be columns that are strings,
   # ints, or categories. Keys are chosen according to the priority:
   #   1) shortest lenghts 2) has "id" in some form in the name of an attribute
   # 3) has attribute furthest to left in the table
   #
   # Arguments:
-  #   df (pd.DataFrame) : dataframe to normalize and make entity set from
+  #   df (pd.DataFrame) : dataframe to normalise and make entity set from
   # dependencies (Dependenies) : the dependencies discovered in df
   # name (str, optional) : the name of created EntitySet
   #
   # Returns:
   #   entityset (ft.EntitySet) : created entity set
-  norm_deps <- normalize(deps)
+  norm_deps <- normalise(deps)
   depdfs <- decompose(df, norm_deps)
   depdfs <- make_indexes(depdfs)
 

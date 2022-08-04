@@ -8,7 +8,7 @@ find_dependencies <- function(df, accuracy) {
   dfd(df, accuracy)
 }
 
-#' Creates a normalized entity set from a dataframe
+#' Creates a normalised entity set from a dataframe
 #'
 #' @param df a data.frame, containing the data to be normalised.
 #' @param accuracy a numeric in (0, 1], giving the accuracy threshold threshold

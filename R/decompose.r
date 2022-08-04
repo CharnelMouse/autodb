@@ -2,7 +2,7 @@
 #'
 #' @param df a data.frame, containing the data to be normalised.
 #' @param norm_deps a list of lists, containing normalised dependencies, as for
-#'   output from \code{\link{normalize}}.
+#'   output from \code{\link{normalise}}.
 #'
 #' @return a named list of tables, containing the normalised data. Tables are
 #'   lists with the following elements: \code{df}, the data.frame containing the

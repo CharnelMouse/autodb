@@ -8,7 +8,7 @@ describe("decompose", {
       attrs = c("a", "b", "c")
     )
     df <- data.frame(a = integer(), b = integer(), c = integer())
-    norm_deps <- normalize(dependencies)
+    norm_deps <- normalise(dependencies)
     norm.df <- decompose(df, norm_deps)
     expect_identical(
       norm.df,
@@ -29,7 +29,7 @@ describe("decompose", {
       attrs = c("a", "b")
     )
     df <- data.frame(a = integer(), b = integer())
-    norm_deps <- normalize(dependencies)
+    norm_deps <- normalise(dependencies)
     norm.df <- decompose(df, norm_deps)
     expect_identical(
       norm.df,
@@ -71,7 +71,7 @@ describe("decompose", {
       ),
       attrs = c("id", "month", "hemisphere", "is_winter")
     )
-    norm_deps <- normalize(deps)
+    norm_deps <- normalise(deps)
     new_dfs <- decompose(df, norm_deps)
     expected_dfs <- list(
       id = list(
@@ -115,7 +115,7 @@ describe("decompose", {
       ),
       attrs = c("a", "b", "c", "d", "e")
     )
-    norm_deps <- normalize(deps)
+    norm_deps <- normalise(deps)
     new_dfs <- decompose(df, norm_deps)
     expect_identical(new_dfs$a$parents, "b_c")
   })
@@ -143,7 +143,7 @@ describe("decompose", {
         city = integer(),
         state = integer()
       )
-      norm_deps <- normalize(deps)
+      norm_deps <- normalise(deps)
       depdfs <- decompose(df, norm_deps)
       expect_identical(length(depdfs), 3L)
       expected_depdfs <- list(
@@ -191,13 +191,13 @@ describe("decompose", {
         flatten(),
       attrs = c("A 1", "B 2", "C 3")
     )
-    norm_deps <- normalize(deps)
+    norm_deps <- normalise(deps)
     norm.df <- decompose(df, norm_deps)
     expect_setequal(names(norm.df[[1]]$df), c("A 1", "B 2", "C 3"))
   })
 })
 
-describe("normalize() replacing normalize_step()", {
+describe("normalise() replacing normalize_step()", {
   it("removes extraneous dependencies", {
     dependencies <- list(
       dependencies = list(
@@ -206,7 +206,7 @@ describe("normalize() replacing normalize_step()", {
       ),
       attrs = c("a", "b", "c")
     )
-    norm.df <- normalize(dependencies)
+    norm.df <- normalise(dependencies)
     expect_identical(
       norm.df,
       list(attrs = list(c("a", "b", "c")), keys = list(list("a")))
@@ -220,7 +220,7 @@ describe("normalize() replacing normalize_step()", {
       ),
       attrs = c("a", "b")
     )
-    norm.df <- normalize(dependencies)
+    norm.df <- normalise(dependencies)
     expect_identical(
       norm.df,
       list(attrs = list(c("a", "b")), keys = list(list("a", "b")))
@@ -258,7 +258,7 @@ describe("normalize() replacing normalize_step()", {
       ),
       attrs = c("id", "month", "hemisphere", "is_winter")
     )
-    new_deps <- normalize(deps)
+    new_deps <- normalise(deps)
     expected_parent <- list(
       attrs = c("id", "month", "hemisphere"),
       keys = list("id")
@@ -297,7 +297,7 @@ describe("normalize() replacing normalize_step()", {
       ),
       attrs = c("player_name", "jersey_num", "team", "state", "city")
     )
-    new_deps <- normalize(deps)
+    new_deps <- normalise(deps)
     expected_deps <- list(
       attrs = list(
         c("player_name", "jersey_num", "team"),

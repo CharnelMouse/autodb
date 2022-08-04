@@ -1,6 +1,6 @@
-#' Normalizes dependency relationships
+#' Normalises dependency relationships
 #'
-#' Normalizes the dependency relationships in dependencies into new
+#' Normalises the dependency relationships in dependencies into new
 #' groups by breaking up all partial and transitive dependencies.
 #'
 #' @param dependencies a list of functional dependencies, each composed of a
@@ -11,7 +11,7 @@
 #'   \code{attrs} contains the normalised dependencies, and \code{keys} contains
 #'   a list of candidate keys.
 #' @export
-normalize <- function(dependencies) {
+normalise <- function(dependencies) {
   dependencies$dependencies |>
     convert_to_vectors() |>
     convert_to_integer_attributes(dependencies$attrs) |>
