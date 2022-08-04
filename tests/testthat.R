@@ -1,4 +1,4 @@
 library(testthat)
-library(autonormalize)
+library(autonormalise)
 
-test_check("autonormalize")
+test_check("autonormalise")

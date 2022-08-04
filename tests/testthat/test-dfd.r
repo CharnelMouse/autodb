@@ -42,7 +42,7 @@ describe("dfd", {
     deps <- dfd(df, 1)
     expect_identical(deps$dependencies$A, list(c("B", "C")))
   })
-  it("finds dependencies for the team data in test-normalize", {
+  it("finds dependencies for the team data in test-normalise", {
     df <- data.frame(
       team = c(
         'Red', 'Red', 'Red', 'Orange', 'Orange',

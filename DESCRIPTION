@@ -1,5 +1,5 @@
-Package: autonormalize
-Title: Database normalization for data frames
+Package: autonormalise
+Title: Database normalisation for data frames
 Version: 0.0.0.9000
 Authors@R: 
     person("Mark", "Webster", , "markwebster204@yahoo.co.uk", role = c("aut", "cre"))
