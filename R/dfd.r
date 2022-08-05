@@ -1,18 +1,8 @@
 # Scratch pad
-# - normalised dependencies don't currently account for bijections in children.
 # - make.names docs: R didn't support underscores in names until 1.9.0, I need
 # to set a limit for R version in DESCRIPTION.
-# - idea for removing transitives: for references, use n and m to build starting
-# reference matrix instead, say x, then solve(I-x, x) gives total reference
-# journeys between tables. Totals greater than one indicate transitive
-# references. Alternatively, we create all non-zero powers of x, and for all
-# powers greater than one, elements of x get set equal to (x && !power(x)).
-# might not be good if we expect matrix to be sparse, which we probably do. in
-# that case, maybe traverse which(arr.ind = TRUE) somehow instead. maybe do that
-# in dependency filtering too? probably already do... but in that case would
-# break if given a dependency cycle, i.e. bijections.
-# - allow filter = TRUE to be passed to dfd, so we don't check functional
-# dependencies that will be ignored later anyway.
+# - add vertical bar sets in tables plot, showing candidate key sets
+# - add partitions
 
 #' DFD algorithm
 #'
