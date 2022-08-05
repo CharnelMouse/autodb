@@ -288,7 +288,6 @@ powerset_nodes <- function(n) {
   if (n == 0)
     return(list(
       bits = raw(),
-      logicals = logical(),
       children = list(),
       parents = list(),
       category = integer(),
@@ -297,7 +296,6 @@ powerset_nodes <- function(n) {
   if (n == 1)
     return(list(
       bits = list(intToBits(1)),
-      logicals = list(TRUE),
       children = list(integer()),
       parents = list(integer()),
       category = 0L,
@@ -315,7 +313,6 @@ powerset_nodes <- function(n) {
   }
   list(
     bits = node_bits,
-    logicals = lapply(node_bits, \(x) as.logical(x)[seq.int(n)]),
     children = children,
     parents = parents,
     category = rep(0L, n_nonempty_subsets),
@@ -335,7 +332,6 @@ reduce_powerset <- function(powerset, n) {
     `[`,
     seq_len(boundary)
   )
-  trimmed$logicals <- lapply(trimmed$logicals, `[`, seq_len(n))
   trimmed$parents <- lapply(trimmed$parents, \(x) x[x <= boundary])
   trimmed
 }
