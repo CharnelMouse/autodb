@@ -4,7 +4,7 @@
 \alias{find_dependencies}
 \title{Finds dependencies within dataframe df with the DFD search algorithm}
 \usage{
-find_dependencies(df, accuracy, filter = FALSE)
+find_dependencies(df, accuracy, exclude_class = character())
 }
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
@@ -12,10 +12,9 @@ find_dependencies(df, accuracy, filter = FALSE)
 \item{accuracy}{a numeric in (0, 1], giving the accuracy threshold threshold
 required in order to conclude a dependency.}
 
-\item{filter}{a logical, indicating whether to filter the discovered
-functional dependencies before normalising the data.frame. Dependencies
-with any determinant attributes that aren't characters, integers, factors,
-or logicals are removed.}
+\item{exclude_class}{a character vector, indicating classes of attributes to
+not consider as members of keys. Attributes are excluded if they inherit
+from any given class.}
 }
 \value{
 A list of dependencies.

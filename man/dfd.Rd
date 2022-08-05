@@ -4,7 +4,13 @@
 \alias{dfd}
 \title{DFD algorithm}
 \usage{
-dfd(df, accuracy, filter = FALSE, progress = 0L, progress_file = "")
+dfd(
+  df,
+  accuracy,
+  exclude_class = character(),
+  progress = 0L,
+  progress_file = ""
+)
 }
 \arguments{
 \item{df}{a data.frame, the relation to evaluate.}
@@ -12,10 +18,9 @@ dfd(df, accuracy, filter = FALSE, progress = 0L, progress_file = "")
 \item{accuracy}{a numeric in (0, 1]: the accuracy threshold required in order
 to conclude a dependency.}
 
-\item{filter}{a logical, indicating whether to filter the candidate
-determinant attributes before looking for dependencies. Attributes that
-aren't characters, integers, factors, or logicals are not considered for
-determinant sets.}
+\item{exclude_class}{a character vector, indicating classes of attributes to
+not consider as members of determinant_sets. Attributes are excluded if
+they inherit from any given class.}
 
 \item{progress}{an integer, for whether to display progress to the user. 0
 (default) displays nothing. 1 notes the start of finding each non-constant

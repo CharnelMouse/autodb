@@ -4,7 +4,7 @@
 \alias{auto_entityset}
 \title{Creates a normalised entity set from a dataframe}
 \usage{
-auto_entityset(df, accuracy, name = NA_character_, filter = FALSE)
+auto_entityset(df, accuracy, name = NA_character_, exclude_class = character())
 }
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
@@ -14,10 +14,9 @@ required in order to conclude a dependency.}
 
 \item{name}{a character scalar, giving the name of the created entity set.}
 
-\item{filter}{a logical, indicating whether to filter the discovered
-functional dependencies before normalising the data.frame. Dependencies
-with any determinant attributes that aren't characters, integers, factors,
-or logicals are removed.}
+\item{exclude_class}{a character vector, indicating classes of attributes to
+not consider as members of keys. Attributes are excluded if they inherit
+from any given class.}
 }
 \value{
 An entity set, containing the data normalised into the required

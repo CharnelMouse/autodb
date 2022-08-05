@@ -42,15 +42,15 @@ describe("dfd", {
     deps <- dfd(df, 1)
     expect_identical(deps$dependencies$A, list(c("B", "C")))
   })
-  it("only uses attributes with correct types as determinants if filter = TRUE", {
+  it("doesn't consider attributes as determinants if type is in exclude_class", {
     # no determinants to check, returns with calling find_LHSs
     df <- data.frame(A = 1:3, B = c(1, 1, 2), C = c(1, 2, 2))
-    deps <- dfd(df, 1, filter = TRUE)
+    deps <- dfd(df, 1, exclude_class = "numeric")
     expect_identical(deps$dependencies$A, list())
 
     # does call find_LHSs
     df2 <- data.frame(A = 1:3, B = c(1L, 1L, 2L), C = c(1, 2, 2))
-    deps <- dfd(df2, 1, filter = TRUE)
+    deps <- dfd(df2, 1, exclude_class = "numeric")
     expect_identical(deps$dependencies$A, list())
   })
   it("finds dependencies for the team data in test-normalise", {

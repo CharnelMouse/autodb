@@ -4,8 +4,8 @@
 #'
 #' @return A list of dependencies.
 #' @export
-find_dependencies <- function(df, accuracy, filter = FALSE) {
-  dfd(df, accuracy, filter = filter)
+find_dependencies <- function(df, accuracy, exclude_class = character()) {
+  dfd(df, accuracy, exclude_class = exclude_class)
 }
 
 #' Creates a normalised entity set from a dataframe
@@ -14,10 +14,9 @@ find_dependencies <- function(df, accuracy, filter = FALSE) {
 #' @param accuracy a numeric in (0, 1], giving the accuracy threshold threshold
 #'   required in order to conclude a dependency.
 #' @param name a character scalar, giving the name of the created entity set.
-#' @param filter a logical, indicating whether to filter the discovered
-#'   functional dependencies before normalising the data.frame. Dependencies
-#'   with any determinant attributes that aren't characters, integers, factors,
-#'   or logicals are removed.
+#' @param exclude_class a character vector, indicating classes of attributes to
+#'   not consider as members of keys. Attributes are excluded if they inherit
+#'   from any given class.
 #'
 #' @return An entity set, containing the data normalised into the required
 #'   number of tables.
@@ -26,12 +25,11 @@ auto_entityset <- function(
   df,
   accuracy,
   name = NA_character_,
-  filter = FALSE
+  exclude_class = character()
 ) {
-  deps <- find_dependencies(df, accuracy, filter = filter)
+  deps <- find_dependencies(df, accuracy, exclude_class = exclude_class)
   deps$dependencies <- flatten(deps$dependencies)
-  if (filter)
-    deps$dependencies <- filter(deps$dependencies, df)
+  deps$dependencies <- filter(deps$dependencies, df, exclude_class)
   norm_deps <- normalise(deps)
   tables <- decompose(df, norm_deps)
   EntitySet(tables, norm_deps, name)
@@ -52,16 +50,16 @@ flatten <- function(dependencies) {
   result
 }
 
-filter <- function(relations, df) {
-  # Removes functional dependencies where any determinant attributes do no
-  # contain strings, integers, factors, or logicals in the data.frame. The idea
-  # is that, for example, we don't expect floats to be part of a key.
+filter <- function(relations, df, exclude_class) {
+  # Removes functional dependencies where any determinant attributes do not
+  # inherit from given classes in df. The idea is that, for example, we don't
+  # expect floats to be part of a key.
   for (rel in relations) {
     lhs <- rel[[1]]
     for (attr in lhs) {
-      if (!inherits(
+      if (inherits(
         df[[attr]],
-        c("character", "integer", "factor", "logical")
+        exclude_class
       )) {
         relations <- setdiff(relations, list(rel))
         break

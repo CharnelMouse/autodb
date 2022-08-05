@@ -44,10 +44,9 @@
 #' @param df a data.frame, the relation to evaluate.
 #' @param accuracy a numeric in (0, 1]: the accuracy threshold required in order
 #'   to conclude a dependency.
-#' @param filter a logical, indicating whether to filter the candidate
-#'   determinant attributes before looking for dependencies. Attributes that
-#'   aren't characters, integers, factors, or logicals are not considered for
-#'   determinant sets.
+#' @param exclude_class a character vector, indicating classes of attributes to
+#'   not consider as members of determinant_sets. Attributes are excluded if
+#'   they inherit from any given class.
 #' @param progress an integer, for whether to display progress to the user. 0
 #'   (default) displays nothing. 1 notes the start of finding each non-constant
 #'   attribute's determinant sets. 2 also briefly describes the status of the
@@ -64,23 +63,19 @@
 #'   \code{df}, in order. This is kept to serve as a default priority order for
 #'   the attributes during normalisation.
 #' @export
-dfd <- function(df, accuracy, filter = FALSE, progress = 0L, progress_file = "") {
+dfd <- function(df, accuracy, exclude_class = character(), progress = 0L, progress_file = "") {
   n_cols <- ncol(df)
   column_names <- colnames(df)
   if (n_cols == 0)
     return(list())
   if (n_cols == 1)
     return(stats::setNames(list(list()), column_names))
-  valid_determinant <- if (filter) {
-    vapply(
-      df,
-      inherits,
-      logical(1),
-      c("character", "integer", "factor", "logical")
-    )
-  }else{
-    rep(TRUE, ncol(df))
-  }
+  valid_determinant <- !vapply(
+    df,
+    inherits,
+    logical(1),
+    exclude_class
+  )
   # convert all columns to integers, since they're checked for duplicates more
   # quickly when calculating partitions
   df <- data.frame(lapply(df, \(x) as.integer(factor(x)))) |>
