@@ -4,7 +4,12 @@
 #'
 #' @return A list of dependencies.
 #' @export
-find_dependencies <- function(df, accuracy, exclude = character(), exclude_class = character()) {
+find_dependencies <- function(
+  df,
+  accuracy,
+  exclude = character(),
+  exclude_class = character()
+) {
   dfd(df, accuracy, exclude = exclude, exclude_class = exclude_class)
 }
 
@@ -31,7 +36,12 @@ auto_entityset <- function(
   exclude = character(),
   exclude_class = character()
 ) {
-  deps <- find_dependencies(df, accuracy, exclude = exclude, exclude_class = exclude_class)
+  deps <- find_dependencies(
+    df,
+    accuracy,
+    exclude = exclude,
+    exclude_class = exclude_class
+  )
   deps$dependencies <- flatten(deps$dependencies)
   norm_deps <- normalise(deps)
   tables <- decompose(df, norm_deps)

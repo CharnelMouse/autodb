@@ -87,6 +87,7 @@ dfd <- function(
     exclude_class
   )
   valid_determinant <- valid_determinant_name & valid_determinant_class
+  valid_determinant_attrs_prefixing <- column_names[valid_determinant]
   # convert all columns to integers, since they're checked for duplicates more
   # quickly when calculating partitions
   df <- data.frame(lapply(df, \(x) as.integer(factor(x)))) |>
@@ -104,7 +105,10 @@ dfd <- function(
         cat(paste(attr, "is fixed\n"), file = progress_file, append = TRUE)
       fixed <- c(fixed, attr)
       nonfixed <- setdiff(nonfixed, attr)
-      dependencies[[attr]] <- as.list(setdiff(column_names[valid_determinant], attr))
+      dependencies[[attr]] <- as.list(setdiff(
+        valid_determinant_attrs_prefixing,
+        attr
+      ))
     }
   }
   if (progress && any(!valid_determinant)) {
@@ -125,9 +129,10 @@ dfd <- function(
   # If there are dependents that aren't valid determinants,
   # this is number of valid determinant attributes. If there
   # aren't, subtract one.
-  valid_determinant_attrs <- intersect(nonfixed, column_names[valid_determinant])
+  valid_determinant_attrs <- intersect(nonfixed, valid_determinant_attrs_prefixing)
   n_dependent_only <- length(nonfixed) - length(valid_determinant_attrs)
-  max_n_lhs_attrs <- length(valid_determinant_attrs) - as.integer(n_dependent_only == 0)
+  max_n_lhs_attrs <- length(valid_determinant_attrs) -
+    as.integer(n_dependent_only == 0)
   # using 0 would allow for one more column, but that's for a later date
   lhs_attrs_limit <- floor(log(.Machine$integer.max, 2))
   if (max_n_lhs_attrs > lhs_attrs_limit)
@@ -153,7 +158,17 @@ dfd <- function(
             file = progress_file,
             append = TRUE
           )
-        lhss <- find_LHSs(rhs, lhs_attrs, nodes, simple_nodes, df, partitions, accuracy, progress, progress_file)
+        lhss <- find_LHSs(
+          rhs,
+          lhs_attrs,
+          nodes,
+          simple_nodes,
+          df,
+          partitions,
+          accuracy,
+          progress,
+          progress_file
+        )
         dependencies[[rhs]] <- c(dependencies[[rhs]], lhss)
       }
     }
