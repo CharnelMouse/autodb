@@ -52,6 +52,11 @@ describe("dfd", {
     df2 <- data.frame(A = 1:3, B = c(1L, 1L, 2L), C = c(1, 2, 2))
     deps <- dfd(df2, 1, exclude = "C")
     expect_identical(deps$dependencies$A, list())
+
+    # for constant dependents
+    df3 <- data.frame(A = 1:3, B = c(1L, 1L, 1L))
+    deps <- dfd(df3, 1, exclude = "A")
+    expect_identical(deps$dependencies$B, list())
   })
   it("doesn't consider attributes as determinants if type is in exclude_class", {
     # no determinants to check, returns with calling find_LHSs

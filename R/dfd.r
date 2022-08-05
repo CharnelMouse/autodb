@@ -104,7 +104,7 @@ dfd <- function(
         cat(paste(attr, "is fixed\n"), file = progress_file, append = TRUE)
       fixed <- c(fixed, attr)
       nonfixed <- setdiff(nonfixed, attr)
-      dependencies[[attr]] <- as.list(setdiff(column_names, attr))
+      dependencies[[attr]] <- as.list(setdiff(column_names[valid_determinant], attr))
     }
   }
   if (progress && any(!valid_determinant)) {

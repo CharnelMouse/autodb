@@ -33,7 +33,6 @@ auto_entityset <- function(
 ) {
   deps <- find_dependencies(df, accuracy, exclude = exclude, exclude_class = exclude_class)
   deps$dependencies <- flatten(deps$dependencies)
-  deps$dependencies <- filter(deps$dependencies, df, exclude, exclude_class)
   norm_deps <- normalise(deps)
   tables <- decompose(df, norm_deps)
   EntitySet(tables, norm_deps, name)
@@ -52,26 +51,4 @@ flatten <- function(dependencies) {
     )
   }
   result
-}
-
-filter <- function(relations, df, exclude, exclude_class) {
-  # Removes functional dependencies where any determinant attributes do not
-  # inherit from given classes in df, or are contained in exclude. The idea is
-  # that, for example, we don't expect floats to be part of a key.
-  for (rel in relations) {
-    lhs <- rel[[1]]
-    for (attr in lhs) {
-      if (
-        attr %in% exclude ||
-        inherits(
-          df[[attr]],
-          exclude_class
-        )
-      ) {
-        relations <- setdiff(relations, list(rel))
-        break
-      }
-    }
-  }
-  relations
 }

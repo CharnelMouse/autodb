@@ -41,7 +41,7 @@ describe("auto_entityset", {
       Format = c("Hardcover", "E-book", "E-book", "Paperback"),
       Author = rep(c("Chad Russell", "E.F. Codd"), each = 2),
       Author_Nationality = rep(c("American", "British"), each = 2),
-      Price = c(4999L, 2234L, 1388L, 3999L),
+      Price = c(4999, 2234, 1388, 3999),
       Thickness = "Thick",
       Genre_ID = rep(1:2, each = 2),
       Genre_Name = rep(c("Tutorial", "Popular science"), each = 2),
@@ -56,7 +56,7 @@ describe("auto_entityset", {
       es_nonfiltered$dataframes$Price$keys,
       list("Price", c("Title", "Format"))
     )
-    es_filtered <- auto_entityset(df, 1, exclude_class = "integer")
+    es_filtered <- auto_entityset(df, 1, exclude_class = "numeric")
     expect_setequal(
       names(es_filtered$dataframes),
       c("Title_Format", "Title", "Format")

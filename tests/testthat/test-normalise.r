@@ -198,23 +198,6 @@ test_that("drop_primary_dups", {
   expect_true(new_df$light_on[new_df$requires_light & new_df$is_dark])
 })
 
-test_that("filter", {
-  keys <- list(
-    list(c('A'), 'E'),
-    list(c('A', 'B'), 'E'),
-    list(c('C', 'D'), 'E')
-  )
-  df <- data.frame(
-    A = numeric(),
-    B = integer(),
-    C = factor(),
-    D = logical()
-  )
-
-  keys <- filter(keys, df, character(), "numeric")
-  expect_identical(keys, list(list(c('C', 'D'), 'E')))
-})
-
 describe("make_indexes", {
   new_dfs <- list(
     id = list(
