@@ -47,6 +47,10 @@
 #' @param df a data.frame, the relation to evaluate.
 #' @param accuracy a numeric in (0, 1]: the accuracy threshold required in order
 #'   to conclude a dependency.
+#' @param filter a logical, indicating whether to filter the candidate
+#'   determinant attributes before looking for dependencies. Attributes that
+#'   aren't characters, integers, factors, or logicals are not considered for
+#'   determinant sets.
 #' @param progress an integer, for whether to display progress to the user. 0
 #'   (default) displays nothing. 1 notes the start of finding each non-constant
 #'   attribute's determinant sets. 2 also briefly describes the status of the
@@ -63,13 +67,23 @@
 #'   \code{df}, in order. This is kept to serve as a default priority order for
 #'   the attributes during normalisation.
 #' @export
-dfd <- function(df, accuracy, progress = 0L, progress_file = "") {
+dfd <- function(df, accuracy, filter = FALSE, progress = 0L, progress_file = "") {
   n_cols <- ncol(df)
   column_names <- colnames(df)
   if (n_cols == 0)
     return(list())
   if (n_cols == 1)
     return(stats::setNames(list(list()), column_names))
+  valid_determinant <- if (filter) {
+    vapply(
+      df,
+      inherits,
+      logical(1),
+      c("character", "integer", "factor", "logical")
+    )
+  }else{
+    rep(TRUE, ncol(df))
+  }
   # convert all columns to integers, since they're checked for duplicates more
   # quickly when calculating partitions
   df <- data.frame(lapply(df, \(x) as.integer(factor(x)))) |>
@@ -90,23 +104,55 @@ dfd <- function(df, accuracy, progress = 0L, progress_file = "") {
       dependencies[[attr]] <- as.list(setdiff(column_names, attr))
     }
   }
-  n_lhs_attrs <- length(nonfixed) - 1L
+  if (progress && any(!valid_determinant)) {
+    cat(
+      paste(
+        "attributes not considered as determinants:",
+        toString(column_names[!valid_determinant]),
+        "\n"
+      ),
+      file = progress_file,
+      append = TRUE
+    )
+  }
+  # For nonfixed attributes, all can be dependents, but
+  # might not all be valid determinants.
+  # Maximum size of determinant set for a dependent is number
+  # of other valid determinants.
+  # If there are dependents that aren't valid determinants,
+  # this is number of valid determinant attributes. If there
+  # aren't, subtract one.
+  valid_determinant_attrs <- intersect(nonfixed, column_names[valid_determinant])
+  n_dependent_only <- length(nonfixed) - length(valid_determinant_attrs)
+  max_n_lhs_attrs <- length(valid_determinant_attrs) - as.integer(n_dependent_only == 0)
   # using 0 would allow for one more column, but that's for a later date
-  max_attrs <- floor(log(.Machine$integer.max, 2))
-  if (n_lhs_attrs > max_attrs)
+  lhs_attrs_limit <- floor(log(.Machine$integer.max, 2))
+  if (max_n_lhs_attrs > lhs_attrs_limit)
     stop(paste(
-      "only data.frames with up to", max_attrs, "columns currently supported"
+      "only data.frames with up to", lhs_attrs_limit, "columns currently supported"
     ))
-  if (n_lhs_attrs > 0) {
-    nodes <- powerset_nodes(n_lhs_attrs)
-    simple_nodes <- as.integer(2^(seq.int(n_lhs_attrs) - 1))
+  if (max_n_lhs_attrs > 0) {
+    powerset <- powerset_nodes(max_n_lhs_attrs)
     for (rhs in nonfixed) {
       if (progress)
         cat(paste("dependent", rhs, "\n"), file = progress_file, append = TRUE)
-      lhs_attrs <- setdiff(nonfixed, rhs)
-      stopifnot(length(lhs_attrs) == n_lhs_attrs)
-      lhss <- find_LHSs(rhs, lhs_attrs, nodes, simple_nodes, df, partitions, accuracy, progress, progress_file)
-      dependencies[[rhs]] <- c(dependencies[[rhs]], lhss)
+      lhs_attrs <- setdiff(valid_determinant_attrs, rhs)
+      n_lhs_attrs <- length(lhs_attrs)
+      expected_n_lhs_attrs <- max_n_lhs_attrs -
+        (n_dependent_only > 0 && is.element(rhs, valid_determinant_attrs))
+      stopifnot(n_lhs_attrs == expected_n_lhs_attrs)
+      if (n_lhs_attrs > 0) {
+        nodes <- reduce_powerset(powerset, n_lhs_attrs)
+        simple_nodes <- as.integer(2^(seq.int(n_lhs_attrs) - 1))
+        if (progress)
+          cat(
+            "determinants available, starting search\n",
+            file = progress_file,
+            append = TRUE
+          )
+        lhss <- find_LHSs(rhs, lhs_attrs, nodes, simple_nodes, df, partitions, accuracy, progress, progress_file)
+        dependencies[[rhs]] <- c(dependencies[[rhs]], lhss)
+      }
     }
   }
   list(dependencies = dependencies, attrs = column_names)

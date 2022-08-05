@@ -4,13 +4,18 @@
 \alias{find_dependencies}
 \title{Finds dependencies within dataframe df with the DFD search algorithm}
 \usage{
-find_dependencies(df, accuracy)
+find_dependencies(df, accuracy, filter = FALSE)
 }
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
 
 \item{accuracy}{a numeric in (0, 1], giving the accuracy threshold threshold
 required in order to conclude a dependency.}
+
+\item{filter}{a logical, indicating whether to filter the discovered
+functional dependencies before normalising the data.frame. Dependencies
+with any determinant attributes that aren't characters, integers, factors,
+or logicals are removed.}
 }
 \value{
 A list of dependencies.

@@ -4,8 +4,8 @@
 #'
 #' @return A list of dependencies.
 #' @export
-find_dependencies <- function(df, accuracy) {
-  dfd(df, accuracy)
+find_dependencies <- function(df, accuracy, filter = FALSE) {
+  dfd(df, accuracy, filter = filter)
 }
 
 #' Creates a normalised entity set from a dataframe
@@ -28,7 +28,7 @@ auto_entityset <- function(
   name = NA_character_,
   filter = FALSE
 ) {
-  deps <- find_dependencies(df, accuracy)
+  deps <- find_dependencies(df, accuracy, filter = filter)
   deps$dependencies <- flatten(deps$dependencies)
   if (filter)
     deps$dependencies <- filter(deps$dependencies, df)
