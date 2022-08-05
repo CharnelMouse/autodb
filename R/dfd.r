@@ -63,7 +63,13 @@
 #'   \code{df}, in order. This is kept to serve as a default priority order for
 #'   the attributes during normalisation.
 #' @export
-dfd <- function(df, accuracy, exclude_class = character(), progress = 0L, progress_file = "") {
+dfd <- function(
+  df,
+  accuracy,
+  exclude_class = character(),
+  progress = 0L,
+  progress_file = ""
+) {
   n_cols <- ncol(df)
   column_names <- colnames(df)
   if (n_cols == 0)
