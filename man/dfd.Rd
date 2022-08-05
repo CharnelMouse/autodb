@@ -7,6 +7,7 @@
 dfd(
   df,
   accuracy,
+  exclude = character(),
   exclude_class = character(),
   progress = 0L,
   progress_file = ""
@@ -17,6 +18,10 @@ dfd(
 
 \item{accuracy}{a numeric in (0, 1]: the accuracy threshold required in order
 to conclude a dependency.}
+
+\item{exclude}{a character vector, containing names of attributes to not
+consider as members of determinant sets. If names are given that aren't
+present in \code{df}, the user is given a warning.}
 
 \item{exclude_class}{a character vector, indicating classes of attributes to
 not consider as members of determinant_sets. Attributes are excluded if

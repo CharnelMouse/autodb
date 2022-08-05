@@ -211,7 +211,7 @@ test_that("filter", {
     D = logical()
   )
 
-  keys <- filter(keys, df, "numeric")
+  keys <- filter(keys, df, character(), "numeric")
   expect_identical(keys, list(list(c('C', 'D'), 'E')))
 })
 

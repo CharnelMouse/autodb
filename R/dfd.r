@@ -44,6 +44,9 @@
 #' @param df a data.frame, the relation to evaluate.
 #' @param accuracy a numeric in (0, 1]: the accuracy threshold required in order
 #'   to conclude a dependency.
+#' @param exclude a character vector, containing names of attributes to not
+#'   consider as members of determinant sets. If names are given that aren't
+#'   present in \code{df}, the user is given a warning.
 #' @param exclude_class a character vector, indicating classes of attributes to
 #'   not consider as members of determinant_sets. Attributes are excluded if
 #'   they inherit from any given class.
@@ -66,6 +69,7 @@
 dfd <- function(
   df,
   accuracy,
+  exclude = character(),
   exclude_class = character(),
   progress = 0L,
   progress_file = ""
@@ -76,12 +80,16 @@ dfd <- function(
     return(list())
   if (n_cols == 1)
     return(stats::setNames(list(list()), column_names))
-  valid_determinant <- !vapply(
+  if (any(!is.element(exclude, column_names)))
+    warning("there are attribute names in exclude not present in df")
+  valid_determinant_name <- !is.element(column_names, exclude)
+  valid_determinant_class <- !vapply(
     df,
     inherits,
     logical(1),
     exclude_class
   )
+  valid_determinant <- valid_determinant_name & valid_determinant_class
   # convert all columns to integers, since they're checked for duplicates more
   # quickly when calculating partitions
   df <- data.frame(lapply(df, \(x) as.integer(factor(x)))) |>
