@@ -30,13 +30,10 @@
 #'   subsets/supersets are dependencies/non-dependencies, instead of waiting to
 #'   exhaust the adjacent subsets/supersets to visit when picking the next node
 #'   to visit.
-#'   \item Some attributes can be designated, ahead of time, as not being
-#'   candidate members for determinant sets. This reduces the number of
-#'   candidate determinant sets to be searched, saving time by not searching for
-#'   determinant sets that would be ignored or removed later anyway. Currently,
-#'   this can only be done based on attribute types: determinants must be
-#'   strings, integers, factors, or logicals, or some type that inherits from
-#'   those.
+#'   \item Some attributes, or attribute types, can be designated, ahead of
+#'   time, as not being candidate members for determinant sets. This reduces the
+#'   number of candidate determinant sets to be searched, saving time by not
+#'   searching for determinant sets that the user would remove later anyway.
 #'   \item We do not yet preserve partitions, just their calculated sizes.
 #'   \item We do not yet keep hashmaps to manage subset/superset relationships,
 #'   as described in Section 3.5 of the original paper.
