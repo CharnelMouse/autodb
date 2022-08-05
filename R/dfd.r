@@ -1,6 +1,6 @@
 # Scratch pad
 # - make.names docs: R didn't support underscores in names until 1.9.0, I need
-# to set a limit for R version in DESCRIPTION.
+# to set a limit for R version in DESCRIPTION if I remove the 4.1.0 pipe usage.
 # - add vertical bar sets in tables plot, showing candidate key sets
 # - add partitions
 
