@@ -7,10 +7,9 @@
 find_dependencies <- function(
   df,
   accuracy,
-  exclude = character(),
-  exclude_class = character()
+  ...
 ) {
-  dfd(df, accuracy, exclude = exclude, exclude_class = exclude_class)
+  dfd(df, accuracy, ...)
 }
 
 #' Creates a normalised entity set from a dataframe
@@ -19,12 +18,7 @@ find_dependencies <- function(
 #' @param accuracy a numeric in (0, 1], giving the accuracy threshold threshold
 #'   required in order to conclude a dependency.
 #' @param name a character scalar, giving the name of the created entity set.
-#' @param exclude a character vector, containing names of attributes to not
-#'   consider as members of keys. If names are given that aren't present in
-#'   \code{df}, the user is given a warning.
-#' @param exclude_class a character vector, indicating classes of attributes to
-#'   not consider as members of keys. Attributes are excluded if they inherit
-#'   from any given class.
+#' @param ... further arguments passed on to \code{\link{dfd}}.
 #'
 #' @return An entity set, containing the data normalised into the required
 #'   number of tables.
@@ -33,14 +27,12 @@ auto_entityset <- function(
   df,
   accuracy,
   name = NA_character_,
-  exclude = character(),
-  exclude_class = character()
+  ...
 ) {
   deps <- find_dependencies(
     df,
     accuracy,
-    exclude = exclude,
-    exclude_class = exclude_class
+    ...
   )
   deps$dependencies <- flatten(deps$dependencies)
   norm_deps <- normalise(deps)

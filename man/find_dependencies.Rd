@@ -4,12 +4,7 @@
 \alias{find_dependencies}
 \title{Finds dependencies within dataframe df with the DFD search algorithm}
 \usage{
-find_dependencies(
-  df,
-  accuracy,
-  exclude = character(),
-  exclude_class = character()
-)
+find_dependencies(df, accuracy, ...)
 }
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
@@ -17,13 +12,7 @@ find_dependencies(
 \item{accuracy}{a numeric in (0, 1], giving the accuracy threshold threshold
 required in order to conclude a dependency.}
 
-\item{exclude}{a character vector, containing names of attributes to not
-consider as members of keys. If names are given that aren't present in
-\code{df}, the user is given a warning.}
-
-\item{exclude_class}{a character vector, indicating classes of attributes to
-not consider as members of keys. Attributes are excluded if they inherit
-from any given class.}
+\item{...}{further arguments passed on to \code{\link{dfd}}.}
 }
 \value{
 A list of dependencies.
