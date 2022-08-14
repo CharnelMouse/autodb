@@ -127,19 +127,23 @@ df_string <- function(dataframe, df_name) {
     seq_along(col_names),
     \(n) {
       col_class <- class(df[[n]])[[1]]
-      characteristics <- c(
-        col_class,
-        if (col_names[n] %in% unlist(keys))
-          "prime"
-      )
+      key_memberships <- vapply(keys, is.element, el = col_names[n], logical(1))
       paste0(
-        "    <TR><TD PORT=\"",
+        "    <TR><TD PORT=\"TO_",
         col_snake[n],
         "\">",
         col_names[n],
-        " : ",
-        toString(characteristics),
-        "</TD></TR>"
+        "</TD>",
+        paste(
+          vapply(
+            key_memberships,
+            \(m) if (m) "<TD BGCOLOR=\"black\"></TD>" else "<TD></TD>",
+            character(1)
+          ),
+          collapse = ""
+        ),
+        "<TD PORT=\"", paste0("FROM_", col_snake[n]), "\">", col_class, "</TD>",
+        "</TR>"
       )
     },
     character(1)
@@ -148,7 +152,7 @@ df_string <- function(dataframe, df_name) {
 
   nrows <- nrow(df)
   label <- paste0(
-    "    <TR><TD>",
+    "    <TR><TD COLSPAN=\"", length(keys) + 2, "\">",
     df_name,
     " (",
     nrows,
@@ -178,13 +182,13 @@ reference_string <- function(reference) {
     "  ",
     paste(
       snakecase::to_snake_case(reference[1]),
-      snakecase::to_snake_case(reference[2]),
+      paste0("FROM_", snakecase::to_snake_case(reference[2])),
       sep = ":"
     ),
     " -> ",
     paste(
       snakecase::to_snake_case(reference[3]),
-      snakecase::to_snake_case(reference[4]),
+      paste0("TO_", snakecase::to_snake_case(reference[4])),
       sep = ":"
     ),
     ";"

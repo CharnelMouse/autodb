@@ -26,19 +26,45 @@ describe("plot_string", {
     nrows,
     attr_names,
     attr_labels,
-    attr_chars
+    attr_classes,
+    key_memberships
   ) {
+    ncols <- ncol(key_memberships) + 2L
     paste(
       paste0("  ", df_label, " [label = <"),
       "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
-      paste0("    <TR><TD>", df_name, " (", nrows, " rows)</TD></TR>"),
+      paste0(
+        "    <TR><TD COLSPAN=\"",
+        ncols,
+        "\">",
+        df_name,
+        " (",
+        nrows,
+        " rows)</TD></TR>"
+      ),
       paste(
-        "    <TR><TD PORT=\"",
+        "    <TR><TD PORT=\"TO_",
         attr_labels,
         "\">",
         attr_names,
-        " : ",
-        attr_chars,
+        "</TD>",
+        if (nrow(key_memberships) > 0)
+          apply(
+            key_memberships,
+            1,
+            \(ls) {
+              paste0(
+                "<TD",
+                ifelse(ls, " BGCOLOR=\"black\"", ""),
+                ">",
+                "</TD>"
+              )
+            }
+          ),
+        "<TD PORT=\"FROM_",
+        attr_labels,
+        "\">",
+        attr_classes,
         "</TD></TR>",
         sep = "",
         collapse = "\n"
@@ -135,7 +161,19 @@ describe("plot_string", {
           2,
           c("Title", "Author", "Pages", "Thickness", "Genre ID", "Publisher ID"),
           c("title", "author", "pages", "thickness", "genre_id", "publisher_id"),
-          c("character, prime", "character", "integer", "character", "integer", "integer")
+          c("character", "character", "integer", "character", "integer", "integer"),
+          matrix(
+            c(
+              TRUE,
+              FALSE,
+              FALSE,
+              FALSE,
+              FALSE,
+              FALSE
+            ),
+            nrow = 6,
+            byrow = TRUE
+          )
         ),
 
         test_df_strings(
@@ -144,7 +182,16 @@ describe("plot_string", {
           4,
           c("Title", "Format", "Price"),
           c("title", "format", "price"),
-          c("character, prime", "character, prime", "integer")
+          c("character", "character", "integer"),
+          matrix(
+            c(
+              TRUE,
+              TRUE,
+              FALSE
+            ),
+            nrow = 3,
+            byrow = TRUE
+          )
         ),
 
         test_df_strings(
@@ -153,7 +200,15 @@ describe("plot_string", {
           2,
           c("Author", "Author Nationality"),
           c("author", "author_nationality"),
-          c("character, prime", "character")
+          c("character", "character"),
+          matrix(
+            c(
+              TRUE,
+              FALSE
+            ),
+            nrow = 2,
+            byrow = TRUE
+          )
         ),
 
         test_df_strings(
@@ -162,14 +217,22 @@ describe("plot_string", {
           2,
           c("Genre ID", "Genre Name"),
           c("genre_id", "genre_name"),
-          c("integer, prime", "character")
+          c("integer", "character"),
+          matrix(
+            c(
+              TRUE,
+              FALSE
+            ),
+            nrow = 2,
+            byrow = TRUE
+          )
         ),
 
         "",
 
-        "  book:title -> format_price:title;",
-        "  book:author -> author:author;",
-        "  book:genre_id -> genre:genre_id;",
+        "  book:FROM_title -> format_price:TO_title;",
+        "  book:FROM_author -> author:TO_author;",
+        "  book:FROM_genre_id -> genre:TO_genre_id;",
         "}",
         "",
         sep = "\n"
@@ -265,7 +328,19 @@ describe("plot_string", {
           2,
           c("Title", "Author", "Pages", "Thickness", "Genre ID", "Publisher ID"),
           c("title", "author", "pages", "thickness", "genre_id", "publisher_id"),
-          c("character, prime", "character", "integer", "character", "integer", "integer")
+          c("character", "character", "integer", "character", "integer", "integer"),
+          matrix(
+            c(
+              TRUE,
+              FALSE,
+              FALSE,
+              FALSE,
+              FALSE,
+              FALSE
+            ),
+            nrow = 6,
+            byrow = TRUE
+          )
         ),
 
         test_df_strings(
@@ -274,7 +349,16 @@ describe("plot_string", {
           4,
           c("Title", "Format", "Price"),
           c("title", "format", "price"),
-          c("character, prime", "character, prime", "integer")
+          c("character", "character", "integer"),
+          matrix(
+            c(
+              TRUE,
+              TRUE,
+              FALSE
+            ),
+            nrow = 3,
+            byrow = TRUE
+          )
         ),
 
         test_df_strings(
@@ -283,7 +367,16 @@ describe("plot_string", {
           2,
           c("Author", "Author Nationality"),
           c("author", "author_nationality"),
-          c("character, prime", "character")
+          c("character", "character"),
+          matrix(
+            c(
+              TRUE,
+              FALSE
+            ),
+            nrow = 2,
+            byrow = TRUE
+          )
+
         ),
 
         test_df_strings(
@@ -292,14 +385,22 @@ describe("plot_string", {
           2,
           c("Genre ID", "Genre Name"),
           c("genre_id", "genre_name"),
-          c("integer, prime", "character")
+          c("integer", "character"),
+          matrix(
+            c(
+              TRUE,
+              FALSE
+            ),
+            nrow = 2,
+            byrow = TRUE
+          )
         ),
 
         "",
 
-        "  book:title -> format_price:title;",
-        "  book:author -> author:author;",
-        "  book:genre_id -> genre:genre_id;",
+        "  book:FROM_title -> format_price:TO_title;",
+        "  book:FROM_author -> author:TO_author;",
+        "  book:FROM_genre_id -> genre:TO_genre_id;",
         "}",
         "",
         sep = "\n"
@@ -328,7 +429,8 @@ describe("plot_string", {
             2,
             c("a", "b"),
             c("a", "b"),
-            c("integer", "character")
+            c("integer", "character"),
+            matrix(nrow = 0, ncol = 0)
           ),
           "}",
           "",
@@ -354,7 +456,8 @@ describe("plot_string", {
             2,
             c("A 1", "b.2"),
             c("a_1", "b_2"),
-            c("integer", "character")
+            c("integer", "character"),
+            matrix(nrow = 0, ncol = 0)
           ),
           "}",
           "",
