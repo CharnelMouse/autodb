@@ -71,108 +71,122 @@ plot_table <- function(df, df_name, to_file = FALSE) {
 }
 
 plot_string_entityset <- function(es) {
-  gv_string <- paste0(
-    "digraph ", snakecase::to_snake_case(es$name), " {\n",
-    "  rankdir = \"LR\"\n",
-    "  node [shape=record];\n"
+  setup_string <- gv_setup_string(es$name)
+  df_strings <- mapply(
+    df_string,
+    es$dataframes,
+    names(es$dataframes)
+  ) |>
+    paste(collapse = "\n")
+  reference_strings <- vapply(
+    es$relationships,
+    reference_string,
+    character(1)
+  ) |>
+    paste(collapse = "\n")
+  teardown_string <- "}\n"
+  paste(
+    setup_string,
+    "",
+    df_strings,
+    "",
+    reference_strings,
+    teardown_string,
+    sep = "\n"
   )
-
-  df_string <- character()
-  for (df_name in names(es$dataframes)) {
-    df <- es$dataframes[[df_name]]$df
-    keys <- es$dataframes[[df_name]]$keys
-    df_snake <- snakecase::to_snake_case(df_name)
-    col_names <- colnames(df)
-    col_snake <- snakecase::to_snake_case(col_names)
-    column_typing_info <- vapply(
-      seq_along(col_names),
-      \(n) {
-        characteristics <- c(
-          class(df[[n]])[[1]],
-          if (col_names[n] %in% unlist(keys))
-            "prime"
-        )
-        paste0(
-          "<", col_snake[n], "> ", col_names[n], " : ",
-          toString(characteristics)
-        )
-      },
-      character(1)
-    )
-    columns_string <- paste(column_typing_info, collapse = "|")
-
-    nrows <- nrow(df)
-    label <- paste0(
-      df_name,
-      " (",
-      nrows,
-      " row",
-      if (nrows != 1) "s",
-      ")|",
-      columns_string
-    )
-    df_string <- paste0("  ", df_snake, " [label = \"", label, "\"];\n")
-    gv_string <- paste0(gv_string, df_string)
-  }
-
-  for (rel in es$relationships) {
-    rel_string <- paste0(
-      "  ",
-      paste(
-        snakecase::to_snake_case(rel[1]),
-        snakecase::to_snake_case(rel[2]),
-        sep = ":"
-      ),
-      " -> ",
-      paste(
-        snakecase::to_snake_case(rel[3]),
-        snakecase::to_snake_case(rel[4]),
-        sep = ":"
-      ),
-      ";"
-    )
-    gv_string <- paste(gv_string, rel_string, sep = "\n")
-  }
-
-  gv_string <- paste0(gv_string, "\n}\n")
-  gv_string
 }
 
 plot_string_df <- function(df, df_name) {
-  df_snake <- snakecase::to_snake_case(df_name)
-
-  gv_string <- paste0(
-    "digraph ", df_snake, " {\n",
-    "  rankdir = \"LR\"\n",
-    "  node [shape=record];\n"
+  setup_string <- gv_setup_string(df_name)
+  table_string <- df_string(list(df = df, keys = list()), df_name)
+  teardown_string <- "}\n"
+  paste(
+    setup_string,
+    "",
+    table_string,
+    teardown_string,
+    sep = "\n"
   )
+}
 
-  df_string <- character()
+gv_setup_string <- function(df_name) {
+  paste0(
+    "digraph ", snakecase::to_snake_case(df_name), " {\n",
+    "  rankdir = \"LR\"\n",
+    "  node [shape=plaintext];"
+  )
+}
+
+df_string <- function(dataframe, df_name) {
+  df <- dataframe$df
+  keys <- dataframe$keys
+  df_snake <- snakecase::to_snake_case(df_name)
   col_names <- colnames(df)
   col_snake <- snakecase::to_snake_case(col_names)
   column_typing_info <- vapply(
     seq_along(col_names),
     \(n) {
       col_class <- class(df[[n]])[[1]]
-      paste0("<", col_snake[n], "> ", col_names[n], " : ", col_class)
+      characteristics <- c(
+        col_class,
+        if (col_names[n] %in% unlist(keys))
+          "prime"
+      )
+      paste0(
+        "    <TR><TD PORT=\"",
+        col_snake[n],
+        "\">",
+        col_names[n],
+        " : ",
+        toString(characteristics),
+        "</TD></TR>"
+      )
     },
     character(1)
   )
-  columns_string <- paste(column_typing_info, collapse = "|")
+  columns_string <- paste(column_typing_info, collapse = "\n")
 
   nrows <- nrow(df)
   label <- paste0(
+    "    <TR><TD>",
     df_name,
     " (",
     nrows,
     " row",
     if (nrows != 1) "s",
-    ")|",
+    ")",
+    "</TD></TR>",
+    "\n",
     columns_string
   )
-  df_string <- paste0("  ", df_snake, " [label = \"", label, "\"];\n")
-  gv_string <- paste0(gv_string, df_string)
+  paste0(
+    "  ",
+    df_snake,
+    " ",
+    "[label = <",
+    "\n",
+    "    ",
+    "<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+    "\n",
+    label,
+    "\n    </TABLE>>];"
+  )
+}
 
-  gv_string <- paste0(gv_string, "}\n")
-  gv_string
+reference_string <- function(reference) {
+  paste0(
+    "  ",
+    paste(
+      snakecase::to_snake_case(reference[1]),
+      snakecase::to_snake_case(reference[2]),
+      sep = ":"
+    ),
+    " -> ",
+    paste(
+      snakecase::to_snake_case(reference[3]),
+      snakecase::to_snake_case(reference[4]),
+      sep = ":"
+    ),
+    ";"
+  )
 }

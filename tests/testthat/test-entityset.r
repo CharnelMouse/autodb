@@ -20,8 +20,36 @@ describe("EntitySet", {
 })
 
 describe("plot_string", {
+  test_df_strings <- function(
+    df_name,
+    df_label,
+    nrows,
+    attr_names,
+    attr_labels,
+    attr_chars
+  ) {
+    paste(
+      paste0("  ", df_label, " [label = <"),
+      "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+      paste0("    <TR><TD>", df_name, " (", nrows, " rows)</TD></TR>"),
+      paste(
+        "    <TR><TD PORT=\"",
+        attr_labels,
+        "\">",
+        attr_names,
+        " : ",
+        attr_chars,
+        "</TD></TR>",
+        sep = "",
+        collapse = "\n"
+      ),
+      "    </TABLE>>];",
+      sep = "\n"
+    )
+  }
+
   describe("entityset", {
-    it("creates a Graphviz record expression for the data.frame", {
+    it("creates a Graphviz HTML-like expression for the data.frame", {
       es <- list(
         name = "Book",
         dataframes = list(
@@ -97,37 +125,48 @@ describe("plot_string", {
       expected_string <- paste(
         "digraph book {",
         "  rankdir = \"LR\"",
-        "  node [shape=record];",
-        paste(
-          "  book [label = \"Book (2 rows)",
-          "<title> Title : character, prime",
-          "<author> Author : character",
-          "<pages> Pages : integer",
-          "<thickness> Thickness : character",
-          "<genre_id> Genre ID : integer",
-          "<publisher_id> Publisher ID : integer\"];",
-          sep = "|"
-        ),
-        paste(
-          "  format_price [label = \"Format Price (4 rows)",
-          "<title> Title : character, prime",
-          "<format> Format : character, prime",
-          "<price> Price : integer\"];",
-          sep = "|"
-        ),
-        paste(
-          "  author [label = \"Author (2 rows)",
-          "<author> Author : character, prime",
-          "<author_nationality> Author Nationality : character\"];",
-          sep = "|"
-        ),
-        paste(
-          "  genre [label = \"Genre (2 rows)",
-          "<genre_id> Genre ID : integer, prime",
-          "<genre_name> Genre Name : character\"];",
-          sep = "|"
-        ),
+        "  node [shape=plaintext];",
+
         "",
+
+        test_df_strings(
+          "Book",
+          "book",
+          2,
+          c("Title", "Author", "Pages", "Thickness", "Genre ID", "Publisher ID"),
+          c("title", "author", "pages", "thickness", "genre_id", "publisher_id"),
+          c("character, prime", "character", "integer", "character", "integer", "integer")
+        ),
+
+        test_df_strings(
+          "Format Price",
+          "format_price",
+          4,
+          c("Title", "Format", "Price"),
+          c("title", "format", "price"),
+          c("character, prime", "character, prime", "integer")
+        ),
+
+        test_df_strings(
+          "Author",
+          "author",
+          2,
+          c("Author", "Author Nationality"),
+          c("author", "author_nationality"),
+          c("character, prime", "character")
+        ),
+
+        test_df_strings(
+          "Genre",
+          "genre",
+          2,
+          c("Genre ID", "Genre Name"),
+          c("genre_id", "genre_name"),
+          c("integer, prime", "character")
+        ),
+
+        "",
+
         "  book:title -> format_price:title;",
         "  book:author -> author:author;",
         "  book:genre_id -> genre:genre_id;",
@@ -216,37 +255,48 @@ describe("plot_string", {
       expected_string <- paste(
         "digraph book {",
         "  rankdir = \"LR\"",
-        "  node [shape=record];",
-        paste(
-          "  book [label = \"Book (2 rows)",
-          "<title> Title : character, prime",
-          "<author> Author : character",
-          "<pages> Pages : integer",
-          "<thickness> Thickness : character",
-          "<genre_id> Genre ID : integer",
-          "<publisher_id> Publisher ID : integer\"];",
-          sep = "|"
-        ),
-        paste(
-          "  format_price [label = \"Format Price (4 rows)",
-          "<title> Title : character, prime",
-          "<format> Format : character, prime",
-          "<price> Price : integer\"];",
-          sep = "|"
-        ),
-        paste(
-          "  author [label = \"Author (2 rows)",
-          "<author> Author : character, prime",
-          "<author_nationality> Author Nationality : character\"];",
-          sep = "|"
-        ),
-        paste(
-          "  genre [label = \"Genre (2 rows)",
-          "<genre_id> Genre ID : integer, prime",
-          "<genre_name> Genre Name : character\"];",
-          sep = "|"
-        ),
+        "  node [shape=plaintext];",
+
         "",
+
+        test_df_strings(
+          "Book",
+          "book",
+          2,
+          c("Title", "Author", "Pages", "Thickness", "Genre ID", "Publisher ID"),
+          c("title", "author", "pages", "thickness", "genre_id", "publisher_id"),
+          c("character, prime", "character", "integer", "character", "integer", "integer")
+        ),
+
+        test_df_strings(
+          "Format Price",
+          "format_price",
+          4,
+          c("Title", "Format", "Price"),
+          c("title", "format", "price"),
+          c("character, prime", "character, prime", "integer")
+        ),
+
+        test_df_strings(
+          "Author",
+          "author",
+          2,
+          c("Author", "Author Nationality"),
+          c("author", "author_nationality"),
+          c("character, prime", "character")
+        ),
+
+        test_df_strings(
+          "Genre",
+          "genre",
+          2,
+          c("Genre ID", "Genre Name"),
+          c("genre_id", "genre_name"),
+          c("integer, prime", "character")
+        ),
+
+        "",
+
         "  book:title -> format_price:title;",
         "  book:author -> author:author;",
         "  book:genre_id -> genre:genre_id;",
@@ -261,7 +311,7 @@ describe("plot_string", {
     })
   })
   describe("data.frame", {
-    it("creates a Graphviz record expression for the data.frame", {
+    it("creates a Graphviz HTML-like expression for the data.frame", {
       df <- data.frame(
         a = 1:2, b = letters[1:2]
       )
@@ -270,8 +320,16 @@ describe("plot_string", {
         paste(
           "digraph table {",
           "  rankdir = \"LR\"",
-          "  node [shape=record];",
-          "  table [label = \"table (2 rows)|<a> a : integer|<b> b : character\"];",
+          "  node [shape=plaintext];",
+          "",
+          test_df_strings(
+            "table",
+            "table",
+            2,
+            c("a", "b"),
+            c("a", "b"),
+            c("integer", "character")
+          ),
           "}",
           "",
           sep = "\n"
@@ -288,8 +346,16 @@ describe("plot_string", {
         paste(
           "digraph table_test {",
           "  rankdir = \"LR\"",
-          "  node [shape=record];",
-          "  table_test [label = \"Table Test (2 rows)|<a_1> A 1 : integer|<b_2> b.2 : character\"];",
+          "  node [shape=plaintext];",
+          "",
+          test_df_strings(
+            "Table Test",
+            "table_test",
+            2,
+            c("A 1", "b.2"),
+            c("a_1", "b_2"),
+            c("integer", "character")
+          ),
           "}",
           "",
           sep = "\n"
