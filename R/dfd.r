@@ -610,8 +610,9 @@ minimise_seeds <- function(seeds, bitsets) {
 }
 
 compute_partitions <- function(df, rhs, lhs_set, partitions, accuracy) {
+  n_rows <- nrow(df)
   if (accuracy < 1)
-    approximate_dependencies(lhs_set, rhs, df, partitions, accuracy)
+    approximate_dependencies(lhs_set, rhs, df, partitions, n_rows, accuracy)
   else
     exact_dependencies(df, rhs, lhs_set, partitions)
 }
@@ -627,32 +628,31 @@ exact_dependencies <- function(df, rhs, lhs_set, partitions) {
 }
 
 partition <- function(attrs, df, partitions) {
-  # This only returns |C| for the equivalence class C, not its contents. This is
-  # less demanding on memory, but we cannot efficiently calculate the
-  # equivalence class for supersets.
+  # This only returns the number |p| of equivalence classes in the partition p,
+  # not its contents. This is less demanding on memory, but we cannot
+  # efficiently calculate the partition for supersets.
   attrs_set <- sort(attrs)
   index <- match(list(attrs_set), partitions$set)
   if (!is.na(index)) {
     return(list(partitions$value[index], partitions))
   }
   df_attrs_only <- df[, unlist(attrs), drop = FALSE]
-  shape <- nrow(df_attrs_only) - sum(duplicated(df_attrs_only))
+  n_remove <- sum(duplicated(df_attrs_only))
   partitions$set <- c(partitions$set, list(sort(attrs)))
-  partitions$value <- c(partitions$value, shape)
-  list(shape, partitions)
+  partitions$value <- c(partitions$value, n_remove)
+  list(n_remove, partitions)
 }
 
-approximate_dependencies <- function(lhs_set, rhs, df, partitions, accuracy) {
+approximate_dependencies <- function(lhs_set, rhs, df, partitions, n_rows, accuracy) {
   # This is a quick working version I put together to replace the non-working
   # original. There's a known better way to do this, see TANE section 2.3s.
-  rows <- nrow(df)
-  limit <- rows * (1 - accuracy)
+  limit <- n_rows * (1 - accuracy)
   n_remove <- function(x) {
     length(x) - max(tabulate(x))
   }
   splitted <- df[[rhs]]
   splitter <- df[, lhs_set, drop = FALSE]
   total_to_remove <- split(splitted, splitter, drop = TRUE) |>
-    Reduce(f = function(n, df) n + n_remove(df), init = 0)
+    Reduce(f = function(n, rhs_vals) n + n_remove(rhs_vals), init = 0)
   list(total_to_remove <= limit, partitions)
 }
