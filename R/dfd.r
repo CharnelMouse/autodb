@@ -611,10 +611,12 @@ minimise_seeds <- function(seeds, bitsets) {
 
 compute_partitions <- function(df, rhs, lhs_set, partitions, accuracy) {
   if (accuracy < 1)
-    return(c(
-      approximate_dependencies(lhs_set, rhs, df, accuracy),
-      list(partitions)
-    ))
+    approximate_dependencies(lhs_set, rhs, df, partitions, accuracy)
+  else
+    exact_dependencies(df, rhs, lhs_set, partitions)
+}
+
+exact_dependencies <- function(df, rhs, lhs_set, partitions) {
   res1 <- partition(union(lhs_set, rhs), df, partitions)
   part_rhs <- res1[[1]]
   partitions <- res1[[2]]
@@ -640,7 +642,7 @@ partition <- function(attrs, df, partitions) {
   list(shape, partitions)
 }
 
-approximate_dependencies <- function(lhs_set, rhs, df, accuracy) {
+approximate_dependencies <- function(lhs_set, rhs, df, partitions, accuracy) {
   # This is a quick working version I put together to replace the non-working
   # original. There's a known better way to do this, see TANE section 2.3s.
   rows <- nrow(df)
@@ -652,5 +654,5 @@ approximate_dependencies <- function(lhs_set, rhs, df, accuracy) {
   splitter <- df[, lhs_set, drop = FALSE]
   total_to_remove <- split(splitted, splitter, drop = TRUE) |>
     Reduce(f = function(n, df) n + n_remove(df), init = 0)
-  total_to_remove <= limit
+  list(total_to_remove <= limit, partitions)
 }
