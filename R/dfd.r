@@ -617,16 +617,16 @@ compute_partitions <- function(df, rhs, lhs_set, partitions, accuracy) {
 }
 
 exact_dependencies <- function(df, rhs, lhs_set, partitions) {
-  res1 <- partition(union(lhs_set, rhs), df, partitions)
+  res1 <- partition_nclass(union(lhs_set, rhs), df, partitions)
   part_rhs <- res1[[1]]
   partitions <- res1[[2]]
-  res2 <- partition(lhs_set, df, partitions)
+  res2 <- partition_nclass(lhs_set, df, partitions)
   part_lhs <- res2[[1]]
   partitions <- res2[[2]]
   list(part_rhs == part_lhs, partitions)
 }
 
-partition <- function(attrs, df, partitions) {
+partition_nclass <- function(attrs, df, partitions) {
   # This only returns the number |p| of equivalence classes in the partition p,
   # not its contents. This is less demanding on memory, but we cannot
   # efficiently calculate the partition for supersets.
