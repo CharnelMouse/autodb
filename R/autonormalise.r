@@ -37,7 +37,7 @@ auto_entityset <- function(
   deps$dependencies <- flatten(deps$dependencies)
   norm_deps <- normalise(deps)
   tables <- decompose(df, norm_deps)
-  EntitySet(tables, norm_deps, name)
+  EntitySet(tables, name)
 }
 
 flatten <- function(dependencies) {

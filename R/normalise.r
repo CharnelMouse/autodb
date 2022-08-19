@@ -53,12 +53,10 @@ remove_extraneous_attributes <- function(vecs) {
 }
 
 remove_extraneous_dependencies <- function(vecs) {
-  old_det_sets <- NULL
   new_det_sets <- vecs$determinant_sets
   old_deps <- NULL
   new_deps <- vecs$dependents
   while (!identical(old_deps, new_deps)) {
-    old_det_sets <- new_det_sets
     old_deps <- new_deps
     rem <- rep(FALSE, length(new_deps))
     for (n in seq_along(new_deps)) {

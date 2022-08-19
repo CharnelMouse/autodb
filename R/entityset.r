@@ -1,4 +1,4 @@
-EntitySet <- function(tables, norm_deps, name = NA_character_) {
+EntitySet <- function(tables, name = NA_character_) {
   # Creates a normalised EntitySet from df based on the dependencies given.
   # Keys for the newly created DataFrames can only be columns that are strings,
   # ints, or categories. Keys are chosen according to the priority:

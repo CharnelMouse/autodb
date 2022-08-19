@@ -280,8 +280,7 @@ find_LHSs <- function(
         nodes,
         trace,
         min_deps,
-        max_non_deps,
-        colnames(df)
+        max_non_deps
       )
       trace <- res[[2]]
       nodes <- res[[3]]
@@ -464,7 +463,7 @@ has_nondependency_superset <- function(node, nodes) {
   ))
 }
 
-pick_next_node <- function(node, nodes, trace, min_deps, max_non_deps, attrs) {
+pick_next_node <- function(node, nodes, trace, min_deps, max_non_deps) {
   # Picks the next node to look at. If current node is a candidate minimum
   # dependency looks for unchecked subsets. If no unchecked subsets that could
   # be a dependency, current node must be a minimum dependency. Otherwise,
