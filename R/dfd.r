@@ -2,6 +2,26 @@
 # - make.names docs: R didn't support underscores in names until 1.9.0, I need
 # to set a limit for R version in DESCRIPTION if I remove the 4.1.0 pipe usage.
 # - add partitions
+# - main runtime for tables with many columns and few rows is currently in the
+# calls to remove_pruned_subsets in minimise_seeds, and the is_subset outer call
+# in particular.
+
+
+# Rare failure:
+# Error (test-autonormalise.r:20:5): auto_entityset: runs DFD and normalises the given data.frame
+# Error in `unique.default(if (length(x) || length(y)) x[match(x, y, 0L) ==
+#                                                          0L] else x)`: unique() applies only to vectors
+# Backtrace:
+#   1. autonormalise::auto_entityset(df, 1)
+# at test-autonormalise.r:20:4
+# 2. autonormalise::normalise(deps)
+# at autonormalise/R/autonormalise.r:38:2
+# 12. autonormalise::remove_extraneous_attributes(...)
+# at autonormalise/R/normalise.r:56:2
+# 13. base::setdiff(vecs$determinant_sets[[n]], attr)
+# at autonormalise/R/normalise.r:46:6
+# 15. base::unique.default(...)
+
 
 #' DFD algorithm
 #'
@@ -239,7 +259,6 @@ find_LHSs <- function(
           min_deps,
           max_non_deps
         )
-        nodes$category[node] <- nodes$category[node]
       }else{
         inferred_type <- infer_type(node, nodes)
         if (!is.na(inferred_type)) {
