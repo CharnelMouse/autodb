@@ -103,6 +103,8 @@ dfd <- function(
   )
   valid_determinant <- valid_determinant_name & valid_determinant_class
   valid_determinant_attrs_prefixing <- column_names[valid_determinant]
+  if (progress)
+    cat("simplifying data types\n", file = progress_file, append = FALSE)
   # convert all columns to integers, since they're checked for duplicates more
   # quickly when calculating partitions
   df <- data.frame(lapply(df, \(x) as.integer(factor(x)))) |>
@@ -111,8 +113,6 @@ dfd <- function(
   dependencies <- stats::setNames(rep(list(list()), ncol(df)), column_names)
   fixed <- character()
   nonfixed <- column_names
-  if (progress)
-    cat("starting DFD\n", file = progress_file, append = FALSE)
   for (i in seq_along(column_names)) {
     attr <- column_names[i]
     if (all(is.na(df[[attr]])) || all(df[[attr]] == df[[attr]][1])) {
@@ -155,6 +155,8 @@ dfd <- function(
       "only data.frames with up to", lhs_attrs_limit, "columns currently supported"
     ))
   if (max_n_lhs_attrs > 0) {
+    if (progress)
+      cat("constructing powerset\n", file = progress_file, append = TRUE)
     powerset <- powerset_nodes(max_n_lhs_attrs)
     for (rhs in nonfixed) {
       if (progress)
