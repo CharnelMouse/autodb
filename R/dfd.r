@@ -2,10 +2,6 @@
 # - make.names docs: R didn't support underscores in names until 1.9.0, I need
 # to set a limit for R version in DESCRIPTION if I remove the 4.1.0 pipe usage.
 # - add partitions
-# - main runtime for tables with many columns and few rows is currently in the
-# calls to remove_pruned_subsets in minimise_seeds, and the is_subset outer call
-# in particular.
-
 
 # Rare failure:
 # Error (test-autonormalise.r:20:5): auto_entityset: runs DFD and normalises the given data.frame
@@ -615,16 +611,18 @@ cross_intersection <- function(seeds, max_non_dep, bitsets) {
 }
 
 minimise_seeds <- function(seeds, bitsets) {
-  minimised <- integer()
-  for (n in seq_along(seeds)) {
-    current_seed <- seeds[n]
-    other_seeds <- seeds[-n]
-    minimised <- c(
-      minimised,
-      remove_pruned_subsets(current_seed, other_seeds, bitsets)
-    )
+  n_seeds <- length(seeds)
+  sorted_bitsets <- bitsets[order(seeds)]
+  include <- rep(TRUE, length(seeds))
+  for (n in seq_len(n_seeds - 1)) {
+    if (include[n]) {
+      for (m in seq.int(n + 1L, n_seeds)) {
+        if (include[m] && is_subset(sorted_bitsets[[n]], sorted_bitsets[[m]]))
+          include[m] <- FALSE
+      }
+    }
   }
-  minimised
+  sort(seeds)[include]
 }
 
 compute_partitions <- function(df, rhs, lhs_set, partitions, accuracy) {
