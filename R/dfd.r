@@ -2,6 +2,8 @@
 # - make.names docs: R didn't support underscores in names until 1.9.0, I need
 # to set a limit for R version in DESCRIPTION if I remove the 4.1.0 pipe usage.
 # - add partitions
+# - check attributes that don't interact with others are kept when normalising
+# - powerset creation is still slow
 
 # Rare failure:
 # Error (test-autonormalise.r:20:5): auto_entityset: runs DFD and normalises the given data.frame
