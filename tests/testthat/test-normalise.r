@@ -162,6 +162,20 @@ describe("normalise", {
       )
     )
   })
+  it("keeps attributes that don't interact with any others", {
+    deps <- list(
+      dependencies = list(
+        a = list("b"),
+        b = list("a"),
+        c = list(),
+        d = list()
+      ),
+      attrs = letters[1:4]
+    )
+    deps$dependencies <- flatten(deps$dependencies)
+    nds <- normalise(deps)
+    expect_setequal(nds$attrs, list(c("a", "b"), "c", "d"))
+  })
 })
 
 test_that("drop_primary_dups", {

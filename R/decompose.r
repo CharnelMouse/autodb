@@ -19,7 +19,7 @@ decompose <- function(df, norm_deps) {
   depdf_list <- Map(
     \(attrs, keys, index) {
       list(
-        df = unique(df[, attrs]),
+        df = unique(df[, attrs, drop = FALSE]),
         keys = keys,
         index = index
       )

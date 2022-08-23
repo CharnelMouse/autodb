@@ -12,6 +12,10 @@
 #'   a list of candidate keys.
 #' @export
 normalise <- function(dependencies) {
+  isolated_attributes <- setdiff(
+    dependencies$attrs,
+    unlist(dependencies$dependencies)
+  )
   dependencies$dependencies |>
     convert_to_vectors() |>
     convert_to_integer_attributes(dependencies$attrs) |>
@@ -22,7 +26,8 @@ normalise <- function(dependencies) {
     remove_transitive_dependencies() |>
     add_bijections() |>
     construct_relations() |>
-    convert_to_character_attributes(dependencies$attrs)
+    convert_to_character_attributes(dependencies$attrs) |>
+    add_isolated_attributes(isolated_attributes)
 }
 
 convert_to_vectors <- function(dependencies) {
@@ -312,6 +317,13 @@ convert_to_character_attributes <- function(vecs, attrs) {
   vecs$attrs <- lapply(vecs$attrs, \(a) attrs[a])
   vecs$keys <- lapply(vecs$keys, \(ks) lapply(ks, \(k) attrs[k]))
   vecs
+}
+
+add_isolated_attributes <- function(decomposition, isolated_attributes) {
+  list(
+    attrs = c(decomposition$attrs, as.list(isolated_attributes)),
+    keys = c(decomposition$keys, lapply(isolated_attributes, list))
+  )
 }
 
 find_closure <- function(attrs, determinant_sets, dependents) {
