@@ -195,24 +195,24 @@ describe("decompose", {
     norm.df <- decompose(df, norm_deps)
     expect_setequal(names(norm.df[[1]]$df), c("A 1", "B 2", "C 3"))
   })
-  it("keeps isolated attributes as their own tables", {
+  it("links added key tables", {
     df <- data.frame(
       a = c(1L, 2L, 1L, 2L),
       b = c(1L, 2L, 1L, 2L),
       c = c(1L, 1L, 2L, 2L)
     )
     norm_deps <- list(
-      attrs = list(c("a", "b"), "c"),
-      keys = list(list("a", "b"), list("c"))
+      attrs = list(c("a", "b"), c("a", "c")),
+      keys = list(list("a", "b"), list(c("a", "c")))
     )
     norm.df <- decompose(df, norm_deps)
     expect_identical(
-      norm.df$c,
+      norm.df$a_c,
       list(
-        df = data.frame(c = 1:2, row.names = c(1L, 3L)),
-        keys = list("c"),
-        index = "c",
-        parents = character()
+        df = data.frame(a = 1:2, c = rep(1:2, each = 2), row.names = 1:4),
+        keys = list(c("a", "c")),
+        index = c("a", "c"),
+        parents = "a"
       )
     )
   })

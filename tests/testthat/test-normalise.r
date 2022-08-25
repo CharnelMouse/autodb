@@ -162,7 +162,7 @@ describe("normalise", {
       )
     )
   })
-  it("keeps attributes that don't interact with any others", {
+  it("adds a key table if one not present, to keep original table reproducible", {
     deps <- list(
       dependencies = list(
         a = list("b"),
@@ -174,7 +174,38 @@ describe("normalise", {
     )
     deps$dependencies <- flatten(deps$dependencies)
     nds <- normalise(deps)
-    expect_setequal(nds$attrs, list(c("a", "b"), "c", "d"))
+    expect_setequal(nds$attrs, list(c("a", "b"), c("a", "c", "d")))
+
+    deps <- list(
+      dependencies = list(
+        a = list(),
+        b = list()
+      ),
+      attrs = letters[1:2]
+    )
+    deps$dependencies <- flatten(deps$dependencies)
+    nds <- normalise(deps)
+    expect_identical(
+      nds,
+      list(attrs = list(c("a", "b")), keys = list(list(c("a", "b"))))
+    )
+
+    deps <- list(
+      dependencies = list(
+        a = list(),
+        b = list("a", c("d", "e")),
+        c = list("a", c("d", "e")),
+        d = list("c"),
+        e = list()
+      ),
+      attrs = letters[1:5]
+    )
+    deps$dependencies <- flatten(deps$dependencies)
+    nds <- normalise(deps)
+    expect_setequal(
+      nds$attrs,
+      list(c("a", "b", "c"), c("d", "e", "b", "c"), c("c", "d"), c("a", "e"))
+    )
   })
 })
 

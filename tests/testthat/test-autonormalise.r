@@ -146,7 +146,7 @@ describe("auto_entityset", {
     es <- auto_entityset(df, 1)
     expect_identical(names(es$dataframes[[1]]$df), c("A 1", "B 2", "C 3"))
   })
-  it("keeps isolated attributes as their own tables", {
+  it("adds a key table if none given in normalisation", {
     df <- data.frame(
       a = c(1L, 2L, 1L, 2L),
       b = c(1L, 2L, 1L, 2L),
@@ -154,12 +154,12 @@ describe("auto_entityset", {
     )
     es <- auto_entityset(df, 1)
     expect_identical(
-      es$dataframes$c,
+      es$dataframes$a_c,
       list(
-        df = data.frame(c = 1:2, row.names = c(1L, 3L)),
-        keys = list("c"),
-        index = "c",
-        parents = character()
+        df = data.frame(a = 1:2, c = rep(1:2, each = 2), row.names = 1:4),
+        keys = list(c("a", "c")),
+        index = c("a", "c"),
+        parents = "a"
       )
     )
   })
