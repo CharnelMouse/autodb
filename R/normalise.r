@@ -144,15 +144,15 @@ merge_equivalent_keys <- function(vecs) {
             partition_keys[[n]] <- c(partition_keys[[n]], partition_keys[[m]])
 
             obsolete <- vapply(
-              partition_dependents[[m]],
+              c(partition_dependents[[n]], partition_dependents[[m]]),
               is.element,
               logical(1),
               c(key1, key2)
             )
             partition_dependents[[n]] <- unique(c(
               partition_dependents[[n]],
-              partition_dependents[[m]][!obsolete]
-            ))
+              partition_dependents[[m]]
+            )[!obsolete])
 
             partition_determinant_set[[m]] <- integer()
             partition_dependents[[m]] <- integer()
@@ -163,10 +163,11 @@ merge_equivalent_keys <- function(vecs) {
     }
   }
   nonempty <- lengths(partition_dependents) > 0
+  in_bijections <- partition_determinant_set %in% bijection_determinant_sets
   list(
-    partition_determinant_set = partition_determinant_set[nonempty],
-    partition_dependents = partition_dependents[nonempty],
-    partition_keys = partition_keys[nonempty],
+    partition_determinant_set = partition_determinant_set[nonempty | in_bijections],
+    partition_dependents = partition_dependents[nonempty | in_bijections],
+    partition_keys = partition_keys[nonempty | in_bijections],
     bijection_determinant_sets = bijection_determinant_sets,
     bijection_dependent_sets = bijection_dependent_sets
   )
