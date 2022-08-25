@@ -207,6 +207,40 @@ describe("normalise", {
       list(c("a", "b", "c"), c("d", "e", "b", "c"), c("c", "d"), c("a", "e"))
     )
   })
+  it("returns relations that return themselves if normalised again", {
+    gen.keysize <- gen.sample.int(10)
+    gen.key <- generate(
+      for (keysize in gen.keysize) {
+        letters[1:10][sort(sample(1:10, keysize))]
+      }
+    )
+    gen.relation <- generate(
+      for (key in gen.key) {
+        nonkey <- setdiff(letters[1:10], key)
+        list(attrs = list(c(key, nonkey)), keys = list(list(key)))
+      }
+    )
+    forall(
+      gen.relation,
+      function(relation) {
+        nonkey <- setdiff(unlist(relation$attrs), unlist(relation$keys))
+        deps <- list(
+          dependencies = flatten(setNames(
+            lapply(
+              nonkey,
+              \(x) relation$keys[[1]]
+            ),
+            nonkey
+          )),
+          attrs = relation$attrs[[1]]
+        )
+        redo <- normalise(deps)
+        expect_length(redo$attrs, 1)
+        expect_identical(redo$attrs[[1]], relation$attrs[[1]])
+        expect_identical(redo$keys[[1]], relation$keys[[1]])
+      }
+    )
+  })
 })
 
 test_that("drop_primary_dups", {
