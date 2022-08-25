@@ -1,25 +1,6 @@
 # Scratch pad
-# - make.names docs: R didn't support underscores in names until 1.9.0, I need
-# to set a limit for R version in DESCRIPTION if I remove the 4.1.0 pipe usage.
 # - add partitions
-# - check attributes that don't interact with others are kept when normalising
 # - powerset creation is still slow
-
-# Rare failure:
-# Error (test-autonormalise.r:20:5): auto_entityset: runs DFD and normalises the given data.frame
-# Error in `unique.default(if (length(x) || length(y)) x[match(x, y, 0L) ==
-#                                                          0L] else x)`: unique() applies only to vectors
-# Backtrace:
-#   1. autonormalise::auto_entityset(df, 1)
-# at test-autonormalise.r:20:4
-# 2. autonormalise::normalise(deps)
-# at autonormalise/R/autonormalise.r:38:2
-# 12. autonormalise::remove_extraneous_attributes(...)
-# at autonormalise/R/normalise.r:56:2
-# 13. base::setdiff(vecs$determinant_sets[[n]], attr)
-# at autonormalise/R/normalise.r:46:6
-# 15. base::unique.default(...)
-
 
 #' DFD algorithm
 #'
