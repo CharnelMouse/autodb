@@ -4,16 +4,18 @@
 \alias{plot_table}
 \title{Plot single dataframe}
 \usage{
-plot_table(df, df_name, to_file = FALSE)
+plot_table(df, df_name, text = FALSE, con = stdout())
 }
 \arguments{
 \item{df}{a data.frame, to be plotted as a record.}
 
 \item{df_name}{a character scalar, giving the name of the record.}
 
-\item{to_file}{a logical, indicating whether to write the plot information to
-a file, as a Graphviz input, instead of plotting. Currently not
-implemented.}
+\item{text}{a logical, indicating whether to write the plot information to a
+connection, as a Graphviz input, instead of plotting.}
+
+\item{con}{a connection, to which the Graphviz text input is written if
+\code{text} is \code{TRUE}.}
 }
 \description{
 Plot single dataframe

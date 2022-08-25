@@ -4,14 +4,16 @@
 \alias{plot_tables}
 \title{Plot dataframes with relationships}
 \usage{
-plot_tables(es, to_file = FALSE)
+plot_tables(es, text = FALSE, con = stdout())
 }
 \arguments{
 \item{es}{an entity set, to plotted as linked records.}
 
-\item{to_file}{a logical, indicating whether to write the plot information to
-a file, as a Graphviz input, instead of plotting. Currently not
-implemented.}
+\item{text}{a logical, indicating whether to write the plot information to a
+connection, as a Graphviz input, instead of plotting.}
+
+\item{con}{a connection, to which the Graphviz text input is written if
+\code{text} is \code{TRUE}.}
 }
 \description{
 Plot dataframes with relationships

@@ -46,28 +46,33 @@ EntitySet <- function(tables, name = NA_character_) {
 #' Plot dataframes with relationships
 #'
 #' @param es an entity set, to plotted as linked records.
-#' @param to_file a logical, indicating whether to write the plot information to
-#'   a file, as a Graphviz input, instead of plotting. Currently not
-#'   implemented.
+#' @param text a logical, indicating whether to write the plot information to a
+#'   connection, as a Graphviz input, instead of plotting.
+#' @param con a connection, to which the Graphviz text input is written if
+#'   \code{text} is \code{TRUE}.
 #'
 #' @export
-plot_tables <- function(es, to_file = FALSE) {
+plot_tables <- function(es, text = FALSE, con = stdout()) {
   gv_string <- plot_string_entityset(es)
-  DiagrammeR::grViz(gv_string)
+  if (text)
+    writeLines(gv_string, con)
+  else
+    DiagrammeR::grViz(gv_string)
 }
 
 #' Plot single dataframe
 #'
 #' @param df a data.frame, to be plotted as a record.
 #' @param df_name a character scalar, giving the name of the record.
-#' @param to_file a logical, indicating whether to write the plot information to
-#'   a file, as a Graphviz input, instead of plotting. Currently not
-#'   implemented.
+#' @inheritParams plot_tables
 #'
 #' @export
-plot_table <- function(df, df_name, to_file = FALSE) {
+plot_table <- function(df, df_name, text = FALSE, con = stdout()) {
   gv_string <- plot_string_df(df, df_name)
-  DiagrammeR::grViz(gv_string)
+  if (text)
+    writeLines(gv_string, con)
+  else
+    DiagrammeR::grViz(gv_string)
 }
 
 plot_string_entityset <- function(es) {
