@@ -35,6 +35,8 @@
 #'   \item We do not yet preserve partitions, just their calculated sizes.
 #'   \item We do not yet keep hashmaps to manage subset/superset relationships,
 #'   as described in Section 3.5 of the original paper.
+#'   \item Missing values (NA) are treated as a normal value, with NA = NA being
+#'   true, and x = NA being false for any non-NA value of x.
 #' }
 #' @param df a data.frame, the relation to evaluate.
 #' @param accuracy a numeric in (0, 1]: the accuracy threshold required in order
@@ -90,7 +92,7 @@ dfd <- function(
     cat("simplifying data types\n", file = progress_file, append = FALSE)
   # convert all columns to integers, since they're checked for duplicates more
   # quickly when calculating partitions
-  df <- data.frame(lapply(df, \(x) as.integer(factor(x)))) |>
+  df <- data.frame(lapply(df, \(x) as.integer(factor(x, exclude = NULL)))) |>
     stats::setNames(column_names)
   partitions <- list()
   dependencies <- stats::setNames(rep(list(list()), ncol(df)), column_names)

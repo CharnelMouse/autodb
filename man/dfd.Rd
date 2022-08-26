@@ -78,5 +78,7 @@ searching for determinant sets that the user would remove later anyway.
 \item We do not yet preserve partitions, just their calculated sizes.
 \item We do not yet keep hashmaps to manage subset/superset relationships,
 as described in Section 3.5 of the original paper.
+\item Missing values (NA) are treated as a normal value, with NA = NA being
+true, and x = NA being false for any non-NA value of x.
 }
 }

@@ -157,6 +157,38 @@ describe("dfd", {
     deps <- dfd(df, 1)
     expect_identical(deps$dependencies$`A 1`, list(c("B 2", "C 3")))
   })
+  it("treats missing values as normal entries", {
+    gen_ncol_inc <- gen.int(4)
+    gen_len_inc <- gen.int(6)
+    gen_df <- generate(
+      for (n_col_inc in gen_ncol_inc) {
+        generate(
+          for (len_inc in gen_len_inc) {
+            rep(
+              list(gen.sample(c(FALSE, TRUE), len_inc - 1, replace = TRUE)),
+              n_col_inc - 1
+            ) |>
+              setNames(make.unique(rep_len(LETTERS, n_col_inc - 1)))
+          }
+        )
+      }
+    )
+    forall(
+      gen_df,
+      function(lst) {
+        df <- as.data.frame(lst)
+        res <- dfd(df, 1)
+        na_df <- as.data.frame(lapply(
+          lst,
+          \(x) {y <- x; y[!y] <- NA; y}
+        ))
+        na_res <- dfd(na_df, 1)
+        expect_identical(res$attrs, na_res$attrs)
+        for (nm in res$attrs)
+          expect_setequal(res$dependencies[[nm]], na_res$dependencies[[nm]])
+      }
+    )
+  })
 })
 
 describe("original tests", {
