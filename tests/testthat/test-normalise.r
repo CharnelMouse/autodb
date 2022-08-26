@@ -21,7 +21,7 @@ describe("normalise", {
       ),
       attrs = letters[1:6]
     )
-    deps$dependencies <- flatten(deps$dependencies)
+    deps <- flatten(deps)
     nds <- normalise(deps)
     forall(
       gen.sample(deps$dependencies, length(deps$dependencies)),
@@ -172,7 +172,7 @@ describe("normalise", {
       ),
       attrs = letters[1:4]
     )
-    deps$dependencies <- flatten(deps$dependencies)
+    deps <- flatten(deps)
     nds <- normalise(deps)
     expect_setequal(nds$attrs, list(c("a", "b"), c("a", "c", "d")))
 
@@ -183,7 +183,7 @@ describe("normalise", {
       ),
       attrs = letters[1:2]
     )
-    deps$dependencies <- flatten(deps$dependencies)
+    deps <- flatten(deps)
     nds <- normalise(deps)
     expect_identical(
       nds,
@@ -200,7 +200,7 @@ describe("normalise", {
       ),
       attrs = letters[1:5]
     )
-    deps$dependencies <- flatten(deps$dependencies)
+    deps <- flatten(deps)
     nds <- normalise(deps)
     expect_setequal(
       nds$attrs,
@@ -224,16 +224,16 @@ describe("normalise", {
       gen.relation,
       function(relation) {
         nonkey <- setdiff(unlist(relation$attrs), unlist(relation$keys))
-        deps <- list(
-          dependencies = flatten(setNames(
+        deps <- flatten(list(
+          dependencies = setNames(
             lapply(
               nonkey,
               \(x) relation$keys[[1]]
             ),
             nonkey
-          )),
+          ),
           attrs = relation$attrs[[1]]
-        )
+        ))
         redo <- normalise(deps)
         expect_length(redo$attrs, 1)
         expect_identical(redo$attrs[[1]], relation$attrs[[1]])

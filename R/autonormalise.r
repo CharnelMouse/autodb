@@ -34,23 +34,34 @@ auto_entityset <- function(
     accuracy,
     ...
   )
-  deps$dependencies <- flatten(deps$dependencies)
+  deps <- flatten(deps)
   norm_deps <- normalise(deps)
   tables <- decompose(df, norm_deps)
   EntitySet(tables, name)
 }
 
+#' Flatten functional dependency list for normalisation
+#'
+#' @param dependencies a list, containing functional dependencies as returned by
+#'   \code{\link{dfd}}.
+#'
+#' @return A copy of \code{dependencies}, where the \code{dependencies} element
+#'   has been transformed to a list of two-element lists, with the dependency's
+#'   determinants in the first element, its dependent in the second. This is the
+#'   format required by \code{\link{normalise}}.
+#' @export
 flatten <- function(dependencies) {
   # Takes dependencies grouped by dependent attribute, and returns the
   # dependencies in a flat list with (parent table, parent attr, child table,
   # child attr) format.
   result <- list()
-  for (i in seq_along(dependencies)) {
-    rhs <- names(dependencies)[i]
+  for (i in seq_along(dependencies$dependencies)) {
+    rhs <- names(dependencies$dependencies)[i]
     result <- c(
       result,
-      lapply(dependencies[[i]], \(lhs) list(lhs, rhs))
+      lapply(dependencies$dependencies[[i]], \(lhs) list(lhs, rhs))
     )
   }
-  result
+  dependencies$dependencies <- result
+  dependencies
 }
