@@ -1,6 +1,9 @@
 # Scratch pad
+# - add error checking for decompose for norm_deps not matching data.frame
 # - add partitions
+# - add option for introducing artifical keys
 # - powerset creation is still slow
+# - look for avoidable attributes (LTK normal form)
 
 #' DFD algorithm
 #'
@@ -56,7 +59,7 @@
 #'   is non-zero, determines where the progress is written to, in the same way
 #'   as the \code{file} argument for \code{\link[base]{cat}}.
 #'
-#' @return a named list with two elements. \code{dependencies} is a named list,
+#' @return A named list with two elements. \code{dependencies} is a named list,
 #'   where the names give the dependent attribute, and each element is a list of
 #'   character vectors. Each character vector is a set of determinant attributes
 #'   for that dependent attribute. \code{attrs} is the column names of

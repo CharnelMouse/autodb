@@ -1,4 +1,4 @@
-describe("auto_entityset", {
+describe("autonorm", {
   it("runs DFD and normalises the given data.frame", {
     df <- data.frame(
       Title = rep(
@@ -17,7 +17,7 @@ describe("auto_entityset", {
       Genre_Name = rep(c("Tutorial", "Popular science"), each = 2),
       Publisher_ID = rep(1:2, each = 2)
     )
-    es <- auto_entityset(df, 1)
+    es <- autonorm(df, 1)
     expect_true(!anyDuplicated(es))
     expect_identical(length(es$dataframes), 3L)
     expect_setequal(names(es$dataframes), c("Price", "Title", "Format"))
@@ -47,7 +47,7 @@ describe("auto_entityset", {
       Genre_Name = rep(c("Tutorial", "Popular science"), each = 2),
       Publisher_ID = rep(1:2, each = 2)
     )
-    es_nonfiltered <- auto_entityset(df, 1)
+    es_nonfiltered <- autonorm(df, 1)
     expect_setequal(
       names(es_nonfiltered$dataframes),
       c("Price", "Title", "Format")
@@ -56,7 +56,7 @@ describe("auto_entityset", {
       es_nonfiltered$dataframes$Price$keys,
       list("Price", c("Title", "Format"))
     )
-    es_filtered <- auto_entityset(df, 1, exclude_class = "numeric")
+    es_filtered <- autonorm(df, 1, exclude_class = "numeric")
     expect_setequal(
       names(es_filtered$dataframes),
       c("Title_Format", "Title", "Format")
@@ -84,7 +84,7 @@ describe("auto_entityset", {
       Genre_Name = rep(c("Tutorial", "Popular science"), each = 2),
       Publisher_ID = rep(1:2, each = 2)
     )
-    es_nonfiltered <- auto_entityset(df, 1)
+    es_nonfiltered <- autonorm(df, 1)
     expect_setequal(
       names(es_nonfiltered$dataframes),
       c("Price", "Title", "Format")
@@ -93,7 +93,7 @@ describe("auto_entityset", {
       es_nonfiltered$dataframes$Price$keys,
       list("Price", c("Title", "Format"))
     )
-    es_filtered <- auto_entityset(df, 1, exclude = "Price")
+    es_filtered <- autonorm(df, 1, exclude = "Price")
     expect_setequal(
       names(es_filtered$dataframes),
       c("Title_Format", "Title", "Format")
@@ -121,7 +121,7 @@ describe("auto_entityset", {
       Genre_Name = rep(c("Tutorial", "Popular science"), each = 2),
       Publisher_ID = rep(1:2, each = 2)
     )
-    es_nonfiltered <- auto_entityset(df, 1)
+    es_nonfiltered <- autonorm(df, 1)
     expect_setequal(
       names(es_nonfiltered$dataframes),
       c("Price", "Title", "Format")
@@ -130,7 +130,7 @@ describe("auto_entityset", {
       es_nonfiltered$dataframes$Price$keys,
       list("Price", c("Title", "Format"))
     )
-    es_filtered <- auto_entityset(df, 1, exclude_class = "integer")
+    es_filtered <- autonorm(df, 1, exclude_class = "integer")
     expect_setequal(
       names(es_filtered$dataframes),
       c("Title_Format", "Title", "Format")
@@ -143,7 +143,7 @@ describe("auto_entityset", {
   it("correctly handles attributes with non-df-standard names", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
       stats::setNames(c("A 1", "B 2", "C 3"))
-    es <- auto_entityset(df, 1)
+    es <- autonorm(df, 1)
     expect_identical(names(es$dataframes[[1]]$df), c("A 1", "B 2", "C 3"))
   })
   it("adds a key table if none given in normalisation", {
@@ -152,7 +152,7 @@ describe("auto_entityset", {
       b = c(1L, 2L, 1L, 2L),
       c = c(1L, 1L, 2L, 2L)
     )
-    es <- auto_entityset(df, 1)
+    es <- autonorm(df, 1)
     expect_identical(
       es$dataframes$a_c,
       list(

@@ -1,19 +1,19 @@
-EntitySet <- function(tables, name = NA_character_) {
-  # Creates a normalised EntitySet from df based on the dependencies given.
-  # Keys for the newly created DataFrames can only be columns that are strings,
-  # ints, or categories. Keys are chosen according to the priority:
-  #   1) shortest lenghts 2) has "id" in some form in the name of an attribute
-  # 3) has attribute furthest to left in the table
-  #
-  # Arguments:
-  #   df (pd.DataFrame) : dataframe to normalise and make entity set from
-  # dependencies (Dependenies) : the dependencies discovered in df
-  # name (str, optional) : the name of created EntitySet
-  #
-  # Returns:
-  #   entityset (ft.EntitySet) : created entity set
-  tables <- make_indexes(tables)
-
+#' Add foreign key references to a normalised database
+#'
+#' @param tables a relation set, i.e. named list of tables, as given by
+#'   \code{\link{decompose}}.
+#'
+#' @return A "database", defined as a list of two elements:
+#'   \itemize{
+#'     \item \code{dataframes} contains the given relation set, \code{tables}.
+#'     \item \code{relationships} contains a list of length-four character
+#'     vectors, describing a single attribute pair in a foreign key
+#'     relationship. In order, the elements give the name of the child table,
+#'     the attribute in the child table, the parent table, and the attribute in
+#'     the parent table. normalised into the required number of tables.
+#'  }
+#' @export
+cross_reference <- function(tables) {
   relationships <- list()
   stack <- tables
   while (length(stack) > 0) {
@@ -35,11 +35,10 @@ EntitySet <- function(tables, name = NA_character_) {
   }
 
   es <- list(
-    name = name,
     dataframes = tables,
     relationships = relationships
   )
-  class(es) <- c("EntitySet", class(es))
+  class(es) <- c("database", class(es))
   es
 }
 

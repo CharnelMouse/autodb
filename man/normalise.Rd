@@ -7,16 +7,22 @@
 normalise(dependencies)
 }
 \arguments{
-\item{dependencies}{a list of functional dependencies, each composed of a
-list, with an element for the left-hand size and one for the right-hand
-side.}
+\item{dependencies}{a list of functional dependencies, as given by
+\code{\link{flatten}}: each dependency is a list, contained one character
+vector for the left-hand size, and one unit-length character vector for the
+right-hand side.}
 }
 \value{
-a list of lists. Each such list contains two named elements:
-\code{attrs} contains the normalised dependencies, and \code{keys} contains
-a list of candidate keys.
+A named list of two lists, with equal length. Each pair represents a
+single relation in the normalisation:
+\itemize{
+\item \code{attrs} elements contain the attributes present, with
+attributes in keys given first.
+\item \code{keys} elements contain a list of the candidate keys for the
+relation.
+}
 }
 \description{
-Normalises the dependency relationships in dependencies into new
+Normalises the dependency relationships in dependencies into a "database", new
 groups by breaking up all partial and transitive dependencies.
 }

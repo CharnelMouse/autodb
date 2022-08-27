@@ -1,15 +1,21 @@
 #' Normalises dependency relationships
 #'
-#' Normalises the dependency relationships in dependencies into new
+#' Normalises the dependency relationships in dependencies into a "database", new
 #' groups by breaking up all partial and transitive dependencies.
 #'
-#' @param dependencies a list of functional dependencies, each composed of a
-#'   list, with an element for the left-hand size and one for the right-hand
-#'   side.
+#' @param dependencies a list of functional dependencies, as given by
+#'   \code{\link{flatten}}: each dependency is a list, contained one character
+#'   vector for the left-hand size, and one unit-length character vector for the
+#'   right-hand side.
 #'
-#' @return a list of lists. Each such list contains two named elements:
-#'   \code{attrs} contains the normalised dependencies, and \code{keys} contains
-#'   a list of candidate keys.
+#' @return A named list of two lists, with equal length. Each pair represents a
+#'   single relation in the normalisation:
+#'   \itemize{
+#'     \item \code{attrs} elements contain the attributes present, with
+#'     attributes in keys given first.
+#'     \item \code{keys} elements contain a list of the candidate keys for the
+#'     relation.
+#'   }
 #' @export
 normalise <- function(dependencies) {
   dependencies$dependencies |>
@@ -22,7 +28,7 @@ normalise <- function(dependencies) {
     remove_transitive_dependencies() |>
     check_original_key(dependencies$attrs) |>
     add_bijections() |>
-    construct_relations() |>
+    construct_relation_schemes() |>
     convert_to_character_attributes(dependencies$attrs)
 }
 
@@ -291,7 +297,7 @@ add_bijections <- function(vecs) {
   )
 }
 
-construct_relations <- function(vecs) {
+construct_relation_schemes <- function(vecs) {
   sorted_bijection_groups <- lapply(
     vecs$bijection_groups,
     \(bg) bg[keys_order(bg)]
@@ -386,50 +392,6 @@ find_closure <- function(attrs, determinant_sets, dependents) {
     }
   }
   attrs
-}
-
-make_indexes <- function(depdfs) {
-  # Replaces any composite keys with synthetic keys.
-  # Currently not implemented, because I want to think through how to implement
-  # it nicely, without removing other dependencies in the parent table.
-  depdfs
-  # depdf <- depdfs[[1]]
-  # prim_key <- get_prim_key(depdf$deps)
-  # prim_key_snake <- paste(prim_key, collapse = "_")
-  #
-  # if (length(prim_key) > 1) {
-  #   depdf$df.insert(0, prim_key_snake, range(0, length(depdf$df)))
-  #   depdf$index <- prim_key_snake
-  #
-  #   # now need to replace it in the parent df...
-  #   if (!is.na(depdf$parent)) {
-  #     add <- rep(NA, length(depdf$parent$df))
-  #     indices <- match(prim_key, colnames(depdf$parent$df))
-  #
-  #     for (name in indices) {
-  #       mask <- NA
-  #       for (i in range(length(prim_key))) {
-  #         m <- depdf$df[prim_key[i]] == name[i]
-  #         if (is.na(mask))
-  #           mask <- m
-  #         else
-  #           mask <- mask & m
-  #       }
-  #       new_val <- depdf$df[mask][prim_key_snake][1]
-  #
-  #       for (index in indices[name])
-  #         add[index] <- new_val
-  #     }
-  #     depdf$parent$df.drop(columns = prim_key, inplace = TRUE)
-  #     depdf$parent$df.insert(
-  #       ncol(depdf$parent$df),
-  #       prim_key_snake,
-  #       add
-  #     )
-  #   }
-  # }
-  # for (child in depdf$children)
-  #   make_indexes(child)
 }
 
 keys_order_same_lengths <- function(keys) {

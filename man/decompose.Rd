@@ -13,13 +13,25 @@ decompose(df, norm_deps)
 output from \code{\link{normalise}}.}
 }
 \value{
-a named list of tables, containing the normalised data. Tables are
-lists with the following elements: \code{df}, the data.frame containing the
-data; \code{keys}, the list of character vectors, representing (candidate)
-keys for the table; \code{index}, a character vector, representing the
-index / primary key of the table; \code{parents}, containing names of
-parent tables, i.e. tables referenced in foreign keys.
+A named list of tables in third normal form, that can reproduce the
+original data.frame. This can be considered as a "database": in this
+package, we refer to it as a "relation set", and reserve the use of
+"database" for when the cross references (foreign keys) are included.
+
+Tables are lists with the following elements:
+\itemize{
+\item \code{df}, the data.frame containing the data.
+\item \code{keys}, the list of character vectors, representing
+(candidate) keys for the table.
+\item \code{index}, a character vector, representing the index / primary
+key of the table.
+\item \code{parents}, containing names of parent tables, i.e. tables
+referenced in foreign keys.
+}
 }
 \description{
-Decompose a data.frame based on given normalised dependencies
+Decomposes a data.frame into several tables, based on the given relations.
+It's intended that the relations are derived from a list of functional
+dependencies for the same data.frame: using anything else will give undefined
+behaviour.
 }

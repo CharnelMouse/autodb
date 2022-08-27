@@ -1,43 +1,27 @@
-#' Finds dependencies within dataframe df with the DFD search algorithm
+#' Create a normalised entity set from a dataframe
 #'
-#' @inheritParams auto_entityset
-#'
-#' @return A list of dependencies.
-#' @export
-find_dependencies <- function(
-  df,
-  accuracy,
-  ...
-) {
-  dfd(df, accuracy, ...)
-}
-
-#' Creates a normalised entity set from a dataframe
+#' This is a wrapper function for applying \code{\link{dfd}},
+#' \code{\link{flatten}}, \code{\link{normalise}}, \code{\link{decompose}}, and
+#' \code{\link{cross_reference}}, in order.
 #'
 #' @param df a data.frame, containing the data to be normalised.
 #' @param accuracy a numeric in (0, 1], giving the accuracy threshold threshold
 #'   required in order to conclude a dependency.
-#' @param name a character scalar, giving the name of the created entity set.
 #' @param ... further arguments passed on to \code{\link{dfd}}.
 #'
-#' @return An entity set, containing the data normalised into the required
-#'   number of tables.
+#' @return A "database", a list of two elements. See
+#'   \code{\link{cross_reference}} for details.
 #' @export
-auto_entityset <- function(
+autonorm <- function(
   df,
   accuracy,
-  name = NA_character_,
   ...
 ) {
-  deps <- find_dependencies(
-    df,
-    accuracy,
-    ...
-  )
+  deps <- dfd(df, accuracy, ...)
   deps <- flatten(deps)
   norm_deps <- normalise(deps)
   tables <- decompose(df, norm_deps)
-  EntitySet(tables, name)
+  cross_reference(tables)
 }
 
 #' Flatten functional dependency list for normalisation

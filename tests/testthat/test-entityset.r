@@ -1,4 +1,4 @@
-describe("EntitySet", {
+describe("cross_reference", {
   it("returns relations", {
     df <- data.frame(a = integer(), b = integer(), c = integer())
     deps <- list(
@@ -11,7 +11,7 @@ describe("EntitySet", {
     )
     norm_deps <- normalise(deps)
     tables <- decompose(df, norm_deps)
-    es <- EntitySet(tables)
+    es <- cross_reference(tables)
     expected_relations <- list(
       c("a", "b", "b", "b")
     )
