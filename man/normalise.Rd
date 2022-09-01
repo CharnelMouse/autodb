@@ -4,13 +4,28 @@
 \alias{normalise}
 \title{Normalises dependency relationships}
 \usage{
-normalise(dependencies)
+normalise(dependencies, check_key = TRUE, progress = 0L, progress_file = "")
 }
 \arguments{
 \item{dependencies}{a list of functional dependencies, as given by
 \code{\link{flatten}}: each dependency is a list, contained one character
 vector for the left-hand size, and one unit-length character vector for the
 right-hand side.}
+
+\item{check_key}{a logical, indicating whether to check whether the
+normalisation is lossless. If it is not, then an additional table is added
+to the final "database", containing a key for \code{df}. This is enough to
+make the normalisation lossless.}
+
+\item{progress}{an integer, for whether to display progress to the user. 0
+(default) displays nothing. 1 notes the start of finding each non-constant
+attribute's determinant sets. 2 also briefly describes the status of the
+search for an attribute's determinant sets when generating new seeds. 3
+also gives the status after visiting each candidate determinant set / node.}
+
+\item{progress_file}{a scalar character or a connection. If \code{progress}
+is non-zero, determines where the progress is written to, in the same way
+as the \code{file} argument for \code{\link[base]{cat}}.}
 }
 \value{
 A named list of two lists, with equal length. Each pair represents a

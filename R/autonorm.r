@@ -7,6 +7,18 @@
 #' @param df a data.frame, containing the data to be normalised.
 #' @param accuracy a numeric in (0, 1], giving the accuracy threshold threshold
 #'   required in order to conclude a dependency.
+#' @param check_key a logical, indicating whether to check whether the
+#'   normalisation is lossless. If it is not, then an additional table is added
+#'   to the final "database", containing a key for \code{df}. This is enough to
+#'   make the normalisation lossless.
+#' @param progress an integer, for whether to display progress to the user. 0
+#'   (default) displays nothing. 1 notes the start of finding each non-constant
+#'   attribute's determinant sets. 2 also briefly describes the status of the
+#'   search for an attribute's determinant sets when generating new seeds. 3
+#'   also gives the status after visiting each candidate determinant set / node.
+#' @param progress_file a scalar character or a connection. If \code{progress}
+#'   is non-zero, determines where the progress is written to, in the same way
+#'   as the \code{file} argument for \code{\link[base]{cat}}.
 #' @param ... further arguments passed on to \code{\link{dfd}}.
 #'
 #' @return A "database", a list of two elements. See
@@ -15,13 +27,18 @@
 autonorm <- function(
   df,
   accuracy,
+  check_key = TRUE,
+  progress = 0L,
+  progress_file = "",
   ...
 ) {
-  deps <- dfd(df, accuracy, ...)
-  deps <- flatten(deps)
-  norm_deps <- normalise(deps)
-  tables <- decompose(df, norm_deps)
-  cross_reference(tables)
+  report <- reporter(progress, progress_file)
+
+  dfd(df, accuracy, progress = progress, progress_file = "", ...) |>
+    report$op(flatten, "flattening") |>
+    report$op(normalise, "normalising", check_key) |>
+    report$op(decompose, "decomposing", df = df) |>
+    report$op(cross_reference, "cross-referencing")
 }
 
 #' Flatten functional dependency list for normalisation

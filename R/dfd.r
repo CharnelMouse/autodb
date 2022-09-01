@@ -50,14 +50,7 @@
 #' @param exclude_class a character vector, indicating classes of attributes to
 #'   not consider as members of determinant_sets. Attributes are excluded if
 #'   they inherit from any given class.
-#' @param progress an integer, for whether to display progress to the user. 0
-#'   (default) displays nothing. 1 notes the start of finding each non-constant
-#'   attribute's determinant sets. 2 also briefly describes the status of the
-#'   search for an attribute's determinant sets when generating new seeds. 3
-#'   also gives the status after visiting each candidate determinant set / node.
-#' @param progress_file a scalar character or a connection. If \code{progress}
-#'   is non-zero, determines where the progress is written to, in the same way
-#'   as the \code{file} argument for \code{\link[base]{cat}}.
+#' @inheritParams autonorm
 #'
 #' @return A named list with two elements. \code{dependencies} is a named list,
 #'   where the names give the dependent attribute, and each element is a list of
@@ -74,6 +67,8 @@ dfd <- function(
   progress = 0L,
   progress_file = ""
 ) {
+  report <- reporter(progress, progress_file, new = TRUE)
+
   n_cols <- ncol(df)
   column_names <- colnames(df)
   if (n_cols == 0)
@@ -91,12 +86,13 @@ dfd <- function(
   )
   valid_determinant <- valid_determinant_name & valid_determinant_class
   valid_determinant_attrs_prefixing <- column_names[valid_determinant]
-  if (progress)
-    cat("simplifying data types\n", file = progress_file, append = FALSE)
   # convert all columns to integers, since they're checked for duplicates more
   # quickly when calculating partitions
-  df <- data.frame(lapply(df, \(x) as.integer(factor(x, exclude = NULL)))) |>
-    stats::setNames(column_names)
+  df <- report$exp(
+    data.frame(lapply(df, \(x) as.integer(factor(x, exclude = NULL)))) |>
+      stats::setNames(column_names),
+    "simplifying data types"
+  )
   partitions <- list()
   dependencies <- stats::setNames(rep(list(list()), ncol(df)), column_names)
   fixed <- character()
@@ -104,9 +100,7 @@ dfd <- function(
   for (i in seq_along(column_names)) {
     attr <- column_names[i]
     if (all(is.na(df[[attr]])) || all(df[[attr]] == df[[attr]][1])) {
-      if (progress)
-        cat(paste(attr, "is fixed\n"), file = progress_file, append = TRUE)
-      fixed <- c(fixed, attr)
+      fixed <- report$op(fixed, c, paste(attr, "is fixed"), attr)
       nonfixed <- setdiff(nonfixed, attr)
       dependencies[[attr]] <- as.list(setdiff(
         valid_determinant_attrs_prefixing,
@@ -143,12 +137,13 @@ dfd <- function(
       "only data.frames with up to", lhs_attrs_limit, "columns currently supported"
     ))
   if (max_n_lhs_attrs > 0) {
-    if (progress)
-      cat("constructing powerset\n", file = progress_file, append = TRUE)
-    powerset <- powerset_nodes(max_n_lhs_attrs)
+    powerset <- report$op(
+      max_n_lhs_attrs,
+      powerset_nodes,
+      "constructing powerset"
+    )
     for (rhs in nonfixed) {
-      if (progress)
-        cat(paste("dependent", rhs, "\n"), file = progress_file, append = TRUE)
+      report$stat(paste("dependent", rhs))
       lhs_attrs <- setdiff(valid_determinant_attrs, rhs)
       n_lhs_attrs <- length(lhs_attrs)
       expected_n_lhs_attrs <- max_n_lhs_attrs -
@@ -157,14 +152,10 @@ dfd <- function(
       if (n_lhs_attrs > 0) {
         nodes <- reduce_powerset(powerset, n_lhs_attrs)
         simple_nodes <- as.integer(2^(seq.int(n_lhs_attrs) - 1))
-        if (progress)
-          cat(
-            "determinants available, starting search\n",
-            file = progress_file,
-            append = TRUE
-          )
-        lhss <- find_LHSs(
+        lhss <- report$op(
           rhs,
+          find_LHSs,
+          "determinants available, starting search",
           lhs_attrs,
           nodes,
           simple_nodes,
@@ -178,6 +169,7 @@ dfd <- function(
       }
     }
   }
+  report$stat("DFD complete")
   list(dependencies = dependencies, attrs = column_names)
 }
 

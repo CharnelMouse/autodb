@@ -7,6 +7,7 @@
 #'   \code{\link{flatten}}: each dependency is a list, contained one character
 #'   vector for the left-hand size, and one unit-length character vector for the
 #'   right-hand side.
+#' @inheritParams autonorm
 #'
 #' @return A named list of two lists, with equal length. Each pair represents a
 #'   single relation in the normalisation:
@@ -17,19 +18,59 @@
 #'     relation.
 #'   }
 #' @export
-normalise <- function(dependencies) {
-  dependencies$dependencies |>
-    convert_to_vectors() |>
+normalise <- function(
+  dependencies,
+  check_key = TRUE,
+  progress = 0L,
+  progress_file = ""
+) {
+  report <- reporter(progress, progress_file)
+
+  inter <- dependencies$dependencies |>
+    report$op(
+      convert_to_vectors,
+      "simplifying dependency format"
+    ) |>
     convert_to_integer_attributes(dependencies$attrs) |>
-    remove_extraneous_attributes() |>
+    report$op(
+      remove_extraneous_attributes,
+      "removing extraneuous components"
+    ) |>
     remove_extraneous_dependencies() |>
-    partition_dependencies() |>
-    merge_equivalent_keys() |>
-    remove_transitive_dependencies() |>
-    check_original_key(dependencies$attrs) |>
-    add_bijections() |>
-    construct_relation_schemes() |>
-    convert_to_character_attributes(dependencies$attrs)
+    report$op(
+      partition_dependencies,
+      "partitioning dependencies"
+    ) |>
+    report$op(
+      merge_equivalent_keys,
+      "merging keys"
+    ) |>
+    report$op(
+      remove_transitive_dependencies,
+      "removing transitive dependencies"
+    )
+  if (check_key)
+    inter <- report$op(
+      inter,
+      check_original_key,
+      "checking original key",
+      dependencies$attrs
+    )
+  inter |>
+    report$op(
+      add_bijections,
+      "re-adding bijections"
+    ) |>
+    report$op(
+      construct_relation_schemes,
+      "construction relation schemes",
+      check_key
+    ) |>
+    report$op(
+      convert_to_character_attributes,
+      "converting to readable format",
+      dependencies$attrs
+    )
 }
 
 convert_to_vectors <- function(dependencies) {
@@ -297,7 +338,7 @@ add_bijections <- function(vecs) {
   )
 }
 
-construct_relation_schemes <- function(vecs) {
+construct_relation_schemes <- function(vecs, check_key) {
   sorted_bijection_groups <- lapply(
     vecs$bijection_groups,
     \(bg) bg[keys_order(bg)]
@@ -349,22 +390,24 @@ construct_relation_schemes <- function(vecs) {
       rel_keys <- c(rel_keys, list(sorted_keys))
     }
   }
-  original_key_present <- vapply(
-    rel_keys,
-    \(keys) any(vapply(
-      keys,
-      \(key) any(vapply(
-        vecs$original_keys,
-        \(ok) all(is.element(ok, key)),
+  if (check_key) {
+    original_key_present <- vapply(
+      rel_keys,
+      \(keys) any(vapply(
+        keys,
+        \(key) any(vapply(
+          vecs$original_keys,
+          \(ok) all(is.element(ok, key)),
+          logical(1)
+        )),
         logical(1)
       )),
       logical(1)
-    )),
-    logical(1)
-  )
-  if (!any(original_key_present)) {
-    attrs <- c(attrs, list(vecs$original_keys[[1]]))
-    rel_keys <- c(rel_keys, list(list(vecs$original_key[[1]])))
+    )
+    if (!any(original_key_present)) {
+      attrs <- c(attrs, list(vecs$original_keys[[1]]))
+      rel_keys <- c(rel_keys, list(list(vecs$original_key[[1]])))
+    }
   }
   list(attrs = attrs, keys = rel_keys)
 }

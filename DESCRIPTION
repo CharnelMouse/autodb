@@ -25,6 +25,7 @@ RoxygenNote: 7.2.0
 Depends:
     R (>= 4.1.0)
 Imports:
+    rlang,
     DiagrammeR (>= 1.0.7),
     snakecase (>= 0.11.0)
 Suggests: 
