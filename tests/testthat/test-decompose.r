@@ -12,12 +12,15 @@ describe("decompose", {
     norm.df <- decompose(df, norm_deps)
     expect_identical(
       norm.df,
-      list(a = list(
-        df = df,
-        keys = list("a"),
-        index = "a",
-        parents = character()
-      ))
+      list(
+        name = NA_character_,
+        tables = list(a = list(
+          df = df,
+          keys = list("a"),
+          index = "a",
+          parents = character()
+        ))
+      )
     )
   })
   it("resolves a simple bijection with no splits", {
@@ -32,7 +35,7 @@ describe("decompose", {
     norm_deps <- normalise(dependencies)
     norm.df <- decompose(df, norm_deps)
     expect_identical(
-      norm.df,
+      norm.df$tables,
       list(a = list(
         df = df,
         keys = list("a", "b"),
@@ -74,26 +77,29 @@ describe("decompose", {
     norm_deps <- normalise(deps)
     new_dfs <- decompose(df, norm_deps)
     expected_dfs <- list(
-      id = list(
-        df = df[, c("id", "month", "hemisphere")],
-        keys = list("id"),
-        index = "id",
-        parents = "month_hemisphere"
-      ),
-      month_hemisphere = list(
-        df = data.frame(
-          month = c("dec", "jul", "dec", "jul"),
-          hemisphere = c("N", "N", "S", "S"),
-          is_winter = c(TRUE, FALSE, FALSE, TRUE),
-          row.names = c(1L, 3L, 5:6)
+      name = NA_character_,
+      tables = list(
+        id = list(
+          df = df[, c("id", "month", "hemisphere")],
+          keys = list("id"),
+          index = "id",
+          parents = "month_hemisphere"
         ),
-        keys = list(
-          c("month", "hemisphere"),
-          c("month", "is_winter"),
-          c("hemisphere", "is_winter")
-        ),
-        index = c("month", "hemisphere"),
-        parents = character()
+        month_hemisphere = list(
+          df = data.frame(
+            month = c("dec", "jul", "dec", "jul"),
+            hemisphere = c("N", "N", "S", "S"),
+            is_winter = c(TRUE, FALSE, FALSE, TRUE),
+            row.names = c(1L, 3L, 5:6)
+          ),
+          keys = list(
+            c("month", "hemisphere"),
+            c("month", "is_winter"),
+            c("hemisphere", "is_winter")
+          ),
+          index = c("month", "hemisphere"),
+          parents = character()
+        )
       )
     )
     expect_identical(new_dfs, expected_dfs)
@@ -117,7 +123,7 @@ describe("decompose", {
     )
     norm_deps <- normalise(deps)
     new_dfs <- decompose(df, norm_deps)
-    expect_identical(new_dfs$a$parents, "b_c")
+    expect_identical(new_dfs$tables$a$parents, "b_c")
   })
 
   describe("Dependencies", {
@@ -145,39 +151,42 @@ describe("decompose", {
       )
       norm_deps <- normalise(deps)
       depdfs <- decompose(df, norm_deps)
-      expect_identical(length(depdfs), 3L)
+      expect_identical(length(depdfs$tables), 3L)
       expected_depdfs <- list(
-        player_name_jersey_num = list(
-          df = data.frame(
-            player_name = integer(),
-            jersey_num = integer(),
-            team = integer()
+        name = NA_character_,
+        tables = list(
+          player_name_jersey_num = list(
+            df = data.frame(
+              player_name = integer(),
+              jersey_num = integer(),
+              team = integer()
+            ),
+            keys = list(
+              c("player_name", "jersey_num"),
+              c("player_name", "team"),
+              c("team", "jersey_num")
+            ),
+            index = c("player_name", "jersey_num"),
+            parents = "team"
           ),
-          keys = list(
-            c("player_name", "jersey_num"),
-            c("player_name", "team"),
-            c("team", "jersey_num")
+          city = list(
+            df = data.frame(
+              city = integer(),
+              state = integer()
+            ),
+            keys = list("city", "state"),
+            index = "city",
+            parents = character()
           ),
-          index = c("player_name", "jersey_num"),
-          parents = "team"
-        ),
-        city = list(
-          df = data.frame(
-            city = integer(),
-            state = integer()
-          ),
-          keys = list("city", "state"),
-          index = "city",
-          parents = character()
-        ),
-        team = list(
-          df = data.frame(
-            team = integer(),
-            city = integer()
-          ),
-          keys = list("team"),
-          index = "team",
-          parents = "city"
+          team = list(
+            df = data.frame(
+              team = integer(),
+              city = integer()
+            ),
+            keys = list("team"),
+            index = "team",
+            parents = "city"
+          )
         )
       )
       expect_identical(depdfs, expected_depdfs)
@@ -192,7 +201,7 @@ describe("decompose", {
     ))
     norm_deps <- normalise(deps)
     norm.df <- decompose(df, norm_deps)
-    expect_setequal(names(norm.df[[1]]$df), c("A 1", "B 2", "C 3"))
+    expect_setequal(names(norm.df$tables[[1]]$df), c("A 1", "B 2", "C 3"))
   })
   it("links added key tables", {
     df <- data.frame(
@@ -206,7 +215,7 @@ describe("decompose", {
     )
     norm.df <- decompose(df, norm_deps)
     expect_identical(
-      norm.df$a_c,
+      norm.df$tables$a_c,
       list(
         df = data.frame(a = 1:2, c = rep(1:2, each = 2), row.names = 1:4),
         keys = list(c("a", "c")),
@@ -229,7 +238,11 @@ describe("normalise() replacing normalize_step()", {
     norm.df <- normalise(dependencies)
     expect_identical(
       norm.df,
-      list(attrs = list(c("a", "b", "c")), keys = list(list("a")))
+      list(
+        name = NA_character_,
+        attrs = list(c("a", "b", "c")),
+        keys = list(list("a"))
+      )
     )
   })
   it("resolves a simple bijection with no splits", {
@@ -243,7 +256,11 @@ describe("normalise() replacing normalize_step()", {
     norm.df <- normalise(dependencies)
     expect_identical(
       norm.df,
-      list(attrs = list(c("a", "b")), keys = list(list("a", "b")))
+      list(
+        name = NA_character_,
+        attrs = list(c("a", "b")),
+        keys = list(list("a", "b"))
+      )
     )
   })
   it("correctly splits example data.frame for original make_indexes() test", {

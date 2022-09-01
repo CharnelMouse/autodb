@@ -48,7 +48,10 @@ decompose <- function(df, norm_deps) {
     ref_names <- relation_names[setdiff(which(refs), n)]
     depdf_list[[n]]$parents <- ref_names
   }
-  stats::setNames(depdf_list, relation_names)
+  list(
+    name = norm_deps$name,
+    tables = stats::setNames(depdf_list, relation_names)
+  )
 }
 
 calculate_reference_matrix <- function(indexes, attrs) {

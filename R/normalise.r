@@ -20,6 +20,7 @@
 #' @export
 normalise <- function(
   dependencies,
+  name = NA_character_,
   check_key = TRUE,
   progress = 0L,
   progress_file = ""
@@ -70,7 +71,8 @@ normalise <- function(
       convert_to_character_attributes,
       "converting to readable format",
       dependencies$attrs
-    )
+    ) |>
+    add_name(name)
 }
 
 convert_to_vectors <- function(dependencies) {
@@ -416,6 +418,10 @@ convert_to_character_attributes <- function(vecs, attrs) {
   vecs$attrs <- lapply(vecs$attrs, \(a) attrs[a])
   vecs$keys <- lapply(vecs$keys, \(ks) lapply(ks, \(k) attrs[k]))
   vecs
+}
+
+add_name <- function(lst, name) {
+  c(list(name = name), lst)
 }
 
 find_closure <- function(attrs, determinant_sets, dependents) {

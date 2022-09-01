@@ -71,7 +71,10 @@ plot_string_df <- function(df, df_name) {
 
 gv_setup_string <- function(df_name) {
   paste0(
-    "digraph ", snakecase::to_snake_case(df_name), " {\n",
+    "digraph ",
+    if (!is.na(df_name))
+      paste0(snakecase::to_snake_case(df_name), " "),
+    "{\n",
     "  rankdir = \"LR\"\n",
     "  node [shape=plaintext];"
   )

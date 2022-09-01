@@ -389,6 +389,25 @@ describe("plot_string", {
         expected_string
       )
     })
+    it("doesn't give a graph ID if database name is missing", {
+      es <- structure(
+        list(
+          name = NA_character_,
+          dataframes = list(
+            a = list(
+              df = data.frame(a = 1:4, b = 1:2),
+              keys = list("a"),
+              index = "a",
+              parents = character()
+            )
+          ),
+          relationships = list()
+        ),
+        class = c("database", "list")
+      )
+      plot_string <- plot_string_entityset(es)
+      expect_identical(substr(plot_string, 1, 9), "digraph {")
+    })
   })
   describe("data.frame", {
     it("creates a Graphviz HTML-like expression for the data.frame", {

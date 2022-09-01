@@ -15,7 +15,7 @@
 #' @export
 cross_reference <- function(tables) {
   relationships <- list()
-  stack <- tables
+  stack <- tables$tables
   while (length(stack) > 0) {
     current_df_name <- names(stack)[1]
     current <- stack[[1]]
@@ -23,7 +23,7 @@ cross_reference <- function(tables) {
     stack <- stack[-1]
 
     for (parent_name in current$parents) {
-      parent <- tables[[parent_name]]
+      parent <- tables$tables[[parent_name]]
       relationships <- c(
         relationships,
         lapply(
@@ -35,7 +35,8 @@ cross_reference <- function(tables) {
   }
 
   es <- list(
-    dataframes = tables,
+    name = tables$name,
+    dataframes = tables$tables,
     relationships = relationships
   )
   class(es) <- c("database", class(es))

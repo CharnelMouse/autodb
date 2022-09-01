@@ -27,6 +27,7 @@
 autonorm <- function(
   df,
   accuracy,
+  name = NA_character_,
   check_key = TRUE,
   progress = 0L,
   progress_file = "",
@@ -36,7 +37,7 @@ autonorm <- function(
 
   dfd(df, accuracy, progress = progress, progress_file = "", ...) |>
     report$op(flatten, "flattening") |>
-    report$op(normalise, "normalising", check_key) |>
+    report$op(normalise, "normalising", name, check_key) |>
     report$op(decompose, "decomposing", df = df) |>
     report$op(cross_reference, "cross-referencing")
 }
