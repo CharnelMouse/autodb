@@ -64,8 +64,8 @@ plot_string_database <- function(db) {
   setup_string <- gv_setup_string(db$name)
   df_strings <- mapply(
     df_string,
-    db$dataframes,
-    names(db$dataframes)
+    db$tables,
+    names(db$tables)
   ) |>
     paste(collapse = "\n")
   reference_strings <- vapply(

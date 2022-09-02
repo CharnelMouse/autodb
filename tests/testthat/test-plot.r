@@ -57,7 +57,7 @@ describe("plot_string", {
     it("creates a Graphviz HTML-like expression for the data.frame", {
       es <- list(
         name = "Book",
-        dataframes = list(
+        tables = list(
           Book = list(
             df = data.frame(
               Title = c(
@@ -224,7 +224,7 @@ describe("plot_string", {
     it("converts attribute/df names to snake case for labels (inc. spaces, periods)", {
       es <- list(
         name = "Book",
-        dataframes = list(
+        tables = list(
           Book = list(
             df = data.frame(
               Title = c(
@@ -393,7 +393,7 @@ describe("plot_string", {
       es <- structure(
         list(
           name = NA_character_,
-          dataframes = list(
+          tables = list(
             a = list(
               df = data.frame(a = 1:4, b = 1:2),
               keys = list("a"),

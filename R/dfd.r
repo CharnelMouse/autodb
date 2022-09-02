@@ -8,7 +8,6 @@
 # - replace checking for original key with adding addition FD before other
 # normalising steps, see end of Maier section 6.5.
 # - move relation matrix setdiff into relation matrix function
-# - fix Graphviz plots only drawing table names
 
 #' Dependency discovery with DFD
 #'
