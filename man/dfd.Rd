@@ -2,7 +2,7 @@
 % Please edit documentation in R/dfd.r
 \name{dfd}
 \alias{dfd}
-\title{DFD algorithm}
+\title{Dependency discovery with DFD}
 \usage{
 dfd(
   df,
@@ -47,7 +47,7 @@ the attributes during normalisation.
 }
 \description{
 The DFD algorithm finds all the minimal functional dependencies represented
-in a relation/table, represented here in a data.frame. Checks each column to
+in a relation/table, represented as a data frame. Checks each column to
 see if it's unique. If it is unique, it is added as the LHS of a dependency
 for every other element. It then loops through all the other non-unique
 columns and determines all the LHS that the column depends on. (LHS -->
@@ -81,4 +81,7 @@ as described in Section 3.5 of the original paper.
 \item Missing values (NA) are treated as a normal value, with NA = NA being
 true, and x = NA being false for any non-NA value of x.
 }
+}
+\references{
+DFD paper.
 }

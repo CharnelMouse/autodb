@@ -11,8 +11,10 @@ cross_reference(tables)
 \code{\link{decompose}}.}
 }
 \value{
-A "database", defined as a list of two elements:
+A database, defined as a list of three elements:
 \itemize{
+\item \code{name} contains the optional name of the database, as set in
+\code{\link{decompose}} or \code{\link{autonorm}}.
 \item \code{dataframes} contains the given relation set, \code{tables}.
 \item \code{relationships} contains a list of length-four character
 vectors, describing a single attribute pair in a foreign key

@@ -1,14 +1,17 @@
 # Scratch pad
+# - add cross-references to the database scheme, not the database
 # - add error checking for decompose for norm_deps not matching data.frame
 # - add partitions
-# - add option for introducing artifical keys
+# - add option for introducing artificial keys
 # - powerset creation is still slow
 # - look for avoidable attributes (LTK normal form)
+# - replace checking for original key with adding addition FD before other
+# normalising steps, see end of Maier section 6.5.
 
-#' DFD algorithm
+#' Dependency discovery with DFD
 #'
 #' The DFD algorithm finds all the minimal functional dependencies represented
-#' in a relation/table, represented here in a data.frame. Checks each column to
+#' in a relation/table, represented as a data frame. Checks each column to
 #' see if it's unique. If it is unique, it is added as the LHS of a dependency
 #' for every other element. It then loops through all the other non-unique
 #' columns and determines all the LHS that the column depends on. (LHS -->
@@ -58,6 +61,8 @@
 #'   for that dependent attribute. \code{attrs} is the column names of
 #'   \code{df}, in order. This is kept to serve as a default priority order for
 #'   the attributes during normalisation.
+#' @references
+#' DFD paper.
 #' @export
 dfd <- function(
   df,

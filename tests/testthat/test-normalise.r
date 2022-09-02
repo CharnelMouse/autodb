@@ -45,7 +45,6 @@ describe("normalise", {
     expect_identical(
       norm.dependencies,
       list(
-        name = NA_character_,
         attrs = list(c("a", "b", "c")),
         keys = list(list("a"))
       )
@@ -64,7 +63,6 @@ describe("normalise", {
     expect_identical(
       norm.dependencies,
       list(
-        name = NA_character_,
         attrs = list(c("a", "b"), c("b", "c")),
         keys = list(list("a"), list("b"))
       )
@@ -84,7 +82,6 @@ describe("normalise", {
     expect_identical(
       norm.dependencies,
       list(
-        name = NA_character_,
         attrs = list(c("a", "d", "b"), c("b", "c", "a")),
         keys = list(list("a", "d"), list(c("b", "c")))
       )
@@ -110,7 +107,6 @@ describe("normalise", {
     expect_identical(
       norm.dependencies,
       list(
-        name = NA_character_,
         attrs = list(c("a", "b", "c", "d", "f"), c("d", "e"), c("f", "e")),
         keys = list(list("a", "b"), list("d"), list("f"))
       )
@@ -164,7 +160,6 @@ describe("normalise", {
     expect_identical(
       norm.dep,
       list(
-        name = NA_character_,
         attrs = list(c("C", "A", "B", "D"), c("C", "E", "F")),
         keys = list(list("C", c("A", "B")), list(c("C", "E")))
       )
@@ -196,7 +191,6 @@ describe("normalise", {
     expect_identical(
       nds,
       list(
-        name = NA_character_,
         attrs = list(c("a", "b")),
         keys = list(list(c("a", "b")))
       )

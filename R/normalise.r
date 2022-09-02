@@ -1,7 +1,17 @@
 #' Normalises dependency relationships
 #'
-#' Normalises the dependency relationships in dependencies into a "database", new
-#' groups by breaking up all partial and transitive dependencies.
+#' Normalises the dependency relationships in dependencies into a database
+#' scheme, using Bernstein's synthesis.
+#'
+#' Bernstein's synthesis is a synthesis algorithm for normalisation of a set of
+#' dependencies into a set of relations that are in third normal form. This
+#' implementation is based on the version given in the referenced paper.
+#'
+#' The implementation also includes a common additional step, to ensure that the
+#' resulting decomposition is lossless, i.e. a relation satisfying the given
+#' dependencies can be perfectly reconstructed from the relations given by the
+#' decomposition. This is done by adding an additional relation, containing a
+#' key for all the original attributes, if one is not already present.
 #'
 #' @param dependencies a list of functional dependencies, as given by
 #'   \code{\link{flatten}}: each dependency is a list, contained one character
@@ -9,18 +19,20 @@
 #'   right-hand side.
 #' @inheritParams autonorm
 #'
-#' @return A named list of two lists, with equal length. Each pair represents a
-#'   single relation in the normalisation:
+#' @return A database scheme, represented by a named list of two lists of equal
+#'   length, whose elements form pairs. Each pair represents a single relation
+#'   scheme in the normalisation:
 #'   \itemize{
-#'     \item \code{attrs} elements contain the attributes present, with
-#'     attributes in keys given first.
+#'     \item \code{attrs} elements contain the attributes present in the
+#'     relation schemes, with attributes in keys given first.
 #'     \item \code{keys} elements contain a list of the candidate keys for the
-#'     relation.
+#'     relation schemes.
 #'   }
+#' @references
+#' Bernstein YEAR, TITLE.
 #' @export
 normalise <- function(
   dependencies,
-  name = NA_character_,
   check_key = TRUE,
   progress = 0L,
   progress_file = ""
@@ -71,8 +83,7 @@ normalise <- function(
       convert_to_character_attributes,
       "converting to readable format",
       dependencies$attrs
-    ) |>
-    add_name(name)
+    )
 }
 
 convert_to_vectors <- function(dependencies) {
@@ -418,10 +429,6 @@ convert_to_character_attributes <- function(vecs, attrs) {
   vecs$attrs <- lapply(vecs$attrs, \(a) attrs[a])
   vecs$keys <- lapply(vecs$keys, \(ks) lapply(ks, \(k) attrs[k]))
   vecs
-}
-
-add_name <- function(lst, name) {
-  c(list(name = name), lst)
 }
 
 find_closure <- function(attrs, determinant_sets, dependents) {

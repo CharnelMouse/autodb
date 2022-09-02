@@ -28,16 +28,31 @@ is non-zero, determines where the progress is written to, in the same way
 as the \code{file} argument for \code{\link[base]{cat}}.}
 }
 \value{
-A named list of two lists, with equal length. Each pair represents a
-single relation in the normalisation:
+A database scheme, consisting of a named list of two lists of equal
+length, whose elements form pairs. Each pair represents a single relation
+scheme in the normalisation:
 \itemize{
-\item \code{attrs} elements contain the attributes present, with
-attributes in keys given first.
+\item \code{attrs} elements contain the attributes present in the
+relation schemes, with attributes in keys given first.
 \item \code{keys} elements contain a list of the candidate keys for the
-relation.
+relation schemes.
 }
 }
 \description{
-Normalises the dependency relationships in dependencies into a "database", new
-groups by breaking up all partial and transitive dependencies.
+Normalises the dependency relationships in dependencies into a database
+scheme, using Bernstein's synthesis.
+}
+\details{
+Bernstein's synthesis is a synthesis algorithm for normalisation of a set of
+dependencies into a set of relations that are in third normal form. This
+implementation is based on the version given in the referenced paper.
+
+The implementation also includes a common additional step, to ensure that the
+resulting decomposition is lossless, i.e. a relation satisfying the given
+dependencies can be perfectly reconstructed from the relations given by the
+decomposition. This is done by adding an additional relation, containing a
+key for all the original attributes, if one is not already present.
+}
+\references{
+Bernstein YEAR, TITLE.
 }

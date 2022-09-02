@@ -1,4 +1,4 @@
-#' Create a normalised entity set from a dataframe
+#' Create a normalised database from a data frame
 #'
 #' This is a wrapper function for applying \code{\link{dfd}},
 #' \code{\link{flatten}}, \code{\link{normalise}}, \code{\link{decompose}}, and
@@ -7,6 +7,9 @@
 #' @param df a data.frame, containing the data to be normalised.
 #' @param accuracy a numeric in (0, 1], giving the accuracy threshold threshold
 #'   required in order to conclude a dependency.
+#' @param name a scalar character, giving the name of the database. This name
+#'   is used for the resulting graph when using \code{\link{plot_tables}}, to
+#'   allow for easier combining of graphs into a single diagram if required.
 #' @param check_key a logical, indicating whether to check whether the
 #'   normalisation is lossless. If it is not, then an additional table is added
 #'   to the final "database", containing a key for \code{df}. This is enough to
@@ -21,7 +24,7 @@
 #'   as the \code{file} argument for \code{\link[base]{cat}}.
 #' @param ... further arguments passed on to \code{\link{dfd}}.
 #'
-#' @return A "database", a list of two elements. See
+#' @return A database, represented by a list of three elements. See
 #'   \code{\link{cross_reference}} for details.
 #' @export
 autonorm <- function(
@@ -37,8 +40,8 @@ autonorm <- function(
 
   dfd(df, accuracy, progress = progress, progress_file = "", ...) |>
     report$op(flatten, "flattening") |>
-    report$op(normalise, "normalising", name, check_key) |>
-    report$op(decompose, "decomposing", df = df) |>
+    report$op(normalise, "normalising", check_key) |>
+    report$op(decompose, "decomposing", df = df, name) |>
     report$op(cross_reference, "cross-referencing")
 }
 

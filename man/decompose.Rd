@@ -4,19 +4,25 @@
 \alias{decompose}
 \title{Decompose a data.frame based on given normalised dependencies}
 \usage{
-decompose(df, norm_deps)
+decompose(df, scheme, name = NA_character_)
 }
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
 
-\item{norm_deps}{a list of lists, containing normalised dependencies, as for
-output from \code{\link{normalise}}.}
+\item{scheme}{a list of lists representing a database scheme, as given by
+\code{\link{normalise}}.}
+
+\item{name}{a scalar character, giving the name of the database. This name
+is used for the resulting graph when using \code{\link{plot_tables}}, to
+allow for easier combining of graphs into a single diagram if required.}
 }
 \value{
-A named list of tables in third normal form, that can reproduce the
-original data.frame. This can be considered as a "database": in this
-package, we refer to it as a "relation set", and reserve the use of
-"database" for when the cross references (foreign keys) are included.
+A named list, with two elements: \code{name} contains the assigned
+name of the relation set, if any; \code{tables} contains a list of tables
+in third normal form, that can reproduce the original data.frame. This can
+be considered as a database, in the usual sense; in this package, we refer
+to it as a "relation set", and reserve the use of "database" for when the
+cross-references (foreign keys) are included.
 
 Tables are lists with the following elements:
 \itemize{
@@ -30,8 +36,8 @@ referenced in foreign keys.
 }
 }
 \description{
-Decomposes a data.frame into several tables, based on the given relations.
-It's intended that the relations are derived from a list of functional
-dependencies for the same data.frame: using anything else will give undefined
-behaviour.
+Decomposes a data.frame into several tables, based on the given database
+scheme. It's intended that the relations are derived from a list of
+functional dependencies for the same data.frame: using anything else will
+give undefined behaviour.
 }

@@ -2,11 +2,12 @@
 % Please edit documentation in R/autonorm.r
 \name{autonorm}
 \alias{autonorm}
-\title{Create a normalised entity set from a dataframe}
+\title{Create a normalised database from a data frame}
 \usage{
 autonorm(
   df,
   accuracy,
+  name = NA_character_,
   check_key = TRUE,
   progress = 0L,
   progress_file = "",
@@ -18,6 +19,10 @@ autonorm(
 
 \item{accuracy}{a numeric in (0, 1], giving the accuracy threshold threshold
 required in order to conclude a dependency.}
+
+\item{name}{a scalar character, giving the name of the database. This name
+is used for the resulting graph when using \code{\link{plot_tables}}, to
+allow for easier combining of graphs into a single diagram if required.}
 
 \item{check_key}{a logical, indicating whether to check whether the
 normalisation is lossless. If it is not, then an additional table is added
@@ -37,7 +42,7 @@ as the \code{file} argument for \code{\link[base]{cat}}.}
 \item{...}{further arguments passed on to \code{\link{dfd}}.}
 }
 \value{
-A "database", a list of two elements. See
+A database, represented by a list of three elements. See
 \code{\link{cross_reference}} for details.
 }
 \description{

@@ -1,18 +1,21 @@
 #' Decompose a data.frame based on given normalised dependencies
 #'
-#' Decomposes a data.frame into several tables, based on the given relations.
-#' It's intended that the relations are derived from a list of functional
-#' dependencies for the same data.frame: using anything else will give undefined
-#' behaviour.
+#' Decomposes a data.frame into several tables, based on the given database
+#' scheme. It's intended that the relations are derived from a list of
+#' functional dependencies for the same data.frame: using anything else will
+#' give undefined behaviour.
 #'
 #' @param df a data.frame, containing the data to be normalised.
-#' @param norm_deps a list of lists, containing normalised dependencies, as for
-#'   output from \code{\link{normalise}}.
+#' @param scheme a list of lists representing a database scheme, as given by
+#'   \code{\link{normalise}}.
+#' @inheritParams autonorm
 #'
-#' @return A named list of tables in third normal form, that can reproduce the
-#'   original data.frame. This can be considered as a "database": in this
-#'   package, we refer to it as a "relation set", and reserve the use of
-#'   "database" for when the cross references (foreign keys) are included.
+#' @return A named list, with two elements: \code{name} contains the assigned
+#'   name of the relation set, if any; \code{tables} contains a list of tables
+#'   in third normal form, that can reproduce the original data.frame. This can
+#'   be considered as a database, in the usual sense; in this package, we refer
+#'   to it as a "relation set", and reserve the use of "database" for when the
+#'   cross-references (foreign keys) are included.
 #'
 #'   Tables are lists with the following elements:
 #'   \itemize{
@@ -25,8 +28,8 @@
 #'     referenced in foreign keys.
 #'   }
 #' @export
-decompose <- function(df, norm_deps) {
-  indexes <- lapply(norm_deps$keys, `[[`, 1)
+decompose <- function(df, scheme, name = NA_character_) {
+  indexes <- lapply(scheme$keys, `[[`, 1)
   relation_names <- vapply(indexes, name_dataframe, character(1))
   stopifnot(!anyDuplicated(relation_names))
 
@@ -38,18 +41,18 @@ decompose <- function(df, norm_deps) {
         index = index
       )
     },
-    norm_deps$attrs,
-    norm_deps$keys,
+    scheme$attrs,
+    scheme$keys,
     indexes
   )
-  reference_mat <- calculate_reference_matrix(indexes, norm_deps$attrs)
-  for (n in seq_along(norm_deps$attrs)) {
+  reference_mat <- calculate_reference_matrix(indexes, scheme$attrs)
+  for (n in seq_along(scheme$attrs)) {
     refs <- reference_mat[n, ]
     ref_names <- relation_names[setdiff(which(refs), n)]
     depdf_list[[n]]$parents <- ref_names
   }
   list(
-    name = norm_deps$name,
+    name = name,
     tables = stats::setNames(depdf_list, relation_names)
   )
 }

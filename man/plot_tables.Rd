@@ -4,10 +4,11 @@
 \alias{plot_tables}
 \title{Plot dataframes with relationships}
 \usage{
-plot_tables(es, text = FALSE, con = stdout())
+plot_tables(db, text = FALSE, con = stdout())
 }
 \arguments{
-\item{es}{an entity set, to plotted as linked records.}
+\item{db}{a database, as returned by \code{\link{cross_reference}} or
+\code{\link{autonorm}}.}
 
 \item{text}{a logical, indicating whether to write the plot information to a
 connection, as a Graphviz input, instead of plotting.}
@@ -16,5 +17,33 @@ connection, as a Graphviz input, instead of plotting.}
 \code{text} is \code{TRUE}.}
 }
 \description{
-Plot dataframes with relationships
+Produces an HTML diagram of a database, via Graphviz, or outputs the text
+input for Graphviz.
+}
+\details{
+Each table is presented as a record-like shape, with the following elements:
+\itemize{
+\item A header with the table's name, and the number of (unique) rows.
+\item A set of rows, one for each attribute in the table. These rows have the following contents:
+\itemize{
+\item On the left, the attribute names.
+\item In the middle, a depiction of the table's (candidate) keys. Each
+column represents a key, and a filled cell indicates that the attribute
+in that row is in that key. The keys are given in lexical order, with
+precedence given to keys with fewer attributes, and keys with attributes
+that appear earlier in the original table's attribute order. Default
+output from other package functions will thus have the primary key given
+first. In the future, this will be changed to always give the primary key
+first.
+\item On the right, the attribute types: specifically, the first element
+when passing the attribute's values into \code{\link{base::class}}.
+}
+}
+
+Any foreign key references are represented by arrows
+between the attribute pairs.
+
+If the database has a name, this name is attached to the resulting graph in
+Graphviz. This is to allow easier combination of several such graphs into a
+single image, if a user wishes to do so.
 }

@@ -239,7 +239,6 @@ describe("normalise() replacing normalize_step()", {
     expect_identical(
       norm.df,
       list(
-        name = NA_character_,
         attrs = list(c("a", "b", "c")),
         keys = list(list("a"))
       )
@@ -257,7 +256,6 @@ describe("normalise() replacing normalize_step()", {
     expect_identical(
       norm.df,
       list(
-        name = NA_character_,
         attrs = list(c("a", "b")),
         keys = list(list("a", "b"))
       )

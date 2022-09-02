@@ -217,7 +217,7 @@ describe("plot_string", {
         sep = "\n"
       )
       expect_identical(
-        plot_string_entityset(es),
+        plot_string_database(es),
         expected_string
       )
     })
@@ -385,7 +385,7 @@ describe("plot_string", {
         sep = "\n"
       )
       expect_identical(
-        plot_string_entityset(es),
+        plot_string_database(es),
         expected_string
       )
     })
@@ -405,7 +405,7 @@ describe("plot_string", {
         ),
         class = c("database", "list")
       )
-      plot_string <- plot_string_entityset(es)
+      plot_string <- plot_string_database(es)
       expect_identical(substr(plot_string, 1, 9), "digraph {")
     })
   })

@@ -1,14 +1,44 @@
 #' Plot dataframes with relationships
 #'
-#' @param es an entity set, to plotted as linked records.
+#' Produces an HTML diagram of a database, via Graphviz, or outputs the text
+#' input for Graphviz.
+#'
+#' Each table is presented as a record-like shape, with the following elements:
+#' \itemize{
+#'   \item A header with the table's name, and the number of (unique) rows.
+#'   \item A set of rows, one for each attribute in the table. These rows have the following contents:
+#'   \itemize{
+#'     \item On the left, the attribute names.
+#'     \item In the middle, a depiction of the table's (candidate) keys. Each
+#'     column represents a key, and a filled cell indicates that the attribute
+#'     in that row is in that key. The keys are given in lexical order, with
+#'     precedence given to keys with fewer attributes, and keys with attributes
+#'     that appear earlier in the original table's attribute order. Default
+#'     output from other package functions will thus have the primary key given
+#'     first. In the future, this will be changed to always give the primary key
+#'     first.
+#'     \item On the right, the attribute types: specifically, the first element
+#'     when passing the attribute's values into \code{\link{base::class}}.
+#'   }
+#' }
+#'
+#' Any foreign key references are represented by arrows
+#' between the attribute pairs.
+#'
+#' If the database has a name, this name is attached to the resulting graph in
+#' Graphviz. This is to allow easier combination of several such graphs into a
+#' single image, if a user wishes to do so.
+#'
+#' @param db a database, as returned by \code{\link{cross_reference}} or
+#'   \code{\link{autonorm}}.
 #' @param text a logical, indicating whether to write the plot information to a
 #'   connection, as a Graphviz input, instead of plotting.
 #' @param con a connection, to which the Graphviz text input is written if
 #'   \code{text} is \code{TRUE}.
 #'
 #' @export
-plot_tables <- function(es, text = FALSE, con = stdout()) {
-  gv_string <- plot_string_entityset(es)
+plot_tables <- function(db, text = FALSE, con = stdout()) {
+  gv_string <- plot_string_database(db)
   if (text)
     writeLines(gv_string, con)
   else
@@ -30,16 +60,16 @@ plot_table <- function(df, df_name, text = FALSE, con = stdout()) {
     DiagrammeR::grViz(gv_string)
 }
 
-plot_string_entityset <- function(es) {
-  setup_string <- gv_setup_string(es$name)
+plot_string_database <- function(db) {
+  setup_string <- gv_setup_string(db$name)
   df_strings <- mapply(
     df_string,
-    es$dataframes,
-    names(es$dataframes)
+    db$dataframes,
+    names(db$dataframes)
   ) |>
     paste(collapse = "\n")
   reference_strings <- vapply(
-    es$relationships,
+    db$relationships,
     reference_string,
     character(1)
   ) |>

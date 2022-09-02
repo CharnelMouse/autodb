@@ -3,8 +3,10 @@
 #' @param tables a relation set, i.e. named list of tables, as given by
 #'   \code{\link{decompose}}.
 #'
-#' @return A "database", defined as a list of two elements:
+#' @return A database, defined as a list of three elements:
 #'   \itemize{
+#'     \item \code{name} contains the optional name of the database, as set in
+#'     \code{\link{decompose}} or \code{\link{autonorm}}.
 #'     \item \code{dataframes} contains the given relation set, \code{tables}.
 #'     \item \code{relationships} contains a list of length-four character
 #'     vectors, describing a single attribute pair in a foreign key
