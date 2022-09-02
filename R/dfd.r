@@ -1,5 +1,4 @@
 # Scratch pad
-# - add cross-references to the database scheme, not the database
 # - add error checking for decompose for norm_deps not matching data.frame
 # - add partitions
 # - add option for introducing artificial keys
