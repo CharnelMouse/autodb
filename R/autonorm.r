@@ -1,8 +1,8 @@
 #' Create a normalised database from a data frame
 #'
 #' This is a wrapper function for applying \code{\link{dfd}},
-#' \code{\link{flatten}}, \code{\link{normalise}}, \code{\link{decompose}}, and
-#' \code{\link{cross_reference}}, in order.
+#' \code{\link{flatten}}, \code{\link{normalise}},
+#' \code{\link{cross_reference}}, and \code{\link{decompose}}, in order.
 #'
 #' @param df a data.frame, containing the data to be normalised.
 #' @param accuracy a numeric in (0, 1], giving the accuracy threshold threshold
@@ -41,8 +41,8 @@ autonorm <- function(
   dfd(df, accuracy, progress = progress, progress_file = "", ...) |>
     report$op(flatten, "flattening") |>
     report$op(normalise, "normalising", check_key) |>
-    report$op(decompose, "decomposing", df = df, name) |>
-    report$op(cross_reference, "cross-referencing")
+    report$op(cross_reference, "cross-referencing") |>
+    report$op(decompose, "decomposing", df = df, name)
 }
 
 #' Flatten functional dependency list for normalisation

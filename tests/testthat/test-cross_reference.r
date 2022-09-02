@@ -1,20 +1,22 @@
 describe("cross_reference", {
-  it("returns relations", {
+  it("returns relationships", {
     df <- data.frame(a = integer(), b = integer(), c = integer())
-    deps <- list(
-      dependencies = list(
-        list("a", "b"),
-        list("a", "c"),
-        list("b", "c")
+    norm_deps <- list(
+      attrs = list(
+        c("a", "b"),
+        c("b", "c")
       ),
-      attrs = c("a", "b", "c")
+      keys = list(
+        list("a"),
+        list("b")
+      )
     )
-    norm_deps <- normalise(deps)
-    tables <- decompose(df, norm_deps)
-    es <- cross_reference(tables)
+    es <- cross_reference(norm_deps)
+    expected_parents = list(2L, integer())
     expected_relations <- list(
-      c("a", "b", "b", "b")
+      list(c(1L, 2L), "b")
     )
+    expect_identical(es$parents, expected_parents)
     expect_identical(es$relationships, expected_relations)
   })
 })

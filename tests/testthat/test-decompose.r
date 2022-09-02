@@ -1,14 +1,12 @@
 describe("decompose", {
   it("removes extraneous dependencies", {
-    dependencies <- list(
-      dependencies = list(
-        list("a", "b"),
-        list(c("a", "b"), "c")
-      ),
-      attrs = c("a", "b", "c")
-    )
     df <- data.frame(a = integer(), b = integer(), c = integer())
-    norm_deps <- normalise(dependencies)
+    norm_deps <- list(
+      attrs = list(c("a", "b", "c")),
+      keys = list(list("a")),
+      parents = list(integer()),
+      relationships = list()
+    )
     norm.df <- decompose(df, norm_deps)
     expect_identical(
       norm.df,
@@ -19,20 +17,19 @@ describe("decompose", {
           keys = list("a"),
           index = "a",
           parents = character()
-        ))
+        )),
+        relationships = list()
       )
     )
   })
   it("resolves a simple bijection with no splits", {
-    dependencies <- list(
-      dependencies = list(
-        list("a", "b"),
-        list("b", "a")
-      ),
-      attrs = c("a", "b")
-    )
     df <- data.frame(a = integer(), b = integer())
-    norm_deps <- normalise(dependencies)
+    norm_deps <- list(
+      attrs = list(c("a", "b")),
+      keys = list(list("a", "b")),
+      parents = list(integer()),
+      relationships = list()
+    )
     norm.df <- decompose(df, norm_deps)
     expect_identical(
       norm.df$tables,
@@ -63,18 +60,25 @@ describe("decompose", {
         TRUE, TRUE, TRUE, FALSE, FALSE
       )
     )
-    deps <- list(
-      dependencies = list(
-        list("id", "month"),
-        list("id", "hemisphere"),
-        list("id", "is_winter"),
-        list(c("month", "hemisphere"), "is_winter"),
-        list(c("month", "is_winter"), "hemisphere"),
-        list(c("hemisphere", "is_winter"), "month")
+    norm_deps <- list(
+      attrs = list(
+        c("id", "month", "hemisphere"),
+        c("month", "hemisphere", "is_winter")
       ),
-      attrs = c("id", "month", "hemisphere", "is_winter")
+      keys = list(
+        list("id"),
+        list(
+          c("month", "hemisphere"),
+          c("month", "is_winter"),
+          c("hemisphere", "is_winter")
+        )
+      ),
+      parents = list(2L, integer()),
+      relationships = list(
+        list(1:2, "month"),
+        list(1:2, "hemisphere")
+      )
     )
-    norm_deps <- normalise(deps)
     new_dfs <- decompose(df, norm_deps)
     expected_dfs <- list(
       name = NA_character_,
@@ -100,6 +104,10 @@ describe("decompose", {
           index = c("month", "hemisphere"),
           parents = character()
         )
+      ),
+      relationships = list(
+        c("id", "month", "month_hemisphere", "month"),
+        c("id", "hemisphere", "month_hemisphere", "hemisphere")
       )
     )
     expect_identical(new_dfs, expected_dfs)
@@ -112,36 +120,30 @@ describe("decompose", {
       d = 1L,
       e = 1L
     )
-    deps <- list(
-      dependencies = list(
-        list("a", "b"),
-        list("a", "c"),
-        list(c("b", "c"), "d"),
-        list("b", "e")
+    norm_deps <- list(
+      attrs = list(
+        c("a", "b", "c"),
+        c("b", "c", "d"),
+        c("b", "e")
       ),
-      attrs = c("a", "b", "c", "d", "e")
+      keys = list(
+        list("a"),
+        list(c("b", "c")),
+        list("b")
+      ),
+      parents = list(2L, 3L, integer()),
+      relationships = list(
+        list(1:2, "b"),
+        list(1:2, "c"),
+        list(2:3, "b")
+      )
     )
-    norm_deps <- normalise(deps)
     new_dfs <- decompose(df, norm_deps)
     expect_identical(new_dfs$tables$a$parents, "b_c")
   })
 
   describe("Dependencies", {
     it("DepDF", {
-      deps <- list(
-        dependencies = list(
-          list(c("player_name", "jersey_num"), "team"),
-          list(c("player_name", "team"), "jersey_num"),
-          list(c("team", "jersey_num"), "player_name"),
-          list("team", "city"),
-          list("state", "city"),
-          list(c("player_name", "jersey_num"), "city"),
-          list("team", "state"),
-          list(c("player_name", "jersey_num"), "state"),
-          list("city", "state")
-        ),
-        attrs = c("player_name", "jersey_num", "team", "city", "state")
-      )
       df <- data.frame(
         player_name = integer(),
         jersey_num = integer(),
@@ -149,7 +151,27 @@ describe("decompose", {
         city = integer(),
         state = integer()
       )
-      norm_deps <- normalise(deps)
+      norm_deps <- list(
+        attrs = list(
+          c("player_name", "jersey_num",  "team"),
+          c("city",  "state"),
+          c("team", "city")
+        ),
+        keys = list(
+          list(
+            c("player_name", "jersey_num"),
+            c("player_name", "team"),
+            c("team", "jersey_num")
+          ),
+          list("city", "state"),
+          list("team")
+        ),
+        parents = list(3L, integer(), 2L),
+        relationships = list(
+          list(c(1L, 3L), "team"),
+          list(3:2, "city")
+        )
+      )
       depdfs <- decompose(df, norm_deps)
       expect_identical(length(depdfs$tables), 3L)
       expected_depdfs <- list(
@@ -187,6 +209,10 @@ describe("decompose", {
             index = "team",
             parents = "city"
           )
+        ),
+        relationships = list(
+          c("player_name_jersey_num", "team", "team", "team"),
+          c("team", "city", "city", "city")
         )
       )
       expect_identical(depdfs, expected_depdfs)
@@ -195,11 +221,12 @@ describe("decompose", {
   it("correctly handles attributes with non-df-standard names", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
       stats::setNames(c("A 1", "B 2", "C 3"))
-    deps <- flatten(list(
-      dependencies = dfd(df, 1)$dependencies,
-      attrs = c("A 1", "B 2", "C 3")
-    ))
-    norm_deps <- normalise(deps)
+    norm_deps <- list(
+      attrs = list(c("A 1", "B 2", "C 3")),
+      keys = list(list("A 1", c("B 2", "C 3"))),
+      parents = list(integer()),
+      relationships = list()
+    )
     norm.df <- decompose(df, norm_deps)
     expect_setequal(names(norm.df$tables[[1]]$df), c("A 1", "B 2", "C 3"))
   })
@@ -211,7 +238,9 @@ describe("decompose", {
     )
     norm_deps <- list(
       attrs = list(c("a", "b"), c("a", "c")),
-      keys = list(list("a", "b"), list(c("a", "c")))
+      keys = list(list("a", "b"), list(c("a", "c"))),
+      parents = list(integer(), 1L),
+      relationships = list(list(2:1, "a"))
     )
     norm.df <- decompose(df, norm_deps)
     expect_identical(

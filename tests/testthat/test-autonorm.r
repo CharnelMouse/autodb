@@ -19,8 +19,8 @@ describe("autonorm", {
     )
     es <- autonorm(df, 1)
     expect_true(!anyDuplicated(es))
-    expect_identical(length(es$dataframes), 3L)
-    expect_setequal(names(es$dataframes), c("Price", "Title", "Format"))
+    expect_identical(length(es$tables), 3L)
+    expect_setequal(names(es$tables), c("Price", "Title", "Format"))
     expect_setequal(
       es$relationships,
       list(
@@ -49,20 +49,20 @@ describe("autonorm", {
     )
     es_nonfiltered <- autonorm(df, 1)
     expect_setequal(
-      names(es_nonfiltered$dataframes),
+      names(es_nonfiltered$tables),
       c("Price", "Title", "Format")
     )
     expect_identical(
-      es_nonfiltered$dataframes$Price$keys,
+      es_nonfiltered$tables$Price$keys,
       list("Price", c("Title", "Format"))
     )
     es_filtered <- autonorm(df, 1, exclude_class = "numeric")
     expect_setequal(
-      names(es_filtered$dataframes),
+      names(es_filtered$tables),
       c("Title_Format", "Title", "Format")
     )
     expect_identical(
-      es_filtered$dataframes$Title_Format$keys,
+      es_filtered$tables$Title_Format$keys,
       list(c("Title", "Format"))
     )
   })
@@ -86,20 +86,20 @@ describe("autonorm", {
     )
     es_nonfiltered <- autonorm(df, 1)
     expect_setequal(
-      names(es_nonfiltered$dataframes),
+      names(es_nonfiltered$tables),
       c("Price", "Title", "Format")
     )
     expect_identical(
-      es_nonfiltered$dataframes$Price$keys,
+      es_nonfiltered$tables$Price$keys,
       list("Price", c("Title", "Format"))
     )
     es_filtered <- autonorm(df, 1, exclude = "Price")
     expect_setequal(
-      names(es_filtered$dataframes),
+      names(es_filtered$tables),
       c("Title_Format", "Title", "Format")
     )
     expect_identical(
-      es_filtered$dataframes$Title_Format$keys,
+      es_filtered$tables$Title_Format$keys,
       list(c("Title", "Format"))
     )
   })
@@ -123,20 +123,20 @@ describe("autonorm", {
     )
     es_nonfiltered <- autonorm(df, 1)
     expect_setequal(
-      names(es_nonfiltered$dataframes),
+      names(es_nonfiltered$tables),
       c("Price", "Title", "Format")
     )
     expect_identical(
-      es_nonfiltered$dataframes$Price$keys,
+      es_nonfiltered$tables$Price$keys,
       list("Price", c("Title", "Format"))
     )
     es_filtered <- autonorm(df, 1, exclude_class = "integer")
     expect_setequal(
-      names(es_filtered$dataframes),
+      names(es_filtered$tables),
       c("Title_Format", "Title", "Format")
     )
     expect_identical(
-      es_filtered$dataframes$Title_Format$keys,
+      es_filtered$tables$Title_Format$keys,
       list(c("Title", "Format"))
     )
   })
@@ -144,7 +144,7 @@ describe("autonorm", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
       stats::setNames(c("A 1", "B 2", "C 3"))
     es <- autonorm(df, 1)
-    expect_identical(names(es$dataframes[[1]]$df), c("A 1", "B 2", "C 3"))
+    expect_identical(names(es$tables[[1]]$df), c("A 1", "B 2", "C 3"))
   })
   it("adds a key table if none given in normalisation", {
     df <- data.frame(
@@ -154,7 +154,7 @@ describe("autonorm", {
     )
     es <- autonorm(df, 1)
     expect_identical(
-      es$dataframes$a_c,
+      es$tables$a_c,
       list(
         df = data.frame(a = 1:2, c = rep(1:2, each = 2), row.names = 1:4),
         keys = list(c("a", "c")),

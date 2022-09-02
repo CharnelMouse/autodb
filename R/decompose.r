@@ -6,27 +6,29 @@
 #' give undefined behaviour.
 #'
 #' @param df a data.frame, containing the data to be normalised.
-#' @param scheme a list of lists representing a database scheme, as given by
-#'   \code{\link{normalise}}.
+#' @param scheme a database scheme with foreign key relationships, as given by
+#'   \code{\link{cross_reference}}.
 #' @inheritParams autonorm
 #'
-#' @return A named list, with two elements: \code{name} contains the assigned
-#'   name of the relation set, if any; \code{tables} contains a list of tables
-#'   in third normal form, that can reproduce the original data.frame. This can
-#'   be considered as a database, in the usual sense; in this package, we refer
-#'   to it as a "relation set", and reserve the use of "database" for when the
-#'   cross-references (foreign keys) are included.
-#'
-#'   Tables are lists with the following elements:
+#' @return A database, represented by a named list, with three elements:
 #'   \itemize{
-#'     \item \code{df}, the data.frame containing the data.
-#'     \item \code{keys}, the list of character vectors, representing
-#'     (candidate) keys for the table.
-#'     \item \code{index}, a character vector, representing the index / primary
-#'     key of the table.
-#'     \item \code{parents}, containing names of parent tables, i.e. tables
-#'     referenced in foreign keys.
+#'     \item \code{name} contains the assigned name of the relation set, if any;
+#'     \item \code{tables} contains a list of tables in third normal form, that
+#'     can reproduce the original data.frame;
+#'     \item \code{relationships} contains relationships between the tables,
+#'     represented as a list of length-four character vectors. In order, the
+#'     elements are the name of the child table, the name of the linked
+#'     attribute in the child table, the name of the parent table, and the name
+#'     of the linked attribute in the parent table. Currently, the attribute is
+#'     expected to have the same name in both tables.
 #'   }
+#'
+#'   Tables are lists with the following elements: \itemize{ \item \code{df},
+#'   the data.frame containing the data. \item \code{keys}, the list of
+#'   character vectors, representing (candidate) keys for the table. \item
+#'   \code{index}, a character vector, representing the index / primary key of
+#'   the table. \item \code{parents}, containing names of parent tables, i.e.
+#'   tables referenced in foreign keys. }
 #' @export
 decompose <- function(df, scheme, name = NA_character_) {
   indexes <- lapply(scheme$keys, `[[`, 1)
@@ -34,26 +36,29 @@ decompose <- function(df, scheme, name = NA_character_) {
   stopifnot(!anyDuplicated(relation_names))
 
   depdf_list <- Map(
-    \(attrs, keys, index) {
+    \(attrs, keys, index, parents) {
       list(
         df = unique(df[, attrs, drop = FALSE]),
         keys = keys,
-        index = index
+        index = index,
+        parents = relation_names[parents]
       )
     },
     scheme$attrs,
     scheme$keys,
-    indexes
+    indexes,
+    scheme$parents
   )
-  reference_mat <- calculate_reference_matrix(indexes, scheme$attrs)
-  for (n in seq_along(scheme$attrs)) {
-    refs <- reference_mat[n, ]
-    ref_names <- relation_names[setdiff(which(refs), n)]
-    depdf_list[[n]]$parents <- ref_names
-  }
+  relationships <- lapply(
+    scheme$relationships,
+    \(r) {
+      c(relation_names[r[[1]][1]], r[[2]], relation_names[r[[1]][2]], r[[2]])
+    }
+  )
   list(
     name = name,
-    tables = stats::setNames(depdf_list, relation_names)
+    tables = stats::setNames(depdf_list, relation_names),
+    relationships = relationships
   )
 }
 

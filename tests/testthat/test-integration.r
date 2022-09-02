@@ -4,8 +4,8 @@ test_that("simple tables pass through the whole pipeline", {
   es2 <- dfd(df, 1) |>
     flatten() |>
     normalise() |>
-    decompose(df = df) |>
-    cross_reference()
+    cross_reference() |>
+    decompose(df = df)
   expect_identical(es, es2)
   expect_silent(plot_tables(es))
 })
