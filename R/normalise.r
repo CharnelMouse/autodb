@@ -45,6 +45,7 @@ normalise <- function(
       "simplifying dependency format"
     ) |>
     convert_to_integer_attributes(dependencies$attrs) |>
+    sort_key_contents() |>
     report$op(
       remove_extraneous_attributes,
       "removing extraneuous components"
@@ -96,6 +97,11 @@ convert_to_vectors <- function(dependencies) {
 convert_to_integer_attributes <- function(vecs, attrs) {
   vecs$determinant_sets <- lapply(vecs$determinant_sets, match, attrs)
   vecs$dependents <- match(vecs$dependents, attrs)
+  vecs
+}
+
+sort_key_contents <- function(vecs) {
+  vecs$determinant_sets <- lapply(vecs$determinant_sets, sort)
   vecs
 }
 

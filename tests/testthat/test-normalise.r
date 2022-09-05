@@ -128,14 +128,14 @@ describe("normalise", {
     norm.dep <- normalise(dependencies)
     expected_attrs <- list(
       c("x1", "x2", "c", "d"), # contains a if trans_deps not removed
-      c("a", "x1", "b"),
-      c("b", "x2", "c"),
+      c("x1", "a", "b"),
+      c("x2", "b", "c"),
       c("c", "a")
     )
     expected_keys <- list(
       list(c("x1", "x2"), c("c", "d")),
-      list(c("a", "x1")),
-      list(c("b", "x2")),
+      list(c("x1", "a")),
+      list(c("x2", "b")),
       list("c")
     )
     expect_setequal(norm.dep$attrs, expected_attrs)
@@ -246,6 +246,19 @@ describe("normalise", {
         expect_identical(redo$keys[[1]], relation$keys[[1]])
       }
     )
+  })
+  it("ensures starting dependencies have key elements ordered by attributes", {
+    dependencies <- list(
+      dependencies = list(list(c("a", "b"), "c")),
+      attrs = c("a", "b", "c")
+    )
+    norm_deps <- normalise(dependencies)
+    dependencies2 <- list(
+      dependencies = list(list(c("b", "a"), "c")),
+      attrs = c("a", "b", "c")
+    )
+    norm_deps2 <- normalise(dependencies2)
+    expect_identical(norm_deps, norm_deps2)
   })
 })
 

@@ -372,7 +372,7 @@ describe("normalise() replacing normalize_step()", {
         list(
           c("player_name", "jersey_num"),
           c("player_name", "team"),
-          c("team", "jersey_num")
+          c("jersey_num", "team")
         ),
         list("team"),
         list("state", "city")
