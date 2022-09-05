@@ -62,3 +62,52 @@ cross_reference <- function(scheme) {
     class = c("database_scheme", "list")
   )
 }
+
+calculate_reference_matrix <- function(indexes, attrs) {
+  ref_detsets <- list()
+  ref_deps <- character()
+  seq_rel <- seq_along(indexes)
+  for (n in seq_rel) {
+    for (m in seq_rel[-n]) {
+      ind <- indexes[[n]]
+      if (all(ind %in% attrs[[m]])) {
+        ref_detsets <- c(ref_detsets, paste(m, ind, sep = "."))
+        ref_deps <- c(ref_deps, paste(n, ind, sep = "."))
+      }
+    }
+  }
+
+  ref_attrs <- unique(c(unlist(ref_detsets), unlist(ref_deps)))
+  ref_vecs <- list(determinant_sets = ref_detsets, dependents = ref_deps) |>
+    convert_to_integer_attributes(ref_attrs) |>
+    remove_extraneous_dependencies()
+  # convert back to characters
+  convert_back <- function(x) {
+    ref_attrs[x] |>
+      as.character() |>
+      strsplit(".", fixed = TRUE)
+  }
+  filtered_determinant_sets <- convert_back(unlist(ref_vecs$determinant_sets))
+  filtered_dependents <- convert_back(ref_vecs$dependents)
+  rel_inds <- function(x) strtoi(vapply(x, `[[`, character(1), 1))
+  rel_attrs <- function(x) vapply(x, `[[`, character(1), 2)
+  filtered_children <- rel_inds(filtered_determinant_sets)
+  filtered_parents <- rel_inds(filtered_dependents)
+  filtered_attrs <- rel_attrs(filtered_determinant_sets)
+  stopifnot(identical(filtered_attrs, rel_attrs(filtered_dependents)))
+
+  unique_ref_splits <- !duplicated(Map(c, filtered_children, filtered_parents))
+  unique_ref_children <- filtered_children[unique_ref_splits]
+  unique_ref_parents <- filtered_parents[unique_ref_splits]
+  ref_order <- order(unique_ref_children, unique_ref_parents)
+  children <- unique_ref_children[ref_order]
+  parents <- unique_ref_parents[ref_order]
+
+  n_tables <- length(indexes)
+  reference_mat <- matrix(FALSE, nrow = n_tables, ncol = n_tables)
+  for (ref in seq_along(ref_order)) {
+    reference_mat[children[ref], parents[ref]] <- TRUE
+  }
+
+  reference_mat
+}
