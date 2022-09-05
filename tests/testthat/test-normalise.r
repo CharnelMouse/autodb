@@ -366,3 +366,142 @@ describe("keys_order", {
     )
   })
 })
+
+describe("normalise() replacing normalize_step()", {
+  expect_database_scheme <- function(current, target) {
+    expect_identical(
+      current,
+      structure(target, class = c("database_scheme", "list"))
+    )
+  }
+
+  it("removes extraneous dependencies", {
+    dependencies <- list(
+      dependencies = list(
+        list("a", "b"),
+        list(c("a", "b"), "c")
+      ),
+      attrs = c("a", "b", "c")
+    )
+    norm.df <- normalise(dependencies)
+    expect_database_scheme(
+      norm.df,
+      list(
+        attrs = list(c("a", "b", "c")),
+        keys = list(list("a"))
+      )
+    )
+  })
+  it("resolves a simple bijection with no splits", {
+    dependencies <- list(
+      dependencies = list(
+        list("a", "b"),
+        list("b", "a")
+      ),
+      attrs = c("a", "b")
+    )
+    norm.df <- normalise(dependencies)
+    expect_database_scheme(
+      norm.df,
+      list(
+        attrs = list(c("a", "b")),
+        keys = list(list("a", "b"))
+      )
+    )
+  })
+  it("correctly splits example data.frame for original make_indexes() test", {
+    # has multi-keys getting combined, so tests construct_relations
+    # handles multiple values in RHS of input relations
+    df <- data.frame(
+      id = c(
+        0, 1, 2, 3, 4,
+        5, 6, 7, 8, 9
+      ),
+      month = c(
+        'dec', 'dec', 'jul', 'jul', 'dec',
+        'jul', 'jul', 'jul', 'dec', 'jul'
+      ),
+      hemisphere = c(
+        'N', 'N', 'N', 'N', 'S',
+        'S', 'S', 'S', 'S', 'N'
+      ),
+      is_winter = c(
+        TRUE, TRUE, FALSE, FALSE, FALSE,
+        TRUE, TRUE, TRUE, FALSE, FALSE
+      )
+    )
+    deps <- list(
+      dependencies = list(
+        list("id", "month"),
+        list("id", "hemisphere"),
+        list("id", "is_winter"),
+        list(c("month", "hemisphere"), "is_winter"),
+        list(c("month", "is_winter"), "hemisphere"),
+        list(c("hemisphere", "is_winter"), "month")
+      ),
+      attrs = c("id", "month", "hemisphere", "is_winter")
+    )
+    new_deps <- normalise(deps)
+    expected_parent <- list(
+      attrs = c("id", "month", "hemisphere"),
+      keys = list("id")
+    )
+    expect_identical(length(new_deps$attrs[[1]]), 3L)
+    expect_true("id" %in% new_deps$attrs[[1]])
+    expect_identical(
+      length(intersect(
+        new_deps$attrs[[1]],
+        c("month", "hemisphere", "is_winter")
+      )),
+      2L
+    )
+    expect_identical(new_deps$keys[[1]], list("id"))
+    expected_child_attrs <- c("month", "hemisphere", "is_winter")
+    expected_child_keys <- list(
+      c("month", "hemisphere"),
+      c("month", "is_winter"),
+      c("hemisphere", "is_winter")
+    )
+    expect_identical(new_deps$attrs[[2]], expected_child_attrs)
+    expect_identical(new_deps$keys[[2]], expected_child_keys)
+  })
+  it("DepDF", {
+    deps <- list(
+      dependencies = list(
+        list(c("player_name", "jersey_num"), "team"),
+        list(c("player_name", "team"), "jersey_num"),
+        list(c("team", "jersey_num"), "player_name"),
+        list("team", "city"),
+        list("state", "city"),
+        list(c("player_name", "jersey_num"), "city"),
+        list("team", "state"),
+        list(c("player_name", "jersey_num"), "state"),
+        list("city", "state")
+      ),
+      attrs = c("player_name", "jersey_num", "team", "state", "city")
+    )
+    new_deps <- normalise(deps)
+    expected_deps <- list(
+      attrs = list(
+        c("player_name", "jersey_num", "team"),
+        c("team", "state"),
+        c("state", "city")
+      ),
+      keys = list(
+        list(
+          c("player_name", "jersey_num"),
+          c("player_name", "team"),
+          c("jersey_num", "team")
+        ),
+        list("team"),
+        list("state", "city")
+      )
+    )
+    expect_setequal(new_deps$attrs, expected_deps$attrs)
+    expect_setequal(new_deps$keys, expected_deps$keys)
+    expect_identical(
+      match(new_deps$attrs, expected_deps$attrs),
+      match(new_deps$keys, expected_deps$keys)
+    )
+  })
+})
