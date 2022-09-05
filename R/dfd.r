@@ -1,5 +1,4 @@
 # Scratch pad
-# - add plotting function for database schemes
 # - add removing of avoidable attributes (ERASE, Maier section 6.6)
 # - add error checking for decompose for norm_deps not matching data.frame
 # - add partitions

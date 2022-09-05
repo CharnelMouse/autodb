@@ -17,9 +17,62 @@ describe("plot_string", {
         ncols,
         "\">",
         df_name,
-        " (",
-        nrows,
-        " rows)</TD></TR>"
+        paste0(
+          " (",
+          nrows,
+          " rows)"
+        ),
+        "</TD></TR>"
+      ),
+      paste(
+        "    <TR><TD PORT=\"TO_",
+        attr_labels,
+        "\">",
+        attr_names,
+        "</TD>",
+        if (nrow(key_memberships) > 0)
+          apply(
+            key_memberships,
+            1,
+            \(ls) {
+              paste0(
+                "<TD",
+                ifelse(ls, " BGCOLOR=\"black\"", ""),
+                ">",
+                "</TD>"
+              )
+            }
+          ),
+        "<TD PORT=\"FROM_",
+        attr_labels,
+        "\">",
+        attr_classes,
+        "</TD></TR>",
+        sep = "",
+        collapse = "\n"
+      ),
+      "    </TABLE>>];",
+      sep = "\n"
+    )
+  }
+  test_nameless_relation_strings <- function(
+    rel_name,
+    rel_label,
+    attr_names,
+    attr_labels,
+    attr_classes,
+    key_memberships
+  ) {
+    ncols <- ncol(key_memberships) + 2L
+    paste(
+      paste0("  ", rel_label, " [label = <"),
+      "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+      paste0(
+        "    <TR><TD COLSPAN=\"",
+        ncols,
+        "\">",
+        rel_name,
+        "</TD></TR>"
       ),
       paste(
         "    <TR><TD PORT=\"TO_",
@@ -406,6 +459,172 @@ describe("plot_string", {
         class = c("database", "list")
       )
       plot_string <- plot_string_database(es)
+      expect_identical(substr(plot_string, 1, 9), "digraph {")
+    })
+  })
+  describe("database_scheme", {
+    it("creates a Graphviz HTML-like expression for the data.frame", {
+      es <- list(
+        attrs = list(
+          c("Title", "Author", "Pages", "Thickness", "Genre_ID", "Publisher_ID"),
+          c("Title", "Format", "Price"),
+          c("Author", "Author_Nationality"),
+          c("Genre_ID", "Genre_Name")
+        ),
+        keys = list(
+          list("Title"),
+          list(c("Title", "Format")),
+          list("Author"),
+          list("Genre_ID")
+        ),
+        parents = list(
+          2:4,
+          integer(),
+          integer(),
+          integer()
+        ),
+        relationships = list(
+          list(c(1L, 2L), "Title"),
+          list(c(1L, 3L), "Author"),
+          list(c(1L, 4L), "Genre ID")
+        )
+      )
+      expected_string <- paste(
+        "digraph book {",
+        "  rankdir = \"LR\"",
+        "  node [shape=plaintext];",
+        "",
+        "  1 [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD PORT=\"TO_title\">Title</TD><TD PORT =\"FROM_title\" BGCOLOR=\"black\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_author\">Author</TD><TD PORT =\"FROM_author\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_pages\">Pages</TD><TD PORT =\"FROM_pages\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_thickness\">Thickness</TD><TD PORT =\"FROM_thickness\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_genre_id\">Genre_ID</TD><TD PORT =\"FROM_genre_id\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_publisher_id\">Publisher_ID</TD><TD PORT =\"FROM_publisher_id\"></TD></TR>",
+        "    </TABLE>>];",
+        "  2 [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD PORT=\"TO_title\">Title</TD><TD PORT =\"FROM_title\" BGCOLOR=\"black\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_format\">Format</TD><TD PORT =\"FROM_format\" BGCOLOR=\"black\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_price\">Price</TD><TD PORT =\"FROM_price\"></TD></TR>",
+        "    </TABLE>>];",
+        "  3 [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD PORT=\"TO_author\">Author</TD><TD PORT =\"FROM_author\" BGCOLOR=\"black\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_author_nationality\">Author_Nationality</TD><TD PORT =\"FROM_author_nationality\"></TD></TR>",
+        "    </TABLE>>];",
+        "  4 [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD PORT=\"TO_genre_id\">Genre_ID</TD><TD PORT =\"FROM_genre_id\" BGCOLOR=\"black\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_genre_name\">Genre_Name</TD><TD PORT =\"FROM_genre_name\"></TD></TR>",
+        "    </TABLE>>];",
+        "",
+        "  1:FROM_title -> 2:TO_title;",
+        "  1:FROM_author -> 3:TO_author;",
+        "  1:FROM_genre_id -> 4:TO_genre_id;",
+        "}",
+        "",
+        sep = "\n"
+      )
+      expect_identical(
+        plot_string_database_scheme(es, "book"),
+        expected_string
+      )
+    })
+    it("converts attribute/df names to snake case for labels (inc. spaces, periods)", {
+      es <- list(
+        attrs = list(
+          c(
+            "Title",
+            "Author",
+            "Pages",
+            "Thickness",
+            "Genre ID",
+            "Publisher ID"
+          ),
+          c("Title", "Format", "Price"),
+          c("Author", "Author Nationality"),
+          c("Genre ID", "Genre Name")
+        ),
+        keys = list(
+          list("Title"),
+          list(c("Title", "Format")),
+          list("Author"),
+          list("Genre ID")
+        ),
+        parents = list(
+          2:4,
+          integer(),
+          integer(),
+          integer()
+        ),
+        relationships = list(
+          list(c(1L, 2L), "Title"),
+          list(c(1L, 3L), "Author"),
+          list(c(1L, 4L), "Genre ID")
+        )
+      )
+      expected_string <- paste(
+        "digraph book {",
+        "  rankdir = \"LR\"",
+        "  node [shape=plaintext];",
+        "",
+        "  1 [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD PORT=\"TO_title\">Title</TD><TD PORT =\"FROM_title\" BGCOLOR=\"black\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_author\">Author</TD><TD PORT =\"FROM_author\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_pages\">Pages</TD><TD PORT =\"FROM_pages\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_thickness\">Thickness</TD><TD PORT =\"FROM_thickness\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_genre_id\">Genre ID</TD><TD PORT =\"FROM_genre_id\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_publisher_id\">Publisher ID</TD><TD PORT =\"FROM_publisher_id\"></TD></TR>",
+        "    </TABLE>>];",
+        "  2 [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD PORT=\"TO_title\">Title</TD><TD PORT =\"FROM_title\" BGCOLOR=\"black\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_format\">Format</TD><TD PORT =\"FROM_format\" BGCOLOR=\"black\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_price\">Price</TD><TD PORT =\"FROM_price\"></TD></TR>",
+        "    </TABLE>>];",
+        "  3 [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD PORT=\"TO_author\">Author</TD><TD PORT =\"FROM_author\" BGCOLOR=\"black\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_author_nationality\">Author Nationality</TD><TD PORT =\"FROM_author_nationality\"></TD></TR>",
+        "    </TABLE>>];",
+        "  4 [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD PORT=\"TO_genre_id\">Genre ID</TD><TD PORT =\"FROM_genre_id\" BGCOLOR=\"black\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_genre_name\">Genre Name</TD><TD PORT =\"FROM_genre_name\"></TD></TR>",
+        "    </TABLE>>];",
+        "",
+        "  1:FROM_title -> 2:TO_title;",
+        "  1:FROM_author -> 3:TO_author;",
+        "  1:FROM_genre_id -> 4:TO_genre_id;",
+        "}",
+        "",
+        sep = "\n"
+      )
+      expect_identical(
+        plot_string_database_scheme(es, "book"),
+        expected_string
+      )
+    })
+    it("doesn't give a graph ID if database name is missing", {
+      es <- structure(
+        list(
+          name = NA_character_,
+          tables = list(
+            a = list(
+              df = data.frame(a = 1:4, b = 1:2),
+              keys = list("a"),
+              index = "a",
+              parents = character()
+            )
+          ),
+          relationships = list()
+        ),
+        class = c("database", "list")
+      )
+      plot_string <- plot_string_database_scheme(es)
       expect_identical(substr(plot_string, 1, 9), "digraph {")
     })
   })
