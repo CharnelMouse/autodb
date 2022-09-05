@@ -1,4 +1,4 @@
-describe("plot_string", {
+describe("gv", {
   test_df_strings <- function(
     df_name,
     df_label,
@@ -270,7 +270,7 @@ describe("plot_string", {
         sep = "\n"
       )
       expect_identical(
-        plot_string_database(es),
+        gv_database(es),
         expected_string
       )
     })
@@ -438,7 +438,7 @@ describe("plot_string", {
         sep = "\n"
       )
       expect_identical(
-        plot_string_database(es),
+        gv_database(es),
         expected_string
       )
     })
@@ -458,7 +458,7 @@ describe("plot_string", {
         ),
         class = c("database", "list")
       )
-      plot_string <- plot_string_database(es)
+      plot_string <- gv_database(es)
       expect_identical(substr(plot_string, 1, 9), "digraph {")
     })
   })
@@ -528,7 +528,7 @@ describe("plot_string", {
         sep = "\n"
       )
       expect_identical(
-        plot_string_database_scheme(es, "book"),
+        gv_database_scheme(es, "book"),
         expected_string
       )
     })
@@ -604,7 +604,7 @@ describe("plot_string", {
         sep = "\n"
       )
       expect_identical(
-        plot_string_database_scheme(es, "book"),
+        gv_database_scheme(es, "book"),
         expected_string
       )
     })
@@ -624,7 +624,7 @@ describe("plot_string", {
         ),
         class = c("database", "list")
       )
-      plot_string <- plot_string_database_scheme(es)
+      plot_string <- gv_database_scheme(es)
       expect_identical(substr(plot_string, 1, 9), "digraph {")
     })
   })
@@ -634,7 +634,7 @@ describe("plot_string", {
         a = 1:2, b = letters[1:2]
       )
       expect_identical(
-        plot_string_df(df, "table"),
+        gv_table(df, "table"),
         paste(
           "digraph table {",
           "  rankdir = \"LR\"",
@@ -661,7 +661,7 @@ describe("plot_string", {
       ) |>
         stats::setNames(c("A 1", "b.2"))
       expect_identical(
-        plot_string_df(df, "Table Test"),
+        gv_table(df, "Table Test"),
         paste(
           "digraph table_test {",
           "  rankdir = \"LR\"",

@@ -26,9 +26,9 @@ Depends:
     R (>= 4.1.0)
 Imports:
     rlang,
-    DiagrammeR (>= 1.0.7),
     snakecase (>= 0.11.0)
 Suggests: 
+    DiagrammeR (>= 1.0.7),
     testthat (>= 3.1.4),
     R.utils (>= 2.11.0),
     hedgehog (>= 0.1)

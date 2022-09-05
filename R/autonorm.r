@@ -8,7 +8,7 @@
 #' @param accuracy a numeric in (0, 1], giving the accuracy threshold threshold
 #'   required in order to conclude a dependency.
 #' @param name a scalar character, giving the name of the database. This name
-#'   is used for the resulting graph when using \code{\link{plot_tables}}, to
+#'   is used for the resulting graph when using \code{\link{gv_database}}, to
 #'   allow for easier combining of graphs into a single diagram if required.
 #' @param check_key a logical, indicating whether to check whether the
 #'   normalisation is lossless. If it is not, then an additional table is added

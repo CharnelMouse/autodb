@@ -7,5 +7,5 @@ test_that("simple tables pass through the whole pipeline", {
     cross_reference() |>
     decompose(df = df)
   expect_identical(es, es2)
-  expect_silent(plot_tables(es))
+  expect_silent(gv_database(es))
 })
