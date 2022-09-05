@@ -28,7 +28,7 @@ is non-zero, determines where the progress is written to, in the same way
 as the \code{file} argument for \code{\link[base]{cat}}.}
 }
 \value{
-A database scheme, consisting of a named list of two lists of equal
+A database scheme, represented by a named list of two lists of equal
 length, whose elements form pairs. Each pair represents a single relation
 scheme in the normalisation:
 \itemize{

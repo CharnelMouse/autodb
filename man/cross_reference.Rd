@@ -2,27 +2,31 @@
 % Please edit documentation in R/cross_reference.r
 \name{cross_reference}
 \alias{cross_reference}
-\title{Add foreign key references to a normalised database}
+\title{Add foreign key relationships to a normalised database}
 \usage{
-cross_reference(tables)
+cross_reference(scheme)
 }
 \arguments{
-\item{tables}{a relation set, i.e. named list of tables, as given by
-\code{\link{decompose}}.}
+\item{scheme}{a database scheme without relationships, as given by
+\code{\link{normalise}}.}
 }
 \value{
-A database, defined as a list of three elements:
+A database scheme with relationships, represented by a named list of
+four lists, with the first three having equal length:
 \itemize{
-\item \code{name} contains the optional name of the database, as set in
-\code{\link{decompose}} or \code{\link{autonorm}}.
-\item \code{dataframes} contains the given relation set, \code{tables}.
-\item \code{relationships} contains a list of length-four character
-vectors, describing a single attribute pair in a foreign key
-relationship. In order, the elements give the name of the child table,
-the attribute in the child table, the parent table, and the attribute in
-the parent table. normalised into the required number of tables.
+\item \code{attrs} elements contain the attributes present in the
+relation schemes, with attributes in keys given first.
+\item \code{keys} elements contain a list of the candidate keys for the
+relation schemes.
+\item \code{parents} elements contain integers, representing a relation
+scheme's parent relation schemes by their position in the paired lists.
+\item \code{relationships} contains a list of relationships, each
+represented by a list containing two elements. In order, the elements
+are a two-length integer vector, giving the positions of the child and
+parent relation schemes, and a scalar character, giving the name of the
+linked attribute in both relation schemes.
 }
 }
 \description{
-Add foreign key references to a normalised database
+Add foreign key relationships to a normalised database
 }

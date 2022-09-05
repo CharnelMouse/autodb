@@ -9,31 +9,33 @@ decompose(df, scheme, name = NA_character_)
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
 
-\item{scheme}{a list of lists representing a database scheme, as given by
-\code{\link{normalise}}.}
+\item{scheme}{a database scheme with foreign key relationships, as given by
+\code{\link{cross_reference}}.}
 
 \item{name}{a scalar character, giving the name of the database. This name
 is used for the resulting graph when using \code{\link{plot_tables}}, to
 allow for easier combining of graphs into a single diagram if required.}
 }
 \value{
-A named list, with two elements: \code{name} contains the assigned
-name of the relation set, if any; \code{tables} contains a list of tables
-in third normal form, that can reproduce the original data.frame. This can
-be considered as a database, in the usual sense; in this package, we refer
-to it as a "relation set", and reserve the use of "database" for when the
-cross-references (foreign keys) are included.
-
-Tables are lists with the following elements:
+A database, represented by a named list, with three elements:
 \itemize{
-\item \code{df}, the data.frame containing the data.
-\item \code{keys}, the list of character vectors, representing
-(candidate) keys for the table.
-\item \code{index}, a character vector, representing the index / primary
-key of the table.
-\item \code{parents}, containing names of parent tables, i.e. tables
-referenced in foreign keys.
+\item \code{name} contains the assigned name of the relation set, if any;
+\item \code{tables} contains a list of tables in third normal form, that
+can reproduce the original data.frame;
+\item \code{relationships} contains relationships between the tables,
+represented as a list of length-four character vectors. In order, the
+elements are the name of the child table, the name of the linked
+attribute in the child table, the name of the parent table, and the name
+of the linked attribute in the parent table. Currently, the attribute is
+expected to have the same name in both tables.
 }
+
+Tables are lists with the following elements: \itemize{ \item \code{df},
+the data.frame containing the data. \item \code{keys}, the list of
+character vectors, representing (candidate) keys for the table. \item
+\code{index}, a character vector, representing the index / primary key of
+the table. \item \code{parents}, containing names of parent tables, i.e.
+tables referenced in foreign keys. }
 }
 \description{
 Decomposes a data.frame into several tables, based on the given database
