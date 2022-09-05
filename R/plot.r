@@ -1,14 +1,28 @@
-#' Generate Graphviz input text to plot databases
+#' Generate Graphviz input text to plot objects
 #'
-#' Produces text input for Graphviz to make an HTML diagram of a given database.
+#' Produces text input for Graphviz to make an HTML diagram of a given object.
+#'
+#' Details of what is plotted are given in individual methods. There are
+#' expected commonalities, which are described below.
+#'
+#' The object is expected to be one of the following:
+#' \itemize{
+#'   \item an object whose elements have the same length. Examples would be
+#'   data.frames, matrices, and other objects that can represent tables, with
+#'   names for the elements, and an optional name for the object itself.
+#'   \item a graph of sub-objects, each of which represent table as
+#'   described above, possibly with connections between the objects, and an
+#'   optional name for the graph as a whole.
+#' }
 #'
 #' Each table is presented as a record-like shape, with the following elements:
 #' \itemize{
-#'   \item A header with the table's name, and the number of (unique) rows.
+#'   \item A optional header with the table's name, and the number of (unique)
+#'   rows.
 #'   \item A set of rows, one for each attribute in the table. These rows have the following contents:
 #'   \itemize{
-#'     \item On the left, the attribute names.
-#'     \item In the middle, a depiction of the table's (candidate) keys. Each
+#'     \item the attribute names.
+#'     \item a depiction of the table's (candidate) keys. Each
 #'     column represents a key, and a filled cell indicates that the attribute
 #'     in that row is in that key. The keys are given in lexical order, with
 #'     precedence given to keys with fewer attributes, and keys with attributes
@@ -16,34 +30,56 @@
 #'     output from other package functions will thus have the primary key given
 #'     first. In the future, this will be changed to always give the primary key
 #'     first.
-#'     \item On the right, the attribute types: specifically, the first element
+#'     \item optionally, the attribute types: specifically, the first element
 #'     when passing the attribute's values into \code{\link{class}}.
 #'   }
 #' }
 #'
-#' Any foreign key references are represented by arrows
-#' between the attribute pairs.
+#' Any connections between tables are represented by one-way arrows, usually
+#' between specific rows.
 #'
-#' If the database has a name, this name is attached to the resulting graph in
+#' If the object has a name, this name is attached to the resulting graph in
 #' Graphviz. This is to allow easier combination of several such graphs into a
 #' single image, if a user wishes to do so.
 #'
-#' @param db a database, as returned by \code{\link{cross_reference}} or
-#'   \code{\link{autonorm}}.
+#' @param x an object to be plotted.
+#' @param ... further arguments passed to or from other methods.
 #'
 #' @return A scalar character, containing text input for Graphviz or the
 #'   \code{DiagrammeR} package.
+#' @seealso \code{\link{gv.data.frame}}, \code{\link{gv.database_scheme}},
+#'   \code{\link{gv.database}}
 #' @export
-gv_database <- function(db) {
-  setup_string <- gv_setup_string(db$name)
+gv <- function(x, ...) {
+  UseMethod("gv", x)
+}
+
+#' Generate Graphviz input text to plot databases
+#'
+#' Produces text input for Graphviz to make an HTML diagram of a given database.
+#'
+#' Each table in the database is presented as a set of rows, one for each
+#' attribute in the table. These rows include information about the attribute
+#' classes.
+#'
+#' @param x a database, as returned by \code{\link{cross_reference}} or
+#'   \code{\link{autonorm}}.
+#' @inheritParams gv
+#'
+#' @return A scalar character, containing text input for Graphviz or the
+#'   \code{DiagrammeR} package.
+#' @seealso The generic \code{\link{gv}}.
+#' @exportS3Method
+gv.database <- function(x, ...) {
+  setup_string <- gv_setup_string(x$name)
   df_strings <- mapply(
     df_string,
-    db$tables,
-    names(db$tables)
+    x$tables,
+    names(x$tables)
   ) |>
     paste(collapse = "\n")
   reference_strings <- vapply(
-    db$relationships,
+    x$relationships,
     reference_string,
     character(1)
   ) |>
@@ -67,44 +103,32 @@ gv_database <- function(db) {
 #' scheme.
 #'
 #' Each relation in the scheme is presented as a set of rows, one for each
-#' attribute in the relation. These rows have the following contents:
-#' \itemize{
-#'   \item On the left, the attribute names.
-#'   \item On the right, a depiction of the table's (candidate) keys. Each
-#'   column represents a key, and a filled cell indicates that the attribute
-#'   in that row is in that key. The keys are given in lexical order, with
-#'   precedence given to keys with fewer attributes, and keys with attributes
-#'   that appear earlier in the original table's attribute order. Default
-#'   output from other package functions will thus have the primary key given
-#'   first. In the future, this will be changed to always give the primary key
-#'   first.
-#' }
+#' attribute in the relation. These rows do not include information about the
+#' attribute classes.
 #'
 #' Any foreign key references are represented by arrows
 #' between the attribute pairs.
 #'
-#' If \code{dbs_name} is not missing, this name is attached to the resulting
-#' graph in Graphviz. This is to allow easier combination of several such graphs
-#' into a single image, if a user wishes to do so.
-#'
-#' @param dbs a database scheme, as given by \code{\link{normalise}} or
+#' @param x a database scheme, as given by \code{\link{normalise}} or
 #'   \code{\link{cross_reference}}.
-#' @param dbs_name a character scalar, giving the name of the scheme, if any.
+#' @param name a character scalar, giving the name of the scheme, if any.
+#' @inheritParams gv
 #'
 #' @return A scalar character, containing text input for Graphviz or the
 #'   \code{DiagrammeR} package.
-#' @export
-gv_database_scheme <- function(dbs, dbs_name = NA_character_) {
-  setup_string <- gv_setup_string(dbs_name)
+#' @seealso The generic \code{\link{gv}}.
+#' @exportS3Method
+gv.database_scheme <- function(x, name = NA_character_, ...) {
+  setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     nameless_relation_string,
-    seq_along(dbs$attrs),
-    dbs$attrs,
-    dbs$keys
+    seq_along(x$attrs),
+    x$attrs,
+    x$keys
   ) |>
     paste(collapse = "\n")
   reference_strings <- vapply(
-    dbs$relationships,
+    x$relationships,
     dbs_reference_string,
     character(1)
   ) |>
@@ -126,38 +150,20 @@ gv_database_scheme <- function(dbs, dbs_name = NA_character_) {
 #' Produces text input for Graphviz to make an HTML diagram of a given table,
 #' represented by a data.frame.
 #'
-#' The table is presented as a record-like shape, with the following elements:
-#' \itemize{
-#'   \item A header with the table's name, and the number of (unique) rows.
-#'   \item A set of rows, one for each attribute in the table. These rows have the following contents:
-#'   \itemize{
-#'     \item On the left, the attribute names.
-#'     \item In the middle, a depiction of the table's (candidate) keys. Each
-#'     column represents a key, and a filled cell indicates that the attribute
-#'     in that row is in that key. The keys are given in lexical order, with
-#'     precedence given to keys with fewer attributes, and keys with attributes
-#'     that appear earlier in the original table's attribute order. Default
-#'     output from other package functions will thus have the primary key given
-#'     first. In the future, this will be changed to always give the primary key
-#'     first.
-#'     \item On the right, the attribute types: specifically, the first element
-#'     when passing the attribute's values into \code{\link{class}}.
-#'   }
-#' }
+#' The rows in the plotted table include information about the attribute
+#' classes.
 #'
-#' The name of the table is also used as the name for the resulting graph, if it
-#' is not missing (\code{NA_character_}). This is to allow easier combination of
-#' several such graphs into a single image, if a user wishes to do so.
-#'
-#' @param df a data.frame, to be plotted as a record.
-#' @param df_name a character scalar, giving the name of the record.
+#' @param x a data.frame.
+#' @param name a character scalar, giving the name of the record, if any.
+#' @inheritParams gv
 #'
 #' @return A scalar character, containing text input for Graphviz or the
 #'   \code{DiagrammeR} package.
-#' @export
-gv_table <- function(df, df_name) {
-  setup_string <- gv_setup_string(df_name)
-  table_string <- df_string(list(df = df, keys = list()), df_name)
+#' @seealso The generic \code{\link{gv}}.
+#' @exportS3Method
+gv.data.frame <- function(x, name, ...) {
+  setup_string <- gv_setup_string(name)
+  table_string <- df_string(list(df = x, keys = list()), name)
   teardown_string <- "}\n"
   paste(
     setup_string,

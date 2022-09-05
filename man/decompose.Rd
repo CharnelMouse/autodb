@@ -13,7 +13,7 @@ decompose(df, scheme, name = NA_character_)
 \code{\link{cross_reference}}.}
 
 \item{name}{a scalar character, giving the name of the database. This name
-is used for the resulting graph when using \code{\link{gv_database}}, to
+is used for the resulting graph when using \code{\link{gv.database}}, to
 allow for easier combining of graphs into a single diagram if required.}
 }
 \value{

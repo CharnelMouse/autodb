@@ -84,7 +84,8 @@ normalise <- function(
       convert_to_character_attributes,
       "converting to readable format",
       dependencies$attrs
-    )
+    ) |>
+    structure(class = c("database_scheme", "list"))
 }
 
 convert_to_vectors <- function(dependencies) {

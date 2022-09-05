@@ -21,7 +21,7 @@ autonorm(
 required in order to conclude a dependency.}
 
 \item{name}{a scalar character, giving the name of the database. This name
-is used for the resulting graph when using \code{\link{gv_database}}, to
+is used for the resulting graph when using \code{\link{gv.database}}, to
 allow for easier combining of graphs into a single diagram if required.}
 
 \item{check_key}{a logical, indicating whether to check whether the

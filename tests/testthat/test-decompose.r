@@ -1,4 +1,8 @@
 describe("decompose", {
+  expect_database <- function(current, target) {
+    expect_identical(current, structure(target, class = c("database", "list")))
+  }
+
   it("removes extraneous dependencies", {
     df <- data.frame(a = integer(), b = integer(), c = integer())
     norm_deps <- list(
@@ -8,7 +12,7 @@ describe("decompose", {
       relationships = list()
     )
     norm.df <- decompose(df, norm_deps)
-    expect_identical(
+    expect_database(
       norm.df,
       list(
         name = NA_character_,
@@ -110,7 +114,7 @@ describe("decompose", {
         c("id", "hemisphere", "month_hemisphere", "hemisphere")
       )
     )
-    expect_identical(new_dfs, expected_dfs)
+    expect_database(new_dfs, expected_dfs)
   })
   it("removes transitive relationships", {
     df <- data.frame(
@@ -215,7 +219,7 @@ describe("decompose", {
           c("team", "city", "city", "city")
         )
       )
-      expect_identical(depdfs, expected_depdfs)
+      expect_database(depdfs, expected_depdfs)
     })
   })
   it("correctly handles attributes with non-df-standard names", {
@@ -256,6 +260,13 @@ describe("decompose", {
 })
 
 describe("normalise() replacing normalize_step()", {
+  expect_database_scheme <- function(current, target) {
+    expect_identical(
+      current,
+      structure(target, class = c("database_scheme", "list"))
+    )
+  }
+
   it("removes extraneous dependencies", {
     dependencies <- list(
       dependencies = list(
@@ -265,7 +276,7 @@ describe("normalise() replacing normalize_step()", {
       attrs = c("a", "b", "c")
     )
     norm.df <- normalise(dependencies)
-    expect_identical(
+    expect_database_scheme(
       norm.df,
       list(
         attrs = list(c("a", "b", "c")),
@@ -282,7 +293,7 @@ describe("normalise() replacing normalize_step()", {
       attrs = c("a", "b")
     )
     norm.df <- normalise(dependencies)
-    expect_identical(
+    expect_database_scheme(
       norm.df,
       list(
         attrs = list(c("a", "b")),

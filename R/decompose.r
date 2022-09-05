@@ -55,10 +55,13 @@ decompose <- function(df, scheme, name = NA_character_) {
       c(relation_names[r[[1]][1]], r[[2]], relation_names[r[[1]][2]], r[[2]])
     }
   )
-  list(
-    name = name,
-    tables = stats::setNames(depdf_list, relation_names),
-    relationships = relationships
+  structure(
+    list(
+      name = name,
+      tables = stats::setNames(depdf_list, relation_names),
+      relationships = relationships
+    ),
+    class = c("database", "list")
   )
 }
 

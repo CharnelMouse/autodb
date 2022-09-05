@@ -1,6 +1,13 @@
 library(hedgehog)
 
 describe("normalise", {
+  expect_database_scheme <- function(current, target) {
+    expect_identical(
+      current,
+      structure(target, class = c("database_scheme", "list"))
+    )
+  }
+
   it("doesn't change relation attribute order if dependencies are reordered", {
     df <- data.frame(
       a = rep(1:2, each = 2),
@@ -42,7 +49,7 @@ describe("normalise", {
       attrs = c("a", "b", "c")
     )
     norm.dependencies <- normalise(dependencies)
-    expect_identical(
+    expect_database_scheme(
       norm.dependencies,
       list(
         attrs = list(c("a", "b", "c")),
@@ -60,7 +67,7 @@ describe("normalise", {
       attrs = c("a", "b", "c")
     )
     norm.dependencies <- normalise(dependencies)
-    expect_identical(
+    expect_database_scheme(
       norm.dependencies,
       list(
         attrs = list(c("a", "b"), c("b", "c")),
@@ -79,7 +86,7 @@ describe("normalise", {
       attrs = c("a", "b", "c", "d")
     )
     norm.dependencies <- normalise(dependencies)
-    expect_identical(
+    expect_database_scheme(
       norm.dependencies,
       list(
         attrs = list(c("a", "d", "b"), c("b", "c", "a")),
@@ -104,7 +111,7 @@ describe("normalise", {
       attrs = c("a", "b", "c", "d", "e", "f")
     )
     norm.dependencies <- normalise(dependencies)
-    expect_identical(
+    expect_database_scheme(
       norm.dependencies,
       list(
         attrs = list(c("a", "b", "c", "d", "f"), c("d", "e"), c("f", "e")),
@@ -157,7 +164,7 @@ describe("normalise", {
       attrs = c("A", "B", "C", "D", "E", "F")
     )
     norm.dep <- normalise(dependencies)
-    expect_identical(
+    expect_database_scheme(
       norm.dep,
       list(
         attrs = list(c("C", "A", "B", "D"), c("C", "E", "F")),
@@ -188,7 +195,7 @@ describe("normalise", {
     )
     deps <- flatten(deps)
     nds <- normalise(deps)
-    expect_identical(
+    expect_database_scheme(
       nds,
       list(
         attrs = list(c("a", "b")),

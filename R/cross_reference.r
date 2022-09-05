@@ -52,10 +52,13 @@ cross_reference <- function(scheme) {
     }
   }
 
-  list(
-    attrs = scheme$attrs,
-    keys = scheme$keys,
-    parents = parents,
-    relationships = relationships
+  structure(
+    list(
+      attrs = scheme$attrs,
+      keys = scheme$keys,
+      parents = parents,
+      relationships = relationships
+    ),
+    class = c("database_scheme", "list")
   )
 }
