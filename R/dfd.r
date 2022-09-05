@@ -5,7 +5,8 @@
 # - powerset creation is still slow
 # - look for avoidable attributes (LTK normal form)
 # - replace checking for original key with adding addition FD before other
-# normalising steps, see end of Maier section 6.5.
+# normalising steps, see end of Maier section 6.5. (Might need to implement
+# Erase first, to stop it adding unnecessary additional keys.)
 # - move relation matrix setdiff into relation matrix function
 
 #' Dependency discovery with DFD
