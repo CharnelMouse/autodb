@@ -1,4 +1,3 @@
-- add function for re-joining to reconstruct original table, to more easily check for lossless decomposition
 - add removing of avoidable attributes (ERASE, Maier section 6.6)
 - add error checking for decompose for norm_deps not matching data.frame
 - add partitions
