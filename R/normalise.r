@@ -260,6 +260,8 @@ remove_transitive_dependencies <- function(vecs) {
     lengths(vecs$bijection_dependent_sets)
   )
   flat_bijection_dependents <- unlist(vecs$bijection_dependent_sets)
+  if (is.null(flat_bijection_dependents))
+    flat_bijection_dependents <- integer()
 
   transitive <- rep(FALSE, length(flat_partition_dependents))
   for (n in seq_along(flat_partition_dependents)) {
