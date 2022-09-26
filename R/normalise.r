@@ -416,19 +416,19 @@ construct_relation_schemes <- function(vecs, check_key) {
   }
   if (check_key) {
     original_key_present <- vapply(
-      rel_keys,
-      \(keys) any(vapply(
-        keys,
-        \(key) any(vapply(
-          vecs$original_keys,
-          \(ok) all(is.element(ok, key)),
+      vecs$original_keys,
+      \(ok) any(vapply(
+        rel_keys,
+        \(keys) any(vapply(
+          keys,
+          \(key) all(is.element(ok, key)),
           logical(1)
         )),
         logical(1)
       )),
       logical(1)
     )
-    if (!any(original_key_present)) {
+    if (length(vecs$original_keys) > 0 && !any(original_key_present)) {
       attrs <- c(attrs, list(vecs$original_keys[[1]]))
       rel_keys <- c(rel_keys, list(list(vecs$original_key[[1]])))
     }

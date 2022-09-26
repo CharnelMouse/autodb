@@ -219,6 +219,10 @@ describe("normalise", {
       nds$attrs,
       list(c("a", "b", "c"), c("d", "e", "b", "c"), c("c", "d"), c("a", "e"))
     )
+
+    deps <- flatten(list(dependencies = list(), attrs = character()))
+    nds <- normalise(deps)
+    expect_identical(nds$attrs, list())
   })
   it("returns relations that return themselves if normalised again", {
     gen.keysize <- gen.sample.int(10)
