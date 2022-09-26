@@ -5,7 +5,7 @@ describe("dfd", {
   it("terminates for simple logical relations", {
     gen_ncol_inc <- gen.int(4)
     gen_len_inc <- gen.int(6)
-    gen_df <- generate(
+    gen_lst <- generate(
       for (n_col_inc in gen_ncol_inc) {
         generate(
           for (len_inc in gen_len_inc) {
@@ -18,10 +18,10 @@ describe("dfd", {
         )
       }
     )
+    gen_df <- generate(for (lst in gen_lst) as.data.frame(lst))
     forall(
       gen_df,
       function(df) {
-        df <- as.data.frame(df)
         res <- withTimeout(dfd(df, 1), timeout = 5, onTimeout = "silent")
         expect_true(!is.null(res))
       },
@@ -160,7 +160,7 @@ describe("dfd", {
   it("treats missing values as normal entries", {
     gen_ncol_inc <- gen.int(4)
     gen_len_inc <- gen.int(6)
-    gen_df <- generate(
+    gen_lst <- generate(
       for (n_col_inc in gen_ncol_inc) {
         generate(
           for (len_inc in gen_len_inc) {
@@ -173,10 +173,10 @@ describe("dfd", {
         )
       }
     )
+    gen_df <- generate(for (lst in gen_lst) as.data.frame(lst))
     forall(
       gen_df,
-      function(lst) {
-        df <- as.data.frame(lst)
+      function(df) {
         res <- dfd(df, 1)
         na_df <- as.data.frame(lapply(
           lst,
