@@ -24,6 +24,7 @@ describe("dfd", {
       function(df) {
         res <- withTimeout(dfd(df, 1), timeout = 5, onTimeout = "silent")
         expect_true(!is.null(res))
+        expect_named(res, c("dependencies", "attrs"))
       },
       shrink.limit = Inf
     )
@@ -36,6 +37,7 @@ describe("dfd", {
     )
     res <- withTimeout(dfd(df, 1), timeout = 5, onTimeout = "silent")
     expect_true(!is.null(res))
+    expect_named(res, c("dependencies", "attrs"))
   })
   it("gives dependencies for unique attributes (in case don't want them as key)", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), C = c(1, 2, 2))

@@ -67,9 +67,12 @@ dfd <- function(
   n_cols <- ncol(df)
   column_names <- colnames(df)
   if (n_cols == 0)
-    return(list())
+    return(list(dependencies = list(), attrs = character()))
   if (n_cols == 1)
-    return(stats::setNames(list(list()), column_names))
+    return(list(
+      dependencies = stats::setNames(list(list()), column_names),
+      attrs = column_names
+    ))
   if (any(!is.element(exclude, column_names)))
     warning("there are attribute names in exclude not present in df")
   valid_determinant_name <- !is.element(column_names, exclude)
