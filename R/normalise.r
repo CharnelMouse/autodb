@@ -250,6 +250,8 @@ remove_transitive_dependencies <- function(vecs) {
     lengths(vecs$partition_dependents)
   )
   flat_partition_dependents <- unlist(vecs$partition_dependents)
+  if (is.null(flat_partition_dependents))
+    flat_partition_dependents <- integer()
   flat_groups <- rep(
     seq_along(vecs$partition_dependents),
     lengths(vecs$partition_dependents)
