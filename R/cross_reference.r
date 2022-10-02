@@ -86,16 +86,18 @@ cross_reference <- function(scheme, ensure_lossless = TRUE) {
 
 calculate_references <- function(keys, attrs) {
   # find all links for indexes (should be any candidate key instead)
-  child_ref_attrs <- character()
-  parent_ref_attrs <- character()
+  child_ref_attrs <- integer()
+  parent_ref_attrs <- integer()
+  ref_attrs <- list()
   seq_rel <- seq_along(keys)
   for (parent in seq_rel) {
     for (child in seq_rel[-parent]) {
       for (key in seq_along(keys[[parent]])) {
         parent_key <- keys[[parent]][[key]]
         if (all(parent_key %in% attrs[[child]])) {
-          child_ref_attrs <- c(child_ref_attrs, paste(child, parent_key, sep = "."))
-          parent_ref_attrs <- c(parent_ref_attrs, paste(parent, parent_key, sep = "."))
+          child_ref_attrs <- c(child_ref_attrs, child)
+          parent_ref_attrs <- c(parent_ref_attrs, parent)
+          ref_attrs <- c(ref_attrs, list(parent_key))
           break
         }
       }
@@ -104,29 +106,21 @@ calculate_references <- function(keys, attrs) {
 
   # remove extraneous relationships, i.e. those that skip tables in the
   # hierarchy, and duplicates
-  ref_attrs <- unique(c(child_ref_attrs, parent_ref_attrs))
-  ref_vecs <- list(
+  vecs <- list(
     determinant_sets = child_ref_attrs,
     dependents = parent_ref_attrs
-  ) |>
-    convert_to_integer_attributes(ref_attrs) |>
-    remove_extraneous_dependencies()
-  # convert back to characters
-  convert_back <- function(x) {
-    ref_attrs[x] |>
-      as.character() |>
-      strsplit(".", fixed = TRUE)
-  }
-  filtered_child_ref_attrs <- convert_back(unlist(ref_vecs$determinant_sets))
-  filtered_parent_ref_attrs <- convert_back(ref_vecs$dependents)
-  rel_inds <- function(x) strtoi(vapply(x, `[[`, character(1), 1))
-  rel_attrs <- function(x) vapply(x, `[[`, character(1), 2)
-  filtered_attrs <- rel_attrs(filtered_child_ref_attrs)
-  stopifnot(identical(filtered_attrs, rel_attrs(filtered_parent_ref_attrs)))
+  )
+  filtered_vecs <- remove_extraneous_dependencies(vecs)
+
+  table_pairs <- do.call(Map, c(list(c), vecs))
+  filtered_table_pairs <- do.call(Map, c(list(c), filtered_vecs))
+  kept <- match(filtered_table_pairs, table_pairs)
+  stopifnot(!anyNA(kept))
+  filtered_attrs <- ref_attrs[kept]
 
   list(
-    child = rel_inds(filtered_child_ref_attrs),
-    parent = rel_inds(filtered_parent_ref_attrs),
-    attr = filtered_attrs
+    child = rep(unlist(filtered_vecs$determinant_sets), lengths(filtered_attrs)),
+    parent = rep(filtered_vecs$dependents, lengths(filtered_attrs)),
+    attr = unlist(filtered_attrs)
   )
 }

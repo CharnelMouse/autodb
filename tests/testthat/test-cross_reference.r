@@ -136,6 +136,25 @@ describe("cross_reference", {
       }
     )
   })
+  it("only return non-extraneous table relationships", {
+    forall(
+      gen_nonempty_df,
+      function(df) {
+        df <- unique(df)
+        scheme <- normalise(flatten(dfd(df, 1)))
+        linked <- cross_reference(scheme, ensure_lossless = TRUE)
+        table_relationships <- unique(lapply(linked$relationships, `[[`, 1))
+        table_relationships <- list(
+          determinant_sets = lapply(table_relationships, `[`, 1),
+          dependents = vapply(table_relationships, `[`, integer(1), 2)
+        )
+        expect_identical(
+          remove_extraneous_dependencies(table_relationships),
+          table_relationships
+        )
+      }
+    )
+  })
   it("returns relations that return themselves if normalised again", {
     gen.keysize <- gen.sample.int(10)
     gen.key <- generate(
