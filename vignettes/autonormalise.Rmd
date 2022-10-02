@@ -1,0 +1,244 @@
+---
+title: "Using autonormalise"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using autonormalise}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(autonormalise)
+```
+
+# Motivation
+
+`autonormalise` is described in the DESCRIPTION file in the following way:
+
+> Automatic normalisation of a data.frame to third normal form, with the intention of easing the process of data cleaning."
+
+Let us begin there.
+
+## Data cleaning, not database design
+
+Database normalisation works on the principle that our data should only express a piece of information in a single place. This is done to reduce the chance that a modification will accidentally change or remove other pieces of information.
+
+Data cleaning works on the principle that we remove duplicate observations and structural errors, and have a clear understanding of any associations between different observations, or parts of observations. This is done to ensure a high quality for the data used in analysis, but I have found that it is equally important for making sure that I understand the domain I am hoping to model.
+
+Normalisation is helpful for both of these areas. I usually use the original, flat, "tidy" data for the analysis itself. However, for checking the data's consistency, and for using the data to learn about the domain, normalised data is often helpful, whether it's used for the analysis or not.
+
+Normalisation may, or may not, be a straightforward process, depending on how much information on the data you have. In my own work, I am lucky if I am given a key or a data dictionary for the data set at all. When I am, it usually proves to be wrong somehow. Normalisation, and data checking, is not just an exercise in looking for errors: it's also a key part of the process of understanding the problem domain. It's in this context that I would usually have to work out the normalisation by hand, and I would like to have a tool that does it semi-automatically. This package is intended to be that tool.
+
+Good database design is a hard and involved process, which requires a strong grasp on the domain that the database will hold information on. Please don't try to use this package to do it on autopilot.
+
+## Third normal form
+
+`autonormalise` gets a given data.frame to third normal form: every attribute depends on the whole key(s), and non-key attributes depend on nothing but the key(s). This was chosen because there is an existing algorithm, Bernstein's synthesis, for normalising to third normal form, and because it's the highest normal form that is attainable with arbitrary original tables.
+
+# A simple example
+
+```{r}
+# ChickWeight
+# as.data.frame(Titanic) # some odd key splits going on here without exclude_class
+```
+
+For a very simple example, we can use the `ChickWeight` dataset, included with base R.
+
+```{r}
+summary(ChickWeight)
+```
+
+## Normalisation with `autonorm`
+
+The simplest way to do normalisation is with the `autonorm` function:
+
+```{r}
+db <- autonorm(ChickWeight, accuracy = 1, name = "Chick Weights")
+```
+
+The `accuracy` argument expects a number between zero and one, determining what proportion of a data.frames rows need to satisfy a given dependency for the algorithm to consider it valid. Setting `accuracy` to one, as done here, limits us to exact dependencies.
+
+```{r}
+db
+```
+
+## Plots
+
+There is no plotting method within the `autonormalise` package itself. Instead, there are functions to write normalised objects as inputs to the Graphviz visualisation software, using the DOT language.
+
+The generic function to do this is `gv`, which calls the `gv.database` method on our database, `db`:
+
+```{r}
+db_text <- gv(db)
+cat(db_text)
+```
+
+This can be saved to a file for passing to Graphviz elsewhere, or can be passed into `grViz` in the `DiagrammeR` package:
+
+```{r db_plot}
+DiagrammeR::grViz(db_text)
+```
+
+We can clearly see that `ChickWeight` was split into two tables, with a weight for each unique combination of Chick number and time, and the Chick number by itself determining the diet. We can also see the number of rows in each table, and the classes of the columns in those tables.
+
+## Finding functional dependencies with DFD
+
+Having looked at the final result first, we now look at the individual steps. The first step is to find the (non-trivial and minimal) dependencies present in the given data.frame. There are various ways to do this, but this package currently uses DFD, a depth-first search algorithm. We run this using the `dfd` function, setting `progress` to `TRUE` to see the steps taken:
+
+```{r}
+deps <- dfd(ChickWeight, 1, progress = TRUE)
+deps
+```
+
+After simplifying the data to something quicker to iterate over -- specifically, by converting all columns to integer values -- the algorithm takes each column in turn as a possible dependent, and finds sets of the other columns that determine it. As present, the algorithm can pass results for one column to future columns, to save computation time, but this is not implemented in the current version.
+
+The result is a list, with two elements: `dependencies` gives the discovered determinants of each column in turn, and `attrs` gives all the column names.
+
+This is meant to be a reasonably compact, user-readable presentation of the results, with dependencies grouped by the dependent. For use in the later stages of the process, we convert to a different format first, using `flatten`:
+
+```{r}
+flat_deps <- flatten(deps)
+flat_deps
+```
+
+Dependencies are now separate entries, rather than being grouped by dependent.
+
+## Normalisation
+
+Now that we have a list of discovered dependencies, we can construct a database scheme, where the relation schemes are normalised to third normal form. This is done using a version of Bernstein's synthesis.
+
+```{r}
+scheme <- normalise(flat_deps)
+scheme
+```
+
+Like the database before, we can also plot this database scheme:
+
+```{r}
+scheme_text <- gv(scheme)
+cat(scheme_text)
+DiagrammeR::grViz(scheme_text)
+```
+
+This is similar to the database plot given before, but there is some information not present, that requires the data frame itself. Namely, we have no class information about the columns, and no row counts for the individual relation schemes. Additionally, at this point we have no connections between the relation schemes, since Bernstein's synthesis doesn't supply information about foreign key references. We could use this database scheme to build a database, but we'd rather have the foreign key references, to guide table joins.
+
+## Tuning detection and normalisation
+
+Let's look at a different dataset for a moment, to look at some cases where we don't want to use the dependencies as given. We'll use the Titanic data set, also provided with base R. This data is in array form, so we first convert it to data frame form:
+
+```{r}
+as.data.frame(Titanic)
+```
+
+This is a simple set of data, with a single count observation for each combination of the four determining variables. In other words, the table is already normalised, so we only expect one table in the normalised database.
+
+If we use `autonorm` again, we get the following database:
+
+```{r}
+DiagrammeR::grViz(gv(autonorm(as.data.frame(Titanic), 1)))
+```
+
+Oops! The DFD algorithm found some functional dependencies where the count could be used to determine another variable. These are clearly spurious: frequency count clearly can't causally determine age, for example. However, the algorithm still finds these dependencies, because the counts are unique often enough to make these dependencies hold in the given data.
+
+There are two approaches we can take to eliminate these spurious dependencies: not letting them be detected in the first place, and removing them before using `cross_reference`.
+
+To stop them being detected, we can put constraints what is discovered by `dfd`: we can ask for certain columns to not be considered as determinants, or we can exclude columns that inherit from certain classes. For example, here we could exclude `Freq` from being considered:
+
+```{r}
+titanic_deps_freqonly <- dfd(as.data.frame(Titanic), 1, exclude = "Freq")
+titanic_deps_freqonly
+```
+
+Alternatively, we could exclude all columns that inherit from "numeric":
+
+```{r}
+identical(titanic_deps_freqonly, dfd(as.data.frame(Titanic), 1, exclude_class = "numeric"))
+```
+
+These can both be used as arguments to `autonorm` too:
+
+```{r}
+DiagrammeR::grViz(gv(autonorm(as.data.frame(Titanic), 1, exclude = "Freq")))
+```
+
+Generally, excluding numeric columns as determinants is often useful, because we do expect non-integer numbers to be a measurement, not part of a primary key.
+
+Alternatively, we could remove unwanted dependencies before using `decompose`. Here are the found dependencies, if we don't exclude anything:
+
+```{r}
+titanic_deps <- dfd(as.data.frame(Titanic), 1)
+titanic_deps
+```
+
+Here, we could remove the unwanted dependencies where `Age` is the dependent:
+
+```{r}
+titanic_deps_filtered <- titanic_deps
+titanic_deps_filtered$dependencies$Age <- list()
+identical(titanic_deps_filtered, titanic_deps_freqonly)
+```
+
+Alternatively, we could look at the flattened version:
+
+```{r}
+flatten(titanic_deps)
+```
+
+We can remove unwanted dependencies from the flattened version, if it's more convenient:
+
+```{r}
+titanic_deps_filtered2 <- flatten(titanic_deps)
+titanic_deps_filtered2$dependencies <- Filter(
+  function(dep) dep[[2]] == "Freq", 
+  titanic_deps_filtered2$dependencies
+)
+identical(flatten(titanic_deps_freqonly), titanic_deps_filtered2)
+```
+
+## Adding cross-references
+
+Getting back to our `ChickWeight` example, we now have a database scheme, consisting of a list of relation schemes. However, we have no information about how these relation schemes are linked to each other. In particular, we have no information about foreign keys, that we would need to join tables back together, to reconstruct the original data frame. We can add this information using `cross_reference`:
+
+```{r}
+linked_scheme <- cross_reference(scheme)
+linked_scheme
+```
+
+Plotting this updated database scheme shows the same relation schemes as before, linked together by foreign key references:
+
+```{r}
+linked_text <- gv(linked_scheme)
+cat(linked_text)
+DiagrammeR::grViz(linked_text)
+```
+
+## Decomposing the original table
+
+Finally, once we have our normalised database scheme, we can apply it to our original data frame, or a new one with the same structure. This results in a normalised database, as we got from using `autonorm`:
+
+```{r}
+db2 <- decompose(ChickWeight, linked_scheme, name = "Chick Weights")
+identical(db, db2)
+```
+
+```{r db_plot}
+```
+
+We now have the column class information and row counts added, as well as automatic names for the individual relations.
+
+## Approximate dependencies
+
+## Limitations
+
+### Lossless ensurance is currently slow
+
+### Avoidable attributes
+
+### Missing values
