@@ -58,7 +58,8 @@ cross_reference <- function(scheme, ensure_lossless = TRUE) {
     if (length(non_parents) != 1 || length(stranded) > 0 || length(non_included) > 0) {
       ult_children <- sort(c(non_parents, stranded))
       ult_child_indexes <- lapply(scheme$keys[ult_children], `[[`, 1)
-      new_table_attrs <- sort(unique(c(unlist(ult_child_indexes), non_included)))
+      new_table_attrs <- unique(c(unlist(ult_child_indexes), non_included))
+      new_table_attrs <- new_table_attrs[order(match(new_table_attrs, all_attrs))]
       attrs <- c(attrs, list(new_table_attrs))
       keys <- c(keys, list(list(new_table_attrs)))
       parents <- c(parents, list(ult_children))
