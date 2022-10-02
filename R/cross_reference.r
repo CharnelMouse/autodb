@@ -21,8 +21,7 @@
 #' @export
 cross_reference <- function(scheme) {
   n_relations <- length(scheme$attrs)
-  indexes <- lapply(scheme$keys, `[[`, 1)
-  references <- calculate_references(indexes, scheme$attrs)
+  references <- calculate_references(scheme$keys, scheme$attrs)
 
   parents <- replicate(n_relations, integer())
   for (n in seq_len(n_relations)) {
@@ -47,22 +46,26 @@ cross_reference <- function(scheme) {
   )
 }
 
-calculate_references <- function(indexes, attrs) {
+calculate_references <- function(keys, attrs) {
   # find all links for indexes (should be any candidate key instead)
   child_ref_attrs <- character()
   parent_ref_attrs <- character()
-  seq_rel <- seq_along(indexes)
+  seq_rel <- seq_along(keys)
   for (parent in seq_rel) {
     for (child in seq_rel[-parent]) {
-      parent_index <- indexes[[parent]]
-      if (all(parent_index %in% attrs[[child]])) {
-        child_ref_attrs <- c(child_ref_attrs, paste(child, parent_index, sep = "."))
-        parent_ref_attrs <- c(parent_ref_attrs, paste(parent, parent_index, sep = "."))
+      for (key in seq_along(keys[[parent]])) {
+        parent_key <- keys[[parent]][[key]]
+        if (all(parent_key %in% attrs[[child]])) {
+          child_ref_attrs <- c(child_ref_attrs, paste(child, parent_key, sep = "."))
+          parent_ref_attrs <- c(parent_ref_attrs, paste(parent, parent_key, sep = "."))
+          break
+        }
       }
     }
   }
 
-  # remove extraneous relationships, i.e. those that skip tables in the hierarchy
+  # remove extraneous relationships, i.e. those that skip tables in the
+  # hierarchy, and duplicates
   ref_attrs <- unique(c(child_ref_attrs, parent_ref_attrs))
   ref_vecs <- list(
     determinant_sets = child_ref_attrs,
