@@ -35,10 +35,20 @@ describe("reduce", {
     forall(
       gen_df,
       function(df) {
-        es <- autonorm(as.data.frame(df), 1)
+        es <- autonorm(as.data.frame(df), 1, ensure_lossless = FALSE)
         once <- reduce(es)
         twice <- reduce(once)
         expect_identical(twice, once)
+      }
+    )
+  })
+  it("does nothing to a lossless database", {
+    forall(
+      gen_df,
+      function(df) {
+        es <- autonorm(as.data.frame(df), 1, ensure_lossless = TRUE)
+        once <- reduce(es)
+        expect_identical(once, es)
       }
     )
   })
@@ -46,7 +56,7 @@ describe("reduce", {
     forall(
       gen_nonempty_df,
       function(df) {
-        es <- autonorm(df, 1)
+        es <- autonorm(df, 1, ensure_lossless = TRUE)
         once <- reduce(es)
         once_plus_small <- once
         once_plus_small$tables <- c(
@@ -69,7 +79,7 @@ describe("reduce", {
     forall(
       gen_nonempty_df,
       function(df) {
-        es <- autonorm(df, 1)
+        es <- autonorm(df, 1, ensure_lossless = FALSE)
         reduced <- reduce(es)
         expect_identical(reduced$name, es$name)
         expect_true(all(reduced$tables %in% es$tables))
@@ -77,17 +87,27 @@ describe("reduce", {
       }
     )
   })
-  it("returns a database with a single non-parent_table", {
+  it("returns a database where non-parent tables have the same maximal number of rows", {
     forall(
       gen_nonempty_df,
       function(df) {
-        es <- autonorm(df, 1)
-        reduced <- reduce(es)
-        non_parents <- setdiff(
-          names(reduced$tables),
-          vapply(reduced$relationships, `[`, character(1), 3)
-        )
-        expect_length(non_parents, 1L)
+        es <- autonorm(df, 1, ensure_lossless = FALSE)
+        if (length(es$tables) == 0)
+          succeed()
+        else{
+          reduced <- reduce(es)
+          non_parents <- setdiff(
+            names(reduced$tables),
+            vapply(reduced$relationships, `[`, character(1), 3)
+          )
+          non_parent_nrows <- vapply(
+            reduced$tables[non_parents],
+            \(table) nrow(table$df),
+            integer(1)
+          )
+          max_table_nrow <- max(vapply(es$tables, \(table) nrow(table$df), integer(1)))
+          expect_true(all(non_parent_nrows == max_table_nrow))
+        }
       }
     )
   })
