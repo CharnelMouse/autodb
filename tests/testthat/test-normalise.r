@@ -53,7 +53,8 @@ describe("normalise", {
       norm.dependencies,
       list(
         attrs = list(c("a", "b", "c")),
-        keys = list(list("a"))
+        keys = list(list("a")),
+        all_attrs = c("a", "b", "c")
       )
     )
   })
@@ -71,7 +72,8 @@ describe("normalise", {
       norm.dependencies,
       list(
         attrs = list(c("a", "b"), c("b", "c")),
-        keys = list(list("a"), list("b"))
+        keys = list(list("a"), list("b")),
+        all_attrs = c("a", "b", "c")
       )
     )
   })
@@ -90,7 +92,8 @@ describe("normalise", {
       norm.dependencies,
       list(
         attrs = list(c("a", "d", "b"), c("b", "c", "a")),
-        keys = list(list("a", "d"), list(c("b", "c")))
+        keys = list(list("a", "d"), list(c("b", "c"))),
+        all_attrs = c("a", "b", "c", "d")
       )
     )
   })
@@ -115,7 +118,8 @@ describe("normalise", {
       norm.dependencies,
       list(
         attrs = list(c("a", "b", "c", "d", "f"), c("d", "e"), c("f", "e")),
-        keys = list(list("a", "b"), list("d"), list("f"))
+        keys = list(list("a", "b"), list("d"), list("f")),
+        all_attrs = c("a", "b", "c", "d", "e", "f")
       )
     )
   })
@@ -168,94 +172,9 @@ describe("normalise", {
       norm.dep,
       list(
         attrs = list(c("C", "A", "B", "D"), c("C", "E", "F")),
-        keys = list(list("C", c("A", "B")), list(c("C", "E")))
+        keys = list(list("C", c("A", "B")), list(c("C", "E"))),
+        all_attrs = c("A", "B", "C", "D", "E", "F")
       )
-    )
-  })
-  it("adds a key table if one not present, to keep original table reproducible", {
-    deps <- list(
-      dependencies = list(
-        a = list("b"),
-        b = list("a"),
-        c = list(),
-        d = list()
-      ),
-      attrs = letters[1:4]
-    )
-    deps <- flatten(deps)
-    nds <- normalise(deps)
-    expect_setequal(nds$attrs, list(c("a", "b"), c("a", "c", "d")))
-
-    deps <- list(
-      dependencies = list(
-        a = list(),
-        b = list()
-      ),
-      attrs = letters[1:2]
-    )
-    deps <- flatten(deps)
-    nds <- normalise(deps)
-    expect_database_scheme(
-      nds,
-      list(
-        attrs = list(c("a", "b")),
-        keys = list(list(c("a", "b")))
-      )
-    )
-
-    deps <- list(
-      dependencies = list(
-        a = list(),
-        b = list("a", c("d", "e")),
-        c = list("a", c("d", "e")),
-        d = list("c"),
-        e = list()
-      ),
-      attrs = letters[1:5]
-    )
-    deps <- flatten(deps)
-    nds <- normalise(deps)
-    expect_setequal(
-      nds$attrs,
-      list(c("a", "b", "c"), c("d", "e", "b", "c"), c("c", "d"), c("a", "e"))
-    )
-
-    deps <- flatten(list(dependencies = list(), attrs = character()))
-    nds <- normalise(deps)
-    expect_identical(nds$attrs, list())
-  })
-  it("returns relations that return themselves if normalised again", {
-    gen.keysize <- gen.sample.int(10)
-    gen.key <- generate(
-      for (keysize in gen.keysize) {
-        letters[1:10][sort(sample(1:10, keysize))]
-      }
-    )
-    gen.relation <- generate(
-      for (key in gen.key) {
-        nonkey <- setdiff(letters[1:10], key)
-        list(attrs = list(c(key, nonkey)), keys = list(list(key)))
-      }
-    )
-    forall(
-      gen.relation,
-      function(relation) {
-        nonkey <- setdiff(unlist(relation$attrs), unlist(relation$keys))
-        deps <- flatten(list(
-          dependencies = setNames(
-            lapply(
-              nonkey,
-              \(x) relation$keys[[1]]
-            ),
-            nonkey
-          ),
-          attrs = relation$attrs[[1]]
-        ))
-        redo <- normalise(deps)
-        expect_length(redo$attrs, 1)
-        expect_identical(redo$attrs[[1]], relation$attrs[[1]])
-        expect_identical(redo$keys[[1]], relation$keys[[1]])
-      }
     )
   })
   it("ensures starting dependencies have key elements ordered by attributes", {
@@ -392,7 +311,8 @@ describe("normalise() replacing normalize_step()", {
       norm.df,
       list(
         attrs = list(c("a", "b", "c")),
-        keys = list(list("a"))
+        keys = list(list("a")),
+        all_attrs = c("a", "b", "c")
       )
     )
   })
@@ -409,7 +329,8 @@ describe("normalise() replacing normalize_step()", {
       norm.df,
       list(
         attrs = list(c("a", "b")),
-        keys = list(list("a", "b"))
+        keys = list(list("a", "b")),
+        all_attrs = c("a", "b")
       )
     )
   })

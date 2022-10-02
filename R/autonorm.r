@@ -10,7 +10,7 @@
 #' @param name a scalar character, giving the name of the database. This name
 #'   is used for the resulting graph when using \code{\link{gv.database}}, to
 #'   allow for easier combining of graphs into a single diagram if required.
-#' @param check_key a logical, indicating whether to check whether the
+#' @param ensure_lossless a logical, indicating whether to check whether the
 #'   normalisation is lossless. If it is not, then an additional table is added
 #'   to the final "database", containing a key for \code{df}. This is enough to
 #'   make the normalisation lossless.
@@ -31,7 +31,7 @@ autonorm <- function(
   df,
   accuracy,
   name = NA_character_,
-  check_key = TRUE,
+  ensure_lossless = TRUE,
   progress = 0L,
   progress_file = "",
   ...
@@ -40,8 +40,8 @@ autonorm <- function(
 
   dfd(df, accuracy, progress = progress, progress_file = "", ...) |>
     report$op(flatten, "flattening") |>
-    report$op(normalise, "normalising", check_key) |>
-    report$op(cross_reference, "cross-referencing") |>
+    report$op(normalise, "normalising") |>
+    report$op(cross_reference, "cross-referencing", ensure_lossless) |>
     report$op(decompose, "decomposing", df = df, name)
 }
 

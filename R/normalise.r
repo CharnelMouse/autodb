@@ -33,16 +33,16 @@
 #' @export
 normalise <- function(
   dependencies,
-  check_key = TRUE,
   progress = 0L,
   progress_file = ""
 ) {
   report <- reporter(progress, progress_file)
 
-  inter <- dependencies$dependencies |>
+  dependencies$dependencies |>
     report$op(
       convert_to_vectors,
-      "simplifying dependency format"
+      "simplifying dependency format",
+      dependencies$attrs
     ) |>
     convert_to_integer_attributes(dependencies$attrs) |>
     sort_key_contents() |>
@@ -62,23 +62,14 @@ normalise <- function(
     report$op(
       remove_transitive_dependencies,
       "removing transitive dependencies"
-    )
-  if (check_key)
-    inter <- report$op(
-      inter,
-      check_original_key,
-      "checking original key",
-      dependencies$attrs
-    )
-  inter |>
+    ) |>
     report$op(
       add_bijections,
       "re-adding bijections"
     ) |>
     report$op(
       construct_relation_schemes,
-      "construction relation schemes",
-      check_key
+      "construction relation schemes"
     ) |>
     report$op(
       convert_to_character_attributes,
@@ -88,10 +79,11 @@ normalise <- function(
     structure(class = c("database_scheme", "list"))
 }
 
-convert_to_vectors <- function(dependencies) {
+convert_to_vectors <- function(dependencies, attrs) {
   list(
     determinant_sets = lapply(dependencies, `[[`, 1),
-    dependents = vapply(dependencies, `[[`, character(1), 2)
+    dependents = vapply(dependencies, `[[`, character(1), 2),
+    all_attrs = attrs
   )
 }
 
@@ -163,7 +155,8 @@ partition_dependencies <- function(vecs) {
     dependents = vecs$dependents,
     partition_determinant_set = partition_det_set,
     partition_dependents = partition_deps,
-    unique_determinant_sets = unique_det_sets
+    unique_determinant_sets = unique_det_sets,
+    all_attrs = vecs$all_attrs
   )
 }
 
@@ -234,7 +227,8 @@ merge_equivalent_keys <- function(vecs) {
     partition_dependents = partition_dependents[nonempty | in_bijections],
     partition_keys = partition_keys[nonempty | in_bijections],
     bijection_determinant_sets = bijection_determinant_sets,
-    bijection_dependent_sets = bijection_dependent_sets
+    bijection_dependent_sets = bijection_dependent_sets,
+    all_attrs = vecs$all_attrs
   )
 }
 
@@ -292,39 +286,9 @@ remove_transitive_dependencies <- function(vecs) {
     flat_groups = flat_groups[!transitive],
     partition_keys = vecs$partition_keys,
     bijection_determinant_sets = flat_bijection_determinant_sets,
-    bijection_dependents = flat_bijection_dependents
+    bijection_dependents = flat_bijection_dependents,
+    all_attrs = vecs$all_attrs
   )
-}
-
-check_original_key <- function(vecs, attrs) {
-  # while bijections are split off,
-  # we use the non-bijection FDs to find the original keys.
-  # we need this later for adding if the relations don't contain any of them.
-  det_sets <- vecs$flat_partition_determinant_sets
-  deps <- vecs$flat_partition_dependents
-  bij_det_sets <- vecs$bijection_determinant_sets
-  bij_deps <- vecs$bijection_dependents
-
-  n_attrs <- length(attrs)
-  attr_indices <- seq_len(n_attrs)
-
-  # brute-force loop, since I'm struggling to infer the key
-  # from vectorised bijection etc. information
-  original_keys <- list()
-  for (len in seq_len(n_attrs)) {
-    for (candidate in apply(utils::combn(n_attrs, len), 2, c, simplify = FALSE)) {
-      closure <- find_closure(
-        candidate,
-        c(det_sets, bij_det_sets),
-        c(deps, bij_deps)
-      )
-      if (setequal(closure, attr_indices)) {
-        original_keys <- c(original_keys, list(candidate))
-      }
-    }
-  }
-
-  c(vecs, list(original_keys = original_keys))
 }
 
 add_bijections <- function(vecs) {
@@ -358,11 +322,11 @@ add_bijections <- function(vecs) {
     flat_partition_dependents = flat_partition_dependents,
     flat_groups = flat_groups,
     bijection_groups = vecs$partition_keys[lengths(vecs$partition_keys) > 1],
-    original_keys = vecs$original_keys
+    all_attrs = vecs$all_attrs
   )
 }
 
-construct_relation_schemes <- function(vecs, check_key) {
+construct_relation_schemes <- function(vecs) {
   sorted_bijection_groups <- lapply(
     vecs$bijection_groups,
     \(bg) bg[keys_order(bg)]
@@ -414,26 +378,7 @@ construct_relation_schemes <- function(vecs, check_key) {
       rel_keys <- c(rel_keys, list(sorted_keys))
     }
   }
-  if (check_key) {
-    original_key_present <- vapply(
-      vecs$original_keys,
-      \(ok) any(vapply(
-        rel_keys,
-        \(keys) any(vapply(
-          keys,
-          \(key) all(is.element(ok, key)),
-          logical(1)
-        )),
-        logical(1)
-      )),
-      logical(1)
-    )
-    if (length(vecs$original_keys) > 0 && !any(original_key_present)) {
-      attrs <- c(attrs, list(vecs$original_keys[[1]]))
-      rel_keys <- c(rel_keys, list(list(vecs$original_key[[1]])))
-    }
-  }
-  list(attrs = attrs, keys = rel_keys)
+  list(attrs = attrs, keys = rel_keys, all_attrs = vecs$all_attrs)
 }
 
 convert_to_character_attributes <- function(vecs, attrs) {

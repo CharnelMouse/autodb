@@ -2,6 +2,9 @@
 #'
 #' @param scheme a database scheme without relationships, as given by
 #'   \code{\link{normalise}}.
+#' @param ensure_lossless a logical, TRUE by default. If TRUE, and the
+#'   decomposition isn't lossless, an extra relation is added to make the
+#'   decomposition lossless. This relation becomes the ultimate child table.
 #'
 #' @return A database scheme with relationships, represented by a named list of
 #'   four lists, with the first three having equal length:
@@ -19,9 +22,12 @@
 #'     linked attribute in both relation schemes.
 #'  }
 #' @export
-cross_reference <- function(scheme) {
-  n_relations <- length(scheme$attrs)
-  references <- calculate_references(scheme$keys, scheme$attrs)
+cross_reference <- function(scheme, ensure_lossless = TRUE) {
+  all_attrs <- scheme$all_attrs
+  attrs <- scheme$attrs
+  n_relations <- length(attrs)
+  keys <- scheme$keys
+  references <- calculate_references(keys, attrs)
 
   parents <- replicate(n_relations, integer())
   for (n in seq_len(n_relations)) {
@@ -35,10 +41,42 @@ cross_reference <- function(scheme) {
     references$attr
   )
 
+  non_included <- setdiff(all_attrs, unlist(scheme$attrs))
+  if (
+    ensure_lossless &&
+    (length(scheme$keys) > 1 || length(non_included) > 0)
+  ) {
+    relationship_tables <- lapply(relationships, `[[`, 1)
+    rel_parents <- vapply(relationship_tables, `[`, integer(1), 2)
+    rel_children <- vapply(relationship_tables, `[`, integer(1), 1)
+    non_parents <- sort(setdiff(rel_children, rel_parents))
+    stranded <- setdiff(
+      seq_along(scheme$keys),
+      unlist(relationship_tables)
+    )
+    non_included <- setdiff(all_attrs, unlist(scheme$attrs))
+    if (length(non_parents) != 1 || length(stranded) > 0 || length(non_included) > 0) {
+      ult_children <- sort(c(non_parents, stranded))
+      ult_child_indexes <- lapply(scheme$keys[ult_children], `[[`, 1)
+      new_table_attrs <- sort(unique(c(unlist(ult_child_indexes), non_included)))
+      attrs <- c(attrs, list(new_table_attrs))
+      keys <- c(keys, list(list(new_table_attrs)))
+      parents <- c(parents, list(ult_children))
+      for (p in ult_children) {
+        for (attr in keys[[p]][[1]]) {
+          relationships <- c(
+            relationships,
+            list(list(c(n_relations + 1L, p), attr))
+          )
+        }
+      }
+    }
+  }
+
   structure(
     list(
-      attrs = scheme$attrs,
-      keys = scheme$keys,
+      attrs = attrs,
+      keys = keys,
       parents = parents,
       relationships = relationships
     ),
