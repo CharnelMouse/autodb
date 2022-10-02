@@ -18,25 +18,27 @@ rejoin <- function(database) {
       logical(1)
     ))
     rels <- relationships[non_child_relationships]
-    for (r in rels) {
-      # remove non-key attributes in parent already present in child,
+    # group rels from same child together for simultaneous merging
+    non_child_children <- vapply(rels, `[`, character(1), 1)
+    for (child in unique(non_child_children)) {
+      # remove non-linking attributes in parent already present in child,
       # to avoid duplicates
-      # remove: parent not-key && child
-      # keep: parent key || !child
-      parent_attrs <- names(tables[[r[3]]]$df)
+      rs <- rels[non_child_children == child]
+      ref_attrs <- vapply(rs, `[`, character(1), 2)
+      parent_attrs <- names(tables[[non_child]]$df)
       columns_to_include <- parent_attrs[
-        parent_attrs %in% unlist(tables[[r[3]]]$keys) |
-          !is.element(parent_attrs, names(tables[[r[1]]]$df))
+        parent_attrs %in% ref_attrs |
+          !is.element(parent_attrs, names(tables[[child]]$df))
       ]
-      tables[[r[1]]]$df <- merge(
-        tables[[r[1]]]$df,
-        tables[[r[3]]]$df[, columns_to_include, drop = FALSE],
-        by.x = r[2],
-        by.y = r[4]
+      tables[[child]]$df <- merge(
+        tables[[child]]$df,
+        tables[[non_child]]$df[, columns_to_include, drop = FALSE],
+        by = ref_attrs,
+        sort = FALSE
       )
-      tables[[r[1]]]$parents <- setdiff(tables[[r[1]]]$parents, r[3])
+      tables[[child]]$parents <- setdiff(tables[[child]]$parents, non_child)
     }
-    parent_index <- match(r[3], names(tables))
+    parent_index <- match(non_child, names(tables))
     tables <- tables[-parent_index]
     relationships <- relationships[-non_child_relationships]
   }

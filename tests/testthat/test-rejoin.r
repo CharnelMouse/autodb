@@ -2,7 +2,9 @@ library(hedgehog)
 
 describe("rejoin", {
   it("is left-inverse for lossless full-dep database creation, outside of row/column permutations, for tables with unique rows", {
-    gen_ncol_inc <- gen.int(4)
+    # 6 columns allows for interesting cases, such as a table containing two
+    # independent ones, or a reference involving several attributes
+    gen_ncol_inc <- gen.int(7)
     gen_len_inc <- gen.int(6)
     gen_lst <- generate(
       for (n_col_inc in gen_ncol_inc) {
