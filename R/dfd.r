@@ -591,19 +591,22 @@ cross_intersection <- function(seeds, max_non_dep, bitsets) {
 }
 
 minimise_seeds <- function(seeds, bitsets) {
-  seeds <- unique(seeds) # non-unique means order values too large, NULL bitsets
-  n_seeds <- length(seeds)
-  sorted_bitsets <- bitsets[order(seeds)]
-  include <- rep(TRUE, length(seeds))
+  # remove duplicates first instead of comparing identical bitsets
+  unique_seeds <- unique(seeds)
+  n_seeds <- length(unique_seeds)
+  include <- rep(TRUE, length(unique_seeds))
   for (n in seq_len(n_seeds - 1)) {
     if (include[n]) {
       for (m in seq.int(n + 1L, n_seeds)) {
-        if (include[m] && is_subset(sorted_bitsets[[n]], sorted_bitsets[[m]]))
+        if (
+          include[m] &&
+          is_subset(bitsets[[unique_seeds[n]]], bitsets[[unique_seeds[m]]])
+        )
           include[m] <- FALSE
       }
     }
   }
-  sort(seeds)[include]
+  unique_seeds[include]
 }
 
 compute_partitions <- function(df, rhs, lhs_set, partitions, accuracy) {
