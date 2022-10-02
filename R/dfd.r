@@ -591,6 +591,7 @@ cross_intersection <- function(seeds, max_non_dep, bitsets) {
 }
 
 minimise_seeds <- function(seeds, bitsets) {
+  seeds <- unique(seeds) # non-unique means order values too large, NULL bitsets
   n_seeds <- length(seeds)
   sorted_bitsets <- bitsets[order(seeds)]
   include <- rep(TRUE, length(seeds))
