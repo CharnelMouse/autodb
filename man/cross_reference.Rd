@@ -4,11 +4,15 @@
 \alias{cross_reference}
 \title{Add foreign key relationships to a normalised database}
 \usage{
-cross_reference(scheme)
+cross_reference(scheme, ensure_lossless = TRUE)
 }
 \arguments{
 \item{scheme}{a database scheme without relationships, as given by
 \code{\link{normalise}}.}
+
+\item{ensure_lossless}{a logical, TRUE by default. If TRUE, and the
+decomposition isn't lossless, an extra relation is added to make the
+decomposition lossless. This relation becomes the ultimate child table.}
 }
 \value{
 A database scheme with relationships, represented by a named list of

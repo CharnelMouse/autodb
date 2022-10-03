@@ -8,7 +8,7 @@ autonorm(
   df,
   accuracy,
   name = NA_character_,
-  check_key = TRUE,
+  ensure_lossless = TRUE,
   progress = 0L,
   progress_file = "",
   ...
@@ -24,7 +24,7 @@ required in order to conclude a dependency.}
 is used for the resulting graph when using \code{\link{gv.database}}, to
 allow for easier combining of graphs into a single diagram if required.}
 
-\item{check_key}{a logical, indicating whether to check whether the
+\item{ensure_lossless}{a logical, indicating whether to check whether the
 normalisation is lossless. If it is not, then an additional table is added
 to the final "database", containing a key for \code{df}. This is enough to
 make the normalisation lossless.}

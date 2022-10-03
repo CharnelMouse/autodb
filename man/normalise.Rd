@@ -4,18 +4,13 @@
 \alias{normalise}
 \title{Normalises dependency relationships}
 \usage{
-normalise(dependencies, check_key = TRUE, progress = 0L, progress_file = "")
+normalise(dependencies, progress = 0L, progress_file = "")
 }
 \arguments{
 \item{dependencies}{a list of functional dependencies, as given by
 \code{\link{flatten}}: each dependency is a list, contained one character
 vector for the left-hand size, and one unit-length character vector for the
 right-hand side.}
-
-\item{check_key}{a logical, indicating whether to check whether the
-normalisation is lossless. If it is not, then an additional table is added
-to the final "database", containing a key for \code{df}. This is enough to
-make the normalisation lossless.}
 
 \item{progress}{an integer, for whether to display progress to the user. 0
 (default) displays nothing. 1 notes the start of finding each non-constant
