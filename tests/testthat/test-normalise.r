@@ -223,6 +223,48 @@ describe("normalise", {
         all_attrs = c("A", "B", "C", "D", "E")
       )
     )
+
+    gen_ncol_inc <- gen.int(7)
+    gen_len_inc <- gen.int(10)
+    gen_nonempty_lst <- generate(
+      for (n_col_inc in gen_ncol_inc) {
+        generate(
+          for (len_inc in gen_len_inc) {
+            rep(
+              list(gen.sample(c(FALSE, TRUE), len_inc, replace = TRUE)),
+              n_col_inc
+            ) |>
+              setNames(make.unique(rep_len(LETTERS, n_col_inc)))
+          }
+        )
+      }
+    )
+    gen_nonempty_df <- generate(for (lst in gen_nonempty_lst) as.data.frame(lst))
+    gen_lst <- generate(
+      for (n_col_inc in gen_ncol_inc) {
+        generate(
+          for (len_inc in gen_len_inc) {
+            rep(
+              list(gen.sample(c(FALSE, TRUE), len_inc - 1, replace = TRUE)),
+              n_col_inc - 1
+            ) |>
+              setNames(make.unique(rep_len(LETTERS, n_col_inc - 1)))
+          }
+        )
+      }
+    )
+    gen_df <- generate(for (lst in gen_lst) as.data.frame(lst))
+    still_lossless <- function(df) {
+      df <- unique(df)
+      scheme <- cross_reference(normalise(
+        flatten(dfd(df, 1)),
+        remove_avoidable = TRUE
+      ))
+      database <- decompose(df, scheme)
+      df2 <- rejoin(database)
+      expect_identical_unordered_table(df2, df)
+    }
+    forall(gen_df, still_lossless)
   })
 })
 

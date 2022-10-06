@@ -26,12 +26,7 @@ describe("rejoin", {
         df <- unique(df)
         es <- autonorm(df, 1)
         df2 <- rejoin(es)
-        stopifnot(all(names(df) %in% names(df2)))
-        df2_reordered <- df2[, names(df), drop = FALSE]
-        expect_identical(
-          `rownames<-`(df2_reordered[do.call(order, df2_reordered), ], NULL),
-          `rownames<-`(df[do.call(order, df), ], NULL)
-        )
+        expect_identical_unordered_table(df2, df)
       }
     )
   })
