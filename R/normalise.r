@@ -376,7 +376,6 @@ remove_avoidable_attributes <- function(vecs, attrs) {
   flat_partition_dependents <- vecs$flat_partition_dependents
   flat_groups <- vecs$flat_groups
 
-  # # I think I want to merge the key sets together first
   for (attr in rev(seq_along(attrs))) {
     for (relation in unique(flat_groups)) { # for each X_i in K
       K <- unique(flat_partition_determinant_set[flat_groups == relation])
@@ -392,23 +391,24 @@ remove_avoidable_attributes <- function(vecs, attrs) {
         if (attr %in% X_i) {
           M <- sort(dclosure_keys(
             X_i,
-            K,
             flat_partition_determinant_set,
-            flat_partition_dependents
+            flat_partition_dependents,
+            flat_groups
           ))
           Mp <- setdiff(intersect(M, relation_attrs), attr)
           Mp_closure <- dclosure_keys(
             Mp,
-            list(Mp), # definitely wrong, might have bijections with other keys
             flat_partition_determinant_set,
-            flat_partition_dependents
+            flat_partition_dependents,
+            flat_groups
           )
           if (all(X_i %in% Mp_closure)) {
             replacement <- sort(minimal_subset_direct(
               Mp,
               X_i,
-              flat_partition_determinant_set[flat_groups != relation],
-              flat_partition_dependents[flat_groups != relation]
+              flat_partition_determinant_set,
+              flat_partition_dependents,
+              flat_groups
             ))
             for (n in seq_along(Kp)) {
               if (identical(Kp[[n]], X_i)) {
@@ -434,7 +434,13 @@ remove_avoidable_attributes <- function(vecs, attrs) {
   vecs
 }
 
-minimal_subset_direct <- function(key, determines, determinant_sets, dependents) {
+minimal_subset_direct <- function(
+  key,
+  determines,
+  determinant_sets,
+  dependents,
+  groups
+) {
   keep <- rep(TRUE, length(key))
   changed <- TRUE
   while (changed) {
@@ -442,8 +448,12 @@ minimal_subset_direct <- function(key, determines, determinant_sets, dependents)
     for (n in rev(seq_along(key)[keep])) {
       temp_keep <- keep
       temp_keep[n] <- FALSE
-      # dclosure?
-      temp_closure <- find_closure(key[temp_keep], determinant_sets, dependents)
+      temp_closure <- dclosure_keys(
+        key[temp_keep],
+        determinant_sets,
+        dependents,
+        groups
+      )
       if (all(determines %in% temp_closure)) {
         keep <- temp_keep
         changed <- TRUE
@@ -453,10 +463,15 @@ minimal_subset_direct <- function(key, determines, determinant_sets, dependents)
   key[keep]
 }
 
-dclosure_keys <- function(lhs, keys, determinant_sets, dependents) {
-  used_fds <- which(vapply(
-    determinant_sets, \(set) !is.element(list(set), keys), logical(1)
-  ))
+dclosure_keys <- function(lhs, determinant_sets, dependents, groups) {
+  lhs_matches <- vapply(
+    determinant_sets,
+    identical,
+    logical(1),
+    lhs
+  )
+  lhs_match_groups <- unique(groups[lhs_matches])
+  used_fds <- which(!is.element(groups, lhs_match_groups))
   find_closure(lhs, determinant_sets[used_fds], dependents[used_fds])
 }
 
