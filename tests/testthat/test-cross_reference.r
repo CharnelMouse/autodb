@@ -1,37 +1,6 @@
 library(hedgehog)
 
 describe("cross_reference", {
-  gen_ncol_inc <- gen.int(7)
-  gen_len_inc <- gen.int(6)
-  gen_nonempty_lst <- generate(
-    for (n_col_inc in gen_ncol_inc) {
-      generate(
-        for (len_inc in gen_len_inc) {
-          rep(
-            list(gen.sample(c(FALSE, TRUE), len_inc, replace = TRUE)),
-            n_col_inc
-          ) |>
-            setNames(make.unique(rep_len(LETTERS, n_col_inc)))
-        }
-      )
-    }
-  )
-  gen_nonempty_df <- generate(for (lst in gen_nonempty_lst) as.data.frame(lst))
-  gen_lst <- generate(
-    for (n_col_inc in gen_ncol_inc) {
-      generate(
-        for (len_inc in gen_len_inc) {
-          rep(
-            list(gen.sample(c(FALSE, TRUE), len_inc - 1, replace = TRUE)),
-            n_col_inc - 1
-          ) |>
-            setNames(make.unique(rep_len(LETTERS, n_col_inc - 1)))
-        }
-      )
-    }
-  )
-  gen_df <- generate(for (lst in gen_lst) as.data.frame(lst))
-
   it("returns relationships", {
     df <- data.frame(a = integer(), b = integer(), c = integer())
     norm_deps <- list(
@@ -54,7 +23,7 @@ describe("cross_reference", {
   })
   it("only links children to parents by exactly one parent key", {
     forall(
-      gen_nonempty_df,
+      gen_df(6, 7, nonempty = TRUE),
       function(df) {
         df <- unique(df)
         deps <- dfd(df, 1)
@@ -82,7 +51,7 @@ describe("cross_reference", {
   })
   it("leaves a single ultimate child if given a lossless decomposition", {
     forall(
-      gen_nonempty_df,
+      gen_df(6, 7, nonempty = TRUE),
       function(df) {
         df <- unique(df)
         deps <- dfd(df, 1)
@@ -102,7 +71,7 @@ describe("cross_reference", {
   })
   it("leaves no stranded tables if given a lossless decomposition", {
     forall(
-      gen_nonempty_df,
+      gen_df(6, 7, nonempty = FALSE),
       function(df) {
         df <- unique(df)
         deps <- dfd(df, 1)
@@ -123,7 +92,7 @@ describe("cross_reference", {
   })
   it("reintroduces attributes not in dependencies if ensuring lossless", {
     forall(
-      gen_df,
+      gen_df(6, 7),
       function(df) {
         df <- unique(df)
         deps <- dfd(df, 1)
@@ -138,7 +107,7 @@ describe("cross_reference", {
   })
   it("only return non-extraneous table relationships", {
     forall(
-      gen_nonempty_df,
+      gen_df(6, 7, nonempty = FALSE),
       function(df) {
         df <- unique(df)
         scheme <- normalise(flatten(dfd(df, 1)))

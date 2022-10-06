@@ -1,39 +1,9 @@
 library(hedgehog)
 
 describe("reduce", {
-  gen_ncol_inc <- gen.int(7)
-  gen_len_inc <- gen.int(6)
-  gen_lst <- generate(
-    for (n_col_inc in gen_ncol_inc) {
-      generate(
-        for (len_inc in gen_len_inc) {
-          rep(
-            list(gen.sample(c(FALSE, TRUE), len_inc - 1, replace = TRUE)),
-            n_col_inc - 1
-          ) |>
-            setNames(make.unique(rep_len(LETTERS, n_col_inc - 1)))
-        }
-      )
-    }
-  )
-  gen_nonempty_lst <- generate(
-    for (n_col_inc in gen_ncol_inc) {
-      generate(
-        for (len_inc in gen_len_inc) {
-          rep(
-            list(gen.sample(c(FALSE, TRUE), len_inc, replace = TRUE)),
-            n_col_inc
-          ) |>
-            setNames(make.unique(rep_len(LETTERS, n_col_inc)))
-        }
-      )
-    }
-  )
-  gen_df <- generate(for (lst in gen_lst) as.data.frame(lst))
-  gen_nonempty_df <- generate(for (lst in gen_nonempty_lst) as.data.frame(lst))
   it("is idempotent", {
     forall(
-      gen_df,
+      gen_df(6, 7),
       function(df) {
         es <- autonorm(as.data.frame(df), 1, ensure_lossless = FALSE)
         once <- reduce(es)
@@ -44,7 +14,7 @@ describe("reduce", {
   })
   it("does nothing to a lossless database", {
     forall(
-      gen_df,
+      gen_df(6, 7),
       function(df) {
         es <- autonorm(as.data.frame(df), 1, ensure_lossless = TRUE)
         once <- reduce(es)
@@ -54,7 +24,7 @@ describe("reduce", {
   })
   it("removes added tables with less rows than existing non-parent tables", {
     forall(
-      gen_nonempty_df,
+      gen_df(6, 7, nonempty = TRUE),
       function(df) {
         es <- autonorm(df, 1, ensure_lossless = TRUE)
         once <- reduce(es)
@@ -77,7 +47,7 @@ describe("reduce", {
   })
   it("returns a subset", {
     forall(
-      gen_nonempty_df,
+      gen_df(6, 7, nonempty = TRUE),
       function(df) {
         es <- autonorm(df, 1, ensure_lossless = FALSE)
         reduced <- reduce(es)
@@ -89,7 +59,7 @@ describe("reduce", {
   })
   it("returns a database where non-parent tables have the same maximal number of rows", {
     forall(
-      gen_nonempty_df,
+      gen_df(6, 7, nonempty = TRUE),
       function(df) {
         es <- autonorm(df, 1, ensure_lossless = FALSE)
         if (length(es$tables) == 0)

@@ -3,31 +3,12 @@ library(hedgehog)
 
 describe("dfd", {
   it("terminates for simple logical relations", {
-    gen_ncol_inc <- gen.int(4)
-    gen_len_inc <- gen.int(6)
-    gen_lst <- generate(
-      for (n_col_inc in gen_ncol_inc) {
-        generate(
-          for (len_inc in gen_len_inc) {
-            rep(
-              list(gen.sample(c(FALSE, TRUE), len_inc - 1, replace = TRUE)),
-              n_col_inc - 1
-            ) |>
-              setNames(make.unique(rep_len(LETTERS, n_col_inc - 1)))
-          }
-        )
-      }
-    )
-    gen_df <- generate(for (lst in gen_lst) as.data.frame(lst))
-    forall(
-      gen_df,
-      function(df) {
-        res <- withTimeout(dfd(df, 1), timeout = 5, onTimeout = "silent")
-        expect_true(!is.null(res))
-        expect_named(res, c("dependencies", "attrs"))
-      },
-      shrink.limit = Inf
-    )
+    terminates_and_named <- function(df) {
+      res <- withTimeout(dfd(df, 1), timeout = 5, onTimeout = "silent")
+      expect_true(!is.null(res))
+      expect_named(res, c("dependencies", "attrs"))
+    }
+    forall(gen_df(4, 6), terminates_and_named, shrink.limit = Inf)
   })
   it("terminates with trivially-dependent columns (not stuck on no MNFDs)", {
     df <- data.frame(
@@ -160,36 +141,18 @@ describe("dfd", {
     expect_identical(deps$dependencies$`A 1`, list(c("B 2", "C 3")))
   })
   it("treats missing values as normal entries", {
-    gen_ncol_inc <- gen.int(4)
-    gen_len_inc <- gen.int(6)
-    gen_lst <- generate(
-      for (n_col_inc in gen_ncol_inc) {
-        generate(
-          for (len_inc in gen_len_inc) {
-            rep(
-              list(gen.sample(c(FALSE, TRUE), len_inc - 1, replace = TRUE)),
-              n_col_inc - 1
-            ) |>
-              setNames(make.unique(rep_len(LETTERS, n_col_inc - 1)))
-          }
-        )
-      }
-    )
-    gen_df <- generate(for (lst in gen_lst) as.data.frame(lst))
-    forall(
-      gen_df,
-      function(df) {
-        res <- dfd(df, 1)
-        na_df <- as.data.frame(lapply(
-          lst,
-          \(x) {y <- x; y[!y] <- NA; y}
-        ))
-        na_res <- dfd(na_df, 1)
-        expect_identical(res$attrs, na_res$attrs)
-        for (nm in res$attrs)
-          expect_setequal(res$dependencies[[nm]], na_res$dependencies[[nm]])
-      }
-    )
+    false_to_na_invariant_deps <- function(df) {
+      res <- dfd(df, 1)
+      na_df <- as.data.frame(lapply(
+        df,
+        \(x) {y <- x; y[!y] <- NA; y}
+      ))
+      na_res <- dfd(na_df, 1)
+      expect_identical(res$attrs, na_res$attrs)
+      for (nm in res$attrs)
+        expect_setequal(res$dependencies[[nm]], na_res$dependencies[[nm]])
+    }
+    forall(gen_df(4, 6), false_to_na_invariant_deps)
   })
 })
 

@@ -25,3 +25,24 @@ expect_identical_unordered_table <- function(new, original) {
     `rownames<-`(original[do.call(order, original), ], NULL)
   )
 }
+
+gen_df <- function(nrow, ncol, nonempty = FALSE) {
+  gen_ncol_inc <- gen.sample(seq.int(nonempty, ncol), 1)
+  gen_len_inc <- gen.sample(seq.int(nonempty, nrow), 1)
+  gen_lst <- generate(
+    for (n_col_inc in gen_ncol_inc) {
+      generate(
+        for (len_inc in gen_len_inc) {
+          rep(
+            list(gen.sample(c(FALSE, TRUE), len_inc, replace = TRUE)),
+            n_col_inc
+          ) |>
+            setNames(make.unique(rep_len(LETTERS, n_col_inc)))
+        }
+      )
+    }
+  )
+  generate(for (lst in gen_lst) as.data.frame(lst))
+}
+
+gen_nonempty_df <- function(nrow, ncol) gen_df(nrow, ncol, nonempty = TRUE)
