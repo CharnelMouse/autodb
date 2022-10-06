@@ -190,6 +190,40 @@ describe("normalise", {
     norm_deps2 <- normalise(dependencies2)
     expect_identical(norm_deps, norm_deps2)
   })
+  it("can remove avoidable attributes", {
+    # example 6.24 from Maier
+    # A <-> B, AC -> D, AC -> E, BD -> C
+    # expected without removing avoidable: A <-> B, AC <-> BD -> E
+    # expected with removing avoidable: A <-> B, AC <-> AD -> E
+    deps <- list(
+      dependencies = list(
+        list("A", "B"),
+        list("B", "A"),
+        list(c("A", "C"), "D"),
+        list(c("A", "C"), "E"),
+        list(c("B", "D"), "C")
+      ),
+      attrs = c("A", "B", "C", "D", "E")
+    )
+    norm.deps <- normalise(deps, remove_avoidable = FALSE)
+    expect_database_scheme(
+      norm.deps,
+      list(
+        attrs = list(c("A", "B"), c("A", "C", "B", "D", "E")),
+        keys = list(list("A", "B"), list(c("A", "C"), c("B", "D"))),
+        all_attrs = c("A", "B", "C", "D", "E")
+      )
+    )
+    norm.deps2 <- normalise(deps, remove_avoidable = TRUE)
+    expect_database_scheme(
+      norm.deps2,
+      list(
+        attrs = list(c("A", "B"), c("A", "C", "D", "E")),
+        keys = list(list("A", "B"), list(c("A", "C"), c("A", "D"))),
+        all_attrs = c("A", "B", "C", "D", "E")
+      )
+    )
+  })
 })
 
 test_that("drop_primary_dups", {
