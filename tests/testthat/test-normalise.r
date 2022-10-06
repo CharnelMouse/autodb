@@ -30,15 +30,14 @@ describe("normalise", {
     )
     deps <- flatten(deps)
     nds <- normalise(deps)
-    forall(
-      gen.sample(deps$dependencies, length(deps$dependencies)),
-      function(perm) {
-        new_deps <- deps
-        new_deps$dependencies <- perm
-        new_nds <- normalise(new_deps)
-        expect_identical(nds, new_nds)
-      }
-    )
+    gen_permutation <- gen.sample(deps$dependencies, length(deps$dependencies))
+    normalisation_permutation_invariant <- function(perm) {
+      new_deps <- deps
+      new_deps$dependencies <- perm
+      new_nds <- normalise(new_deps)
+      expect_identical(nds, new_nds)
+    }
+    forall(gen_permutation, normalisation_permutation_invariant)
   })
   it("removes extraneous attributes", {
     dependencies <- list(
@@ -225,7 +224,6 @@ describe("normalise", {
     )
 
     still_lossless <- function(df) {
-      df <- unique(df)
       scheme <- cross_reference(normalise(
         flatten(dfd(df, 1)),
         remove_avoidable = TRUE
@@ -234,7 +232,7 @@ describe("normalise", {
       df2 <- rejoin(database)
       expect_identical_unordered_table(df2, df)
     }
-    forall(gen_df(10, 7), still_lossless)
+    forall(gen_df(10, 7, remove_dup_rows = TRUE), still_lossless)
   })
 })
 
@@ -274,21 +272,17 @@ test_that("drop_primary_dups", {
 
 describe("keys_order", {
   it("works like order() for single-length elements", {
-    forall(
-      gen.sample.int(100, 10),
-      function(ints) {
-        expect_identical(order(ints), keys_order(ints))
-      }
-    )
+    same_as_order <- function(ints) {
+      expect_identical(order(ints), keys_order(ints))
+    }
+    forall(gen.sample.int(100, 10), same_as_order)
   })
   it("gives a sorted list if applied as subsetter", {
-    forall(
-      gen.sample.int(100, 10),
-      function(ints) {
-        ord <- keys_order(ints)
-        expect_identical(seq_along(ints), keys_order(ints[ord]))
-      }
-    )
+    sorts_input_to_itself <- function(ints) {
+      ord <- keys_order(ints)
+      expect_identical(seq_along(ints), keys_order(ints[ord]))
+    }
+    forall(gen.sample.int(100, 10), sorts_input_to_itself)
   })
   it("orders by length first", {
     gen_el <- generate(for (n in gen.int(4)) {
@@ -297,16 +291,14 @@ describe("keys_order", {
       })
     })
     gen_lst <- gen.list(gen_el, to = 10)
-    forall(
-      gen_lst,
-      function(lst) {
-        ord <- keys_order(lst)
-        ord_sorted_within_lengths <- ord |>
-          tapply(lengths(lst)[ord], sort, simplify = FALSE) |>
-          unlist(use.names = FALSE)
-        expect_identical(order(lengths(lst)), ord_sorted_within_lengths)
-      }
-    )
+    orders_by_length_first <- function(lst) {
+      ord <- keys_order(lst)
+      ord_sorted_within_lengths <- ord |>
+        tapply(lengths(lst)[ord], sort, simplify = FALSE) |>
+        unlist(use.names = FALSE)
+      expect_identical(order(lengths(lst)), ord_sorted_within_lengths)
+    }
+    forall(gen_lst, orders_by_length_first)
   })
   it("orders by values, in given order, within lengths", {
     same_length_sorted <- function(lst) {
@@ -324,15 +316,13 @@ describe("keys_order", {
       gen.sample.int(2, n, replace = TRUE)
     })
     gen_lst <- gen.list(gen_el, to = 10)
-    forall(
-      gen_lst,
-      function(lst) {
-        ord <- keys_order(lst)
-        sorted_keys <- lst[ord]
-        sorted_lengths <- lengths(lst)[ord]
-        expect_true(all(tapply(sorted_keys, sorted_lengths, same_length_sorted)))
-      }
-    )
+    orders_by_values_with_lengths <- function(lst) {
+      ord <- keys_order(lst)
+      sorted_keys <- lst[ord]
+      sorted_lengths <- lengths(lst)[ord]
+      expect_true(all(tapply(sorted_keys, sorted_lengths, same_length_sorted)))
+    }
+    forall(gen_lst, orders_by_values_with_lengths)
   })
 })
 

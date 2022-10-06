@@ -26,7 +26,7 @@ expect_identical_unordered_table <- function(new, original) {
   )
 }
 
-gen_df <- function(nrow, ncol, nonempty = FALSE) {
+gen_df <- function(nrow, ncol, nonempty = FALSE, remove_dup_rows = FALSE) {
   gen_ncol_inc <- gen.sample(seq.int(nonempty, ncol), 1)
   gen_len_inc <- gen.sample(seq.int(nonempty, nrow), 1)
   gen_lst <- generate(
@@ -42,7 +42,12 @@ gen_df <- function(nrow, ncol, nonempty = FALSE) {
       )
     }
   )
-  generate(for (lst in gen_lst) as.data.frame(lst))
+  generate(for (lst in gen_lst) {
+    if (remove_dup_rows)
+      unique(as.data.frame(lst))
+    else
+      as.data.frame(lst)
+  })
 }
 
 gen_nonempty_df <- function(nrow, ncol) gen_df(nrow, ncol, nonempty = TRUE)
