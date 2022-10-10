@@ -51,3 +51,35 @@ gen_df <- function(nrow, ncol, nonempty = FALSE, remove_dup_rows = FALSE) {
 }
 
 gen_nonempty_df <- function(nrow, ncol) gen_df(nrow, ncol, nonempty = TRUE)
+
+gen_df_vary_classes <- function(nrow, ncol, nonempty = FALSE, remove_dup_rows = FALSE) {
+  gen_ncol_inc <- gen.sample(seq.int(nonempty, ncol), 1)
+  gen_len_inc <- gen.sample(seq.int(nonempty, nrow), 1)
+  gen_classes <- generate(for (ncol in gen_ncol_inc) {
+    classes <- c("logical", "integer", "numeric", "character")
+    gen.sample(classes, ncol, replace = TRUE)
+  })
+  gen_lst <- generate(
+    for (classes in gen_classes) {
+      generate(
+        for (len_inc in gen_len_inc) {
+          lapply(
+            classes,
+            \(class) gen.sample(
+              as(c(FALSE, TRUE), class),
+              len_inc,
+              replace = TRUE
+            )
+          ) |>
+            setNames(make.unique(rep_len(LETTERS, length(classes))))
+        }
+      )
+    }
+  )
+  generate(for (lst in gen_lst) {
+    if (remove_dup_rows)
+      unique(as.data.frame(lst))
+    else
+      as.data.frame(lst)
+  })
+}

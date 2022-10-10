@@ -1,24 +1,225 @@
+# Possible additional properties
+# Invariants
+# + Finishes!
+# + Running DFD twice gives equivalent results
+# + Treats missing values as normal entries, i.e. replacing a value with NAs
+# doesn't change results
+# + FDs with the same RHS can't be LHSs where one is a subset of the other
+# + invariant to permuting/changing values for an attribute (incl. NA)
+# + invariant to changing type for an attribute
+# - invariant to changing attribute order, except for order in dep elements and
+# determinant sets
+# - invariant to changing attribute names (including duplicate names?)
+# - invariant to accuracy within same nrow threshold
+# - removing a column removes FDs involving that column, the rest stay the same
+# - removing a row keeps all previous FDs, might add more
+# + doesn't have attribute in determinant sets if excluded
+# + excluding type === excluding all attributes of that type
+# Metamorphic/model
+# - change attribute names then DFD === DFD then change attribute names
+
+# Already implemented:
+
+# Various tests should have random accuracy draws, probably with lots of
+# weight on 1
+
 library(R.utils)
 library(hedgehog)
 
 describe("dfd", {
-  it("terminates for simple logical relations", {
-    terminates_and_named <- function(df) {
-      res <- withTimeout(dfd(df, 1), timeout = 5, onTimeout = "silent")
+  expect_equiv_deps <- function(deps1, deps2) {
+    expect_identical(deps1$attrs, deps2$attrs)
+    expect_identical(names(deps1$dependencies), names(deps2$dependencies))
+    for (n in seq_along(deps1$dependencies))
+      expect_setequal(deps1$dependencies[[n]], deps2$dependencies[[n]])
+  }
+  expect_subset_deps <- function(deps1, deps2) {
+    expect_identical(deps1$attrs, deps2$attrs)
+    expect_identical(names(deps1$dependencies), names(deps2$dependencies))
+    for (n in seq_along(deps1$dependencies))
+      expect_true(all(is.element(deps1$dependencies[[n]], deps2$dependencies[[n]])))
+  }
+  terminates_then <- function(fn, accuracy, ...) {
+    function(df) {
+      res <- withTimeout(dfd(df, accuracy, ...), timeout = 5, onTimeout = "silent")
       expect_true(!is.null(res))
-      expect_named(res, c("dependencies", "attrs"))
+      fn(res)
     }
-    forall(gen_df(4, 6), terminates_and_named, shrink.limit = Inf)
+  }
+  both_terminate_then <- function(fn, accuracy, ...) {
+    function(df1, df2) {
+      res1 <- withTimeout(dfd(df1, accuracy, ...), timeout = 5, onTimeout = "silent")
+      expect_true(!is.null(res1))
+      res2 <- withTimeout(dfd(df2, accuracy, ...), timeout = 5, onTimeout = "silent")
+      expect_true(!is.null(res2))
+      fn(res1, res2)
+    }
+  }
+  list_pair <- function(fn) {
+    function(lst) {
+      fn(lst[[1]], lst[[2]])
+    }
+  }
+
+  it("terminates for simple logical relations", {
+    is_named <- function(deps) {
+      expect_named(deps, c("dependencies", "attrs"))
+    }
+    forall(gen_df(4, 6), terminates_then(is_named, 1), shrink.limit = Inf)
   })
-  it("terminates with trivially-dependent columns (not stuck on no MNFDs)", {
-    df <- data.frame(
-      A = 1:3,
-      B = 1:3,
-      C = 1:3
+  it("gives a deterministic result, except for per-dependent dependency order", {
+    two_copies <- function(fn) {
+      function(df) {
+        fn(df, df)
+      }
+    }
+    forall(
+      gen_df(4, 6),
+      two_copies(both_terminate_then(expect_equiv_deps, accuracy = 1))
     )
-    res <- withTimeout(dfd(df, 1), timeout = 5, onTimeout = "silent")
-    expect_true(!is.null(res))
-    expect_named(res, c("dependencies", "attrs"))
+  })
+  it("treats missing values as normal entries", {
+    with_na_copy <- function(fn) {
+      function(df) {
+        na_df <- as.data.frame(lapply(
+          df,
+          \(x) {y <- x; y[!y] <- NA; y}
+        ))
+        fn(df, na_df)
+      }
+    }
+    forall(gen_df(4, 6), with_na_copy(both_terminate_then(expect_equiv_deps, 1)))
+  })
+  it("returns dependencies where shared dependent <=> not sub/supersets for determinants", {
+    has_non_nested_determinant_sets <- function(deps) {
+      for (det_sets in deps$dependencies) {
+        len <- length(det_sets)
+        if (len <= 1)
+          succeed()
+        else{
+          for (n in seq_len(max(0, len - 1))) {
+            for (m in seq.int(n + 1L, len)) {
+              expect_true(length(setdiff(det_sets[[n]], det_sets[[m]])) > 0)
+              expect_true(length(setdiff(det_sets[[m]], det_sets[[n]])) > 0)
+            }
+          }
+        }
+      }
+    }
+    forall(gen_df(4, 6), terminates_then(has_non_nested_determinant_sets, 1))
+  })
+  it("is invariant to an attribute's values being permuted", {
+    gen_perm <- function(vals) {
+      uniq <- sort(unique(vals))
+      matches <- match(vals, uniq)
+      pool <- union(uniq, NA)
+      generate(for (perm in gen.sample(pool, length(uniq))) {
+        perm[matches]
+      })
+    }
+    gen_df_and_value_perm <- function(
+      nrow,
+      ncol,
+      remove_dup_rows = FALSE
+    ) {
+      generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows)) {
+        generate(for (attr in gen.int(ncol(df))){
+          generate(for (permuted_attr in gen_perm(df[, attr])) {
+            permed <- df
+            permed[, attr] <- permuted_attr
+            list(df, permed)
+          })
+        })
+      })
+    }
+    forall(
+      gen_df_and_value_perm(4, 6),
+      list_pair(both_terminate_then(expect_equiv_deps, 1))
+    )
+  })
+  it("is invariant to an attribute's class being changed (without exclusions)", {
+    gen_df_and_type_change <- function(
+      nrow,
+      ncol,
+      remove_dup_rows = FALSE
+    ) {
+      classes <- c("logical", "integer", "numeric", "character")
+      generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows)) {
+        generate(for (attr in gen.int(ncol(df))) {
+          generate(for (new_class in gen.element(
+            setdiff(classes, class(df[, attr])))
+          ) {
+            permed <- df
+            permed[, attr] <- as(permed[, attr], new_class)
+            list(df, permed)
+          })
+        })
+      })
+    }
+    forall(
+      gen_df_and_type_change(4, 6),
+      list_pair(both_terminate_then(expect_equiv_deps, 1))
+    )
+  })
+  it("doesn't have an excluded attribute in any determinant sets", {
+    gen_df_and_exclude <- function(nrow, ncol, remove_dup_rows = FALSE) {
+      generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows)) {
+        list(df, gen.sample(names(df), 1))
+      })
+    }
+    terminates_with_exclusion_then <- function(fn, accuracy, ...) {
+      function(df, attr) {
+        deps <- withTimeout(
+          dfd(df, accuracy, exclude = attr, ...),
+          timeout = 5,
+          onTimeout = "silent"
+        )
+        expect_true(!is.null(deps))
+        fn(deps, attr)
+      }
+    }
+    exclusion_not_in_determinant_sets <- function(deps, attr) {
+      for (det_sets in deps$dependencies) {
+        for (det_set in det_sets) {
+          expect_false(is.element(attr, det_set))
+        }
+      }
+    }
+    forall(
+      gen_df_and_exclude(4, 6),
+      list_pair(terminates_with_exclusion_then(
+        exclusion_not_in_determinant_sets,
+        accuracy = 1
+      ))
+    )
+  })
+  it("gives same result from excluding class and exclude attributes with that class", {
+    exclude_and_exclude_class_terminate_then <- function(fn, accuracy, class, ...) {
+      function(df) {
+        attrs_with_class <- names(df)[vapply(df, inherits, logical(1), class)]
+        deps1 <- withTimeout(
+          dfd(df, accuracy, exclude = attrs_with_class, ...),
+          timeout = 5,
+          onTimeout = "silent"
+        )
+        expect_true(!is.null(deps1))
+        deps2 <- withTimeout(
+          dfd(df, accuracy, exclude_class = class, ...),
+          timeout = 5,
+          onTimeout = "silent"
+        )
+        expect_true(!is.null(deps2))
+        fn(deps1, deps2)
+      }
+    }
+    forall(
+      gen_df_vary_classes(4, 6), # need to generate dfs with differing classes
+      exclude_and_exclude_class_terminate_then(
+        expect_equiv_deps,
+        accuracy = 1,
+        "logical"
+      )
+    )
   })
   it("gives dependencies for unique attributes (in case don't want them as key)", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), C = c(1, 2, 2))
@@ -139,20 +340,6 @@ describe("dfd", {
       stats::setNames(c("A 1", "B 2", "C 3"))
     deps <- dfd(df, 1)
     expect_identical(deps$dependencies$`A 1`, list(c("B 2", "C 3")))
-  })
-  it("treats missing values as normal entries", {
-    false_to_na_invariant_deps <- function(df) {
-      res <- dfd(df, 1)
-      na_df <- as.data.frame(lapply(
-        df,
-        \(x) {y <- x; y[!y] <- NA; y}
-      ))
-      na_res <- dfd(na_df, 1)
-      expect_identical(res$attrs, na_res$attrs)
-      for (nm in res$attrs)
-        expect_setequal(res$dependencies[[nm]], na_res$dependencies[[nm]])
-    }
-    forall(gen_df(4, 6), false_to_na_invariant_deps)
   })
 })
 
