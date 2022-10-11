@@ -2,23 +2,19 @@
 # Invariants
 # + Finishes!
 # + Running DFD twice gives equivalent results
-# + Treats missing values as normal entries, i.e. replacing a value with NAs
 # doesn't change results
 # + FDs with the same RHS can't be LHSs where one is a subset of the other
 # + invariant to permuting/changing values for an attribute (incl. NA)
 # + invariant to changing type for an attribute
-# - invariant to changing attribute order, except for order in dep elements and
+# + invariant to changing attribute order, except for order in dep elements and
 # determinant sets
-# - invariant to changing attribute names (including duplicate names?)
-# - invariant to accuracy within same nrow threshold
-# - removing a column removes FDs involving that column, the rest stay the same
-# - removing a row keeps all previous FDs, might add more
+# + invariant to accuracy within same nrow threshold
+# + removing a column removes FDs involving that column, the rest stay the same
+# + removing a row keeps subsets of all previous FDs, might add more
 # + doesn't have attribute in determinant sets if excluded
 # + excluding type === excluding all attributes of that type
 # Metamorphic/model
-# - change attribute names then DFD === DFD then change attribute names
-
-# Already implemented:
+# + change attribute names then DFD === DFD then change attribute names
 
 # Various tests should have random accuracy draws, probably with lots of
 # weight on 1
@@ -33,11 +29,64 @@ describe("dfd", {
     for (n in seq_along(deps1$dependencies))
       expect_setequal(deps1$dependencies[[n]], deps2$dependencies[[n]])
   }
+  expect_permutation_deps <- function(deps1, deps2) {
+    expect_setequal(deps1$attrs, deps2$attrs)
+    perm <- match(deps1$attrs, deps2$attrs)
+    expect_identical(names(deps1$dependencies), names(deps2$dependencies)[perm])
+    for (n in seq_along(deps1$dependencies))
+      expect_setequal(
+        deps1$dependencies[[n]],
+        lapply(
+          deps2$dependencies[[perm[n]]],
+          \(nms) nms[order(match(nms, deps1$attrs))]
+        )
+      )
+  }
   expect_subset_deps <- function(deps1, deps2) {
     expect_identical(deps1$attrs, deps2$attrs)
     expect_identical(names(deps1$dependencies), names(deps2$dependencies))
     for (n in seq_along(deps1$dependencies))
       expect_true(all(is.element(deps1$dependencies[[n]], deps2$dependencies[[n]])))
+  }
+  expect_equiv_deps_except_names <- function(deps1, deps2) {
+    new_names <- deps2$attrs
+    new_deps <- deps1
+    names(new_deps$dependencies) <- new_names
+    new_deps$dependencies <- lapply(
+      new_deps$dependencies,
+      \(ds) lapply(ds, \(attrs) deps2$attrs[match(attrs, deps1$attrs)])
+    )
+    new_deps$attrs <- new_names
+    expect_equiv_deps(new_deps, deps2)
+  }
+  expect_equiv_non_removed_attr_deps <- function(deps1, deps2) {
+    removed_attr <- setdiff(deps1$attrs, deps2$attrs)
+    expect_length(removed_attr, 1)
+    filtered <- deps1
+    filtered$attrs <- setdiff(deps1$attrs, removed_attr)
+    filtered$dependencies <- filtered$dependencies[
+      names(filtered$dependencies) != removed_attr
+    ]
+    filtered$dependencies <- lapply(
+      filtered$dependencies,
+      Filter,
+      f = function(ds) !is.element(removed_attr, ds)
+    )
+    expect_equiv_deps(filtered, deps2)
+  }
+  expect_det_subsets_kept <- function(deps1, deps2) {
+    expect_identical(deps1$attrs, deps2$attrs)
+    expect_identical(names(deps1$dependencies), names(deps2$dependencies))
+    for (n in seq_along(deps1$dependencies))
+      expect_true(all(vapply(
+        deps1$dependencies[[n]],
+        \(ds) any(vapply(
+          deps2$dependencies[[n]],
+          \(ds2) all(is.element(ds2, ds)),
+          logical(1)
+        )),
+        logical(1)
+      )))
   }
   terminates_then <- function(fn, accuracy, ...) {
     function(df) {
@@ -53,11 +102,6 @@ describe("dfd", {
       res2 <- withTimeout(dfd(df2, accuracy, ...), timeout = 5, onTimeout = "silent")
       expect_true(!is.null(res2))
       fn(res1, res2)
-    }
-  }
-  list_pair <- function(fn) {
-    function(lst) {
-      fn(lst[[1]], lst[[2]])
     }
   }
 
@@ -77,18 +121,6 @@ describe("dfd", {
       gen_df(4, 6),
       two_copies(both_terminate_then(expect_equiv_deps, accuracy = 1))
     )
-  })
-  it("treats missing values as normal entries", {
-    with_na_copy <- function(fn) {
-      function(df) {
-        na_df <- as.data.frame(lapply(
-          df,
-          \(x) {y <- x; y[!y] <- NA; y}
-        ))
-        fn(df, na_df)
-      }
-    }
-    forall(gen_df(4, 6), with_na_copy(both_terminate_then(expect_equiv_deps, 1)))
   })
   it("returns dependencies where shared dependent <=> not sub/supersets for determinants", {
     has_non_nested_determinant_sets <- function(deps) {
@@ -134,7 +166,8 @@ describe("dfd", {
     }
     forall(
       gen_df_and_value_perm(4, 6),
-      list_pair(both_terminate_then(expect_equiv_deps, 1))
+      both_terminate_then(expect_equiv_deps, 1),
+      curry = TRUE
     )
   })
   it("is invariant to an attribute's class being changed (without exclusions)", {
@@ -158,7 +191,93 @@ describe("dfd", {
     }
     forall(
       gen_df_and_type_change(4, 6),
-      list_pair(both_terminate_then(expect_equiv_deps, 1))
+      both_terminate_then(expect_equiv_deps, 1),
+      curry = TRUE
+    )
+  })
+  it("is invariant, under reordering, to attributes being reordered", {
+    gen_df_and_attr_perm <- function(
+      nrow,
+      ncol,
+      remove_dup_rows = FALSE
+    ) {
+      generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows)) {
+        generate(for (perm in sample.int(ncol(df))) {
+          list(df, df[, perm, drop = FALSE])
+        })
+      })
+    }
+    forall(
+      gen_df_and_attr_perm(4, 6),
+      both_terminate_then(expect_permutation_deps, 1),
+      curry = TRUE
+    )
+  })
+  it("loses FDs involving a removed attribute, keeps the rest", {
+    gen_df_and_remove_col <- function(nrow, ncol, remove_dup_rows = FALSE) {
+      generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows)) {
+        generate(for (n in gen.int(ncol(df))) {
+          list(df, df[, -n, drop = FALSE])
+        })
+      })
+    }
+    forall(
+      gen_df_and_remove_col(4, 6),
+      both_terminate_then(expect_equiv_non_removed_attr_deps, 1),
+      curry = TRUE
+    )
+  })
+  it("is invariant to changes of accuracy within same required row count", {
+    gen_df_and_accuracy_nrow <- function(nrow, ncol, remove_dup_rows = FALSE) {
+      generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows)) {
+        generate(for (n in gen.int(nrow(df))) {
+          prop <- n/nrow(df)
+          low <- (n - 1)/nrow(df) + 1e-9
+          list(df, low, prop)
+        })
+      })
+    }
+    both_bounds_terminate_then <- function(fn, ...) {
+      function(df, low, high) {
+        res1 <- withTimeout(dfd(df, low, ...), timeout = 5, onTimeout = "silent")
+        expect_true(!is.null(res1))
+        res2 <- withTimeout(dfd(df, high, ...), timeout = 5, onTimeout = "silent")
+        expect_true(!is.null(res2))
+        fn(res1, res2)
+      }
+    }
+    forall(
+      gen_df_and_accuracy_nrow(4, 6),
+      both_bounds_terminate_then(expect_equiv_deps),
+      curry = TRUE
+    )
+  })
+  it("keeps subsets of all FDs if a row is removed, might have more", {
+    gen_df_and_remove_row <- function(nrow, ncol) {
+      generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows = TRUE)) {
+        generate(for (n in gen.element(seq_len(nrow(df)))) {
+          list(df, df[-n, , drop = FALSE])
+        })
+      })
+    }
+    forall(
+      gen_df_and_remove_row(4, 6),
+      both_terminate_then(expect_det_subsets_kept, 1),
+      curry = TRUE
+    )
+  })
+  it("dfd -> change attribute names is equivalent to change names -> dfd", {
+    gen_df_and_name_change <- function(nrow, ncol, remove_dup_rows = FALSE) {
+      generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows)) {
+        generate(for (new_names in gen.sample(LETTERS, ncol(df))) {
+          list(df, stats::setNames(df, new_names))
+        })
+      })
+    }
+    forall(
+      gen_df_and_name_change(4, 6),
+      both_terminate_then(expect_equiv_deps_except_names, 1),
+      curry = TRUE
     )
   })
   it("doesn't have an excluded attribute in any determinant sets", {
@@ -187,10 +306,11 @@ describe("dfd", {
     }
     forall(
       gen_df_and_exclude(4, 6),
-      list_pair(terminates_with_exclusion_then(
+      terminates_with_exclusion_then(
         exclusion_not_in_determinant_sets,
         accuracy = 1
-      ))
+      ),
+      curry = TRUE
     )
   })
   it("gives same result from excluding class and exclude attributes with that class", {

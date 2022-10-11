@@ -67,7 +67,10 @@ dfd <- function(
   n_cols <- ncol(df)
   column_names <- colnames(df)
   if (n_cols == 0)
-    return(list(dependencies = list(), attrs = character()))
+    return(list(
+      dependencies = stats::setNames(list(), character()),
+      attrs = character()
+    ))
   if (n_cols == 1)
     return(list(
       dependencies = stats::setNames(list(list()), column_names),
