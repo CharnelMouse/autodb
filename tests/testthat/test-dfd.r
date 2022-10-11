@@ -1,6 +1,5 @@
 # Possible additional properties
 # Invariants
-# + Finishes!
 # + Running DFD twice gives equivalent results
 # doesn't change results
 # + FDs with the same RHS can't be LHSs where one is a subset of the other
@@ -105,12 +104,6 @@ describe("dfd", {
     }
   }
 
-  it("terminates for simple logical relations", {
-    is_named <- function(deps) {
-      expect_named(deps, c("dependencies", "attrs"))
-    }
-    forall(gen_df(4, 6), terminates_then(is_named, 1), shrink.limit = Inf)
-  })
   it("gives a deterministic result, except for per-dependent dependency order", {
     two_copies <- function(fn) {
       function(df) {
@@ -346,33 +339,6 @@ describe("dfd", {
     deps <- dfd(df, 1)
     expect_identical(deps$dependencies$A, list(c("B", "C")))
   })
-  it("doesn't consider attributes as determinants if given in exclude", {
-    # no determinants to check, returns with calling find_LHSs
-    df <- data.frame(A = 1:3, B = c(1, 1, 2), C = c(1, 2, 2))
-    deps <- dfd(df, 1, exclude = c("B", "C"))
-    expect_identical(deps$dependencies$A, list())
-
-    # does call find_LHSs
-    df2 <- data.frame(A = 1:3, B = c(1L, 1L, 2L), C = c(1, 2, 2))
-    deps <- dfd(df2, 1, exclude = "C")
-    expect_identical(deps$dependencies$A, list())
-
-    # for constant dependents
-    df3 <- data.frame(A = 1:3, B = c(1L, 1L, 1L))
-    deps <- dfd(df3, 1, exclude = "A")
-    expect_identical(deps$dependencies$B, list())
-  })
-  it("doesn't consider attributes as determinants if type is in exclude_class", {
-    # no determinants to check, returns with calling find_LHSs
-    df <- data.frame(A = 1:3, B = c(1, 1, 2), C = c(1, 2, 2))
-    deps <- dfd(df, 1, exclude_class = "numeric")
-    expect_identical(deps$dependencies$A, list())
-
-    # does call find_LHSs
-    df2 <- data.frame(A = 1:3, B = c(1L, 1L, 2L), C = c(1, 2, 2))
-    deps <- dfd(df2, 1, exclude_class = "numeric")
-    expect_identical(deps$dependencies$A, list())
-  })
   it("finds dependencies for the team data in test-normalise", {
     df <- data.frame(
       team = c(
@@ -460,38 +426,5 @@ describe("dfd", {
       stats::setNames(c("A 1", "B 2", "C 3"))
     deps <- dfd(df, 1)
     expect_identical(deps$dependencies$`A 1`, list(c("B 2", "C 3")))
-  })
-})
-
-describe("original tests", {
-  describe("compute_partitions", {
-    a <- c(
-      6, 2, 3, 7, 8, 1, 0, 2, 0, 3,
-      6, 0, 4, 6, 8, 7, 6, 8, 1, 5,
-      1, 3, 3, 0, 0, 4, 5, 5, 7, 0,
-      8, 2, 4, 7, 0, 0, 6, 4, 6, 8
-    )
-    b <- as.integer(a %% 2 == 0)
-    c <- as.integer((a + b < 4)) + 1L
-    df <- data.frame(a = a, b = b, c = c)
-    it("df", {
-      expect_true(compute_partitions(df, "c", c("a", "b"), list(), 1)[[1]])
-      expect_true(compute_partitions(df, "c", c("a", "b"), list(), 0.9)[[1]])
-    })
-    it("is true only for accuracy up to 0.975, given one different row in forty", {
-      df2 <- df
-      df2$c[1] <- 2L
-      expect_true(compute_partitions(df2, "c", c("a", "b"), list(), 0.9)[[1]])
-      expect_true(compute_partitions(df2, "c", c("a", "b"), list(), 0.975)[[1]])
-      expect_false(compute_partitions(df2, "c", c("a", "b"), list(), 0.98)[[1]])
-    })
-    it("is true only for accuracy up to 0.95, given two different rows in forty", {
-      df3 <- df
-      df3$c[1] <- 2L
-      df3$c[36] <- 1L
-      expect_true(compute_partitions(df3, "c", c("a", "b"), list(), 0.9)[[1]])
-      expect_true(compute_partitions(df3, "c", c("a", "b"), list(), 0.95)[[1]])
-      expect_false(compute_partitions(df3, "c", c("a", "b"), list(), 0.96)[[1]])
-    })
   })
 })
