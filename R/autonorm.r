@@ -14,6 +14,10 @@
 #'   normalisation is lossless. If it is not, then an additional table is added
 #'   to the final "database", containing a key for \code{df}. This is enough to
 #'   make the normalisation lossless.
+#' @param remove_avoidable a logical, indicating whether to remove avoidable
+#'   attributes in tables. If so, then an attribute are removed from tables if
+#'   the keys can be changed such that it is not needed to preserve the given
+#'   functional dependencies.
 #' @param progress an integer, for whether to display progress to the user. 0
 #'   (default) displays nothing. 1 notes the start of finding each non-constant
 #'   attribute's determinant sets. 2 also briefly describes the status of the
@@ -32,6 +36,7 @@ autonorm <- function(
   accuracy,
   name = NA_character_,
   ensure_lossless = TRUE,
+  remove_avoidable = FALSE,
   progress = 0L,
   progress_file = "",
   ...
@@ -40,7 +45,7 @@ autonorm <- function(
 
   dfd(df, accuracy, progress = progress, progress_file = "", ...) |>
     report$op(flatten, "flattening") |>
-    report$op(normalise, "normalising") |>
+    report$op(normalise, "normalising", remove_avoidable) |>
     report$op(cross_reference, "cross-referencing", ensure_lossless) |>
     report$op(decompose, "decomposing", df = df, name)
 }

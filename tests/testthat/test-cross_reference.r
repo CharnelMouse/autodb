@@ -13,13 +13,13 @@ describe("cross_reference", {
         list("b")
       )
     )
-    es <- cross_reference(norm_deps)
+    database <- cross_reference(norm_deps)
     expected_parents = list(2L, integer())
     expected_relations <- list(
       list(c(1L, 2L), "b")
     )
-    expect_identical(es$parents, expected_parents)
-    expect_identical(es$relationships, expected_relations)
+    expect_identical(database$parents, expected_parents)
+    expect_identical(database$relationships, expected_relations)
   })
   it("only links children to parents by exactly one parent key", {
     links_by_exactly_one_parent_key <- function(df) {

@@ -4,13 +4,23 @@
 \alias{normalise}
 \title{Normalises dependency relationships}
 \usage{
-normalise(dependencies, progress = 0L, progress_file = "")
+normalise(
+  dependencies,
+  remove_avoidable = FALSE,
+  progress = 0L,
+  progress_file = ""
+)
 }
 \arguments{
 \item{dependencies}{a list of functional dependencies, as given by
 \code{\link{flatten}}: each dependency is a list, contained one character
 vector for the left-hand size, and one unit-length character vector for the
 right-hand side.}
+
+\item{remove_avoidable}{a logical, indicating whether to remove avoidable
+attributes in tables. If so, then an attribute are removed from tables if
+the keys can be changed such that it is not needed to preserve the given
+functional dependencies.}
 
 \item{progress}{an integer, for whether to display progress to the user. 0
 (default) displays nothing. 1 notes the start of finding each non-constant

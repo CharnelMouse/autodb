@@ -9,6 +9,7 @@ autonorm(
   accuracy,
   name = NA_character_,
   ensure_lossless = TRUE,
+  remove_avoidable = FALSE,
   progress = 0L,
   progress_file = "",
   ...
@@ -28,6 +29,11 @@ allow for easier combining of graphs into a single diagram if required.}
 normalisation is lossless. If it is not, then an additional table is added
 to the final "database", containing a key for \code{df}. This is enough to
 make the normalisation lossless.}
+
+\item{remove_avoidable}{a logical, indicating whether to remove avoidable
+attributes in tables. If so, then an attribute are removed from tables if
+the keys can be changed such that it is not needed to preserve the given
+functional dependencies.}
 
 \item{progress}{an integer, for whether to display progress to the user. 0
 (default) displays nothing. 1 notes the start of finding each non-constant

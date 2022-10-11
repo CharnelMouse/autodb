@@ -108,7 +108,7 @@ describe("gv", {
 
   describe("entityset", {
     it("creates a Graphviz HTML-like expression for the data.frame", {
-      es <- structure(
+      database <- structure(
         list(
           name = "Book",
           tables = list(
@@ -273,12 +273,12 @@ describe("gv", {
         sep = "\n"
       )
       expect_identical(
-        gv(es),
+        gv(database),
         expected_string
       )
     })
     it("converts attribute/df names to snake case for labels (inc. spaces, periods)", {
-      es <- structure(
+      database <- structure(
         list(
           name = "Book",
           tables = list(
@@ -444,12 +444,12 @@ describe("gv", {
         sep = "\n"
       )
       expect_identical(
-        gv(es),
+        gv(database),
         expected_string
       )
     })
     it("doesn't give a graph ID if database name is missing", {
-      es <- structure(
+      database <- structure(
         list(
           name = NA_character_,
           tables = list(
@@ -464,13 +464,13 @@ describe("gv", {
         ),
         class = c("database", "list")
       )
-      plot_string <- gv(es)
+      plot_string <- gv(database)
       expect_identical(substr(plot_string, 1, 9), "digraph {")
     })
   })
   describe("database_scheme", {
     it("creates a Graphviz HTML-like expression for the data.frame", {
-      es <- structure(
+      database <- structure(
         list(
           attrs = list(
             c("Title", "Author", "Pages", "Thickness", "Genre_ID", "Publisher_ID"),
@@ -537,12 +537,12 @@ describe("gv", {
         sep = "\n"
       )
       expect_identical(
-        gv(es, "book"),
+        gv(database, "book"),
         expected_string
       )
     })
     it("converts attribute/df names to snake case for labels (inc. spaces, periods)", {
-      es <- structure(
+      database <- structure(
         list(
           attrs = list(
             c(
@@ -616,12 +616,12 @@ describe("gv", {
         sep = "\n"
       )
       expect_identical(
-        gv(es, "book"),
+        gv(database, "book"),
         expected_string
       )
     })
     it("doesn't give a graph ID if database name is missing", {
-      es <- structure(
+      database <- structure(
         list(
           name = NA_character_,
           tables = list(
@@ -636,7 +636,7 @@ describe("gv", {
         ),
         class = c("database_scheme", "list")
       )
-      plot_string <- gv(es)
+      plot_string <- gv(database)
       expect_identical(substr(plot_string, 1, 9), "digraph {")
     })
   })
