@@ -552,8 +552,8 @@ remove_pruned_supersets <- function(supersets, subsets, bitsets) {
   supersets[!prune]
 }
 
-is_subset <- function(bits1, bits2) identical(bits1 & bits2, bits1)
-is_superset <- function(bits1, bits2) identical(bits1 & bits2, bits2)
+is_subset <- function(bits1, bits2) all(as.logical(bits2[as.logical(bits1)]))
+is_superset <- function(bits1, bits2) all(as.logical(bits1[as.logical(bits2)]))
 
 generate_next_seeds <- function(max_non_deps, min_deps, lhs_attr_nodes, nodes) {
   if (length(max_non_deps) == 0) {
