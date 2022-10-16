@@ -580,13 +580,19 @@ generate_next_seeds <- function(max_non_deps, min_deps, lhs_attr_nodes, nodes) {
   remove_pruned_supersets(seeds, min_deps, nodes$bits)
 }
 
+pack_vals <- as.integer(2^(0:30))
+int_from_bits <- function(bits) {
+  l <- as.logical(bits)[1:31]
+  sum(l*pack_vals)
+}
+
 cross_intersection <- function(seeds, max_non_dep, bitsets) {
   new_seeds <- integer()
   for (dep in seeds) {
     seed_bitset <- intToBits(dep)
     for (set in max_non_dep) {
       set_bit_index <- intToBits(set)
-      new_seed <- packBits(seed_bitset | set_bit_index, "integer")
+      new_seed <- int_from_bits(seed_bitset | set_bit_index)
       new_seeds <- c(new_seeds, new_seed)
     }
   }
