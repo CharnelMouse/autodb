@@ -1,3 +1,4 @@
+- cross_intersection still converts to full bitset instead of shorted logical vectors
 - add error checking for decompose for norm_deps not matching data.frame
 - add lookup maps for quicker subsetting
 - add partitions

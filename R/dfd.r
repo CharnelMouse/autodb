@@ -204,6 +204,7 @@ find_LHSs <- function(
   #  1 = non-minimal dependency
   #  2 = minimal dependency
   #  3 = candidate minimal dependency
+  nodes$bits <- lapply(nodes$bits, as.logical)
   seeds <- simple_nodes
   min_deps <- integer()
   max_non_deps <- integer()
@@ -347,7 +348,7 @@ find_LHSs <- function(
 powerset_nodes <- function(n) {
   if (n == 0)
     return(list(
-      bits = raw(),
+      bits = logical(),
       children = list(),
       parents = list(),
       category = integer(),
@@ -355,18 +356,18 @@ powerset_nodes <- function(n) {
     ))
   if (n == 1)
     return(list(
-      bits = list(intToBits(1)),
+      bits = list(TRUE),
       children = list(integer()),
       parents = list(integer()),
       category = 0L,
       visited = FALSE
     ))
   n_nonempty_subsets <- 2^n - 1
-  node_bits <- lapply(seq.int(n_nonempty_subsets), intToBits)
+  node_bits <- lapply(seq.int(n_nonempty_subsets), \(i) as.logical(intToBits(i))[1:n])
   children <- rep(list(integer()), n_nonempty_subsets)
   parents <- rep(list(integer()), n_nonempty_subsets)
   for (x in seq.int(n_nonempty_subsets - 1)) {
-    zeroes <- which(node_bits[[x]][1:n] == 0)
+    zeroes <- which(!node_bits[[x]][1:n])
     ys <- as.integer(x + 2^(zeroes - 1))
     parents[[x]] <- c(parents[[x]], ys)
     children[ys] <- lapply(children[ys], c, x)
@@ -393,6 +394,7 @@ reduce_powerset <- function(powerset, n) {
     seq_len(boundary)
   )
   trimmed$parents <- lapply(trimmed$parents, \(x) x[x <= boundary])
+  trimmed$bits <- lapply(trimmed$bits, \(x) x[1:n])
   trimmed
 }
 
@@ -552,8 +554,8 @@ remove_pruned_supersets <- function(supersets, subsets, bitsets) {
   supersets[!prune]
 }
 
-is_subset <- function(bits1, bits2) all(as.logical(bits2[as.logical(bits1)]))
-is_superset <- function(bits1, bits2) all(as.logical(bits1[as.logical(bits2)]))
+is_subset <- function(bits1, bits2) all(bits2[bits1])
+is_superset <- function(bits1, bits2) all(bits1[bits2])
 
 generate_next_seeds <- function(max_non_deps, min_deps, lhs_attr_nodes, nodes) {
   if (length(max_non_deps) == 0) {
