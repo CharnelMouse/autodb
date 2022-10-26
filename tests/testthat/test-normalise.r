@@ -223,16 +223,34 @@ describe("normalise", {
       )
     )
 
-    still_lossless <- function(df) {
-      scheme <- cross_reference(normalise(
-        flatten(dfd(df, 1)),
+    still_lossless_with_less_or_same_attributes <- function(df) {
+      flat_deps <- flatten(dfd(df, 1))
+      scheme1 <- cross_reference(normalise(
+        flat_deps,
         remove_avoidable = TRUE
       ))
-      database <- decompose(df, scheme)
+
+      # lossless?
+      database <- decompose(df, scheme1)
       df2 <- rejoin(database)
       expect_identical_unordered_table(df2, df)
+
+      # doesn't have more attributes in any table?
+      scheme2 <- cross_reference(normalise(
+        flat_deps,
+        remove_avoidable = FALSE
+      ))
+      lengths1 <- lengths(scheme1$attrs)
+      lengths2 <- lengths(scheme2$attrs)
+      expect_identical(length(lengths1), length(lengths2))
+      for (l in seq_along(lengths1)) {
+        expect_lte(lengths1[l], lengths2[l])
+      }
     }
-    forall(gen_df(10, 7, remove_dup_rows = TRUE), still_lossless)
+    forall(
+      gen_df(10, 7, remove_dup_rows = TRUE),
+      still_lossless_with_less_or_same_attributes
+    )
   })
 })
 
