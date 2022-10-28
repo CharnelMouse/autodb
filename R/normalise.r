@@ -592,3 +592,40 @@ keys_order <- function(keys) {
     rep(starts, lengths(order_within_lengths))
   length_order[flat_order]
 }
+
+#' @exportS3Method
+print.database_scheme <- function(x, max = 10, ...) {
+  n_relations <- length(x$attrs)
+  cat(paste0(
+    "database scheme with ",
+    n_relations,
+    " relation scheme",
+    if (n_relations != 1) "s",
+    "\n"
+  ))
+  for (n in seq_len(min(n_relations, max))) {
+    cat(paste0("scheme ", n, ": ", toString(x$attrs[[n]]), "\n"))
+    keys <- x$keys[[n]]
+    n_keys <- length(keys)
+    for (k in seq_len(min(n_keys, max))) {
+      cat(paste0("  key ", k, ": ", toString(keys[[k]]), "\n"))
+    }
+    if (max < n_keys)
+      cat("  ... and", n_keys - max, "other keys\n")
+  }
+  if (max < n_relations) {
+    cat("... and", n_relations - max, "other schemes\n")
+  }
+  if (length(x$relationships) == 0)
+    cat("no relationships\n")
+  else {
+    cat(paste("relationships:\n"))
+    n_relationships <- length(x$relationships)
+    for (r in seq_len(n_relationships)) {
+      rel <- x$relationships[[r]]
+      cat(paste0(rel[[1]][1], ".", rel[[2]], " -> ", rel[[1]][2], ".", rel[[2]], "\n"))
+    }
+    if (max < n_relationships)
+      cat("... and", n_relationships - max, "other relationships\n")
+  }
+}

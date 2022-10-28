@@ -103,3 +103,51 @@ Mode <- function(x) {
 name_dataframe <- function(index) {
   paste(index, collapse = "_")
 }
+
+#' @exportS3Method
+print.database <- function(x, max = 10, ...) {
+  n_relations <- length(x$tables)
+  cat(paste0(
+    "database ",
+    x$name,
+    " with ",
+    n_relations,
+    " relation",
+    if (n_relations != 1) "s",
+    "\n"
+  ))
+  for (n in seq_len(min(n_relations, max))) {
+    rows <- nrow(x$tables[[n]]$df)
+    cat(paste0(
+      "relation ",
+      names(x$tables)[n],
+      ": ",
+      toString(names(x$tables[[n]]$df)),
+      "; ",
+      rows,
+      " row", if (rows != 1) "s", "\n"
+    ))
+    keys <- x$tables[[n]]$keys
+    n_keys <- length(keys)
+    for (k in seq_len(min(n_keys, max))) {
+      cat(paste0("  key ", k, ": ", toString(keys[[k]]), "\n"))
+    }
+    if (max < n_keys)
+      cat("  ... and", n_keys - max, "other keys\n")
+  }
+  if (max < n_relations) {
+    cat("... and", n_relations - max, "other relations\n")
+  }
+  if (length(x$relationships) == 0)
+    cat("no relationships\n")
+  else {
+    cat(paste("relationships:\n"))
+    n_relationships <- length(x$relationships)
+    for (r in seq_len(min(n_relationships, max))) {
+      rel <- x$relationships[[r]]
+      cat(paste0(rel[1], ".", rel[2], " -> ", rel[3], ".", rel[4], "\n"))
+    }
+    if (max < n_relationships)
+      cat("... and", n_relationships - max, "other relationships\n")
+  }
+}
