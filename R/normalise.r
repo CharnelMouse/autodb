@@ -488,7 +488,7 @@ remove_avoidable_attributes <- function(vecs, all_attrs) {
       }
       if (!fail) {
         keys[[relation]] <- Kp
-        attrs[[relation]] <- c(unique(unlist(Kp)), nonprime_attrs)
+        attrs[[relation]] <- union(unique(unlist(Kp)), nonprime_attrs)
       }
     }
   }
@@ -535,7 +535,10 @@ dclosure_keys <- function(lhs, determinant_sets, dependents, bijection_groups) {
     \(bg) any(vapply(bg, identical, logical(1), lhs)),
     logical(1)
   )
-  equivalent_keys <- unique(unlist(bijection_groups[lhs_matches], recursive = FALSE))
+  equivalent_keys <- unique(c(
+    list(lhs), # explicitly add since might not be in a bijection group
+    unlist(bijection_groups[lhs_matches], recursive = FALSE)
+  ))
   determinants_equiv <- match(determinant_sets, equivalent_keys)
   find_closure(
     lhs,

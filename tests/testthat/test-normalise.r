@@ -255,27 +255,9 @@ describe("normalise", {
       # Sometimes removing avoidable attributes allows not adding an extra table
       # to keep decomposition lossless, so can't always expect length of lengths
       # to be identical: lengths2 might be one longer.
-      # Sometimes the avoidance scheme gets an extra table instead, which I
-      # didn't expect. I'll track this down later.
-      # AEF -> B
-      # AEF -> G
-      # ABG <-> BGE
-      # A <-> C <-> D
-      # flat_deps <- list(
-      #   dependencies = list(
-      #     list(c("A", "E", "F"), "B"),
-      #     list(c("A", "E", "F"), "G"),
-      #     list(c("A", "B", "G"), "E"),
-      #     list(c("B", "E", "G"), "A"),
-      #     list("A", "C"),
-      #     list("A", "D"),
-      #     list("C", "A"),
-      #     list("C", "D"),
-      #     list("D", "A"),
-      #     list("D", "C")
-      #   ),
-      #   attrs = LETTERS[1:7]
-      # )
+      # Sometimes the avoidance scheme gets an extra table for lossless
+      # decomposition instead, which I didn't expect. I'll track this down
+      # later.
       expect_identical(length(lengths1), length(lengths2))
       for (l in seq_along(lengths1)) {
         expect_lte(lengths1[l], lengths2[l])
