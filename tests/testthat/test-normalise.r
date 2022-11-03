@@ -225,27 +225,68 @@ describe("normalise", {
 
     still_lossless_with_less_or_same_attributes <- function(df) {
       flat_deps <- flatten(dfd(df, 1))
-      scheme1 <- cross_reference(normalise(
+      scheme_avoid_lossless <- cross_reference(normalise(
         flat_deps,
         remove_avoidable = TRUE
       ))
 
-      # lossless?
-      database <- decompose(df, scheme1)
-      df2 <- rejoin(database)
+      # scheme_avoid_lossless should be lossless
+      database_avoid_lossless <- decompose(df, scheme_avoid_lossless)
+      df2 <- rejoin(database_avoid_lossless)
       expect_identical_unordered_table(df2, df)
 
-      # doesn't have more attributes in any table?
-      scheme2 <- cross_reference(normalise(
-        flat_deps,
-        remove_avoidable = FALSE
-      ))
-      lengths1 <- lengths(scheme1$attrs)
-      lengths2 <- lengths(scheme2$attrs)
+      # removing attributes shouldn't increase non-extra table widths
+      scheme_avoid_lossy <- cross_reference(
+        normalise(
+          flat_deps,
+          remove_avoidable = TRUE
+        ),
+        ensure_lossless = FALSE
+      )
+      scheme_noavoid_lossy <- cross_reference(
+        normalise(
+          flat_deps,
+          remove_avoidable = FALSE
+        ),
+        ensure_lossless = FALSE
+      )
+      lengths1 <- lengths(scheme_avoid_lossy$attrs)
+      lengths2 <- lengths(scheme_noavoid_lossy$attrs)
+      # Sometimes removing avoidable attributes allows not adding an extra table
+      # to keep decomposition lossless, so can't always expect length of lengths
+      # to be identical: lengths2 might be one longer.
+      # Sometimes the avoidance scheme gets an extra table instead, which I
+      # didn't expect. I'll track this down later.
+      # AEF -> B
+      # AEF -> G
+      # ABG <-> BGE
+      # A <-> C <-> D
+      # flat_deps <- list(
+      #   dependencies = list(
+      #     list(c("A", "E", "F"), "B"),
+      #     list(c("A", "E", "F"), "G"),
+      #     list(c("A", "B", "G"), "E"),
+      #     list(c("B", "E", "G"), "A"),
+      #     list("A", "C"),
+      #     list("A", "D"),
+      #     list("C", "A"),
+      #     list("C", "D"),
+      #     list("D", "A"),
+      #     list("D", "C")
+      #   ),
+      #   attrs = LETTERS[1:7]
+      # )
       expect_identical(length(lengths1), length(lengths2))
       for (l in seq_along(lengths1)) {
         expect_lte(lengths1[l], lengths2[l])
       }
+
+      # additional tests to add:
+      # - Accounting for extra tables. Any combination of noavoid and avoid
+      # having one is possible.
+      # - something about not introducing an extra table? or not making it
+      # wider?
+      # - something about not changing table hierarchy / cross-references?
     }
     forall(
       gen_df(10, 7, remove_dup_rows = TRUE),

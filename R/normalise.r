@@ -67,6 +67,10 @@ normalise <- function(
     report$op(
       add_bijections,
       "re-adding bijections"
+    ) |>
+    report$op(
+      construct_relation_schemes,
+      "construction relation schemes"
     )
   if (remove_avoidable)
     inter <- inter |>
@@ -76,10 +80,6 @@ normalise <- function(
       dependencies$attrs
     )
   inter |>
-    report$op(
-      construct_relation_schemes,
-      "construction relation schemes"
-    ) |>
     report$op(
       convert_to_character_attributes,
       "converting to readable format",
@@ -335,159 +335,6 @@ add_bijections <- function(vecs) {
   )
 }
 
-remove_avoidable_attributes <- function(vecs, attrs) {
-  # AVOID(R, B, F)
-  # begin
-  # K’ := K; fail := false;
-  # for each X_i in K do
-  #   if B in X_i then begin
-  #     M := DCLOSURE(X_i, F);
-  #     M’ :z (M n R) - B;
-  #     if DCLOSURE(M’, F) is superset of X_i then
-  #       replace X_i in K’ by a minimal subset Z of M’ such that Z .-> X_i
-  #     else fail := true
-  #     end ;
-  # if fail = false then
-  #   return(K')
-  #   else return empty set, i.e. no removal
-  # end.
-
-  # R: relation scheme
-  # B: attribute in R to try to avoid
-  # F: set of FDs
-  # K: set of keys
-  # DCLOSURE is not find_closure: DCLOSURE(X, F) returns the maximum set X' such
-  # that X .-> X' under F.
-  # .-> : X .-> Y, i.e. X directly determines Y under FDs G if there is a
-  # non-redundant cover F for G with an F-based DDAG H for X -> Y such that
-  # intersect(U(H), E_F(X)) is empty, where E_F(X) is the subset of F where the
-  # LHS is equivalent to X, and U(H) is the use set of H, i.e. the set of all
-  # FDs in F used to derive a given dependency. In other words, deriving X -> Y
-  # from some F can be done without using any dependencies with the equivalent of
-  # the whole of X on the left.
-  # We know which sets of attributes are equivalent to X, since they're the
-  # other keys in this relation. E_F(X) is, therefore, just the dependencies
-  # inherent in the current relation. Therefore, if we remove these, we should
-  # still be able to show that X -> Y.
-  # Lemma: X .-> Y under FDs G iff for every non-redundant cover F for G there
-  # is an F-based DDAG H for X -> Y with intersect(U(H), E_F(X)) empty.
-
-  flat_partition_determinant_set <- vecs$flat_partition_determinant_set
-  flat_partition_dependents <- vecs$flat_partition_dependents
-  flat_groups <- vecs$flat_groups
-
-  for (attr in rev(seq_along(attrs))) {
-    for (relation in unique(flat_groups)) { # for each X_i in K
-      K <- unique(flat_partition_determinant_set[flat_groups == relation])
-      Kp <- K
-      fail <- FALSE
-      relation_attrs <- unique(c(
-        unlist(K),
-        flat_partition_dependents
-      ))
-      if (!is.element(attr, unlist(K)))
-        next
-      for (X_i in K) {
-        if (attr %in% X_i) {
-          M <- sort(dclosure_keys(
-            X_i,
-            flat_partition_determinant_set,
-            flat_partition_dependents,
-            flat_groups
-          ))
-          Mp <- setdiff(intersect(M, relation_attrs), attr)
-          Mp_closure <- dclosure_keys(
-            Mp,
-            flat_partition_determinant_set,
-            flat_partition_dependents,
-            flat_groups
-          )
-          if (all(X_i %in% Mp_closure)) {
-            replacement <- sort(minimal_subset_direct(
-              Mp,
-              X_i,
-              flat_partition_determinant_set,
-              flat_partition_dependents,
-              flat_groups
-            ))
-            for (n in seq_along(Kp)) {
-              if (identical(Kp[[n]], X_i)) {
-                Kp[[n]] <- replacement
-              }
-            }
-          }else{
-            fail <- TRUE
-          }
-        }
-      }
-      if (!fail) {
-        relation_indexes <- which(flat_groups == relation)
-        key_matches <- match(
-          flat_partition_determinant_set[relation_indexes],
-          K
-        )
-        flat_partition_determinant_set[relation_indexes] <- Kp[key_matches]
-      }
-    }
-  }
-  vecs$flat_partition_determinant_set <- flat_partition_determinant_set
-  vecs
-}
-
-minimal_subset_direct <- function(
-  key,
-  determines,
-  determinant_sets,
-  dependents,
-  groups
-) {
-  keep <- rep(TRUE, length(key))
-  changed <- TRUE
-  while (changed) {
-    changed <- FALSE
-    for (n in rev(seq_along(key)[keep])) {
-      temp_keep <- keep
-      temp_keep[n] <- FALSE
-      temp_closure <- dclosure_keys(
-        key[temp_keep],
-        determinant_sets,
-        dependents,
-        groups
-      )
-      if (all(determines %in% temp_closure)) {
-        keep <- temp_keep
-        changed <- TRUE
-      }
-    }
-  }
-  key[keep]
-}
-
-dclosure_keys <- function(lhs, determinant_sets, dependents, groups) {
-  lhs_matches <- vapply(
-    determinant_sets,
-    identical,
-    logical(1),
-    lhs
-  )
-  lhs_match_groups <- unique(groups[lhs_matches])
-  used_fds <- which(!is.element(groups, lhs_match_groups))
-  find_closure(lhs, determinant_sets[used_fds], dependents[used_fds])
-}
-
-direct_determines <- function(lhs, rhs, determinant_sets, dependents) {
-  attrs <- unique(unlist(lhs))
-  used_fds <- which(vapply(
-    determinant_sets, \(set) !is.element(list(set), lhs), logical(1)
-  ))
-  direct_closure <- find_closure(
-    attrs,
-    determinant_sets[used_fds],
-    dependents[used_fds]
-  )
-  rhs %in% direct_closure
-}
-
 construct_relation_schemes <- function(vecs) {
   sorted_bijection_groups <- lapply(
     vecs$bijection_groups,
@@ -540,13 +387,180 @@ construct_relation_schemes <- function(vecs) {
       rel_keys <- c(rel_keys, list(sorted_keys))
     }
   }
-  list(attrs = attrs, keys = rel_keys, all_attrs = vecs$all_attrs)
+  list(
+    attrs = attrs,
+    keys = rel_keys,
+    all_attrs = vecs$all_attrs,
+    used_dependencies = list(
+      flat_partition_determinant_set = vecs$flat_partition_determinant_set,
+      flat_partition_dependents = vecs$flat_partition_dependents,
+      flat_groups = vecs$flat_groups,
+      bijection_groups = vecs$bijection_groups
+    )
+  )
+}
+
+remove_avoidable_attributes <- function(vecs, all_attrs) {
+  # AVOID(R, B, F)
+  # begin
+  # K’ := K; fail := false;
+  # for each X_i in K do
+  #   if B in X_i then begin
+  #     M := DCLOSURE(X_i, F);
+  #     M’ :z (M n R) - B;
+  #     if DCLOSURE(M’, F) is superset of X_i then
+  #       replace X_i in K’ by a minimal subset Z of M’ such that Z .-> X_i
+  #     else fail := true
+  #     end ;
+  # if fail = false then
+  #   return(K')
+  #   else return empty set, i.e. no removal
+  # end.
+
+  # R: relation scheme
+  # B: attribute in R to try to avoid
+  # F: set of FDs
+  # K: set of keys
+  # DCLOSURE is not find_closure: DCLOSURE(X, F) returns the maximum set X' such
+  # that X .-> X' under F.
+  # .-> : X .-> Y, i.e. X directly determines Y under FDs G if there is a
+  # non-redundant cover F for G with an F-based DDAG H for X -> Y such that
+  # intersect(U(H), E_F(X)) is empty, where E_F(X) is the subset of F where the
+  # LHS is equivalent to X, and U(H) is the use set of H, i.e. the set of all
+  # FDs in F used to derive a given dependency. In other words, deriving X -> Y
+  # from some F can be done without using any dependencies with the equivalent of
+  # the whole of X on the left.
+  # We know which sets of attributes are equivalent to X, since they're the
+  # other keys in this relation. E_F(X) is, therefore, just the dependencies
+  # inherent in the current relation. Therefore, if we remove these, we should
+  # still be able to show that X -> Y.
+  # Lemma: X .-> Y under FDs G iff for every non-redundant cover F for G there
+  # is an F-based DDAG H for X -> Y with intersect(U(H), E_F(X)) empty.
+
+  attrs <- vecs$attrs
+  keys <- vecs$keys
+  flat_partition_determinant_set <- vecs$used_dependencies$flat_partition_determinant_set
+  flat_partition_dependents <- vecs$used_dependencies$flat_partition_dependents
+  flat_groups <- vecs$used_dependencies$flat_groups
+  all_attrs <- vecs$all_attrs
+
+  for (attr in rev(seq_along(all_attrs))) {
+    for (relation in seq_along(attrs)) {
+      K <- keys[[relation]]
+      Kp <- K
+      fail <- FALSE
+      relation_attrs <- attrs[[relation]]
+      nonprime_attrs <- setdiff(relation_attrs, unlist(K))
+      if (!is.element(attr, unlist(K)))
+        next
+      for (X_i in K) {
+        if (attr %in% X_i) {
+          M <- sort(dclosure_keys(
+            X_i,
+            flat_partition_determinant_set,
+            flat_partition_dependents,
+            vecs$used_dependencies$bijection_groups
+          ))
+          Mp <- setdiff(intersect(M, relation_attrs), attr)
+          Mp_closure <- dclosure_keys(
+            Mp,
+            flat_partition_determinant_set,
+            flat_partition_dependents,
+            vecs$used_dependencies$bijection_groups
+          )
+          if (all(X_i %in% Mp_closure)) {
+            replacement <- sort(minimal_subset_direct(
+              Mp,
+              X_i,
+              flat_partition_determinant_set,
+              flat_partition_dependents,
+              vecs$used_dependencies$bijection_groups
+            ))
+            for (n in seq_along(Kp)) {
+              if (identical(Kp[[n]], X_i)) {
+                Kp[[n]] <- replacement
+              }
+            }
+          }else{
+            fail <- TRUE
+          }
+        }
+      }
+      if (!fail) {
+        keys[[relation]] <- Kp
+        attrs[[relation]] <- c(unique(unlist(Kp)), nonprime_attrs)
+      }
+    }
+  }
+  vecs$keys <- keys
+  vecs$attrs <- attrs
+  vecs
+}
+
+minimal_subset_direct <- function(
+  key,
+  determines,
+  determinant_sets,
+  dependents,
+  bijection_groups
+) {
+  keep <- rep(TRUE, length(key))
+  changed <- TRUE
+  while (changed) {
+    changed <- FALSE
+    for (n in rev(seq_along(key)[keep])) {
+      temp_keep <- keep
+      temp_keep[n] <- FALSE
+      temp_closure <- dclosure_keys(
+        key[temp_keep],
+        determinant_sets,
+        dependents,
+        bijection_groups
+      )
+      if (all(determines %in% temp_closure)) {
+        keep <- temp_keep
+        changed <- TRUE
+      }
+    }
+  }
+  key[keep]
+}
+
+dclosure_keys <- function(lhs, determinant_sets, dependents, bijection_groups) {
+  # Finds a direct closure, where direct determination (X .-> Y) under G
+  # means that we can find a cover F for G in which X -> Y can be derived
+  # without using FDs where the LHS is equivalent to X.
+  lhs_matches <- vapply(
+    bijection_groups,
+    \(bg) any(vapply(bg, identical, logical(1), lhs)),
+    logical(1)
+  )
+  equivalent_keys <- unique(unlist(bijection_groups[lhs_matches], recursive = FALSE))
+  determinants_equiv <- match(determinant_sets, equivalent_keys)
+  find_closure(
+    lhs,
+    determinant_sets[is.na(determinants_equiv)],
+    dependents[is.na(determinants_equiv)]
+  )
+}
+
+direct_determines <- function(lhs, rhs, determinant_sets, dependents) {
+  attrs <- unique(unlist(lhs))
+  used_fds <- which(vapply(
+    determinant_sets, \(set) !is.element(list(set), lhs), logical(1)
+  ))
+  direct_closure <- find_closure(
+    attrs,
+    determinant_sets[used_fds],
+    dependents[used_fds]
+  )
+  rhs %in% direct_closure
 }
 
 convert_to_character_attributes <- function(vecs, attrs) {
   vecs$attrs <- lapply(vecs$attrs, \(a) attrs[a])
   vecs$keys <- lapply(vecs$keys, \(ks) lapply(ks, \(k) attrs[k]))
-  vecs
+  vecs[c("attrs", "keys", "all_attrs")]
 }
 
 find_closure <- function(attrs, determinant_sets, dependents) {
