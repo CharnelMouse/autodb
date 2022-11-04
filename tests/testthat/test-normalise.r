@@ -224,19 +224,22 @@ describe("normalise", {
     )
 
     still_lossless_with_less_or_same_attributes_dep <- function(flat_deps) {
+      norm_deps_avoid <- normalise(
+        flat_deps,
+        remove_avoidable = TRUE
+      )
+      norm_deps_noavoid <- normalise(
+        flat_deps,
+        remove_avoidable = FALSE
+      )
+
       # removing attributes shouldn't increase non-extra table widths
       scheme_avoid_lossy <- cross_reference(
-        normalise(
-          flat_deps,
-          remove_avoidable = TRUE
-        ),
+        norm_deps_avoid,
         ensure_lossless = FALSE
       )
       scheme_noavoid_lossy <- cross_reference(
-        normalise(
-          flat_deps,
-          remove_avoidable = FALSE
-        ),
+        norm_deps_noavoid,
         ensure_lossless = FALSE
       )
       lengths1 <- lengths(scheme_avoid_lossy$attrs)
@@ -251,6 +254,9 @@ describe("normalise", {
       for (l in seq_along(lengths1)) {
         expect_lte(lengths1[l], lengths2[l])
       }
+
+      # removing attributes shouldn't add an extra table for losslessness if
+      # there wasn't one before
 
       # additional tests to add:
       # - Accounting for extra tables. Any combination of noavoid and avoid
