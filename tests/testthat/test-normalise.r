@@ -223,18 +223,7 @@ describe("normalise", {
       )
     )
 
-    still_lossless_with_less_or_same_attributes <- function(df) {
-      flat_deps <- flatten(dfd(df, 1))
-      scheme_avoid_lossless <- cross_reference(normalise(
-        flat_deps,
-        remove_avoidable = TRUE
-      ))
-
-      # scheme_avoid_lossless should be lossless
-      database_avoid_lossless <- decompose(df, scheme_avoid_lossless)
-      df2 <- rejoin(database_avoid_lossless)
-      expect_identical_unordered_table(df2, df)
-
+    still_lossless_with_less_or_same_attributes_dep <- function(flat_deps) {
       # removing attributes shouldn't increase non-extra table widths
       scheme_avoid_lossy <- cross_reference(
         normalise(
@@ -270,9 +259,29 @@ describe("normalise", {
       # wider?
       # - something about not changing table hierarchy / cross-references?
     }
+
+    still_lossless_with_less_or_same_attributes <- function(df) {
+      flat_deps <- flatten(dfd(df, 1))
+      scheme_avoid_lossless <- cross_reference(normalise(
+        flat_deps,
+        remove_avoidable = TRUE
+      ))
+
+      # scheme_avoid_lossless should be lossless
+      database_avoid_lossless <- decompose(df, scheme_avoid_lossless)
+      df2 <- rejoin(database_avoid_lossless)
+      expect_identical_unordered_table(df2, df)
+
+      still_lossless_with_less_or_same_attributes_dep(flat_deps)
+    }
+
     forall(
       gen_df(10, 7, remove_dup_rows = TRUE),
       still_lossless_with_less_or_same_attributes
+    )
+    forall(
+      gen_flat_deps(7, 20),
+      still_lossless_with_less_or_same_attributes_dep
     )
   })
 })

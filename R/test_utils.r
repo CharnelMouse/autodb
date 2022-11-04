@@ -83,3 +83,50 @@ gen_df_vary_classes <- function(nrow, ncol, nonempty = FALSE, remove_dup_rows = 
       as.data.frame(lst)
   })
 }
+
+gen_nonempty_subsequence <- function(x) {
+  generate(for (n in gen.int(length(x))) {
+    generate(for (sample in gen.sample(x, n)) {
+      sort(sample)
+    })
+  })
+}
+
+gen_det <- function(n, attr) {
+  gen_nonempty_subsequence(LETTERS[seq_len(n)][-attr])
+}
+
+gen_dets <- function(n, attr, max_dets) {
+  gen.list(
+    gen_det(n, attr),
+    from = 0,
+    to = min(max_dets, n - 1)
+  )
+}
+
+gen_unique_dets <- function(n, attr, max_dets) {
+  # should also check no redundancy
+  generate(for (dets in gen_dets(n, attr, min(max_dets, n - 1))) {
+    unique(dets)
+  })
+}
+
+gen_unnamed_flat_deps <- function(n, max_dets) {
+  generate(for (n_attrs in gen.sample(seq.int(0, n), 1)) {
+    lapply(
+      seq_len(n_attrs),
+      function(attr) gen_unique_dets(n_attrs, attr, min(max_dets, n_attrs - 1))
+    )
+  })
+}
+
+gen_flat_deps <- function(n, max_dets) {
+  generate(for (unnamed_deps in gen_unnamed_flat_deps(n, max_dets)) {
+      attrs <- LETTERS[seq_along(unnamed_deps)]
+      names(unnamed_deps) <- attrs
+      flatten(list(
+        dependencies = unnamed_deps,
+        attrs = attrs
+      ))
+  })
+}
