@@ -401,41 +401,8 @@ construct_relation_schemes <- function(vecs) {
 }
 
 remove_avoidable_attributes <- function(vecs, all_attrs) {
-  # AVOID(R, B, F)
-  # begin
-  # K’ := K; fail := false;
-  # for each X_i in K do
-  #   if B in X_i then begin
-  #     M := DCLOSURE(X_i, F);
-  #     M’ :z (M n R) - B;
-  #     if DCLOSURE(M’, F) is superset of X_i then
-  #       replace X_i in K’ by a minimal subset Z of M’ such that Z .-> X_i
-  #     else fail := true
-  #     end ;
-  # if fail = false then
-  #   return(K')
-  #   else return empty set, i.e. no removal
-  # end.
-
-  # R: relation scheme
-  # B: attribute in R to try to avoid
-  # F: set of FDs
-  # K: set of keys
-  # DCLOSURE is not find_closure: DCLOSURE(X, F) returns the maximum set X' such
-  # that X .-> X' under F.
-  # .-> : X .-> Y, i.e. X directly determines Y under FDs G if there is a
-  # non-redundant cover F for G with an F-based DDAG H for X -> Y such that
-  # intersect(U(H), E_F(X)) is empty, where E_F(X) is the subset of F where the
-  # LHS is equivalent to X, and U(H) is the use set of H, i.e. the set of all
-  # FDs in F used to derive a given dependency. In other words, deriving X -> Y
-  # from some F can be done without using any dependencies with the equivalent of
-  # the whole of X on the left.
-  # We know which sets of attributes are equivalent to X, since they're the
-  # other keys in this relation. E_F(X) is, therefore, just the dependencies
-  # inherent in the current relation. Therefore, if we remove these, we should
-  # still be able to show that X -> Y.
-  # Lemma: X .-> Y under FDs G iff for every non-redundant cover F for G there
-  # is an F-based DDAG H for X -> Y with intersect(U(H), E_F(X)) empty.
+  # Using the algorithm description in the original LTK paper, since I struggled
+  # to understand the use of .-> in Maier's version.
 
   attrs <- vecs$attrs
   keys <- vecs$keys
@@ -446,55 +413,132 @@ remove_avoidable_attributes <- function(vecs, all_attrs) {
 
   for (attr in rev(seq_along(all_attrs))) {
     for (relation in seq_along(attrs)) {
+      G <- synthesised_fds(attrs, keys)
       K <- keys[[relation]]
-      Kp <- K
-      fail <- FALSE
+      nonsuperfluous <- FALSE
       relation_attrs <- attrs[[relation]]
-      nonprime_attrs <- setdiff(relation_attrs, unlist(K))
-      if (!is.element(attr, unlist(K)))
+      if (!is.element(attr, relation_attrs))
         next
-      for (X_i in K) {
-        if (attr %in% X_i) {
-          M <- sort(dclosure_keys(
-            X_i,
-            flat_partition_determinant_set,
-            flat_partition_dependents,
-            vecs$used_dependencies$bijection_groups
-          ))
+      if (identical(K, relation_attrs)) {
+        nonsuperfluous <- TRUE
+        next
+      }
+      Kp <- Filter(\(k) !is.element(attr, unlist(k)), K)
+      Gp <- G
+      Gp[[relation]] <- Filter(\(fd) !is.element(attr, unlist(fd)), Gp[[relation]])
+      nonprime_attrs <- setdiff(relation_attrs, unlist(K))
+
+      # check restorability
+      if (length(Kp) == 0) {
+        nonsuperfluous <- TRUE
+        next
+      }
+      X <- Kp[[1]]
+      Gp_det_sets <- lapply(unlist(Gp, recursive = FALSE), `[[`, 1)
+      Gp_deps <- vapply(unlist(Gp, recursive = FALSE), `[[`, integer(1), 2)
+      if (!is.element(
+        attr,
+        find_closure(X, Gp_det_sets, Gp_deps)
+      ))
+        nonsuperfluous <- TRUE
+
+      # check nonessentiality
+      for (X_i in setdiff(K, Kp)) {
+        if (any(!is.element(
+          relation_attrs,
+          find_closure(X_i, Gp_det_sets, Gp_deps)
+        ))) {
+          M <- find_closure(X_i, Gp_det_sets, Gp_deps)
           Mp <- setdiff(intersect(M, relation_attrs), attr)
-          Mp_closure <- dclosure_keys(
-            Mp,
-            flat_partition_determinant_set,
-            flat_partition_dependents,
-            vecs$used_dependencies$bijection_groups
-          )
-          if (all(X_i %in% Mp_closure)) {
-            replacement <- sort(minimal_subset_direct(
-              Mp,
-              X_i,
-              flat_partition_determinant_set,
-              flat_partition_dependents,
-              vecs$used_dependencies$bijection_groups
-            ))
-            for (n in seq_along(Kp)) {
-              if (identical(Kp[[n]], X_i)) {
-                Kp[[n]] <- replacement
-              }
-            }
-          }else{
-            fail <- TRUE
+          G_det_sets <- lapply(unlist(G, recursive = FALSE), `[[`, 1)
+          G_deps <- vapply(unlist(G, recursive = FALSE), `[[`, integer(1), 2)
+          if (any(!is.element(
+            relation_attrs,
+            find_closure(Mp, G_det_sets, G_deps)
+          )))
+            nonsuperfluous <- TRUE
+          else{
+            # LTK paper version says to "insert into [Kp] any key of [relation]
+            # contained in [Mp]". This doesn't work, e.g. key sets A<->B and AC
+            # <-> BD would result in the latter losing B and only having key AC
+            # remaining, when it should get AD. We therefore use a variation of
+            # how a minimal replacement is found in Maier.
+            replacement <- minimal_subset(Mp, relation_attrs, G_det_sets, G_deps)
+            if (!is.element(list(replacement), Kp))
+              Kp <- c(Kp, list(replacement))
           }
         }
       }
-      if (!fail) {
+      if (!nonsuperfluous) {
+        stopifnot(all(unlist(Kp) %in% relation_attrs))
         keys[[relation]] <- Kp
-        attrs[[relation]] <- union(unique(unlist(Kp)), nonprime_attrs)
+        attrs[[relation]] <- setdiff(relation_attrs, attr)
       }
     }
   }
   vecs$keys <- keys
   vecs$attrs <- attrs
   vecs
+}
+
+synthesised_fds <- function(attrs, keys) {
+  # returns nested list of functional dependencies directly represented in
+  # relations
+  Map(
+    relation_fds,
+    attrs,
+    keys
+  )
+}
+
+relation_fds <- function(attrs, keys) {
+  # represented FDs for a single relation
+  key_bijections <- list()
+  key_indices <- seq_along(keys)
+  for (lhs_index in key_indices) {
+    for (rhs_index in key_indices[-lhs_index]) {
+      key_bijections <- c(
+        key_bijections,
+        lapply(keys[[rhs_index]], \(k) list(keys[[lhs_index]], k))
+      )
+    }
+  }
+  nonprimes <- setdiff(attrs, unlist(keys))
+  nonbijections <- unlist(
+    lapply(
+      keys,
+      \(k) lapply(nonprimes, \(np) list(k, np))
+    ),
+    recursive = FALSE
+  )
+  c(key_bijections, nonbijections)
+}
+
+minimal_subset <- function(
+  key,
+  determines,
+  determinant_sets,
+  dependents
+) {
+  keep <- rep(TRUE, length(key))
+  changed <- TRUE
+  while (changed) {
+    changed <- FALSE
+    for (n in rev(seq_along(key)[keep])) {
+      temp_keep <- keep
+      temp_keep[n] <- FALSE
+      temp_closure <- find_closure(
+        key[temp_keep],
+        determinant_sets,
+        dependents
+      )
+      if (all(determines %in% temp_closure)) {
+        keep <- temp_keep
+        changed <- TRUE
+      }
+    }
+  }
+  sort(key[keep])
 }
 
 minimal_subset_direct <- function(
