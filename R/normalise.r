@@ -437,6 +437,8 @@ remove_avoidable_attributes <- function(vecs) {
         nonsuperfluous <- TRUE
 
       # check nonessentiality
+      G_det_sets <- lapply(unlist(G, recursive = FALSE), `[[`, 1)
+      G_deps <- vapply(unlist(G, recursive = FALSE), `[[`, integer(1), 2)
       for (X_i in setdiff(K, Kp)) {
         if (
           !nonsuperfluous &&
@@ -447,8 +449,6 @@ remove_avoidable_attributes <- function(vecs) {
         ) {
           M <- find_closure(X_i, Gp_det_sets, Gp_deps)
           Mp <- setdiff(intersect(M, relation_attrs), attr)
-          G_det_sets <- lapply(unlist(G, recursive = FALSE), `[[`, 1)
-          G_deps <- vapply(unlist(G, recursive = FALSE), `[[`, integer(1), 2)
           if (any(!is.element(
             relation_attrs,
             find_closure(Mp, G_det_sets, G_deps)
