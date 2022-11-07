@@ -362,6 +362,17 @@ construct_relation_schemes <- function(vecs) {
                   setdiff(bijection_set) |>
                   union(primary) |>
                   sort()
+                # new_keys <- keys
+                # new_keys[[key_el_ind]] <- new_keys[[key_el_ind]] |>
+                #   setdiff(bijection_set) |>
+                #   union(primary) |>
+                #   sort()
+                # vecs$flat_partition_determinant_set[partition_index] <-
+                #   new_keys[match(
+                #     vecs$flat_partition_determinant_set[partition_index],
+                #     keys
+                #   )]
+                # keys <- new_keys
               }
             }
           }
@@ -396,6 +407,7 @@ construct_relation_schemes <- function(vecs) {
       flat_partition_dependents = vecs$flat_partition_dependents,
       flat_groups = vecs$flat_groups,
       bijection_groups = vecs$bijection_groups
+      # bijection_groups = rel_keys[lengths(rel_keys) > 1]
     )
   )
 }
@@ -416,10 +428,10 @@ remove_avoidable_attributes <- function(vecs, all_attrs) {
       G <- synthesised_fds(attrs, keys)
       K <- keys[[relation]]
       nonsuperfluous <- FALSE
-      relation_attrs <- attrs[[relation]]
+      relation_attrs <- sort(attrs[[relation]])
       if (!is.element(attr, relation_attrs))
         next
-      if (identical(K, relation_attrs)) {
+      if (identical(K, list(relation_attrs))) {
         nonsuperfluous <- TRUE
         next
       }
@@ -444,10 +456,13 @@ remove_avoidable_attributes <- function(vecs, all_attrs) {
 
       # check nonessentiality
       for (X_i in setdiff(K, Kp)) {
-        if (any(!is.element(
-          relation_attrs,
-          find_closure(X_i, Gp_det_sets, Gp_deps)
-        ))) {
+        if (
+          !nonsuperfluous &&
+          any(!is.element(
+            relation_attrs,
+            find_closure(X_i, Gp_det_sets, Gp_deps)
+          ))
+        ) {
           M <- find_closure(X_i, Gp_det_sets, Gp_deps)
           Mp <- setdiff(intersect(M, relation_attrs), attr)
           G_det_sets <- lapply(unlist(G, recursive = FALSE), `[[`, 1)
@@ -499,7 +514,10 @@ relation_fds <- function(attrs, keys) {
     for (rhs_index in key_indices[-lhs_index]) {
       key_bijections <- c(
         key_bijections,
-        lapply(keys[[rhs_index]], \(k) list(keys[[lhs_index]], k))
+        lapply(
+          setdiff(keys[[rhs_index]], keys[[lhs_index]]),
+          \(k) list(keys[[lhs_index]], k)
+        )
       )
     }
   }
