@@ -409,29 +409,24 @@ remove_avoidable_attributes <- function(vecs) {
   attrs <- vecs$attrs
   keys <- vecs$keys
   all_attrs <- vecs$all_attrs
+  G <- synthesised_fds(attrs, keys)
 
   for (attr in rev(seq_along(all_attrs))) {
     for (relation in seq_along(attrs)) {
-      G <- synthesised_fds(attrs, keys)
-      K <- keys[[relation]]
-      nonsuperfluous <- FALSE
       relation_attrs <- sort(attrs[[relation]])
       if (!is.element(attr, relation_attrs))
         next
-      if (identical(K, list(relation_attrs))) {
-        nonsuperfluous <- TRUE
+      K <- keys[[relation]]
+      if (identical(K, list(relation_attrs)))
         next
-      }
+      nonsuperfluous <- FALSE
       Kp <- Filter(\(k) !is.element(attr, unlist(k)), K)
-      Gp <- G
-      Gp[[relation]] <- Filter(\(fd) !is.element(attr, unlist(fd)), Gp[[relation]])
-      nonprime_attrs <- setdiff(relation_attrs, unlist(K))
 
       # check restorability
-      if (length(Kp) == 0) {
-        nonsuperfluous <- TRUE
+      if (length(Kp) == 0)
         next
-      }
+      Gp <- G
+      Gp[[relation]] <- Filter(\(fd) !is.element(attr, unlist(fd)), Gp[[relation]])
       X <- Kp[[1]]
       Gp_det_sets <- lapply(unlist(Gp, recursive = FALSE), `[[`, 1)
       Gp_deps <- vapply(unlist(Gp, recursive = FALSE), `[[`, integer(1), 2)
@@ -474,7 +469,9 @@ remove_avoidable_attributes <- function(vecs) {
       if (!nonsuperfluous) {
         stopifnot(all(unlist(Kp) %in% relation_attrs))
         keys[[relation]] <- Kp
-        attrs[[relation]] <- setdiff(relation_attrs, attr)
+        new_rel_attrs <- setdiff(relation_attrs, attr)
+        attrs[[relation]] <- new_rel_attrs
+        G[[relation]] <- relation_fds(new_rel_attrs, Kp)
       }
     }
   }
