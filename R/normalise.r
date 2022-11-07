@@ -433,12 +433,12 @@ remove_avoidable_attributes <- function(vecs) {
         next
 
       # check nonessentiality
-      nonsuperfluous <- FALSE
+      superfluous <- TRUE
       G_det_sets <- lapply(unlist(G, recursive = FALSE), `[[`, 1)
       G_deps <- vapply(unlist(G, recursive = FALSE), `[[`, integer(1), 2)
       for (X_i in setdiff(K, Kp)) {
         if (
-          !nonsuperfluous &&
+          superfluous &&
           any(!is.element(
             relation_attrs,
             find_closure(X_i, Gp_det_sets, Gp_deps)
@@ -450,7 +450,7 @@ remove_avoidable_attributes <- function(vecs) {
             relation_attrs,
             find_closure(Mp, G_det_sets, G_deps)
           )))
-            nonsuperfluous <- TRUE
+            superfluous <- FALSE
           else{
             # LTK paper version says to "insert into [Kp] any key of [relation]
             # contained in [Mp]". This doesn't work, e.g. key sets A<->B and AC
@@ -463,7 +463,7 @@ remove_avoidable_attributes <- function(vecs) {
           }
         }
       }
-      if (!nonsuperfluous) {
+      if (superfluous) {
         stopifnot(all(unlist(Kp) %in% relation_attrs))
         keys[[relation]] <- Kp
         new_rel_attrs <- setdiff(relation_attrs, attr)
