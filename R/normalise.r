@@ -39,13 +39,12 @@ normalise <- function(
 ) {
   report <- reporter(progress, progress_file)
 
-  inter <- dependencies$dependencies |>
+  inter <- dependencies |>
     report$op(
       convert_to_vectors,
-      "simplifying dependency format",
-      dependencies$attrs
+      "simplifying dependency format"
     ) |>
-    convert_to_integer_attributes(dependencies$attrs) |>
+    convert_to_integer_attributes() |>
     sort_key_contents() |>
     report$op(
       remove_extraneous_attributes,
@@ -76,29 +75,27 @@ normalise <- function(
     inter <- inter |>
     report$op(
       remove_avoidable_attributes,
-      "removing avoidable attributes",
-      dependencies$attrs
+      "removing avoidable attributes"
     )
   inter |>
     report$op(
       convert_to_character_attributes,
-      "converting to readable format",
-      dependencies$attrs
+      "converting to readable format"
     ) |>
     structure(class = c("database_scheme", "list"))
 }
 
-convert_to_vectors <- function(dependencies, attrs) {
+convert_to_vectors <- function(flat_dependencies) {
   list(
-    determinant_sets = lapply(dependencies, `[[`, 1),
-    dependents = vapply(dependencies, `[[`, character(1), 2),
-    all_attrs = attrs
+    determinant_sets = lapply(flat_dependencies$dependencies, `[[`, 1),
+    dependents = vapply(flat_dependencies$dependencies, `[[`, character(1), 2),
+    all_attrs = flat_dependencies$attrs
   )
 }
 
-convert_to_integer_attributes <- function(vecs, attrs) {
-  vecs$determinant_sets <- lapply(vecs$determinant_sets, match, attrs)
-  vecs$dependents <- match(vecs$dependents, attrs)
+convert_to_integer_attributes <- function(vecs) {
+  vecs$determinant_sets <- lapply(vecs$determinant_sets, match, vecs$all_attrs)
+  vecs$dependents <- match(vecs$dependents, vecs$all_attrs)
   vecs
 }
 
@@ -401,26 +398,16 @@ construct_relation_schemes <- function(vecs) {
   list(
     attrs = attrs,
     keys = rel_keys,
-    all_attrs = vecs$all_attrs,
-    used_dependencies = list(
-      flat_partition_determinant_set = vecs$flat_partition_determinant_set,
-      flat_partition_dependents = vecs$flat_partition_dependents,
-      flat_groups = vecs$flat_groups,
-      bijection_groups = vecs$bijection_groups
-      # bijection_groups = rel_keys[lengths(rel_keys) > 1]
-    )
+    all_attrs = vecs$all_attrs
   )
 }
 
-remove_avoidable_attributes <- function(vecs, all_attrs) {
+remove_avoidable_attributes <- function(vecs) {
   # Using the algorithm description in the original LTK paper, since I struggled
   # to understand the use of .-> in Maier's version.
 
   attrs <- vecs$attrs
   keys <- vecs$keys
-  flat_partition_determinant_set <- vecs$used_dependencies$flat_partition_determinant_set
-  flat_partition_dependents <- vecs$used_dependencies$flat_partition_dependents
-  flat_groups <- vecs$used_dependencies$flat_groups
   all_attrs <- vecs$all_attrs
 
   for (attr in rev(seq_along(all_attrs))) {
@@ -559,73 +546,10 @@ minimal_subset <- function(
   sort(key[keep])
 }
 
-minimal_subset_direct <- function(
-  key,
-  determines,
-  determinant_sets,
-  dependents,
-  bijection_groups
-) {
-  keep <- rep(TRUE, length(key))
-  changed <- TRUE
-  while (changed) {
-    changed <- FALSE
-    for (n in rev(seq_along(key)[keep])) {
-      temp_keep <- keep
-      temp_keep[n] <- FALSE
-      temp_closure <- dclosure_keys(
-        key[temp_keep],
-        determinant_sets,
-        dependents,
-        bijection_groups
-      )
-      if (all(determines %in% temp_closure)) {
-        keep <- temp_keep
-        changed <- TRUE
-      }
-    }
-  }
-  key[keep]
-}
-
-dclosure_keys <- function(lhs, determinant_sets, dependents, bijection_groups) {
-  # Finds a direct closure, where direct determination (X .-> Y) under G
-  # means that we can find a cover F for G in which X -> Y can be derived
-  # without using FDs where the LHS is equivalent to X.
-  lhs_matches <- vapply(
-    bijection_groups,
-    \(bg) any(vapply(bg, identical, logical(1), lhs)),
-    logical(1)
-  )
-  equivalent_keys <- unique(c(
-    list(lhs), # explicitly add since might not be in a bijection group
-    unlist(bijection_groups[lhs_matches], recursive = FALSE)
-  ))
-  determinants_equiv <- match(determinant_sets, equivalent_keys)
-  find_closure(
-    lhs,
-    determinant_sets[is.na(determinants_equiv)],
-    dependents[is.na(determinants_equiv)]
-  )
-}
-
-direct_determines <- function(lhs, rhs, determinant_sets, dependents) {
-  attrs <- unique(unlist(lhs))
-  used_fds <- which(vapply(
-    determinant_sets, \(set) !is.element(list(set), lhs), logical(1)
-  ))
-  direct_closure <- find_closure(
-    attrs,
-    determinant_sets[used_fds],
-    dependents[used_fds]
-  )
-  rhs %in% direct_closure
-}
-
-convert_to_character_attributes <- function(vecs, attrs) {
-  vecs$attrs <- lapply(vecs$attrs, \(a) attrs[a])
-  vecs$keys <- lapply(vecs$keys, \(ks) lapply(ks, \(k) attrs[k]))
-  vecs[c("attrs", "keys", "all_attrs")]
+convert_to_character_attributes <- function(vecs) {
+  vecs$attrs <- lapply(vecs$attrs, \(a) vecs$all_attrs[a])
+  vecs$keys <- lapply(vecs$keys, \(ks) lapply(ks, \(k) vecs$all_attrs[k]))
+  vecs
 }
 
 find_closure <- function(attrs, determinant_sets, dependents) {
