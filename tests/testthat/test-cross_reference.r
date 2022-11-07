@@ -105,6 +105,91 @@ describe("cross_reference", {
       reintroduces_missing_attrs_if_lossless
     )
   })
+  it("has no change in added table for losslessness if avoidable attributes removed", {
+    still_lossless_with_less_or_same_attributes_dep <- function(flat_deps) {
+      norm_deps_avoid <- normalise(
+        flat_deps,
+        remove_avoidable = TRUE
+      )
+      norm_deps_noavoid <- normalise(
+        flat_deps,
+        remove_avoidable = FALSE
+      )
+
+      # failing example:
+      # flat_deps <- list(
+      #   dependencies = list(
+      #     list("F", "B"),
+      #     list(c("B", "E"), "C"),
+      #     list(c("A", "B", "E", "F", "G"), "D"),
+      #     list(c("B", "C", "E", "F"), "D"),
+      #     list(c("A", "B", "C", "E", "F"), "D"),
+      #     list(c("A", "B", "C", "E", "F", "G"), "D"),
+      #     list(c("B", "C", "D"), "F"),
+      #     list("C", "F"),
+      #     list(c("C", "D", "E"), "F"),
+      #     list(c("B", "C"), "F"),
+      #     list(c("B", "C", "D", "E", "G"), "F"),
+      #     list(c("A", "B", "C", "D", "E", "G"), "F"),
+      #     list(c("D", "F"), "G"),
+      #     list(c("A", "B", "C", "D", "E", "F"), "G"),
+      #     list(c("A", "B", "D"), "G"),
+      #     list("C", "G")
+      #   ),
+      #   attrs = LETTERS[1:7]
+      # )
+
+      # removing attributes shouldn't add an extra table for losslessness if
+      # there wasn't one before
+      scheme_avoid_lossy <- cross_reference(
+        norm_deps_avoid,
+        ensure_lossless = FALSE
+      )
+      scheme_noavoid_lossy <- cross_reference(
+        norm_deps_noavoid,
+        ensure_lossless = FALSE
+      )
+      scheme_avoid_lossless <- cross_reference(
+        norm_deps_avoid,
+        ensure_lossless = TRUE
+      )
+      scheme_noavoid_lossless <- cross_reference(
+        norm_deps_noavoid,
+        ensure_lossless = TRUE
+      )
+      lengths_avoid_lossy <- lengths(scheme_avoid_lossy$attrs)
+      lengths_noavoid_lossy <- lengths(scheme_noavoid_lossy$attrs)
+      lengths_avoid_lossless <- lengths(scheme_avoid_lossless$attrs)
+      lengths_noavoid_lossless <- lengths(scheme_noavoid_lossless$attrs)
+
+      # Losslessness should add 0 or 1 tables
+      expect_gte(length(lengths_avoid_lossless), length(lengths_avoid_lossy))
+      expect_lte(length(lengths_avoid_lossless), length(lengths_avoid_lossy) + 1)
+      expect_gte(length(lengths_noavoid_lossless), length(lengths_noavoid_lossy))
+      expect_lte(length(lengths_noavoid_lossless), length(lengths_noavoid_lossy) + 1)
+
+      # # Sometimes removing avoidable attributes allows not adding an extra table
+      # # to keep decomposition lossless, so can't always expect length of lengths
+      # # to be identical: lengths2 might be one longer.
+      expect_lte(length(lengths_avoid_lossless), length(lengths_noavoid_lossless))
+      expect_gte(length(lengths_avoid_lossless), length(lengths_noavoid_lossless) - 1)
+      # for (l in seq_len(min(length(lengths_avoid_lossless), length(lengths_noavoid_lossless)))) {
+      #   expect_lte(lengths_avoid_lossless[l], lengths_noavoid_lossless[l])
+      # }
+
+      # additional tests to add:
+      # - Accounting for extra tables. Any combination of noavoid and avoid
+      # having one is possible.
+      # - something about not introducing an extra table? or not making it
+      # wider?
+      # - something about not changing table hierarchy / cross-references?
+    }
+
+    forall(
+      gen_flat_deps(7, 20),
+      still_lossless_with_less_or_same_attributes_dep
+    )
+  })
   it("only return non-extraneous table relationships", {
     only_returns_non_extraneous_relationships <- function(df) {
       scheme <- normalise(flatten(dfd(df, 1)))

@@ -413,7 +413,7 @@ remove_avoidable_attributes <- function(vecs) {
 
   for (attr in rev(seq_along(all_attrs))) {
     for (relation in seq_along(attrs)) {
-      relation_attrs <- sort(attrs[[relation]])
+      relation_attrs <- attrs[[relation]]
       if (!is.element(attr, relation_attrs))
         next
       K <- keys[[relation]]
