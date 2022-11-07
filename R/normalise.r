@@ -419,7 +419,6 @@ remove_avoidable_attributes <- function(vecs) {
       K <- keys[[relation]]
       if (identical(K, list(relation_attrs)))
         next
-      nonsuperfluous <- FALSE
       Kp <- Filter(\(k) !is.element(attr, unlist(k)), K)
 
       # check restorability
@@ -430,13 +429,11 @@ remove_avoidable_attributes <- function(vecs) {
       X <- Kp[[1]]
       Gp_det_sets <- lapply(unlist(Gp, recursive = FALSE), `[[`, 1)
       Gp_deps <- vapply(unlist(Gp, recursive = FALSE), `[[`, integer(1), 2)
-      if (!is.element(
-        attr,
-        find_closure(X, Gp_det_sets, Gp_deps)
-      ))
-        nonsuperfluous <- TRUE
+      if (!is.element(attr, find_closure(X, Gp_det_sets, Gp_deps)))
+        next
 
       # check nonessentiality
+      nonsuperfluous <- FALSE
       G_det_sets <- lapply(unlist(G, recursive = FALSE), `[[`, 1)
       G_deps <- vapply(unlist(G, recursive = FALSE), `[[`, integer(1), 2)
       for (X_i in setdiff(K, Kp)) {
