@@ -306,7 +306,6 @@ describe("normalise", {
       # }
 
       # additional tests to add:
-      # - Tables with avoidance have fewer or same number of keys
       # - Accounting for extra tables. Any combination of noavoid and avoid
       # having one is possible.
       # - something about not introducing an extra table? or not making it
