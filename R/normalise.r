@@ -483,11 +483,7 @@ remove_avoidable_attributes <- function(vecs) {
 synthesised_fds <- function(attrs, keys) {
   # returns nested list of functional dependencies directly represented in
   # relations
-  Map(
-    relation_fds,
-    attrs,
-    keys
-  )
+  Map(relation_fds, attrs, keys)
 }
 
 relation_fds <- function(attrs, keys) {
