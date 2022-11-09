@@ -25,10 +25,24 @@
 cross_reference <- function(scheme, ensure_lossless = TRUE) {
   all_attrs <- scheme$all_attrs
   attrs <- scheme$attrs
-  n_relations <- length(attrs)
   keys <- scheme$keys
+
+  if (ensure_lossless) {
+    G <- synthesised_fds(attrs, keys)
+    G_det_sets <- lapply(unlist(G, recursive = FALSE), `[[`, 1)
+    G_deps <- vapply(unlist(G, recursive = FALSE), `[[`, character(1), 2)
+    primaries <- lapply(keys, `[[`, 1)
+    closures <- lapply(primaries, find_closure, G_det_sets, G_deps)
+    if (!any(vapply(closures, setequal, logical(1), all_attrs))) {
+      new_key <- minimal_subset(all_attrs, all_attrs, G_det_sets, G_deps)
+      attrs <- c(attrs, list(new_key))
+      keys <- c(keys, list(list(new_key)))
+    }
+  }
+
   references <- calculate_references(keys, attrs)
 
+  n_relations <- length(attrs)
   parents <- replicate(n_relations, integer())
   for (n in seq_len(n_relations)) {
     parents[[n]] <- sort(unique(references$parent[references$child == n]))
@@ -40,39 +54,6 @@ cross_reference <- function(scheme, ensure_lossless = TRUE) {
     references$parent,
     references$attr
   )
-
-  non_included <- setdiff(all_attrs, unlist(scheme$attrs))
-  if (
-    ensure_lossless &&
-    (length(scheme$keys) > 1 || length(non_included) > 0)
-  ) {
-    relationship_tables <- lapply(relationships, `[[`, 1)
-    rel_parents <- vapply(relationship_tables, `[`, integer(1), 2)
-    rel_children <- vapply(relationship_tables, `[`, integer(1), 1)
-    non_parents <- sort(setdiff(rel_children, rel_parents))
-    stranded <- setdiff(
-      seq_along(scheme$keys),
-      unlist(relationship_tables)
-    )
-    non_included <- setdiff(all_attrs, unlist(scheme$attrs))
-    if (length(non_parents) != 1 || length(stranded) > 0 || length(non_included) > 0) {
-      ult_children <- sort(c(non_parents, stranded))
-      ult_child_indexes <- lapply(scheme$keys[ult_children], `[[`, 1)
-      new_table_attrs <- unique(c(unlist(ult_child_indexes), non_included))
-      new_table_attrs <- new_table_attrs[order(match(new_table_attrs, all_attrs))]
-      attrs <- c(attrs, list(new_table_attrs))
-      keys <- c(keys, list(list(new_table_attrs)))
-      parents <- c(parents, list(ult_children))
-      for (p in ult_children) {
-        for (attr in keys[[p]][[1]]) {
-          relationships <- c(
-            relationships,
-            list(list(c(n_relations + 1L, p), attr))
-          )
-        }
-      }
-    }
-  }
 
   structure(
     list(

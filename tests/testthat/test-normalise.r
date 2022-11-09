@@ -265,7 +265,8 @@ describe("normalise", {
     )
     forall(
       gen_flat_deps(7, 20),
-      still_lossless_with_less_or_same_attributes_dep
+      still_lossless_with_less_or_same_attributes_dep,
+      tests = 1000
     )
   })
 })

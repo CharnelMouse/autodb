@@ -2,8 +2,7 @@ library(hedgehog)
 
 describe("cross_reference", {
   it("returns relationships", {
-    df <- data.frame(a = integer(), b = integer(), c = integer())
-    norm_deps <- list(
+    scheme <- list(
       attrs = list(
         c("a", "b"),
         c("b", "c")
@@ -11,9 +10,10 @@ describe("cross_reference", {
       keys = list(
         list("a"),
         list("b")
-      )
+      ),
+      all_attrs = c("a", "b", "c")
     )
-    database <- cross_reference(norm_deps)
+    database <- cross_reference(scheme)
     expected_parents = list(2L, integer())
     expected_relations <- list(
       list(c(1L, 2L), "b")
@@ -47,47 +47,6 @@ describe("cross_reference", {
     forall(
       gen_df(6, 7, nonempty = TRUE, remove_dup_rows = TRUE),
       links_by_exactly_one_parent_key
-    )
-  })
-  it("leaves a single ultimate child if given a lossless decomposition", {
-    single_ultimate_child_if_lossless_decomposition <- function(df) {
-      deps <- dfd(df, 1)
-      scheme <- normalise(flatten(deps))
-      linked <- cross_reference(scheme, ensure_lossless = TRUE)
-      if (length(linked$keys) == 1)
-        succeed()
-      else{
-        relationship_tables <- lapply(linked$relationships, `[[`, 1)
-        parents <- vapply(relationship_tables, `[`, integer(1), 2)
-        children <- vapply(relationship_tables, `[`, integer(1), 1)
-        non_parents <- setdiff(children, parents)
-        expect_length(non_parents, 1)
-      }
-    }
-    forall(
-      gen_df(6, 7, nonempty = TRUE, remove_dup_rows = TRUE),
-      single_ultimate_child_if_lossless_decomposition
-    )
-  })
-  it("leaves no stranded tables if given a lossless decomposition", {
-    no_stranded_if_lossless_decomposition <- function(df) {
-      deps <- dfd(df, 1)
-      scheme <- normalise(flatten(deps))
-      linked <- cross_reference(scheme, ensure_lossless = TRUE)
-      if (length(linked$keys) == 1)
-        succeed()
-      else{
-        relationship_tables <- lapply(linked$relationships, `[[`, 1)
-        stranded <- setdiff(
-          seq_along(linked$keys),
-          unlist(relationship_tables)
-        )
-        expect_length(stranded, 0)
-      }
-    }
-    forall(
-      gen_df(6, 7, nonempty = FALSE, remove_dup_rows = TRUE),
-      no_stranded_if_lossless_decomposition
     )
   })
   it("reintroduces attributes not in dependencies if ensuring lossless", {
@@ -171,11 +130,17 @@ describe("cross_reference", {
       # # Sometimes removing avoidable attributes allows not adding an extra table
       # # to keep decomposition lossless, so can't always expect length of lengths
       # # to be identical: lengths2 might be one longer.
-      expect_lte(length(lengths_avoid_lossless), length(lengths_noavoid_lossless))
-      expect_gte(length(lengths_avoid_lossless), length(lengths_noavoid_lossless) - 1)
-      # for (l in seq_len(min(length(lengths_avoid_lossless), length(lengths_noavoid_lossless)))) {
-      #   expect_lte(lengths_avoid_lossless[l], lengths_noavoid_lossless[l])
-      # }
+      expect_identical(length(lengths_avoid_lossless), length(lengths_noavoid_lossless))
+      lossless_length <- length(lengths_avoid_lossless)
+      for (l in seq_len(lossless_length)) {
+        expect_lte(lengths_avoid_lossless[l], lengths_noavoid_lossless[l])
+      }
+      # if extra table added, avoidance shouldn't affect it
+      if (length(lengths_avoid_lossless) > length(lengths_avoid_lossy))
+        expect_identical(
+          lengths_avoid_lossless[lossless_length],
+          lengths_noavoid_lossless[lossless_length]
+        )
 
       # additional tests to add:
       # - Accounting for extra tables. Any combination of noavoid and avoid
@@ -187,7 +152,8 @@ describe("cross_reference", {
 
     forall(
       gen_flat_deps(7, 20),
-      still_lossless_with_less_or_same_attributes_dep
+      still_lossless_with_less_or_same_attributes_dep,
+      tests = 1000
     )
   })
   it("only return non-extraneous table relationships", {

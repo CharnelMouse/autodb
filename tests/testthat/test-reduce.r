@@ -10,14 +10,6 @@ describe("reduce", {
     }
     forall(gen_df(6, 7), has_idempotent_reduction)
   })
-  it("does nothing to a lossless database", {
-    has_lossless_decomp_invariant_to_reduce <-       function(df) {
-      database <- autonorm(as.data.frame(df), 1, ensure_lossless = TRUE)
-      once <- reduce(database)
-      expect_identical(once, database)
-    }
-    forall(gen_df(6, 7), has_lossless_decomp_invariant_to_reduce)
-  })
   it("removes added tables with less rows than existing non-parent tables", {
     removes_added_non_parent_with_non_maximum_nrow <- function(df) {
       database <- autonorm(df, 1, ensure_lossless = TRUE)

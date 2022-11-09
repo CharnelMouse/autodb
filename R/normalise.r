@@ -483,7 +483,7 @@ synthesised_fds <- function(attrs, keys) {
   Map(relation_fds, attrs, keys)
 }
 
-relation_fds <- function(attrs, keys) {
+relation_fds <- function(attrs, keys, groups) {
   # represented FDs for a single relation
   key_bijections <- list()
   key_indices <- seq_along(keys)
@@ -543,8 +543,8 @@ convert_to_character_attributes <- function(vecs) {
 }
 
 find_closure <- function(attrs, determinant_sets, dependents) {
-  if (!is.integer(attrs))
-    stop(paste("attr is", toString(class(attrs))))
+  # if (!is.integer(attrs))
+  #   stop(paste("attr is", toString(class(attrs))))
   if (length(dependents) == 0)
     return(attrs)
   for (n in seq_along(dependents)) {
@@ -559,6 +559,32 @@ find_closure <- function(attrs, determinant_sets, dependents) {
     }
   }
   attrs
+}
+
+find_closure_with_used <- function(attrs, determinant_sets, dependents) {
+  if (length(dependents) == 0)
+    return(attrs)
+  checked <- rep(FALSE, length(dependents))
+  change <- TRUE
+  ordered_use <- integer()
+  while (change) {
+    change <- FALSE
+    for (n in seq_along(dependents)[!checked]) {
+      det_set <- determinant_sets[[n]]
+      dep <- dependents[n]
+      if (length(dep) != 1)
+        stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(dep)))
+      if (all(is.element(det_set, attrs))) {
+        checked[n] <- TRUE
+        if (!is.element(dep, attrs)) {
+          change <- TRUE
+          attrs <- c(attrs, dep)
+          ordered_use <- c(ordered_use, n)
+        }
+      }
+    }
+  }
+  list(attrs, ordered_use)
 }
 
 keys_order_same_lengths <- function(keys) {

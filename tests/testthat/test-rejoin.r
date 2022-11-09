@@ -9,6 +9,10 @@ describe("rejoin", {
     }
     # 6 columns allows for interesting cases, such as a table containing two
     # independent ones, or a reference involving several attributes
-    forall(gen_df(6, 7, remove_dup_rows = TRUE), autonorm_inverted_by_rejoin)
+    forall(
+      gen_df(6, 7, remove_dup_rows = TRUE),
+      autonorm_inverted_by_rejoin,
+      tests = 1000
+    )
   })
 })
