@@ -174,7 +174,8 @@ describe("cross_reference", {
             attrs = list(c(key, nonkey)),
             keys = list(list(key)),
             parents = list(integer()),
-            relationships = list()
+            relationships = list(),
+            relation_names = paste(key, collapse = "_")
           ),
           class = c("database_scheme", "list")
         )

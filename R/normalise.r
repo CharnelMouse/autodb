@@ -77,12 +77,19 @@ normalise <- function(
       remove_avoidable_attributes,
       "removing avoidable attributes"
     )
-  inter |>
+  inter <- inter |>
     report$op(
       convert_to_character_attributes,
       "converting to readable format"
-    ) |>
-    structure(class = c("database_scheme", "list"))
+    )
+  relation_names <- vapply(
+    inter$keys,
+    \(keys) name_dataframe(keys[[1]]),
+    character(1)
+  )
+  stopifnot(!anyDuplicated(relation_names))
+  inter$relation_names <- relation_names
+  structure(inter, class = c("database_scheme", "list"))
 }
 
 convert_to_vectors <- function(flat_dependencies) {
@@ -540,6 +547,10 @@ convert_to_character_attributes <- function(vecs) {
   vecs$attrs <- lapply(vecs$attrs, \(a) vecs$all_attrs[a])
   vecs$keys <- lapply(vecs$keys, \(ks) lapply(ks, \(k) vecs$all_attrs[k]))
   vecs
+}
+
+name_dataframe <- function(index) {
+  paste(index, collapse = "_")
 }
 
 find_closure <- function(attrs, determinant_sets, dependents) {

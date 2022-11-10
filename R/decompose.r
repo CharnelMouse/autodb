@@ -32,8 +32,8 @@
 #' @export
 decompose <- function(df, scheme, name = NA_character_) {
   indexes <- lapply(scheme$keys, `[[`, 1)
-  relation_names <- vapply(indexes, name_dataframe, character(1))
-  stopifnot(!anyDuplicated(relation_names))
+  relation_names <- scheme$relation_names
+  # stopifnot(!anyDuplicated(relation_names))
 
   depdf_list <- Map(
     \(attrs, keys, index, parents) {
@@ -98,10 +98,6 @@ Mode <- function(x) {
   uniqs <- unique(x)
   tabs <- tabulate(match(x, uniqs))
   uniqs[[which.max(tabs)]]
-}
-
-name_dataframe <- function(index) {
-  paste(index, collapse = "_")
 }
 
 #' @exportS3Method

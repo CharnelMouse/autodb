@@ -53,7 +53,8 @@ describe("normalise", {
       list(
         attrs = list(c("a", "b", "c")),
         keys = list(list("a")),
-        all_attrs = c("a", "b", "c")
+        all_attrs = c("a", "b", "c"),
+        relation_names = "a"
       )
     )
   })
@@ -72,7 +73,8 @@ describe("normalise", {
       list(
         attrs = list(c("a", "b"), c("b", "c")),
         keys = list(list("a"), list("b")),
-        all_attrs = c("a", "b", "c")
+        all_attrs = c("a", "b", "c"),
+        relation_names = c("a", "b")
       )
     )
   })
@@ -92,7 +94,8 @@ describe("normalise", {
       list(
         attrs = list(c("a", "d", "b"), c("b", "c", "a")),
         keys = list(list("a", "d"), list(c("b", "c"))),
-        all_attrs = c("a", "b", "c", "d")
+        all_attrs = c("a", "b", "c", "d"),
+        relation_names = c("a", "b_c")
       )
     )
   })
@@ -118,7 +121,8 @@ describe("normalise", {
       list(
         attrs = list(c("a", "b", "c", "d", "f"), c("d", "e"), c("f", "e")),
         keys = list(list("a", "b"), list("d"), list("f")),
-        all_attrs = c("a", "b", "c", "d", "e", "f")
+        all_attrs = c("a", "b", "c", "d", "e", "f"),
+        relation_names = c("a", "d", "f")
       )
     )
   })
@@ -172,7 +176,8 @@ describe("normalise", {
       list(
         attrs = list(c("C", "A", "B", "D"), c("C", "E", "F")),
         keys = list(list("C", c("A", "B")), list(c("C", "E"))),
-        all_attrs = c("A", "B", "C", "D", "E", "F")
+        all_attrs = c("A", "B", "C", "D", "E", "F"),
+        relation_names = c("C", "C_E")
       )
     )
   })
@@ -210,7 +215,8 @@ describe("normalise", {
       list(
         attrs = list(c("A", "B"), c("A", "C", "B", "D", "E")),
         keys = list(list("A", "B"), list(c("A", "C"), c("B", "D"))),
-        all_attrs = c("A", "B", "C", "D", "E")
+        all_attrs = c("A", "B", "C", "D", "E"),
+        relation_names = c("A", "A_C")
       )
     )
     norm.deps2 <- normalise(deps, remove_avoidable = TRUE)
@@ -219,7 +225,8 @@ describe("normalise", {
       list(
         attrs = list(c("A", "B"), c("A", "C", "D", "E")),
         keys = list(list("A", "B"), list(c("A", "C"), c("A", "D"))),
-        all_attrs = c("A", "B", "C", "D", "E")
+        all_attrs = c("A", "B", "C", "D", "E"),
+        relation_names = c("A", "A_C")
       )
     )
 
@@ -383,7 +390,8 @@ describe("normalise() replacing normalize_step()", {
       list(
         attrs = list(c("a", "b", "c")),
         keys = list(list("a")),
-        all_attrs = c("a", "b", "c")
+        all_attrs = c("a", "b", "c"),
+        relation_names = "a"
       )
     )
   })
@@ -401,7 +409,8 @@ describe("normalise() replacing normalize_step()", {
       list(
         attrs = list(c("a", "b")),
         keys = list(list("a", "b")),
-        all_attrs = c("a", "b")
+        all_attrs = c("a", "b"),
+        relation_names = "a"
       )
     )
   })

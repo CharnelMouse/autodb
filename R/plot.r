@@ -122,15 +122,16 @@ gv.database_scheme <- function(x, name = NA_character_, ...) {
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     nameless_relation_string,
-    seq_along(x$attrs),
     x$attrs,
-    x$keys
+    x$keys,
+    x$relation_names
   ) |>
     paste(collapse = "\n")
   reference_strings <- vapply(
     x$relationships,
     dbs_reference_string,
-    character(1)
+    character(1),
+    x$relation_names
   ) |>
     paste(collapse = "\n")
   teardown_string <- "}\n"
@@ -245,9 +246,10 @@ df_string <- function(dataframe, df_name) {
   )
 }
 
-nameless_relation_string <- function(id, attrs, keys) {
+nameless_relation_string <- function(attrs, keys, relation_name) {
   col_names <- attrs
   col_snake <- snakecase::to_snake_case(col_names)
+  rel_snake <- snakecase::to_snake_case(relation_name)
   column_typing_info <- vapply(
     seq_along(col_names),
     \(n) {
@@ -290,17 +292,24 @@ nameless_relation_string <- function(id, attrs, keys) {
     character(1)
   )
   columns_string <- paste(column_typing_info, collapse = "\n")
+  label <- paste0(
+    "    <TR><TD COLSPAN=\"", length(keys) + 2, "\">",
+    relation_name,
+    "</TD></TR>",
+    "\n",
+    columns_string
+  )
 
   paste0(
     "  ",
-    id,
+    rel_snake,
     " ",
     "[label = <",
     "\n",
     "    ",
     "<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
     "\n",
-    columns_string,
+    label,
     "\n    </TABLE>>];"
   )
 }
@@ -323,17 +332,18 @@ reference_string <- function(reference) {
   )
 }
 
-dbs_reference_string <- function(reference) {
+dbs_reference_string <- function(reference, relation_names) {
+  reference[[1]] <- relation_names[reference[[1]]]
   paste0(
     "  ",
     paste(
-      snakecase::to_snake_case(as.character(reference[[1]][1])),
+      snakecase::to_snake_case(reference[[1]][1]),
       paste0("FROM_", snakecase::to_snake_case(reference[[2]])),
       sep = ":"
     ),
     " -> ",
     paste(
-      snakecase::to_snake_case(as.character(reference[[1]][2])),
+      snakecase::to_snake_case(reference[[1]][2]),
       paste0("TO_", snakecase::to_snake_case(reference[[2]])),
       sep = ":"
     ),

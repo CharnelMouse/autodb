@@ -26,6 +26,7 @@ cross_reference <- function(scheme, ensure_lossless = TRUE) {
   all_attrs <- scheme$all_attrs
   attrs <- scheme$attrs
   keys <- scheme$keys
+  relation_names <- scheme$relation_names
 
   if (ensure_lossless) {
     G <- synthesised_fds(attrs, keys)
@@ -37,6 +38,7 @@ cross_reference <- function(scheme, ensure_lossless = TRUE) {
       new_key <- minimal_subset(all_attrs, all_attrs, G_det_sets, G_deps)
       attrs <- c(attrs, list(new_key))
       keys <- c(keys, list(list(new_key)))
+      relation_names <- c(relation_names, paste(new_key, collapse = "_"))
     }
   }
 
@@ -60,7 +62,8 @@ cross_reference <- function(scheme, ensure_lossless = TRUE) {
       attrs = attrs,
       keys = keys,
       parents = parents,
-      relationships = relationships
+      relationships = relationships,
+      relation_names = relation_names
     ),
     class = c("database_scheme", "list")
   )
