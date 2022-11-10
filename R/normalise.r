@@ -543,8 +543,6 @@ convert_to_character_attributes <- function(vecs) {
 }
 
 find_closure <- function(attrs, determinant_sets, dependents) {
-  # if (!is.integer(attrs))
-  #   stop(paste("attr is", toString(class(attrs))))
   if (length(dependents) == 0)
     return(attrs)
   for (n in seq_along(dependents)) {
