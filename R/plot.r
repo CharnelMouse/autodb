@@ -73,7 +73,7 @@ gv <- function(x, ...) {
 gv.database <- function(x, ...) {
   setup_string <- gv_setup_string(x$name)
   df_strings <- mapply(
-    df_string,
+    relation_string,
     x$tables,
     names(x$tables)
   ) |>
@@ -121,7 +121,7 @@ gv.database <- function(x, ...) {
 gv.database_scheme <- function(x, name = NA_character_, ...) {
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
-    nameless_relation_string,
+    relation_scheme_string,
     x$attrs,
     x$keys,
     x$relation_names
@@ -164,7 +164,7 @@ gv.database_scheme <- function(x, name = NA_character_, ...) {
 #' @exportS3Method
 gv.data.frame <- function(x, name, ...) {
   setup_string <- gv_setup_string(name)
-  table_string <- df_string(list(df = x, keys = list()), name)
+  table_string <- relation_string(list(df = x, keys = list()), name)
   teardown_string <- "}\n"
   paste(
     setup_string,
@@ -186,7 +186,7 @@ gv_setup_string <- function(df_name) {
   )
 }
 
-df_string <- function(dataframe, df_name) {
+relation_string <- function(dataframe, df_name) {
   df <- dataframe$df
   keys <- dataframe$keys
   df_snake <- snakecase::to_snake_case(df_name)
@@ -246,7 +246,7 @@ df_string <- function(dataframe, df_name) {
   )
 }
 
-nameless_relation_string <- function(attrs, keys, relation_name) {
+relation_scheme_string <- function(attrs, keys, relation_name) {
   col_names <- attrs
   col_snake <- snakecase::to_snake_case(col_names)
   rel_snake <- snakecase::to_snake_case(relation_name)
