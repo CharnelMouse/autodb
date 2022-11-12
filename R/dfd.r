@@ -464,22 +464,6 @@ has_nondependency_superset <- function(node, nodes) {
 }
 
 pick_next_node <- function(node, nodes, trace, min_deps, max_non_deps) {
-  # Picks the next node to look at. If current node is a candidate minimum
-  # dependency looks for unchecked subsets. If no unchecked subsets that could
-  # be a dependency, current node must be a minimum dependency. Otherwise,
-  # check an unchecked subset.
-  # If current node is a candidate maximal dependnecy, look for unchecked
-  # supersets. If no unchecked supersets that could be a non-dependency,
-  # it must be a maximum non-dependency. Otherwise, check an unchecked superset.
-  # If not a candidate, return last node on trace (go back down in graph)
-  # Arguments:
-  #     node (int) : current node just visited
-  #     trace (list[int]) : stack of past nodes visited
-  #     min_deps (list[int]) : discovered minimum dependencies
-  #     max_non_deps (list[int]) : discovered maximum non-dependencies
-  # Returns:
-  #     next_node (int or NA) : next node to look at, NA if none left
-  #     to check in currrent part of graph
   if (nodes$category[node] == 3) { # candidate dependency
     s <- unchecked_subsets(node, nodes)
     s <- remove_pruned_subsets(s, min_deps, nodes$bits)
@@ -519,12 +503,6 @@ unchecked_supersets <- function(index, nodes) {
 }
 
 remove_pruned_subsets <- function(subsets, supersets, bitsets) {
-  # Removes all pruned subsets. A subset can be pruned when it is a
-  # subset of an existing discovered minimum dependency (because we
-  # thus know it is a non-dependency)
-  # Arguments:
-  #     subsets (list[int]) : list of subset nodes
-  #     min_deps (list[int]) : discovered minimal dependencies
   if (length(subsets) == 0 || length(supersets) == 0)
     return(subsets)
   check_pairs <- outer(
@@ -537,12 +515,6 @@ remove_pruned_subsets <- function(subsets, supersets, bitsets) {
 }
 
 remove_pruned_supersets <- function(supersets, subsets, bitsets) {
-  # Removes all pruned supersets. A superset can be pruned when it is
-  # a superset of an existing discovered maximal non-dependency (because
-  # we thus know it is a dependency)
-  # Arguments:
-  #     supersets (list[int]) : list of superset nodes
-  #     max_non_deps (list[int]) : discovered maximal non-dependencies
   if (length(subsets) == 0 || length(supersets) == 0)
     return(supersets)
   check_pairs <- outer(
