@@ -366,17 +366,6 @@ construct_relation_schemes <- function(vecs) {
                   setdiff(bijection_set) |>
                   union(primary) |>
                   sort()
-                # new_keys <- keys
-                # new_keys[[key_el_ind]] <- new_keys[[key_el_ind]] |>
-                #   setdiff(bijection_set) |>
-                #   union(primary) |>
-                #   sort()
-                # vecs$flat_partition_determinant_set[partition_index] <-
-                #   new_keys[match(
-                #     vecs$flat_partition_determinant_set[partition_index],
-                #     keys
-                #   )]
-                # keys <- new_keys
               }
             }
           }
