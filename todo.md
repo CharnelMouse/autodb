@@ -1,3 +1,4 @@
+- possibly add attribute types to database schemes, as this is the norm for real databases
 - cross_intersection still converts to full bitset instead of shorted logical vectors
 - add error checking for decompose for norm_deps not matching data.frame
 - add lookup maps for quicker subsetting
@@ -6,4 +7,3 @@
 - powerset creation is still slow
 - move relation matrix setdiff into relation matrix function
 - options for putting the constant attributes elsewhere?
-- add names to relation schemes, since this seems to be the norm
