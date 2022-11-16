@@ -33,6 +33,10 @@
 #'   as described in Section 3.5 of the original paper.
 #'   \item Missing values (NA) are treated as a normal value, with NA = NA being
 #'   true, and x = NA being false for any non-NA value of x.
+#'   \item Attributes that have a single unique value, i.e. are constant, get
+#'   attributed a single empty determinant set, instead of all possible
+#'   length-one determinant sets. This distinguishes them as constant, allowing
+#'   for special treatment at normalisation and later steps.
 #' }
 #' @param df a data.frame, the relation to evaluate.
 #' @param accuracy a numeric in (0, 1]: the accuracy threshold required in order

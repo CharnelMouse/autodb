@@ -57,6 +57,10 @@ resulting decomposition is lossless, i.e. a relation satisfying the given
 dependencies can be perfectly reconstructed from the relations given by the
 decomposition. This is done by adding an additional relation, containing a
 key for all the original attributes, if one is not already present.
+
+Constant attributes, i.e. those with whose only determinant set is empty, get
+assigned to a relation with no keys, which is assigned the name "constants"
+before ensuring that relation names are unique.
 }
 \references{
 Bernstein YEAR, TITLE.

@@ -1,3 +1,26 @@
+#' Join a database into a single flat table
+#'
+#' Rejoins the tables in a database. This is the inverse of calling
+#' \code{\link{autonorm}} with \code{accuracy} set to 1, except that the rows
+#' and columns might be returned in a different order.
+#'
+#' The rejoining algorithm might not use all of the given tables: it begins with
+#' the table with the largest number of rows, then joins it with enough tables
+#' to contain all of the present attributes. This may not include all of the
+#' tables that the starting table is linked to by foreign keys, and is not
+#' limited to them either, since in some cases these constraints make it
+#' impossible to rejoin with all of the present attributes.
+#'
+#' If the database is inconsistent, where the unused tables contain additional
+#' information, then the rejoining will be lossy. The algorithm does not check
+#' for this consistency violation.
+#'
+#' @param database A database containing the data to be rejoined, as returned by
+#'   \code{\link{decompose}}.
+#'
+#' @return A data frame, containing all information contained \code{database} if
+#'   it is lossless and self-consistent.
+#' @export
 rejoin <- function(database) {
   tables <- database$tables
   if (length(tables) == 0)

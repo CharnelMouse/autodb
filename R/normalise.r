@@ -13,6 +13,10 @@
 #' decomposition. This is done by adding an additional relation, containing a
 #' key for all the original attributes, if one is not already present.
 #'
+#' Constant attributes, i.e. those with whose only determinant set is empty, get
+#' assigned to a relation with no keys, which is assigned the name "constants"
+#' before ensuring that relation names are unique.
+#'
 #' @param dependencies a list of functional dependencies, as given by
 #'   \code{\link{flatten}}: each dependency is a list, contained one character
 #'   vector for the left-hand size, and one unit-length character vector for the
