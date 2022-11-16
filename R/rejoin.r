@@ -27,7 +27,6 @@ rejoin <- function(database) {
     return(data.frame())
   if (length(tables) == 1)
     return(tables[[1]]$df)
-  relationships <- database$relationships
   attrs <- lapply(tables, \(tb) names(tb$df))
   all_attrs <- unique(unlist(attrs))
   keys <- lapply(tables, \(tb) tb$keys)
