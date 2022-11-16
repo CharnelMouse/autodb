@@ -194,6 +194,36 @@ describe("normalise", {
     norm_deps2 <- normalise(dependencies2)
     expect_identical(norm_deps, norm_deps2)
   })
+  it("gives unique names to all tables", {
+    gets_unique_table_names <- function(fds) {
+      expect_true(!anyDuplicated(normalise(fds)$relation_names))
+    }
+    forall(
+      gen_flat_deps(7, 20), # need to generate more complex names: [A-Z_ ], maybe
+      gets_unique_table_names
+    )
+  })
+  it("gives unique non-zero-length names to tables", {
+    gets_nonempty_table_names <- function(fds) {
+      nms <- normalise(fds)$relation_names
+      expect_true(all(nchar(nms) > 0))
+      expect_true(!anyDuplicated(nms))
+    }
+    forall(
+      gen_flat_deps(7, 20),
+      gets_nonempty_table_names
+    )
+  })
+  it("can only return up to one relation scheme with no keys", {
+    has_up_to_one_keyless_relation_scheme <- function(fds) {
+      keys <- normalise(fds)$keys
+      expect_lte(sum(lengths(keys) == 0), 1)
+    }
+    forall(
+      gen_flat_deps(7, 20),
+      has_up_to_one_keyless_relation_scheme
+    )
+  })
   it("can remove avoidable attributes", {
     # example 6.24 from Maier
     # A <-> B, AC -> D, AC -> E, BD -> C
@@ -327,7 +357,7 @@ describe("keys_order", {
     forall(gen.sample.int(100, 10), sorts_input_to_itself)
   })
   it("orders by length first", {
-    gen_el <- generate(for (n in gen.int(4)) {
+    gen_el <- generate(for (n in gen.sample(0:4, 1)) {
       generate(for (start in gen.int(10)) {
         as.integer(start - 1L + seq_len(n))
       })

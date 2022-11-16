@@ -31,16 +31,21 @@ describe("cross_reference", {
         linked <- cross_reference(scheme)
         relationship_tables <- lapply(linked$relationships, `[[`, 1)
         relationship_attrs <- vapply(linked$relationships, `[[`, character(1), 2)
-        link_sets <- tapply(
-          relationship_attrs,
-          as.data.frame(do.call(rbind, relationship_tables)),
-          \(as) sort(unique(as))
-        )
-        for (column in seq_len(ncol(link_sets))) {
-          parent <- strtoi(colnames(link_sets)[column])
-          attribute_sets <- link_sets[, column]
-          attribute_sets <- attribute_sets[!vapply(attribute_sets, is.null, logical(1))]
-          expect_lte(length(setdiff(attribute_sets, linked$keys[[parent]])), 1)
+        tables_index <- as.data.frame(do.call(rbind, relationship_tables))
+        if (nrow(tables_index) == 0)
+          succeed()
+        else{
+          link_sets <- tapply(
+            relationship_attrs,
+            tables_index,
+            \(as) sort(unique(as))
+          )
+          for (column in seq_len(ncol(link_sets))) {
+            parent <- strtoi(colnames(link_sets)[column])
+            attribute_sets <- link_sets[, column]
+            attribute_sets <- attribute_sets[!vapply(attribute_sets, is.null, logical(1))]
+            expect_lte(length(setdiff(attribute_sets, linked$keys[[parent]])), 1)
+          }
         }
       }
     }

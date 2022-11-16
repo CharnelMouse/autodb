@@ -414,7 +414,7 @@ describe("dfd", {
       Author = list("Title"),
       Author_Nationality = list("Author"),
       Price = list(c("Title", "Format")),
-      Thickness = list("Title"),
+      Thickness = list(character()),
       Genre_ID = list("Title"),
       Genre_Name = list("Genre_ID"),
       Publisher_ID = list("Title")

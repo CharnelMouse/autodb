@@ -71,11 +71,6 @@ dfd <- function(
       dependencies = stats::setNames(list(), character()),
       attrs = character()
     ))
-  if (n_cols == 1)
-    return(list(
-      dependencies = stats::setNames(list(list()), column_names),
-      attrs = column_names
-    ))
   if (any(!is.element(exclude, column_names)))
     warning("there are attribute names in exclude not present in df")
   valid_determinant_name <- !is.element(column_names, exclude)
@@ -103,10 +98,7 @@ dfd <- function(
     if (all(is.na(df[[attr]])) || all(df[[attr]] == df[[attr]][1])) {
       fixed <- report$op(fixed, c, paste(attr, "is fixed"), attr)
       nonfixed <- setdiff(nonfixed, attr)
-      dependencies[[attr]] <- as.list(setdiff(
-        valid_determinant_attrs_prefixing,
-        attr
-      ))
+      dependencies[[attr]] <- list(character())
     }
   }
   if (progress && any(!valid_determinant)) {

@@ -84,8 +84,8 @@ gen_df_vary_classes <- function(nrow, ncol, nonempty = FALSE, remove_dup_rows = 
   })
 }
 
-gen_nonempty_subsequence <- function(x) {
-  generate(for (n in gen.int(length(x))) {
+gen_subsequence <- function(x) {
+  generate(for (n in gen.sample(seq.int(0, length(x)), 1)) {
     generate(for (sample in gen.sample(x, n)) {
       sort(sample)
     })
@@ -93,7 +93,7 @@ gen_nonempty_subsequence <- function(x) {
 }
 
 gen_det <- function(n, attr) {
-  gen_nonempty_subsequence(LETTERS[seq_len(n)][-attr])
+  gen_subsequence(LETTERS[seq_len(n)][-attr])
 }
 
 gen_dets <- function(n, attr, max_dets) {

@@ -87,6 +87,7 @@ normalise <- function(
     \(keys) name_dataframe(keys[[1]]),
     character(1)
   )
+  relation_names[nchar(relation_names) == 0] <- "constants"
   stopifnot(!anyDuplicated(relation_names))
   inter$relation_names <- relation_names
   structure(inter, class = c("database_scheme", "list"))
@@ -589,7 +590,7 @@ keys_order_same_lengths <- function(keys) {
   len <- length(keys[[1]])
   stopifnot(all(lengths(keys) == len))
   if (len == 0)
-    return(seq_len(keys))
+    return(seq_along(keys))
   els_by_place <- do.call(Map, c(c, keys))
   do.call(order, els_by_place)
 }
