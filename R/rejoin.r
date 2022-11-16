@@ -6,10 +6,10 @@
 #'
 #' The rejoining algorithm might not use all of the given tables: it begins with
 #' the table with the largest number of rows, then joins it with enough tables
-#' to contain all of the present attributes. This may not include all of the
-#' tables that the starting table is linked to by foreign keys, and is not
-#' limited to them either, since in some cases these constraints make it
-#' impossible to rejoin with all of the present attributes.
+#' to contain all of the present attributes. This is not limited to tables that
+#' the starting table is linked to by foreign keys, and is not limited to them
+#' either, since in some cases this constraint would make it impossible to
+#' rejoin with all of the present attributes.
 #'
 #' If the database is inconsistent, where the unused tables contain additional
 #' information, then the rejoining will be lossy. The algorithm does not check
