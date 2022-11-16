@@ -1,4 +1,5 @@
 - possibly add attribute types to database schemes, as this is the norm for real databases
+- add more comprehensive checking of attribute/table name uniqueness (especially with the constants table currently having its name hard-coded)
 - cross_intersection still converts to full bitset instead of shorted logical vectors
 - add error checking for decompose for norm_deps not matching data.frame
 - add lookup maps for quicker subsetting
@@ -6,4 +7,4 @@
 - add option for introducing artificial keys
 - powerset creation is still slow
 - move relation matrix setdiff into relation matrix function
-- options for putting the constant attributes elsewhere?
+- export reduce(), possible after making it return a "partial_database" type that can't be used in rejoin()
