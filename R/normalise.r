@@ -559,15 +559,21 @@ name_dataframe <- function(index) {
 find_closure <- function(attrs, determinant_sets, dependents) {
   if (length(dependents) == 0)
     return(attrs)
-  for (n in seq_along(dependents)) {
-    det_set <- determinant_sets[[n]]
-    dep <- dependents[n]
-    if (length(dep) != 1)
-      stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(dep)))
-    if (all(is.element(det_set, attrs))) {
-      if (!is.element(dep, attrs))
-        attrs <- c(attrs, dep)
-      return(find_closure(attrs, determinant_sets[-n], dependents[-n]))
+  checked <- rep(FALSE, length(dependents))
+  change <- TRUE
+  while (change) {
+    change <- FALSE
+    for (n in seq_along(dependents)[!checked]) {
+      det_set <- determinant_sets[[n]]
+      dep <- dependents[n]
+      if (length(dep) != 1)
+        stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(dep)))
+      if (all(is.element(det_set, attrs))) {
+        checked[n] <- TRUE
+        if (!is.element(dep, attrs))
+          change <- TRUE
+          attrs <- c(attrs, dep)
+      }
     }
   }
   attrs
