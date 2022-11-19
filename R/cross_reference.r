@@ -63,7 +63,8 @@ cross_reference <- function(scheme, ensure_lossless = TRUE) {
       keys = keys,
       parents = parents,
       relationships = relationships,
-      relation_names = relation_names
+      relation_names = relation_names,
+      all_attrs = all_attrs
     ),
     class = c("database_scheme", "list")
   )

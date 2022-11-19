@@ -145,6 +145,19 @@ describe("cross_reference", {
       tests = 1000
     )
   })
+  it("adds table with key with attributes in original order", {
+    adds_ordered_primary_keys <- function(fds) {
+      scheme <- cross_reference(normalise(fds), ensure_lossless = TRUE)
+      all_keys <- unlist(scheme$keys, recursive = FALSE)
+      key_indices <- lapply(all_keys, match, scheme$all_attrs)
+      expect_false(any(vapply(key_indices, is.unsorted, logical(1))))
+    }
+    forall(
+      gen_flat_deps(7, 20),
+      adds_ordered_primary_keys,
+      tests = 1000
+    )
+  })
   it("only return non-extraneous table relationships", {
     only_returns_non_extraneous_relationships <- function(df) {
       scheme <- normalise(flatten(dfd(df, 1)))
@@ -180,7 +193,8 @@ describe("cross_reference", {
             keys = list(list(key)),
             parents = list(integer()),
             relationships = list(),
-            relation_names = paste(key, collapse = "_")
+            relation_names = paste(key, collapse = "_"),
+            all_attrs = letters[1:10]
           ),
           class = c("database_scheme", "list")
         )
@@ -199,10 +213,11 @@ describe("cross_reference", {
         attrs = relation$attrs[[1]]
       ))
       redo <- cross_reference(normalise(deps), ensure_lossless = TRUE)
-      expect_identical(redo, relation)
       expect_length(redo$attrs, 1)
       expect_identical(redo$attrs[[1]], relation$attrs[[1]])
       expect_identical(redo$keys[[1]], relation$keys[[1]])
+      expect_identical(redo$relation_names, relation$relation_names)
+      expect_setequal(redo$all_attrs, relation$all_attrs)
     }
     forall(gen.relation, returns_itself)
   })

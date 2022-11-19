@@ -38,6 +38,7 @@
 normalise <- function(
   dependencies,
   remove_avoidable = FALSE,
+  constants_name = "constants",
   progress = 0L,
   progress_file = ""
 ) {
@@ -91,7 +92,10 @@ normalise <- function(
     \(keys) name_dataframe(keys[[1]]),
     character(1)
   )
-  relation_names[nchar(relation_names) == 0] <- "constants"
+  relation_names[nchar(relation_names) == 0] <- constants_name
+  if (!missing(constants_name) && sum(relation_names == constants_name) > 1)
+    warning("constants_name appears in generated relation names, and will be changed to keep relation names unique")
+  relation_names <- make.names(relation_names, unique = TRUE)
   stopifnot(!anyDuplicated(relation_names))
   inter$relation_names <- relation_names
   structure(inter, class = c("database_scheme", "list"))
@@ -458,7 +462,12 @@ remove_avoidable_attributes <- function(vecs) {
             # <-> BD would result in the latter losing B and only having key AC
             # remaining, when it should get AD. We therefore use a variation of
             # how a minimal replacement is found in Maier.
-            replacement <- minimal_subset(Mp, relation_attrs, G_det_sets, G_deps)
+            replacement <- sort(minimal_subset(
+              Mp,
+              relation_attrs,
+              G_det_sets,
+              G_deps
+            ))
             if (!is.element(list(replacement), Kp))
               Kp <- c(Kp, list(replacement))
           }
@@ -534,7 +543,7 @@ minimal_subset <- function(
       }
     }
   }
-  sort(key[keep])
+  key[keep]
 }
 
 convert_to_character_attributes <- function(vecs) {

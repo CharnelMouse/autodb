@@ -84,49 +84,70 @@ gen_df_vary_classes <- function(nrow, ncol, nonempty = FALSE, remove_dup_rows = 
   })
 }
 
-gen_subsequence <- function(x) {
-  generate(for (n in gen.sample(seq.int(0, length(x)), 1)) {
-    generate(for (sample in gen.sample(x, n)) {
-      sort(sample)
+gen_attr_name <- function(len) {
+  generate(for (clen in gen.int(len)) {
+    generate(for (attr_name in gen.sample(c(letters, "_", " ", "."), clen)) {
+      paste(attr_name, collapse = "")
     })
   })
 }
 
-gen_det <- function(n, attr) {
-  gen_subsequence(LETTERS[seq_len(n)][-attr])
+gen_attr_names <- function(n, len) {
+  generate(for (attr_names in gen.c(gen_attr_name(len), of = n)) {
+    make.unique(attr_names)
+  })
 }
 
-gen_dets <- function(n, attr, max_dets) {
+gen_subsequence <- function(x) {
+  generate(for (n in gen.sample(seq.int(0, length(x)), 1)) {
+    generate(for (sample in gen.sample(x, n)) {
+      sample[order(match(sample, x))]
+    })
+  })
+}
+
+gen_det <- function(n_attrs, n) {
+  gen_subsequence(setdiff(seq_len(n_attrs), n))
+}
+
+gen_dets <- function(n_attrs, n, max_dets) {
   gen.list(
-    gen_det(n, attr),
+    gen_det(n_attrs, n),
     from = 0,
-    to = min(max_dets, n - 1)
+    to = min(max_dets, n_attrs - 1)
   )
 }
 
-gen_unique_dets <- function(n, attr, max_dets) {
+gen_unique_dets <- function(n_attrs, n, max_dets) {
   # should also check no redundancy
-  generate(for (dets in gen_dets(n, attr, min(max_dets, n - 1))) {
+  generate(for (dets in gen_dets(
+    n_attrs,
+    n,
+    min(max_dets, n_attrs - 1)
+  )) {
     unique(dets)
   })
 }
 
-gen_unnamed_flat_deps <- function(n, max_dets) {
-  generate(for (n_attrs in gen.sample(seq.int(0, n), 1)) {
-    lapply(
-      seq_len(n_attrs),
-      function(attr) gen_unique_dets(n_attrs, attr, min(max_dets, n_attrs - 1))
-    )
-  })
+gen_unnamed_flat_deps <- function(n_attrs, max_dets) {
+  md <- min(max_dets, n_attrs - 1)
+  gen.structure(lapply(
+    seq_len(n_attrs),
+    function(n) {
+      gen_unique_dets(n_attrs, n, md)
+    }
+  ))
 }
 
-gen_flat_deps <- function(n, max_dets) {
-  generate(for (unnamed_deps in gen_unnamed_flat_deps(n, max_dets)) {
-      attrs <- LETTERS[seq_along(unnamed_deps)]
-      names(unnamed_deps) <- attrs
+gen_flat_deps <- function(n, max_dets, len = 9) {
+  generate(for (attrs in gen_attr_names(n, len)) {
+    generate(for (unnamed_deps in gen_unnamed_flat_deps(length(attrs), max_dets)) {
+      unindexed_deps <- lapply(unnamed_deps, \(ud) lapply(ud, \(cs) attrs[cs]))
+      names(unindexed_deps) <- attrs
       flatten(list(
-        dependencies = unnamed_deps,
+        dependencies = unindexed_deps,
         attrs = attrs
       ))
+    })
   })
 }

@@ -7,6 +7,9 @@ describe("normalise", {
       structure(target, class = c("database_scheme", "list"))
     )
   }
+  gets_unique_table_names <- function(fds) {
+    expect_true(!anyDuplicated(normalise(fds)$relation_names))
+  }
 
   it("doesn't change relation attribute order if dependencies are reordered", {
     df <- data.frame(
@@ -195,11 +198,8 @@ describe("normalise", {
     expect_identical(norm_deps, norm_deps2)
   })
   it("gives unique names to all tables", {
-    gets_unique_table_names <- function(fds) {
-      expect_true(!anyDuplicated(normalise(fds)$relation_names))
-    }
     forall(
-      gen_flat_deps(7, 20), # need to generate more complex names: [A-Z_ ], maybe
+      gen_flat_deps(7, 20),
       gets_unique_table_names
     )
   })
@@ -212,6 +212,33 @@ describe("normalise", {
     forall(
       gen_flat_deps(7, 20),
       gets_nonempty_table_names
+    )
+  })
+  it("gives unique names if constants appears in attribute names and via constant attributes", {
+    fds <- list(
+      dependencies = list(
+        list("constants", "a"),
+        list(character(), "b")
+      ),
+      attrs = c("constants", "a", "b")
+    )
+    gets_unique_table_names(fds)
+  })
+  it("gives keys with attributes in original order", {
+    gives_ordered_attributes_in_keys <- function(fds) {
+      scheme <- normalise(fds)
+      all_keys <- unlist(scheme$keys, recursive = FALSE)
+      key_indices <- lapply(all_keys, match, scheme$all_attrs)
+      expect_false(any(vapply(key_indices, is.unsorted, logical(1))))
+
+      scheme2 <- normalise(fds, remove_avoidable = TRUE)
+      all_keys2 <- lapply(scheme2$keys, "[[", 1)
+      key_indices2 <- lapply(all_keys2, match, scheme2$all_attrs)
+      expect_false(any(vapply(key_indices2, is.unsorted, logical(1))))
+    }
+    forall(
+      gen_flat_deps(7, 20),
+      gives_ordered_attributes_in_keys
     )
   })
   it("can only return up to one relation scheme with no keys", {

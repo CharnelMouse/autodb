@@ -7,6 +7,7 @@
 normalise(
   dependencies,
   remove_avoidable = FALSE,
+  constants_name = "constants",
   progress = 0L,
   progress_file = ""
 )
@@ -21,6 +22,11 @@ right-hand side.}
 attributes in tables. If so, then an attribute are removed from tables if
 the keys can be changed such that it is not needed to preserve the given
 functional dependencies.}
+
+\item{constants_name}{a scalar character, giving the name for any table
+created to store constant attributes. If this is the same as a generated
+table name, it will be changed, with a warning, to ensure that all tables
+have a unique name.}
 
 \item{progress}{an integer, for whether to display progress to the user. 0
 (default) displays nothing. 1 notes the start of finding each non-constant

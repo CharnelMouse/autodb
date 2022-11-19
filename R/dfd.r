@@ -70,6 +70,12 @@ dfd <- function(
 
   n_cols <- ncol(df)
   column_names <- colnames(df)
+  duplicates <- which(duplicated(column_names))
+  if (length(duplicates) > 0) {
+    dup_names <- unique(column_names[duplicates])
+    sorted_dup_names <- dup_names[order(match(dup_names, column_names))]
+    stop("duplicate column names: ", toString(sorted_dup_names))
+  }
   if (n_cols == 0)
     return(list(
       dependencies = stats::setNames(list(), character()),

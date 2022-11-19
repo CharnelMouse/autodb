@@ -427,4 +427,8 @@ describe("dfd", {
     deps <- dfd(df, 1)
     expect_identical(deps$dependencies$`A 1`, list(c("B 2", "C 3")))
   })
+  it("expects attribute names to be unique", {
+    df <- data.frame(A = 1:3, B = c(1, 1, 2), A = c(1, 2, 2), check.names = FALSE)
+    expect_error(dfd(df, 1), "^duplicate column names: A$")
+  })
 })
