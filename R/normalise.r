@@ -53,7 +53,7 @@ normalise <- function(
     sort_key_contents() |>
     report$op(
       remove_extraneous_attributes,
-      "removing extraneuous components"
+      "removing extraneous components"
     ) |>
     remove_extraneous_dependencies() |>
     report$op(
