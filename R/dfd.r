@@ -637,7 +637,17 @@ approximate_dependencies <- function(lhs_set, rhs, df, partitions, n_rows, accur
   }
   splitted <- df[[rhs]]
   splitter <- df[, lhs_set, drop = FALSE]
-  total_to_remove <- split(splitted, splitter, drop = TRUE) |>
-    Reduce(f = function(n, rhs_vals) n + n_remove(rhs_vals), init = 0)
+  # split() takes a long time with multiple splitters, due to interaction().
+  # since splitters are integers, we can just paste them together.
+  strs <- do.call(
+    mapply,
+    c(list(FUN = paste, SIMPLIFY = FALSE), splitter)
+  )
+  single_splitter <- unlist(strs)
+  total_to_remove <- sum(vapply(
+    split(splitted, single_splitter, drop = TRUE),
+    n_remove,
+    integer(1)
+  ))
   list(total_to_remove <= limit, partitions)
 }
