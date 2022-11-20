@@ -604,13 +604,15 @@ compute_partitions <- function(df, rhs, lhs_set, partitions, accuracy) {
 }
 
 exact_dependencies <- function(df, rhs, lhs_set, partitions) {
-  res1 <- partition_nclass(union(lhs_set, rhs), df, partitions)
-  part_rhs <- res1[[1]]
+  res1 <- partition_nclass(lhs_set, df, partitions)
+  part_lhs <- res1[[1]]
   partitions <- res1[[2]]
-  res2 <- partition_nclass(lhs_set, df, partitions)
-  part_lhs <- res2[[1]]
+  if (part_lhs == 0)
+    return(list(TRUE, partitions))
+  res2 <- partition_nclass(union(lhs_set, rhs), df, partitions)
+  part_union <- res2[[1]]
   partitions <- res2[[2]]
-  list(part_rhs == part_lhs, partitions)
+  list(part_union == part_lhs, partitions)
 }
 
 partition_nclass <- function(attrs, df, partitions) {
