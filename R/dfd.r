@@ -596,8 +596,9 @@ minimise_seeds <- function(seeds, bitsets) {
 
 compute_partitions <- function(df, rhs, lhs_set, partitions, accuracy) {
   n_rows <- nrow(df)
-  if (accuracy < 1)
-    approximate_dependencies(lhs_set, rhs, df, partitions, n_rows, accuracy)
+  threshold <- ceiling(n_rows*accuracy)
+  if (threshold < n_rows)
+    approximate_dependencies(lhs_set, rhs, df, partitions, threshold)
   else
     exact_dependencies(df, rhs, lhs_set, partitions)
 }
@@ -628,12 +629,11 @@ partition_nclass <- function(attrs, df, partitions) {
   list(n_remove, partitions)
 }
 
-approximate_dependencies <- function(lhs_set, rhs, df, partitions, n_rows, accuracy) {
+approximate_dependencies <- function(lhs_set, rhs, df, partitions, threshold) {
   # This is a quick working version I put together to replace the non-working
   # original. There's a known better way to do this, see TANE section 2.3s.
-  limit <- n_rows * (1 - accuracy)
-  n_remove <- function(x) {
-    length(x) - max(tabulate(x))
+  majority_size <- function(x) {
+    max(tabulate(x))
   }
   splitted <- df[[rhs]]
   splitter <- df[, lhs_set, drop = FALSE]
@@ -644,10 +644,10 @@ approximate_dependencies <- function(lhs_set, rhs, df, partitions, n_rows, accur
     c(list(FUN = paste, SIMPLIFY = FALSE), splitter)
   )
   single_splitter <- unlist(strs)
-  total_to_remove <- sum(vapply(
+  majorities_total <- sum(vapply(
     split(splitted, single_splitter, drop = TRUE),
-    n_remove,
+    majority_size,
     integer(1)
   ))
-  list(total_to_remove <= limit, partitions)
+  list(majorities_total >= threshold, partitions)
 }
