@@ -623,10 +623,73 @@ exact_dependencies <- function(df, rhs, lhs_set, partitions, cache = FALSE) {
   list(part_union == part_lhs, partitions)
 }
 
+approximate_dependencies <- function(lhs_set, rhs, df, partitions, threshold, cache = FALSE) {
+  partition <- if (cache) partition_stripped else partition_nclass
+
+  # cheaper bounds checks:
+  # nrow(df) - (part_lhs - part_union) <= majorities_total <= nrow(df) - part_lhs
+  limit <- nrow(df) - threshold
+  res1 <- partition(lhs_set, df, partitions)
+  part_lhs <- res1[[1]]
+  partitions <- res1[[2]]
+  if (part_lhs <= limit)
+    return(list(TRUE, partitions))
+  res2 <- partition(union(lhs_set, rhs), df, partitions)
+  part_union <- res2[[1]]
+  partitions <- res2[[2]]
+  if (part_lhs - part_union > limit)
+    return(list(FALSE, partitions))
+
+  if (cache) {
+    # e(lhs_set -> rhs)
+    ind_lhs <- match(list(sort(lhs_set)), partitions$set)
+    stopifnot(!is.na(ind_lhs))
+    classes_lhs <- partitions$value[[ind_lhs]]
+    ind_union <- match(list(sort(union(lhs_set, rhs))), partitions$set)
+    stopifnot(!is.na(ind_union))
+    classes_union <- partitions$value[[ind_union]]
+    e <- 0L
+    Ts <- integer()
+    for (c in classes_union) {
+      Ts[c[1]] <- length(c)
+    }
+    for (c in classes_lhs) {
+      m <- 1L
+      for (ts in c) {
+        m <- max(m, Ts[ts], na.rm = TRUE)
+      }
+      e <- e + length(c) - m
+    }
+    list(e <= limit, partitions)
+  }else{
+    # This is a quick working version I put together to replace the non-working
+    # original. The quicker version from Tane requires cache = TRUE for stripped
+    # partition information.
+    majority_size <- function(x) {
+      max(tabulate(x))
+    }
+    splitted <- df[[rhs]]
+    splitter <- df[, lhs_set, drop = FALSE]
+    # split() takes a long time with multiple splitters, due to interaction().
+    # since splitters are integers, we can just paste them together.
+    strs <- do.call(
+      mapply,
+      c(list(FUN = paste, SIMPLIFY = FALSE), splitter)
+    )
+    single_splitter <- unlist(strs)
+    majorities_total <- sum(vapply(
+      split(splitted, single_splitter, drop = TRUE),
+      majority_size,
+      integer(1)
+    ))
+    list(majorities_total >= threshold, partitions)
+  }
+}
+
 partition_nclass <- function(attrs, df, partitions) {
   # This only returns the number |p| of equivalence classes in the partition p,
-  # not its contents. This is less demanding on memory, but we cannot
-  # efficiently calculate the partition for supersets.
+  # not its contents. This is less demanding on memory than storing stripped
+  # partitions, but we cannot efficiently calculate the partition for supersets.
   attrs_set <- sort(attrs)
   index <- match(list(attrs_set), partitions$set)
   if (!is.na(index)) {
@@ -693,67 +756,5 @@ stripped_partition_product <- function(sp1, sp2, n_rows) {
   in_both <- which(!is.na(tab) & !is.na(tab2))
   tab_both[in_both] <- paste(tab[in_both], tab2[in_both])
   sp <- split(seq_len(n_rows), tab_both)
-  sp[lengths(sp) >= 2]
-}
-
-approximate_dependencies <- function(lhs_set, rhs, df, partitions, threshold, cache = FALSE) {
-  partition <- if (cache) partition_stripped else partition_nclass
-
-  # cheaper bounds checks:
-  # nrow(df) - (part_lhs - part_union) <= majorities_total <= nrow(df) - part_lhs
-  limit <- nrow(df) - threshold
-  res1 <- partition(lhs_set, df, partitions)
-  part_lhs <- res1[[1]]
-  partitions <- res1[[2]]
-  if (part_lhs <= limit)
-    return(list(TRUE, partitions))
-  res2 <- partition(union(lhs_set, rhs), df, partitions)
-  part_union <- res2[[1]]
-  partitions <- res2[[2]]
-  if (part_lhs - part_union > limit)
-    return(list(FALSE, partitions))
-
-  if (cache) {
-    # e(lhs_set -> rhs)
-    ind_lhs <- match(list(sort(lhs_set)), partitions$set)
-    stopifnot(!is.na(ind_lhs))
-    classes_lhs <- partitions$value[[ind_lhs]]
-    ind_union <- match(list(sort(union(lhs_set, rhs))), partitions$set)
-    stopifnot(!is.na(ind_union))
-    classes_union <- partitions$value[[ind_union]]
-    e <- 0L
-    Ts <- integer()
-    for (c in classes_union) {
-      Ts[c[1]] <- length(c)
-    }
-    for (c in classes_lhs) {
-      m <- 1L
-      for (ts in c) {
-        m <- max(m, Ts[ts], na.rm = TRUE)
-      }
-      e <- e + length(c) - m
-    }
-    list(e <= limit, partitions)
-  }else{
-    # This is a quick working version I put together to replace the non-working
-    # original. There's a known better way to do this, see TANE section 2.3s.
-    majority_size <- function(x) {
-      max(tabulate(x))
-    }
-    splitted <- df[[rhs]]
-    splitter <- df[, lhs_set, drop = FALSE]
-    # split() takes a long time with multiple splitters, due to interaction().
-    # since splitters are integers, we can just paste them together.
-    strs <- do.call(
-      mapply,
-      c(list(FUN = paste, SIMPLIFY = FALSE), splitter)
-    )
-    single_splitter <- unlist(strs)
-    majorities_total <- sum(vapply(
-      split(splitted, single_splitter, drop = TRUE),
-      majority_size,
-      integer(1)
-    ))
-    list(majorities_total >= threshold, partitions)
-  }
+  unname(sp[lengths(sp) >= 2])
 }
