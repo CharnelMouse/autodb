@@ -41,6 +41,10 @@
 #' @param df a data.frame, the relation to evaluate.
 #' @param accuracy a numeric in (0, 1]: the accuracy threshold required in order
 #'   to conclude a dependency.
+#' @param cache a logical, indicating whether to store information about how
+#'   sets of attributes group the table rows (stripped partitions). This is
+#'   expected to let the algorithm run more quickly, but might be inefficient
+#'   for small tables or small amounts of memory.
 #' @param exclude a character vector, containing names of attributes to not
 #'   consider as members of determinant sets. If names are given that aren't
 #'   present in \code{df}, the user is given a warning.
@@ -61,6 +65,7 @@
 dfd <- function(
   df,
   accuracy,
+  cache = FALSE,
   exclude = character(),
   exclude_class = character(),
   progress = 0L,
@@ -165,6 +170,7 @@ dfd <- function(
           df,
           partitions,
           accuracy,
+          cache,
           progress,
           progress_file
         )
@@ -184,6 +190,7 @@ find_LHSs <- function(
   df,
   partitions,
   accuracy,
+  cache = FALSE,
   progress = 0L,
   progress_file = ""
 ) {
@@ -248,7 +255,7 @@ find_LHSs <- function(
         }
         if (nodes$category[node] == 0L) {
           lhs_set <- lhs_attrs[as.logical(intToBits(node))]
-          cp <- compute_partitions(df, rhs, lhs_set, partitions, accuracy)
+          cp <- compute_partitions(df, rhs, lhs_set, partitions, accuracy, cache = cache)
           result <- cp[[1]]
           partitions <- cp[[2]]
           if (result) {
@@ -594,22 +601,23 @@ minimise_seeds <- function(seeds, bitsets) {
   unique_seeds[include]
 }
 
-compute_partitions <- function(df, rhs, lhs_set, partitions, accuracy) {
+compute_partitions <- function(df, rhs, lhs_set, partitions, accuracy, cache = FALSE) {
   n_rows <- nrow(df)
   threshold <- ceiling(n_rows*accuracy)
   if (threshold < n_rows)
-    approximate_dependencies(lhs_set, rhs, df, partitions, threshold)
+    approximate_dependencies(lhs_set, rhs, df, partitions, threshold, cache = cache)
   else
-    exact_dependencies(df, rhs, lhs_set, partitions)
+    exact_dependencies(df, rhs, lhs_set, partitions, cache = cache)
 }
 
-exact_dependencies <- function(df, rhs, lhs_set, partitions) {
-  res1 <- partition_nclass(lhs_set, df, partitions)
+exact_dependencies <- function(df, rhs, lhs_set, partitions, cache = FALSE) {
+  partition <- if (cache) partition_stripped else partition_nclass
+  res1 <- partition(lhs_set, df, partitions)
   part_lhs <- res1[[1]]
   partitions <- res1[[2]]
   if (part_lhs == 0)
     return(list(TRUE, partitions))
-  res2 <- partition_nclass(union(lhs_set, rhs), df, partitions)
+  res2 <- partition(union(lhs_set, rhs), df, partitions)
   part_union <- res2[[1]]
   partitions <- res2[[2]]
   list(part_union == part_lhs, partitions)
@@ -631,25 +639,121 @@ partition_nclass <- function(attrs, df, partitions) {
   list(n_remove, partitions)
 }
 
-approximate_dependencies <- function(lhs_set, rhs, df, partitions, threshold) {
-  # This is a quick working version I put together to replace the non-working
-  # original. There's a known better way to do this, see TANE section 2.3s.
-  majority_size <- function(x) {
-    max(tabulate(x))
+partition_stripped <- function(attrs, df, partitions) {
+  attrs_set <- sort(attrs)
+  index <- match(list(attrs_set), partitions$set)
+  if (!is.na(index)) {
+    sp <- partitions$value[[index]]
+    return(list(sum(lengths(sp)) - length(sp), partitions))
   }
-  splitted <- df[[rhs]]
-  splitter <- df[, lhs_set, drop = FALSE]
-  # split() takes a long time with multiple splitters, due to interaction().
-  # since splitters are integers, we can just paste them together.
-  strs <- do.call(
-    mapply,
-    c(list(FUN = paste, SIMPLIFY = FALSE), splitter)
-  )
-  single_splitter <- unlist(strs)
-  majorities_total <- sum(vapply(
-    split(splitted, single_splitter, drop = TRUE),
-    majority_size,
-    integer(1)
-  ))
-  list(majorities_total >= threshold, partitions)
+  attr_indices <- seq_along(attrs_set)
+  attrs_subsets <- lapply(attr_indices, \(n) attrs_set[-n])
+  subsets_match <- match(attrs_subsets, partitions$set)
+  if (sum(!is.na(subsets_match)) >= 2) {
+    indices <- which(!is.na(subsets_match))[1:2]
+    sp <- stripped_partition_product(
+      partitions$value[[subsets_match[indices[1]]]],
+      partitions$value[[subsets_match[indices[2]]]],
+      nrow(df)
+    )
+  }else{
+    if (sum(!is.na(subsets_match)) == 1) {
+      index <- which(!is.na(subsets_match))
+      main_subset <- attrs_subsets[[index]]
+      small_subset <- setdiff(attrs, main_subset)
+      main_partition <- partitions$value[[subsets_match[index]]]
+      subres <- partition_stripped(small_subset, df, partitions)
+      partitions <- subres[[2]]
+      small_partition <- partitions$value[[match(small_subset, partitions$set)]]
+      sp <- stripped_partition_product(
+        main_partition,
+        small_partition,
+        nrow(df)
+      )
+    }else{
+      # column contents are known to be integer, so we paste them together
+      # before calling split to avoid expensive interaction() calls
+      interactions <- do.call(paste, df[, unlist(attrs), drop = FALSE])
+      sp <- split(seq_len(nrow(df)), interactions, drop = TRUE)
+      sp <- unname(sp[lengths(sp) > 1])
+    }
+  }
+  partitions$set <- c(partitions$set, list(sort(attrs)))
+  partitions$value <- c(partitions$value, list(sp))
+  list(sum(lengths(sp)) - length(sp), partitions)
+}
+
+stripped_partition_product <- function(sp1, sp2, n_rows) {
+  # vectorised union of stripped partitions to replace algorithm from Tane
+  tab <- rep(NA_integer_, n_rows)
+  tab[unlist(sp1)] <- rep(seq_along(sp1), lengths(sp1))
+  tab2 <- rep(NA_integer_, n_rows)
+  tab2[unlist(sp2)] <- rep(seq_along(sp2), lengths(sp2))
+  tab_both <- rep(NA_integer_, n_rows)
+  in_both <- which(!is.na(tab) & !is.na(tab2))
+  tab_both[in_both] <- paste(tab[in_both], tab2[in_both])
+  sp <- split(seq_len(n_rows), tab_both)
+  sp[lengths(sp) >= 2]
+}
+
+approximate_dependencies <- function(lhs_set, rhs, df, partitions, threshold, cache = FALSE) {
+  partition <- if (cache) partition_stripped else partition_nclass
+
+  # cheaper bounds checks:
+  # nrow(df) - (part_lhs - part_union) <= majorities_total <= nrow(df) - part_lhs
+  limit <- nrow(df) - threshold
+  res1 <- partition(lhs_set, df, partitions)
+  part_lhs <- res1[[1]]
+  partitions <- res1[[2]]
+  if (part_lhs <= limit)
+    return(list(TRUE, partitions))
+  res2 <- partition(union(lhs_set, rhs), df, partitions)
+  part_union <- res2[[1]]
+  partitions <- res2[[2]]
+  if (part_lhs - part_union > limit)
+    return(list(FALSE, partitions))
+
+  if (cache) {
+    # e(lhs_set -> rhs)
+    ind_lhs <- match(list(sort(lhs_set)), partitions$set)
+    stopifnot(!is.na(ind_lhs))
+    classes_lhs <- partitions$value[[ind_lhs]]
+    ind_union <- match(list(sort(union(lhs_set, rhs))), partitions$set)
+    stopifnot(!is.na(ind_union))
+    classes_union <- partitions$value[[ind_union]]
+    e <- 0L
+    Ts <- integer()
+    for (c in classes_union) {
+      Ts[c[1]] <- length(c)
+    }
+    for (c in classes_lhs) {
+      m <- 1L
+      for (ts in c) {
+        m <- max(m, Ts[ts], na.rm = TRUE)
+      }
+      e <- e + length(c) - m
+    }
+    list(e <= limit, partitions)
+  }else{
+    # This is a quick working version I put together to replace the non-working
+    # original. There's a known better way to do this, see TANE section 2.3s.
+    majority_size <- function(x) {
+      max(tabulate(x))
+    }
+    splitted <- df[[rhs]]
+    splitter <- df[, lhs_set, drop = FALSE]
+    # split() takes a long time with multiple splitters, due to interaction().
+    # since splitters are integers, we can just paste them together.
+    strs <- do.call(
+      mapply,
+      c(list(FUN = paste, SIMPLIFY = FALSE), splitter)
+    )
+    single_splitter <- unlist(strs)
+    majorities_total <- sum(vapply(
+      split(splitted, single_splitter, drop = TRUE),
+      majority_size,
+      integer(1)
+    ))
+    list(majorities_total >= threshold, partitions)
+  }
 }

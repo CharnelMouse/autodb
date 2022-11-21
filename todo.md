@@ -2,7 +2,6 @@
 - cross_intersection still converts to full bitset instead of shorted logical vectors
 - add error checking for decompose for norm_deps not matching data.frame
 - add lookup maps for quicker subsetting
-- add partitions
 - add option for introducing artificial keys
 - powerset creation is still slow
 - move relation matrix setdiff into relation matrix function

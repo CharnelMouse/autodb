@@ -431,4 +431,40 @@ describe("dfd", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), A = c(1, 2, 2), check.names = FALSE)
     expect_error(dfd(df, 1), "^duplicate column names: A$")
   })
+  it("gets the same results with and without storing partitions", {
+    gen_ncol_inc <- gen.int(6)
+    gen_len_inc <- gen.int(20)
+    gen_df <- generate(
+      for (n_col_inc in gen_ncol_inc) {
+        generate(
+          for (len_inc in gen_len_inc) {
+            rep(
+              list(gen.sample(c(FALSE, TRUE), len_inc - 1, replace = TRUE)),
+              n_col_inc - 1
+            ) |>
+              setNames(make.unique(rep_len(LETTERS, n_col_inc - 1)))
+          }
+        )
+      }
+    )
+    forall(
+      gen_df,
+      function(df) {
+        df <- as.data.frame(df)
+        res_nocache <- dfd(df, 1, cache = FALSE)
+        res_cache <- dfd(df, 1, cache = TRUE)
+        expect_identical(
+          lapply(res_nocache$dependencies, \(det_sets) if (length(det_sets) == 0) det_sets else det_sets[keys_order(det_sets)]),
+          lapply(res_cache$dependencies, \(det_sets) if (length(det_sets) == 0) det_sets else det_sets[keys_order(det_sets)])
+        )
+        res_partial_nocache <- dfd(df, 3/4, cache = FALSE)
+        res_partial_cache <- dfd(df, 3/4, cache = TRUE)
+        expect_identical(
+          lapply(res_partial_nocache$dependencies, \(det_sets) if (length(det_sets) == 0) det_sets else det_sets[keys_order(det_sets)]),
+          lapply(res_partial_cache$dependencies, \(det_sets) if (length(det_sets) == 0) det_sets else det_sets[keys_order(det_sets)])
+        )
+      },
+      shrink.limit = Inf
+    )
+  })
 })

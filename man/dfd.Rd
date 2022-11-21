@@ -7,6 +7,7 @@
 dfd(
   df,
   accuracy,
+  cache = FALSE,
   exclude = character(),
   exclude_class = character(),
   progress = 0L,
@@ -18,6 +19,11 @@ dfd(
 
 \item{accuracy}{a numeric in (0, 1]: the accuracy threshold required in order
 to conclude a dependency.}
+
+\item{cache}{a logical, indicating whether to store information about how
+sets of attributes group the table rows (stripped partitions). This is
+expected to let the algorithm run more quickly, but might be inefficient
+for small tables or small amounts of memory.}
 
 \item{exclude}{a character vector, containing names of attributes to not
 consider as members of determinant sets. If names are given that aren't
