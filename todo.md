@@ -1,8 +1,16 @@
+Before release
 - possibly add attribute types to database schemes, as this is the norm for real databases
-- cross_intersection still converts to full bitset instead of shorted logical vectors
 - add error checking for decompose for norm_deps not matching data.frame
-- add lookup maps for quicker subsetting
+- export reduce(), possible after making it return a "partial_database" type that can't be used in rejoin()
+- store lossless rejoin plan in database and database scheme
+- give columns in rejoin() output in original table order
+- update function documentation
+- finish vignette
+
+After release
+- cross_intersection still converts to full bitset instead of shorted logical vectors
+- add lookup maps for quicker subsetting (c.f. Tane)
 - add option for introducing artificial keys
 - powerset creation is still slow
 - move relation matrix setdiff into relation matrix function
-- export reduce(), possible after making it return a "partial_database" type that can't be used in rejoin()
+- add combining of dependency lists, schemes, etc.
