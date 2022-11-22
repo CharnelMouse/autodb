@@ -26,7 +26,7 @@ rejoin <- function(database) {
   if (length(tables) == 0)
     return(data.frame())
   if (length(tables) == 1)
-    return(tables[[1]]$df)
+    return(tables[[1]]$df[, database$attributes, drop = FALSE])
   attrs <- lapply(tables, \(tb) names(tb$df))
   all_attrs <- unique(unlist(attrs))
   keys <- lapply(tables, \(tb) tb$keys)
@@ -65,5 +65,5 @@ rejoin <- function(database) {
     )
     stopifnot(identical(nrow(main_table), old_nrow))
   }
-  main_table
+  main_table[, database$attributes, drop = FALSE]
 }

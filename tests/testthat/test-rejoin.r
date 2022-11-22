@@ -1,7 +1,7 @@
 library(hedgehog)
 
 describe("rejoin", {
-  it("is left-inverse for lossless full-dep database creation, outside of row/column permutations, for tables with unique rows", {
+  it("is left-inverse for lossless full-dep database creation, outside of row permutations, for tables with unique rows", {
     autonorm_inverted_by_rejoin <- function(df) {
       database <- autonorm(df, 1)
       df2 <- rejoin(database)

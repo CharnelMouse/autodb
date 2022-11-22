@@ -3,7 +3,6 @@ Before release
 - add error checking for decompose for norm_deps not matching data.frame
 - export reduce(), possible after making it return a "partial_database" type that can't be used in rejoin()
 - store lossless rejoin plan in database and database scheme
-- give columns in rejoin() output in original table order
 - update function documentation
 - finish vignette
 

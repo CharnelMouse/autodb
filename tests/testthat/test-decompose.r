@@ -10,7 +10,8 @@ describe("decompose", {
       keys = list(list("a")),
       parents = list(integer()),
       relationships = list(),
-      relation_names = "a"
+      relation_names = "a",
+      all_attrs = c("a", "b", "c")
     )
     norm.df <- decompose(df, norm_deps)
     expect_database(
@@ -23,7 +24,8 @@ describe("decompose", {
           index = "a",
           parents = character()
         )),
-        relationships = list()
+        relationships = list(),
+        attributes = c("a", "b", "c")
       )
     )
   })
@@ -34,7 +36,8 @@ describe("decompose", {
       keys = list(list("a", "b")),
       parents = list(integer()),
       relationships = list(),
-      relation_names = "a"
+      relation_names = "a",
+      all_attrs = c("a", "b")
     )
     norm.df <- decompose(df, norm_deps)
     expect_identical(
@@ -84,7 +87,8 @@ describe("decompose", {
         list(1:2, "month"),
         list(1:2, "hemisphere")
       ),
-      relation_names = c("id", "month_hemisphere")
+      relation_names = c("id", "month_hemisphere"),
+      all_attrs = c("id", "month", "hemisphere", "is_winter")
     )
     new_dfs <- decompose(df, norm_deps)
     expected_dfs <- list(
@@ -115,7 +119,8 @@ describe("decompose", {
       relationships = list(
         c("id", "month", "month_hemisphere", "month"),
         c("id", "hemisphere", "month_hemisphere", "hemisphere")
-      )
+      ),
+      attributes = c("id", "month", "hemisphere", "is_winter")
     )
     expect_database(new_dfs, expected_dfs)
   })
@@ -144,7 +149,8 @@ describe("decompose", {
         list(1:2, "c"),
         list(2:3, "b")
       ),
-      relation_names = c("a", "b_c", "b")
+      relation_names = c("a", "b_c", "b"),
+      all_attrs = c("a", "b", "c", "d", "e")
     )
     new_dfs <- decompose(df, norm_deps)
     expect_identical(new_dfs$tables$a$parents, "b_c")
@@ -179,7 +185,8 @@ describe("decompose", {
           list(c(1L, 3L), "team"),
           list(3:2, "city")
         ),
-        relation_names = c("player_name_jersey_num", "city", "team")
+        relation_names = c("player_name_jersey_num", "city", "team"),
+        all_attrs = c("player_name", "jersey_num", "team", "city", "state")
       )
       depdfs <- decompose(df, norm_deps)
       expect_identical(length(depdfs$tables), 3L)
@@ -222,7 +229,8 @@ describe("decompose", {
         relationships = list(
           c("player_name_jersey_num", "team", "team", "team"),
           c("team", "city", "city", "city")
-        )
+        ),
+        attributes = c("player_name", "jersey_num", "team", "city", "state")
       )
       expect_database(depdfs, expected_depdfs)
     })
@@ -234,7 +242,8 @@ describe("decompose", {
       attrs = list(c("A 1", "B 2", "C 3")),
       keys = list(list("A 1", c("B 2", "C 3"))),
       parents = list(integer()),
-      relationships = list()
+      relationships = list(),
+      all_attrs = c("A 1", "B 2", "C 3")
     )
     norm.df <- decompose(df, norm_deps)
     expect_setequal(names(norm.df$tables[[1]]$df), c("A 1", "B 2", "C 3"))
@@ -250,7 +259,8 @@ describe("decompose", {
       keys = list(list("a", "b"), list(c("a", "c"))),
       parents = list(integer(), 1L),
       relationships = list(list(2:1, "a")),
-      relation_names = c("a", "a_c")
+      relation_names = c("a", "a_c"),
+      all_attrs = c("a", "b", "c")
     )
     norm.df <- decompose(df, norm_deps)
     expect_identical(

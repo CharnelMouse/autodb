@@ -34,6 +34,7 @@ decompose <- function(df, scheme, name = NA_character_) {
   indexes <- lapply(scheme$keys, `[[`, 1)
   relation_names <- scheme$relation_names
   # stopifnot(!anyDuplicated(relation_names))
+  stopifnot(identical(names(df), scheme$all_attrs))
 
   depdf_list <- Map(
     \(attrs, keys, index, parents) {
@@ -59,7 +60,8 @@ decompose <- function(df, scheme, name = NA_character_) {
     list(
       name = name,
       tables = stats::setNames(depdf_list, relation_names),
-      relationships = relationships
+      relationships = relationships,
+      attributes = scheme$all_attrs
     ),
     class = c("database", "list")
   )

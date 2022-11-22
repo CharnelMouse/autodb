@@ -19,9 +19,8 @@ expect_superset_of_dependency <- function(dep1, dep2) {
 
 expect_identical_unordered_table <- function(new, original) {
   stopifnot(all(names(original) %in% names(new)))
-  df2_reordered <- new[, names(original), drop = FALSE]
   expect_identical(
-    `rownames<-`(df2_reordered[do.call(order, df2_reordered), ], NULL),
+    `rownames<-`(new[do.call(order, new), ], NULL),
     `rownames<-`(original[do.call(order, original), ], NULL)
   )
 }
