@@ -1,3 +1,20 @@
+#' Remove database tables not linked to the main table
+#'
+#' Filters a database's tables, keeping only those linked to the main table by
+#' foreign key references. The main table is considered to be the table with the
+#' largest number of rows. Foreign key relationships involving removed tables
+#' are also removed.
+#'
+#' This function is mostly intended for simplifying a database for the purposes
+#' of exploration, particularly by examining plots. While the filtering might
+#' remove important auxiliary tables, it's also likely to remove any tables
+#' based on spurious dependencies, of which some databases can contain many.
+#'
+#' @param database A database, whose tables are to be filtered.
+#'
+#' @return A database, with the auxiliary tables and foreign key relationships
+#'   removed.
+#' @export
 reduce <- function(database) {
   table_nrows <- vapply(database$tables, \(x) nrow(x$df), integer(1))
   queue <- names(table_nrows)[table_nrows == max(table_nrows)]
