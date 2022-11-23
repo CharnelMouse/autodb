@@ -1,12 +1,12 @@
 Before release
-- possibly add attribute types to database schemes, as this is the norm for real databases
-- add error checking for decompose for norm_deps not matching data.frame
 - export reduce(), possible after making it return a "partial_database" type that can't be used in rejoin()
-- store lossless rejoin plan in database and database scheme
 - update function documentation
 - finish vignette
 
 After release
+- possibly add attribute types to database schemes, as this is the norm for real databases
+- add error checking for decompose for norm_deps not matching data.frame
+- store lossless rejoin plan in database and database scheme
 - cross_intersection still converts to full bitset instead of shorted logical vectors
 - add lookup maps for quicker subsetting (c.f. Tane)
 - add option for introducing artificial keys
