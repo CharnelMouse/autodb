@@ -10,6 +10,9 @@
 #' remove important auxiliary tables, it's also likely to remove any tables
 #' based on spurious dependencies, of which some databases can contain many.
 #'
+#' Using \code{\link{rejoin}} on the database resulting from \code{reduce} is
+#' likely to fail or return incomplete results.
+#'
 #' @param database A database, whose tables are to be filtered.
 #'
 #' @return A database, with the auxiliary tables and foreign key relationships

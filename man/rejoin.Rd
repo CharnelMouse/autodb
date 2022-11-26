@@ -29,5 +29,6 @@ rejoin with all of the present attributes.
 
 If the database is inconsistent, where the unused tables contain additional
 information, then the rejoining will be lossy. The algorithm does not check
-for this consistency violation.
+for this consistency violation. This is also the case for rejoining the
+results of \code{\link{reduce}}.
 }
