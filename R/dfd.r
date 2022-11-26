@@ -670,15 +670,9 @@ approximate_dependencies <- function(lhs_set, rhs, df, partitions, threshold, ca
     }
     splitted <- df[[rhs]]
     splitter <- df[, lhs_set, drop = FALSE]
-    # split() takes a long time with multiple splitters, due to interaction().
-    # since splitters are integers, we can just paste them together.
-    strs <- do.call(
-      mapply,
-      c(list(FUN = paste, SIMPLIFY = FALSE), splitter)
-    )
-    single_splitter <- unlist(strs)
+    rhs_split <- fsplit(splitted, splitter)
     majorities_total <- sum(vapply(
-      split(splitted, single_splitter, drop = TRUE),
+      rhs_split,
       majority_size,
       integer(1)
     ))
@@ -734,10 +728,7 @@ partition_stripped <- function(attrs, df, partitions) {
         nrow(df)
       )
     }else{
-      # column contents are known to be integer, so we paste them together
-      # before calling split to avoid expensive interaction() calls
-      interactions <- do.call(paste, df[, unlist(attrs), drop = FALSE])
-      sp <- split(seq_len(nrow(df)), interactions, drop = TRUE)
+      sp <- fsplit_rows(df, attrs)
       sp <- unname(sp[lengths(sp) > 1])
     }
   }
@@ -757,4 +748,16 @@ stripped_partition_product <- function(sp1, sp2, n_rows) {
   tab_both[in_both] <- paste(tab[in_both], tab2[in_both])
   sp <- split(seq_len(n_rows), tab_both)
   unname(sp[lengths(sp) >= 2])
+}
+
+fsplit <- function(splitted, splitter) {
+  # Column contents are known to be integer, so we paste them together before
+  # calling split. This is much faster than the iterated pasting of multiple f
+  # elements done by interaction().
+  single_splitter <- do.call(paste, splitter)
+  split(splitted, single_splitter, drop = TRUE)
+}
+
+fsplit_rows <- function(df, attrs) {
+  fsplit(seq_len(nrow(df)), df[, unlist(attrs), drop = FALSE])
 }
