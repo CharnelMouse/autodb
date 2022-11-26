@@ -1,9 +1,10 @@
 Before release
-- export reduce(), possible after making it return a "partial_database" type that can't be used in rejoin()
 - update function documentation
 - finish vignette
 
 After release
+- vectorisation of DFD
+- make reduce() return a "partial_database" type that can't be used in rejoin(), or at least do some consistency checks on completion
 - possibly add attribute types to database schemes, as this is the norm for real databases
 - add error checking for decompose for norm_deps not matching data.frame
 - store lossless rejoin plan in database and database scheme
