@@ -43,8 +43,15 @@ describe("cross_reference", {
           for (column in seq_len(ncol(link_sets))) {
             parent <- strtoi(colnames(link_sets)[column])
             attribute_sets <- link_sets[, column]
-            attribute_sets <- attribute_sets[!vapply(attribute_sets, is.null, logical(1))]
-            expect_lte(length(setdiff(attribute_sets, linked$keys[[parent]])), 1)
+            attribute_sets <- na.omit(attribute_sets[!vapply(
+              attribute_sets,
+              is.null,
+              logical(1)
+            )])
+            expect_length(
+              setdiff(attribute_sets, lapply(linked$keys[[parent]], sort)),
+              0
+            )
           }
         }
       }

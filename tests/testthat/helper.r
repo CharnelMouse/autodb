@@ -32,11 +32,15 @@ gen_df <- function(nrow, ncol, nonempty = FALSE, remove_dup_rows = FALSE) {
     for (n_col_inc in gen_ncol_inc) {
       generate(
         for (len_inc in gen_len_inc) {
-          rep(
-            list(gen.sample(c(FALSE, TRUE), len_inc, replace = TRUE)),
-            n_col_inc
-          ) |>
-            setNames(make.unique(rep_len(LETTERS, n_col_inc)))
+          generate(
+            for (nms in gen_attr_names(n_col_inc, 9)) {
+              rep(
+                list(gen.sample(c(FALSE, TRUE), len_inc, replace = TRUE)),
+                n_col_inc
+              ) |>
+                setNames(nms)
+            }
+          )
         }
       )
     }
@@ -62,15 +66,19 @@ gen_df_vary_classes <- function(nrow, ncol, nonempty = FALSE, remove_dup_rows = 
     for (classes in gen_classes) {
       generate(
         for (len_inc in gen_len_inc) {
-          lapply(
-            classes,
-            \(class) gen.sample(
-              as(c(FALSE, TRUE), class),
-              len_inc,
-              replace = TRUE
-            )
-          ) |>
-            setNames(make.unique(rep_len(LETTERS, length(classes))))
+          generate(
+            for (nms in gen_attr_names(length(classes), 9)) {
+              lapply(
+                classes,
+                \(class) gen.sample(
+                  as(c(FALSE, TRUE), class),
+                  len_inc,
+                  replace = TRUE
+                )
+              ) |>
+                setNames(nms)
+            }
+          )
         }
       )
     }
@@ -93,7 +101,7 @@ gen_attr_name <- function(len) {
 
 gen_attr_names <- function(n, len) {
   generate(for (attr_names in gen.c(gen_attr_name(len), of = n)) {
-    make.unique(attr_names)
+    make.unique(as.character(attr_names)) # as.character for length-0 NULL value
   })
 }
 
