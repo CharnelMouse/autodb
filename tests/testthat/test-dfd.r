@@ -135,7 +135,7 @@ describe("dfd", {
   })
   it("is invariant to an attribute's values being permuted", {
     gen_perm <- function(vals) {
-      uniq <- sort(unique(vals))
+      uniq <- sort(unique(vals), na.last = TRUE)
       matches <- match(vals, uniq)
       pool <- union(uniq, NA)
       generate(for (perm in gen.sample(pool, length(uniq))) {
@@ -148,7 +148,7 @@ describe("dfd", {
       remove_dup_rows = FALSE
     ) {
       generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows)) {
-        generate(for (attr in gen.int(ncol(df))){
+        generate(for (attr in gen.int(ncol(df))) {
           generate(for (permuted_attr in gen_perm(df[, attr])) {
             permed <- df
             permed[, attr] <- permuted_attr

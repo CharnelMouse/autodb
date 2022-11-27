@@ -35,7 +35,7 @@ gen_df <- function(nrow, ncol, nonempty = FALSE, remove_dup_rows = FALSE) {
           generate(
             for (nms in gen_attr_names(n_col_inc, 9)) {
               rep(
-                list(gen.sample(c(FALSE, TRUE), len_inc, replace = TRUE)),
+                list(gen.sample(c(FALSE, TRUE, NA), len_inc, replace = TRUE)),
                 n_col_inc
               ) |>
                 setNames(nms)
@@ -71,7 +71,7 @@ gen_df_vary_classes <- function(nrow, ncol, nonempty = FALSE, remove_dup_rows = 
               lapply(
                 classes,
                 \(class) gen.sample(
-                  as(c(FALSE, TRUE), class),
+                  as(c(FALSE, TRUE, NA), class),
                   len_inc,
                   replace = TRUE
                 )
