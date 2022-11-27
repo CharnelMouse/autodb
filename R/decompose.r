@@ -41,7 +41,7 @@
 decompose <- function(df, scheme, name = NA_character_) {
   indexes <- lapply(scheme$keys, `[[`, 1)
   relation_names <- scheme$relation_names
-  # stopifnot(!anyDuplicated(relation_names))
+  stopifnot(!anyDuplicated(relation_names))
   stopifnot(identical(names(df), scheme$all_attrs))
 
   depdf_list <- Map(
