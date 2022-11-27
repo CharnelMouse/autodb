@@ -293,7 +293,7 @@ relation_scheme_string <- function(attrs, keys, relation_name) {
   )
   columns_string <- paste(column_typing_info, collapse = "\n")
   label <- paste0(
-    "    <TR><TD COLSPAN=\"", length(keys) + 2, "\">",
+    "    <TR><TD COLSPAN=\"", length(keys) + 1, "\">",
     relation_name,
     "</TD></TR>",
     "\n",
