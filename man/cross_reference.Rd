@@ -16,7 +16,8 @@ decomposition lossless. This relation becomes the ultimate child table.}
 }
 \value{
 A database scheme with relationships, represented by a named list of
-four lists, with the first three having equal length:
+three lists and two character vectors, with the first four having equal
+length and representing relation schemes:
 \itemize{
 \item \code{attrs} elements contain the attributes present in the
 relation schemes, with attributes in keys given first.
@@ -29,6 +30,11 @@ represented by a list containing two elements. In order, the elements
 are a two-length integer vector, giving the positions of the child and
 parent relation schemes, and a scalar character, giving the name of the
 linked attribute in both relation schemes.
+\item \code{relation_names} is a character vector, containing the names
+of the relation schemas
+\item \code{all_attrs} is a character vector, containing all attribute
+names in priority order for placement and key ordering, i.e. as ordered
+in the original flat table.
 }
 }
 \description{

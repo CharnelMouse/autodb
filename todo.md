@@ -4,7 +4,8 @@ Before release
 
 After release
 - vectorisation of DFD
-- make reduce() return a "partial_database" type that can't be used in rejoin(), or at least do some consistency checks on completion
+- make reduce() return a "partial_database" type that can't be used in rejoin(), or at least do some losslessness/consistency checks on completion
+be used in rejoin(), or at least check for consistency somehow
 - possibly add attribute types to database schemes, as this is the norm for real databases
 - add error checking for decompose for norm_deps not matching data.frame
 - store lossless rejoin plan in database and database scheme

@@ -8,9 +8,9 @@
 #' The object is expected to be one of the following:
 #' \itemize{
 #'   \item an object whose elements have the same length. Examples would be
-#'   data.frames, matrices, and other objects that can represent tables, with
+#'   data frames, matrices, and other objects that can represent tables, with
 #'   names for the elements, and an optional name for the object itself.
-#'   \item a graph of sub-objects, each of which represent table as
+#'   \item a graph of sub-objects, each of which represent a table as
 #'   described above, possibly with connections between the objects, and an
 #'   optional name for the graph as a whole.
 #' }
@@ -35,8 +35,8 @@
 #'   }
 #' }
 #'
-#' Any connections between tables are represented by one-way arrows, usually
-#' between specific rows.
+#' Any foreign key references between tables are represented by one-way arrows,
+#' one per attribute in the foreign key.
 #'
 #' If the object has a name, this name is attached to the resulting graph in
 #' Graphviz. This is to allow easier combination of several such graphs into a

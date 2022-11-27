@@ -1,8 +1,8 @@
-#' Decompose a data.frame based on given normalised dependencies
+#' Decompose a data frame based on given normalised dependencies
 #'
-#' Decomposes a data.frame into several tables, based on the given database
+#' Decomposes a data frame into several tables, based on the given database
 #' scheme. It's intended that the relations are derived from a list of
-#' functional dependencies for the same data.frame: using anything else will
+#' functional dependencies for the same data frame: using anything else will
 #' give undefined behaviour.
 #'
 #' @param df a data.frame, containing the data to be normalised.
@@ -21,14 +21,22 @@
 #'     attribute in the child table, the name of the parent table, and the name
 #'     of the linked attribute in the parent table. Currently, the attribute is
 #'     expected to have the same name in both tables.
+#'     \item \code{attributes} contains the attribute names in priority order.
+#'     This order can be taken from their order in \code{df}, or from the
+#'     \code{all_attrs} element in \code{scheme}; these orderings must be the
+#'     same.
 #'   }
 #'
-#'   Tables are lists with the following elements: \itemize{ \item \code{df},
-#'   the data.frame containing the data. \item \code{keys}, the list of
-#'   character vectors, representing (candidate) keys for the table. \item
-#'   \code{index}, a character vector, representing the index / primary key of
-#'   the table. \item \code{parents}, containing names of parent tables, i.e.
-#'   tables referenced in foreign keys. }
+#'   Tables are lists with the following elements:
+#'   \itemize{
+#'     \item \code{df}, the data.frame containing the data.
+#'     \item \code{keys}, a list of character vectors representing
+#'     (candidate) keys for the table.
+#'     \item \code{index}, a character vector representing the index / primary
+#'     key of the table.
+#'     \item \code{parents}, a character vector containing names of parent
+#'     tables, i.e. tables referenced in foreign keys.
+#'   }
 #' @export
 decompose <- function(df, scheme, name = NA_character_) {
   indexes <- lapply(scheme$keys, `[[`, 1)

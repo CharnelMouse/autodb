@@ -14,9 +14,9 @@ normalise(
 }
 \arguments{
 \item{dependencies}{a list of functional dependencies, as given by
-\code{\link{flatten}}: each dependency is a list, contained one character
-vector for the left-hand size, and one unit-length character vector for the
-right-hand side.}
+\code{\link{flatten}}: each dependency is a list, containing one character
+vector for the determinant set, and one unit-length character vector for
+the dependent.}
 
 \item{remove_avoidable}{a logical, indicating whether to remove avoidable
 attributes in tables. If so, then an attribute are removed from tables if
@@ -39,19 +39,25 @@ is non-zero, determines where the progress is written to, in the same way
 as the \code{file} argument for \code{\link[base]{cat}}.}
 }
 \value{
-A database scheme, represented by a named list of two lists of equal
-length, whose elements form pairs. Each pair represents a single relation
-scheme in the normalisation:
+A database scheme, represented by a named list of two lists and two
+character vectors:
 \itemize{
 \item \code{attrs} elements contain the attributes present in the
 relation schemes, with attributes in keys given first.
 \item \code{keys} elements contain a list of the candidate keys for the
 relation schemes.
+\item \code{all_attrs} is a character vector, containing all attribute
+names in priority order for placement and key ordering, i.e. as ordered
+in the original flat table.
+\item \code{relation_names} is a character vector, containing the names
+of the relation schemas
 }
+The lists and the \code{relation_names} vector are of equal length,
+representing relation schemes.
 }
 \description{
 Normalises the dependency relationships in dependencies into a database
-scheme, using Bernstein's synthesis.
+scheme satisfying at least third normal form, using Bernstein's synthesis.
 }
 \details{
 Bernstein's synthesis is a synthesis algorithm for normalisation of a set of
@@ -64,9 +70,10 @@ dependencies can be perfectly reconstructed from the relations given by the
 decomposition. This is done by adding an additional relation, containing a
 key for all the original attributes, if one is not already present.
 
-Constant attributes, i.e. those with whose only determinant set is empty, get
-assigned to a relation with no keys, which is assigned the name "constants"
-before ensuring that relation names are unique.
+Constant attributes, i.e. those whose only determinant set is empty, get
+assigned to a relation with no keys.
+
+Relation names are adjusted for uniqueness after synthesis.
 }
 \references{
 Bernstein YEAR, TITLE.

@@ -1,15 +1,23 @@
 #' Dependency discovery with DFD
 #'
 #' The DFD algorithm finds all the minimal functional dependencies represented
-#' in a relation/table, represented as a data frame. Checks each column to
-#' see if it's unique. If it is unique, it is added as the LHS of a dependency
-#' for every other element. It then loops through all the other non-unique
-#' columns and determines all the LHS that the column depends on. (LHS -->
-#' column)
+#' in a relation/table, represented as a data frame.
+#'
+#' Column names for \code{\link{df}} must be unique.
 #'
 #' This implementation differs a little from the algorithm presented in the
 #' original paper:
 #' \itemize{
+#'   \item Some attributes, or attribute types, can be designated, ahead of
+#'   time, as not being candidate members for determinant sets. This reduces the
+#'   number of candidate determinant sets to be searched, saving time by not
+#'   searching for determinant sets that the user would remove later anyway.
+#'   \item Attributes that have a single unique value, i.e. are
+#'   constant, get attributed a single empty determinant set. In the standard
+#'   DFD algorithm, they would be assigned all the other non-excluded attributes
+#'   as length-one determinant sets. Assigning them the empty set distinguishes
+#'   them as constant, allowing for special treatment at normalisation and later
+#'   steps.
 #'   \item As was done in the original Python library, there is an extra case in
 #'   seed generation for when there are no discovered maximal non-dependencies.
 #'   In this case, we take all of the single-attribute nodes, then filter out by
@@ -24,19 +32,10 @@
 #'   subsets/supersets are dependencies/non-dependencies, instead of waiting to
 #'   exhaust the adjacent subsets/supersets to visit when picking the next node
 #'   to visit.
-#'   \item Some attributes, or attribute types, can be designated, ahead of
-#'   time, as not being candidate members for determinant sets. This reduces the
-#'   number of candidate determinant sets to be searched, saving time by not
-#'   searching for determinant sets that the user would remove later anyway.
-#'   \item We do not yet preserve partitions, just their calculated sizes.
 #'   \item We do not yet keep hashmaps to manage subset/superset relationships,
 #'   as described in Section 3.5 of the original paper.
 #'   \item Missing values (NA) are treated as a normal value, with NA = NA being
 #'   true, and x = NA being false for any non-NA value of x.
-#'   \item Attributes that have a single unique value, i.e. are constant, get
-#'   attributed a single empty determinant set, instead of all possible
-#'   length-one determinant sets. This distinguishes them as constant, allowing
-#'   for special treatment at normalisation and later steps.
 #' }
 #' @param df a data.frame, the relation to evaluate.
 #' @param accuracy a numeric in (0, 1]: the accuracy threshold required in order
