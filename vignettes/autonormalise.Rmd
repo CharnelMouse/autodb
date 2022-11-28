@@ -20,6 +20,10 @@ knitr::opts_chunk$set(
 library(autonormalise)
 ```
 
+# Terminology
+
+To avoid confusion, this vignette is consistent with terminology: a *database* consists of *relations*, which have *records* with the same *attributes*. This is in line with terms used in the relational model; in Statistics, where we would talk about tables, which have rows with values for the same variables, with a column for each variable. For the original data set, which is a flat table, we refer to a *data frame* instead, which also consists of records with attributes.
+
 # Motivation
 
 `autonormalise` is described in the DESCRIPTION file in the following way:
@@ -44,19 +48,15 @@ I usually do data checking under the following conditions:
 
 It's in this context that I would usually have to do the normalisation by hand, and I would like to have a tool that does it semi-automatically. This package is intended to be that tool, using a minimal amount of additional libraries.
 
-## Terminology
-
-To avoid confusion, this vignette is consistent with terminology: a *database* consists of *relations*, which have *records* with the same *attributes*. This is in line with terms used in the relational model; in Statistics, where we would talk about tables, which have rows with values for the same variables, with a column for each variable. For the original data set, which is a flat table, we refer to a *data frame* instead, which also consists of records with attributes.
-
 ## Not for database design
 
-Good database design is a hard and involved process, which requires a strong grasp on the domain that the database will hold information on. Please don't try to use this package to do it on autopilot. In particular, the conditions described above mean we do things differently to how we would in a real database:
+Good database design is a hard and involved process, which requires a strong grasp on the domain that the database will hold information on. Please don't try to use this package to do it on autopilot. In particular, the conditions described above mean we do things differently to good practice for normalised relational databases:
 
 - We need to handle constant attributes, that have the same value in every record. In a real database, we would probably expect these to not stay constant when more data is added, and would know which relation to place it in. In one-off data checking, there isn't more data coming, so we need to handle these attributes in an automatic way by placing them in a "constants" relation with an empty key, which database designers would probably frown at.
 - We don't care about database design principles concerned with avoiding errors under deletion, modification, and so on, because the data won't change. This means that we don't care about introducing artificial keys, unless we think it would make data modelling more convenient. Similarly, we don't care about having single-attribute reference relations, which are used to make sure other relations only assign legal values to that relation's attribute.
 - We have no "derived relations", also known as "views", which are additional relations created from the others for lookup convenience. We expect to be using the data frame for modelling, rather than the database, so such lookups aren't commonly necessary, and are left to the discretion of the user to do manually with base R's `merge` function.
 
-## Third normal form
+## To third normal form
 
 `autonormalise` gets a given data.frame to third normal form: every attribute depends on the whole key(s), and non-key attributes depend on nothing but the key(s). This was chosen because there is an existing algorithm, Bernstein's synthesis, for normalising to third normal form, and because it's the highest normal form that is attainable with arbitrary original data frames. There is an additional enhancement available as an option: see the section on avoidable attributes for more details.
 
@@ -417,9 +417,13 @@ This schema is now in LTK form, with no remaining avoidable attributes. We could
 
 As shown in the plots above, database schemas don't contain information about the attribute classes: this is only added on database creation. This would potentially be useful if the original data.frame is large, and creating the database would take a long time.
 
+## Pretty printing for functional dependencies
+
+Lists of functional dependencies -- both the grouped ones returned by `dfd`, and the flattened ones given to `normalise` -- use the default printing for lists. They should have a prettier printing operation, making use of the usual `A -> B` notation for functional dependencies.
+
 ## Better consistency checks
 
-There are currently obvious consistency checks that are missing. One example is when the relation decomposed with a schema is different to the one originally used to create the schema: if the new relation doesn't satisfy the schema's functional dependencies, the result will have relations with inconsistent information, which may or may not become apparent when the database is rejoined into a data frame.
+There are obvious consistency checks that are missing. One example is when the relation decomposed with a schema is different to the one originally used to create the schema: if the new relation doesn't satisfy the schema's functional dependencies, the result will have relations with inconsistent information, which may or may not become apparent when the database is rejoined into a data frame.
 
 ## Handling of duplicate records
 
@@ -438,7 +442,7 @@ df_nas <- data.frame(
 df_nas
 ```
 
-However, currently autonormalise treats `NA` as just another value, with no special treatment for normalisation or rejoining, resulting in no splitting of the data:
+The package currently treats `NA` as just another value, with no special treatment for normalisation or rejoining, resulting in no splitting of the above data frame:
 
 ```{r example_data_frame_with_NAs_autonorm}
 DiagrammeR::grViz(gv(autonorm(df_nas, 1)))
@@ -478,4 +482,4 @@ ideal_db <- structure(
 DiagrammeR::grViz(gv(ideal_db))
 ```
 
-Handling cases like this requires automatically detecting, and normalising, nullable functional dependencies. This is planned for a later version, but is currently not available.
+Handling cases like this requires automatically detecting, and normalising, nullable functional dependencies, which account for the ambiguity of missing values.
