@@ -468,7 +468,7 @@ describe("gv", {
       expect_identical(substr(plot_string, 1, 9), "digraph {")
     })
   })
-  describe("database_scheme", {
+  describe("database_schema", {
     it("creates a Graphviz HTML-like expression for the data.frame", {
       database <- structure(
         list(
@@ -497,7 +497,7 @@ describe("gv", {
           ),
           relation_names = c("Title", "Title_Format", "Author", "Genre_ID")
         ),
-        class = c("database_scheme", "list")
+        class = c("database_schema", "list")
       )
       expected_string <- paste(
         "digraph book {",
@@ -581,7 +581,7 @@ describe("gv", {
           ),
           relation_names = c("Title", "Title_Format", "Author", "Genre ID")
         ),
-        class = c("database_scheme", "list")
+        class = c("database_schema", "list")
       )
       expected_string <- paste(
         "digraph book {",
@@ -644,7 +644,7 @@ describe("gv", {
           ),
           relationships = list()
         ),
-        class = c("database_scheme", "list")
+        class = c("database_schema", "list")
       )
       plot_string <- gv(database)
       expect_identical(substr(plot_string, 1, 9), "digraph {")

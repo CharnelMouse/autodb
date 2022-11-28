@@ -1,26 +1,26 @@
 #' Add foreign key relationships to a normalised database
 #'
-#' @param scheme a database scheme without relationships, as given by
+#' @param schema a database schema without relationships, as given by
 #'   \code{\link{normalise}}.
 #' @param ensure_lossless a logical, TRUE by default. If TRUE, and the
 #'   decomposition isn't lossless, an extra relation is added to make the
 #'   decomposition lossless. This relation becomes the ultimate child table.
 #'
-#' @return A database scheme with relationships, represented by a named list of
+#' @return A database schema with relationships, represented by a named list of
 #'   three lists and two character vectors, with the first four having equal
-#'   length and representing relation schemes:
+#'   length and representing relation schemas:
 #'   \itemize{
 #'     \item \code{attrs} elements contain the attributes present in the
-#'     relation schemes, with attributes in keys given first.
+#'     relation schemas, with attributes in keys given first.
 #'     \item \code{keys} elements contain a list of the candidate keys for the
-#'     relation schemes.
+#'     relation schemas.
 #'     \item \code{parents} elements contain integers, representing a relation
-#'     scheme's parent relation schemes by their position in the paired lists.
+#'     schema's parent relation schemas by their position in the paired lists.
 #'     \item \code{relationships} contains a list of relationships, each
 #'     represented by a list containing two elements. In order, the elements
 #'     are a two-length integer vector, giving the positions of the child and
-#'     parent relation schemes, and a scalar character, giving the name of the
-#'     linked attribute in both relation schemes.
+#'     parent relation schemas, and a scalar character, giving the name of the
+#'     linked attribute in both relation schemas.
 #'     \item \code{relation_names} is a character vector, containing the names
 #'     of the relation schemas
 #'     \item \code{all_attrs} is a character vector, containing all attribute
@@ -28,11 +28,11 @@
 #'     in the original flat table.
 #'  }
 #' @export
-cross_reference <- function(scheme, ensure_lossless = TRUE) {
-  all_attrs <- scheme$all_attrs
-  attrs <- scheme$attrs
-  keys <- scheme$keys
-  relation_names <- scheme$relation_names
+cross_reference <- function(schema, ensure_lossless = TRUE) {
+  all_attrs <- schema$all_attrs
+  attrs <- schema$attrs
+  keys <- schema$keys
+  relation_names <- schema$relation_names
 
   if (ensure_lossless) {
     G <- synthesised_fds(attrs, keys)
@@ -72,7 +72,7 @@ cross_reference <- function(scheme, ensure_lossless = TRUE) {
       relation_names = relation_names,
       all_attrs = all_attrs
     ),
-    class = c("database_scheme", "list")
+    class = c("database_schema", "list")
   )
 }
 

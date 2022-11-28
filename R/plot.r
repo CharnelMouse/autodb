@@ -47,7 +47,7 @@
 #'
 #' @return A scalar character, containing text input for Graphviz or the
 #'   \code{DiagrammeR} package.
-#' @seealso \code{\link{gv.data.frame}}, \code{\link{gv.database_scheme}},
+#' @seealso \code{\link{gv.data.frame}}, \code{\link{gv.database_schema}},
 #'   \code{\link{gv.database}}
 #' @export
 gv <- function(x, ...) {
@@ -97,31 +97,31 @@ gv.database <- function(x, ...) {
 }
 
 
-#' Generate Graphviz input text to plot database schemes
+#' Generate Graphviz input text to plot database schemas
 #'
 #' Produces text input for Graphviz to make an HTML diagram of a given database
-#' scheme.
+#' schema.
 #'
-#' Each relation in the scheme is presented as a set of rows, one for each
+#' Each relation in the schema is presented as a set of rows, one for each
 #' attribute in the relation. These rows do not include information about the
 #' attribute classes.
 #'
 #' Any foreign key references are represented by arrows
 #' between the attribute pairs.
 #'
-#' @param x a database scheme, as given by \code{\link{normalise}} or
+#' @param x a database schema, as given by \code{\link{normalise}} or
 #'   \code{\link{cross_reference}}.
-#' @param name a character scalar, giving the name of the scheme, if any.
+#' @param name a character scalar, giving the name of the schema, if any.
 #' @inheritParams gv
 #'
 #' @return A scalar character, containing text input for Graphviz or the
 #'   \code{DiagrammeR} package.
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
-gv.database_scheme <- function(x, name = NA_character_, ...) {
+gv.database_schema <- function(x, name = NA_character_, ...) {
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
-    relation_scheme_string,
+    relation_schema_string,
     x$attrs,
     x$keys,
     x$relation_names
@@ -246,7 +246,7 @@ relation_string <- function(dataframe, df_name) {
   )
 }
 
-relation_scheme_string <- function(attrs, keys, relation_name) {
+relation_schema_string <- function(attrs, keys, relation_name) {
   col_names <- attrs
   col_snake <- snakecase::to_snake_case(col_names)
   rel_snake <- snakecase::to_snake_case(relation_name)

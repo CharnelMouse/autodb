@@ -2,7 +2,6 @@ Before release
 - update function documentation
 - add database equivalence operator, use in vignette
 - finish vignette
-- change all uses of "scheme" to "schema" to fit modern standards
 - remove index element
 
 After release

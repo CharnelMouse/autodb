@@ -39,13 +39,13 @@ is non-zero, determines where the progress is written to, in the same way
 as the \code{file} argument for \code{\link[base]{cat}}.}
 }
 \value{
-A database scheme, represented by a named list of two lists and two
+A database schema, represented by a named list of two lists and two
 character vectors:
 \itemize{
 \item \code{attrs} elements contain the attributes present in the
-relation schemes, with attributes in keys given first.
+relation schemas, with attributes in keys given first.
 \item \code{keys} elements contain a list of the candidate keys for the
-relation schemes.
+relation schemas.
 \item \code{all_attrs} is a character vector, containing all attribute
 names in priority order for placement and key ordering, i.e. as ordered
 in the original flat table.
@@ -53,11 +53,11 @@ in the original flat table.
 of the relation schemas
 }
 The lists and the \code{relation_names} vector are of equal length,
-representing relation schemes.
+representing relation schemas.
 }
 \description{
 Normalises the dependency relationships in dependencies into a database
-scheme satisfying at least third normal form, using Bernstein's synthesis.
+schema satisfying at least third normal form, using Bernstein's synthesis.
 }
 \details{
 Bernstein's synthesis is a synthesis algorithm for normalisation of a set of

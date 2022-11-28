@@ -1,10 +1,10 @@
 library(hedgehog)
 
 describe("normalise", {
-  expect_database_scheme <- function(current, target) {
+  expect_database_schema <- function(current, target) {
     expect_identical(
       current,
-      structure(target, class = c("database_scheme", "list"))
+      structure(target, class = c("database_schema", "list"))
     )
   }
   gets_unique_table_names <- function(fds) {
@@ -51,7 +51,7 @@ describe("normalise", {
       attrs = c("a", "b", "c")
     )
     norm.dependencies <- normalise(dependencies)
-    expect_database_scheme(
+    expect_database_schema(
       norm.dependencies,
       list(
         attrs = list(c("a", "b", "c")),
@@ -71,7 +71,7 @@ describe("normalise", {
       attrs = c("a", "b", "c")
     )
     norm.dependencies <- normalise(dependencies)
-    expect_database_scheme(
+    expect_database_schema(
       norm.dependencies,
       list(
         attrs = list(c("a", "b"), c("b", "c")),
@@ -92,7 +92,7 @@ describe("normalise", {
       attrs = c("a", "b", "c", "d")
     )
     norm.dependencies <- normalise(dependencies)
-    expect_database_scheme(
+    expect_database_schema(
       norm.dependencies,
       list(
         attrs = list(c("a", "d", "b"), c("b", "c", "a")),
@@ -119,7 +119,7 @@ describe("normalise", {
       attrs = c("a", "b", "c", "d", "e", "f")
     )
     norm.dependencies <- normalise(dependencies)
-    expect_database_scheme(
+    expect_database_schema(
       norm.dependencies,
       list(
         attrs = list(c("a", "b", "c", "d", "f"), c("d", "e"), c("f", "e")),
@@ -174,7 +174,7 @@ describe("normalise", {
       attrs = c("A", "B", "C", "D", "E", "F")
     )
     norm.dep <- normalise(dependencies)
-    expect_database_scheme(
+    expect_database_schema(
       norm.dep,
       list(
         attrs = list(c("C", "A", "B", "D"), c("C", "E", "F")),
@@ -226,14 +226,14 @@ describe("normalise", {
   })
   it("gives keys with attributes in original order", {
     gives_ordered_attributes_in_keys <- function(fds) {
-      scheme <- normalise(fds)
-      all_keys <- unlist(scheme$keys, recursive = FALSE)
-      key_indices <- lapply(all_keys, match, scheme$all_attrs)
+      schema <- normalise(fds)
+      all_keys <- unlist(schema$keys, recursive = FALSE)
+      key_indices <- lapply(all_keys, match, schema$all_attrs)
       expect_false(any(vapply(key_indices, is.unsorted, logical(1))))
 
-      scheme2 <- normalise(fds, remove_avoidable = TRUE)
-      all_keys2 <- lapply(scheme2$keys, "[[", 1)
-      key_indices2 <- lapply(all_keys2, match, scheme2$all_attrs)
+      schema2 <- normalise(fds, remove_avoidable = TRUE)
+      all_keys2 <- lapply(schema2$keys, "[[", 1)
+      key_indices2 <- lapply(all_keys2, match, schema2$all_attrs)
       expect_false(any(vapply(key_indices2, is.unsorted, logical(1))))
     }
     forall(
@@ -241,14 +241,14 @@ describe("normalise", {
       gives_ordered_attributes_in_keys
     )
   })
-  it("can only return up to one relation scheme with no keys", {
-    has_up_to_one_keyless_relation_scheme <- function(fds) {
+  it("can only return up to one relation schema with no keys", {
+    has_up_to_one_keyless_relation_schema <- function(fds) {
       keys <- normalise(fds)$keys
       expect_lte(sum(lengths(keys) == 0), 1)
     }
     forall(
       gen_flat_deps(7, 20),
-      has_up_to_one_keyless_relation_scheme
+      has_up_to_one_keyless_relation_schema
     )
   })
   it("can remove avoidable attributes", {
@@ -267,7 +267,7 @@ describe("normalise", {
       attrs = c("A", "B", "C", "D", "E")
     )
     norm.deps <- normalise(deps, remove_avoidable = FALSE)
-    expect_database_scheme(
+    expect_database_schema(
       norm.deps,
       list(
         attrs = list(c("A", "B"), c("A", "C", "B", "D", "E")),
@@ -277,7 +277,7 @@ describe("normalise", {
       )
     )
     norm.deps2 <- normalise(deps, remove_avoidable = TRUE)
-    expect_database_scheme(
+    expect_database_schema(
       norm.deps2,
       list(
         attrs = list(c("A", "B"), c("A", "C", "D", "E")),
@@ -310,13 +310,13 @@ describe("normalise", {
 
     still_lossless_with_less_or_same_attributes <- function(df) {
       flat_deps <- flatten(dfd(df, 1))
-      scheme_avoid_lossless <- cross_reference(normalise(
+      schema_avoid_lossless <- cross_reference(normalise(
         flat_deps,
         remove_avoidable = TRUE
       ))
 
-      # scheme_avoid_lossless should be lossless
-      database_avoid_lossless <- decompose(df, scheme_avoid_lossless)
+      # schema_avoid_lossless should be lossless
+      database_avoid_lossless <- decompose(df, schema_avoid_lossless)
       df2 <- rejoin(database_avoid_lossless)
       expect_identical_unordered_table(df2, df)
 
@@ -426,10 +426,10 @@ describe("keys_order", {
 })
 
 describe("normalise() replacing normalize_step()", {
-  expect_database_scheme <- function(current, target) {
+  expect_database_schema <- function(current, target) {
     expect_identical(
       current,
-      structure(target, class = c("database_scheme", "list"))
+      structure(target, class = c("database_schema", "list"))
     )
   }
 
@@ -442,7 +442,7 @@ describe("normalise() replacing normalize_step()", {
       attrs = c("a", "b", "c")
     )
     norm.df <- normalise(dependencies)
-    expect_database_scheme(
+    expect_database_schema(
       norm.df,
       list(
         attrs = list(c("a", "b", "c")),
@@ -461,7 +461,7 @@ describe("normalise() replacing normalize_step()", {
       attrs = c("a", "b")
     )
     norm.df <- normalise(dependencies)
-    expect_database_scheme(
+    expect_database_schema(
       norm.df,
       list(
         attrs = list(c("a", "b")),

@@ -4,10 +4,10 @@
 \alias{cross_reference}
 \title{Add foreign key relationships to a normalised database}
 \usage{
-cross_reference(scheme, ensure_lossless = TRUE)
+cross_reference(schema, ensure_lossless = TRUE)
 }
 \arguments{
-\item{scheme}{a database scheme without relationships, as given by
+\item{schema}{a database schema without relationships, as given by
 \code{\link{normalise}}.}
 
 \item{ensure_lossless}{a logical, TRUE by default. If TRUE, and the
@@ -15,21 +15,21 @@ decomposition isn't lossless, an extra relation is added to make the
 decomposition lossless. This relation becomes the ultimate child table.}
 }
 \value{
-A database scheme with relationships, represented by a named list of
+A database schema with relationships, represented by a named list of
 three lists and two character vectors, with the first four having equal
-length and representing relation schemes:
+length and representing relation schemas:
 \itemize{
 \item \code{attrs} elements contain the attributes present in the
-relation schemes, with attributes in keys given first.
+relation schemas, with attributes in keys given first.
 \item \code{keys} elements contain a list of the candidate keys for the
-relation schemes.
+relation schemas.
 \item \code{parents} elements contain integers, representing a relation
-scheme's parent relation schemes by their position in the paired lists.
+schema's parent relation schemas by their position in the paired lists.
 \item \code{relationships} contains a list of relationships, each
 represented by a list containing two elements. In order, the elements
 are a two-length integer vector, giving the positions of the child and
-parent relation schemes, and a scalar character, giving the name of the
-linked attribute in both relation schemes.
+parent relation schemas, and a scalar character, giving the name of the
+linked attribute in both relation schemas.
 \item \code{relation_names} is a character vector, containing the names
 of the relation schemas
 \item \code{all_attrs} is a character vector, containing all attribute

@@ -1,7 +1,7 @@
 #' Normalises dependency relationships
 #'
 #' Normalises the dependency relationships in dependencies into a database
-#' scheme satisfying at least third normal form, using Bernstein's synthesis.
+#' schema satisfying at least third normal form, using Bernstein's synthesis.
 #'
 #' Bernstein's synthesis is a synthesis algorithm for normalisation of a set of
 #' dependencies into a set of relations that are in third normal form. This
@@ -24,13 +24,13 @@
 #'   the dependent.
 #' @inheritParams autonorm
 #'
-#' @return A database scheme, represented by a named list of two lists and two
+#' @return A database schema, represented by a named list of two lists and two
 #'   character vectors:
 #'   \itemize{
 #'     \item \code{attrs} elements contain the attributes present in the
-#'     relation schemes, with attributes in keys given first.
+#'     relation schemas, with attributes in keys given first.
 #'     \item \code{keys} elements contain a list of the candidate keys for the
-#'     relation schemes.
+#'     relation schemas.
 #'     \item \code{all_attrs} is a character vector, containing all attribute
 #'     names in priority order for placement and key ordering, i.e. as ordered
 #'     in the original flat table.
@@ -38,7 +38,7 @@
 #'     of the relation schemas
 #'   }
 #'   The lists and the \code{relation_names} vector are of equal length,
-#'   representing relation schemes.
+#'   representing relation schemas.
 #' @references
 #' Bernstein YEAR, TITLE.
 #' @export
@@ -80,8 +80,8 @@ normalise <- function(
       "re-adding bijections"
     ) |>
     report$op(
-      construct_relation_schemes,
-      "construction relation schemes"
+      construct_relation_schemas,
+      "construction relation schemas"
     )
   if (remove_avoidable)
     inter <- inter |>
@@ -105,7 +105,7 @@ normalise <- function(
   relation_names <- make.names(relation_names, unique = TRUE)
   stopifnot(!anyDuplicated(relation_names))
   inter$relation_names <- relation_names
-  structure(inter, class = c("database_scheme", "list"))
+  structure(inter, class = c("database_schema", "list"))
 }
 
 convert_to_vectors <- function(flat_dependencies) {
@@ -355,7 +355,7 @@ add_bijections <- function(vecs) {
   )
 }
 
-construct_relation_schemes <- function(vecs) {
+construct_relation_schemas <- function(vecs) {
   sorted_bijection_groups <- lapply(
     vecs$bijection_groups,
     \(bg) bg[keys_order(bg)]
@@ -638,17 +638,17 @@ keys_order <- function(keys) {
 }
 
 #' @exportS3Method
-print.database_scheme <- function(x, max = 10, ...) {
+print.database_schema <- function(x, max = 10, ...) {
   n_relations <- length(x$attrs)
   cat(paste0(
-    "database scheme with ",
+    "database schema with ",
     n_relations,
-    " relation scheme",
+    " relation schema",
     if (n_relations != 1) "s",
     "\n"
   ))
   for (n in seq_len(min(n_relations, max))) {
-    cat(paste0("scheme ", n, ": ", toString(x$attrs[[n]]), "\n"))
+    cat(paste0("schema ", n, ": ", toString(x$attrs[[n]]), "\n"))
     keys <- x$keys[[n]]
     n_keys <- length(keys)
     for (k in seq_len(min(n_keys, max))) {
@@ -658,7 +658,7 @@ print.database_scheme <- function(x, max = 10, ...) {
       cat("  ... and", n_keys - max, "other keys\n")
   }
   if (max < n_relations) {
-    cat("... and", n_relations - max, "other schemes\n")
+    cat("... and", n_relations - max, "other schemas\n")
   }
   if (length(x$relationships) == 0)
     cat("no relationships\n")

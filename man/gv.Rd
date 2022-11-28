@@ -60,6 +60,6 @@ Graphviz. This is to allow easier combination of several such graphs into a
 single image, if a user wishes to do so.
 }
 \seealso{
-\code{\link{gv.data.frame}}, \code{\link{gv.database_scheme}},
+\code{\link{gv.data.frame}}, \code{\link{gv.database_schema}},
 \code{\link{gv.database}}
 }

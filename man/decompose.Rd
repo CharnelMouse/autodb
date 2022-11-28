@@ -4,12 +4,12 @@
 \alias{decompose}
 \title{Decompose a data frame based on given normalised dependencies}
 \usage{
-decompose(df, scheme, name = NA_character_)
+decompose(df, schema, name = NA_character_)
 }
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
 
-\item{scheme}{a database scheme with foreign key relationships, as given by
+\item{schema}{a database schema with foreign key relationships, as given by
 \code{\link{cross_reference}}.}
 
 \item{name}{a scalar character, giving the name of the database. This name
@@ -30,7 +30,7 @@ of the linked attribute in the parent table. Currently, the attribute is
 expected to have the same name in both tables.
 \item \code{attributes} contains the attribute names in priority order.
 This order can be taken from their order in \code{df}, or from the
-\code{all_attrs} element in \code{scheme}; these orderings must be the
+\code{all_attrs} element in \code{schema}; these orderings must be the
 same.
 }
 
@@ -47,7 +47,7 @@ tables, i.e. tables referenced in foreign keys.
 }
 \description{
 Decomposes a data frame into several tables, based on the given database
-scheme. It's intended that the relations are derived from a list of
+schema. It's intended that the relations are derived from a list of
 functional dependencies for the same data frame: using anything else will
 give undefined behaviour.
 }

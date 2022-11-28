@@ -2,7 +2,7 @@ library(hedgehog)
 
 describe("cross_reference", {
   it("returns relationships", {
-    scheme <- list(
+    schema <- list(
       attrs = list(
         c("a", "b"),
         c("b", "c")
@@ -13,7 +13,7 @@ describe("cross_reference", {
       ),
       all_attrs = c("a", "b", "c")
     )
-    database <- cross_reference(scheme)
+    database <- cross_reference(schema)
     expected_parents = list(2L, integer())
     expected_relations <- list(
       list(c(1L, 2L), "b")
@@ -24,11 +24,11 @@ describe("cross_reference", {
   it("only links children to parents by exactly one parent key", {
     links_by_exactly_one_parent_key <- function(df) {
       deps <- dfd(df, 1)
-      scheme <- normalise(flatten(deps))
-      if (length(scheme$keys) <= 1)
+      schema <- normalise(flatten(deps))
+      if (length(schema$keys) <= 1)
         succeed()
       else{
-        linked <- cross_reference(scheme)
+        linked <- cross_reference(schema)
         relationship_tables <- lapply(linked$relationships, `[[`, 1)
         relationship_attrs <- vapply(linked$relationships, `[[`, character(1), 2)
         tables_index <- as.data.frame(do.call(rbind, relationship_tables))
@@ -67,8 +67,8 @@ describe("cross_reference", {
       lone_attr <- LETTERS[length(deps$attrs) + 1]
       deps$dependencies <- c(deps$dependencies, setNames(list(list()), lone_attr))
       deps$attrs <- c(deps$attrs, lone_attr)
-      scheme <- normalise(flatten(deps))
-      linked <- cross_reference(scheme, ensure_lossless = TRUE)
+      schema <- normalise(flatten(deps))
+      linked <- cross_reference(schema, ensure_lossless = TRUE)
       expect_true(lone_attr %in% unlist(linked$attrs))
     }
     forall(
@@ -87,26 +87,26 @@ describe("cross_reference", {
         remove_avoidable = FALSE
       )
 
-      scheme_avoid_lossy <- cross_reference(
+      schema_avoid_lossy <- cross_reference(
         norm_deps_avoid,
         ensure_lossless = FALSE
       )
-      scheme_noavoid_lossy <- cross_reference(
+      schema_noavoid_lossy <- cross_reference(
         norm_deps_noavoid,
         ensure_lossless = FALSE
       )
-      scheme_avoid_lossless <- cross_reference(
+      schema_avoid_lossless <- cross_reference(
         norm_deps_avoid,
         ensure_lossless = TRUE
       )
-      scheme_noavoid_lossless <- cross_reference(
+      schema_noavoid_lossless <- cross_reference(
         norm_deps_noavoid,
         ensure_lossless = TRUE
       )
-      lengths_avoid_lossy <- lengths(scheme_avoid_lossy$attrs)
-      lengths_noavoid_lossy <- lengths(scheme_noavoid_lossy$attrs)
-      lengths_avoid_lossless <- lengths(scheme_avoid_lossless$attrs)
-      lengths_noavoid_lossless <- lengths(scheme_noavoid_lossless$attrs)
+      lengths_avoid_lossy <- lengths(schema_avoid_lossy$attrs)
+      lengths_noavoid_lossy <- lengths(schema_noavoid_lossy$attrs)
+      lengths_avoid_lossless <- lengths(schema_avoid_lossless$attrs)
+      lengths_noavoid_lossless <- lengths(schema_noavoid_lossless$attrs)
 
       # losslessness should add 0 or 1 tables
       expect_gte(
@@ -141,8 +141,8 @@ describe("cross_reference", {
       # if extra table added, avoidance shouldn't affect its attributes
       if (length(lengths_avoid_lossless) > length(lengths_avoid_lossy))
         expect_identical(
-          scheme_avoid_lossless$attrs[[lossless_length]],
-          scheme_noavoid_lossless$attrs[[lossless_length]]
+          schema_avoid_lossless$attrs[[lossless_length]],
+          schema_noavoid_lossless$attrs[[lossless_length]]
         )
     }
 
@@ -154,9 +154,9 @@ describe("cross_reference", {
   })
   it("adds table with key with attributes in original order", {
     adds_ordered_primary_keys <- function(fds) {
-      scheme <- cross_reference(normalise(fds), ensure_lossless = TRUE)
-      all_keys <- unlist(scheme$keys, recursive = FALSE)
-      key_indices <- lapply(all_keys, match, scheme$all_attrs)
+      schema <- cross_reference(normalise(fds), ensure_lossless = TRUE)
+      all_keys <- unlist(schema$keys, recursive = FALSE)
+      key_indices <- lapply(all_keys, match, schema$all_attrs)
       expect_false(any(vapply(key_indices, is.unsorted, logical(1))))
     }
     forall(
@@ -167,8 +167,8 @@ describe("cross_reference", {
   })
   it("only return non-extraneous table relationships", {
     only_returns_non_extraneous_relationships <- function(df) {
-      scheme <- normalise(flatten(dfd(df, 1)))
-      linked <- cross_reference(scheme, ensure_lossless = TRUE)
+      schema <- normalise(flatten(dfd(df, 1)))
+      linked <- cross_reference(schema, ensure_lossless = TRUE)
       table_relationships <- unique(lapply(linked$relationships, `[[`, 1))
       table_relationships <- list(
         determinant_sets = lapply(table_relationships, `[`, 1),
@@ -203,7 +203,7 @@ describe("cross_reference", {
             relation_names = paste(key, collapse = "_"),
             all_attrs = letters[1:10]
           ),
-          class = c("database_scheme", "list")
+          class = c("database_schema", "list")
         )
       }
     )

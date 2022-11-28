@@ -1,12 +1,12 @@
 #' Decompose a data frame based on given normalised dependencies
 #'
 #' Decomposes a data frame into several tables, based on the given database
-#' scheme. It's intended that the relations are derived from a list of
+#' schema. It's intended that the relations are derived from a list of
 #' functional dependencies for the same data frame: using anything else will
 #' give undefined behaviour.
 #'
 #' @param df a data.frame, containing the data to be normalised.
-#' @param scheme a database scheme with foreign key relationships, as given by
+#' @param schema a database schema with foreign key relationships, as given by
 #'   \code{\link{cross_reference}}.
 #' @inheritParams autonorm
 #'
@@ -23,7 +23,7 @@
 #'     expected to have the same name in both tables.
 #'     \item \code{attributes} contains the attribute names in priority order.
 #'     This order can be taken from their order in \code{df}, or from the
-#'     \code{all_attrs} element in \code{scheme}; these orderings must be the
+#'     \code{all_attrs} element in \code{schema}; these orderings must be the
 #'     same.
 #'   }
 #'
@@ -38,11 +38,11 @@
 #'     tables, i.e. tables referenced in foreign keys.
 #'   }
 #' @export
-decompose <- function(df, scheme, name = NA_character_) {
-  indexes <- lapply(scheme$keys, `[[`, 1)
-  relation_names <- scheme$relation_names
+decompose <- function(df, schema, name = NA_character_) {
+  indexes <- lapply(schema$keys, `[[`, 1)
+  relation_names <- schema$relation_names
   stopifnot(!anyDuplicated(relation_names))
-  stopifnot(identical(names(df), scheme$all_attrs))
+  stopifnot(identical(names(df), schema$all_attrs))
 
   depdf_list <- Map(
     \(attrs, keys, index, parents) {
@@ -53,13 +53,13 @@ decompose <- function(df, scheme, name = NA_character_) {
         parents = relation_names[parents]
       )
     },
-    scheme$attrs,
-    scheme$keys,
+    schema$attrs,
+    schema$keys,
     indexes,
-    scheme$parents
+    schema$parents
   )
   relationships <- lapply(
-    scheme$relationships,
+    schema$relationships,
     \(r) {
       c(relation_names[r[[1]][1]], r[[2]], relation_names[r[[1]][2]], r[[2]])
     }
@@ -69,7 +69,7 @@ decompose <- function(df, scheme, name = NA_character_) {
       name = name,
       tables = stats::setNames(depdf_list, relation_names),
       relationships = relationships,
-      attributes = scheme$all_attrs
+      attributes = schema$all_attrs
     ),
     class = c("database", "list")
   )

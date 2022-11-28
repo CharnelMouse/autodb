@@ -2,9 +2,9 @@
 
 S3method(gv,data.frame)
 S3method(gv,database)
-S3method(gv,database_scheme)
+S3method(gv,database_schema)
 S3method(print,database)
-S3method(print,database_scheme)
+S3method(print,database_schema)
 export(autonorm)
 export(cross_reference)
 export(decompose)
