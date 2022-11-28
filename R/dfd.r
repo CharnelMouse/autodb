@@ -67,7 +67,7 @@ dfd <- function(
   cache = FALSE,
   exclude = character(),
   exclude_class = character(),
-  progress = 0L,
+  progress = FALSE,
   progress_file = ""
 ) {
   report <- reporter(progress, progress_file, new = TRUE)
@@ -293,61 +293,9 @@ find_LHSs <- function(
       nodes <- res[[3]]
       min_deps <- res[[4]]
       max_non_deps <- res[[5]]
-      if (progress >= 3L)
-        cat(
-          paste0(
-            "node: ", node, ", ",
-            "visited: ", sum(nodes$visited), ", ",
-            "not visited: ", sum(!nodes$visited), ", ",
-            "#seeds: ", length(seeds), ", ",
-            "#min_deps: ", length(min_deps), ", ",
-            "#max_non_deps: ", length(max_non_deps), ", ",
-            "trace: ", length(trace), ", ",
-            "category: ", nodes$category[node], "\n"
-          ),
-          file = progress_file,
-          append = TRUE
-        )
       node <- res[[1]]
     }
     new_seeds <- generate_next_seeds(max_non_deps, min_deps, simple_nodes, nodes)
-    if (progress >= 2L)
-      cat(
-        paste0(
-          "generate: 0, ",
-          "visited: ", sum(nodes$visited), ", ",
-          "not visited: ", sum(!nodes$visited), ", ",
-          "#seeds: ", length(new_seeds), ", ",
-          "#min_deps: ", length(min_deps), ", ",
-          "#max_non_deps: ", length(max_non_deps), ", ",
-          "trace: ", length(trace), ", ",
-          "category: ", 0, "\n"
-        ),
-        file = progress_file,
-        append = TRUE
-      )
-    if (progress >= 4L && setequal(seeds, new_seeds))
-      cat(
-        paste0(
-          "seed status:\n",
-          paste(
-            vapply(
-              seeds,
-              \(s) paste0(
-                "node: ", s, ", ",
-                "children: ", toString(nodes$children[[s]]), ", ",
-                "parents: ", toString(nodes$parents[[s]]), ", ",
-                "category: ", nodes$category[s], ", ",
-                "visited: ", nodes$visited[s], "\n"
-              ),
-              character(1)
-            ),
-            collapse = "\n"
-          )
-        ),
-        file = progress_file,
-        append = TRUE
-      )
     seeds <- new_seeds
   }
   lapply(min_deps, \(md) lhs_attrs[as.logical(intToBits(md))])

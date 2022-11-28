@@ -13,8 +13,8 @@ flatten(dependencies)
 \value{
 A copy of \code{dependencies}, where the \code{dependencies} element
 has been transformed to a list of two-element lists, with the dependency's
-determinants in the first element, its dependent in the second. This is the
-format required by \code{\link{normalise}}.
+determinants in the first element, and its dependent in the second. This is
+the format required by \code{\link{normalise}}.
 }
 \description{
 Flatten functional dependency list for normalisation

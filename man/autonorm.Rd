@@ -11,7 +11,7 @@ autonorm(
   ensure_lossless = TRUE,
   remove_avoidable = FALSE,
   constants_name = "constants",
-  progress = 0L,
+  progress = FALSE,
   progress_file = "",
   ...
 )
@@ -41,11 +41,9 @@ created to store constant attributes. If this is the same as a generated
 table name, it will be changed, with a warning, to ensure that all tables
 have a unique name.}
 
-\item{progress}{an integer, for whether to display progress to the user. 0
-(default) displays nothing. 1 notes the start of finding each non-constant
-attribute's determinant sets. 2 also briefly describes the status of the
-search for an attribute's determinant sets when generating new seeds. 3
-also gives the status after visiting each candidate determinant set / node.}
+\item{progress}{a logical, for whether to display progress to the user during
+dependency search in \code{\link{dfd}} and normalisation in
+\code{\link{normalise}}.}
 
 \item{progress_file}{a scalar character or a connection. If \code{progress}
 is non-zero, determines where the progress is written to, in the same way

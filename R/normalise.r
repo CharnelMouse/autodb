@@ -46,7 +46,7 @@ normalise <- function(
   dependencies,
   remove_avoidable = FALSE,
   constants_name = "constants",
-  progress = 0L,
+  progress = FALSE,
   progress_file = ""
 ) {
   report <- reporter(progress, progress_file)
