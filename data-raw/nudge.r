@@ -7,7 +7,7 @@ nudge <- read.csv(
     "character",
     "character",
     "integer",
-    "factor",
+    "integer",
     "factor",
     "factor",
     "factor",
@@ -30,13 +30,14 @@ nudge <- read.csv(
 )
 bool_cols <- c("binary_outcome", "approximation", "wansink")
 nudge[, bool_cols] <- as.logical(unlist(nudge[, bool_cols]))
-usethis::use_data(nudge, overwrite = TRUE)
-
-nudge_database_nonumeric <- autonormalise::autonorm(
-  nudge,
-  accuracy = 1,
-  name = "Nudge",
-  check_key = FALSE,
-  exclude_class = "numeric"
+location_categories <- c("outside US", "inside US")
+nudge$location <- factor(
+  location_categories[nudge$location + 1L],
+  location_categories
 )
-usethis::use_data(nudge_database_nonumeric, overwrite = TRUE)
+population_categories <- c("children and/or adolescents", "adults")
+nudge$population <- factor(
+  population_categories[nudge$population + 1L],
+  population_categories
+)
+usethis::use_data(nudge, overwrite = TRUE)
