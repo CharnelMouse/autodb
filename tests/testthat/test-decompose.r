@@ -18,7 +18,7 @@ describe("decompose", {
       norm.df,
       list(
         name = NA_character_,
-        tables = list(a = list(
+        relations = list(a = list(
           df = df,
           keys = list("a"),
           parents = character()
@@ -40,7 +40,7 @@ describe("decompose", {
     )
     norm.df <- decompose(df, norm_deps)
     expect_identical(
-      norm.df$tables,
+      norm.df$relations,
       list(a = list(
         df = df,
         keys = list("a", "b"),
@@ -91,7 +91,7 @@ describe("decompose", {
     new_dfs <- decompose(df, norm_deps)
     expected_dfs <- list(
       name = NA_character_,
-      tables = list(
+      relations = list(
         id = list(
           df = df[, c("id", "month", "hemisphere")],
           keys = list("id"),
@@ -149,7 +149,7 @@ describe("decompose", {
       all_attrs = c("a", "b", "c", "d", "e")
     )
     new_dfs <- decompose(df, norm_deps)
-    expect_identical(new_dfs$tables$a$parents, "b_c")
+    expect_identical(new_dfs$relations$a$parents, "b_c")
   })
 
   describe("Dependencies", {
@@ -185,10 +185,10 @@ describe("decompose", {
         all_attrs = c("player_name", "jersey_num", "team", "city", "state")
       )
       depdfs <- decompose(df, norm_deps)
-      expect_identical(length(depdfs$tables), 3L)
+      expect_identical(length(depdfs$relations), 3L)
       expected_depdfs <- list(
         name = NA_character_,
-        tables = list(
+        relations = list(
           player_name_jersey_num = list(
             df = data.frame(
               player_name = integer(),
@@ -239,9 +239,9 @@ describe("decompose", {
       all_attrs = c("A 1", "B 2", "C 3")
     )
     norm.df <- decompose(df, norm_deps)
-    expect_setequal(names(norm.df$tables[[1]]$df), c("A 1", "B 2", "C 3"))
+    expect_setequal(names(norm.df$relations[[1]]$df), c("A 1", "B 2", "C 3"))
   })
-  it("links added key tables", {
+  it("links added key relations", {
     df <- data.frame(
       a = c(1L, 2L, 1L, 2L),
       b = c(1L, 2L, 1L, 2L),
@@ -257,7 +257,7 @@ describe("decompose", {
     )
     norm.df <- decompose(df, norm_deps)
     expect_identical(
-      norm.df$tables$a_c,
+      norm.df$relations$a_c,
       list(
         df = data.frame(a = 1:2, c = rep(1:2, each = 2), row.names = 1:4),
         keys = list(c("a", "c")),

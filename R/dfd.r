@@ -1,7 +1,7 @@
 #' Dependency discovery with DFD
 #'
 #' The DFD algorithm finds all the minimal functional dependencies represented
-#' in a relation/table, represented as a data frame.
+#' in a data frame.
 #'
 #' Column names for \code{\link{df}} must be unique.
 #'
@@ -41,9 +41,9 @@
 #' @param accuracy a numeric in (0, 1]: the accuracy threshold required in order
 #'   to conclude a dependency.
 #' @param cache a logical, indicating whether to store information about how
-#'   sets of attributes group the table rows (stripped partitions). This is
+#'   sets of attributes group the relation records (stripped partitions). This is
 #'   expected to let the algorithm run more quickly, but might be inefficient
-#'   for small tables or small amounts of memory.
+#'   for small data frames or small amounts of memory.
 #' @param exclude a character vector, containing names of attributes to not
 #'   consider as members of determinant sets. If names are given that aren't
 #'   present in \code{df}, the user is given a warning.
@@ -55,7 +55,7 @@
 #' @return A named list with two elements. \code{dependencies} is a named list,
 #'   where the names give the dependent attribute, and each element is a list of
 #'   character vectors. Each character vector is a set of determinant attributes
-#'   for that dependent attribute. \code{attrs} is the column names of
+#'   for that dependent attribute. \code{attrs} is the attribute names of
 #'   \code{df}, in order. This is kept to serve as a default priority order for
 #'   the attributes during normalisation.
 #' @references

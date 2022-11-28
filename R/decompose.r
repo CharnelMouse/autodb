@@ -1,6 +1,6 @@
 #' Decompose a data frame based on given normalised dependencies
 #'
-#' Decomposes a data frame into several tables, based on the given database
+#' Decomposes a data frame into several relations, based on the given database
 #' schema. It's intended that the relations are derived from a list of
 #' functional dependencies for the same data frame: using anything else will
 #' give undefined behaviour.
@@ -13,28 +13,28 @@
 #' @return A database, represented by a named list, with three elements:
 #'   \itemize{
 #'     \item \code{name} contains the assigned name of the relation set, if any;
-#'     \item \code{tables} contains a list of tables in third normal form, that
-#'     can reproduce the original data.frame;
-#'     \item \code{relationships} contains relationships between the tables,
+#'     \item \code{relations} contains a list of relations in third normal form,
+#'     that can reproduce the original data.frame;
+#'     \item \code{relationships} contains relationships between the relations,
 #'     represented as a list of length-four character vectors. In order, the
-#'     elements are the name of the child table, the name of the linked
-#'     attribute in the child table, the name of the parent table, and the name
-#'     of the linked attribute in the parent table. Currently, the attribute is
-#'     expected to have the same name in both tables.
+#'     elements are the name of the child relation, the name of the linked
+#'     attribute in the child relation, the name of the parent relation, and the
+#'     name of the linked attribute in the parent relation. Currently, the
+#'     attribute is expected to have the same name in both relations.
 #'     \item \code{attributes} contains the attribute names in priority order.
 #'     This order can be taken from their order in \code{df}, or from the
 #'     \code{all_attrs} element in \code{schema}; these orderings must be the
 #'     same.
 #'   }
 #'
-#'   Tables are lists with the following elements:
+#'   Relations are lists with the following elements:
 #'   \itemize{
 #'     \item \code{df}, the data.frame containing the data.
 #'     \item \code{keys}, a list of character vectors representing
-#'     (candidate) keys for the table. The first key in the list is the primary
-#'     key.
+#'     (candidate) keys for the relation. The first key in the list is the
+#'     primary key.
 #'     \item \code{parents}, a character vector containing names of parent
-#'     tables, i.e. tables referenced in foreign keys.
+#'     relations, i.e. relations referenced in foreign keys.
 #'   }
 #' @export
 decompose <- function(df, schema, name = NA_character_) {
@@ -63,7 +63,7 @@ decompose <- function(df, schema, name = NA_character_) {
   structure(
     list(
       name = name,
-      tables = stats::setNames(relation_list, relation_names),
+      relations = stats::setNames(relation_list, relation_names),
       relationships = relationships,
       attributes = schema$all_attrs
     ),
@@ -108,7 +108,7 @@ Mode <- function(x) {
 
 #' @exportS3Method
 print.database <- function(x, max = 10, ...) {
-  n_relations <- length(x$tables)
+  n_relations <- length(x$relations)
   cat(paste0(
     "database ",
     x$name,
@@ -119,17 +119,17 @@ print.database <- function(x, max = 10, ...) {
     "\n"
   ))
   for (n in seq_len(min(n_relations, max))) {
-    rows <- nrow(x$tables[[n]]$df)
+    rows <- nrow(x$relations[[n]]$df)
     cat(paste0(
       "relation ",
-      names(x$tables)[n],
+      names(x$relations)[n],
       ": ",
-      toString(names(x$tables[[n]]$df)),
+      toString(names(x$relations[[n]]$df)),
       "; ",
       rows,
       " row", if (rows != 1) "s", "\n"
     ))
-    keys <- x$tables[[n]]$keys
+    keys <- x$relations[[n]]$keys
     n_keys <- length(keys)
     for (k in seq_len(min(n_keys, max))) {
       cat(paste0("  key ", k, ": ", toString(keys[[k]]), "\n"))

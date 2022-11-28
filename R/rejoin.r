@@ -1,20 +1,20 @@
-#' Join a database into a single flat table
+#' Join a database into a data frame
 #'
-#' Rejoins the tables in a database. This is the inverse of calling
+#' Rejoins the relations in a database. This is the inverse of calling
 #' \code{\link{autonorm}} with \code{accuracy} set to 1, except that the rows
-#' and columns might be returned in a different order.
+#' might be returned in a different order.
 #'
-#' The rejoining algorithm might not use all of the given tables: it begins with
-#' the table with the largest number of rows, then joins it with enough tables
-#' to contain all of the present attributes. This is not limited to tables that
-#' the starting table is linked to by foreign keys, and is not limited to them
-#' either, since in some cases this constraint would make it impossible to
-#' rejoin with all of the present attributes.
+#' The rejoining algorithm might not use all of the given relations: it begins
+#' with the relation with the largest number of records, then joins it with enough
+#' relations to contain all of the present attributes. This is not limited to
+#' relations that the starting relation is linked to by foreign keys, and is not
+#' limited to them either, since in some cases this constraint would make it
+#' impossible to rejoin with all of the present attributes.
 #'
-#' If the database is inconsistent, where the unused tables contain additional
-#' information, then the rejoining will be lossy. The algorithm does not check
-#' for this consistency violation. This is also the case for rejoining the
-#' results of \code{\link{reduce}}.
+#' If the database is inconsistent, where the unused relations contain
+#' additional information, then the rejoining will be lossy. The algorithm does
+#' not check for this consistency violation. This is also the case for rejoining
+#' the results of \code{\link{reduce}}.
 #'
 #' @param database A database containing the data to be rejoined, as returned by
 #'   \code{\link{decompose}}.
@@ -23,14 +23,14 @@
 #'   it is lossless and self-consistent.
 #' @export
 rejoin <- function(database) {
-  tables <- database$tables
-  if (length(tables) == 0)
+  relations <- database$relations
+  if (length(relations) == 0)
     return(data.frame())
-  if (length(tables) == 1)
-    return(tables[[1]]$df[, database$attributes, drop = FALSE])
-  attrs <- lapply(tables, \(tb) names(tb$df))
+  if (length(relations) == 1)
+    return(relations[[1]]$df[, database$attributes, drop = FALSE])
+  attrs <- lapply(relations, \(r) names(r$df))
   all_attrs <- unique(unlist(attrs))
-  keys <- lapply(tables, \(tb) tb$keys)
+  keys <- lapply(relations, \(r) r$keys)
   G <- synthesised_fds(attrs, keys)
   G_det_sets <- lapply(unlist(G, recursive = FALSE), `[[`, 1)
   G_deps <- vapply(unlist(G, recursive = FALSE), `[[`, character(1), 2)
@@ -48,23 +48,23 @@ rejoin <- function(database) {
     stop("database is not lossless")
   to_merge <- unique(G_relations[closure_usedlists[[which(is_main)[1]]]])
   stopifnot(!is.null(names(is_main)))
-  main_table <- tables[[which(is_main)]]$df
+  main_relation <- relations[[which(is_main)]]$df
   while (length(to_merge) > 0) {
     mergee <- to_merge[1]
     to_merge <- to_merge[-1]
-    mergee_relation <- tables[[mergee]]
-    current_attrs <- names(main_table)
+    mergee_relation <- relations[[mergee]]
+    current_attrs <- names(main_relation)
     mergee_attrs <- names(mergee_relation$df)
     key <- Find(\(k) all(is.element(k, current_attrs)), mergee_relation$keys)
     new_attrs <- setdiff(mergee_attrs, current_attrs)
-    old_nrow <- nrow(main_table)
-    main_table <- merge(
-      main_table,
+    old_nrow <- nrow(main_relation)
+    main_relation <- merge(
+      main_relation,
       mergee_relation$df[, c(key, new_attrs), drop = FALSE],
       by = key,
       sort = FALSE
     )
-    stopifnot(identical(nrow(main_table), old_nrow))
+    stopifnot(identical(nrow(main_relation), old_nrow))
   }
-  main_table[, database$attributes, drop = FALSE]
+  main_relation[, database$attributes, drop = FALSE]
 }

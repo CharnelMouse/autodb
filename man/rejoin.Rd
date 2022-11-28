@@ -2,7 +2,7 @@
 % Please edit documentation in R/rejoin.r
 \name{rejoin}
 \alias{rejoin}
-\title{Join a database into a single flat table}
+\title{Join a database into a data frame}
 \usage{
 rejoin(database)
 }
@@ -15,20 +15,20 @@ A data frame, containing all information contained \code{database} if
 it is lossless and self-consistent.
 }
 \description{
-Rejoins the tables in a database. This is the inverse of calling
+Rejoins the relations in a database. This is the inverse of calling
 \code{\link{autonorm}} with \code{accuracy} set to 1, except that the rows
-and columns might be returned in a different order.
+might be returned in a different order.
 }
 \details{
-The rejoining algorithm might not use all of the given tables: it begins with
-the table with the largest number of rows, then joins it with enough tables
-to contain all of the present attributes. This is not limited to tables that
-the starting table is linked to by foreign keys, and is not limited to them
-either, since in some cases this constraint would make it impossible to
-rejoin with all of the present attributes.
+The rejoining algorithm might not use all of the given relations: it begins
+with the relation with the largest number of records, then joins it with enough
+relations to contain all of the present attributes. This is not limited to
+relations that the starting relation is linked to by foreign keys, and is not
+limited to them either, since in some cases this constraint would make it
+impossible to rejoin with all of the present attributes.
 
-If the database is inconsistent, where the unused tables contain additional
-information, then the rejoining will be lossy. The algorithm does not check
-for this consistency violation. This is also the case for rejoining the
-results of \code{\link{reduce}}.
+If the database is inconsistent, where the unused relations contain
+additional information, then the rejoining will be lossy. The algorithm does
+not check for this consistency violation. This is also the case for rejoining
+the results of \code{\link{reduce}}.
 }

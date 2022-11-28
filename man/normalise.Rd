@@ -19,14 +19,14 @@ vector for the determinant set, and one unit-length character vector for
 the dependent.}
 
 \item{remove_avoidable}{a logical, indicating whether to remove avoidable
-attributes in tables. If so, then an attribute are removed from tables if
-the keys can be changed such that it is not needed to preserve the given
-functional dependencies.}
+attributes in relations. If so, then an attribute are removed from
+relations if the keys can be changed such that it is not needed to preserve
+the given functional dependencies.}
 
-\item{constants_name}{a scalar character, giving the name for any table
+\item{constants_name}{a scalar character, giving the name for any relation
 created to store constant attributes. If this is the same as a generated
-table name, it will be changed, with a warning, to ensure that all tables
-have a unique name.}
+relation name, it will be changed, with a warning, to ensure that all
+relations have a unique name.}
 
 \item{progress}{a logical, for whether to display progress to the user during
 dependency search in \code{\link{dfd}} and normalisation in
@@ -46,7 +46,7 @@ relation schemas, with attributes in keys given first.
 relation schemas.
 \item \code{all_attrs} is a character vector, containing all attribute
 names in priority order for placement and key ordering, i.e. as ordered
-in the original flat table.
+in the original data frame.
 \item \code{relation_names} is a character vector, containing the names
 of the relation schemas
 }

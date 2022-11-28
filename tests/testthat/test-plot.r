@@ -3,6 +3,7 @@ describe("gv", {
     df_name,
     df_label,
     nrows,
+    rows_name,
     attr_names,
     attr_labels,
     attr_classes,
@@ -20,7 +21,9 @@ describe("gv", {
         paste0(
           " (",
           nrows,
-          " rows)"
+          " ",
+          rows_name,
+          ")"
         ),
         "</TD></TR>"
       ),
@@ -111,7 +114,7 @@ describe("gv", {
       database <- structure(
         list(
           name = "Book",
-          tables = list(
+          relations = list(
             Book = list(
               df = data.frame(
                 Title = c(
@@ -194,6 +197,7 @@ describe("gv", {
           "Book",
           "book",
           2,
+          "records",
           c("Title", "Author", "Pages", "Thickness", "Genre ID", "Publisher ID"),
           c("title", "author", "pages", "thickness", "genre_id", "publisher_id"),
           c("character", "character", "integer", "character", "integer", "integer"),
@@ -215,6 +219,7 @@ describe("gv", {
           "Format Price",
           "format_price",
           4,
+          "records",
           c("Title", "Format", "Price"),
           c("title", "format", "price"),
           c("character", "character", "integer"),
@@ -233,6 +238,7 @@ describe("gv", {
           "Author",
           "author",
           2,
+          "records",
           c("Author", "Author Nationality"),
           c("author", "author_nationality"),
           c("character", "character"),
@@ -250,6 +256,7 @@ describe("gv", {
           "Genre",
           "genre",
           2,
+          "records",
           c("Genre ID", "Genre Name"),
           c("genre_id", "genre_name"),
           c("integer", "character"),
@@ -281,7 +288,7 @@ describe("gv", {
       database <- structure(
         list(
           name = "Book",
-          tables = list(
+          relations = list(
             Book = list(
               df = data.frame(
                 Title = c(
@@ -364,6 +371,7 @@ describe("gv", {
           "Book",
           "book",
           2,
+          "records",
           c("Title", "Author", "Pages", "Thickness", "Genre ID", "Publisher ID"),
           c("title", "author", "pages", "thickness", "genre_id", "publisher_id"),
           c("character", "character", "integer", "character", "integer", "integer"),
@@ -385,6 +393,7 @@ describe("gv", {
           "Format Price",
           "format_price",
           4,
+          "records",
           c("Title", "Format", "Price"),
           c("title", "format", "price"),
           c("character", "character", "integer"),
@@ -403,6 +412,7 @@ describe("gv", {
           "Author",
           "author",
           2,
+          "records",
           c("Author", "Author Nationality"),
           c("author", "author_nationality"),
           c("character", "character"),
@@ -421,6 +431,7 @@ describe("gv", {
           "Genre",
           "genre",
           2,
+          "records",
           c("Genre ID", "Genre Name"),
           c("genre_id", "genre_name"),
           c("integer", "character"),
@@ -452,7 +463,7 @@ describe("gv", {
       database <- structure(
         list(
           name = NA_character_,
-          tables = list(
+          relations = list(
             a = list(
               df = data.frame(a = 1:4, b = 1:2),
               keys = list("a"),
@@ -634,7 +645,7 @@ describe("gv", {
       database <- structure(
         list(
           name = NA_character_,
-          tables = list(
+          relations = list(
             a = list(
               df = data.frame(a = 1:4, b = 1:2),
               keys = list("a"),
@@ -666,6 +677,7 @@ describe("gv", {
             "table",
             "table",
             2,
+            "rows",
             c("a", "b"),
             c("a", "b"),
             c("integer", "character"),
@@ -693,6 +705,7 @@ describe("gv", {
             "Table Test",
             "table_test",
             2,
+            "rows",
             c("A 1", "b.2"),
             c("a_1", "b_2"),
             c("integer", "character"),

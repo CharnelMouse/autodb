@@ -287,7 +287,7 @@ However, the publication-level relation this refers to is not determined by the 
 
 ```{r nudge_publication_check}
 nudge_database <- decompose(nudge, nudge_schema, "nudge")
-nudge_title_relation <- nudge_database$tables$title$df
+nudge_title_relation <- nudge_database$relations$title$df
 nudge_pid_duplicates <- unique(nudge_title_relation$publication_id[
   duplicated(nudge_title_relation$publication_id)
 ])
@@ -312,7 +312,7 @@ This looks to be an improvement. However, we can still see some spurious relatio
 
 ```{r nudge_reference_check}
 nudge_database_filtered <- decompose(nudge, nudge_schema_filtered, "nudge")
-nudge_title_relation_filtered <- nudge_database_filtered$tables$title$df
+nudge_title_relation_filtered <- nudge_database_filtered$relations$title$df
 nudge_reference_duplicates <- unique(nudge_title_relation_filtered$reference[
   duplicated(nudge_title_relation_filtered$reference)
 ])
@@ -454,14 +454,13 @@ In this case, a missing death date represents no death, and we would prefer to m
 ideal_db <- structure(
   list(
     name = "patients",
-    tables = list(
+    relations = list(
       patient = list(
         df = data.frame(
           patient_id = c(1L, 2L, 3L, 4L),
           trial_entry_date = as.Date(c("2022/05/02", "2022/06/06", "2022/04/01", "2022/03/19"))
         ),
         keys = list("patient_id"),
-        index = "patient_id",
         parents = "death"
       ),
       death = list(
@@ -470,7 +469,6 @@ ideal_db <- structure(
           death_date = as.Date("2022/10/07")
         ),
         keys = list("patient_id"),
-        index = "patient_id",
         parents = character()
       )
     ),

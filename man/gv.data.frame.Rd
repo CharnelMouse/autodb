@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot.r
 \name{gv.data.frame}
 \alias{gv.data.frame}
-\title{Generate Graphviz input text to plot single tables}
+\title{Generate Graphviz input text to plot a data frame}
 \usage{
 \method{gv}{data.frame}(x, name, ...)
 }
@@ -18,11 +18,11 @@ A scalar character, containing text input for Graphviz or the
 \code{DiagrammeR} package.
 }
 \description{
-Produces text input for Graphviz to make an HTML diagram of a given table,
-represented by a data.frame.
+Produces text input for Graphviz to make an HTML diagram of a given data
+frame.
 }
 \details{
-The rows in the plotted table include information about the attribute
+The rows in the plotted data frame include information about the attribute
 classes.
 }
 \seealso{

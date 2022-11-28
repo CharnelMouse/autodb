@@ -2,28 +2,28 @@
 % Please edit documentation in R/reduce.r
 \name{reduce}
 \alias{reduce}
-\title{Remove database tables not linked to the main table}
+\title{Remove database relations not linked to the main relation}
 \usage{
 reduce(database)
 }
 \arguments{
-\item{database}{A database, whose tables are to be filtered.}
+\item{database}{A database, whose relations are to be filtered.}
 }
 \value{
-A database, with the auxiliary tables and foreign key relationships
-removed.
+A database, with the auxiliary relations and foreign key
+relationships removed.
 }
 \description{
-Filters a database's tables, keeping only those linked to the main table by
-foreign key references. The main table is considered to be the table with the
-largest number of rows. Foreign key relationships involving removed tables
-are also removed.
+Filters a database's relations, keeping only those linked to the main
+relation by foreign key references. The main relations is considered to be
+the relation with the largest number of records. Foreign key relationships
+involving removed relations are also removed.
 }
 \details{
 This function is mostly intended for simplifying a database for the purposes
 of exploration, particularly by examining plots. While the filtering might
-remove important auxiliary tables, it's also likely to remove any tables
-based on spurious dependencies, of which some databases can contain many.
+remove important auxiliary relations, it's also likely to remove any based on
+spurious dependencies, of which some databases can contain many.
 
 Using \code{\link{rejoin}} on the database resulting from \code{reduce} is
 likely to fail or return incomplete results.

@@ -11,17 +11,17 @@
 #'   is used for the resulting graph when using \code{\link{gv.database}}, to
 #'   allow for easier combining of graphs into a single diagram if required.
 #' @param ensure_lossless a logical, indicating whether to check whether the
-#'   normalisation is lossless. If it is not, then an additional table is added
-#'   to the final "database", containing a key for \code{df}. This is enough to
-#'   make the normalisation lossless.
+#'   normalisation is lossless. If it is not, then an additional relation is
+#'   added to the final "database", containing a key for \code{df}. This is
+#'   enough to make the normalisation lossless.
 #' @param remove_avoidable a logical, indicating whether to remove avoidable
-#'   attributes in tables. If so, then an attribute are removed from tables if
-#'   the keys can be changed such that it is not needed to preserve the given
-#'   functional dependencies.
-#' @param constants_name a scalar character, giving the name for any table
+#'   attributes in relations. If so, then an attribute are removed from
+#'   relations if the keys can be changed such that it is not needed to preserve
+#'   the given functional dependencies.
+#' @param constants_name a scalar character, giving the name for any relation
 #'   created to store constant attributes. If this is the same as a generated
-#'   table name, it will be changed, with a warning, to ensure that all tables
-#'   have a unique name.
+#'   relation name, it will be changed, with a warning, to ensure that all
+#'   relations have a unique name.
 #' @param progress a logical, for whether to display progress to the user during
 #'   dependency search in \code{\link{dfd}} and normalisation in
 #'   \code{\link{normalise}}.

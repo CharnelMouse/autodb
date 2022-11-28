@@ -4,7 +4,7 @@
 #'   \code{\link{normalise}}.
 #' @param ensure_lossless a logical, TRUE by default. If TRUE, and the
 #'   decomposition isn't lossless, an extra relation is added to make the
-#'   decomposition lossless. This relation becomes the ultimate child table.
+#'   decomposition lossless. This relation becomes the ultimate child relation.
 #'
 #' @return A database schema with relationships, represented by a named list of
 #'   three lists and two character vectors, with the first four having equal
@@ -25,7 +25,7 @@
 #'     of the relation schemas
 #'     \item \code{all_attrs} is a character vector, containing all attribute
 #'     names in priority order for placement and key ordering, i.e. as ordered
-#'     in the original flat table.
+#'     in the original data frame.
 #'  }
 #' @export
 cross_reference <- function(schema, ensure_lossless = TRUE) {
@@ -96,7 +96,7 @@ calculate_references <- function(keys, attrs) {
     }
   }
 
-  # remove extraneous relationships, i.e. those that skip tables in the
+  # remove extraneous relationships, i.e. those that skip relations in the
   # hierarchy, and duplicates
   vecs <- list(
     determinant_sets = child_ref_attrs,
@@ -104,9 +104,9 @@ calculate_references <- function(keys, attrs) {
   )
   filtered_vecs <- remove_extraneous_dependencies(vecs)
 
-  table_pairs <- do.call(Map, c(list(c), vecs))
-  filtered_table_pairs <- do.call(Map, c(list(c), filtered_vecs))
-  kept <- match(filtered_table_pairs, table_pairs)
+  relation_pairs <- do.call(Map, c(list(c), vecs))
+  filtered_relation_pairs <- do.call(Map, c(list(c), filtered_vecs))
+  kept <- match(filtered_relation_pairs, relation_pairs)
   stopifnot(!anyNA(kept))
   filtered_attrs <- ref_attrs[kept]
 

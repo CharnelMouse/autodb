@@ -8,25 +8,26 @@
 #' The object is expected to be one of the following:
 #' \itemize{
 #'   \item an object whose elements have the same length. Examples would be
-#'   data frames, matrices, and other objects that can represent tables, with
+#'   data frames, matrices, and other objects that can represent relations, with
 #'   names for the elements, and an optional name for the object itself.
-#'   \item a graph of sub-objects, each of which represent a table as
+#'   \item a graph of sub-objects, each of which represent a relation as
 #'   described above, possibly with connections between the objects, and an
 #'   optional name for the graph as a whole.
 #' }
 #'
-#' Each table is presented as a record-like shape, with the following elements:
+#' Each relation is presented as a record-like shape, with the following elements:
 #' \itemize{
-#'   \item A optional header with the table's name, and the number of (unique)
-#'   rows.
-#'   \item A set of rows, one for each attribute in the table. These rows have the following contents:
+#'   \item A optional header with the relation's name, and the number of (unique)
+#'   records.
+#'   \item A set of rows, one for each attribute in the relation. These rows
+#'   have the following contents:
 #'   \itemize{
 #'     \item the attribute names.
-#'     \item a depiction of the table's (candidate) keys. Each
+#'     \item a depiction of the relation's (candidate) keys. Each
 #'     column represents a key, and a filled cell indicates that the attribute
 #'     in that row is in that key. The keys are given in lexical order, with
 #'     precedence given to keys with fewer attributes, and keys with attributes
-#'     that appear earlier in the original table's attribute order. Default
+#'     that appear earlier in the original data frame's attribute order. Default
 #'     output from other package functions will thus have the primary key given
 #'     first. In the future, this will be changed to always give the primary key
 #'     first.
@@ -35,7 +36,7 @@
 #'   }
 #' }
 #'
-#' Any foreign key references between tables are represented by one-way arrows,
+#' Any foreign key references between relations are represented by one-way arrows,
 #' one per attribute in the foreign key.
 #'
 #' If the object has a name, this name is attached to the resulting graph in
@@ -58,8 +59,8 @@ gv <- function(x, ...) {
 #'
 #' Produces text input for Graphviz to make an HTML diagram of a given database.
 #'
-#' Each table in the database is presented as a set of rows, one for each
-#' attribute in the table. These rows include information about the attribute
+#' Each relation in the database is presented as a set of rows, one for each
+#' attribute in the relation. These rows include information about the attribute
 #' classes.
 #'
 #' @param x a database, as returned by \code{\link{cross_reference}} or
@@ -74,8 +75,9 @@ gv.database <- function(x, ...) {
   setup_string <- gv_setup_string(x$name)
   df_strings <- mapply(
     relation_string,
-    x$tables,
-    names(x$tables)
+    x$relations,
+    names(x$relations),
+    "record"
   ) |>
     paste(collapse = "\n")
   reference_strings <- vapply(
@@ -146,12 +148,12 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
   )
 }
 
-#' Generate Graphviz input text to plot single tables
+#' Generate Graphviz input text to plot a data frame
 #'
-#' Produces text input for Graphviz to make an HTML diagram of a given table,
-#' represented by a data.frame.
+#' Produces text input for Graphviz to make an HTML diagram of a given data
+#' frame.
 #'
-#' The rows in the plotted table include information about the attribute
+#' The rows in the plotted data frame include information about the attribute
 #' classes.
 #'
 #' @param x a data.frame.
@@ -164,7 +166,7 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
 #' @exportS3Method
 gv.data.frame <- function(x, name, ...) {
   setup_string <- gv_setup_string(name)
-  table_string <- relation_string(list(df = x, keys = list()), name)
+  table_string <- relation_string(list(df = x, keys = list()), name, "row")
   teardown_string <- "}\n"
   paste(
     setup_string,
@@ -186,7 +188,8 @@ gv_setup_string <- function(df_name) {
   )
 }
 
-relation_string <- function(dataframe, df_name) {
+relation_string <- function(dataframe, df_name, row_name = c("record", "row")) {
+  row_name <- match.arg(row_name)
   df <- dataframe$df
   keys <- dataframe$keys
   df_snake <- snakecase::to_snake_case(df_name)
@@ -225,7 +228,8 @@ relation_string <- function(dataframe, df_name) {
     df_name,
     " (",
     nrows,
-    " row",
+    " ",
+    row_name,
     if (nrows != 1) "s",
     ")",
     "</TD></TR>",

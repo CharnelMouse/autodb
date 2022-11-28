@@ -12,7 +12,7 @@ cross_reference(schema, ensure_lossless = TRUE)
 
 \item{ensure_lossless}{a logical, TRUE by default. If TRUE, and the
 decomposition isn't lossless, an extra relation is added to make the
-decomposition lossless. This relation becomes the ultimate child table.}
+decomposition lossless. This relation becomes the ultimate child relation.}
 }
 \value{
 A database schema with relationships, represented by a named list of
@@ -34,7 +34,7 @@ linked attribute in both relation schemas.
 of the relation schemas
 \item \code{all_attrs} is a character vector, containing all attribute
 names in priority order for placement and key ordering, i.e. as ordered
-in the original flat table.
+in the original data frame.
 }
 }
 \description{

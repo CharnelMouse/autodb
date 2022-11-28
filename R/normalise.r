@@ -33,7 +33,7 @@
 #'     relation schemas.
 #'     \item \code{all_attrs} is a character vector, containing all attribute
 #'     names in priority order for placement and key ordering, i.e. as ordered
-#'     in the original flat table.
+#'     in the original data frame.
 #'     \item \code{relation_names} is a character vector, containing the names
 #'     of the relation schemas
 #'   }

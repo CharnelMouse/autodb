@@ -20,8 +20,8 @@ A scalar character, containing text input for Graphviz or the
 Produces text input for Graphviz to make an HTML diagram of a given database.
 }
 \details{
-Each table in the database is presented as a set of rows, one for each
-attribute in the table. These rows include information about the attribute
+Each relation in the database is presented as a set of rows, one for each
+attribute in the relation. These rows include information about the attribute
 classes.
 }
 \seealso{
