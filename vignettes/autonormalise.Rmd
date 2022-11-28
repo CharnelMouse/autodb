@@ -46,7 +46,7 @@ It's in this context that I would usually have to do the normalisation by hand, 
 
 ## Terminology
 
-To keep things aimed at R users and statisticians, this vignette is consistent with terminology: a *database* consists of *relations*, which have *records* with the same *attributes*. This is more in line with terms used in relational theory than Statistics, where we would talk about tables, which have rows with values for the same variables, with a column for each variable. In the case where we would refer to a "flat table", we refer to a *data frame* instead, which also consists of records with attributes.
+To avoid confusion, this vignette is consistent with terminology: a *database* consists of *relations*, which have *records* with the same *attributes*. This is in line with terms used in the relational model; in Statistics, where we would talk about tables, which have rows with values for the same variables, with a column for each variable. For the original data set, which is a flat table, we refer to a *data frame* instead, which also consists of records with attributes.
 
 ## Not for database design
 
