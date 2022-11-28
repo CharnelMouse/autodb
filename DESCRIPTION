@@ -1,5 +1,5 @@
 Package: autonormalise
-Title: Database normalisation for data frames
+Title: Automatic database normalisation for data frames
 Version: 0.0.0.9000
 Authors@R: 
     person(
