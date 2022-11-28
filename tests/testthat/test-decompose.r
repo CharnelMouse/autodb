@@ -21,7 +21,6 @@ describe("decompose", {
         tables = list(a = list(
           df = df,
           keys = list("a"),
-          index = "a",
           parents = character()
         )),
         relationships = list(),
@@ -45,7 +44,6 @@ describe("decompose", {
       list(a = list(
         df = df,
         keys = list("a", "b"),
-        index = "a",
         parents = character()
       ))
     )
@@ -97,7 +95,6 @@ describe("decompose", {
         id = list(
           df = df[, c("id", "month", "hemisphere")],
           keys = list("id"),
-          index = "id",
           parents = "month_hemisphere"
         ),
         month_hemisphere = list(
@@ -112,7 +109,6 @@ describe("decompose", {
             c("month", "is_winter"),
             c("hemisphere", "is_winter")
           ),
-          index = c("month", "hemisphere"),
           parents = character()
         )
       ),
@@ -204,7 +200,6 @@ describe("decompose", {
               c("player_name", "team"),
               c("team", "jersey_num")
             ),
-            index = c("player_name", "jersey_num"),
             parents = "team"
           ),
           city = list(
@@ -213,7 +208,6 @@ describe("decompose", {
               state = integer()
             ),
             keys = list("city", "state"),
-            index = "city",
             parents = character()
           ),
           team = list(
@@ -222,7 +216,6 @@ describe("decompose", {
               city = integer()
             ),
             keys = list("team"),
-            index = "team",
             parents = "city"
           )
         ),
@@ -268,7 +261,6 @@ describe("decompose", {
       list(
         df = data.frame(a = 1:2, c = rep(1:2, each = 2), row.names = 1:4),
         keys = list(c("a", "c")),
-        index = c("a", "c"),
         parents = "a"
       )
     )

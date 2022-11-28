@@ -38,9 +38,8 @@ Tables are lists with the following elements:
 \itemize{
 \item \code{df}, the data.frame containing the data.
 \item \code{keys}, a list of character vectors representing
-(candidate) keys for the table.
-\item \code{index}, a character vector representing the index / primary
-key of the table.
+(candidate) keys for the table. The first key in the list is the primary
+key.
 \item \code{parents}, a character vector containing names of parent
 tables, i.e. tables referenced in foreign keys.
 }

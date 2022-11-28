@@ -2,7 +2,6 @@ Before release
 - update function documentation
 - add database equivalence operator, use in vignette
 - finish vignette
-- remove index element
 
 After release
 - vectorisation of DFD

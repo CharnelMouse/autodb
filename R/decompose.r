@@ -31,31 +31,27 @@
 #'   \itemize{
 #'     \item \code{df}, the data.frame containing the data.
 #'     \item \code{keys}, a list of character vectors representing
-#'     (candidate) keys for the table.
-#'     \item \code{index}, a character vector representing the index / primary
-#'     key of the table.
+#'     (candidate) keys for the table. The first key in the list is the primary
+#'     key.
 #'     \item \code{parents}, a character vector containing names of parent
 #'     tables, i.e. tables referenced in foreign keys.
 #'   }
 #' @export
 decompose <- function(df, schema, name = NA_character_) {
-  indexes <- lapply(schema$keys, `[[`, 1)
   relation_names <- schema$relation_names
   stopifnot(!anyDuplicated(relation_names))
   stopifnot(identical(names(df), schema$all_attrs))
 
-  depdf_list <- Map(
-    \(attrs, keys, index, parents) {
+  relation_list <- Map(
+    \(attrs, keys, parents) {
       list(
         df = unique(df[, attrs, drop = FALSE]),
         keys = keys,
-        index = index,
         parents = relation_names[parents]
       )
     },
     schema$attrs,
     schema$keys,
-    indexes,
     schema$parents
   )
   relationships <- lapply(
@@ -67,7 +63,7 @@ decompose <- function(df, schema, name = NA_character_) {
   structure(
     list(
       name = name,
-      tables = stats::setNames(depdf_list, relation_names),
+      tables = stats::setNames(relation_list, relation_names),
       relationships = relationships,
       attributes = schema$all_attrs
     ),
