@@ -24,11 +24,11 @@ library(autonormalise)
 
 `autonormalise` is described in the DESCRIPTION file in the following way:
 
-> Automatic normalisation of a data.frame to third normal form, with the intention of easing the process of data cleaning."
+> Automatic normalisation of a data frame to third normal form, with the intention of easing the process of data cleaning. (Usage to design your actual database for you is not advised.)"
 
 Let us begin there.
 
-## Data cleaning, not database design
+## For data cleaning
 
 Database normalisation works on the principle that our data should only express a piece of information in a single place. This is done to reduce the chance that a modification will accidentally change or remove other pieces of information.
 
@@ -36,17 +36,33 @@ Data cleaning works on the principle that we remove duplicate observations and s
 
 Normalisation is helpful for both of these areas. I usually use the original, flat, "tidy" data for the analysis itself. However, for checking the data's consistency, and for using the data to learn about the domain, normalised data is often helpful, whether it's used for the analysis or not.
 
-Normalisation may, or may not, be a straightforward process, depending on how much information on the data you have. In my own work, I am lucky if I am given a key or a data dictionary for the data set at all. When I am, it usually proves to be wrong somehow. Normalisation, and data checking, is not just an exercise in looking for errors: it's also a key part of the process of understanding the problem domain. It's in this context that I would usually have to work out the normalisation by hand, and I would like to have a tool that does it semi-automatically. This package is intended to be that tool.
+I usually do data checking under the following conditions:
 
-Good database design is a hard and involved process, which requires a strong grasp on the domain that the database will hold information on. Please don't try to use this package to do it on autopilot.
+- No need to store the data in normalised form. My own work normally consists of one-off analyses, where I won't see the data again once I've finished the work. For more permanent data, it would be better to store the data in a database designed to hold it, if you're able to.
+- Limited documentation. In my own work, I am lucky if I am given a key or a data dictionary for the data set at all. When I am, it usually proves to be wrong somehow. This makes it even more important to do data checking, not just for looking for errors, but also as an exercise in understanding the problem domain before starting to model it.
+- Data that fits in local memory. This process could be done in batches or using a streaming algorithm, but this is a more advanced case.
+
+It's in this context that I would usually have to do the normalisation by hand, and I would like to have a tool that does it semi-automatically. This package is intended to be that tool, using a minimal amount of additional libraries.
+
+## Terminology
+
+To keep things aimed at R users and statisticians, this vignette is consistent with terminology: a *database* consists of *relations*, which have *records* with the same *attributes*. This is more in line with terms used in relational theory than Statistics, where we would talk about tables, which have rows with values for the same variables, with a column for each variable. In the case where we would refer to a "flat table", we refer to a *data frame* instead, which also consists of records with attributes.
+
+## Not for database design
+
+Good database design is a hard and involved process, which requires a strong grasp on the domain that the database will hold information on. Please don't try to use this package to do it on autopilot. In particular, the conditions described above mean we do things differently to how we would in a real database:
+
+- We need to handle constant attributes, that have the same value in every record. In a real database, we would probably expect these to not stay constant when more data is added, and would know which relation to place it in. In one-off data checking, there isn't more data coming, so we need to handle these attributes in an automatic way by placing them in a "constants" relation with an empty key, which database designers would probably frown at.
+- We don't care about database design principles concerned with avoiding errors under deletion, modification, and so on, because the data won't change. This means that we don't care about introducing artificial keys, unless we think it would make data modelling more convenient. Similarly, we don't care about having single-attribute reference relations, which are used to make sure other relations only assign legal values to that relation's attribute.
+- We have no "derived relations", also known as "views", which are additional relations created from the others for lookup convenience. We expect to be using the data frame for modelling, rather than the database, so such lookups aren't commonly necessary, and are left to the discretion of the user to do manually with base R's `merge` function.
 
 ## Third normal form
 
-`autonormalise` gets a given data.frame to third normal form: every attribute depends on the whole key(s), and non-key attributes depend on nothing but the key(s). This was chosen because there is an existing algorithm, Bernstein's synthesis, for normalising to third normal form, and because it's the highest normal form that is attainable with arbitrary original tables.
+`autonormalise` gets a given data.frame to third normal form: every attribute depends on the whole key(s), and non-key attributes depend on nothing but the key(s). This was chosen because there is an existing algorithm, Bernstein's synthesis, for normalising to third normal form, and because it's the highest normal form that is attainable with arbitrary original data frames. There is an additional enhancement available as an option: see the section on avoidable attributes for more details.
 
-# A simple example
+# Simple examples
 
-For a very simple example, we can use the `ChickWeight` dataset, included with base R.
+For most of these simple examples, we use the `ChickWeight` dataset, included with base R.
 
 ```{r}
 summary(ChickWeight)
@@ -60,7 +76,7 @@ The simplest way to do normalisation is with the `autonorm` function:
 db <- autonorm(ChickWeight, accuracy = 1, name = "Chick Weights")
 ```
 
-The `accuracy` argument expects a number between zero and one, determining what proportion of a data.frames rows need to satisfy a given dependency for the algorithm to consider it valid. Setting `accuracy` to one, as done here, limits us to exact dependencies.
+The `accuracy` argument expects a number between zero and one, determining what proportion of a data frame's records need to satisfy a given dependency for the algorithm to consider it valid. Setting `accuracy` to one, as done here, limits us to exact dependencies. We'll look at other values later, in the section on approximate dependencies.
 
 ```{r}
 db
@@ -83,24 +99,26 @@ This can be saved to a file for passing to Graphviz elsewhere, or can be passed 
 DiagrammeR::grViz(db_text)
 ```
 
-Each table is represented as a box, with the top row giving the name and number of rows, and the other rows detailing the columns. In the middle is a grid of cells: each column of cells represents a (candidate) key for the table, where columns in that key have their cell filled in black.
+Each relation is represented as a box, with the top row giving the relation name and the number of records, and the other rows detailing the attributes. In the middle is a grid of cells: each column of cells represents a (candidate) key for the relation, where attributes in that key have their cell filled in black.
 
-We can see that `ChickWeight` was split into two tables, with a weight for each unique combination of Chick number and time, and the Chick number by itself determining the diet. We can also see the number of rows in each table, and the classes of the columns in those tables.
+We can see that `ChickWeight` was split into two relations, with a weight for each unique combination of Chick number and time, and the Chick number by itself determining the diet. We can also see the number of records in each relation, and the classes of the attributes in those relations.
+
+`gv` also has methods for `data.frame`, and for `database_scheme`, which is introduced later.
 
 ## Finding functional dependencies with DFD
 
-Having looked at the final result first, we now look at the individual steps. The first step is to find the (non-trivial and minimal) dependencies present in the given data.frame. There are various ways to do this; this package uses DFD, a depth-first search algorithm. We run this using the `dfd` function, setting `progress` to `TRUE` to see the steps taken:
+Having looked at the final result first, we now look at the individual steps. The first step is to find the (non-trivial and minimal) dependencies present in the given data.frame. There are various ways to do this; the package uses DFD, a depth-first search algorithm. We run this using the `dfd` function, setting `progress` to `TRUE` to see the steps taken:
 
 ```{r}
 deps <- dfd(ChickWeight, 1, progress = TRUE)
 deps
 ```
 
-After simplifying the data to something quicker to iterate over -- specifically, by converting all columns to integer values -- the algorithm takes each column in turn as a possible dependent, and finds sets of the other columns that determine it. As present, the algorithm can pass results for one column to future columns, to save computation time, but this is not implemented in the current version.
+After simplifying the data to something quicker to iterate over -- specifically, by converting all attributes to have integer values -- the algorithm takes each attribute in turn as a possible dependent, and finds sets of the other attributes that determine it.
 
-The result is a list, with two elements: `dependencies` gives the discovered determinants of each column in turn, and `attrs` gives all the column names.
+The result is a list, with two elements: `dependencies` gives the discovered determinants of each attribute in turn, and `attrs` gives all the attribute names in their original order.
 
-This is meant to be a reasonably compact, user-readable presentation of the results, with dependencies grouped by the dependent. For use in the later stages of the process, we convert to a different format first, using `flatten`:
+This is meant to be a reasonably compact, user-readable presentation of the results, for when we're interested in the determinants for a particular dependent attribute. For use in the later stages of the process, we convert to a different format first, using `flatten`:
 
 ```{r}
 flat_deps <- flatten(deps)
@@ -126,7 +144,7 @@ cat(scheme_text)
 DiagrammeR::grViz(scheme_text)
 ```
 
-This is similar to the database plot given before, but there is some information not present, that requires the data frame itself. Namely, we have no class information about the columns, and no row counts for the individual relation schemes. Additionally, at this point we have no connections between the relation schemes, since Bernstein's synthesis doesn't supply information about foreign key references. We could use this database scheme to build a database, but we'd rather have the foreign key references, to guide table joins.
+This is similar to the database plot given before, but there is some information not present, that requires the data frame itself. Namely, we have no class information about the attributes, and no record counts for the individual relation schemes. Additionally, at this point we have no connections between the relation schemes, since Bernstein's synthesis doesn't supply information about foreign key references. We could use this database scheme to build a database, but we'd rather add the foreign key references first.
 
 ## Tuning detection and normalisation
 
@@ -136,7 +154,7 @@ Let's look at a different dataset for a moment, to look at some cases where we d
 as.data.frame(Titanic)
 ```
 
-This is a simple set of data, with a single count observation, `Freq`, for each combination of the four determining variables. In other words, the table is already normalised, so we only expect one table in the normalised database.
+This is a simple set of data, with a single count observation, `Freq`, for each combination of the four determining attributes. In other words, the relation is already normalised, so we only expect one relation in the normalised database.
 
 If we use `autonorm` again, we get the following database:
 
@@ -144,18 +162,18 @@ If we use `autonorm` again, we get the following database:
 DiagrammeR::grViz(gv(autonorm(as.data.frame(Titanic), 1)))
 ```
 
-Oops! The DFD algorithm found some functional dependencies where the count could be used to determine another variable. These are clearly spurious: frequency count clearly can't causally determine age, for example. However, the algorithm still finds these dependencies, because the counts are unique often enough to make these dependencies hold in the given data.
+Oops! The DFD algorithm found some functional dependencies where the count could be used to determine another attribute. These are clearly spurious: frequency count can't causally determine age, for example. However, the algorithm still finds these dependencies, because the counts are unique often enough to make these dependencies hold in the given data.
 
 There are two approaches we can take to eliminate these spurious dependencies: not letting them be detected in the first place, and removing them before using `cross_reference`.
 
-To stop them being detected, we can put constraints on what is discovered by `dfd`: we can ask for certain columns to not be considered as determinants, or we can exclude columns that inherit from certain classes. For example, here we could exclude `Freq` from being considered:
+To stop them being detected, we can put constraints on what is discovered by `dfd`: we can ask for certain attributes to not be considered as determinants, or we can exclude attributes that inherit from certain classes. In this example, we could exclude `Freq` from being considered:
 
 ```{r}
 titanic_deps_freqonly <- dfd(as.data.frame(Titanic), 1, exclude = "Freq")
 titanic_deps_freqonly
 ```
 
-Alternatively, we could exclude all columns that inherit from "numeric":
+Alternatively, we could exclude all attributes that inherit from "numeric":
 
 ```{r}
 identical(titanic_deps_freqonly, dfd(as.data.frame(Titanic), 1, exclude_class = "numeric"))
@@ -167,7 +185,7 @@ These can both be used as arguments to `autonorm` too:
 DiagrammeR::grViz(gv(autonorm(as.data.frame(Titanic), 1, exclude = "Freq")))
 ```
 
-Generally, excluding numeric columns as determinants is often useful, because we expect non-integer numbers to be a measurement, not part of a primary key.
+Generally, excluding numeric attributes as determinants is often useful, because we expect non-integer numbers to be a measurement, not part of a primary key.
 
 Alternatively, we could remove unwanted dependencies before using `decompose`. Here are the found dependencies, if we don't exclude anything:
 
@@ -176,7 +194,7 @@ titanic_deps <- dfd(as.data.frame(Titanic), 1)
 titanic_deps
 ```
 
-We could remove the unwanted dependencies, where `Age` is the dependent:
+We could remove the unwanted dependencies, where `Age` is the dependent, from here:
 
 ```{r}
 titanic_deps_filtered <- titanic_deps
@@ -184,15 +202,10 @@ titanic_deps_filtered$dependencies$Age <- list()
 identical(titanic_deps_filtered, titanic_deps_freqonly)
 ```
 
-Alternatively, we could look at the flattened version:
+Alternatively, we could remove them from the flattened version, if that's more convenient:
 
 ```{r}
 flatten(titanic_deps)
-```
-
-We can remove unwanted dependencies from the flattened version, if it's more convenient:
-
-```{r}
 titanic_deps_filtered2 <- flatten(titanic_deps)
 titanic_deps_filtered2$dependencies <- Filter(
   function(dep) dep[[2]] == "Freq", 
@@ -203,7 +216,7 @@ identical(flatten(titanic_deps_freqonly), titanic_deps_filtered2)
 
 ## Adding cross-references
 
-Getting back to our `ChickWeight` example, we now have a database scheme, consisting of a list of relation schemes. However, we have no information about how these relation schemes are linked to each other. In particular, we have no information about foreign keys, that we would need to join tables back together, to reconstruct the original data frame. We can add this information using `cross_reference`:
+Getting back to our `ChickWeight` example, we now have a database scheme, consisting of a list of `relation` schemes. However, we have no information about how these relation schemes are linked to each other. In particular, we have no information about foreign keys, that we would need to join relations back together, to reconstruct the original data frame. We can add this information using `cross_reference`:
 
 ```{r}
 linked_scheme <- cross_reference(scheme)
@@ -218,7 +231,7 @@ cat(linked_text)
 DiagrammeR::grViz(linked_text)
 ```
 
-## Decomposing the original table
+## Decomposing the original relation
 
 Finally, once we have our normalised database scheme, we can apply it to our original data frame, or a new one with the same structure. This results in a normalised database, as we got from using `autonorm`:
 
@@ -231,29 +244,31 @@ identical(db, db2)
 DiagrammeR::grViz(gv(db, name = "Chick Weights"))
 ```
 
-We now have the column class information and row counts added, as well as automatic names for the individual relations.
+We now have the attribute class information and record counts added, as well as automatic names for the individual relations.
 
-## Approximate dependencies
+## Rejoin a database to a data frame
 
-## Avoidable attributes
+We can reverse the process of turning a data frame into a database with the `rejoin` function:
+
+```{r chickWeights_rejoin}
+rejoined <- rejoin(db)
+summary(rejoined)
+identical(rejoined, ChickWeight)
+```
+
+When rejoined, the relation attributes will be in the original order. However, the record order might have changed.
 
 # A larger example
 
 Included in the package is a `r paste(dim(nudge), collapse = "-by-")` data frame called `nudge`:
 
 ```{r nudge_classes}
-knitr::kable(
-  data.frame(
-    attribute = names(nudge),
-    class = vapply(nudge, class, character(1))
-  ),
-  row.names = FALSE
-)
+DiagrammeR::grViz(gv(nudge, name = "nudge"))
 ```
 
 This is the data set for a meta-analysis, looking at the effectiveness of "nudge" interventions. Measurements are taken within a three-layer hierarchy: publications contain studies, which contain effect size measurements. We expect this hierarchy to be apparent in the normalisation.
 
-Getting full dependency information for this table can take a long time, so here we find a reduced set, not considering numeric or sample size columns:
+Getting full dependency information for this relation can take a long time, so here we search for a reduced set, not considering numeric or sample size attributes as determinants:
 
 ```{r nudge_database}
 nudge_deps <- flatten(dfd(
@@ -266,20 +281,22 @@ nudge_scheme <- cross_reference(normalise(nudge_deps, remove_avoidable = TRUE))
 DiagrammeR::grViz(gv(nudge_scheme))
 ```
 
-We can see a table, with many columns, determined by the effect size ID number, `es_id`. This contains all of the numeric measurements, as expected in the table for the lowest level in the hierarchy. As also expected, this has a foreign key reference to a table for study-level information. However, the table this has a reference to is not determined by the publication ID, as we would expect. Instead, it is determined by the publication's title: to use the ID, we would need to supplement it with the publication year. This suggests that some publication ID numbers have been erroneously assigned to several publications, which we can easily test:
+We can see a relation, with many attributes, determined by the effect size ID number, `es_id`. This contains all of the numeric measurements, as expected in the relation for the lowest level in the hierarchy. As also expected, this has a foreign key reference to a relation for study-level information, determined by the study ID number, `study_id`.
+
+However, the publication-level relation this refers to is not determined by the publication ID, `publication_id`, as we would expect. Instead, it is determined by the publication's title: to use the ID, we would need to supplement it with the publication year. This suggests that some publication ID numbers have been erroneously assigned to several publications, which we can easily test:
 
 ```{r nudge_publication_check}
 nudge_database <- decompose(nudge, nudge_scheme, "nudge")
-nudge_title_table <- nudge_database$tables$title$df
-nudge_pid_duplicates <- unique(nudge_title_table$publication_id[
-  duplicated(nudge_title_table$publication_id)
+nudge_title_relation <- nudge_database$tables$title$df
+nudge_pid_duplicates <- unique(nudge_title_relation$publication_id[
+  duplicated(nudge_title_relation$publication_id)
 ])
-knitr::kable(subset(nudge_title_table, publication_id %in% nudge_pid_duplicates))
+knitr::kable(subset(nudge_title_relation, publication_id %in% nudge_pid_duplicates))
 ```
 
-This is likely to also be why we have what appear to be tables for spurious functional dependencies, which have `publication_id` in a key.
+This would also explain why the publication ID appears in several other relations, that look likely to be spurious.
 
-Since the publication ID, therefore, can't be trusted, we could consider removing the column. Here, we'll remove all function dependencies where `publication_id` is in the determinant set, to get the same effect without re-running DFD:
+Since the publication ID can't be trusted, we could consider removing the attribute. Here, we'll keep it, but remove all functional dependencies where it is in the determinant set, to get the same effect without re-running DFD:
 
 ```{r nudge_filter}
 nudge_deps_filtered <- nudge_deps
@@ -291,20 +308,20 @@ nudge_scheme_filtered <- cross_reference(normalise(nudge_deps_filtered, remove_a
 DiagrammeR::grViz(gv(nudge_scheme_filtered))
 ```
 
-This looks to be an improvement. However, we can still see some spurious tables involving `reference`. One of these combines it with `type_experiment` to determine `location`, a study-level variable. The other combine it with another variable to determine `title`. This is expected, since, in the publication-level table, the title determines the reference, but not vice versa. This means that there are publications that share a reference:
+This looks to be an improvement. However, we can still see some spurious relations involving `reference`. One of these combines it with `type_experiment` to determine `location`, a study-level attribute. The others combine it with another attribute to determine `title`. This is expected, since, in the publication-level relation, the title determines the reference, but not vice versa. This means that there are publications that share a reference:
 
 ```{r nudge_reference_check}
 nudge_database_filtered <- decompose(nudge, nudge_scheme_filtered, "nudge")
-nudge_title_table_filtered <- nudge_database_filtered$tables$title$df
-nudge_reference_duplicates <- unique(nudge_title_table_filtered$reference[
-  duplicated(nudge_title_table_filtered$reference)
+nudge_title_relation_filtered <- nudge_database_filtered$tables$title$df
+nudge_reference_duplicates <- unique(nudge_title_relation_filtered$reference[
+  duplicated(nudge_title_relation_filtered$reference)
 ])
-knitr::kable(subset(nudge_title_table_filtered, reference %in% nudge_reference_duplicates))
+knitr::kable(subset(nudge_title_relation_filtered, reference %in% nudge_reference_duplicates))
 ```
 
-BETA is the Behavioural Economics Team of the Australian Government, so it's not surprising that they'd have multiple publications/reports per year. Giving them both the same reference would be awkward if those references were to be used, however.
+BETA is the Behavioural Economics Team of the Australian Government, so it's not surprising that they'd have multiple publications/reports per year. Duplicate references is not necessarily an error, but would be awkward if the references were to be used.
 
-While the reference is useful, the tables mentioned above are not, so we'll also remove functional dependencies with the reference determining something apart from the year:
+While the reference is useful, the relations mentioned above are not, so we'll also remove functional dependencies with the reference determining something apart from the year:
 
 ```{r nudge_filter2}
 nudge_deps_filtered2 <- nudge_deps_filtered
@@ -316,14 +333,83 @@ nudge_scheme_filtered2 <- cross_reference(normalise(nudge_deps_filtered2, remove
 DiagrammeR::grViz(gv(nudge_scheme_filtered2))
 ```
 
-We now have `location` in a non-spurious table. Interestingly, removing dependencies has revealed extra information about study locations: studies of the same experiment type in a publication always have the same location. Looking at the resulting database shows that this removes many rows of what would be redundant location information if kept in the study table:
+We now, finally, have the study location in a non-spurious relation. Interestingly, removing dependencies has revealed extra information about study locations, via the new `title_type_experiment` relation: studies of the same experiment type in a publication always have the same location. Looking at the resulting database shows that this removes many entries of what would be redundant location information if kept in the study relation:
 
 ```{r nudge_clean_database}
 nudge_database_filtered2 <- decompose(nudge, nudge_scheme_filtered2, "nudge")
 DiagrammeR::grViz(gv(nudge_database_filtered2))
 ```
 
-While this is not a dependency we could expect to hold if more data was collected, it's a reasonable dependency for the given data set.
+While this is not a dependency we could expect to hold if more data was collected, it's a reasonable dependency for the given data set, which won't be added to.
+
+(As far as I'm aware, the publication ID error mentioned above would not have affected the meta-analysis results.)
+
+# Other features
+
+## Approximate dependencies and database reduction
+
+Larger datasets can often have entry errors, without an easy way to remove or deal with them. For this reason, we might be interested in "approximate" functional dependencies, which hold after removing a bounded amount of violating records.
+
+Suppose that we normalise `nudge` again, without any manual dependency removal, but allow approximate dependencies, that hold in only `0.99` of the records. Since `nudge` has `r nrow(nudge)`, the dependencies must hold over at least `r ceiling(nrow(nudge)*0.99)` records.
+
+```{r nudge_approximate}
+nudge_approx_database <- autonorm(
+  nudge,
+  accuracy = 0.99,
+  exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
+  exclude_class = "numeric"
+)
+DiagrammeR::grViz(gv(nudge_approx_database))
+```
+
+This is a little overwhelming, so we'll use a utility function called `reduce`. This finds the relation with the most number of records, which can be considered as the "main" relation, and removes any relations not linked to it by foreign key references. Reducing the approximate database gives us this set of relations:
+
+```{r nudge_approximate_reduced}
+DiagrammeR::grViz(gv(reduce(nudge_approx_database)))
+```
+
+Questionable intermediate relations aside, we can see that there is now a publication-level relation with the publication ID as a key, since it determines the publication attributes once we remove one of the duplicate records we discovered before.
+
+`reduce` needs to be used with caution: while the relations it removes are often spurious, it's possible to find databases where relations not linked to the main relation by foreign key references are required to rejoin to the original data frame, so reduction can remove necessary relations. Its intent is mostly to make glancing at database plots more manageable.
+
+## Avoidable attributes
+
+The next normal form after third normal form (3NF) is Boyes-Codd normal form (BCNF). It represents an issue for automatic normalisation, since not all relations can be put into BCNF. Even worse, determining whether a database scheme in 3NF is in BCNF is intractable.
+
+Instead, the package includes an option to convert to enhanced third normal form, also known as LTK form. This enhancement is tangential to BCNF, and can also be used to enhance schemes in BCNF.
+
+In brief, the standard normal forms only put constraints on the attributes present in the relations one relation at a time. The enhancement is a constraint on the attributes present in a relation, while considering their presence in other relations. If a attribute in a relation can be removed, and still be determined from that relation by joining it to others, then the attribute is "avoidable", and can be removed. If the attribute is in any of the relation's keys, they'll be replaced by keys that use the attributes not being removed. This removes attributes from relations without removing any information from the database as a whole.
+
+For example, we can take this simple example from Chapter 6 of The Theory of Relational Databases, by David Maier:
+
+```{r avoid_setup}
+avoid_deps <- list(
+  dependencies = list(
+    list("A", "B"),
+    list("B", "A"),
+    list(c("A", "C"), "D"),
+    list(c("A", "C"), "E"),
+    list(c("B", "D"), "C")
+  ),
+  attrs = c("A", "B", "C", "D", "E")
+)
+avoid_scheme <- cross_reference(normalise(avoid_deps))
+DiagrammeR::grViz(gv(avoid_scheme))
+```
+
+Attributes `A` and `B` are equivalent, since relation `A` has them both as a key. In other words, relation `A` is a simple lookup relation. Because of this, we could remove `B` from relation `A_C`, and replace the key `B, D` with `A, D`, which is equivalent when accounting from the lookup relation `A`.
+
+We can have this removal of avoidable attributes done automatically, using the `remove_avoidable` flag for `normalise`:
+
+```{r avoid_remove}
+avoid_scheme_removed <- cross_reference(normalise(
+  avoid_deps,
+  remove_avoidable = TRUE
+))
+DiagrammeR::grViz(gv(avoid_scheme_removed))
+```
+
+This scheme is now in LTK form, with no remaining avoidable attributes. We could have also removed `A` from relation `A_C` instead of `B`, so this process may not have a unique result. The package's implementation prefers to remove attributes that appear later in the original relation.
 
 # Planned extensions
 
@@ -333,11 +419,17 @@ As shown in the plots above, database schemes don't contain information about th
 
 ## Better consistency checks
 
+There are currently obvious consistency checks that are missing. One example is when the relation decomposed with a scheme is different to the one originally used to create the scheme: if the new relation doesn't satisfy the scheme's functional dependencies, the result will have relations with inconsistent information, which may or may not become apparent when the database is rejoined into a data frame.
+
+## Handling of duplicate records
+
+It's expected that an R user might pass a data frame into the package that has duplicate records. At the moment, these are kept when searching for dependencies. This can affect results for approximate dependencies, due to affecting the record counts. However, they will be removed when the data frame is decomposed into a database. At the moment, I'm not certain on whether they are best handled by removing them, or by simply returning an error if there are duplicate records.
+
 ## Missing values
 
-In relational databases, we commonly want to avoid the presence of missing values. For example, take the following table:
+In relational databases, we commonly want to avoid the presence of missing values. For example, take the following data frame:
 
-```{r example_table_with_NAs}
+```{r example_data_frame_with_NAs}
 df_nas <- data.frame(
   patient_id = c(1L, 2L, 3L, 4L),
   trial_entry_date = as.Date(c("2022/05/02", "2022/06/06", "2022/04/01", "2022/03/19")),
@@ -346,15 +438,15 @@ df_nas <- data.frame(
 df_nas
 ```
 
-However, currently autonormalise treats `NA` as just another value, with no special treatment for normalisation or rejoining, resulting in no splitting of the table:
+However, currently autonormalise treats `NA` as just another value, with no special treatment for normalisation or rejoining, resulting in no splitting of the data:
 
-```{r example_table_with_NAs_autonorm}
+```{r example_data_frame_with_NAs_autonorm}
 DiagrammeR::grViz(gv(autonorm(df_nas, 1)))
 ```
 
-In this case, a missing death date represents no death, and we would prefer to move death information to a separate table, containing only patients with a death date, in this case patient 3:
+In this case, a missing death date represents no death, and we would prefer to move death information to a separate relation, containing only patients with a death date, in this case patient 3:
 
-```{r example_table_with_NAs_nullably_normalised}
+```{r example_data_frame_with_NAs_nullably_normalised}
 ideal_db <- structure(
   list(
     name = "patients",

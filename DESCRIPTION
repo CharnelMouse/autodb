@@ -9,7 +9,7 @@ Authors@R:
       role = c("aut", "cre"),
       comment = c(ORCID = "0000-0002-3351-0686")
     )
-Description: Automatic normalisation of a data.frame to third normal form, with
+Description: Automatic normalisation of a data frame to third normal form, with
   the intention of easing the process of data cleaning. (Usage to design your
   actual database for you is not advised.)
   Originally inspired by Alteryx's AutoNormalize Python library
