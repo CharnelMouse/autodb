@@ -64,7 +64,7 @@
 dfd <- function(
   df,
   accuracy,
-  cache = FALSE,
+  cache = TRUE,
   exclude = character(),
   exclude_class = character(),
   progress = FALSE,

@@ -5,14 +5,14 @@
 #' @return A logical.
 #' @export
 df_equiv <- function(df1, df2) {
-  if (!identical(
-    dim(df1), dim(df2) ||
-    !identical(table(names(original)) %in% table(names(new)))
-  ))
+  if (
+    !identical(dim(df1), dim(df2)) ||
+    !identical(table(names(df1)), table(names(df2)))
+  )
     FALSE
   else
     identical(
-      `rownames<-`(new[do.call(order, new), ], NULL),
-      `rownames<-`(original[do.call(order, original), ], NULL)
+      `rownames<-`(df1[do.call(order, df1), ], NULL),
+      `rownames<-`(df2[do.call(order, df2), ], NULL)
     )
 }
