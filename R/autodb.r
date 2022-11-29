@@ -33,7 +33,7 @@
 #' @return A database, represented by a list of three elements. See
 #'   \code{\link{cross_reference}} for details.
 #' @export
-autonorm <- function(
+autodb <- function(
   df,
   accuracy,
   name = NA_character_,

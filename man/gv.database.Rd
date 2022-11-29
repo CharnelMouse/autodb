@@ -8,7 +8,7 @@
 }
 \arguments{
 \item{x}{a database, as returned by \code{\link{cross_reference}} or
-\code{\link{autonorm}}.}
+\code{\link{autodb}}.}
 
 \item{...}{further arguments passed to or from other methods.}
 }

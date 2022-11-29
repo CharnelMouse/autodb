@@ -50,7 +50,7 @@
 #' @param exclude_class a character vector, indicating classes of attributes to
 #'   not consider as members of determinant_sets. Attributes are excluded if
 #'   they inherit from any given class.
-#' @inheritParams autonorm
+#' @inheritParams autodb
 #'
 #' @return A named list with two elements. \code{dependencies} is a named list,
 #'   where the names give the dependent attribute, and each element is a list of

@@ -16,7 +16,7 @@ it is lossless and self-consistent.
 }
 \description{
 Rejoins the relations in a database. This is the inverse of calling
-\code{\link{autonorm}} with \code{accuracy} set to 1, except that the rows
+\code{\link{autodb}} with \code{accuracy} set to 1, except that the rows
 might be returned in a different order.
 }
 \details{

@@ -64,7 +64,7 @@ gv <- function(x, ...) {
 #' classes.
 #'
 #' @param x a database, as returned by \code{\link{cross_reference}} or
-#'   \code{\link{autonorm}}.
+#'   \code{\link{autodb}}.
 #' @inheritParams gv
 #'
 #' @return A scalar character, containing text input for Graphviz or the

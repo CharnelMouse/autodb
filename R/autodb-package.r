@@ -10,5 +10,5 @@
 #' discovery time, or remove discovered dependencies at normalisation time.
 #'
 #' @docType package
-#' @name autonormalise
+#' @name autodb
 NULL

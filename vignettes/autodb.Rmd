@@ -1,8 +1,8 @@
 ---
-title: "Using autonormalise"
+title: "Using autodb"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Using autonormalise}
+  %\VignetteIndexEntry{Using autodb}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(autonormalise)
+library(autodb)
 ```
 
 # Terminology
@@ -26,7 +26,7 @@ To avoid confusion, this vignette is consistent with terminology: a *database* c
 
 # Motivation
 
-`autonormalise` is described in the DESCRIPTION file in the following way:
+`autodb` is described in the DESCRIPTION file in the following way:
 
 > Automatic normalisation of a data frame to third normal form, with the intention of easing the process of data cleaning. (Usage to design your actual database for you is not advised.)"
 
@@ -58,7 +58,7 @@ Good database design is a hard and involved process, which requires a strong gra
 
 ## To third normal form
 
-`autonormalise` gets a given data.frame to third normal form: every attribute depends on the whole key(s), and non-key attributes depend on nothing but the key(s). This was chosen because there is an existing algorithm, Bernstein's synthesis, for normalising to third normal form, and because it's the highest normal form that is attainable with arbitrary original data frames. There is an additional enhancement available as an option: see the section on avoidable attributes for more details.
+`autodb` gets a given data.frame to third normal form: every attribute depends on the whole key(s), and non-key attributes depend on nothing but the key(s). This was chosen because there is an existing algorithm, Bernstein's synthesis, for normalising to third normal form, and because it's the highest normal form that is attainable with arbitrary original data frames. There is an additional enhancement available as an option: see the section on avoidable attributes for more details.
 
 # Simple examples
 
@@ -68,12 +68,12 @@ For most of these simple examples, we use the `ChickWeight` dataset, included wi
 summary(ChickWeight)
 ```
 
-## Normalisation with `autonorm`
+## Normalisation with `autodb`
 
-The simplest way to do normalisation is with the `autonorm` function:
+The simplest way to do normalisation is with the `autodb` function:
 
 ```{r}
-db <- autonorm(ChickWeight, accuracy = 1, name = "Chick Weights")
+db <- autodb(ChickWeight, accuracy = 1, name = "Chick Weights")
 ```
 
 The `accuracy` argument expects a number between zero and one, determining what proportion of a data frame's records need to satisfy a given dependency for the algorithm to consider it valid. Setting `accuracy` to one, as done here, limits us to exact dependencies. We'll look at other values later, in the section on approximate dependencies.
@@ -84,7 +84,7 @@ db
 
 ## Plots
 
-There is no plotting method within the `autonormalise` package itself. Instead, there are functions to write normalised objects as inputs to the Graphviz visualisation software, using the DOT language.
+There is no plotting method within the `autodb` package itself. Instead, there are functions to write normalised objects as inputs to the Graphviz visualisation software, using the DOT language.
 
 The generic function to do this is `gv`, which calls the `gv.database` method on our database, `db`:
 
@@ -156,10 +156,10 @@ as.data.frame(Titanic)
 
 This is a simple set of data, with a single count observation, `Freq`, for each combination of the four determining attributes. In other words, the relation is already normalised, so we only expect one relation in the normalised database.
 
-If we use `autonorm` again, we get the following database:
+If we use `autodb` again, we get the following database:
 
 ```{r}
-DiagrammeR::grViz(gv(autonorm(as.data.frame(Titanic), 1)))
+DiagrammeR::grViz(gv(autodb(as.data.frame(Titanic), 1)))
 ```
 
 Oops! The DFD algorithm found some functional dependencies where the count could be used to determine another attribute. These are clearly spurious: frequency count can't causally determine age, for example. However, the algorithm still finds these dependencies, because the counts are unique often enough to make these dependencies hold in the given data.
@@ -179,10 +179,10 @@ Alternatively, we could exclude all attributes that inherit from "numeric":
 identical(titanic_deps_freqonly, dfd(as.data.frame(Titanic), 1, exclude_class = "numeric"))
 ```
 
-These can both be used as arguments to `autonorm` too:
+These can both be used as arguments to `autodb` too:
 
 ```{r}
-DiagrammeR::grViz(gv(autonorm(as.data.frame(Titanic), 1, exclude = "Freq")))
+DiagrammeR::grViz(gv(autodb(as.data.frame(Titanic), 1, exclude = "Freq")))
 ```
 
 Generally, excluding numeric attributes as determinants is often useful, because we expect non-integer numbers to be a measurement, not part of a primary key.
@@ -233,7 +233,7 @@ DiagrammeR::grViz(linked_text)
 
 ## Decomposing the original relation
 
-Finally, once we have our normalised database schema, we can apply it to our original data frame, or a new one with the same structure. This results in a normalised database, as we got from using `autonorm`:
+Finally, once we have our normalised database schema, we can apply it to our original data frame, or a new one with the same structure. This results in a normalised database, as we got from using `autodb`:
 
 ```{r chickWeight_db2_plot}
 db2 <- decompose(ChickWeight, linked_schema)
@@ -350,7 +350,7 @@ Larger datasets can often have entry errors, without an easy way to remove or de
 Suppose that we normalise `nudge` again, without any manual dependency removal, but allow approximate dependencies, that hold in only `0.99` of the records. Since `nudge` has `r nrow(nudge)`, the dependencies must hold over at least `r ceiling(nrow(nudge)*0.99)` records.
 
 ```{r nudge_approximate}
-nudge_approx_database <- autonorm(
+nudge_approx_database <- autodb(
   nudge,
   accuracy = 0.99,
   exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
@@ -441,8 +441,8 @@ df_nas
 
 The package currently treats `NA` as just another value, with no special treatment for normalisation or rejoining, resulting in no splitting of the above data frame:
 
-```{r example_data_frame_with_NAs_autonorm}
-DiagrammeR::grViz(gv(autonorm(df_nas, 1)))
+```{r example_data_frame_with_NAs_autodb}
+DiagrammeR::grViz(gv(autodb(df_nas, 1)))
 ```
 
 In this case, a missing death date represents no death, and we would prefer to move death information to a separate relation, containing only patients with a death date, in this case patient 3:

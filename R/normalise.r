@@ -22,7 +22,7 @@
 #'   \code{\link{flatten}}: each dependency is a list, containing one character
 #'   vector for the determinant set, and one unit-length character vector for
 #'   the dependent.
-#' @inheritParams autonorm
+#' @inheritParams autodb
 #'
 #' @return A database schema, represented by a named list of two lists and two
 #'   character vectors:
