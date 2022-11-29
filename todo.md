@@ -1,6 +1,4 @@
 Before release
-- update function documentation
-- finish vignette
 - add readme
 
 After release
