@@ -235,25 +235,22 @@ DiagrammeR::grViz(linked_text)
 
 Finally, once we have our normalised database schema, we can apply it to our original data frame, or a new one with the same structure. This results in a normalised database, as we got from using `autonorm`:
 
-```{r}
+```{r chickWeight_db2_plot}
 db2 <- decompose(ChickWeight, linked_schema)
-identical(db, db2)
-```
-
-```{r chickWeights_db_plot}
-DiagrammeR::grViz(gv(db, name = "Chick Weights"))
+DiagrammeR::grViz(gv(db2, name = "Chick Weights"))
 ```
 
 We now have the attribute class information and record counts added, as well as automatic names for the individual relations.
 
 ## Rejoin a database to a data frame
 
-We can reverse the process of turning a data frame into a database with the `rejoin` function:
+We can reverse the process of turning a data frame into a database with the `rejoin` function. This may not be identical to `ChickWeight`, since the rows may have been rearranged. However, we can use the convenience function `df_equiv` to check for equivalence under row reordering:
 
 ```{r chickWeights_rejoin}
 rejoined <- rejoin(db)
 summary(rejoined)
 identical(rejoined, ChickWeight)
+df_equiv(rejoined, ChickWeight)
 ```
 
 When rejoined, the relation attributes will be in the original order. However, the record order might have changed.
@@ -362,7 +359,7 @@ nudge_approx_database <- autonorm(
 DiagrammeR::grViz(gv(nudge_approx_database))
 ```
 
-This is a little overwhelming, so we'll use a utility function called `reduce`. This finds the relation with the most number of records, which can be considered as the "main" relation, and removes any relations not linked to it by foreign key references. Reducing the approximate database gives us this set of relations:
+This is a little overwhelming, so we'll use a utility function called `reduce`. This finds the relation with the most records, which can be considered as the "main" relation, and removes any relations not linked to it by foreign key references. Reducing the approximate database gives us this set of relations:
 
 ```{r nudge_approximate_reduced}
 DiagrammeR::grViz(gv(reduce(nudge_approx_database)))

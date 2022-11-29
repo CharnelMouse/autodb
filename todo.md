@@ -1,6 +1,5 @@
 Before release
 - update function documentation
-- add database equivalence operator, use in vignette
 - finish vignette
 - add readme
 
