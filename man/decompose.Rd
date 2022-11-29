@@ -50,3 +50,7 @@ schema. It's intended that the relations are derived from a list of
 functional dependencies for the same data frame: using anything else will
 give undefined behaviour.
 }
+\details{
+Currently, there is no removal of records that violate dependencies, which
+usually occurs due to searching for approximate dependencies.
+}

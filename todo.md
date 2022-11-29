@@ -4,6 +4,8 @@ Before release
 - add readme
 
 After release
+- remove violating rows in databases formed with approximate dependencies
+- create a better intermediate language for constructing relations etc.
 - vectorisation of DFD
 - make reduce() return a "partial_database" type that can't be used in rejoin(), or at least do some losslessness/consistency checks on completion
 be used in rejoin(), or at least check for consistency somehow

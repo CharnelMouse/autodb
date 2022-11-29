@@ -5,6 +5,9 @@
 #' functional dependencies for the same data frame: using anything else will
 #' give undefined behaviour.
 #'
+#' Currently, there is no removal of records that violate dependencies, which
+#' usually occurs due to searching for approximate dependencies.
+#'
 #' @param df a data.frame, containing the data to be normalised.
 #' @param schema a database schema with foreign key relationships, as given by
 #'   \code{\link{cross_reference}}.
