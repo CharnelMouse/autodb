@@ -4,3 +4,4 @@
 ^doc$
 ^Meta$
 ^data-raw$
+^README\.Rmd$

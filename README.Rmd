@@ -1,0 +1,54 @@
+---
+output: github_document
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# autodb
+
+autodb is an R package for automatic normalisation of a data frame to third
+normal form, with the intention of easing the process of data cleaning. (Usage
+to design your actual database for you is not advised.)
+
+## Installation
+
+You can install the development version of autodb from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("CharnelMouse/autodb")
+```
+
+## Example
+
+Turning a simple data frame into a database:
+
+```{r example}
+library(autodb)
+summary(ChickWeight)
+db <- autodb(ChickWeight, accuracy = 1, name = "ChickWeight")
+db
+graphviz_text <- gv(db)
+DiagrammeR::grViz(graphviz_text)
+```
+
+Using the `exclude_class` argument to forbid numeric variables from appearing in keys:
+
+```{r exclude_example}
+summary(CO2)
+db2_noexclude <- autodb(CO2, accuracy = 1, name = "CO2")
+db2_noexclude
+db2 <- autodb(CO2, accuracy = 1, name = "CO2", exclude_class = "numeric")
+db2
+graphviz_text2 <- gv(db2)
+DiagrammeR::grViz(graphviz_text2)
+```
+
+There are also functions for doing each step of the database creation separately, including functional dependency detection and normalisation. See the vignette for more details.
