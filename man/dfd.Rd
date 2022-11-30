@@ -90,5 +90,8 @@ true, and x = NA being false for any non-NA value of x.
 }
 }
 \references{
-DFD paper.
+Abedjan Z., Schulze P., Naumann F. (2014) DFD: efficient functional
+dependency discovery. \emph{Proceedings of the 23rd ACM International Conference
+on Conference on Information and Knowledge Management (CIKM '14). New York,
+U.S.A.}, 949–958.
 }

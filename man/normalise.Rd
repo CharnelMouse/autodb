@@ -74,5 +74,6 @@ assigned to a relation with no keys.
 Relation names are adjusted for uniqueness after synthesis.
 }
 \references{
-Bernstein YEAR, TITLE.
+Bernstein P. A. (1976) Synthesizing third normal form relations from
+functional dependencies. \emph{ACM Trans. Database Syst.}, \strong{1, 4}, 277–298.
 }

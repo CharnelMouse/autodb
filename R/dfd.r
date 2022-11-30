@@ -59,7 +59,10 @@
 #'   \code{df}, in order. This is kept to serve as a default priority order for
 #'   the attributes during normalisation.
 #' @references
-#' DFD paper.
+#' Abedjan Z., Schulze P., Naumann F. (2014) DFD: efficient functional
+#' dependency discovery. *Proceedings of the 23rd ACM International Conference
+#' on Conference on Information and Knowledge Management (CIKM '14). New York,
+#' U.S.A.*, 949–958.
 #' @export
 dfd <- function(
   df,

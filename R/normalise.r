@@ -40,7 +40,8 @@
 #'   The lists and the \code{relation_names} vector are of equal length,
 #'   representing relation schemas.
 #' @references
-#' Bernstein YEAR, TITLE.
+#' Bernstein P. A. (1976) Synthesizing third normal form relations from
+#' functional dependencies. *ACM Trans. Database Syst.*, **1, 4**, 277–298.
 #' @export
 normalise <- function(
   dependencies,
