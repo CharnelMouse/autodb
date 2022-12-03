@@ -130,7 +130,7 @@ print.database <- function(x, max = 10, ...) {
       toString(names(x$relations[[n]]$df)),
       "; ",
       rows,
-      " row", if (rows != 1) "s", "\n"
+      " record", if (rows != 1) "s", "\n"
     ))
     keys <- x$relations[[n]]$keys
     n_keys <- length(keys)
