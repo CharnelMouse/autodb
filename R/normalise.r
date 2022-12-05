@@ -40,8 +40,13 @@
 #'   The lists and the \code{relation_names} vector are of equal length,
 #'   representing relation schemas.
 #' @references
-#' Bernstein P. A. (1976) Synthesizing third normal form relations from
-#' functional dependencies. *ACM Trans. Database Syst.*, **1, 4**, 277–298.
+#' 3NF synthesis algorithm: Bernstein P. A. (1976) Synthesizing third normal
+#' form relations from functional dependencies. *ACM Trans. Database Syst.*,
+#' **1, 4**, 277--298.
+#'
+#' Removal of avoidable attributes: Ling T., Tompa F. W., Kameda T. (1981) An
+#' improved third normal form for relational databases. *ACM Trans. Database
+#' Syst.* **6, 2**, 329--346.
 #' @export
 normalise <- function(
   dependencies,

@@ -4,7 +4,7 @@
 #'   \code{\link{normalise}}.
 #' @param ensure_lossless a logical, TRUE by default. If TRUE, and the
 #'   decomposition isn't lossless, an extra relation is added to make the
-#'   decomposition lossless. This relation becomes the ultimate child relation.
+#'   decomposition lossless.
 #'
 #' @return A database schema with relationships, represented by a named list of
 #'   three lists and two character vectors, with the first four having equal

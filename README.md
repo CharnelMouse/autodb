@@ -38,9 +38,9 @@ summary(ChickWeight)
 db <- autodb(ChickWeight, accuracy = 1, name = "ChickWeight")
 db
 #> database ChickWeight with 2 relations
-#> relation Time_Chick: Time, Chick, weight; 578 rows
+#> relation Time_Chick: Time, Chick, weight; 578 records
 #>   key 1: Time, Chick
-#> relation Chick: Chick, Diet; 50 rows
+#> relation Chick: Chick, Diet; 50 records
 #>   key 1: Chick
 #> relationships:
 #> Time_Chick.Chick -> Chick.Chick
@@ -66,12 +66,12 @@ summary(CO2)
 db2_noexclude <- autodb(CO2, accuracy = 1, name = "CO2")
 db2_noexclude
 #> database CO2 with 3 relations
-#> relation Plant_conc: Plant, conc, Treatment, uptake; 84 rows
+#> relation Plant_conc: Plant, conc, Treatment, uptake; 84 records
 #>   key 1: Plant, conc
 #>   key 2: Treatment, conc, uptake
-#> relation Plant: Plant, Type, Treatment; 12 rows
+#> relation Plant: Plant, Type, Treatment; 12 records
 #>   key 1: Plant
-#> relation conc_uptake: conc, uptake, Type; 82 rows
+#> relation conc_uptake: conc, uptake, Type; 82 records
 #>   key 1: conc, uptake
 #> relationships:
 #> Plant_conc.Plant -> Plant.Plant
@@ -80,9 +80,9 @@ db2_noexclude
 db2 <- autodb(CO2, accuracy = 1, name = "CO2", exclude_class = "numeric")
 db2
 #> database CO2 with 2 relations
-#> relation Plant: Plant, Type, Treatment; 12 rows
+#> relation Plant: Plant, Type, Treatment; 12 records
 #>   key 1: Plant
-#> relation Plant_conc_uptake: Plant, conc, uptake; 84 rows
+#> relation Plant_conc_uptake: Plant, conc, uptake; 84 records
 #>   key 1: Plant, conc, uptake
 #> relationships:
 #> Plant_conc_uptake.Plant -> Plant.Plant

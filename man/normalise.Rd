@@ -74,6 +74,11 @@ assigned to a relation with no keys.
 Relation names are adjusted for uniqueness after synthesis.
 }
 \references{
-Bernstein P. A. (1976) Synthesizing third normal form relations from
-functional dependencies. \emph{ACM Trans. Database Syst.}, \strong{1, 4}, 277–298.
+3NF synthesis algorithm: Bernstein P. A. (1976) Synthesizing third normal
+form relations from functional dependencies. \emph{ACM Trans. Database Syst.},
+\strong{1, 4}, 277--298.
+
+Removal of avoidable attributes: Ling T., Tompa F. W., Kameda T. (1981) An
+improved third normal form for relational databases. \emph{ACM Trans. Database
+Syst.} \strong{6, 2}, 329--346.
 }
