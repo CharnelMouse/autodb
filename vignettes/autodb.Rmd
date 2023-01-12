@@ -458,7 +458,7 @@ ideal_db <- structure(
           trial_entry_date = as.Date(c("2022/05/02", "2022/06/06", "2022/04/01", "2022/03/19"))
         ),
         keys = list("patient_id"),
-        parents = "death"
+        parents = character()
       ),
       death = list(
         df = data.frame(
@@ -466,10 +466,10 @@ ideal_db <- structure(
           death_date = as.Date("2022/10/07")
         ),
         keys = list("patient_id"),
-        parents = character()
+        parents = "patient"
       )
     ),
-    relationships = list(c("patient", "patient_id", "death", "patient_id")),
+    relationships = list(c("death", "patient_id", "patient", "patient_id")),
     attributes = c("patient_id", "trial_entry_date", "death_date")
   ),
   class = c("database", "list")
