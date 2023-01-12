@@ -89,6 +89,18 @@ as described in Section 3.5 of the original paper.
 true, and x = NA being false for any non-NA value of x.
 }
 }
+\examples{
+# simple example
+dfd(ChickWeight, 1)
+
+# example with spurious dependencies
+dfd(CO2, 1)
+# exclude attributes that can't be determinants.
+# in this case, the numeric attributes are now
+# not determined by anything, because of repeat measurements
+# with no variable to mark them as such.
+dfd(CO2, 1, exclude_class = "numeric")
+}
 \references{
 Abedjan Z., Schulze P., Naumann F. (2014) DFD: efficient functional
 dependency discovery. \emph{Proceedings of the 23rd ACM International Conference

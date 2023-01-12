@@ -4,6 +4,7 @@
 
 Improvements:
 
+* Added examples for `autodb`, `dfd`, `gv`, and `rejoin`.
 * Added a reference for removing avoidable attributes for enhanced third normal
 form.
 

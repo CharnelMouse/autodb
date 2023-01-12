@@ -63,6 +63,17 @@
 #' dependency discovery. *Proceedings of the 23rd ACM International Conference
 #' on Conference on Information and Knowledge Management (CIKM '14). New York,
 #' U.S.A.*, 949--958.
+#' @examples
+#' # simple example
+#' dfd(ChickWeight, 1)
+#'
+#' # example with spurious dependencies
+#' dfd(CO2, 1)
+#' # exclude attributes that can't be determinants.
+#' # in this case, the numeric attributes are now
+#' # not determined by anything, because of repeat measurements
+#' # with no variable to mark them as such.
+#' dfd(CO2, 1, exclude_class = "numeric")
 #' @export
 dfd <- function(
   df,

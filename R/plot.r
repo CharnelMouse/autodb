@@ -50,6 +50,21 @@
 #'   \code{DiagrammeR} package.
 #' @seealso \code{\link{gv.data.frame}}, \code{\link{gv.database_schema}},
 #'   \code{\link{gv.database}}
+#' @examples
+#' # simple data.frame example
+#' txt_df <- gv(ChickWeight, "chick")
+#' cat(txt_df)
+#' DiagrammeR::grViz(txt_df)
+#' # simple database example
+#' db <- autodb(ChickWeight, 1, "chick")
+#' txt_db <- gv(db)
+#' cat(txt_db)
+#' DiagrammeR::grViz(txt_db)
+#' # simple database_scheme
+#' scheme <- cross_reference(normalise(flatten(dfd(ChickWeight, 1))))
+#' txt_scheme <- gv(scheme)
+#' cat(txt_scheme)
+#' DiagrammeR::grViz(txt_scheme)
 #' @export
 gv <- function(x, ...) {
   UseMethod("gv", x)

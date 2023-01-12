@@ -32,3 +32,10 @@ additional information, then the rejoining will be lossy. The algorithm does
 not check for this consistency violation. This is also the case for rejoining
 the results of \code{\link{reduce}}.
 }
+\examples{
+# simple example
+db <- autodb(ChickWeight, 1, "chick")
+rj <- rejoin(db)
+rj <- rj[order(as.integer(rownames(rj))), ]
+mapply(identical, rj, as.data.frame(ChickWeight))
+}

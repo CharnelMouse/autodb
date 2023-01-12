@@ -32,6 +32,9 @@
 #'
 #' @return A database, represented by a list of three elements. See
 #'   \code{\link{cross_reference}} for details.
+#' @examples
+#' # simple example
+#' autodb(ChickWeight, 1)
 #' @export
 autodb <- function(
   df,

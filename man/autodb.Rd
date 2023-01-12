@@ -70,3 +70,7 @@ This is a wrapper function for applying \code{\link{dfd}},
 \code{\link{flatten}}, \code{\link{normalise}},
 \code{\link{cross_reference}}, and \code{\link{decompose}}, in order.
 }
+\examples{
+# simple example
+autodb(ChickWeight, 1)
+}

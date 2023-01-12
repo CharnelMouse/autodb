@@ -21,6 +21,12 @@
 #'
 #' @return A data frame, containing all information contained \code{database} if
 #'   it is lossless and self-consistent.
+#' @examples
+#' # simple example
+#' db <- autodb(ChickWeight, 1, "chick")
+#' rj <- rejoin(db)
+#' rj <- rj[order(as.integer(rownames(rj))), ]
+#' mapply(identical, rj, as.data.frame(ChickWeight))
 #' @export
 rejoin <- function(database) {
   relations <- database$relations
