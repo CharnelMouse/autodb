@@ -18,11 +18,7 @@ expect_superset_of_dependency <- function(dep1, dep2) {
 }
 
 expect_identical_unordered_table <- function(new, original) {
-  stopifnot(all(names(original) %in% names(new)))
-  expect_identical(
-    `rownames<-`(new[do.call(order, new), ], NULL),
-    `rownames<-`(original[do.call(order, original), ], NULL)
-  )
+  expect_true(df_equiv(new, original))
 }
 
 gen_df <- function(nrow, ncol, nonempty = FALSE, remove_dup_rows = FALSE) {
