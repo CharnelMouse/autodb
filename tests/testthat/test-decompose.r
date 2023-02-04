@@ -231,14 +231,17 @@ describe("decompose", {
   it("correctly handles attributes with non-df-standard names", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
       stats::setNames(c("A 1", "B 2", "C 3"))
-    norm_deps <- list(
-      attrs = list(c("A 1", "B 2", "C 3")),
-      keys = list(list("A 1", c("B 2", "C 3"))),
-      parents = list(integer()),
-      relationships = list(),
-      all_attrs = c("A 1", "B 2", "C 3")
+    schema <- structure(
+      list(
+        attrs = list(c("A 1", "B 2", "C 3")),
+        keys = list(list("A 1", c("B 2", "C 3"))),
+        parents = list(integer()),
+        relationships = list(),
+        all_attrs = c("A 1", "B 2", "C 3")
+      ),
+      class = c("database_schema", "list")
     )
-    norm.df <- decompose(df, norm_deps)
+    norm.df <- decompose(df, schema)
     expect_setequal(names(norm.df$relations[[1]]$df), c("A 1", "B 2", "C 3"))
   })
   it("links added key relations", {
