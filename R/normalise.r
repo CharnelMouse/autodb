@@ -506,7 +506,7 @@ synthesised_fds <- function(attrs, keys) {
   Map(relation_fds, attrs, keys)
 }
 
-relation_fds <- function(attrs, keys, groups) {
+relation_fds <- function(attrs, keys) {
   # represented FDs for a single relation
   key_bijections <- list()
   key_indices <- seq_along(keys)
