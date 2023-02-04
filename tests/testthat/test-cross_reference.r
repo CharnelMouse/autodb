@@ -57,7 +57,7 @@ describe("cross_reference", {
       }
     }
     forall(
-      gen_df(6, 7, nonempty = TRUE, remove_dup_rows = TRUE),
+      gen_df(6, 7, minrow = 1L, remove_dup_rows = TRUE),
       links_by_exactly_one_parent_key
     )
   })
@@ -180,7 +180,7 @@ describe("cross_reference", {
       )
     }
     forall(
-      gen_df(6, 7, nonempty = FALSE, remove_dup_rows = TRUE),
+      gen_df(6, 7, minrow = 1L, remove_dup_rows = TRUE),
       only_returns_non_extraneous_relationships
     )
   })

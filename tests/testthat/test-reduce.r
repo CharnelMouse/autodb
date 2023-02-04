@@ -30,7 +30,7 @@ describe("reduce", {
       expect_identical(twice, once)
     }
     forall(
-      gen_df(6, 7, nonempty = TRUE),
+      gen_df(6, 7, minrow = 1L),
       removes_added_non_parent_with_non_maximum_nrow
     )
   })
@@ -42,7 +42,7 @@ describe("reduce", {
       expect_true(all(reduced$relations %in% database$relations))
       expect_true(all(reduced$relationships %in% database$relationships))
     }
-    forall(gen_df(6, 7, nonempty = TRUE), reduced_to_subset)
+    forall(gen_df(6, 7, minrow = 1L), reduced_to_subset)
   })
   it("returns a database where non-parent relations have the same maximal number of rows", {
     all_non_parents_in_reduction_have_same_nrow <- function(df) {
@@ -65,7 +65,7 @@ describe("reduce", {
       }
     }
     forall(
-      gen_df(6, 7, nonempty = TRUE),
+      gen_df(6, 7, minrow = 1L),
       all_non_parents_in_reduction_have_same_nrow
     )
   })

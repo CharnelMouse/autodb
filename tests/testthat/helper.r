@@ -21,9 +21,9 @@ expect_identical_unordered_table <- function(new, original) {
   expect_true(df_equiv(new, original))
 }
 
-gen_df <- function(nrow, ncol, nonempty = FALSE, remove_dup_rows = FALSE) {
-  gen_ncol_inc <- gen.sample(seq.int(nonempty, ncol), 1)
-  gen_len_inc <- gen.sample(seq.int(nonempty, nrow), 1)
+gen_df <- function(nrow, ncol, minrow = 0L, remove_dup_rows = FALSE) {
+  gen_ncol_inc <- gen.sample(seq.int(minrow, ncol), 1)
+  gen_len_inc <- gen.sample(seq.int(minrow, nrow), 1)
   gen_lst <- generate(
     for (n_col_inc in gen_ncol_inc) {
       generate(
@@ -49,11 +49,9 @@ gen_df <- function(nrow, ncol, nonempty = FALSE, remove_dup_rows = FALSE) {
   })
 }
 
-gen_nonempty_df <- function(nrow, ncol) gen_df(nrow, ncol, nonempty = TRUE)
-
-gen_df_vary_classes <- function(nrow, ncol, nonempty = FALSE, remove_dup_rows = FALSE) {
-  gen_ncol_inc <- gen.sample(seq.int(nonempty, ncol), 1)
-  gen_len_inc <- gen.sample(seq.int(nonempty, nrow), 1)
+gen_df_vary_classes <- function(nrow, ncol, minrow = 0L, remove_dup_rows = FALSE) {
+  gen_ncol_inc <- gen.sample(seq.int(minrow, ncol), 1)
+  gen_len_inc <- gen.sample(seq.int(minrow, nrow), 1)
   gen_classes <- generate(for (ncol in gen_ncol_inc) {
     classes <- c("logical", "integer", "numeric", "character")
     gen.sample(classes, ncol, replace = TRUE)

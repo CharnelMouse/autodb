@@ -147,7 +147,7 @@ describe("dfd", {
       ncol,
       remove_dup_rows = FALSE
     ) {
-      generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows)) {
+      generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows)) {
         generate(for (attr in gen.int(ncol(df))) {
           generate(for (permuted_attr in gen_perm(df[, attr])) {
             permed <- df
@@ -170,7 +170,7 @@ describe("dfd", {
       remove_dup_rows = FALSE
     ) {
       classes <- c("logical", "integer", "numeric", "character")
-      generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows)) {
+      generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows)) {
         generate(for (attr in gen.int(ncol(df))) {
           generate(for (new_class in gen.element(
             setdiff(classes, class(df[, attr])))
@@ -194,7 +194,7 @@ describe("dfd", {
       ncol,
       remove_dup_rows = FALSE
     ) {
-      generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows)) {
+      generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows)) {
         generate(for (perm in sample.int(ncol(df))) {
           list(df, df[, perm, drop = FALSE])
         })
@@ -208,7 +208,7 @@ describe("dfd", {
   })
   it("loses FDs involving a removed attribute, keeps the rest", {
     gen_df_and_remove_col <- function(nrow, ncol, remove_dup_rows = FALSE) {
-      generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows)) {
+      generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows)) {
         generate(for (n in gen.int(ncol(df))) {
           list(df, df[, -n, drop = FALSE])
         })
@@ -222,7 +222,7 @@ describe("dfd", {
   })
   it("is invariant to changes of accuracy within same required row count", {
     gen_df_and_accuracy_nrow <- function(nrow, ncol, remove_dup_rows = FALSE) {
-      generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows)) {
+      generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows)) {
         generate(for (n in gen.int(nrow(df))) {
           prop <- n/nrow(df)
           low <- (n - 1)/nrow(df) + 1e-9
@@ -247,7 +247,7 @@ describe("dfd", {
   })
   it("keeps subsets of all FDs if a row is removed, might have more", {
     gen_df_and_remove_row <- function(nrow, ncol) {
-      generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows = TRUE)) {
+      generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows = TRUE)) {
         generate(for (n in gen.element(seq_len(nrow(df)))) {
           list(df, df[-n, , drop = FALSE])
         })
@@ -261,7 +261,7 @@ describe("dfd", {
   })
   it("dfd -> change attribute names is equivalent to change names -> dfd", {
     gen_df_and_name_change <- function(nrow, ncol, remove_dup_rows = FALSE) {
-      generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows)) {
+      generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows)) {
         generate(for (new_names in gen.sample(LETTERS, ncol(df))) {
           list(df, stats::setNames(df, new_names))
         })
@@ -275,7 +275,7 @@ describe("dfd", {
   })
   it("doesn't have an excluded attribute in any determinant sets", {
     gen_df_and_exclude <- function(nrow, ncol, remove_dup_rows = FALSE) {
-      generate(for (df in gen_df(nrow, ncol, nonempty = TRUE, remove_dup_rows)) {
+      generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows)) {
         list(df, gen.sample(names(df), 1))
       })
     }
