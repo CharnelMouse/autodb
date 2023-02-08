@@ -1,3 +1,5 @@
+library(hedgehog)
+
 describe("decompose", {
   expect_database <- function(current, target) {
     expect_identical(current, structure(target, class = c("database", "list")))
@@ -150,6 +152,58 @@ describe("decompose", {
     )
     new_dfs <- decompose(df, norm_deps)
     expect_identical(new_dfs$relations$a$parents, "b_c")
+  })
+  it("returns a error if data.frame doesn't satisfy FDs in the schema", {
+    add_id_attribute <- function(df) {
+      df2 <- cbind(df, a = seq.int(nrow(df)))
+      names(df2) <- make.names(names(df2), unique = TRUE)
+      df2
+    }
+    gen_fd_reduction_for_df <- function(df) {
+      true_fds <- flatten(dfd(df, 1))
+      nonempty_detsets <- which(vapply(
+        true_fds$dependencies,
+        \(fd) length(fd[[1]]) > 0,
+        logical(1)
+      ))
+      if (length(nonempty_detsets) == 0)
+        return(gen.pure(list(df, NULL, NULL)))
+      gen.element(nonempty_detsets) |>
+        gen.with(\(index) true_fds$dependencies[[index]]) |>
+        gen.and_then(\(fd) list(fd, gen.int(length(fd[[1]])))) |>
+        gen.with(\(lst) c(list(df), lst))
+    }
+    gen_df_and_fd_reduction <- function(nrow, ncol) {
+      gen_df(nrow, ncol, minrow = 2L, remove_dup_rows = TRUE) |>
+        gen.with(add_id_attribute) |>
+        gen.and_then(gen_fd_reduction_for_df)
+    }
+    expect_decompose_error <- function(df, reduced_fd, removed_det) {
+      if (nrow(df) <= 1)
+        discard()
+      flat_deps <- flatten(dfd(df, 1))
+      reduced_index <- match(list(reduced_fd), flat_deps$dependencies)
+      reduced_deps <- flat_deps
+      reduced_deps$dependencies[[reduced_index]][[1]] <-
+        flat_deps$dependencies[[reduced_index]][[1]][-removed_det]
+      schema <- cross_reference(normalise(reduced_deps))
+      expect_error(
+        decompose(df, schema),
+        paste0(
+          "\\A",
+          "df doesn't satisfy functional dependencies in schema:",
+          "(\\n\\{.*\\} -> .*)+",
+          "\\Z"
+        ),
+        perl = TRUE
+      )
+    }
+    forall(
+      gen_df_and_fd_reduction(6, 7),
+      expect_decompose_error,
+      discard.limit = 10L,
+      curry = TRUE
+    )
   })
 
   describe("Dependencies", {

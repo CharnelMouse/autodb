@@ -511,15 +511,13 @@ relation_fds <- function(attrs, keys) {
   key_bijections <- list()
   key_indices <- seq_along(keys)
   for (lhs_index in key_indices) {
-    for (rhs_index in key_indices[-lhs_index]) {
-      key_bijections <- c(
-        key_bijections,
-        lapply(
-          setdiff(keys[[rhs_index]], keys[[lhs_index]]),
-          \(k) list(keys[[lhs_index]], k)
-        )
+    key_bijections <- c(
+      key_bijections,
+      lapply(
+        setdiff(unlist(keys[key_indices[-lhs_index]]), keys[[lhs_index]]),
+        \(k) list(keys[[lhs_index]], k)
       )
-    }
+    )
   }
   nonprimes <- setdiff(attrs, unlist(keys))
   nonbijections <- unlist(
@@ -529,7 +527,9 @@ relation_fds <- function(attrs, keys) {
     ),
     recursive = FALSE
   )
-  c(key_bijections, nonbijections)
+  res <- c(key_bijections, nonbijections)
+  stopifnot(!anyDuplicated(res))
+  res
 }
 
 minimal_subset <- function(

@@ -1,12 +1,16 @@
 #' Decompose a data frame based on given normalised dependencies
 #'
 #' Decomposes a data frame into several relations, based on the given database
-#' schema. It's intended that the relations are derived from a list of
-#' functional dependencies for the same data frame: using anything else will
-#' give undefined behaviour.
+#' schema. It's intended that the data frame satisfies all the functional
+#' dependencies implied by the schema, such as if the schema was constructed
+#' from the same data frame. If this is not the case, the function will returns
+#' an error.
 #'
-#' Currently, there is no removal of records that violate dependencies, which
-#' usually occurs due to searching for approximate dependencies.
+#' If the schema was constructed using approximate dependencies for the same
+#' data frame, `decompose` returns an error, to prevent either duplicate records
+#' or lossy decompositions. This is temporary: for the next update, we plan to
+#' add an option to allow this, or to add "approximate" equivalents of databases
+#' and database schemas.
 #'
 #' @param df a data.frame, containing the data to be normalised.
 #' @param schema a database schema with foreign key relationships, as given by
@@ -44,6 +48,40 @@ decompose <- function(df, schema, name = NA_character_) {
   relation_names <- schema$relation_names
   stopifnot(!anyDuplicated(relation_names))
   stopifnot(identical(names(df), schema$all_attrs))
+
+  inferred_fds <- synthesised_fds(schema$attrs, schema$keys)
+  if (length(inferred_fds) > 0L)
+    inferred_fds <- unlist(inferred_fds, recursive = FALSE)
+  check_fd <- function(df, fd) {
+    if (length(fd[[1]]) == 0L) {
+      dep_vals <- df[[fd[[2]]]]
+      all(vapply(dep_vals, identical, logical(1), dep_vals[1]))
+    }else{
+      both_proj <- unique(df[, unlist(fd), drop = FALSE])
+      key_proj <- unique(both_proj[, fd[[1]], drop = FALSE])
+      nrow(key_proj) == nrow(both_proj)
+    }
+  }
+  fds_satisfied <- vapply(
+    inferred_fds,
+    check_fd,
+    logical(1L),
+    df = df
+  )
+  if (!all(fds_satisfied)) {
+    stop(paste(
+      "df doesn't satisfy functional dependencies in schema:",
+      paste(
+        vapply(
+          inferred_fds[!fds_satisfied],
+          \(fd) paste0("{", toString(fd[[1]]), "} -> ", fd[[2]]),
+          character(1)
+        ),
+        collapse = "\n"
+      ),
+      sep = "\n"
+    ))
+  }
 
   relation_list <- Map(
     \(attrs, keys, parents) {
