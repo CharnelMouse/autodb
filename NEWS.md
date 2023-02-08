@@ -14,6 +14,7 @@ Fixes:
 * Fixed `print.database` to refer to records instead of rows.
 * Fixed existing reference formatting.
 * Fixed references for missing-value implementation mockup in vignette.
+* Fixed a bug in `normalise` that resulted in relations having duplicate keys.
 
 # autodb 1.0.0
 

@@ -375,6 +375,11 @@ construct_relation_schemas <- function(vecs) {
       keys <- unique(vecs$flat_partition_determinant_set[partition_index])
       dependents <- unique(vecs$flat_partition_dependents[partition_index])
       nonprimes <- setdiff(dependents, unlist(keys))
+
+      # try simplifying keys using other bijection sets
+      # this is not replicated by removing avoidable attributes
+      # if dependencies aren't complete, can result in duplicated keys,
+      # so we have to use unique()
       for (bi_grp_ind in seq_along(sorted_bijection_groups)) {
         grp <- sorted_bijection_groups[[bi_grp_ind]]
         primary <- primaries[[bi_grp_ind]]
@@ -392,10 +397,11 @@ construct_relation_schemas <- function(vecs) {
             }
           }
         }
+        keys <- unique(keys)
         key_matches <- match(keys, grp)
         if (any(!is.na(key_matches))) {
-          primary_loc <- match(list(primary), keys)
-          keys <- c(list(primary), keys[-primary_loc])
+          primary_loc <- vapply(keys, identical, logical(1), primary)
+          keys <- c(list(primary), keys[!primary_loc])
         }
 
         for (bijection_set in nonprimary_bijection_set) {

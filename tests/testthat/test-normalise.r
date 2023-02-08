@@ -241,6 +241,48 @@ describe("normalise", {
       gives_ordered_attributes_in_keys
     )
   })
+  it("gives unique keys for each relation", {
+    gives_unique_keys <- function(flat_deps) {
+      schema <- normalise(flat_deps)
+      for (keyset in schema$keys)
+        expect_true(!anyDuplicated(keyset))
+    }
+
+    deps <- list(
+      dependencies = list(
+        A = list(c("C", "G")),
+        B = list("E"),
+        C = list("F", c("A", "G")),
+        D = list("F"),
+        E = list("B", c("F", "G")),
+        F = list(c("C", "D"), c("D", "G"), c("C", "E")),
+        G = list("E", c("A", "C"))
+      ),
+      attrs = c("A", "B", "C", "D", "E", "F", "G")
+    )
+    gives_unique_keys(flatten(deps))
+
+    deps2 <- list(
+      dependencies = list(
+        list("ri", "fvjxtkbal"),
+        list("fvjxtkbal", "suwxbd"),
+        list(c("fvjxtkbal", "suwxbd", "cvz_tj", "ri"), "q"),
+        list(c("cvz_tj", "j"), "ri"),
+        list(c("fvjxtkbal", "suwxbd", "cvz_tj", "q", "bgreow", "j"), "ri"),
+        list(c("fvjxtkbal", "cvz_tj", "q", "bgreow", "j"), "ri"),
+        list(c("fvjxtkbal", "cvz_tj", "j"), "ri"),
+        list("suwxbd", "ri"),
+        list(c("cvz_tj", "ri"), "bgreow"),
+        list(c("suwxbd", "cvz_tj"), "bgreow"),
+        list(c("fvjxtkbal", "suwxbd", "cvz_tj", "q", "ri", "bgreow"), "j"),
+        list(c("suwxbd", "cvz_tj", "q", "ri", "bgreow"), "j")
+      ),
+      attrs = c("fvjxtkbal", "suwxbd", "cvz_tj", "q", "ri", "bgreow", "j")
+    )
+    gives_unique_keys(deps2)
+
+    forall(gen_flat_deps(7, 20), gives_unique_keys)
+  })
   it("can only return up to one relation schema with no keys", {
     has_up_to_one_keyless_relation_schema <- function(fds) {
       keys <- normalise(fds)$keys
