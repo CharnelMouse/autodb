@@ -140,6 +140,18 @@ gen_unnamed_flat_deps <- function(n_attrs, max_dets) {
   ))
 }
 
+gen_flat_deps_fixed_names <- function(n, max_dets, len = 9) {
+  attrs <- LETTERS[seq.int(n)]
+  generate(for (unnamed_deps in gen_unnamed_flat_deps(length(attrs), max_dets)) {
+    unindexed_deps <- lapply(unnamed_deps, \(ud) lapply(ud, \(cs) attrs[cs]))
+    names(unindexed_deps) <- attrs
+    flatten(list(
+      dependencies = unindexed_deps,
+      attrs = attrs
+    ))
+  })
+}
+
 gen_flat_deps <- function(n, max_dets, len = 9) {
   generate(for (attrs in gen_attr_names(n, len)) {
     generate(for (unnamed_deps in gen_unnamed_flat_deps(length(attrs), max_dets)) {

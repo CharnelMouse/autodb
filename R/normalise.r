@@ -370,6 +370,19 @@ construct_relation_schemas <- function(vecs) {
   attrs <- list()
   rel_keys <- list()
   if (length(vecs$flat_groups) > 0) {
+    group_bi_grp_ind <- vapply(
+      seq_len(max(vecs$flat_groups)),
+      \(n) {
+        keys <- unique(vecs$flat_partition_determinant_set[vecs$flat_groups == n])
+        sorted_keys <- keys[keys_order(keys)]
+        match(list(sorted_keys), sorted_bijection_groups)
+      },
+      integer(1)
+    )
+    stopifnot(identical(
+      sort(group_bi_grp_ind[!is.na(group_bi_grp_ind)]),
+      seq_along(vecs$bijection_groups)
+    ))
     for (group_ind in seq_len(max(vecs$flat_groups))) {
       partition_index <- vecs$flat_groups == group_ind
       keys <- unique(vecs$flat_partition_determinant_set[partition_index])
@@ -380,12 +393,28 @@ construct_relation_schemas <- function(vecs) {
       # this is not replicated by removing avoidable attributes
       # if dependencies aren't complete, can result in duplicated keys,
       # so we have to use unique()
-      for (bi_grp_ind in seq_along(sorted_bijection_groups)) {
+      # I'm not sure these simplifications actually get used, unless
+      # the given FDs aren't complete for each dependant.
+      # skip own bijection group
+      other_bijection_groups <- setdiff(
+        seq_along(sorted_bijection_groups),
+        group_bi_grp_ind[group_ind]
+      )
+      for (bi_grp_ind in other_bijection_groups) {
         grp <- sorted_bijection_groups[[bi_grp_ind]]
         primary <- primaries[[bi_grp_ind]]
         nonprimary_bijection_set <- setdiff(grp, list(primary))
 
-        if (!any(vapply(keys, \(k) all(primary %in% k), logical(1)))) {
+        # use bijection set to simplify if its primary isn't in the group
+        # I think the intention here is more like "if the set isn't
+        # the one that defines the group", which will break if the group's
+        # primary gets changed to something else by an earlier bijection set.
+        primary_not_in_keys <- !any(vapply(
+          keys,
+          \(k) all(primary %in% k),
+          logical(1)
+        ))
+        if (primary_not_in_keys) {
           for (bijection_set in nonprimary_bijection_set) {
             for (key_el_ind in seq_along(keys)) {
               if (all(bijection_set %in% keys[[key_el_ind]])) {
@@ -397,13 +426,16 @@ construct_relation_schemas <- function(vecs) {
             }
           }
         }
+        # above step can currently result in duplicates
         keys <- unique(keys)
         key_matches <- match(keys, grp)
+        # replace any keys within the bijection group with its primary
         if (any(!is.na(key_matches))) {
           primary_loc <- vapply(keys, identical, logical(1), primary)
           keys <- c(list(primary), keys[!primary_loc])
         }
 
+        # if replace any keys within the nonprime attributes with the primary
         for (bijection_set in nonprimary_bijection_set) {
           if (all(bijection_set %in% nonprimes)) {
             nonprimes <- setdiff(nonprimes, bijection_set)

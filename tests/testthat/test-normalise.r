@@ -375,6 +375,67 @@ describe("normalise", {
       tests = 1000
     )
   })
+  it("gives database schemas that reproduce the given functional dependencies", {
+    expect_nofds <- function(fds) {
+      act <- quasi_label(rlang::enquo(fds), arg = "object")
+      act$n <- length(act$val)
+      expect(
+        act$n == 0L,
+        sprintf(paste0(
+          length(fds),
+          " dependencies not represented:\n",
+          paste(
+            vapply(
+              fds,
+              \(fd) paste0("{", toString(fd[[1]]), "} -> ", fd[2]),
+              character(1)
+            ),
+            collapse = "\n"
+          )
+        ))
+      )
+      invisible(act$val)
+    }
+    reproduces_fds <- function(flat_deps) {
+      if (length(flat_deps$dependencies) == 0L)
+        discard()
+      schema <- normalise(flat_deps)
+      implied_fds <- synthesised_fds(schema$attrs, schema$keys)
+      if (length(implied_fds) > 0)
+        implied_fds <- unlist(implied_fds, recursive = FALSE)
+      implied_detsets <- lapply(implied_fds, "[[", 1)
+      implied_deps <- vapply(implied_fds, "[[", character(1), 2)
+      fds_reproduced <- vapply(
+        flat_deps$dependencies,
+        \(fd) {
+          closure <- find_closure(fd[[1]], implied_detsets, implied_deps)
+          fd[[2]] %in% closure
+        },
+        logical(1)
+      )
+      expect_nofds(flat_deps$dependencies[!fds_reproduced])
+    }
+
+    deps <- list(
+      dependencies = list(
+        A = list(c("C", "G")),
+        B = list("E"),
+        C = list("F", c("A", "G")),
+        D = list("F"),
+        E = list("B", c("F", "G")),
+        F = list(c("C", "D"), c("D", "G"), c("C", "E")),
+        G = list("E", c("A", "C"))
+      ),
+      attrs = c("A", "B", "C", "D", "E", "F", "G")
+    )
+    reproduces_fds(flatten(deps))
+
+    forall(
+      gen_flat_deps_fixed_names(7, 20),
+      reproduces_fds,
+      discard.limit = 10L
+    )
+  })
 })
 
 test_that("drop_primary_dups", {
