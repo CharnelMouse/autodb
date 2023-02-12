@@ -347,27 +347,51 @@ While this is not a dependency we could expect to hold if more data was collecte
 
 Larger datasets can often have entry errors, without an easy way to remove or deal with them. For this reason, we might be interested in "approximate" functional dependencies, which hold after removing a bounded amount of violating records.
 
-Suppose that we normalise `nudge` again, without any manual dependency removal, but allow approximate dependencies, that hold in only `0.99` of the records. Since `nudge` has `r nrow(nudge)`, the dependencies must hold over at least `r ceiling(nrow(nudge)*0.99)` records.
+Suppose that we normalise `nudge` again, without any manual dependency removal, but allowing approximate dependencies. We could cheat, knowing that the questionable data example found above showed there to be two questionable records: one for a duplicated publication ID, and one for a duplicated reference. Since `nudge` has `r nrow(nudge)` records, we can get rid of the resulting questionable dependencies by setting the accuracy to allow two discrepant records.
+
+```{r nudge_approximate_cheat}
+nudge_approx_cheat_database_schema <- dfd(
+  nudge,
+  accuracy = 1 - 2/nrow(nudge),
+  exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
+  exclude_class = "numeric"
+) |>
+  flatten() |>
+  normalise() |>
+  cross_reference()
+DiagrammeR::grViz(gv(nudge_approx_cheat_database_schema))
+```
+
+Currently `decompose` doesn't account for approximate dependencies, resulting in invalid databases, so here we just work with the database schema.
+
+Compare this to the database schema we arrived at manually:
+- The publication ID, the title, and the reference being considered equivalent, as we'd have originally expected.
+- There is an additional relation, showing `approximation` to be approximately determined by some publication- and study-level attributes, rather than functionally determined at the effect-size level.
+
+Lowering the accuracy results in more dependencies being found, and so in more relations. The number of relations can get very large. For example, suppose we instead set the accuracy to `0.99`, returning any approximate dependencies that hold in at least `r ceiling(nrow(nudge)*0.99)` records.
 
 ```{r nudge_approximate}
-nudge_approx_database <- autodb(
+nudge_approx_database_schema <- dfd(
   nudge,
   accuracy = 0.99,
   exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
   exclude_class = "numeric"
-)
-DiagrammeR::grViz(gv(nudge_approx_database))
+) |>
+  flatten() |>
+  normalise() |>
+  cross_reference()
+DiagrammeR::grViz(gv(nudge_approx_database_schema))
 ```
 
 This is a little overwhelming, so we'll use a utility function called `reduce`. This finds the relation with the most records, which can be considered as the "main" relation, and removes any relations not linked to it by foreign key references. Reducing the approximate database gives us this set of relations:
 
 ```{r nudge_approximate_reduced}
-DiagrammeR::grViz(gv(reduce(nudge_approx_database)))
+DiagrammeR::grViz(gv(reduce(nudge_approx_database_schema, "es_id")))
 ```
 
 Questionable intermediate relations aside, we can see that there is now a publication-level relation with the publication ID as a key, since it determines the publication attributes once we remove one of the duplicate records we discovered before.
 
-`reduce` needs to be used with caution: while the relations it removes are often spurious, it's possible to find databases where relations not linked to the main relation by foreign key references are required to rejoin to the original data frame, so reduction can remove necessary relations. Its intent is mostly to make glancing at database plots more manageable.
+`reduce` can also be used on databases. It needs to be used with caution: while the relations it removes are often spurious, it's possible to find databases where relations not linked to the main relation by foreign key references are required to rejoin to the original data frame, so reduction can remove necessary relations. Its intent is mostly to make glancing at database plots more manageable.
 
 ## Avoidable attributes
 
