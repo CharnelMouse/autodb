@@ -3,7 +3,7 @@ library(hedgehog)
 describe("reduce.database", {
   it("is idempotent", {
     has_idempotent_reduction <- function(df) {
-      database <- autodb(as.data.frame(df), 1, ensure_lossless = FALSE)
+      database <- autodb(as.data.frame(df), ensure_lossless = FALSE)
       once <- reduce(database)
       twice <- reduce(once)
       expect_identical(twice, once)
@@ -12,7 +12,7 @@ describe("reduce.database", {
   })
   it("removes added relations with less rows than existing non-parent relations", {
     removes_added_non_parent_with_non_maximum_nrow <- function(df) {
-      database <- autodb(df, 1, ensure_lossless = TRUE)
+      database <- autodb(df, ensure_lossless = TRUE)
       once <- reduce(database)
       once_plus_small <- once
       once_plus_small$relations <- c(
@@ -36,7 +36,7 @@ describe("reduce.database", {
   })
   it("returns a subset", {
     reduced_to_subset <- function(df) {
-      database <- autodb(df, 1, ensure_lossless = FALSE)
+      database <- autodb(df, ensure_lossless = FALSE)
       reduced <- reduce(database)
       expect_identical(reduced$name, database$name)
       expect_true(all(reduced$relations %in% database$relations))
@@ -46,7 +46,7 @@ describe("reduce.database", {
   })
   it("returns a database where non-parent relations have the same maximal number of rows", {
     all_non_parents_in_reduction_have_same_nrow <- function(df) {
-      database <- autodb(df, 1, ensure_lossless = FALSE)
+      database <- autodb(df, ensure_lossless = FALSE)
       if (length(database$relations) == 0)
         succeed()
       else{

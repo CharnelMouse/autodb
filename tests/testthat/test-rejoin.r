@@ -3,7 +3,7 @@ library(hedgehog)
 describe("rejoin", {
   it("is left-inverse for lossless full-dep database creation, outside of row permutations, for tables with unique rows", {
     autodb_inverted_by_rejoin <- function(df) {
-      database <- autodb(df, 1)
+      database <- autodb(df)
       df2 <- rejoin(database)
       expect_identical_unordered_table(df2, df)
     }

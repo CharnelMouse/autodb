@@ -23,7 +23,7 @@
 #'   it is lossless and self-consistent.
 #' @examples
 #' # simple example
-#' db <- autodb(ChickWeight, 1, "chick")
+#' db <- autodb(ChickWeight, "chick")
 #' rj <- rejoin(db)
 #' rj <- rj[order(as.integer(rownames(rj))), ]
 #' mapply(identical, rj, as.data.frame(ChickWeight))

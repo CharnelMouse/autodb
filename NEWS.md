@@ -11,6 +11,7 @@ form.
 * Made `reduce` generic, and added a method for database schemas. Currently this method requires explicitly naming the main relations, rather than inferring them.
 * Removed incorrect comment in vignette about needing foreign keys to reconstruct the original data frame from a database.
 * Tidied up `nudge` data documentation, improved commentary on publication references in vignette.
+* Removed accuracy argument from `autodb`, due to approximate dependencies now returning an error in `decompose`.
 
 Fixes:
 

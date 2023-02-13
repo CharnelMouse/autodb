@@ -66,7 +66,7 @@ txt_df <- gv(ChickWeight, "chick")
 cat(txt_df)
 DiagrammeR::grViz(txt_df)
 # simple database example
-db <- autodb(ChickWeight, 1, "chick")
+db <- autodb(ChickWeight, "chick")
 txt_db <- gv(db)
 cat(txt_db)
 DiagrammeR::grViz(txt_db)

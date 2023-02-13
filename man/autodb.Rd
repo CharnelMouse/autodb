@@ -7,7 +7,6 @@
 \usage{
 autodb(
   df,
-  accuracy,
   name = NA_character_,
   ensure_lossless = TRUE,
   remove_avoidable = FALSE,
@@ -19,9 +18,6 @@ autodb(
 }
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
-
-\item{accuracy}{a numeric in (0, 1], giving the accuracy threshold threshold
-required in order to conclude a dependency.}
 
 \item{name}{a scalar character, giving the name of the database. This name
 is used for the resulting graph when using \code{\link{gv.database}}, to
@@ -70,7 +66,11 @@ This is a wrapper function for applying \code{\link{dfd}},
 \code{\link{flatten}}, \code{\link{normalise}},
 \code{\link{cross_reference}}, and \code{\link{decompose}}, in order.
 }
+\details{
+Since \code{decompose} only works with functional dependencies, not approximate
+dependencies, the accuracy in \code{dfd} is fixed as 1.
+}
 \examples{
 # simple example
-autodb(ChickWeight, 1)
+autodb(ChickWeight)
 }

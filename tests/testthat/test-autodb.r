@@ -17,7 +17,7 @@ describe("autodb", {
       Genre_Name = rep(c("Tutorial", "Popular science"), each = 2),
       Publisher_ID = rep(1:2, each = 2)
     )
-    database <- autodb(df, 1)
+    database <- autodb(df)
     expect_true(!anyDuplicated(database))
     expect_identical(length(database$relations), 3L)
     expect_setequal(names(database$relations), c("Price", "Title", "constants"))
@@ -44,7 +44,7 @@ describe("autodb", {
       Genre_Name = rep(c("Tutorial", "Popular science"), each = 2),
       Publisher_ID = rep(1:2, each = 2)
     )
-    database_nonfiltered <- autodb(df, 1)
+    database_nonfiltered <- autodb(df)
     expect_setequal(
       names(database_nonfiltered$relations),
       c("Price", "Title", "constants")
@@ -53,7 +53,7 @@ describe("autodb", {
       database_nonfiltered$relations$Price$keys,
       list("Price", c("Title", "Format"))
     )
-    database_filtered <- autodb(df, 1, exclude_class = "numeric")
+    database_filtered <- autodb(df, exclude_class = "numeric")
     expect_setequal(
       names(database_filtered$relations),
       c("Title_Format", "Title", "constants")
@@ -81,7 +81,7 @@ describe("autodb", {
       Genre_Name = rep(c("Tutorial", "Popular science"), each = 2),
       Publisher_ID = rep(1:2, each = 2)
     )
-    database_nonfiltered <- autodb(df, 1)
+    database_nonfiltered <- autodb(df)
     expect_setequal(
       names(database_nonfiltered$relations),
       c("Price", "Title", "constants")
@@ -90,7 +90,7 @@ describe("autodb", {
       database_nonfiltered$relations$Price$keys,
       list("Price", c("Title", "Format"))
     )
-    database_filtered <- autodb(df, 1, exclude = "Price")
+    database_filtered <- autodb(df, exclude = "Price")
     expect_setequal(
       names(database_filtered$relations),
       c("Title_Format", "Title", "constants")
@@ -118,7 +118,7 @@ describe("autodb", {
       Genre_Name = rep(c("Tutorial", "Popular science"), each = 2),
       Publisher_ID = rep(1:2, each = 2)
     )
-    database_nonfiltered <- autodb(df, 1)
+    database_nonfiltered <- autodb(df)
     expect_setequal(
       names(database_nonfiltered$relations),
       c("Price", "Title", "constants")
@@ -127,7 +127,7 @@ describe("autodb", {
       database_nonfiltered$relations$Price$keys,
       list("Price", c("Title", "Format"))
     )
-    database_filtered <- autodb(df, 1, exclude_class = "integer")
+    database_filtered <- autodb(df, exclude_class = "integer")
     expect_setequal(
       names(database_filtered$relations),
       c("Title_Format", "Title", "constants")
@@ -140,7 +140,7 @@ describe("autodb", {
   it("correctly handles attributes with non-df-standard names", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
       stats::setNames(c("A 1", "B 2", "C 3"))
-    database <- autodb(df, 1)
+    database <- autodb(df)
     expect_identical(names(database$relations[[1]]$df), c("A 1", "B 2", "C 3"))
   })
   it("adds a key table if none given in normalisation", {
@@ -149,7 +149,7 @@ describe("autodb", {
       b = c(1L, 2L, 1L, 2L),
       c = c(1L, 1L, 2L, 2L)
     )
-    database <- autodb(df, 1)
+    database <- autodb(df)
     expect_identical(
       database$relations$a_c,
       list(

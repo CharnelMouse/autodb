@@ -73,12 +73,7 @@ summary(ChickWeight)
 The simplest way to do normalisation is with the `autodb` function:
 
 ```{r}
-db <- autodb(ChickWeight, accuracy = 1, name = "Chick Weights")
-```
-
-The `accuracy` argument expects a number between zero and one, determining what proportion of a data frame's records need to satisfy a given dependency for the algorithm to consider it valid. Setting `accuracy` to one, as done here, limits us to exact dependencies. We'll look at other values later, in the section on approximate dependencies.
-
-```{r}
+db <- autodb(ChickWeight, name = "Chick Weights")
 db
 ```
 
@@ -110,7 +105,12 @@ We can see that `ChickWeight` was split into two relations, with a weight for ea
 Having looked at the final result first, we now look at the individual steps. The first step is to find the (non-trivial and minimal) dependencies present in the given data.frame. There are various ways to do this; the package uses DFD, a depth-first search algorithm. We run this using the `dfd` function, setting `progress` to `TRUE` to see the steps taken:
 
 ```{r}
-deps <- dfd(ChickWeight, 1, progress = TRUE)
+deps <- dfd(ChickWeight, accuracy = 1, progress = TRUE)
+```
+
+The `accuracy` argument expects a number between zero and one, determining what proportion of a data frame's records need to satisfy a given dependency for the algorithm to consider it valid. Setting `accuracy` to one, as done here, limits us to exact dependencies. We'll look at other values later, in the section on approximate dependencies.
+
+```{r}
 deps
 ```
 
@@ -159,7 +159,7 @@ This is a simple set of data, with a single count observation, `Freq`, for each 
 If we use `autodb` again, we get the following database:
 
 ```{r}
-DiagrammeR::grViz(gv(autodb(as.data.frame(Titanic), 1)))
+DiagrammeR::grViz(gv(autodb(as.data.frame(Titanic))))
 ```
 
 Oops! The DFD algorithm found some functional dependencies where the count could be used to determine another attribute. These are clearly spurious: frequency count can't causally determine age, for example. However, the algorithm still finds these dependencies, because the counts are unique often enough to make these dependencies hold in the given data.
@@ -182,7 +182,7 @@ identical(titanic_deps_freqonly, dfd(as.data.frame(Titanic), 1, exclude_class = 
 These can both be used as arguments to `autodb` too:
 
 ```{r}
-DiagrammeR::grViz(gv(autodb(as.data.frame(Titanic), 1, exclude = "Freq")))
+DiagrammeR::grViz(gv(autodb(as.data.frame(Titanic), exclude = "Freq")))
 ```
 
 Generally, excluding numeric attributes as determinants is often useful, because we expect non-integer numbers to be a measurement, not part of a primary key.
@@ -468,7 +468,7 @@ df_nas
 The package currently treats `NA` as just another value, with no special treatment for normalisation or rejoining, resulting in no splitting of the above data frame:
 
 ```{r example_data_frame_with_NAs_autodb}
-DiagrammeR::grViz(gv(autodb(df_nas, 1)))
+DiagrammeR::grViz(gv(autodb(df_nas)))
 ```
 
 In this case, a missing death date represents no death, and we would prefer to move death information to a separate relation, containing only patients with a death date, in this case patient 3:
