@@ -8,11 +8,13 @@
 A data frame with 447 effect size measurements and 25 columns:
 \enumerate{
 \item publication_id, integer ID number for the publication. Note that
-two publications were erroneuously assigned the same ID number, so this
+two publications were erroneously assigned the same ID number, so this
 is not a unique publication identifier.
 \item study_id, integer ID number for the study.
 \item es_id, integer ID number for the effect size measured.
-\item reference, publication citation in "Author(s) (year)" format.
+\item reference, publication citation in "Author(s) (year)" format. Due
+to two publications being assigned the same reference, this is also not a
+unique publication identifier.
 \item title, title of the publication. Due to the error in assigning
 publication ID numbers, this is the unique publication identifier within
 the data set.

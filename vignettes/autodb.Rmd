@@ -216,7 +216,7 @@ identical(flatten(titanic_deps_freqonly), titanic_deps_filtered2)
 
 ## Adding cross-references
 
-Getting back to our `ChickWeight` example, we now have a database schema, consisting of a list of `relation` schemas. However, we have no information about how these relation schemas are linked to each other. In particular, we have no information about foreign keys, that we would need to join relations back together, to reconstruct the original data frame. We can add this information using `cross_reference`:
+Getting back to our `ChickWeight` example, we now have a database schema, consisting of a list of `relation` schemas. However, we have no information about how these relation schemas are linked to each other. In particular, we have no information about foreign keys. We can add this information using `cross_reference`:
 
 ```{r}
 linked_schema <- cross_reference(schema)
@@ -280,7 +280,7 @@ DiagrammeR::grViz(gv(nudge_schema))
 
 We can see a relation, with many attributes, determined by the effect size ID number, `es_id`. This contains all of the numeric measurements, as expected in the relation for the lowest level in the hierarchy. As also expected, this has a foreign key reference to a relation for study-level information, determined by the study ID number, `study_id`.
 
-However, the publication-level relation this refers to is not determined by the publication ID, `publication_id`, as we would expect. Instead, it is determined by the publication's title: to use the ID, we would need to supplement it with the publication year. This suggests that some publication ID numbers have been erroneously assigned to several publications, which we can easily test:
+However, the publication-level relation this refers to is not determined by the publication ID, `publication_id`, as we would expect; neither is it determined by the publication reference. Instead, it is solely determined by the publication's title: to use the ID, we would need to supplement it with the publication year. This suggests that some publication ID numbers have been erroneously assigned to several publications, which we can easily test:
 
 ```{r nudge_publication_check}
 nudge_database <- decompose(nudge, nudge_schema, "nudge")
@@ -305,7 +305,9 @@ nudge_schema_filtered <- cross_reference(normalise(nudge_deps_filtered, remove_a
 DiagrammeR::grViz(gv(nudge_schema_filtered))
 ```
 
-This looks to be an improvement. However, we can still see some spurious relations involving `reference`. One of these combines it with `type_experiment` to determine `location`, a study-level attribute. The others combine it with another attribute to determine `title`. This is expected, since, in the publication-level relation, the title determines the reference, but not vice versa. This means that there are publications that share a reference:
+This looks to be an improvement. However, we can still see some spurious relations involving `reference`. One of these combines it with `type_experiment` to determine `location`, a study-level attribute. The others combine it with another attribute to determine `title`.
+
+As mentioned, we'd expect the reference to uniqely identify the publication: however, in the publication-level relation, the title determines the reference, but not vice versa. This means that there are publications that share a reference:
 
 ```{r nudge_reference_check}
 nudge_database_filtered <- decompose(nudge, nudge_schema_filtered, "nudge")
@@ -365,7 +367,7 @@ DiagrammeR::grViz(gv(nudge_approx_cheat_database_schema))
 Currently `decompose` doesn't account for approximate dependencies, resulting in invalid databases, so here we just work with the database schema.
 
 Compare this to the database schema we arrived at manually:
-- The publication ID, the title, and the reference being considered equivalent, as we'd have originally expected.
+- The publication ID, the title, and the reference are considered equivalent, as we'd have originally expected.
 - There is an additional relation, showing `approximation` to be approximately determined by some publication- and study-level attributes, rather than functionally determined at the effect-size level.
 
 Lowering the accuracy results in more dependencies being found, and so in more relations. The number of relations can get very large. For example, suppose we instead set the accuracy to `0.99`, returning any approximate dependencies that hold in at least `r ceiling(nrow(nudge)*0.99)` records.

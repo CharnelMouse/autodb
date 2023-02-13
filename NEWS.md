@@ -9,6 +9,8 @@ Improvements:
 form.
 * Changed `decompose` to return an error if the data.frame doesn't satisfy the functional dependencies implied by the schema. This will return an error when using `decompose` with a schema derived from the same data.frame if any approximate dependencies were included. Previously, using `decompose` or `dfd` with approximate dependencies would result in constructing a database with duplicate key values, since there's currently no handling of approximate dependencies during database construction, and records ignored in approximate dependencies were being kept. This is incorrect behaviour; `decompose` will be added back for approximate dependencies once the package can properly handle them.
 * Made `reduce` generic, and added a method for database schemas. Currently this method requires explicitly naming the main relations, rather than inferring them.
+* Removed incorrect comment in vignette about needing foreign keys to reconstruct the original data frame from a database.
+* Tidied up `nudge` data documentation, improved commentary on publication references in vignette.
 
 Fixes:
 
