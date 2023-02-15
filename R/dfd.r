@@ -113,7 +113,7 @@ dfd <- function(
   # convert all columns to integers, since they're checked for duplicates more
   # quickly when calculating partitions
   df <- report$exp(
-    data.frame(lapply(df, \(x) as.integer(factor(x, exclude = NULL)))) |>
+    data.frame(lapply(df, \(x) as.integer(factor(unclass(x), exclude = NULL)))) |>
       stats::setNames(column_names),
     "simplifying data types"
   )

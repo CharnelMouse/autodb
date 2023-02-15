@@ -273,6 +273,25 @@ describe("dfd", {
       curry = TRUE
     )
   })
+  it("correctly simplifies date attributes with varying standard/daylight savings", {
+    # example from nycflights13::weather
+    df <- data.frame(
+      month = c(11L, 11L, 12L),
+      day = 3L,
+      hour = 1L,
+      time = as.POSIXct(
+        # 2013-11-03 01:00:00 EDT,
+        # 2013-11-03 01:00:00 EST,
+        # 2013-11-04 01:00:00 EST
+        c(1383454800L, 1383458400L, 1383544800L),
+        origin = "1970-01-01 00:00:00 UTC",
+        tz = "America/New_York"
+      )
+    )
+    stopifnot(df[1, "time"] != df[2, "time"])
+    deps <- dfd(df, 1)
+    expect_length(deps$dependencies$time, 0L)
+  })
   it("doesn't have an excluded attribute in any determinant sets", {
     gen_df_and_exclude <- function(nrow, ncol, remove_dup_rows = FALSE) {
       generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows)) {
