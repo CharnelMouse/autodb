@@ -12,7 +12,7 @@ df_equiv <- function(df1, df2) {
     FALSE
   else
     identical(
-      `rownames<-`(df1[do.call(order, df1), ], NULL),
-      `rownames<-`(df2[do.call(order, df2), ], NULL)
+      `rownames<-`(df1[do.call(order, unname(df1)), ], NULL),
+      `rownames<-`(df2[do.call(order, unname(df2)), ], NULL)
     )
 }

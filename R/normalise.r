@@ -661,8 +661,8 @@ keys_order_same_lengths <- function(keys) {
   stopifnot(all(lengths(keys) == len))
   if (len == 0)
     return(seq_along(keys))
-  els_by_place <- do.call(Map, c(c, keys))
-  do.call(order, els_by_place)
+  els_by_place <- do.call(Map, unname(c(c, keys)))
+  do.call(order, unname(els_by_place))
 }
 
 keys_order <- function(keys) {

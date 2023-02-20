@@ -104,8 +104,8 @@ calculate_references <- function(keys, attrs) {
   )
   filtered_vecs <- remove_extraneous_dependencies(vecs)
 
-  relation_pairs <- do.call(Map, c(list(c), vecs))
-  filtered_relation_pairs <- do.call(Map, c(list(c), filtered_vecs))
+  relation_pairs <- do.call(Map, unname(c(list(c), vecs)))
+  filtered_relation_pairs <- do.call(Map, unname(c(list(c), filtered_vecs)))
   kept <- match(filtered_relation_pairs, relation_pairs)
   stopifnot(!anyNA(kept))
   filtered_attrs <- ref_attrs[kept]
