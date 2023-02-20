@@ -155,24 +155,25 @@ describe("dfd", {
       uniq <- sort(unique(vals), na.last = TRUE)
       matches <- match(vals, uniq)
       pool <- union(uniq, NA)
-      generate(for (perm in gen.sample(pool, length(uniq))) {
-        perm[matches]
-      })
+      gen.sample(pool, length(uniq)) |>
+        gen.with(\(perm) perm[matches])
     }
     gen_df_and_value_perm <- function(
       nrow,
       ncol,
       remove_dup_rows = FALSE
     ) {
-      generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows)) {
-        generate(for (attr in gen.int(ncol(df))) {
-          generate(for (permuted_attr in gen_perm(df[, attr])) {
-            permed <- df
-            permed[, attr] <- permuted_attr
-            list(df, permed)
-          })
+      gen_df(nrow, ncol, minrow = 1L, remove_dup_rows) |>
+        gen.and_then(\(df) list(df, gen.int(ncol(df)))) |>
+        gen.and_then(\(lst) c(lst, list(gen_perm(lst[[1]][[lst[[2]]]])))) |>
+        gen.with(\(lst) {
+          df <- lst[[1]]
+          attr <- lst[[2]]
+          permuted_attr <- lst[[3]]
+          permed <- df
+          permed[[attr]] <- permuted_attr
+          list(df, permed)
         })
-      })
     }
     forall(
       gen_df_and_value_perm(4, 6),
@@ -187,17 +188,24 @@ describe("dfd", {
       remove_dup_rows = FALSE
     ) {
       classes <- c("logical", "integer", "numeric", "character")
-      generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows)) {
-        generate(for (attr in gen.int(ncol(df))) {
-          generate(for (new_class in gen.element(
-            setdiff(classes, class(df[, attr])))
-          ) {
+      gen_df(nrow, ncol, minrow = 1L, remove_dup_rows) |>
+        gen.and_then(\(df) list(df, gen.int(ncol(df)))) |>
+        gen.and_then(\(lst) {
+          c(
+            lst,
+            list(gen.element(setdiff(classes, class(lst[[1]][, lst[[2]]]))))
+          )
+        }) |>
+        gen.with(
+          \(lst) {
+            df <- lst[[1]]
+            attr <- lst[[2]]
+            new_class <- lst[[3]]
             permed <- df
-            permed[, attr] <- as(permed[, attr], new_class)
+            permed[[attr]] <- as(permed[[attr]], new_class)
             list(df, permed)
-          })
-        })
-      })
+          }
+        )
     }
     forall(
       gen_df_and_type_change(4, 6),
@@ -211,11 +219,13 @@ describe("dfd", {
       ncol,
       remove_dup_rows = FALSE
     ) {
-      generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows)) {
-        generate(for (perm in sample.int(ncol(df))) {
+      gen_df(nrow, ncol, minrow = 1L, remove_dup_rows) |>
+        gen.and_then(\(df) list(df, sample.int(ncol(df)))) |>
+        gen.with(\(lst) {
+          df <- lst[[1]]
+          perm <- lst[[2]]
           list(df, df[, perm, drop = FALSE])
         })
-      })
     }
     forall(
       gen_df_and_attr_perm(4, 6),
@@ -225,11 +235,13 @@ describe("dfd", {
   })
   it("loses FDs involving a removed attribute, keeps the rest", {
     gen_df_and_remove_col <- function(nrow, ncol, remove_dup_rows = FALSE) {
-      generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows)) {
-        generate(for (n in gen.int(ncol(df))) {
+      gen_df(nrow, ncol, minrow = 1L, remove_dup_rows) |>
+        gen.and_then(\(df) list(df, gen.int(ncol(df)))) |>
+        gen.with(\(lst) {
+          df <- lst[[1]]
+          n <- lst[[2]]
           list(df, df[, -n, drop = FALSE])
         })
-      })
     }
     forall(
       gen_df_and_remove_col(4, 6),
@@ -239,13 +251,15 @@ describe("dfd", {
   })
   it("is invariant to changes of accuracy within same required row count", {
     gen_df_and_accuracy_nrow <- function(nrow, ncol, remove_dup_rows = FALSE) {
-      generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows)) {
-        generate(for (n in gen.int(nrow(df))) {
+      gen_df(nrow, ncol, minrow = 1L, remove_dup_rows) |>
+        gen.and_then(\(df) list(df, gen.int(nrow(df)))) |>
+        gen.with(\(lst) {
+          df <- lst[[1]]
+          n <- lst[[2]]
           prop <- n/nrow(df)
           low <- (n - 1)/nrow(df) + 1e-9
           list(df, low, prop)
         })
-      })
     }
     both_bounds_terminate_then <- function(fn, ...) {
       function(df, low, high) {
@@ -264,11 +278,13 @@ describe("dfd", {
   })
   it("keeps subsets of all FDs if a row is removed, might have more", {
     gen_df_and_remove_row <- function(nrow, ncol) {
-      generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows = TRUE)) {
-        generate(for (n in gen.element(seq_len(nrow(df)))) {
+      gen_df(nrow, ncol, minrow = 1L, remove_dup_rows = TRUE) |>
+        gen.and_then(\(df) list(df, gen.element(seq_len(nrow(df))))) |>
+        gen.with(\(lst) {
+          df <- lst[[1]]
+          n <- lst[[2]]
           list(df, df[-n, , drop = FALSE])
         })
-      })
     }
     forall(
       gen_df_and_remove_row(4, 6),
@@ -278,11 +294,13 @@ describe("dfd", {
   })
   it("dfd -> change attribute names is equivalent to change names -> dfd", {
     gen_df_and_name_change <- function(nrow, ncol, remove_dup_rows = FALSE) {
-      generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows)) {
-        generate(for (new_names in gen.sample(LETTERS, ncol(df))) {
+      gen_df(nrow, ncol, minrow = 1L, remove_dup_rows) |>
+        gen.and_then(\(df) list(df, gen.sample(LETTERS, ncol(df)))) |>
+        gen.with(\(lst) {
+          df <- lst[[1]]
+          new_names <- lst[[2]]
           list(df, stats::setNames(df, new_names))
         })
-      })
     }
     forall(
       gen_df_and_name_change(4, 6),
@@ -311,9 +329,8 @@ describe("dfd", {
   })
   it("doesn't have an excluded attribute in any determinant sets", {
     gen_df_and_exclude <- function(nrow, ncol, remove_dup_rows = FALSE) {
-      generate(for (df in gen_df(nrow, ncol, minrow = 1L, remove_dup_rows)) {
-        list(df, gen.sample(names(df), 1))
-      })
+      gen_df(nrow, ncol, minrow = 1L, remove_dup_rows) |>
+        gen.and_then(\(df) list(df, gen.sample(names(df), 1)))
     }
     terminates_with_exclusion_then <- function(fn, accuracy, ...) {
       function(df, attr) {
