@@ -1,20 +1,8 @@
 # Possible additional properties
 # Invariants
-# + Running DFD twice gives equivalent results
-# doesn't change results
 # + FDs with the same RHS can't be LHSs where one is a subset of the other
-# + invariant to permuting/changing values for an attribute (incl. NA)
-# + invariant to changing type for an attribute
-# + invariant to changing attribute order, except for order in dep elements and
-# determinant sets
-# + invariant to accuracy within same nrow threshold
-# + removing a column removes FDs involving that column, the rest stay the same
-# + removing a row keeps subsets of all previous FDs, might add more
-# + doesn't have attribute in determinant sets if excluded
-# + excluding type === excluding all attributes of that type
 # Metamorphic/model
 # + change attribute names then DFD === DFD then change attribute names
-
 # Various tests should have random accuracy draws, probably with lots of
 # weight on 1
 
