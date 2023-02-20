@@ -715,7 +715,9 @@ fsplit <- function(splitted, splitter) {
   # Column contents are known to be integer, so we paste them together before
   # calling split. This is much faster than the iterated pasting of multiple f
   # elements done by interaction().
-  single_splitter <- do.call(paste, splitter)
+  # splitter is unnamed in case any attributes have names like "sep"
+  # that would be used as arguments for split
+  single_splitter <- do.call(paste, unname(splitter))
   split(splitted, single_splitter, drop = TRUE)
 }
 

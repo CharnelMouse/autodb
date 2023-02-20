@@ -201,6 +201,23 @@ describe("dfd", {
       curry = TRUE
     )
   })
+  it("terminates properly when attributes have parameter names for paste", {
+    df1 <- data.frame(
+      b = NA,
+      j = c(TRUE, NA, NA, NA),
+      u = c(FALSE, TRUE, TRUE, NA),
+      l = c(FALSE, TRUE, TRUE, TRUE),
+      t = c(FALSE, FALSE, TRUE, NA),
+      sep = c(TRUE, TRUE, NA, NA)
+    )
+    df2 <- df1[, c("l", "j", "t", "b", "u", "sep")]
+    terminates_with_and_without_cache <- terminates_with_and_without_cache_then(
+      \(x, y) {},
+      1
+    )
+    terminates_with_and_without_cache(df1)
+    terminates_with_and_without_cache(df2)
+  })
   it("is invariant, under reordering, to attributes being reordered", {
     gen_df_and_attr_perm <- function(
       nrow,
