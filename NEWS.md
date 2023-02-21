@@ -22,6 +22,7 @@ Fixes:
 * Fixed a bug in `normalise`, that resulted in schemas that didn't reproduce the given functional dependencies.
 * Fixed `dfd`'s data simplification step for POSIXct datetimes, in case where two times only differ by standard/daylight-savings time (e.g. 1:00:00 EST vs. 1:00:00 EDT on the same day).
 * Fixed a bug in `dfd` with cache = TRUE, where data frame column names being argument names for `paste` can result in an error.
+* Fixed decomposition for tables with zero columns (TABLE_DUM and TABLE_DEE) to allow lossless rejoin.
 
 # autodb 1.0.0
 

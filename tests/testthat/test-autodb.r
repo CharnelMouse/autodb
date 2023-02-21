@@ -159,4 +159,17 @@ describe("autodb", {
       )
     )
   })
+  it("decomposes zero-column data frames correctly into TABLE_DUM or TABLE_DEE", {
+    table_dum <- data.frame()
+    table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
+    table_deux <- data.frame(a = 1:2)[, -1, drop = FALSE]
+    db_dum <- autodb(table_dum)
+    db_dee <- autodb(table_dee)
+    db_deux <- autodb(table_deux)
+    expect_length(db_dum$relations, 1L)
+    expect_length(db_dee$relations, 1L)
+    expect_identical(nrow(db_dum$relations[[1]]$df), 0L)
+    expect_identical(nrow(db_dee$relations[[1]]$df), 1L)
+    expect_identical(db_deux, db_dee)
+  })
 })

@@ -86,7 +86,12 @@ decompose <- function(df, schema, name = NA_character_) {
   relation_list <- Map(
     \(attrs, keys, parents) {
       list(
-        df = unique(df[, attrs, drop = FALSE]),
+        # conditional needed to handle 0-attrs case,
+        # i.e. decomposing to table_dum and table_dee
+        df = if (length(attrs) == 0L)
+          df[seq_len(nrow(df) >= 1L), attrs, drop = FALSE]
+        else
+          unique(df[, attrs, drop = FALSE]),
         keys = keys,
         parents = relation_names[parents]
       )

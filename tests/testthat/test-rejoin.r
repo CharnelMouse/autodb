@@ -7,6 +7,10 @@ describe("rejoin", {
       df2 <- rejoin(database)
       expect_identical_unordered_table(df2, df)
     }
+    table_dum <- data.frame()
+    table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
+    autodb_inverted_by_rejoin(table_dum)
+    autodb_inverted_by_rejoin(table_dee)
     # 6 columns allows for interesting cases, such as a table containing two
     # independent ones, or a reference involving several attributes
     forall(
