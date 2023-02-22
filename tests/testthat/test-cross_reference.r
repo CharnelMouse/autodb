@@ -228,4 +228,18 @@ describe("cross_reference", {
     }
     forall(gen.relation, returns_itself)
   })
+  it("gives names that aren't empty (e.g. are valid names in Graphviz plots)", {
+    gets_nonempty_table_names <- function(fds) {
+      schema <- normalise(fds)
+      linked <- cross_reference(schema, ensure_lossless = TRUE)
+      expect_true(all(nchar(linked$relation_names) > 0L))
+    }
+    # table_dum and table_dee
+    empty_fds <- list(
+      dependencies = list(),
+      attrs = character()
+    )
+    gets_nonempty_table_names(empty_fds)
+    forall(gen_flat_deps(4, 4), gets_nonempty_table_names)
+  })
 })

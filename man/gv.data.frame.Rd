@@ -9,7 +9,8 @@
 \arguments{
 \item{x}{a data.frame.}
 
-\item{name}{a character scalar, giving the name of the record, if any.}
+\item{name}{a character scalar, giving the name of the record, if any. The
+name must be non-empty.}
 
 \item{...}{further arguments passed to or from other methods.}
 }

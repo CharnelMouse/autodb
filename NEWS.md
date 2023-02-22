@@ -23,6 +23,7 @@ Fixes:
 * Fixed `dfd`'s data simplification step for POSIXct datetimes, in case where two times only differ by standard/daylight-savings time (e.g. 1:00:00 EST vs. 1:00:00 EDT on the same day).
 * Fixed a bug in `dfd` with cache = TRUE, where data frame column names being argument names for `paste` can result in an error.
 * Fixed decomposition for tables with zero columns (TABLE_DUM and TABLE_DEE) to allow lossless rejoin.
+* Fixed a bug where the output of `gv` methods included Graphviz syntax errors when given relations with zero-length names. `gv.data.frame` now requires `name` to be non-empty; `gv.database_schema` and `gv.database` replace zero-length names.
 
 # autodb 1.0.0
 

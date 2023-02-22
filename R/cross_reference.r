@@ -45,6 +45,9 @@ cross_reference <- function(schema, ensure_lossless = TRUE) {
       attrs <- c(attrs, list(new_key))
       keys <- c(keys, list(list(new_key)))
       relation_names <- c(relation_names, paste(new_key, collapse = "_"))
+      stopifnot(sum(nchar(relation_names) == 0L) <= 1L)
+      relation_names[nchar(relation_names) == 0L] <- "empty"
+      relation_names <- make.names(relation_names, unique = TRUE)
     }
   }
 

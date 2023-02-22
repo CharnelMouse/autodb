@@ -87,6 +87,11 @@ gv <- function(x, ...) {
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
 gv.database <- function(x, ...) {
+  empty_names <- which(names(x$relations) == "" | names(x$relations) == "empty")
+  names(x$relations)[empty_names] <- make.names(
+    rep("empty", length(empty_names)),
+    unique = TRUE
+  )
   setup_string <- gv_setup_string(x$name)
   df_strings <- mapply(
     relation_string,
@@ -136,6 +141,11 @@ gv.database <- function(x, ...) {
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
 gv.database_schema <- function(x, name = NA_character_, ...) {
+  empty_names <- which(x$relation_names == "" | x$relation_names == "empty")
+  x$relation_names[empty_names] <- make.names(
+    rep("empty", length(empty_names)),
+    unique = TRUE
+  )
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     relation_schema_string,
@@ -172,7 +182,8 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
 #' classes.
 #'
 #' @param x a data.frame.
-#' @param name a character scalar, giving the name of the record, if any.
+#' @param name a character scalar, giving the name of the record, if any. The
+#'   name must be non-empty.
 #' @inheritParams gv
 #'
 #' @return A scalar character, containing text input for Graphviz or the
@@ -180,6 +191,8 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
 gv.data.frame <- function(x, name, ...) {
+  if (name == "")
+    stop("name must be non-empty")
   setup_string <- gv_setup_string(name)
   table_string <- relation_string(list(df = x, keys = list()), name, "row")
   teardown_string <- "}\n"

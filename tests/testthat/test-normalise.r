@@ -224,6 +224,13 @@ describe("normalise", {
     )
     gets_unique_table_names(fds)
   })
+  it("gives names that aren't empty (e.g. are valid names in Graphviz plots)", {
+    gets_nonempty_table_names <- function(fds) {
+      schema <- normalise(fds)
+      expect_true(all(nchar(schema$relation_names) > 0L))
+    }
+    forall(gen_flat_deps(7, 20), gets_nonempty_table_names)
+  })
   it("gives keys with attributes in original order", {
     gives_ordered_attributes_in_keys <- function(fds) {
       schema <- normalise(fds)

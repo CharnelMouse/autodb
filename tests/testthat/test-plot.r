@@ -110,6 +110,14 @@ describe("gv", {
   }
 
   describe("entityset", {
+    it("works for degenerate cases", {
+      table_dum <- data.frame()
+      table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
+      db_dum <- autodb(table_dum)
+      db_dee <- autodb(table_dee)
+      expect_no_error(gv(db_dum))
+      expect_no_error(gv(db_dee))
+    })
     it("creates a Graphviz HTML-like expression for the data.frame", {
       database <- structure(
         list(
@@ -480,6 +488,14 @@ describe("gv", {
     })
   })
   describe("database_schema", {
+    it("works for degenerate cases", {
+      table_dum <- data.frame()
+      table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
+      schema_dum <- cross_reference(normalise(flatten(dfd(table_dum, 1))))
+      schema_dee <- cross_reference(normalise(flatten(dfd(table_dee, 1))))
+      expect_no_error(gv(schema_dum))
+      expect_no_error(gv(schema_dee))
+    })
     it("creates a Graphviz HTML-like expression for the data.frame", {
       database <- structure(
         list(
@@ -662,6 +678,16 @@ describe("gv", {
     })
   })
   describe("data.frame", {
+    it("expects name to be non-empty", {
+      df <- data.frame(a = 1:3)
+      expect_error(gv(df, ""), "^name must be non-empty$")
+    })
+    it("works for degenerate cases", {
+      table_dum <- data.frame()
+      table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
+      expect_no_error(gv(table_dum, "table_dum"))
+      expect_no_error(gv(table_dee, "table_dee"))
+    })
     it("creates a Graphviz HTML-like expression for the data.frame", {
       df <- data.frame(
         a = 1:2, b = letters[1:2]
