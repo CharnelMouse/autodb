@@ -109,7 +109,7 @@ describe("gv", {
     )
   }
 
-  describe("entityset", {
+  describe("database", {
     it("works for degenerate cases", {
       table_dum <- data.frame()
       table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
