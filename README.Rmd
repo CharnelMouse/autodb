@@ -33,7 +33,7 @@ Turning a simple data frame into a database:
 ```{r example}
 library(autodb)
 summary(ChickWeight)
-db <- autodb(ChickWeight, accuracy = 1, name = "ChickWeight")
+db <- autodb(ChickWeight, name = "ChickWeight")
 db
 graphviz_text <- gv(db)
 DiagrammeR::grViz(graphviz_text)
@@ -43,9 +43,9 @@ Using the `exclude_class` argument to forbid numeric variables from appearing in
 
 ```{r exclude_example}
 summary(CO2)
-db2_noexclude <- autodb(CO2, accuracy = 1, name = "CO2")
+db2_noexclude <- autodb(CO2, name = "CO2")
 db2_noexclude
-db2 <- autodb(CO2, accuracy = 1, name = "CO2", exclude_class = "numeric")
+db2 <- autodb(CO2, name = "CO2", exclude_class = "numeric")
 db2
 graphviz_text2 <- gv(db2)
 DiagrammeR::grViz(graphviz_text2)

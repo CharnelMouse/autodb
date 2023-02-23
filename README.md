@@ -35,7 +35,7 @@ summary(ChickWeight)
 #>  3rd Qu.:163.8   3rd Qu.:16.00   17     : 12          
 #>  Max.   :373.0   Max.   :21.00   19     : 12          
 #>                                  (Other):506
-db <- autodb(ChickWeight, accuracy = 1, name = "ChickWeight")
+db <- autodb(ChickWeight, name = "ChickWeight")
 db
 #> database ChickWeight with 2 relations
 #> relation Time_Chick: Time, Chick, weight; 578 records
@@ -63,7 +63,7 @@ summary(CO2)
 #>  Qc3    : 7                                    3rd Qu.: 675   3rd Qu.:37.12  
 #>  Qc2    : 7                                    Max.   :1000   Max.   :45.50  
 #>  (Other):42
-db2_noexclude <- autodb(CO2, accuracy = 1, name = "CO2")
+db2_noexclude <- autodb(CO2, name = "CO2")
 db2_noexclude
 #> database CO2 with 3 relations
 #> relation Plant_conc: Plant, conc, Treatment, uptake; 84 records
@@ -77,7 +77,7 @@ db2_noexclude
 #> Plant_conc.Plant -> Plant.Plant
 #> Plant_conc.conc -> conc_uptake.conc
 #> Plant_conc.uptake -> conc_uptake.uptake
-db2 <- autodb(CO2, accuracy = 1, name = "CO2", exclude_class = "numeric")
+db2 <- autodb(CO2, name = "CO2", exclude_class = "numeric")
 db2
 #> database CO2 with 2 relations
 #> relation Plant: Plant, Type, Treatment; 12 records
