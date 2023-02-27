@@ -1,8 +1,3 @@
-# Possible additional properties
-# Invariants
-# + FDs with the same RHS can't be LHSs where one is a subset of the other
-# Metamorphic/model
-# + change attribute names then DFD === DFD then change attribute names
 # Various tests should have random accuracy draws, probably with lots of
 # weight on 1
 
