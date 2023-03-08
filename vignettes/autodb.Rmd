@@ -164,7 +164,7 @@ DiagrammeR::grViz(gv(autodb(as.data.frame(Titanic))))
 
 Oops! The DFD algorithm found some functional dependencies where the count could be used to determine another attribute. These are clearly spurious: frequency count can't causally determine age, for example. However, the algorithm still finds these dependencies, because the counts are unique often enough to make these dependencies hold in the given data.
 
-There are two approaches we can take to eliminate these spurious dependencies: not letting them be detected in the first place, and removing them before using `cross_reference`.
+There are two approaches we can take to eliminate these spurious dependencies: not letting them be detected in the first place, and removing them before using `normalise`.
 
 To stop them being detected, we can put constraints on what is discovered by `dfd`: we can ask for certain attributes to not be considered as determinants, or we can exclude attributes that inherit from certain classes. In this example, we could exclude `Freq` from being considered:
 
