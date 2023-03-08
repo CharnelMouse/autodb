@@ -1,5 +1,8 @@
 # autodb (development version)
 
+* Corrected vignette re: when to remove spurious dependencies before.
+
+
 # autodb 1.1.0
 
 * Added a `NEWS.md` file to track changes to the package.
