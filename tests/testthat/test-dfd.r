@@ -164,7 +164,7 @@ describe("dfd", {
       curry = TRUE
     )
   })
-  it("is invariant to an attribute's class being changed (without exclusions)", {
+  it("is invariant to an attribute's class being losslessly changed (without exclusions)", {
     gen_df_and_type_change <- function(
       nrow,
       ncol,
@@ -172,11 +172,16 @@ describe("dfd", {
     ) {
       classes <- c("logical", "integer", "numeric", "character")
       gen_df(nrow, ncol, minrow = 1L, remove_dup_rows) |>
-        gen.and_then(\(df) list(df, gen.int(ncol(df)))) |>
+        gen.and_then(\(df) list(df, gen.sample(ncol(df)))) |>
         gen.and_then(\(lst) {
           c(
             lst,
-            list(gen.element(setdiff(classes, class(lst[[1]][, lst[[2]]]))))
+            list(gen.element(classes[
+              -seq.int(min(
+                match(class(lst[[1]][[lst[[2]]]]), classes),
+                length(classes) - 1L
+              ))
+            ]))
           )
         }) |>
         gen.with(
@@ -379,7 +384,7 @@ describe("dfd", {
       }
     }
     forall(
-      gen_df_vary_classes(4, 6), # need to generate dfs with differing classes
+      gen_df(4, 6),
       exclude_and_exclude_class_terminate_then(
         expect_equiv_deps,
         accuracy = 1,
