@@ -50,7 +50,7 @@ as the \code{file} argument for \code{\link[base]{cat}}.}
 }
 \value{
 A database, represented by a list of three elements. See
-\code{\link{cross_reference}} for details.
+\code{\link{decompose}} for details.
 }
 \description{
 Automatic normalisation of a data.frame to third normal form, with the

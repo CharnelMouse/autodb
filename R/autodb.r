@@ -32,7 +32,7 @@
 #' @param ... further arguments passed on to \code{\link{dfd}}.
 #'
 #' @return A database, represented by a list of three elements. See
-#'   \code{\link{cross_reference}} for details.
+#'   \code{\link{decompose}} for details.
 #' @examples
 #' # simple example
 #' autodb(ChickWeight)

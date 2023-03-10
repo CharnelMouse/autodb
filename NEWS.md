@@ -1,7 +1,7 @@
 # autodb (development version)
 
 * Corrected vignette re: when to remove spurious dependencies before.
-
+* Corrected autodb documentation link to page with database format information.
 
 # autodb 1.1.0
 
