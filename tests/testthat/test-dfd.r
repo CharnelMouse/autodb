@@ -135,7 +135,7 @@ describe("dfd", {
   })
   it("is invariant to an attribute's values being permuted", {
     gen_perm <- function(vals) {
-      uniq <- sort(unique(vals), na.last = TRUE)
+      uniq <- unique(vals)
       matches <- match(vals, uniq)
       pool <- union(uniq, NA)
       gen.sample(pool, length(uniq)) |>
