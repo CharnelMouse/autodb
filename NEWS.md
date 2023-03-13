@@ -2,6 +2,7 @@
 
 * Corrected vignette re: when to remove spurious dependencies before.
 * Corrected autodb documentation link to page with database format information.
+* Corrected df_equiv to work with data.frame columns that are lists.
 
 # autodb 1.1.0
 
