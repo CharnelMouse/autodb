@@ -206,10 +206,9 @@ Alternatively, we could remove them from the flattened version, if that's more c
 
 ```{r}
 flatten(titanic_deps)
-titanic_deps_filtered2 <- flatten(titanic_deps)
-titanic_deps_filtered2$dependencies <- Filter(
+titanic_deps_filtered2 <- Filter(
   function(dep) dep[[2]] == "Freq", 
-  titanic_deps_filtered2$dependencies
+  flatten(titanic_deps)
 )
 identical(flatten(titanic_deps_freqonly), titanic_deps_filtered2)
 ```
@@ -296,10 +295,9 @@ This would also explain why the publication ID appears in several other relation
 Since the publication ID can't be trusted, we could consider removing the attribute. Here, we'll keep it, but remove all functional dependencies where it is in the determinant set, to get the same effect without re-running DFD:
 
 ```{r nudge_filter}
-nudge_deps_filtered <- nudge_deps
-nudge_deps_filtered$dependencies <- Filter(
+nudge_deps_filtered <- Filter(
   function(fd) !is.element("publication_id", fd[[1]]),
-  nudge_deps_filtered$dependencies
+  nudge_deps
 )
 nudge_schema_filtered <- cross_reference(normalise(nudge_deps_filtered, remove_avoidable = TRUE))
 DiagrammeR::grViz(gv(nudge_schema_filtered))
@@ -323,10 +321,9 @@ BETA is the Behavioural Economics Team of the Australian Government, so it's not
 While the reference is useful, the relations mentioned above are not, so we'll also remove functional dependencies with the reference determining something apart from the year:
 
 ```{r nudge_filter2}
-nudge_deps_filtered2 <- nudge_deps_filtered
-nudge_deps_filtered2$dependencies <- Filter(
+nudge_deps_filtered2 <- Filter(
   function(fd) !is.element("reference", fd[[1]]) || fd[[2]] == "year",
-  nudge_deps_filtered2$dependencies
+  nudge_deps_filtered
 )
 nudge_schema_filtered2 <- cross_reference(normalise(nudge_deps_filtered2, remove_avoidable = TRUE))
 DiagrammeR::grViz(gv(nudge_schema_filtered2))
@@ -406,8 +403,8 @@ In brief, the standard normal forms only put constraints on the attributes prese
 For example, we can take this simple example from Chapter 6 of The Theory of Relational Databases, by David Maier:
 
 ```{r avoid_setup}
-avoid_deps <- list(
-  dependencies = list(
+avoid_deps <- functional_dependency(
+  list(
     list("A", "B"),
     list("B", "A"),
     list(c("A", "C"), "D"),
@@ -416,6 +413,7 @@ avoid_deps <- list(
   ),
   attrs = c("A", "B", "C", "D", "E")
 )
+avoid_deps
 avoid_schema <- cross_reference(normalise(avoid_deps))
 DiagrammeR::grViz(gv(avoid_schema))
 ```

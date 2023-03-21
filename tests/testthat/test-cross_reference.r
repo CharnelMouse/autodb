@@ -235,10 +235,7 @@ describe("cross_reference", {
       expect_true(all(nchar(linked$relation_names) > 0L))
     }
     # table_dum and table_dee
-    empty_fds <- list(
-      dependencies = list(),
-      attrs = character()
-    )
+    empty_fds <- functional_dependency(list(), attrs = character())
     gets_nonempty_table_names(empty_fds)
     forall(gen_flat_deps(4, 4), gets_nonempty_table_names)
   })

@@ -3,6 +3,7 @@
 * Corrected vignette re: when to remove spurious dependencies before.
 * Corrected autodb documentation link to page with database format information.
 * Corrected df_equiv to work with data.frame columns that are lists.
+* Added a functional_dependency class for flattened functional dependency lists. The attributes vector is now stored as an attribute, so that the dependencies can be accessed as a simple list without list subsetting operators.
 
 # autodb 1.1.0
 

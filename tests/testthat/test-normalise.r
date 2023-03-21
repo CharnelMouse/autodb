@@ -21,7 +21,7 @@ describe("normalise", {
       f = rep(1:2, each = 2)
     )
     deps <- list(
-      dependencies = list(
+      list(
         a = as.list(letters[1:6][-1]),
         b = as.list(letters[1:6][-2]),
         c = as.list(letters[1:6][-3]),
@@ -43,8 +43,8 @@ describe("normalise", {
     forall(gen_permutation, normalisation_permutation_invariant)
   })
   it("removes extraneous attributes", {
-    dependencies <- list(
-      dependencies = list(
+    dependencies <- functional_dependency(
+      list(
         list("a", "b"),
         list(c("a", "b"), "c")
       ),
@@ -62,8 +62,8 @@ describe("normalise", {
     )
   })
   it("removes extraneous dependencies", {
-    dependencies <- list(
-      dependencies = list(
+    dependencies <- functional_dependency(
+      list(
         list("a", "b"),
         list("a", "c"),
         list("b", "c")
@@ -82,8 +82,8 @@ describe("normalise", {
     )
   })
   it("merges equivalent keys", {
-    dependencies <- list(
-      dependencies = list(
+    dependencies <- functional_dependency(
+      list(
         list("d", "a"),
         list("d", "b"),
         list("a", "d"),
@@ -105,8 +105,8 @@ describe("normalise", {
   it("can handle basic bijections", {
     # A -> B, B -> A, A -> C, B -> C, A -> D, B -> F, D -> E, F -> E
     # => A <-> B, A -> CDF, D -> E, F -> E
-    dependencies <- list(
-      dependencies = list(
+    dependencies <- functional_dependency(
+      list(
         list("a", "b"),
         list("b", "a"),
         list("a", "c"),
@@ -130,8 +130,8 @@ describe("normalise", {
     )
   })
   it("removes transient dependencies after-merging keys (DFD fig. 3)", {
-    dependencies <- list(
-      dependencies = list(
+    dependencies <- functional_dependency(
+      list(
         list(c("x1", "x2"), "a"),
         list(c("x1", "x2"), "d"),
         list(c("c", "d"), "x1"),
@@ -163,8 +163,8 @@ describe("normalise", {
     )
   })
   it("replaces keys / non-key attributes with their bijection set's chosen index", {
-    dependencies <- list(
-      dependencies = list(
+    dependencies <- functional_dependency(
+      list(
         list(c("A", "B"), "C"),
         list("C", "A"),
         list("C", "B"),
@@ -185,13 +185,13 @@ describe("normalise", {
     )
   })
   it("ensures starting dependencies have key elements ordered by attributes", {
-    dependencies <- list(
-      dependencies = list(list(c("a", "b"), "c")),
+    dependencies <- functional_dependency(
+      list(list(c("a", "b"), "c")),
       attrs = c("a", "b", "c")
     )
     norm_deps <- normalise(dependencies)
-    dependencies2 <- list(
-      dependencies = list(list(c("b", "a"), "c")),
+    dependencies2 <- functional_dependency(
+      list(list(c("b", "a"), "c")),
       attrs = c("a", "b", "c")
     )
     norm_deps2 <- normalise(dependencies2)
@@ -215,8 +215,8 @@ describe("normalise", {
     )
   })
   it("gives unique names if constants appears in attribute names and via constant attributes", {
-    fds <- list(
-      dependencies = list(
+    fds <- functional_dependency(
+      list(
         list("constants", "a"),
         list(character(), "b")
       ),
@@ -256,7 +256,7 @@ describe("normalise", {
     }
 
     deps <- list(
-      dependencies = list(
+      list(
         A = list(c("C", "G")),
         B = list("E"),
         C = list("F", c("A", "G")),
@@ -269,8 +269,8 @@ describe("normalise", {
     )
     gives_unique_keys(flatten(deps))
 
-    deps2 <- list(
-      dependencies = list(
+    deps2 <- functional_dependency(
+      list(
         list("ri", "fvjxtkbal"),
         list("fvjxtkbal", "suwxbd"),
         list(c("fvjxtkbal", "suwxbd", "cvz_tj", "ri"), "q"),
@@ -305,8 +305,8 @@ describe("normalise", {
     # A <-> B, AC -> D, AC -> E, BD -> C
     # expected without removing avoidable: A <-> B, AC <-> BD -> E
     # expected with removing avoidable: A <-> B, AC <-> AD -> E
-    deps <- list(
-      dependencies = list(
+    deps <- functional_dependency(
+      list(
         list("A", "B"),
         list("B", "A"),
         list(c("A", "C"), "D"),
@@ -404,7 +404,7 @@ describe("normalise", {
       invisible(act$val)
     }
     reproduces_fds <- function(flat_deps) {
-      if (length(flat_deps$dependencies) == 0L)
+      if (length(flat_deps) == 0L)
         discard()
       schema <- normalise(flat_deps)
       implied_fds <- synthesised_fds(schema$attrs, schema$keys)
@@ -544,8 +544,8 @@ describe("normalise() replacing normalize_step()", {
   }
 
   it("removes extraneous dependencies", {
-    dependencies <- list(
-      dependencies = list(
+    dependencies <- functional_dependency(
+      list(
         list("a", "b"),
         list(c("a", "b"), "c")
       ),
@@ -563,8 +563,8 @@ describe("normalise() replacing normalize_step()", {
     )
   })
   it("resolves a simple bijection with no splits", {
-    dependencies <- list(
-      dependencies = list(
+    dependencies <- functional_dependency(
+      list(
         list("a", "b"),
         list("b", "a")
       ),
@@ -602,8 +602,8 @@ describe("normalise() replacing normalize_step()", {
         TRUE, TRUE, TRUE, FALSE, FALSE
       )
     )
-    deps <- list(
-      dependencies = list(
+    deps <- functional_dependency(
+      list(
         list("id", "month"),
         list("id", "hemisphere"),
         list("id", "is_winter"),
@@ -638,8 +638,8 @@ describe("normalise() replacing normalize_step()", {
     expect_identical(new_deps$keys[[2]], expected_child_keys)
   })
   it("DepDF", {
-    deps <- list(
-      dependencies = list(
+    deps <- functional_dependency(
+      list(
         list(c("player_name", "jersey_num"), "team"),
         list(c("player_name", "team"), "jersey_num"),
         list(c("team", "jersey_num"), "player_name"),
@@ -653,7 +653,7 @@ describe("normalise() replacing normalize_step()", {
       attrs = c("player_name", "jersey_num", "team", "state", "city")
     )
     new_deps <- normalise(deps)
-    expected_deps <- list(
+    expected_schema <- list(
       attrs = list(
         c("player_name", "jersey_num", "team"),
         c("team", "state"),
@@ -669,11 +669,11 @@ describe("normalise() replacing normalize_step()", {
         list("state", "city")
       )
     )
-    expect_setequal(new_deps$attrs, expected_deps$attrs)
-    expect_setequal(new_deps$keys, expected_deps$keys)
+    expect_setequal(new_deps$attrs, expected_schema$attrs)
+    expect_setequal(new_deps$keys, expected_schema$keys)
     expect_identical(
-      match(new_deps$attrs, expected_deps$attrs),
-      match(new_deps$keys, expected_deps$keys)
+      match(new_deps$attrs, expected_schema$attrs),
+      match(new_deps$keys, expected_schema$keys)
     )
   })
 })

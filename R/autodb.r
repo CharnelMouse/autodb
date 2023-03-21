@@ -55,26 +55,3 @@ autodb <- function(
     report$op(cross_reference, "cross-referencing", ensure_lossless) |>
     report$op(decompose, "decomposing", df = df, name)
 }
-
-#' Flatten functional dependency list for normalisation
-#'
-#' @param dependencies a list, containing functional dependencies as returned by
-#'   \code{\link{dfd}}.
-#'
-#' @return A copy of \code{dependencies}, where the \code{dependencies} element
-#'   has been transformed to a list of two-element lists, with the dependency's
-#'   determinants in the first element, and its dependent in the second. This is
-#'   the format required by \code{\link{normalise}}.
-#' @export
-flatten <- function(dependencies) {
-  result <- list()
-  for (i in seq_along(dependencies$dependencies)) {
-    rhs <- names(dependencies$dependencies)[i]
-    result <- c(
-      result,
-      lapply(dependencies$dependencies[[i]], \(lhs) list(lhs, rhs))
-    )
-  }
-  dependencies$dependencies <- result
-  dependencies
-}

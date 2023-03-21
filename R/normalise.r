@@ -116,9 +116,9 @@ normalise <- function(
 
 convert_to_vectors <- function(flat_dependencies) {
   list(
-    determinant_sets = lapply(flat_dependencies$dependencies, `[[`, 1),
-    dependents = vapply(flat_dependencies$dependencies, `[[`, character(1), 2),
-    all_attrs = flat_dependencies$attrs
+    determinant_sets = lapply(flat_dependencies, `[[`, 1),
+    dependents = vapply(flat_dependencies, `[[`, character(1), 2),
+    all_attrs = attr(flat_dependencies, "attrs", exact = TRUE)
   )
 }
 
