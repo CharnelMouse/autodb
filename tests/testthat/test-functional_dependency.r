@@ -72,22 +72,9 @@ describe("flatten", {
         f(flatten(deps))
       }
     }
-    expect_valid_functional_dependency <- function(functional_dependency) {
-      expect_s3_class(functional_dependency, "functional_dependency")
-      attrs <- attr(functional_dependency, "attrs", exact = TRUE)
-      expect_true(all(is.element(unlist(functional_dependency), attrs)))
-      determinant_sets <- unlist(
-        lapply(functional_dependency, `[[`, 1L),
-        recursive = FALSE
-      )
-      determinant_indices <- lapply(determinant_sets, match, attrs)
-      expect_true(all(vapply(
-        determinant_indices, Negate(is.unsorted), logical(1)
-      )))
-    }
     forall(
       gen_df(6, 7) |> gen.with(\(df) dfd(df, 1)),
-      flattens_then(expect_valid_functional_dependency)
+      flattens_then(is_valid_functional_dependency)
     )
   })
 })

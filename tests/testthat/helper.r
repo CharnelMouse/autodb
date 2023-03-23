@@ -1,3 +1,20 @@
+is_valid_functional_dependency <- function(x) {
+  expect_s3_class(x, "functional_dependency")
+  attrs <- attr(x, "attrs")
+  expect_true(all(lengths(x) == 2L))
+  expect_true(all(lengths(lapply(x, `[[`, 2L)) == 1L))
+  expect_true(all(vapply(x, \(fd) is.character(fd[[1]]), logical(1))))
+  lhs <- lapply(x, `[[`, 1L)
+
+  expect_true(all(is.element(unlist(x), attrs)))
+  expect_true(all(vapply(x, \(fd) !is.element(fd[[2]], fd[[1]]), logical(1))))
+  expect_true(all(vapply(
+    lhs,
+    \(detset) !is.unsorted(match(detset, attrs)),
+    logical(1)
+  )))
+}
+
 expect_superset_of_dependency <- function(dep1, dep2) {
   dep1 <- dep1[names(dep2)]
   stopifnot(sort(names(dep1)) == sort(names(dep2)))
