@@ -12,33 +12,20 @@ describe("normalise", {
   }
 
   it("doesn't change relation attribute order if dependencies are reordered", {
-    df <- data.frame(
-      a = rep(1:2, each = 2),
-      b = rep(1:2, each = 2),
-      c = rep(1:2, each = 2),
-      d = rep(1:2, each = 2),
-      e = rep(1:2, each = 2),
-      f = rep(1:2, each = 2)
-    )
-    deps <- list(
-      list(
-        a = as.list(letters[1:6][-1]),
-        b = as.list(letters[1:6][-2]),
-        c = as.list(letters[1:6][-3]),
-        d = as.list(letters[1:6][-4]),
-        e = as.list(letters[1:6][-5]),
-        f = as.list(letters[1:6][-6])
-      ),
-      attrs = letters[1:6]
-    )
-    deps <- flatten(deps)
-    nds <- normalise(deps)
-    gen_permutation <- gen.sample(deps$dependencies, length(deps$dependencies))
-    normalisation_permutation_invariant <- function(perm) {
+    gen_permutation <- gen_flat_deps(4, 5) |>
+      gen.and_then(\(fds) list(fds, gen.sample(fds, length(fds))))
+    normalisation_permutation_invariant <- function(lst) {
+      deps <- lst[[1]]
+      perm <- lst[[2]]
       new_deps <- deps
-      new_deps$dependencies <- perm
+      new_deps[] <- perm
+      nds <- normalise(deps)
       new_nds <- normalise(new_deps)
-      expect_identical(nds, new_nds)
+      expect_identical(new_nds$all_attrs, nds$all_attrs)
+      expect_identical(length(new_nds$relation_names), length(nds$relation_names))
+      relperm <- order(match(new_nds$relation_names, nds$relation_names))
+      expect_identical(new_nds$keys[relperm], nds$keys)
+      expect_identical(new_nds$attrs[relperm], nds$attrs)
     }
     forall(gen_permutation, normalisation_permutation_invariant)
   })
