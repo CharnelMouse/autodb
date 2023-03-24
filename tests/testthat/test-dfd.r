@@ -501,4 +501,15 @@ describe("dfd", {
       shrink.limit = Inf
     )
   })
+  it("returns a minimal functional dependency set once flattened", {
+    flattens_then <- function(fn) {
+      function(deps) {
+        fn(flatten(deps))
+      }
+    }
+    forall(
+      gen_df(6, 7),
+      terminates_then(flattens_then(is_valid_minimal_functional_dependency), 1)
+    )
+  })
 })

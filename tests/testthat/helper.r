@@ -15,6 +15,24 @@ is_valid_functional_dependency <- function(x) {
   )))
 }
 
+is_valid_minimal_functional_dependency <- function(x) {
+  is_valid_functional_dependency(x)
+  grouped <- split(lapply(x, `[[`, 1), vapply(x, `[[`, character(1), 2))
+  expect_true(!any(lapply(
+    grouped,
+    \(detsets) anyDuplicated(detsets) ||
+      any(outer(
+        detsets,
+        detsets,
+        Vectorize(\(d1, d2) {
+          both <- intersect(d1, d2)
+          !setequal(d1, d2) &&
+            (setequal(both, d1) || setequal(both, d2))
+        })
+      ))
+  )))
+}
+
 expect_superset_of_dependency <- function(dep1, dep2) {
   dep1 <- dep1[names(dep2)]
   stopifnot(sort(names(dep1)) == sort(names(dep2)))
