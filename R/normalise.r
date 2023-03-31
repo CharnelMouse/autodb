@@ -68,6 +68,7 @@ normalise <- function(
       remove_extraneous_attributes,
       "removing extraneous components"
     ) |>
+    sort_dependencies() |>
     remove_extraneous_dependencies() |>
     report$op(
       partition_dependencies,
@@ -144,6 +145,13 @@ remove_extraneous_attributes <- function(vecs) {
       }
     }
   }
+  vecs
+}
+
+sort_dependencies <- function(vecs) {
+  ord <- order(keys_rank(vecs$determinant_sets), vecs$dependents)
+  vecs$determinant_sets <- vecs$determinant_sets[ord]
+  vecs$dependents <- vecs$dependents[ord]
   vecs
 }
 

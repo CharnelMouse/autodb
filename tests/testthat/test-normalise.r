@@ -11,22 +11,45 @@ describe("normalise", {
     expect_true(!anyDuplicated(normalise(fds)$relation_names))
   }
 
-  it("doesn't change relation attribute order if dependencies are reordered", {
+  it("is invariant to dependency reordering", {
     gen_permutation <- gen_flat_deps(4, 5) |>
       gen.and_then(\(fds) list(fds, gen.sample(fds, length(fds))))
     normalisation_permutation_invariant <- function(lst) {
       deps <- lst[[1]]
       perm <- lst[[2]]
-      new_deps <- deps
-      new_deps[] <- perm
       nds <- normalise(deps)
-      new_nds <- normalise(new_deps)
+      new_nds <- normalise(perm)
       expect_identical(new_nds$all_attrs, nds$all_attrs)
       expect_identical(length(new_nds$relation_names), length(nds$relation_names))
       relperm <- order(match(new_nds$relation_names, nds$relation_names))
       expect_identical(new_nds$keys[relperm], nds$keys)
       expect_identical(new_nds$attrs[relperm], nds$attrs)
     }
+
+    # currently-rarely-generated case:
+    # given a choice of which dependency to remove as extraneous,
+    # order matters
+    normalisation_permutation_invariant(list(
+      functional_dependency(
+        list(
+          list(c("C", "D"), "B"),
+          list(c("A", "B"), "C"),
+          list(c("A", "D"), "B"),
+          list(c("A", "D"), "C")
+        ),
+        attrs = c("A", "B", "C", "D")
+      ),
+      functional_dependency(
+        list(
+          list(c("C", "D"), "B"),
+          list(c("A", "B"), "C"),
+          list(c("A", "D"), "C"),
+          list(c("A", "D"), "B")
+        ),
+        attrs = c("A", "B", "C", "D")
+      )
+    ))
+
     forall(gen_permutation, normalisation_permutation_invariant)
   })
   it("removes extraneous attributes", {
