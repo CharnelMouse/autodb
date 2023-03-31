@@ -52,6 +52,20 @@ describe("normalise", {
 
     forall(gen_permutation, normalisation_permutation_invariant)
   })
+  it("removes longer/later-attributed dependency sets if given a choce", {
+    schema <- normalise(functional_dependency(
+      list(
+        list(c("C", "D"), "B"),
+        list(c("A", "B"), "C"),
+        list(c("A", "D"), "B"),
+        list(c("A", "D"), "C")
+      ),
+      attrs = c("A", "B", "C", "D")
+    ))
+    expect_setequal(schema$relation_names, c("A_B", "A_D", "C_D"))
+    ord <- match("A_D", schema$relation_names)
+    expect_identical(setdiff(schema$attrs[[ord]], c("A", "D")), "B")
+  })
   it("removes extraneous attributes", {
     dependencies <- functional_dependency(
       list(

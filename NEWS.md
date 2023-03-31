@@ -4,6 +4,8 @@
 * Corrected autodb documentation link to page with database format information.
 * Corrected df_equiv to work with data.frame columns that are lists.
 * Added a functional_dependency class for flattened functional dependency lists. The attributes vector is now stored as an attribute, so that the dependencies can be accessed as a simple list without list subsetting operators.
+* Fixed normalise's return output to be invariant to the given order of the functional_dependency input.
+* Adjusted normalise to prefer to remove dependencies with dependents and determinant sets later in table order, and with larger dependent sets. This brings it more in line with similar decisions made in other package functions.
 
 # autodb 1.1.0
 

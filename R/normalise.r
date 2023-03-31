@@ -162,7 +162,7 @@ remove_extraneous_dependencies <- function(vecs) {
   while (!identical(old_deps, new_deps)) {
     old_deps <- new_deps
     rem <- rep(FALSE, length(new_deps))
-    for (n in seq_along(new_deps)) {
+    for (n in rev(seq_along(new_deps))) {
       det_set <- new_det_sets[[n]]
       dep <- new_deps[n]
       other_det_sets <- new_det_sets[-n]
