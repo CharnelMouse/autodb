@@ -666,6 +666,8 @@ keys_order_same_lengths <- function(keys) {
 }
 
 keys_order <- function(keys) {
+  if (length(keys) == 0L)
+    return(integer())
   lens <- lengths(keys)
   length_order <- order(lens)
   order_within_lengths <- tapply(
@@ -707,6 +709,8 @@ keys_rank_same_lengths <- function(keys) {
 
 # same as keys_order, but doesn't resolve ties
 keys_rank <- function(keys) {
+  if (length(keys) == 0L)
+    return(integer())
   # length-one lists get handled one level deep by tapply
   if (length(keys) == 1L)
     return(1L)

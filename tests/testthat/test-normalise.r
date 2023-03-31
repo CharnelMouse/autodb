@@ -471,14 +471,14 @@ describe("keys_order", {
     same_as_order <- function(ints) {
       expect_identical(order(ints), keys_order(ints))
     }
-    forall(gen.sample.int(100, 10), same_as_order)
+    forall(gen.sample.int(100, gen.sample(0:10, 1)), same_as_order)
   })
   it("gives a sorted list if applied as subsetter", {
     sorts_input_to_itself <- function(ints) {
       ord <- keys_order(ints)
       expect_identical(seq_along(ints), keys_order(ints[ord]))
     }
-    forall(gen.sample.int(100, 10), sorts_input_to_itself)
+    forall(gen.sample.int(100, gen.sample(0:10, 1)), sorts_input_to_itself)
   })
   it("orders by length first", {
     gen_el <- generate(for (n in gen.sample(0:4, 1)) {
@@ -486,12 +486,16 @@ describe("keys_order", {
         as.integer(start - 1L + seq_len(n))
       })
     })
-    gen_lst <- gen.list(gen_el, to = 10)
+    gen_lst <- gen.list(gen_el, from = 0, to = 10)
     orders_by_length_first <- function(lst) {
       ord <- keys_order(lst)
       ord_sorted_within_lengths <- ord |>
-        tapply(lengths(lst)[ord], sort, simplify = FALSE) |>
-        unlist(use.names = FALSE)
+        tapply(lengths(lst)[ord], sort, simplify = FALSE)
+      ord_sorted_within_lengths <- if (length(ord_sorted_within_lengths) == 0L) {
+        integer()
+      }else{
+        unlist(ord_sorted_within_lengths, use.names = FALSE)
+      }
       expect_identical(order(lengths(lst)), ord_sorted_within_lengths)
     }
     forall(gen_lst, orders_by_length_first)
@@ -511,7 +515,7 @@ describe("keys_order", {
     gen_el <- generate(for (n in gen.int(5)) {
       gen.sample.int(2, n, replace = TRUE)
     })
-    gen_lst <- gen.list(gen_el, to = 10)
+    gen_lst <- gen.list(gen_el, from = 0, to = 10)
     orders_by_values_with_lengths <- function(lst) {
       ord <- keys_order(lst)
       sorted_keys <- lst[ord]
@@ -526,7 +530,7 @@ describe("keys_rank", {
   gen_el <- generate(for (n in gen.int(5)) {
     gen.sample.int(2, n, replace = TRUE)
   })
-  gen_lst <- gen.list(gen_el, to = 10)
+  gen_lst <- gen.list(gen_el, from = 0, to = 10)
   it("is equal to order(keys_order) when there are no ties", {
     gen_unique_lst <- gen_lst |>
       gen.with(unique)
@@ -536,11 +540,14 @@ describe("keys_rank", {
     forall(gen_unique_lst, equal_to_ordered_keys_order)
   })
   it("assigns identical keys the same sorting index", {
-    gen_lst_with_dups <- gen_lst |>
+    gen_lst_with_dups <- gen.list(gen_el, from = 1, to = 10) |>
       gen.and_then(\(lst) gen.sample(lst, 15, replace = TRUE))
     keeps_identical_keys_tied <- function(lst) {
       res <- keys_rank(lst)
-      ties <- which(outer(lst, lst, Vectorize(identical)), arr.ind = TRUE)
+      ties <- if (length(lst) == 0L)
+        matrix(logical(), nrow = 0L, ncol = 0L)
+      else
+        which(outer(lst, lst, Vectorize(identical)), arr.ind = TRUE)
       expect_true(all(apply(
         ties,
         1,
