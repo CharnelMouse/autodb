@@ -522,6 +522,35 @@ describe("keys_order", {
   })
 })
 
+describe("keys_rank", {
+  gen_el <- generate(for (n in gen.int(5)) {
+    gen.sample.int(2, n, replace = TRUE)
+  })
+  gen_lst <- gen.list(gen_el, to = 10)
+  it("is equal to order(keys_order) when there are no ties", {
+    gen_unique_lst <- gen_lst |>
+      gen.with(unique)
+    equal_to_ordered_keys_order <- function(lst) {
+      expect_equal(keys_rank(lst), order(keys_order(lst)))
+    }
+    forall(gen_unique_lst, equal_to_ordered_keys_order)
+  })
+  it("assigns identical keys the same sorting index", {
+    gen_lst_with_dups <- gen_lst |>
+      gen.and_then(\(lst) gen.sample(lst, 15, replace = TRUE))
+    keeps_identical_keys_tied <- function(lst) {
+      res <- keys_rank(lst)
+      ties <- which(outer(lst, lst, Vectorize(identical)), arr.ind = TRUE)
+      expect_true(all(apply(
+        ties,
+        1,
+        \(inds) identical(res[inds[1]], res[inds[2]])
+      )))
+    }
+    forall(gen_lst_with_dups, keeps_identical_keys_tied)
+  })
+})
+
 describe("normalise() replacing normalize_step()", {
   expect_database_schema <- function(current, target) {
     expect_identical(
