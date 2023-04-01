@@ -22,57 +22,53 @@ describe("cross_reference", {
     expect_identical(database$relationships, expected_relations)
   })
   it("only links children to parents by exactly one parent key", {
-    links_by_exactly_one_parent_key <- function(df) {
-      deps <- dfd(df, 1)
-      schema <- normalise(flatten(deps))
+    links_by_exactly_one_parent_key <- function(deps) {
+      schema <- normalise(deps)
       if (length(schema$keys) <= 1)
-        succeed()
+        discard()
       else{
         linked <- cross_reference(schema)
+        if (length(linked$relationships) == 0)
+          discard()
         relationship_tables <- lapply(linked$relationships, `[[`, 1)
         relationship_attrs <- vapply(linked$relationships, `[[`, character(1), 2)
         tables_index <- as.data.frame(do.call(rbind, relationship_tables))
-        if (nrow(tables_index) == 0)
-          succeed()
-        else{
-          link_sets <- tapply(
-            relationship_attrs,
-            tables_index,
-            \(as) sort(unique(as))
+        link_sets <- tapply(
+          relationship_attrs,
+          tables_index,
+          \(as) sort(unique(as))
+        )
+        for (column in seq_len(ncol(link_sets))) {
+          parent <- strtoi(colnames(link_sets)[column])
+          attribute_sets <- link_sets[, column]
+          attribute_sets <- na.omit(attribute_sets[!vapply(
+            attribute_sets,
+            is.null,
+            logical(1)
+          )])
+          expect_length(
+            setdiff(attribute_sets, lapply(linked$keys[[parent]], sort)),
+            0
           )
-          for (column in seq_len(ncol(link_sets))) {
-            parent <- strtoi(colnames(link_sets)[column])
-            attribute_sets <- link_sets[, column]
-            attribute_sets <- na.omit(attribute_sets[!vapply(
-              attribute_sets,
-              is.null,
-              logical(1)
-            )])
-            expect_length(
-              setdiff(attribute_sets, lapply(linked$keys[[parent]], sort)),
-              0
-            )
-          }
         }
       }
     }
     forall(
-      gen_df(6, 7, minrow = 1L, remove_dup_rows = TRUE),
-      links_by_exactly_one_parent_key
+      gen_flat_deps(7, 20),
+      links_by_exactly_one_parent_key,
+      discard.limit = 90
     )
   })
   it("reintroduces attributes not in dependencies if ensuring lossless", {
-    reintroduces_missing_attrs_if_lossless <- function(df) {
-      deps <- dfd(df, 1)
-      lone_attr <- LETTERS[length(deps$attrs) + 1]
-      deps$dependencies <- c(deps$dependencies, setNames(list(list()), lone_attr))
-      deps$attrs <- c(deps$attrs, lone_attr)
-      schema <- normalise(flatten(deps))
+    reintroduces_missing_attrs_if_lossless <- function(deps) {
+      lone_attr <- LETTERS[length(attr(deps, "attrs")) + 1]
+      attr(deps, "attrs") <- c(attr(deps, "attrs"), lone_attr)
+      schema <- normalise(deps)
       linked <- cross_reference(schema, ensure_lossless = TRUE)
       expect_true(lone_attr %in% unlist(linked$attrs))
     }
     forall(
-      gen_df(6, 7, remove_dup_rows = TRUE),
+      gen_flat_deps(7, 20),
       reintroduces_missing_attrs_if_lossless
     )
   })
@@ -148,8 +144,7 @@ describe("cross_reference", {
 
     forall(
       gen_flat_deps(7, 20),
-      still_lossless_with_less_or_same_attributes_dep,
-      tests = 1000
+      still_lossless_with_less_or_same_attributes_dep
     )
   })
   it("adds table with key with attributes in original order", {
@@ -161,13 +156,12 @@ describe("cross_reference", {
     }
     forall(
       gen_flat_deps(7, 20),
-      adds_ordered_primary_keys,
-      tests = 1000
+      adds_ordered_primary_keys
     )
   })
   it("only return non-extraneous table relationships", {
-    only_returns_non_extraneous_relationships <- function(df) {
-      schema <- normalise(flatten(dfd(df, 1)))
+    only_returns_non_extraneous_relationships <- function(deps) {
+      schema <- normalise(deps)
       linked <- cross_reference(schema, ensure_lossless = TRUE)
       table_relationships <- unique(lapply(linked$relationships, `[[`, 1))
       table_relationships <- list(
@@ -180,19 +174,15 @@ describe("cross_reference", {
       )
     }
     forall(
-      gen_df(6, 7, minrow = 1L, remove_dup_rows = TRUE),
+      gen_flat_deps(7, 20),
       only_returns_non_extraneous_relationships
     )
   })
   it("returns relations that return themselves if normalised again", {
-    gen.keysize <- gen.sample.int(10)
-    gen.key <- generate(
-      for (keysize in gen.keysize) {
-        letters[1:10][sort(sample(1:10, keysize))]
-      }
-    )
-    gen.relation <- generate(
-      for (key in gen.key) {
+    gen.key <- gen.sample(letters[1:10], gen.int(10)) |>
+      gen.with(sort)
+    gen.relation <- gen.key |>
+      gen.and_then(function(key) {
         nonkey <- setdiff(letters[1:10], key)
         structure(
           list(
@@ -205,8 +195,7 @@ describe("cross_reference", {
           ),
           class = c("database_schema", "list")
         )
-      }
-    )
+      })
     returns_itself <- function(relation) {
       nonkey <- setdiff(unlist(relation$attrs), unlist(relation$keys))
       deps <- flatten(list(
