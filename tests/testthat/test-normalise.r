@@ -1,5 +1,8 @@
 library(hedgehog)
 
+gen.nonempty_key <- gen.sample.int(2, gen.int(5), replace = TRUE)
+gen.key <- gen.sample.int(2, gen.sample(0:5, 1), replace = TRUE)
+
 describe("normalise", {
   expect_database_schema <- function(current, target) {
     expect_identical(
@@ -505,37 +508,22 @@ test_that("drop_primary_dups", {
 
 describe("keys_order", {
   it("works like order() for single-length elements", {
-    same_as_order <- function(ints) {
-      expect_identical(order(ints), keys_order(ints))
-    }
-    forall(gen.sample.int(100, gen.sample(0:10, 1)), same_as_order)
+    forall(
+      gen.sample.int(100, gen.sample(0:10, 1)),
+      expect_biidentical(as.list %>>% keys_order, order)
+    )
   })
   it("gives a sorted list if applied as subsetter", {
-    sorts_input_to_itself <- function(ints) {
-      ord <- keys_order(ints)
-      expect_identical(seq_along(ints), keys_order(ints[ord]))
-    }
-    forall(gen.sample.int(100, gen.sample(0:10, 1)), sorts_input_to_itself)
+    forall(
+      gen.sample.int(100, gen.sample(0:10, 1)),
+      expect_biidentical(subset_by(keys_order) %>>% keys_order, seq_along)
+    )
   })
   it("orders by length first", {
-    gen_el <- generate(for (n in gen.sample(0:4, 1)) {
-      generate(for (start in gen.int(10)) {
-        as.integer(start - 1L + seq_len(n))
-      })
-    })
-    gen_lst <- gen.list(gen_el, from = 0, to = 10)
-    orders_by_length_first <- function(lst) {
-      ord <- keys_order(lst)
-      ord_sorted_within_lengths <- ord |>
-        tapply(lengths(lst)[ord], sort, simplify = FALSE)
-      ord_sorted_within_lengths <- if (length(ord_sorted_within_lengths) == 0L) {
-        integer()
-      }else{
-        unlist(ord_sorted_within_lengths, use.names = FALSE)
-      }
-      expect_identical(order(lengths(lst)), ord_sorted_within_lengths)
-    }
-    forall(gen_lst, orders_by_length_first)
+    forall(
+      gen.emptyable_list(gen.key, 10),
+      expect_biidentical(subset_by(keys_order) %>>% lengths, lengths %>>% sort)
+    )
   })
   it("orders by values, in given order, within lengths", {
     same_length_sorted <- function(lst) {
@@ -549,91 +537,54 @@ describe("keys_order", {
       rest <- lapply(lst, `[`, -1)
       all(tapply(rest, firsts, \(x) length(x) <= 1 || same_length_sorted(x)))
     }
-    gen_el <- generate(for (n in gen.int(5)) {
-      gen.sample.int(2, n, replace = TRUE)
-    })
-    gen_lst <- gen.list(gen_el, from = 0, to = 10)
     orders_by_values_with_lengths <- function(lst) {
       ord <- keys_order(lst)
       sorted_keys <- lst[ord]
       sorted_lengths <- lengths(lst)[ord]
       expect_true(all(tapply(sorted_keys, sorted_lengths, same_length_sorted)))
     }
-    forall(gen_lst, orders_by_values_with_lengths)
+    forall(
+      gen.emptyable_list(gen.sample.int(2, gen.int(5), replace = TRUE), 10),
+      orders_by_values_with_lengths
+    )
   })
   it("returns an order, i.e. sequential integers from 1", {
-    gen_el <- generate(for (n in gen.sample(0:4, 1)) {
-      generate(for (start in gen.int(10)) {
-        as.integer(start - 1L + seq_len(n))
-      })
-    })
-    gen_lst <- gen.list(gen_el, from = 0, to = 10)
-    forall(gen_lst, \(x) expect_setequal(keys_order(x), seq_along(x)))
+    is_order <- function(x) expect_setequal(x, seq_along(x))
+    forall(
+      gen.emptyable_list(gen.key, 10),
+      keys_order %>>% is_order
+    )
   })
 })
 
 describe("keys_rank", {
-  gen_el <- generate(for (n in gen.int(5)) {
-    gen.sample.int(2, n, replace = TRUE)
+  it("is equal to order of keys_order when there are no ties", {
+    gen_unique_lst <- gen.with(gen.emptyable_list(gen.key, 10), unique)
+    forall(gen_unique_lst, expect_biequal(keys_rank, keys_order %>>% order))
   })
-  gen_lst <- gen.list(gen_el, from = 0, to = 10)
-  it("is equal to order(keys_order) when there are no ties", {
-    gen_unique_lst <- gen_lst |>
-      gen.with(unique)
-    equal_to_ordered_keys_order <- function(lst) {
-      expect_equal(keys_rank(lst), order(keys_order(lst)))
-    }
-    forall(gen_unique_lst, equal_to_ordered_keys_order)
-  })
-  it("assigns identical keys the same sorting index", {
-    gen_lst_with_dups <- gen.list(gen_el, from = 1, to = 10) |>
-      gen.and_then(\(lst) gen.sample(lst, 15, replace = TRUE))
-    keeps_identical_keys_tied <- function(lst) {
-      res <- keys_rank(lst)
-      ties <- if (length(lst) == 0L)
-        matrix(logical(), nrow = 0L, ncol = 0L)
-      else
-        which(outer(lst, lst, Vectorize(identical)), arr.ind = TRUE)
-      expect_true(all(apply(
-        ties,
-        1,
-        \(inds) identical(res[inds[1]], res[inds[2]])
-      )))
-    }
-    forall(gen_lst_with_dups, keeps_identical_keys_tied)
-  })
-  it("returns ranks, i.e. integers in [1,length] that sum to same as 1:length", {
-    gen_el <- generate(for (n in gen.sample(0:4, 1)) {
-      generate(for (start in gen.int(10)) {
-        as.integer(start - 1L + seq_len(n))
-      })
-    })
-    gen_lst <- gen.list(gen_el, from = 0, to = 10)
+  it("returns ranks, i.e. reals in [1,length] that sum to same as 1:length", {
     is_rank <- function(r) {
       len <- length(r)
-      all(r >= 1 & r <= len) && sum(r) == len*(len + 1)/2
+      expect_true(all(r >= 1 & r <= len) && sum(r) == len*(len + 1)/2)
     }
-    returns_rank <- function(lst) {
-      expect_true(is_rank(keys_rank(lst)))
-    }
-    forall(gen_lst, returns_rank)
+    forall(
+      gen.emptyable_list(gen.subsequence(0:10), 10),
+      keys_rank %>>% is_rank
+    )
   })
   it("gives equal rank to equal keys", {
-    gen_el <- generate(for (n in gen.sample(0:4, 1)) {
-      generate(for (start in gen.int(10)) {
-        as.integer(start - 1L + seq_len(n))
-      })
-    })
-    gen_lst <- gen.list(gen_el, from = 1, to = 10)
+    no_multielement <- function(x) all(lengths(x) <= 1L)
+    expect_monovalued_elements <- function(grouped) {
+      expect_true(all(vapply(
+        grouped,
+        \(x) all(vapply(x, identical, logical(1), x[[1]])),
+        logical(1)
+      )))
+    }
     forall(
-      gen_lst,
-      \(x) {
-        ranks <- keys_rank(x)
-        id <- outer(x, x, Vectorize(identical)) |>
-          (\(m) m & lower.tri(m, diag = FALSE))() |>
-          which(arr.ind = TRUE)
-        expect_true(all(apply(id, 1, \(ints) ranks[ints[1]] == ranks[ints[2]])))
-      }
+      gen.list_with_dups(gen.nonempty_key, 10),
+      split_by(keys_rank) %>>%
+        if_discard_else(no_multielement, expect_monovalued_elements)
     )
   })
 })

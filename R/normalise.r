@@ -687,8 +687,7 @@ keys_order <- function(keys) {
   starts <- c(0L, cum_lengths[-length(cum_lengths)])
   flat_order <- unlist(order_within_lengths, use.names = FALSE) +
     rep(starts, lengths(order_within_lengths))
-  length_order <- order(lens)
-  length_order[flat_order]
+  order(lens)[flat_order]
 }
 
 keys_rank_same_lengths <- function(keys) {

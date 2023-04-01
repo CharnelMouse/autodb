@@ -171,3 +171,23 @@ gen_flat_deps <- function(n, max_dets, len = 9) {
     })
   })
 }
+
+# generating key / determinant set lists
+gen.nonempty_list <- function(generator, to)
+  gen.list(generator, from = 1, to = to)
+gen.emptyable_list <- function(generator, to)
+  gen.list(generator, from = 0, to = to)
+gen.list_with_dups <- function(generator, n_unique)
+  gen.nonempty_list(generator, n_unique) |>
+  gen.and_then(\(lst) gen.sample(lst, ceiling(1.5*length(lst)), replace = TRUE))
+
+# functional utility functions for tests
+`%>>%` <- function(fn1, fn2) function(x) fn2(fn1(x))
+expect_biequal <- function(fn1, fn2) function(x) expect_equal(fn1(x), fn2(x))
+expect_biidentical <- function(fn1, fn2)
+  function(x) expect_identical(fn1(x), fn2(x))
+split_by <- function(fn, ...) function(x) split(x, fn(x), ...)
+subset_by <- function(fn) function(x) x[fn(x)]
+sort_by <- function(fn) function(x) x[order(fn(x))]
+if_discard_else <- function(cond, fn)
+  function(x) if (cond(x)) discard() else fn(x)
