@@ -677,7 +677,6 @@ keys_order <- function(keys) {
   if (length(keys) == 0L)
     return(integer())
   lens <- lengths(keys)
-  length_order <- order(lens)
   order_within_lengths <- tapply(
     keys,
     lens,
@@ -688,6 +687,7 @@ keys_order <- function(keys) {
   starts <- c(0L, cum_lengths[-length(cum_lengths)])
   flat_order <- unlist(order_within_lengths, use.names = FALSE) +
     rep(starts, lengths(order_within_lengths))
+  length_order <- order(lens)
   length_order[flat_order]
 }
 
@@ -695,14 +695,14 @@ keys_rank_same_lengths <- function(keys) {
   len <- length(keys[[1]])
   stopifnot(all(lengths(keys) == len))
   if (len == 0)
-    return(seq_along(keys))
+    return(rep((length(keys) + 1)/2, length(keys)))
   els_by_place <- do.call(Map, unname(c(c, keys)))
   ranks <- rep((length(keys) + 1)/2, length(keys))
   for (n in seq_len(len)) {
-    vals <- els_by_place[[n]]
     ur <- unique(ranks)
     if (length(ur) == length(keys))
       break
+    vals <- els_by_place[[n]]
     newranks <- ranks
     for (r in ur) {
       rs <- ranks == r
@@ -715,32 +715,19 @@ keys_rank_same_lengths <- function(keys) {
   ranks
 }
 
-# same as keys_order, but doesn't resolve ties
 keys_rank <- function(keys) {
   if (length(keys) == 0L)
     return(integer())
-  # length-one lists get handled one level deep by tapply
-  if (length(keys) == 1L)
-    return(1L)
   lens <- lengths(keys)
-  length_order <- order(lens)
   rank_within_lengths <- unname(tapply(
     keys,
     lens,
     keys_rank_same_lengths,
     simplify = FALSE
   ))
-  consecutive_rank_within_lengths <- lapply(
-    rank_within_lengths,
-    \(ranks) {
-      uniq <- unique(ranks)
-      uniq_rank <- rank(uniq)
-      uniq_rank[match(ranks, uniq)]
-    }
-  )
-  cum_lengths <- cumsum(lengths(consecutive_rank_within_lengths))
+  cum_lengths <- cumsum(lengths(rank_within_lengths))
   starts <- c(0L, cum_lengths[-length(cum_lengths)])
-  unsplit(Map("+", consecutive_rank_within_lengths, starts), lens)
+  unsplit(Map("+", rank_within_lengths, starts), lens)
 }
 
 #' @exportS3Method

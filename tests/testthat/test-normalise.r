@@ -561,6 +561,15 @@ describe("keys_order", {
     }
     forall(gen_lst, orders_by_values_with_lengths)
   })
+  it("returns an order, i.e. sequential integers from 1", {
+    gen_el <- generate(for (n in gen.sample(0:4, 1)) {
+      generate(for (start in gen.int(10)) {
+        as.integer(start - 1L + seq_len(n))
+      })
+    })
+    gen_lst <- gen.list(gen_el, from = 0, to = 10)
+    forall(gen_lst, \(x) expect_setequal(keys_order(x), seq_along(x)))
+  })
 })
 
 describe("keys_rank", {
@@ -592,6 +601,40 @@ describe("keys_rank", {
       )))
     }
     forall(gen_lst_with_dups, keeps_identical_keys_tied)
+  })
+  it("returns ranks, i.e. integers in [1,length] that sum to same as 1:length", {
+    gen_el <- generate(for (n in gen.sample(0:4, 1)) {
+      generate(for (start in gen.int(10)) {
+        as.integer(start - 1L + seq_len(n))
+      })
+    })
+    gen_lst <- gen.list(gen_el, from = 0, to = 10)
+    is_rank <- function(r) {
+      len <- length(r)
+      all(r >= 1 & r <= len) && sum(r) == len*(len + 1)/2
+    }
+    returns_rank <- function(lst) {
+      expect_true(is_rank(keys_rank(lst)))
+    }
+    forall(gen_lst, returns_rank)
+  })
+  it("gives equal rank to equal keys", {
+    gen_el <- generate(for (n in gen.sample(0:4, 1)) {
+      generate(for (start in gen.int(10)) {
+        as.integer(start - 1L + seq_len(n))
+      })
+    })
+    gen_lst <- gen.list(gen_el, from = 1, to = 10)
+    forall(
+      gen_lst,
+      \(x) {
+        ranks <- keys_rank(x)
+        id <- outer(x, x, Vectorize(identical)) |>
+          (\(m) m & lower.tri(m, diag = FALSE))() |>
+          which(arr.ind = TRUE)
+        expect_true(all(apply(id, 1, \(ints) ranks[ints[1]] == ranks[ints[2]])))
+      }
+    )
   })
 })
 
