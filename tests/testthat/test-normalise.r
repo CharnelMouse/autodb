@@ -129,7 +129,27 @@ describe("normalise", {
       )
     )
   })
-  it("can handle basic bijections", {
+  it("resolves simple bijections with no splits", {
+    # A -> B, B -> A => A <-> B
+    dependencies <- functional_dependency(
+      list(
+        list("a", "b"),
+        list("b", "a")
+      ),
+      attrs = c("a", "b")
+    )
+    norm.df <- normalise(dependencies)
+    expect_database_schema(
+      norm.df,
+      list(
+        attrs = list(c("a", "b")),
+        keys = list(list("a", "b")),
+        all_attrs = c("a", "b"),
+        relation_names = "a"
+      )
+    )
+  })
+  it("can handle basic bijections with dependents", {
     # A -> B, B -> A, A -> C, B -> C, A -> D, B -> F, D -> E, F -> E
     # => A <-> B, A -> CDF, D -> E, F -> E
     dependencies <- functional_dependency(
@@ -501,9 +521,8 @@ test_that("drop_primary_dups", {
     light_on = c(TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, TRUE)
   )
   new_df <- drop_primary_dups(df, c('requires_light', 'is_dark'))
-  expect_false(new_df$light_on[new_df$requires_light & !new_df$is_dark])
-  expect_false(new_df$light_on[!new_df$requires_light & new_df$is_dark])
-  expect_true(new_df$light_on[new_df$requires_light & new_df$is_dark])
+  expect_identical(nrow(new_df), 3L)
+  expect_true(all(new_df$light_on == (new_df$requires_light & new_df$is_dark)))
 })
 
 describe("keys_order", {
@@ -585,149 +604,6 @@ describe("keys_rank", {
       gen.list_with_dups(gen.nonempty_key, 10),
       split_by(keys_rank) %>>%
         if_discard_else(no_multielement, expect_monovalued_elements)
-    )
-  })
-})
-
-describe("normalise() replacing normalize_step()", {
-  expect_database_schema <- function(current, target) {
-    expect_identical(
-      current,
-      structure(target, class = c("database_schema", "list"))
-    )
-  }
-
-  it("removes extraneous dependencies", {
-    dependencies <- functional_dependency(
-      list(
-        list("a", "b"),
-        list(c("a", "b"), "c")
-      ),
-      attrs = c("a", "b", "c")
-    )
-    norm.df <- normalise(dependencies)
-    expect_database_schema(
-      norm.df,
-      list(
-        attrs = list(c("a", "b", "c")),
-        keys = list(list("a")),
-        all_attrs = c("a", "b", "c"),
-        relation_names = "a"
-      )
-    )
-  })
-  it("resolves a simple bijection with no splits", {
-    dependencies <- functional_dependency(
-      list(
-        list("a", "b"),
-        list("b", "a")
-      ),
-      attrs = c("a", "b")
-    )
-    norm.df <- normalise(dependencies)
-    expect_database_schema(
-      norm.df,
-      list(
-        attrs = list(c("a", "b")),
-        keys = list(list("a", "b")),
-        all_attrs = c("a", "b"),
-        relation_names = "a"
-      )
-    )
-  })
-  it("correctly splits example data.frame for original make_indexes() test", {
-    # has multi-keys getting combined, so tests construct_relations
-    # handles multiple values in RHS of input relations
-    df <- data.frame(
-      id = c(
-        0, 1, 2, 3, 4,
-        5, 6, 7, 8, 9
-      ),
-      month = c(
-        'dec', 'dec', 'jul', 'jul', 'dec',
-        'jul', 'jul', 'jul', 'dec', 'jul'
-      ),
-      hemisphere = c(
-        'N', 'N', 'N', 'N', 'S',
-        'S', 'S', 'S', 'S', 'N'
-      ),
-      is_winter = c(
-        TRUE, TRUE, FALSE, FALSE, FALSE,
-        TRUE, TRUE, TRUE, FALSE, FALSE
-      )
-    )
-    deps <- functional_dependency(
-      list(
-        list("id", "month"),
-        list("id", "hemisphere"),
-        list("id", "is_winter"),
-        list(c("month", "hemisphere"), "is_winter"),
-        list(c("month", "is_winter"), "hemisphere"),
-        list(c("hemisphere", "is_winter"), "month")
-      ),
-      attrs = c("id", "month", "hemisphere", "is_winter")
-    )
-    new_deps <- normalise(deps)
-    expected_parent <- list(
-      attrs = c("id", "month", "hemisphere"),
-      keys = list("id")
-    )
-    expect_identical(length(new_deps$attrs[[1]]), 3L)
-    expect_true("id" %in% new_deps$attrs[[1]])
-    expect_identical(
-      length(intersect(
-        new_deps$attrs[[1]],
-        c("month", "hemisphere", "is_winter")
-      )),
-      2L
-    )
-    expect_identical(new_deps$keys[[1]], list("id"))
-    expected_child_attrs <- c("month", "hemisphere", "is_winter")
-    expected_child_keys <- list(
-      c("month", "hemisphere"),
-      c("month", "is_winter"),
-      c("hemisphere", "is_winter")
-    )
-    expect_identical(new_deps$attrs[[2]], expected_child_attrs)
-    expect_identical(new_deps$keys[[2]], expected_child_keys)
-  })
-  it("DepDF", {
-    deps <- functional_dependency(
-      list(
-        list(c("player_name", "jersey_num"), "team"),
-        list(c("player_name", "team"), "jersey_num"),
-        list(c("team", "jersey_num"), "player_name"),
-        list("team", "city"),
-        list("state", "city"),
-        list(c("player_name", "jersey_num"), "city"),
-        list("team", "state"),
-        list(c("player_name", "jersey_num"), "state"),
-        list("city", "state")
-      ),
-      attrs = c("player_name", "jersey_num", "team", "state", "city")
-    )
-    new_deps <- normalise(deps)
-    expected_schema <- list(
-      attrs = list(
-        c("player_name", "jersey_num", "team"),
-        c("team", "state"),
-        c("state", "city")
-      ),
-      keys = list(
-        list(
-          c("player_name", "jersey_num"),
-          c("player_name", "team"),
-          c("jersey_num", "team")
-        ),
-        list("team"),
-        list("state", "city")
-      )
-    )
-    expect_setequal(new_deps$attrs, expected_schema$attrs)
-    expect_setequal(new_deps$keys, expected_schema$keys)
-    expect_identical(
-      match(new_deps$attrs, expected_schema$attrs),
-      match(new_deps$keys, expected_schema$keys)
     )
   })
 })
