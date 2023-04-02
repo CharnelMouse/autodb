@@ -21,6 +21,22 @@ describe("cross_reference", {
     expect_identical(database$parents, expected_parents)
     expect_identical(database$relationships, expected_relations)
   })
+  it("gives valid schemas", {
+    # table_dum and table_dee
+    empty_fds <- functional_dependency(list(), attrs = character())
+    empty_schema <- cross_reference(normalise(empty_fds))
+    is_valid_database_schema(empty_schema)
+
+    forall(
+      gen_flat_deps(7, 20),
+      apply_both(
+        normalise %>>% cross_reference %>>% is_valid_database_schema,
+        normalise %>>%
+          with_args(cross_reference, ensure_lossless = FALSE) %>>%
+          is_valid_database_schema
+      )
+    )
+  })
   it("only links children to parents by exactly one parent key", {
     links_by_exactly_one_parent_key <- function(deps) {
       schema <- normalise(deps)
@@ -159,7 +175,7 @@ describe("cross_reference", {
       adds_ordered_primary_keys
     )
   })
-  it("only return non-extraneous table relationships", {
+  it("only returns non-extraneous table relationships", {
     only_returns_non_extraneous_relationships <- function(deps) {
       schema <- normalise(deps)
       linked <- cross_reference(schema, ensure_lossless = TRUE)
@@ -178,7 +194,15 @@ describe("cross_reference", {
       only_returns_non_extraneous_relationships
     )
   })
-  it("returns relations that return themselves if normalised again", {
+  it("is idempotent", {
+    forall(
+      gen_flat_deps(7, 20),
+      normalise %>>%
+        cross_reference %>>%
+        expect_biidentical(identity, cross_reference)
+    )
+  })
+  it("returns relations that return themselves if normalised again, if lossless", {
     gen.key <- gen.sample(letters[1:10], gen.int(10)) |>
       gen.with(sort)
     gen.relation <- gen.key |>
@@ -216,16 +240,5 @@ describe("cross_reference", {
       expect_setequal(redo$all_attrs, relation$all_attrs)
     }
     forall(gen.relation, returns_itself)
-  })
-  it("gives names that aren't empty (e.g. are valid names in Graphviz plots)", {
-    gets_nonempty_table_names <- function(fds) {
-      schema <- normalise(fds)
-      linked <- cross_reference(schema, ensure_lossless = TRUE)
-      expect_true(all(nchar(linked$relation_names) > 0L))
-    }
-    # table_dum and table_dee
-    empty_fds <- functional_dependency(list(), attrs = character())
-    gets_nonempty_table_names(empty_fds)
-    forall(gen_flat_deps(4, 4), gets_nonempty_table_names)
   })
 })

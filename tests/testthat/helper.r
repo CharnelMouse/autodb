@@ -33,6 +33,35 @@ is_valid_minimal_functional_dependency <- function(x) {
   )))
 }
 
+is_valid_database_schema <- function(x) {
+  expect_s3_class(x, "database_schema")
+  expect_true(!anyDuplicated(x$relation_names))
+  expect_true(all(nchar(x$relation_names) > 0L))
+  expect_identical(length(x$attrs), length(x$keys))
+  key_els <- lapply(x$keys, \(ks) unique(unlist(ks)))
+  expect_identical(
+    Map(\(as, n) as[seq_len(n)], x$attrs, lengths(key_els)),
+    key_els
+  )
+  nonprime_attrs <- Map(
+    \(as, n) as[setdiff(seq_along(as), seq_len(n))],
+    x$attrs,
+    lengths(key_els)
+  )
+  expect_true(all(vapply(
+    x$keys,
+    \(ks) all(vapply(ks, \(k) !is.unsorted(match(k, x$all_attrs)), logical(1))),
+    logical(1)
+  )))
+  expect_true(all(vapply(
+    nonprime_attrs,
+    \(as) all(vapply(as, \(a) !is.unsorted(match(a, x$all_attrs)), logical(1))),
+    logical(1)
+  )))
+  expect_true(all(vapply(x$keys, Negate(anyDuplicated), logical(1))))
+  expect_lte(sum(vapply(x$keys, identical, logical(1), list(character()))), 1L)
+}
+
 expect_superset_of_dependency <- function(dep1, dep2) {
   dep1 <- dep1[names(dep2)]
   stopifnot(sort(names(dep1)) == sort(names(dep2)))
@@ -191,3 +220,6 @@ subset_by <- function(fn) function(x) x[fn(x)]
 sort_by <- function(fn) function(x) x[order(fn(x))]
 if_discard_else <- function(cond, fn)
   function(x) if (cond(x)) discard() else fn(x)
+uncurry <- function(fn) function(x) fn(x[1], x[2])
+with_args <- function(fn, ...) function(x) fn(x, ...)
+apply_both <- function(fn1, fn2) function(x) {fn1(x); fn2(x)}

@@ -14,44 +14,37 @@ describe("normalise", {
     expect_true(!anyDuplicated(normalise(fds)$relation_names))
   }
 
+  it("gives valid schemas", {
+    forall(
+      gen_flat_deps(7, 20),
+      apply_both(
+        normalise %>>% is_valid_database_schema,
+        with_args(normalise, remove_avoidable = TRUE) %>>%
+          is_valid_database_schema
+      )
+    )
+  })
   it("is invariant to dependency reordering", {
     gen_permutation <- gen_flat_deps(4, 5) |>
-      gen.and_then(\(fds) list(fds, gen.sample(fds, length(fds))))
-    normalisation_permutation_invariant <- function(lst) {
-      deps <- lst[[1]]
-      perm <- lst[[2]]
-      nds <- normalise(deps)
-      new_nds <- normalise(perm)
-      expect_identical(new_nds$all_attrs, nds$all_attrs)
-      expect_identical(length(new_nds$relation_names), length(nds$relation_names))
-      relperm <- order(match(new_nds$relation_names, nds$relation_names))
-      expect_identical(new_nds$keys[relperm], nds$keys)
-      expect_identical(new_nds$attrs[relperm], nds$attrs)
-    }
+      gen.and_then(\(fds) list(fds, gen.sample(fds)))
+    normalisation_permutation_invariant <- if_discard_else(
+      uncurry(identical),
+      with_args(lapply, normalise) %>>% (uncurry(expect_identical))
+    )
 
     # currently-rarely-generated case:
     # given a choice of which dependency to remove as extraneous,
     # order matters
-    normalisation_permutation_invariant(list(
-      functional_dependency(
-        list(
-          list(c("C", "D"), "B"),
-          list(c("A", "B"), "C"),
-          list(c("A", "D"), "B"),
-          list(c("A", "D"), "C")
-        ),
-        attrs = c("A", "B", "C", "D")
+    deps <- functional_dependency(
+      list(
+        list(c("C", "D"), "B"),
+        list(c("A", "B"), "C"),
+        list(c("A", "D"), "B"),
+        list(c("A", "D"), "C")
       ),
-      functional_dependency(
-        list(
-          list(c("C", "D"), "B"),
-          list(c("A", "B"), "C"),
-          list(c("A", "D"), "C"),
-          list(c("A", "D"), "B")
-        ),
-        attrs = c("A", "B", "C", "D")
-      )
-    ))
+      attrs = c("A", "B", "C", "D")
+    )
+    normalisation_permutation_invariant(list(deps, deps[c(1, 2, 4, 3)]))
 
     forall(gen_permutation, normalisation_permutation_invariant)
   })
@@ -231,36 +224,6 @@ describe("normalise", {
       )
     )
   })
-  it("ensures starting dependencies have key elements ordered by attributes", {
-    dependencies <- functional_dependency(
-      list(list(c("a", "b"), "c")),
-      attrs = c("a", "b", "c")
-    )
-    norm_deps <- normalise(dependencies)
-    dependencies2 <- functional_dependency(
-      list(list(c("b", "a"), "c")),
-      attrs = c("a", "b", "c")
-    )
-    norm_deps2 <- normalise(dependencies2)
-    expect_identical(norm_deps, norm_deps2)
-  })
-  it("gives unique names to all tables", {
-    forall(
-      gen_flat_deps(7, 20),
-      gets_unique_table_names
-    )
-  })
-  it("gives unique non-zero-length names to tables", {
-    gets_nonempty_table_names <- function(fds) {
-      nms <- normalise(fds)$relation_names
-      expect_true(all(nchar(nms) > 0))
-      expect_true(!anyDuplicated(nms))
-    }
-    forall(
-      gen_flat_deps(7, 20),
-      gets_nonempty_table_names
-    )
-  })
   it("gives unique names if constants appears in attribute names and via constant attributes", {
     fds <- functional_dependency(
       list(
@@ -270,82 +233,6 @@ describe("normalise", {
       attrs = c("constants", "a", "b")
     )
     gets_unique_table_names(fds)
-  })
-  it("gives names that aren't empty (e.g. are valid names in Graphviz plots)", {
-    gets_nonempty_table_names <- function(fds) {
-      schema <- normalise(fds)
-      expect_true(all(nchar(schema$relation_names) > 0L))
-    }
-    forall(gen_flat_deps(7, 20), gets_nonempty_table_names)
-  })
-  it("gives keys with attributes in original order", {
-    gives_ordered_attributes_in_keys <- function(fds) {
-      schema <- normalise(fds)
-      all_keys <- unlist(schema$keys, recursive = FALSE)
-      key_indices <- lapply(all_keys, match, schema$all_attrs)
-      expect_false(any(vapply(key_indices, is.unsorted, logical(1))))
-
-      schema2 <- normalise(fds, remove_avoidable = TRUE)
-      all_keys2 <- lapply(schema2$keys, "[[", 1)
-      key_indices2 <- lapply(all_keys2, match, schema2$all_attrs)
-      expect_false(any(vapply(key_indices2, is.unsorted, logical(1))))
-    }
-    forall(
-      gen_flat_deps(7, 20),
-      gives_ordered_attributes_in_keys
-    )
-  })
-  it("gives unique keys for each relation", {
-    gives_unique_keys <- function(flat_deps) {
-      schema <- normalise(flat_deps)
-      for (keyset in schema$keys)
-        expect_true(!anyDuplicated(keyset))
-    }
-
-    deps <- list(
-      list(
-        A = list(c("C", "G")),
-        B = list("E"),
-        C = list("F", c("A", "G")),
-        D = list("F"),
-        E = list("B", c("F", "G")),
-        F = list(c("C", "D"), c("D", "G"), c("C", "E")),
-        G = list("E", c("A", "C"))
-      ),
-      attrs = c("A", "B", "C", "D", "E", "F", "G")
-    )
-    gives_unique_keys(flatten(deps))
-
-    deps2 <- functional_dependency(
-      list(
-        list("ri", "fvjxtkbal"),
-        list("fvjxtkbal", "suwxbd"),
-        list(c("fvjxtkbal", "suwxbd", "cvz_tj", "ri"), "q"),
-        list(c("cvz_tj", "j"), "ri"),
-        list(c("fvjxtkbal", "suwxbd", "cvz_tj", "q", "bgreow", "j"), "ri"),
-        list(c("fvjxtkbal", "cvz_tj", "q", "bgreow", "j"), "ri"),
-        list(c("fvjxtkbal", "cvz_tj", "j"), "ri"),
-        list("suwxbd", "ri"),
-        list(c("cvz_tj", "ri"), "bgreow"),
-        list(c("suwxbd", "cvz_tj"), "bgreow"),
-        list(c("fvjxtkbal", "suwxbd", "cvz_tj", "q", "ri", "bgreow"), "j"),
-        list(c("suwxbd", "cvz_tj", "q", "ri", "bgreow"), "j")
-      ),
-      attrs = c("fvjxtkbal", "suwxbd", "cvz_tj", "q", "ri", "bgreow", "j")
-    )
-    gives_unique_keys(deps2)
-
-    forall(gen_flat_deps(7, 20), gives_unique_keys)
-  })
-  it("can only return up to one relation schema with no keys", {
-    has_up_to_one_keyless_relation_schema <- function(fds) {
-      keys <- normalise(fds)$keys
-      expect_lte(sum(lengths(keys) == 0), 1)
-    }
-    forall(
-      gen_flat_deps(7, 20),
-      has_up_to_one_keyless_relation_schema
-    )
   })
   it("can remove avoidable attributes", {
     # example 6.24 from Maier
