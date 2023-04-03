@@ -42,31 +42,29 @@ describe("cross_reference", {
       schema <- normalise(deps)
       if (length(schema$keys) <= 1)
         discard()
-      else{
-        linked <- cross_reference(schema)
-        if (length(linked$relationships) == 0)
-          discard()
-        relationship_tables <- lapply(linked$relationships, `[[`, 1)
-        relationship_attrs <- vapply(linked$relationships, `[[`, character(1), 2)
-        tables_index <- as.data.frame(do.call(rbind, relationship_tables))
-        link_sets <- tapply(
-          relationship_attrs,
-          tables_index,
-          \(as) sort(unique(as))
+      linked <- cross_reference(schema)
+      if (length(linked$relationships) == 0)
+        discard()
+      relationship_tables <- lapply(linked$relationships, `[[`, 1)
+      relationship_attrs <- vapply(linked$relationships, `[[`, character(1), 2)
+      tables_index <- as.data.frame(do.call(rbind, relationship_tables))
+      link_sets <- tapply(
+        relationship_attrs,
+        tables_index,
+        \(as) sort(unique(as))
+      )
+      for (column in seq_len(ncol(link_sets))) {
+        parent <- strtoi(colnames(link_sets)[column])
+        attribute_sets <- link_sets[, column]
+        attribute_sets <- na.omit(attribute_sets[!vapply(
+          attribute_sets,
+          is.null,
+          logical(1)
+        )])
+        expect_length(
+          setdiff(attribute_sets, lapply(linked$keys[[parent]], sort)),
+          0
         )
-        for (column in seq_len(ncol(link_sets))) {
-          parent <- strtoi(colnames(link_sets)[column])
-          attribute_sets <- link_sets[, column]
-          attribute_sets <- na.omit(attribute_sets[!vapply(
-            attribute_sets,
-            is.null,
-            logical(1)
-          )])
-          expect_length(
-            setdiff(attribute_sets, lapply(linked$keys[[parent]], sort)),
-            0
-          )
-        }
       }
     }
     forall(

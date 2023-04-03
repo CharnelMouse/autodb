@@ -15,6 +15,32 @@ describe("normalise", {
   }
 
   it("gives valid schemas", {
+    # rare failing case:
+    # removing avoidables can muck up attrs order
+    # if keys aren't reordered afterwards
+    deps <- functional_dependency(
+      list(
+        list(c("bcr_j", "vfzc."), "mdaoyx"),
+        list("vfzc.", "bcr_j"),
+        list(c("mdaoyx", "bcr_j", "bi", "vfzc."), "fvoxk"),
+        list(c("mdaoyx", "bcr_j", "eqro", "vfzc."), "fvoxk"),
+        list(c("mdaoyx", "eqro", "bi"), "fvoxk"),
+        list(c("mdaoyx", "vfzc."), "fvoxk"),
+        list(c("mdaoyx", "bcr_j", "eqro", "fvoxk", "vfzc."), "bi"),
+        list(c("mdaoyx", "eqro", "bi"), "vfzc."),
+        list(c("bcr_j", "eqro", "fvoxk"), "vfzc."),
+        list(c("mdaoyx", "bcr_j", "fvoxk", "bi"), "vfzc."),
+        list(c("bcr_j", "fvoxk", "bi"), "vfzc.")
+      ),
+      c("mdaoyx", "bcr_j", "eqro", "fvoxk", "bi", "vfzc.")
+    )
+    deps |>
+      (apply_both(
+        normalise %>>% is_valid_database_schema,
+        with_args(normalise, remove_avoidable = TRUE) %>>%
+          is_valid_database_schema
+      ))()
+
     forall(
       gen_flat_deps(7, 20),
       apply_both(

@@ -542,7 +542,11 @@ remove_avoidable_attributes <- function(vecs) {
     }
   }
   vecs$keys <- keys
-  vecs$attrs <- attrs
+  vecs$attrs <- Map(
+    \(as, ks) c(unique(unlist(ks)), setdiff(as, unlist(ks))),
+    attrs,
+    keys
+  )
   vecs
 }
 

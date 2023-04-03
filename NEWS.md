@@ -6,6 +6,7 @@
 * Added a `functional_dependency` class for flattened functional dependency lists. The attributes vector is now stored as an attribute, so that the dependencies can be accessed as a simple list without list subsetting operators.
 * Fixed `normalise`'s return output to be invariant to the given order of the functional_dependency input.
 * Adjusted `normalise` to prefer to remove dependencies with dependents and determinant sets later in table order, and with larger dependent sets. This brings it more in line with similar decisions made in other package functions.
+* Fixed `normalise` returning relations with attributes in the wrong order in certain cases where `remove_avoidable = TRUE`.
 
 # autodb 1.1.0
 

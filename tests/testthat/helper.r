@@ -60,6 +60,32 @@ is_valid_database_schema <- function(x) {
   )))
   expect_true(all(vapply(x$keys, Negate(anyDuplicated), logical(1))))
   expect_lte(sum(vapply(x$keys, identical, logical(1), list(character()))), 1L)
+
+  if (!is.null(x$relationships)) {
+    fks <- x$relationships
+    for (fk in fks) {
+      expect_length(fk, 2L)
+      expect_identical(lengths(fk), 2:1)
+      expect_true(is.integer(fk[[1]]))
+      expect_true(is.character(fk[[2]]))
+      expect_false(fk[[1]][1] == fk[[1]][2])
+      expect_true(is.element(fk[[2]], x$attrs[[fk[[1]][1]]]))
+      expect_true(is.element(fk[[2]], x$attrs[[fk[[1]][2]]]))
+    }
+    expect_true(!anyDuplicated(fks))
+    fk_relations <- lapply(fks, "[[", 1L)
+    fk_children <- vapply(fk_relations, "[", integer(1), 1L)
+    fk_parents <- vapply(fk_relations, "[", integer(1), 2L)
+    fk_parent_sets <- split(fk_parents, fk_children)
+    children <- strtoi(names(fk_parent_sets))
+    nonchildren <- setdiff(seq_along(x$relation_names), children)
+    Map(
+      expect_setequal,
+      fk_parent_sets[as.character(children)],
+      x$parents[children]
+    )
+    lapply(x$parents[nonchildren], expect_identical, integer())
+  }
 }
 
 expect_superset_of_dependency <- function(dep1, dep2) {
