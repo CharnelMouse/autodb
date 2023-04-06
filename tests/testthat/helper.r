@@ -88,6 +88,80 @@ is_valid_database_schema <- function(x) {
   }
 }
 
+is_valid_database <- function(x) {
+  expect_s3_class(x, "database")
+  expect_setequal(names(x), c("name", "relations", "relationships", "attributes"))
+
+  expect_is(x$name, "character")
+
+  expect_true(!anyDuplicated(names(x$relations)))
+  expect_true(all(nchar(names(x$relations)) > 0L))
+
+  rel_keys <- Map(\(r) r$keys, x$relations)
+  rel_key_els <- Map(\(ks) unique(unlist(ks)), rel_keys)
+  rel_attrs <- Map(\(r) names(r$df), x$relations)
+  Map(
+    \(ks, as) expect_identical(as[seq_along(ks)], ks),
+    rel_key_els,
+    rel_attrs
+  )
+  nonprime_attrs <- Map(
+    \(ks, as) as[-seq_along(ks)],
+    rel_key_els,
+    rel_attrs
+  )
+  expect_true(all(vapply(
+    rel_keys,
+    \(ks) all(vapply(ks, \(k) !is.unsorted(match(k, x$attributes)), logical(1))),
+    logical(1)
+  )))
+  expect_true(all(vapply(
+    nonprime_attrs,
+    \(as) all(vapply(as, \(a) !is.unsorted(match(a, x$attributes)), logical(1))),
+    logical(1)
+  )))
+  expect_true(all(vapply(rel_keys, Negate(anyDuplicated), logical(1))))
+  expect_lte(sum(vapply(rel_keys, identical, logical(1), list(character()))), 1L)
+  expect_true(all(vapply(
+    x$relations,
+    \(r) all(vapply(
+      r$keys,
+      \(k) !anyDuplicated(r$df[, k, drop = FALSE]),
+      logical(1)
+    )),
+    logical(1)
+  )))
+
+  fks <- x$relationships
+  for (fk in fks) {
+    expect_is(fk, "character")
+    expect_length(fk, 4L)
+    expect_false(fk[1] == fk[3])
+    expect_true(is.element(fk[2], names(x$relations[[fk[1]]]$df)))
+    expect_true(is.element(fk[4], names(x$relations[[fk[3]]]$df)))
+    expect_true(all(is.element(
+      x$relations[[fk[1]]]$df[[fk[2]]],
+      x$relations[[fk[3]]]$df[[fk[4]]]
+    )))
+  }
+  expect_true(!anyDuplicated(fks))
+  fk_children <- vapply(fks, "[", character(1), 1L)
+  fk_parents <- vapply(fks, "[", character(1), 3L)
+  fk_parent_sets <- split(fk_parents, fk_children)
+  children <- names(fk_parent_sets)
+  nonchildren <- setdiff(names(x$relations), children)
+  Map(
+    expect_setequal,
+    fk_parent_sets[children],
+    lapply(x$relations[children], \(r) r$parents)
+  )
+  lapply(
+    lapply(x$relations[nonchildren], \(r) r$parents),
+    expect_identical,
+    character()
+  )
+}
+
 expect_superset_of_dependency <- function(dep1, dep2) {
   dep1 <- dep1[names(dep2)]
   stopifnot(sort(names(dep1)) == sort(names(dep2)))
@@ -246,6 +320,8 @@ subset_by <- function(fn) function(x) x[fn(x)]
 sort_by <- function(fn) function(x) x[order(fn(x))]
 if_discard_else <- function(cond, fn)
   function(x) if (cond(x)) discard() else fn(x)
-uncurry <- function(fn) function(x) fn(x[1], x[2])
+uncurry <- function(fn) function(x) fn(x[[1]], x[[2]])
 with_args <- function(fn, ...) function(x) fn(x, ...)
 apply_both <- function(fn1, fn2) function(x) {fn1(x); fn2(x)}
+dup <- function(x) list(x, x)
+onRight <- function(f) function(x) list(x[[1]], f(x[[2]]))

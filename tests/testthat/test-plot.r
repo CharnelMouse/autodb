@@ -1,3 +1,5 @@
+library(hedgehog)
+
 describe("gv", {
   test_df_strings <- function(
     df_name,
@@ -110,6 +112,12 @@ describe("gv", {
   }
 
   describe("database", {
+    it("works for autodb output", {
+      forall(
+        gen_df(6, 7),
+        autodb %>>% gv %>>% expect_no_error
+      )
+    })
     it("works for degenerate cases", {
       table_dum <- data.frame()
       table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
@@ -488,6 +496,16 @@ describe("gv", {
     })
   })
   describe("database_schema", {
+    it("works for normalise and cross_reference outputs", {
+      forall(
+        gen_flat_deps(7, 20),
+        normalise %>>%
+          apply_both(
+            gv %>>% expect_no_error,
+            cross_reference %>>% gv %>>% expect_no_error
+          )
+      )
+    })
     it("works for degenerate cases", {
       table_dum <- data.frame()
       table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
@@ -687,6 +705,12 @@ describe("gv", {
       table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
       expect_no_error(gv(table_dum, "table_dum"))
       expect_no_error(gv(table_dee, "table_dee"))
+    })
+    it("works for data frames", {
+      forall(
+        gen_df(6, 7) |> gen.and_then(\(df) list(df, gen_attr_name(5))),
+        uncurry(gv) %>>% expect_no_error
+      )
     })
     it("creates a Graphviz HTML-like expression for the data.frame", {
       df <- data.frame(

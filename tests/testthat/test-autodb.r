@@ -1,4 +1,41 @@
+library(hedgehog)
+
 describe("autodb", {
+  it("returns valid databases", {
+    forall(
+      gen_df(6, 7),
+      apply_both(
+        autodb %>>% is_valid_database,
+        with_args(autodb, remove_avoidable = TRUE) %>>% is_valid_database
+      )
+    )
+  })
+  it("is the same as dfd >> flatten >> normalise >> cross_reference >> decompose", {
+    df <- data.frame(a = 1:4, b = 1:2)
+    database <- autodb(df)
+    database2 <- dfd(df, 1) |>
+      flatten() |>
+      normalise() |>
+      cross_reference() |>
+      decompose(df = df)
+    expect_identical(database, database2)
+    expect_silent(gv(database))
+
+    forall(
+      gen_df(6, 7),
+      expect_biidentical(
+        autodb,
+        dup %>>%
+          onRight(
+            with_args(dfd, accuracy = 1) %>>%
+              flatten %>>%
+              normalise %>>%
+              cross_reference
+          ) %>>%
+          uncurry(decompose)
+      )
+    )
+  })
   it("runs DFD and normalises the given data.frame", {
     df <- data.frame(
       Title = rep(

@@ -5,9 +5,23 @@ describe("decompose", {
     expect_identical(current, structure(target, class = c("database", "list")))
   }
 
+  it("returns valid databases", {
+    forall(
+      gen_df(6, 7),
+      dup %>>%
+        (onRight(
+          with_args(dfd, accuracy = 1) %>>%
+            flatten %>>%
+            normalise %>>%
+            cross_reference
+        )) %>>%
+        uncurry(decompose) %>>%
+        is_valid_database
+    )
+  })
   it("removes extraneous dependencies", {
     df <- data.frame(a = integer(), b = integer(), c = integer())
-    norm_deps <- list(
+    schema <- list(
       attrs = list(c("a", "b", "c")),
       keys = list(list("a")),
       parents = list(integer()),
@@ -15,7 +29,7 @@ describe("decompose", {
       relation_names = "a",
       all_attrs = c("a", "b", "c")
     )
-    norm.df <- decompose(df, norm_deps)
+    norm.df <- decompose(df, schema)
     expect_database(
       norm.df,
       list(
@@ -32,7 +46,7 @@ describe("decompose", {
   })
   it("resolves a simple bijection with no splits", {
     df <- data.frame(a = integer(), b = integer())
-    norm_deps <- list(
+    schema <- list(
       attrs = list(c("a", "b")),
       keys = list(list("a", "b")),
       parents = list(integer()),
@@ -40,7 +54,7 @@ describe("decompose", {
       relation_names = "a",
       all_attrs = c("a", "b")
     )
-    norm.df <- decompose(df, norm_deps)
+    norm.df <- decompose(df, schema)
     expect_identical(
       norm.df$relations,
       list(a = list(
@@ -69,7 +83,7 @@ describe("decompose", {
         TRUE, TRUE, TRUE, FALSE, FALSE
       )
     )
-    norm_deps <- list(
+    schema <- list(
       attrs = list(
         c("id", "month", "hemisphere"),
         c("month", "hemisphere", "is_winter")
@@ -90,7 +104,7 @@ describe("decompose", {
       relation_names = c("id", "month_hemisphere"),
       all_attrs = c("id", "month", "hemisphere", "is_winter")
     )
-    new_dfs <- decompose(df, norm_deps)
+    new_dfs <- decompose(df, schema)
     expected_dfs <- list(
       name = NA_character_,
       relations = list(
@@ -130,7 +144,7 @@ describe("decompose", {
       d = 1L,
       e = 1L
     )
-    norm_deps <- list(
+    schema <- list(
       attrs = list(
         c("a", "b", "c"),
         c("b", "c", "d"),
@@ -150,7 +164,7 @@ describe("decompose", {
       relation_names = c("a", "b_c", "b"),
       all_attrs = c("a", "b", "c", "d", "e")
     )
-    new_dfs <- decompose(df, norm_deps)
+    new_dfs <- decompose(df, schema)
     expect_identical(new_dfs$relations$a$parents, "b_c")
   })
   it("returns a error if data.frame doesn't satisfy FDs in the schema", {
@@ -215,7 +229,7 @@ describe("decompose", {
         city = integer(),
         state = integer()
       )
-      norm_deps <- list(
+      schema <- list(
         attrs = list(
           c("player_name", "jersey_num",  "team"),
           c("city",  "state"),
@@ -238,7 +252,7 @@ describe("decompose", {
         relation_names = c("player_name_jersey_num", "city", "team"),
         all_attrs = c("player_name", "jersey_num", "team", "city", "state")
       )
-      depdfs <- decompose(df, norm_deps)
+      depdfs <- decompose(df, schema)
       expect_identical(length(depdfs$relations), 3L)
       expected_depdfs <- list(
         name = NA_character_,
@@ -304,7 +318,7 @@ describe("decompose", {
       b = c(1L, 2L, 1L, 2L),
       c = c(1L, 1L, 2L, 2L)
     )
-    norm_deps <- list(
+    schema <- list(
       attrs = list(c("a", "b"), c("a", "c")),
       keys = list(list("a", "b"), list(c("a", "c"))),
       parents = list(integer(), 1L),
@@ -312,7 +326,7 @@ describe("decompose", {
       relation_names = c("a", "a_c"),
       all_attrs = c("a", "b", "c")
     )
-    norm.df <- decompose(df, norm_deps)
+    norm.df <- decompose(df, schema)
     expect_identical(
       norm.df$relations$a_c,
       list(
