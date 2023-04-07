@@ -1,13 +1,21 @@
 # autodb (development version)
 
+Breaking changes:
+
+* Removed `flatten` from exported functions, in favour of flattening the functional dependencies in `dfd` instead. Since `flatten` was usually called anyway, and its output is more readable since adding a `print` method for it, the old `dfd` output format had little reason to be kept.
+
+Improvements:
+
+* Added a `functional_dependency` class for flattened functional dependency lists. The attributes vector is now stored as an attribute, so that the dependencies can be accessed as a simple list without list subsetting operators.
+* Adjusted `normalise` to prefer to remove dependencies with dependents and determinant sets later in table order, and with larger dependent sets. This brings it more in line with similar decisions made in other package functions.
+
+Fixes:
+
 * Corrected vignette re: when to remove spurious dependencies before.
 * Corrected `autodb` documentation link to page with database format information.
 * Corrected `df_equiv` to work with `data.frame` columns that are lists.
-* Added a `functional_dependency` class for flattened functional dependency lists. The attributes vector is now stored as an attribute, so that the dependencies can be accessed as a simple list without list subsetting operators.
 * Fixed `normalise`'s return output to be invariant to the given order of the functional_dependency input.
-* Adjusted `normalise` to prefer to remove dependencies with dependents and determinant sets later in table order, and with larger dependent sets. This brings it more in line with similar decisions made in other package functions.
 * Fixed `normalise` returning relations with attributes in the wrong order in certain cases where `remove_avoidable = TRUE`.
-* Removed `flatten` from exported functions, in favour of flattening the functional dependencies in `dfd` instead. Since `flatten` was usually called anyway, and its output is more readable since adding a `print` method for it, the old `dfd` output format had little reason to be kept.
 
 # autodb 1.1.0
 
