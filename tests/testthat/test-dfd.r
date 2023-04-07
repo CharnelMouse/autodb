@@ -12,17 +12,11 @@ describe("dfd", {
       expect_setequal(deps1$dependencies[[n]], deps2$dependencies[[n]])
   }
   expect_permutation_deps <- function(deps1, deps2) {
-    expect_setequal(deps1$attrs, deps2$attrs)
-    perm <- match(deps1$attrs, deps2$attrs)
-    expect_identical(names(deps1$dependencies), names(deps2$dependencies)[perm])
-    for (n in seq_along(deps1$dependencies))
-      expect_setequal(
-        deps1$dependencies[[n]],
-        lapply(
-          deps2$dependencies[[perm[n]]],
-          \(nms) nms[order(match(nms, deps1$attrs))]
-        )
-      )
+    expect_setequal(attr(deps1, "attrs"), attr(deps2, "attrs"))
+    expect_setequal(
+      deps1,
+      functional_dependency(deps2, attr(deps1, "attrs"))
+    )
   }
   expect_subset_deps <- function(deps1, deps2) {
     expect_identical(deps1$attrs, deps2$attrs)
@@ -42,18 +36,15 @@ describe("dfd", {
     expect_equiv_deps(new_deps, deps2)
   }
   expect_equiv_non_removed_attr_deps <- function(deps1, deps2) {
-    removed_attr <- setdiff(deps1$attrs, deps2$attrs)
+    removed_attr <- setdiff(attr(deps1, "attrs"), attr(deps2, "attrs"))
     expect_length(removed_attr, 1)
     filtered <- deps1
-    filtered$attrs <- setdiff(deps1$attrs, removed_attr)
-    filtered$dependencies <- filtered$dependencies[
-      names(filtered$dependencies) != removed_attr
-    ]
-    filtered$dependencies <- lapply(
-      filtered$dependencies,
-      Filter,
-      f = function(ds) !is.element(removed_attr, ds)
-    )
+    attr(filtered, "attrs") <- setdiff(attr(deps1, "attrs"), removed_attr)
+    filtered <- filtered[vapply(
+      filtered,
+      \(fd) !is.element(removed_attr, unlist(fd)),
+      logical(1)
+    )]
     expect_equiv_deps(filtered, deps2)
   }
   expect_det_subsets_kept <- function(deps1, deps2) {
@@ -395,7 +386,9 @@ describe("dfd", {
   it("gives dependencies for unique attributes (in case don't want them as key)", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), C = c(1, 2, 2))
     deps <- dfd(df, 1)
-    expect_identical(deps$dependencies$A, list(c("B", "C")))
+    A_deps <- vapply(deps, \(fd) fd[[2]] == "A", logical(1))
+    A_detsets <- lapply(deps[A_deps], `[[`, 1)
+    expect_identical(A_detsets, list(c("B", "C")))
   })
   it("finds dependencies for the team data in test-normalise", {
     df <- data.frame(
@@ -421,15 +414,23 @@ describe("dfd", {
       )
     )
     deps <- dfd(df, 1)
-    expected_deps <- list(
-      team = list(c('player_name', 'jersey_num')),
-      jersey_num = list(c('player_name', 'team')),
-      player_name = list(c('team', 'jersey_num')),
-      city = list('team', 'state', c('player_name', 'jersey_num')),
-      state = list('team', c('player_name', 'jersey_num'), 'city')
+    expected_deps <- functional_dependency(
+      list(
+        list(c('player_name', 'jersey_num'), "team"),
+        list(c('player_name', 'team'), "jersey_num"),
+        list(c('team', 'jersey_num'), "player_name"),
+        list('team', "city"),
+        list('state', "city"),
+        list(c('player_name', 'jersey_num'), "city"),
+        list('team', "state"),
+        list(c('player_name', 'jersey_num'), "state"),
+        list('city', "state")
+      ),
+      c("team", "jersey_num", "player_name", "city", "state")
     )
-    expect_identical(lengths(deps$dependencies), lengths(expected_deps))
-    expect_superset_of_dependency(deps$dependencies, expected_deps)
+
+    expect_identical(attr(deps, "attrs"), attr(expected_deps, "attrs"))
+    expect_true(all(is.element(expected_deps, deps)))
   })
   it("finds dependencies for the team data in original's edit demo", {
     df <- data.frame(
@@ -439,13 +440,19 @@ describe("dfd", {
       roster_size = c(20L, 21L, 20L, 20L, 19L, 21L)
     )
     deps <- dfd(df, 1)
-    expected_deps <- list(
-      team = list("city"),
-      city = list("team"),
-      state = list("team", "city"),
-      roster_size = list("team", "city")
+    expected_deps <- functional_dependency(
+      list(
+        list("city", "team"),
+        list("team", "city"),
+        list("team", "state"),
+        list("city", "state"),
+        list("team", "roster_size"),
+        list("city", "roster_size")
+      ),
+      c("team", "city", "state", "roster_size")
     )
-    expect_superset_of_dependency(deps$dependencies, expected_deps)
+    expect_identical(attr(deps, "attrs"), attr(expected_deps, "attrs"))
+    expect_true(all(is.element(expected_deps, deps)))
   })
   it("finds dependencies for Wikipedia 1NF->2NF->3NF example", {
     df <- data.frame(
@@ -466,24 +473,38 @@ describe("dfd", {
       Publisher_ID = rep(1:2, each = 2)
     )
     deps <- dfd(df, 1)
-    expected_deps <- list(
-      Title = list(),
-      Format = list(),
-      Author = list("Title"),
-      Author_Nationality = list("Author"),
-      Price = list(c("Title", "Format")),
-      Thickness = list(character()),
-      Genre_ID = list("Title"),
-      Genre_Name = list("Genre_ID"),
-      Publisher_ID = list("Title")
+    expected_deps <- functional_dependency(
+      list(
+        list("Title", "Author"),
+        list("Author", "Author_Nationality"),
+        list(c("Title", "Format"), "Price"),
+        list(character(), "Thickness"),
+        list("Title", "Genre_ID"),
+        list("Genre_ID", "Genre_Name"),
+        list("Title", "Publisher_ID")
+      ),
+      c(
+        "Title",
+        "Format",
+        "Author",
+        "Author_Nationality",
+        "Price",
+        "Thickness",
+        "Genre_ID",
+        "Genre_Name",
+        "Publisher_ID"
+      )
     )
-    expect_superset_of_dependency(deps$dependencies, expected_deps)
+    expect_identical(attr(deps, "attrs"), attr(expected_deps, "attrs"))
+    expect_true(all(is.element(expected_deps, deps)))
   })
   it("correctly handles attributes with non-df-standard names", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
       stats::setNames(c("A 1", "B 2", "C 3"))
     deps <- dfd(df, 1)
-    expect_identical(deps$dependencies$`A 1`, list(c("B 2", "C 3")))
+    A_1_deps <- vapply(deps, \(fd) fd[[2]] == "A 1", logical(1))
+    A_1_detsets <- lapply(deps[A_1_deps], `[[`, 1L)
+    expect_identical(A_1_detsets, list(c("B 2", "C 3")))
   })
   it("expects attribute names to be unique", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), A = c(1, 2, 2), check.names = FALSE)
@@ -501,15 +522,10 @@ describe("dfd", {
       shrink.limit = Inf
     )
   })
-  it("returns a minimal functional dependency set once flattened", {
-    flattens_then <- function(fn) {
-      function(deps) {
-        fn(flatten(deps))
-      }
-    }
+  it("returns a minimal functional dependency set", {
     forall(
       gen_df(6, 7),
-      terminates_then(flattens_then(is_valid_minimal_functional_dependency), 1)
+      terminates_then(is_valid_minimal_functional_dependency, 1)
     )
   })
 })

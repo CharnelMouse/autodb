@@ -88,7 +88,6 @@ print.functional_dependency <- function(x, ...) {
 #'   in the second. Attributes are stored, in the original ordering, in the
 #'   \code{attrs} attributes. This is the format required by
 #'   \code{\link{normalise}}.
-#' @export
 flatten <- function(dependencies) {
   result <- list()
   for (i in seq_along(dependencies$dependencies)) {

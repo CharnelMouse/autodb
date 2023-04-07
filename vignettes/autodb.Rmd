@@ -116,23 +116,14 @@ deps
 
 After simplifying the data to something quicker to iterate over -- specifically, by converting all attributes to have integer values -- the algorithm takes each attribute in turn as a possible dependent, and finds sets of the other attributes that determine it.
 
-The result is a list, with two elements: `dependencies` gives the discovered determinants of each attribute in turn, and `attrs` gives all the attribute names in their original order.
-
-This is meant to be a reasonably compact, user-readable presentation of the results, for when we're interested in the determinants for a particular dependent attribute. For use in the later stages of the process, we convert to a different format first, using `flatten`:
-
-```{r}
-flat_deps <- flatten(deps)
-flat_deps
-```
-
-Dependencies are now separate entries, rather than being grouped by dependent.
+The result is a list of functional dependencies, in the format `determinant set -> dependent`, with an attribute named `attrs` that gives all the attribute names in their original order.
 
 ## Normalisation
 
 Now that we have a list of discovered dependencies, we can construct a database schema, where the relation schemas are normalised to third normal form. This is done using a version of Bernstein's synthesis.
 
 ```{r}
-schema <- normalise(flat_deps)
+schema <- normalise(deps)
 schema
 ```
 
@@ -194,23 +185,13 @@ titanic_deps <- dfd(as.data.frame(Titanic), 1)
 titanic_deps
 ```
 
-We could remove the unwanted dependencies, where `Age` is the dependent, from here:
+We can remove the unwanted dependencies, where `Age` is the dependent:
 
 ```{r}
-titanic_deps_filtered <- titanic_deps
-titanic_deps_filtered$dependencies$Age <- list()
-identical(titanic_deps_filtered, titanic_deps_freqonly)
-```
-
-Alternatively, we could remove them from the flattened version, if that's more convenient:
-
-```{r}
-flatten(titanic_deps)
-titanic_deps_filtered2 <- Filter(
+titanic_deps_filtered <- Filter(
   function(dep) dep[[2]] == "Freq", 
-  flatten(titanic_deps)
+  titanic_deps
 )
-identical(flatten(titanic_deps_freqonly), titanic_deps_filtered2)
 ```
 
 ## Adding cross-references
@@ -267,12 +248,12 @@ This is the data set for a meta-analysis, looking at the effectiveness of "nudge
 Getting full dependency information for this relation can take a long time, so here we search for a reduced set, not considering numeric or sample size attributes as determinants:
 
 ```{r nudge_database}
-nudge_deps <- flatten(dfd(
+nudge_deps <- dfd(
   nudge,
   accuracy = 1,
   exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
   exclude_class = "numeric"
-))
+)
 nudge_schema <- cross_reference(normalise(nudge_deps, remove_avoidable = TRUE))
 DiagrammeR::grViz(gv(nudge_schema))
 ```
@@ -355,7 +336,6 @@ nudge_approx_cheat_database_schema <- dfd(
   exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
   exclude_class = "numeric"
 ) |>
-  flatten() |>
   normalise() |>
   cross_reference()
 DiagrammeR::grViz(gv(nudge_approx_cheat_database_schema))
@@ -376,7 +356,6 @@ nudge_approx_database_schema <- dfd(
   exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
   exclude_class = "numeric"
 ) |>
-  flatten() |>
   normalise() |>
   cross_reference()
 DiagrammeR::grViz(gv(nudge_approx_database_schema))
@@ -437,14 +416,6 @@ This schema is now in LTK form, with no remaining avoidable attributes. We could
 ## Class information in schemas
 
 As shown in the plots above, database schemas don't contain information about the attribute classes: this is only added on database creation. This would potentially be useful if the original data.frame is large, and creating the database would take a long time.
-
-## Pretty printing for functional dependencies
-
-Lists of functional dependencies -- both the grouped ones returned by `dfd`, and the flattened ones given to `normalise` -- use the default printing for lists. They should have a prettier printing operation, making use of the usual `A -> B` notation for functional dependencies.
-
-## Better consistency checks
-
-There are obvious consistency checks that are missing. One example is when the relation decomposed with a schema is different to the one originally used to create the schema: if the new relation doesn't satisfy the schema's functional dependencies, the result will have relations with inconsistent information, which may or may not become apparent when the database is rejoined into a data frame.
 
 ## Handling of duplicate records
 

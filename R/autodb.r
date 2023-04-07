@@ -50,7 +50,6 @@ autodb <- function(
   report <- reporter(progress, progress_file)
 
   dfd(df, 1, progress = progress, progress_file = "", ...) |>
-    report$op(flatten, "flattening") |>
     report$op(normalise, "normalising", remove_avoidable, constants_name) |>
     report$op(cross_reference, "cross-referencing", ensure_lossless) |>
     report$op(decompose, "decomposing", df = df, name)

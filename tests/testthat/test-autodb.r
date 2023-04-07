@@ -10,11 +10,10 @@ describe("autodb", {
       )
     )
   })
-  it("is the same as dfd >> flatten >> normalise >> cross_reference >> decompose", {
+  it("is the same as dfd >> normalise >> cross_reference >> decompose", {
     df <- data.frame(a = 1:4, b = 1:2)
     database <- autodb(df)
     database2 <- dfd(df, 1) |>
-      flatten() |>
       normalise() |>
       cross_reference() |>
       decompose(df = df)
@@ -28,7 +27,6 @@ describe("autodb", {
         dup %>>%
           onRight(
             with_args(dfd, accuracy = 1) %>>%
-              flatten %>>%
               normalise %>>%
               cross_reference
           ) %>>%

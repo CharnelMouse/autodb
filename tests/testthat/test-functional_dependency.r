@@ -64,17 +64,3 @@ describe("functional_dependency", {
     expect_identical(x, y)
   })
 })
-
-describe("flatten", {
-  it("returns a valid functional_dependency", {
-    flattens_then <- function(f) {
-      function(deps) {
-        f(flatten(deps))
-      }
-    }
-    forall(
-      gen_df(6, 7) |> gen.with(\(df) dfd(df, 1)),
-      flattens_then(is_valid_functional_dependency)
-    )
-  })
-})

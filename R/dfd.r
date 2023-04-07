@@ -95,8 +95,8 @@ dfd <- function(
     stop("duplicate column names: ", toString(sorted_dup_names))
   }
   if (n_cols == 0)
-    return(list(
-      dependencies = stats::setNames(list(), character()),
+    return(functional_dependency(
+      stats::setNames(list(), character()),
       attrs = character()
     ))
   if (any(!is.element(exclude, column_names)))
@@ -192,7 +192,7 @@ dfd <- function(
     }
   }
   report$stat("DFD complete")
-  list(dependencies = dependencies, attrs = column_names)
+  flatten(list(dependencies = dependencies, attrs = column_names))
 }
 
 find_LHSs <- function(
