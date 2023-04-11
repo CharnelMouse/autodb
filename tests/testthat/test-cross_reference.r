@@ -68,9 +68,9 @@ describe("cross_reference", {
       }
     }
     forall(
-      gen_flat_deps(7, 20),
+      gen_flat_deps(20, 2),
       links_by_exactly_one_parent_key,
-      discard.limit = 90
+      discard.limit = 10
     )
   })
   it("reintroduces attributes not in dependencies if ensuring lossless", {
