@@ -61,6 +61,24 @@ is_valid_database_schema <- function(x) {
   expect_true(all(vapply(x$keys, Negate(anyDuplicated), logical(1))))
   expect_lte(sum(vapply(x$keys, identical, logical(1), list(character()))), 1L)
 
+  implied_fds <- functional_dependency(
+    unlist(
+      Map(
+        \(ks, as) {
+          unlist(
+            lapply(ks, \(k) lapply(setdiff(as, k), \(a) list(k, a))),
+            recursive = FALSE
+          )
+        },
+        x$keys,
+        x$attrs
+      ),
+      recursive = FALSE
+    ),
+    x$all_attrs
+  )
+  expect_true(!anyDuplicated(implied_fds))
+
   if (!is.null(x$relationships)) {
     fks <- x$relationships
     for (fk in fks) {
