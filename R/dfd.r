@@ -203,7 +203,7 @@ find_LHSs <- function(
   df,
   partitions,
   accuracy,
-  cache = FALSE,
+  cache,
   progress = 0L,
   progress_file = ""
 ) {
@@ -562,7 +562,7 @@ minimise_seeds <- function(seeds, bitsets) {
   unique_seeds[include]
 }
 
-compute_partitions <- function(df, rhs, lhs_set, partitions, accuracy, cache = FALSE) {
+compute_partitions <- function(df, rhs, lhs_set, partitions, accuracy, cache) {
   n_rows <- nrow(df)
   threshold <- ceiling(n_rows*accuracy)
   if (threshold < n_rows)
@@ -571,7 +571,7 @@ compute_partitions <- function(df, rhs, lhs_set, partitions, accuracy, cache = F
     exact_dependencies(df, rhs, lhs_set, partitions, cache = cache)
 }
 
-exact_dependencies <- function(df, rhs, lhs_set, partitions, cache = FALSE) {
+exact_dependencies <- function(df, rhs, lhs_set, partitions, cache) {
   partition <- if (cache) partition_stripped else partition_nclass
   res1 <- partition(lhs_set, df, partitions)
   part_lhs <- res1[[1]]
@@ -584,7 +584,7 @@ exact_dependencies <- function(df, rhs, lhs_set, partitions, cache = FALSE) {
   list(part_union == part_lhs, partitions)
 }
 
-approximate_dependencies <- function(lhs_set, rhs, df, partitions, threshold, cache = FALSE) {
+approximate_dependencies <- function(lhs_set, rhs, df, partitions, threshold, cache) {
   partition <- if (cache) partition_stripped else partition_nclass
 
   # cheaper bounds checks:
