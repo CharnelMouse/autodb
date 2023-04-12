@@ -182,9 +182,7 @@ dfd <- function(
           nodes,
           simple_nodes,
           partitions,
-          compute_partitions,
-          progress,
-          progress_file
+          compute_partitions
         )
         dependencies[[rhs]] <- c(dependencies[[rhs]], lhss)
       }
@@ -200,9 +198,7 @@ find_LHSs <- function(
   nodes,
   simple_nodes,
   partitions,
-  compute_partitions,
-  progress = 0L,
-  progress_file = ""
+  compute_partitions
 ) {
   # The original library "names" nodes with their attribute set,
   # so finding a node involves matching a character vector against
