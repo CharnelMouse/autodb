@@ -6,34 +6,23 @@ library(hedgehog)
 
 describe("dfd", {
   expect_equiv_deps <- function(deps1, deps2) {
-    expect_identical(deps1$attrs, deps2$attrs)
-    expect_identical(names(deps1$dependencies), names(deps2$dependencies))
-    for (n in seq_along(deps1$dependencies))
-      expect_setequal(deps1$dependencies[[n]], deps2$dependencies[[n]])
-  }
-  expect_permutation_deps <- function(deps1, deps2) {
     expect_setequal(attr(deps1, "attrs"), attr(deps2, "attrs"))
     expect_setequal(
       deps1,
       functional_dependency(deps2, attr(deps1, "attrs"))
     )
   }
-  expect_subset_deps <- function(deps1, deps2) {
-    expect_identical(deps1$attrs, deps2$attrs)
-    expect_identical(names(deps1$dependencies), names(deps2$dependencies))
-    for (n in seq_along(deps1$dependencies))
-      expect_true(all(is.element(deps1$dependencies[[n]], deps2$dependencies[[n]])))
-  }
   expect_equiv_deps_except_names <- function(deps1, deps2) {
-    new_names <- deps2$attrs
-    new_deps <- deps1
-    names(new_deps$dependencies) <- new_names
-    new_deps$dependencies <- lapply(
-      new_deps$dependencies,
-      \(ds) lapply(ds, \(attrs) deps2$attrs[match(attrs, deps1$attrs)])
+    nms1 <- attr(deps1, "attrs")
+    nms2 <- attr(deps2, "attrs")
+    renamed_deps1 <- functional_dependency(
+      lapply(
+        deps1,
+        \(fd) list(nms2[match(fd[[1]], nms1)], nms2[[match(fd[[2]], nms1)]])
+      ),
+      nms2
     )
-    new_deps$attrs <- new_names
-    expect_equiv_deps(new_deps, deps2)
+    expect_equiv_deps(renamed_deps1, deps2)
   }
   expect_equiv_non_removed_attr_deps <- function(deps1, deps2) {
     removed_attr <- setdiff(attr(deps1, "attrs"), attr(deps2, "attrs"))
@@ -48,18 +37,16 @@ describe("dfd", {
     expect_equiv_deps(filtered, deps2)
   }
   expect_det_subsets_kept <- function(deps1, deps2) {
-    expect_identical(deps1$attrs, deps2$attrs)
-    expect_identical(names(deps1$dependencies), names(deps2$dependencies))
-    for (n in seq_along(deps1$dependencies))
-      expect_true(all(vapply(
-        deps1$dependencies[[n]],
-        \(ds) any(vapply(
-          deps2$dependencies[[n]],
-          \(ds2) all(is.element(ds2, ds)),
-          logical(1)
-        )),
+    expect_identical(attr(deps1, "attrs"), attr(deps2, "attrs"))
+    expect_true(all(vapply(
+      deps1,
+      \(ds) any(vapply(
+        deps2,
+        \(ds2) identical(ds2[[2]], ds[[2]]) && all(is.element(ds2[[1]], ds[[1]])),
         logical(1)
-      )))
+      )),
+      logical(1)
+    )))
   }
   terminates_then <- function(fn, accuracy, ...) {
     function(df) {
@@ -108,7 +95,11 @@ describe("dfd", {
   })
   it("returns dependencies where shared dependent <=> not sub/supersets for determinants", {
     has_non_nested_determinant_sets <- function(deps) {
-      for (det_sets in deps$dependencies) {
+      det_groups <- split(
+        lapply(deps, `[[`, 1L),
+        vapply(deps, `[[`, character(1L), 2L)
+      )
+      for (det_sets in det_groups) {
         len <- length(det_sets)
         if (len <= 1)
           succeed()
@@ -225,7 +216,7 @@ describe("dfd", {
     }
     forall(
       gen_df_and_attr_perm(4, 6),
-      both_terminate_then(expect_permutation_deps, 1),
+      both_terminate_then(expect_equiv_deps, 1),
       curry = TRUE
     )
   })
@@ -321,7 +312,7 @@ describe("dfd", {
     )
     stopifnot(df[1, "time"] != df[2, "time"])
     deps <- dfd(df, 1)
-    expect_length(deps$dependencies$time, 0L)
+    expect_length(Filter(\(fd) fd[[2]] == "time", deps), 0L)
   })
   it("doesn't have an excluded attribute in any determinant sets", {
     gen_df_and_exclude <- function(nrow, ncol, remove_dup_rows = FALSE) {
@@ -340,7 +331,7 @@ describe("dfd", {
       }
     }
     exclusion_not_in_determinant_sets <- function(deps, attr) {
-      for (det_sets in deps$dependencies) {
+      for (det_sets in lapply(deps, `[[`, 1L)) {
         for (det_set in det_sets) {
           expect_false(is.element(attr, det_set))
         }
