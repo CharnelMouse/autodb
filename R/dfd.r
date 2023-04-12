@@ -163,6 +163,7 @@ dfd <- function(
       powerset_nodes,
       "constructing powerset"
     )
+    compute_partitions <- partition_computer(df, accuracy, cache)
     for (rhs in nonfixed) {
       report$stat(paste("dependent", rhs))
       lhs_attrs <- setdiff(valid_determinant_attrs, rhs)
@@ -180,10 +181,8 @@ dfd <- function(
           lhs_attrs,
           nodes,
           simple_nodes,
-          df,
           partitions,
-          accuracy,
-          cache,
+          compute_partitions,
           progress,
           progress_file
         )
@@ -200,10 +199,8 @@ find_LHSs <- function(
   lhs_attrs,
   nodes,
   simple_nodes,
-  df,
   partitions,
-  accuracy,
-  cache,
+  compute_partitions,
   progress = 0L,
   progress_file = ""
 ) {
@@ -268,7 +265,11 @@ find_LHSs <- function(
         }
         if (nodes$category[node] == 0L) {
           lhs_set <- lhs_attrs[as.logical(intToBits(node))]
-          cp <- compute_partitions(df, rhs, lhs_set, partitions, accuracy, cache = cache)
+          cp <- compute_partitions(
+            rhs,
+            lhs_set,
+            partitions
+          )
           result <- cp[[1]]
           partitions <- cp[[2]]
           if (result) {
@@ -562,17 +563,35 @@ minimise_seeds <- function(seeds, bitsets) {
   unique_seeds[include]
 }
 
-compute_partitions <- function(df, rhs, lhs_set, partitions, accuracy, cache) {
-  n_rows <- nrow(df)
-  threshold <- ceiling(n_rows*accuracy)
-  if (threshold < n_rows)
-    approximate_dependencies(lhs_set, rhs, df, partitions, threshold, cache = cache)
-  else
-    exact_dependencies(df, rhs, lhs_set, partitions, cache = cache)
+partition_computer <- function(df, accuracy, cache) {
+  threshold <- ceiling(nrow(df)*accuracy)
+  partition <- if (cache) partition_stripped else partition_nclass
+  if (threshold < nrow(df)) {
+    check_AD <- if (cache) check_AD_cache else check_AD_nocache
+    function(rhs, lhs_set, partitions) {
+      approximate_dependencies(
+        df,
+        rhs,
+        lhs_set,
+        partitions,
+        threshold,
+        partition,
+        check_AD
+      )
+    }
+  }else
+    function(rhs, lhs_set, partitions) {
+      exact_dependencies(
+        df,
+        rhs,
+        lhs_set,
+        partitions,
+        partition
+      )
+    }
 }
 
-exact_dependencies <- function(df, rhs, lhs_set, partitions, cache) {
-  partition <- if (cache) partition_stripped else partition_nclass
+exact_dependencies <- function(df, rhs, lhs_set, partitions, partition) {
   res1 <- partition(lhs_set, df, partitions)
   part_lhs <- res1[[1]]
   partitions <- res1[[2]]
@@ -584,12 +603,18 @@ exact_dependencies <- function(df, rhs, lhs_set, partitions, cache) {
   list(part_union == part_lhs, partitions)
 }
 
-approximate_dependencies <- function(lhs_set, rhs, df, partitions, threshold, cache) {
-  partition <- if (cache) partition_stripped else partition_nclass
-
+approximate_dependencies <- function(
+  df,
+  rhs,
+  lhs_set,
+  partitions,
+  threshold,
+  partition,
+  check_AD
+) {
+  limit <- nrow(df) - threshold
   # cheaper bounds checks:
   # nrow(df) - (part_lhs - part_union) <= majorities_total <= nrow(df) - part_lhs
-  limit <- nrow(df) - threshold
   res1 <- partition(lhs_set, df, partitions)
   part_lhs <- res1[[1]]
   partitions <- res1[[2]]
@@ -601,44 +626,7 @@ approximate_dependencies <- function(lhs_set, rhs, df, partitions, threshold, ca
   if (part_lhs - part_union > limit)
     return(list(FALSE, partitions))
 
-  if (cache) {
-    # e(lhs_set -> rhs)
-    ind_lhs <- match(list(sort(lhs_set)), partitions$set)
-    stopifnot(!is.na(ind_lhs))
-    classes_lhs <- partitions$value[[ind_lhs]]
-    ind_union <- match(list(sort(union(lhs_set, rhs))), partitions$set)
-    stopifnot(!is.na(ind_union))
-    classes_union <- partitions$value[[ind_union]]
-    e <- 0L
-    Ts <- integer()
-    for (c in classes_union) {
-      Ts[c[1]] <- length(c)
-    }
-    for (c in classes_lhs) {
-      m <- 1L
-      for (ts in c) {
-        m <- max(m, Ts[ts], na.rm = TRUE)
-      }
-      e <- e + length(c) - m
-    }
-    list(e <= limit, partitions)
-  }else{
-    # This is a quick working version I put together to replace the non-working
-    # original. The quicker version from Tane requires cache = TRUE for stripped
-    # partition information.
-    majority_size <- function(x) {
-      max(tabulate(x))
-    }
-    splitted <- df[[rhs]]
-    splitter <- df[, lhs_set, drop = FALSE]
-    rhs_split <- fsplit(splitted, splitter)
-    majorities_total <- sum(vapply(
-      rhs_split,
-      majority_size,
-      integer(1)
-    ))
-    list(majorities_total >= threshold, partitions)
-  }
+  check_AD(df, rhs, lhs_set, partitions, threshold, limit)
 }
 
 partition_nclass <- function(attrs, df, partitions) {
@@ -696,6 +684,47 @@ partition_stripped <- function(attrs, df, partitions) {
   partitions$set <- c(partitions$set, list(sort(attrs)))
   partitions$value <- c(partitions$value, list(sp))
   list(sum(lengths(sp)) - length(sp), partitions)
+}
+
+check_AD_cache <- function(df, rhs, lhs_set, partitions, threshold, limit) {
+  # e(lhs_set -> rhs)
+  ind_lhs <- match(list(sort(lhs_set)), partitions$set)
+  stopifnot(!is.na(ind_lhs))
+  classes_lhs <- partitions$value[[ind_lhs]]
+  ind_union <- match(list(sort(union(lhs_set, rhs))), partitions$set)
+  stopifnot(!is.na(ind_union))
+  classes_union <- partitions$value[[ind_union]]
+  e <- 0L
+  Ts <- integer()
+  for (c in classes_union) {
+    Ts[c[1]] <- length(c)
+  }
+  for (c in classes_lhs) {
+    m <- 1L
+    for (ts in c) {
+      m <- max(m, Ts[ts], na.rm = TRUE)
+    }
+    e <- e + length(c) - m
+  }
+  list(e <= limit, partitions)
+}
+
+check_AD_nocache <- function(df, rhs, lhs_set, partitions, threshold, limit) {
+  # This is a quick working version I put together to replace the non-working
+  # original. The quicker version from Tane requires cache = TRUE for stripped
+  # partition information.
+  majority_size <- function(x) {
+    max(tabulate(x))
+  }
+  splitted <- df[[rhs]]
+  splitter <- df[, lhs_set, drop = FALSE]
+  rhs_split <- fsplit(splitted, splitter)
+  majorities_total <- sum(vapply(
+    rhs_split,
+    majority_size,
+    integer(1)
+  ))
+  list(majorities_total >= threshold, partitions)
 }
 
 stripped_partition_product <- function(sp1, sp2, n_rows) {
