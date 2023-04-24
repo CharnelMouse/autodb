@@ -155,7 +155,9 @@ dfd <- function(
   lhs_attrs_limit <- floor(log(.Machine$integer.max, 2))
   if (max_n_lhs_attrs > lhs_attrs_limit)
     stop(paste(
-      "only data.frames with up to", lhs_attrs_limit, "columns currently supported"
+      "only data.frames with up to",
+      lhs_attrs_limit,
+      "columns possible in a determinant set currently supported"
     ))
   if (max_n_lhs_attrs > 0) {
     powerset <- report$op(
@@ -163,7 +165,11 @@ dfd <- function(
       powerset_nodes,
       "constructing powerset"
     )
-    compute_partitions <- partition_computer(df, accuracy, cache)
+    compute_partitions <- partition_computer(
+      df[, nonfixed, drop = FALSE],
+      accuracy,
+      cache
+    )
     for (rhs in nonfixed) {
       report$stat(paste("dependent", rhs))
       lhs_attrs <- setdiff(valid_determinant_attrs, rhs)
@@ -562,10 +568,19 @@ minimise_seeds <- function(seeds, bitsets) {
 partition_computer <- function(df, accuracy, cache) {
   threshold <- ceiling(nrow(df)*accuracy)
 
-  attrs_to_partkey <- function(attrs) sort(attrs)
+  attrs_to_partkey <- function(attrs) {
+    sum(2^(match(attrs, names(df)) - 1L))
+  }
   partitions_ui <- list(
+    # we could use the partkey directly as an index into a list of
+    # pre-allocated length, but this often requires a very large list that is
+    # slow to assign elements in, so we stick to matching on a growing list
+    # here.
+    # It would also require the partkey to be representable as an integer,
+    # rather than a double, which introduces a tighter constraint on the maximum
+    # number of columns df can have (nonfixed attrs instead of just LHS attrs).
     add_partition = function(attrs, val, partitions) {
-      partitions$set <- c(partitions$set, list(attrs_to_partkey(attrs)))
+      partitions$set <- c(partitions$set, attrs_to_partkey(attrs))
       partitions$value <- c(partitions$value, list(val))
       partitions
     },
@@ -573,8 +588,8 @@ partition_computer <- function(df, accuracy, cache) {
       partitions$value[[index]]
     },
     lookup_partkey = function(attrs, partitions) {
-      attrs_set <- attrs_to_partkey(attrs)
-      match(list(attrs_set), partitions$set)
+      index <- attrs_to_partkey(attrs)
+      match(index, partitions$set)
     },
     attrs_to_partkey = attrs_to_partkey
   )

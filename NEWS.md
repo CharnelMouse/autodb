@@ -8,6 +8,7 @@ Improvements:
 
 * Added a `functional_dependency` class for flattened functional dependency lists. The attributes vector is now stored as an attribute, so that the dependencies can be accessed as a simple list without list subsetting operators.
 * Adjusted `normalise` to prefer to remove dependencies with dependents and determinant sets later in table order, and with larger dependent sets. This brings it more in line with similar decisions made in other package functions.
+* Simplified some internals of `dfd` to improve computation time.
 
 Fixes:
 
