@@ -561,9 +561,38 @@ minimise_seeds <- function(seeds, bitsets) {
 
 partition_computer <- function(df, accuracy, cache) {
   threshold <- ceiling(nrow(df)*accuracy)
-  partition <- if (cache) partition_stripped else partition_nclass
+
+  attrs_to_partkey <- function(attrs) sort(attrs)
+  partitions_ui <- list(
+    add_partition = function(attrs, val, partitions) {
+      partitions$set <- c(partitions$set, list(attrs_to_partkey(attrs)))
+      partitions$value <- c(partitions$value, list(val))
+      partitions
+    },
+    get_with_index = function(index, partitions) {
+      partitions$value[[index]]
+    },
+    lookup_partkey = function(attrs, partitions) {
+      attrs_set <- attrs_to_partkey(attrs)
+      match(list(attrs_set), partitions$set)
+    },
+    attrs_to_partkey = attrs_to_partkey
+  )
+
+  check_FD_partition <- if (cache)
+    function(attrs, df, partitions)
+      check_FD_partition_stripped(attrs, df, partitions, partitions_ui)
+  else
+    function(attrs, df, partitions)
+      check_FD_partition_nclass(attrs, df, partitions, partitions_ui)
+
   if (threshold < nrow(df)) {
-    check_AD <- if (cache) check_AD_cache else check_AD_nocache
+    check_AD <- if (cache)
+      function(df, rhs, lhs_set, partitions, threshold, limit)
+        check_AD_cache(df, rhs, lhs_set, partitions, threshold, limit, partitions_ui)
+    else
+      function(df, rhs, lhs_set, partitions, threshold, limit)
+        check_AD_nocache(df, rhs, lhs_set, partitions, threshold, limit, partitions_ui)
     function(rhs, lhs_set, partitions) {
       approximate_dependencies(
         df,
@@ -571,7 +600,7 @@ partition_computer <- function(df, accuracy, cache) {
         lhs_set,
         partitions,
         threshold,
-        partition,
+        check_FD_partition,
         check_AD
       )
     }
@@ -582,18 +611,24 @@ partition_computer <- function(df, accuracy, cache) {
         rhs,
         lhs_set,
         partitions,
-        partition
+        check_FD_partition
       )
     }
 }
 
-exact_dependencies <- function(df, rhs, lhs_set, partitions, partition) {
-  res1 <- partition(lhs_set, df, partitions)
+exact_dependencies <- function(
+  df,
+  rhs,
+  lhs_set,
+  partitions,
+  check_FD_partition
+) {
+  res1 <- check_FD_partition(lhs_set, df, partitions)
   part_lhs <- res1[[1]]
   partitions <- res1[[2]]
   if (part_lhs == 0)
     return(list(TRUE, partitions))
-  res2 <- partition(union(lhs_set, rhs), df, partitions)
+  res2 <- check_FD_partition(union(lhs_set, rhs), df, partitions)
   part_union <- res2[[1]]
   partitions <- res2[[2]]
   list(part_union == part_lhs, partitions)
@@ -605,18 +640,18 @@ approximate_dependencies <- function(
   lhs_set,
   partitions,
   threshold,
-  partition,
+  check_FD_partition,
   check_AD
 ) {
   limit <- nrow(df) - threshold
   # cheaper bounds checks:
   # nrow(df) - (part_lhs - part_union) <= majorities_total <= nrow(df) - part_lhs
-  res1 <- partition(lhs_set, df, partitions)
+  res1 <- check_FD_partition(lhs_set, df, partitions)
   part_lhs <- res1[[1]]
   partitions <- res1[[2]]
   if (part_lhs <= limit)
     return(list(TRUE, partitions))
-  res2 <- partition(union(lhs_set, rhs), df, partitions)
+  res2 <- check_FD_partition(union(lhs_set, rhs), df, partitions)
   part_union <- res2[[1]]
   partitions <- res2[[2]]
   if (part_lhs - part_union > limit)
@@ -625,37 +660,34 @@ approximate_dependencies <- function(
   check_AD(df, rhs, lhs_set, partitions, threshold, limit)
 }
 
-partition_nclass <- function(attrs, df, partitions) {
+check_FD_partition_nclass <- function(attrs, df, partitions, partitions_ui) {
   # This only returns the number |p| of equivalence classes in the partition p,
   # not its contents. This is less demanding on memory than storing stripped
   # partitions, but we cannot efficiently calculate the partition for supersets.
-  attrs_set <- sort(attrs)
-  index <- match(list(attrs_set), partitions$set)
+  index <- partitions_ui$lookup_partkey(attrs, partitions)
   if (!is.na(index)) {
-    return(list(partitions$value[index], partitions))
+    return(list(partitions_ui$get_with_index(index, partitions), partitions))
   }
   df_attrs_only <- df[, unlist(attrs), drop = FALSE]
   n_remove <- sum(duplicated(df_attrs_only))
-  partitions$set <- c(partitions$set, list(sort(attrs)))
-  partitions$value <- c(partitions$value, n_remove)
+  partitions <- partitions_ui$add_partition(attrs, n_remove, partitions)
   list(n_remove, partitions)
 }
 
-partition_stripped <- function(attrs, df, partitions) {
-  attrs_set <- sort(attrs)
-  index <- match(list(attrs_set), partitions$set)
+check_FD_partition_stripped <- function(attrs, df, partitions, partitions_ui) {
+  index <- partitions_ui$lookup_partkey(attrs, partitions)
   if (!is.na(index)) {
-    sp <- partitions$value[[index]]
+    sp <- partitions_ui$get_with_index(index, partitions)
     return(list(sum(lengths(sp)) - length(sp), partitions))
   }
-  attr_indices <- seq_along(attrs_set)
-  attrs_subsets <- lapply(attr_indices, \(n) attrs_set[-n])
-  subsets_match <- match(attrs_subsets, partitions$set)
+  attr_indices <- seq_along(attrs)
+  attrs_subsets <- lapply(attr_indices, \(n) attrs[-n])
+  subsets_match <- vapply(attrs_subsets, partitions_ui$lookup_partkey, integer(1L), partitions)
   if (sum(!is.na(subsets_match)) >= 2) {
     indices <- which(!is.na(subsets_match))[1:2]
     sp <- stripped_partition_product(
-      partitions$value[[subsets_match[indices[1]]]],
-      partitions$value[[subsets_match[indices[2]]]],
+      partitions_ui$get_with_index(subsets_match[indices[[1]]], partitions),
+      partitions_ui$get_with_index(subsets_match[indices[[2]]], partitions),
       nrow(df)
     )
   }else{
@@ -663,10 +695,13 @@ partition_stripped <- function(attrs, df, partitions) {
       index <- which(!is.na(subsets_match))
       main_subset <- attrs_subsets[[index]]
       small_subset <- setdiff(attrs, main_subset)
-      main_partition <- partitions$value[[subsets_match[index]]]
-      subres <- partition_stripped(small_subset, df, partitions)
+      main_partition <- partitions_ui$get_with_index(subsets_match[index], partitions)
+      subres <- check_FD_partition_stripped(small_subset, df, partitions, partitions_ui)
       partitions <- subres[[2]]
-      small_partition <- partitions$value[[match(small_subset, partitions$set)]]
+      small_partition <- partitions_ui$get_with_index(
+        partitions_ui$lookup_partkey(small_subset, partitions),
+        partitions
+      )
       sp <- stripped_partition_product(
         main_partition,
         small_partition,
@@ -677,19 +712,18 @@ partition_stripped <- function(attrs, df, partitions) {
       sp <- unname(sp[lengths(sp) > 1])
     }
   }
-  partitions$set <- c(partitions$set, list(sort(attrs)))
-  partitions$value <- c(partitions$value, list(sp))
+  partitions <- partitions_ui$add_partition(attrs, sp, partitions)
   list(sum(lengths(sp)) - length(sp), partitions)
 }
 
-check_AD_cache <- function(df, rhs, lhs_set, partitions, threshold, limit) {
+check_AD_cache <- function(df, rhs, lhs_set, partitions, threshold, limit, partitions_ui) {
   # e(lhs_set -> rhs)
-  ind_lhs <- match(list(sort(lhs_set)), partitions$set)
+  ind_lhs <- partitions_ui$lookup_partkey(lhs_set, partitions)
   stopifnot(!is.na(ind_lhs))
-  classes_lhs <- partitions$value[[ind_lhs]]
-  ind_union <- match(list(sort(union(lhs_set, rhs))), partitions$set)
+  classes_lhs <- partitions_ui$get_with_index(ind_lhs, partitions)
+  ind_union <- partitions_ui$lookup_partkey(union(lhs_set, rhs), partitions)
   stopifnot(!is.na(ind_union))
-  classes_union <- partitions$value[[ind_union]]
+  classes_union <- partitions_ui$get_with_index(ind_union, partitions)
   e <- 0L
   Ts <- integer()
   for (c in classes_union) {
@@ -705,7 +739,7 @@ check_AD_cache <- function(df, rhs, lhs_set, partitions, threshold, limit) {
   list(e <= limit, partitions)
 }
 
-check_AD_nocache <- function(df, rhs, lhs_set, partitions, threshold, limit) {
+check_AD_nocache <- function(df, rhs, lhs_set, partitions, threshold, limit, partitions_ui) {
   # This is a quick working version I put together to replace the non-working
   # original. The quicker version from Tane requires cache = TRUE for stripped
   # partition information.
