@@ -64,21 +64,38 @@ describe("dfd", {
       fn(res1, res2)
     }
   }
-  terminates_with_and_without_cache_then <- function(fn, accuracy, ...) {
+  terminates_with_and_without_full_cache_then <- function(fn, accuracy, ...) {
     function(df) {
       res_cache <- withTimeout(
-        dfd(df, accuracy, cache = TRUE, ...),
+        dfd(df, accuracy, full_cache = TRUE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
       expect_true(!is.null(res_cache))
       res_nocache <- withTimeout(
-        dfd(df, accuracy, cache = FALSE, ...),
+        dfd(df, accuracy, full_cache = FALSE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
       expect_true(!is.null(res_nocache))
       fn(res_cache, res_nocache)
+    }
+  }
+  terminates_with_and_without_store_cache_then <- function(fn, accuracy, ...) {
+    function(df) {
+      res_store <- withTimeout(
+        dfd(df, accuracy, full_cache = TRUE, store_cache = TRUE, ...),
+        timeout = 5,
+        onTimeout = "silent"
+      )
+      expect_true(!is.null(res_store))
+      res_nostore <- withTimeout(
+        dfd(df, accuracy, full_cache = TRUE, store_cache = FALSE, ...),
+        timeout = 5,
+        onTimeout = "silent"
+      )
+      expect_true(!is.null(res_nostore))
+      fn(res_store, res_nostore)
     }
   }
 
@@ -193,7 +210,7 @@ describe("dfd", {
       sep = c(TRUE, TRUE, NA, NA)
     )
     df2 <- df1[, c("l", "j", "t", "b", "u", "sep")]
-    terminates_with_and_without_cache <- terminates_with_and_without_cache_then(
+    terminates_with_and_without_cache <- terminates_with_and_without_full_cache_then(
       \(x, y) {},
       1
     )
@@ -504,12 +521,24 @@ describe("dfd", {
   it("gets the same results with and without storing partitions", {
     forall(
       gen_df(20, 5),
-      terminates_with_and_without_cache_then(expect_equiv_deps, accuracy = 1),
+      terminates_with_and_without_full_cache_then(expect_equiv_deps, accuracy = 1),
       shrink.limit = Inf
     )
     forall(
       gen_df(20, 5),
-      terminates_with_and_without_cache_then(expect_equiv_deps, accuracy = 3/4),
+      terminates_with_and_without_full_cache_then(expect_equiv_deps, accuracy = 3/4),
+      shrink.limit = Inf
+    )
+  })
+  it("is invariant to whether partition is transferred between dependents", {
+    forall(
+      gen_df(20, 5),
+      terminates_with_and_without_store_cache_then(expect_equiv_deps, accuracy = 1),
+      shrink.limit = Inf
+    )
+    forall(
+      gen_df(20, 5),
+      terminates_with_and_without_store_cache_then(expect_equiv_deps, accuracy = 3/4),
       shrink.limit = Inf
     )
   })

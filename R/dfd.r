@@ -40,10 +40,15 @@
 #' @param df a data.frame, the relation to evaluate.
 #' @param accuracy a numeric in (0, 1]: the accuracy threshold required in order
 #'   to conclude a dependency.
-#' @param cache a logical, indicating whether to store information about how
-#'   sets of attributes group the relation records (stripped partitions). This is
-#'   expected to let the algorithm run more quickly, but might be inefficient
-#'   for small data frames or small amounts of memory.
+#' @param full_cache a logical, indicating whether to store information about
+#'   how sets of attributes group the relation records (stripped partitions).
+#'   Otherwise, only the number of groups is stored. Storing the stripped
+#'   partition is expected to let the algorithm run more quickly, but might be
+#'   inefficient for small data frames or small amounts of memory.
+#' @param store_cache a logical, indicating whether to keep cached information
+#'   to use when finding dependencies for other dependents. This allows the
+#'   algorithm to run more quickly by not having to re-calculate information,
+#'   but takes up more memory.
 #' @param exclude a character vector, containing names of attributes to not
 #'   consider as members of determinant sets. If names are given that aren't
 #'   present in \code{df}, the user is given a warning.
@@ -78,7 +83,8 @@
 dfd <- function(
   df,
   accuracy,
-  cache = TRUE,
+  full_cache = TRUE,
+  store_cache = TRUE,
   exclude = character(),
   exclude_class = character(),
   progress = FALSE,
@@ -168,7 +174,7 @@ dfd <- function(
     compute_partitions <- partition_computer(
       df[, nonfixed, drop = FALSE],
       accuracy,
-      cache
+      full_cache
     )
     for (rhs in nonfixed) {
       report$stat(paste("dependent", rhs))
@@ -188,9 +194,15 @@ dfd <- function(
           nodes,
           simple_nodes,
           partitions,
-          compute_partitions
+          compute_partitions,
+          store_cache
         )
-        dependencies[[rhs]] <- c(dependencies[[rhs]], lhss)
+        if (store_cache) {
+          dependencies[[rhs]] <- c(dependencies[[rhs]], lhss[[1]])
+          partitions <- lhss[[2]]
+        }else{
+          dependencies[[rhs]] <- c(dependencies[[rhs]], lhss)
+        }
       }
     }
   }
@@ -204,7 +216,8 @@ find_LHSs <- function(
   nodes,
   simple_nodes,
   partitions,
-  compute_partitions
+  compute_partitions,
+  store_cache = FALSE
 ) {
   # The original library "names" nodes with their attribute set,
   # so finding a node involves matching a character vector against
@@ -315,7 +328,13 @@ find_LHSs <- function(
     new_seeds <- generate_next_seeds(max_non_deps, min_deps, simple_nodes, nodes)
     seeds <- new_seeds
   }
-  lapply(min_deps, \(md) lhs_attrs[as.logical(intToBits(md))])
+  if (store_cache)
+    list(
+      lapply(min_deps, \(md) lhs_attrs[as.logical(intToBits(md))]),
+      partitions
+    )
+  else
+    lapply(min_deps, \(md) lhs_attrs[as.logical(intToBits(md))])
 }
 
 powerset_nodes <- function(n) {

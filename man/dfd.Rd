@@ -7,7 +7,8 @@
 dfd(
   df,
   accuracy,
-  cache = TRUE,
+  full_cache = TRUE,
+  store_cache = TRUE,
   exclude = character(),
   exclude_class = character(),
   progress = FALSE,
@@ -20,10 +21,16 @@ dfd(
 \item{accuracy}{a numeric in (0, 1]: the accuracy threshold required in order
 to conclude a dependency.}
 
-\item{cache}{a logical, indicating whether to store information about how
-sets of attributes group the relation records (stripped partitions). This is
-expected to let the algorithm run more quickly, but might be inefficient
-for small data frames or small amounts of memory.}
+\item{full_cache}{a logical, indicating whether to store information about
+how sets of attributes group the relation records (stripped partitions).
+Otherwise, only the number of groups is stored. Storing the stripped
+partition is expected to let the algorithm run more quickly, but might be
+inefficient for small data frames or small amounts of memory.}
+
+\item{store_cache}{a logical, indicating whether to keep cached information
+to use when finding dependencies for other dependents. This allows the
+algorithm to run more quickly by not having to re-calculate information,
+but takes up more memory.}
 
 \item{exclude}{a character vector, containing names of attributes to not
 consider as members of determinant sets. If names are given that aren't
