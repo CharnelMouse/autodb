@@ -597,7 +597,7 @@ partition_computer <- function(df, accuracy, cache) {
     # rather than a double, which introduces a tighter constraint on the maximum
     # number of columns df can have (nonfixed attrs instead of just LHS attrs).
     add_partition = function(node, val, partitions) {
-      partitions$set <- c(partitions$set, node)
+      partitions$key <- c(partitions$key, node)
       partitions$value <- c(partitions$value, list(val))
       partitions
     },
@@ -605,7 +605,7 @@ partition_computer <- function(df, accuracy, cache) {
       partitions$value[[index]]
     },
     lookup_node = function(node, partitions) {
-      match(node, partitions$set)
+      match(node, partitions$key)
     }
   )
 
