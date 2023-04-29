@@ -154,6 +154,7 @@ dfd <- function(
   # this is number of valid determinant attributes. If there
   # aren't, subtract one.
   valid_determinant_attrs <- intersect(nonfixed, valid_determinant_attrs_prefixing)
+  valid_determinant_indices <- match(valid_determinant_attrs, nonfixed)
   n_dependent_only <- length(nonfixed) - length(valid_determinant_attrs)
   max_n_lhs_attrs <- length(valid_determinant_attrs) -
     as.integer(n_dependent_only == 0)
@@ -172,25 +173,25 @@ dfd <- function(
       "constructing powerset"
     )
     compute_partitions <- partition_computer(
-      df[, nonfixed, drop = FALSE],
+      unname(df[, nonfixed, drop = FALSE]),
       accuracy,
       full_cache
     )
-    for (rhs in nonfixed) {
+    for (rhs in seq_along(nonfixed)) {
       report$stat(paste("dependent", rhs))
-      lhs_attrs <- setdiff(valid_determinant_attrs, rhs)
-      n_lhs_attrs <- length(lhs_attrs)
+      lhs_indices <- setdiff(valid_determinant_indices, rhs)
+      n_lhs_attrs <- length(lhs_indices)
       expected_n_lhs_attrs <- max_n_lhs_attrs -
-        (n_dependent_only > 0 && is.element(rhs, valid_determinant_attrs))
+        (n_dependent_only > 0 && is.element(rhs, valid_determinant_indices))
       stopifnot(n_lhs_attrs == expected_n_lhs_attrs)
       if (n_lhs_attrs > 0) {
         nodes <- reduce_powerset(powerset, n_lhs_attrs)
-        simple_nodes <- as.integer(2^(seq.int(n_lhs_attrs) - 1))
+        simple_nodes <- to_nodes(seq_len(n_lhs_attrs))
         lhss <- report$op(
           rhs,
           find_LHSs,
           "determinants available, starting search",
-          lhs_attrs,
+          lhs_indices,
           nodes,
           simple_nodes,
           partitions,
@@ -198,10 +199,16 @@ dfd <- function(
           store_cache
         )
         if (store_cache) {
-          dependencies[[rhs]] <- c(dependencies[[rhs]], lhss[[1]])
+          dependencies[[nonfixed[rhs]]] <- c(
+            dependencies[[nonfixed[rhs]]],
+            lapply(lhss[[1]], \(x) nonfixed[x])
+          )
           partitions <- lhss[[2]]
         }else{
-          dependencies[[rhs]] <- c(dependencies[[rhs]], lhss)
+          dependencies[[nonfixed[rhs]]] <- c(
+            dependencies[[nonfixed[rhs]]],
+            lapply(lhss, \(x) nonfixed[x])
+          )
         }
       }
     }
@@ -212,7 +219,7 @@ dfd <- function(
 
 find_LHSs <- function(
   rhs,
-  lhs_attrs,
+  lhs_indices,
   nodes,
   simple_nodes,
   partitions,
@@ -279,7 +286,7 @@ find_LHSs <- function(
           nodes$category[node] <- inferred_type
         }
         if (nodes$category[node] == 0L) {
-          lhs_set <- lhs_attrs[as.logical(intToBits(node))]
+          lhs_set <- lhs_indices[as.logical(intToBits(node))]
           cp <- compute_partitions(
             rhs,
             lhs_set,
@@ -330,11 +337,11 @@ find_LHSs <- function(
   }
   if (store_cache)
     list(
-      lapply(min_deps, \(md) lhs_attrs[as.logical(intToBits(md))]),
+      lapply(min_deps, \(md) lhs_indices[as.logical(intToBits(md))]),
       partitions
     )
   else
-    lapply(min_deps, \(md) lhs_attrs[as.logical(intToBits(md))])
+    lapply(min_deps, \(md) lhs_indices[as.logical(intToBits(md))])
 }
 
 powerset_nodes <- function(n) {
@@ -546,12 +553,6 @@ generate_next_seeds <- function(max_non_deps, min_deps, lhs_attr_nodes, nodes) {
   remove_pruned_supersets(seeds, min_deps, nodes$bits)
 }
 
-pack_vals <- as.integer(2^(0:30))
-int_from_bits <- function(bits) {
-  l <- as.logical(bits)[1:31]
-  sum(l*pack_vals)
-}
-
 cross_intersection <- function(seeds, max_non_dep, bitsets) {
   new_seeds <- integer()
   for (dep in seeds) {
@@ -587,9 +588,6 @@ minimise_seeds <- function(seeds, bitsets) {
 partition_computer <- function(df, accuracy, cache) {
   threshold <- ceiling(nrow(df)*accuracy)
 
-  attrs_to_partkey <- function(attrs) {
-    sum(2^(match(attrs, names(df)) - 1L))
-  }
   partitions_ui <- list(
     # we could use the partkey directly as an index into a list of
     # pre-allocated length, but this often requires a very large list that is
@@ -598,27 +596,25 @@ partition_computer <- function(df, accuracy, cache) {
     # It would also require the partkey to be representable as an integer,
     # rather than a double, which introduces a tighter constraint on the maximum
     # number of columns df can have (nonfixed attrs instead of just LHS attrs).
-    add_partition = function(attrs, val, partitions) {
-      partitions$set <- c(partitions$set, attrs_to_partkey(attrs))
+    add_partition = function(node, val, partitions) {
+      partitions$set <- c(partitions$set, node)
       partitions$value <- c(partitions$value, list(val))
       partitions
     },
     get_with_index = function(index, partitions) {
       partitions$value[[index]]
     },
-    lookup_partkey = function(attrs, partitions) {
-      index <- attrs_to_partkey(attrs)
-      match(index, partitions$set)
-    },
-    attrs_to_partkey = attrs_to_partkey
+    lookup_node = function(node, partitions) {
+      match(node, partitions$set)
+    }
   )
 
   check_FD_partition <- if (cache)
-    function(attrs, df, partitions)
-      check_FD_partition_stripped(attrs, df, partitions, partitions_ui)
+    function(node, df, partitions)
+      check_FD_partition_stripped(node, df, partitions, partitions_ui)
   else
-    function(attrs, df, partitions)
-      check_FD_partition_nclass(attrs, df, partitions, partitions_ui)
+    function(node, df, partitions)
+      check_FD_partition_nclass(node, df, partitions, partitions_ui)
 
   if (threshold < nrow(df)) {
     check_AD <- if (cache)
@@ -694,29 +690,36 @@ approximate_dependencies <- function(
   check_AD(df, rhs, lhs_set, partitions, threshold, limit)
 }
 
-check_FD_partition_nclass <- function(attrs, df, partitions, partitions_ui) {
+check_FD_partition_nclass <- function(attr_indices, df, partitions, partitions_ui) {
   # This only returns the number |p| of equivalence classes in the partition p,
   # not its contents. This is less demanding on memory than storing stripped
   # partitions, but we cannot efficiently calculate the partition for supersets.
-  index <- partitions_ui$lookup_partkey(attrs, partitions)
-  if (!is.na(index)) {
-    return(list(partitions_ui$get_with_index(index, partitions), partitions))
+  node <- to_node(attr_indices)
+  partkey <- partitions_ui$lookup_node(node, partitions)
+  if (!is.na(partkey)) {
+    return(list(partitions_ui$get_with_index(partkey, partitions), partitions))
   }
-  df_attrs_only <- df[, unlist(attrs), drop = FALSE]
+  df_attrs_only <- df[, attr_indices, drop = FALSE]
   n_remove <- sum(duplicated(df_attrs_only))
-  partitions <- partitions_ui$add_partition(attrs, n_remove, partitions)
+  partitions <- partitions_ui$add_partition(node, n_remove, partitions)
   list(n_remove, partitions)
 }
 
-check_FD_partition_stripped <- function(attrs, df, partitions, partitions_ui) {
-  index <- partitions_ui$lookup_partkey(attrs, partitions)
-  if (!is.na(index)) {
-    sp <- partitions_ui$get_with_index(index, partitions)
+check_FD_partition_stripped <- function(attr_indices, df, partitions, partitions_ui) {
+  attr_nodes <- to_node(attr_indices)
+  node <- sum(attr_nodes)
+  partkey <- partitions_ui$lookup_node(node, partitions)
+  if (!is.na(partkey)) {
+    sp <- partitions_ui$get_with_index(partkey, partitions)
     return(list(sum(lengths(sp)) - length(sp), partitions))
   }
-  attr_indices <- seq_along(attrs)
-  attrs_subsets <- lapply(attr_indices, \(n) attrs[-n])
-  subsets_match <- vapply(attrs_subsets, partitions_ui$lookup_partkey, integer(1L), partitions)
+  subset_nodes <- node - attr_nodes
+  subsets_match <- vapply(
+    subset_nodes,
+    partitions_ui$lookup_node,
+    integer(1L),
+    partitions
+  )
   if (sum(!is.na(subsets_match)) >= 2) {
     indices <- which(!is.na(subsets_match))[1:2]
     sp <- stripped_partition_product(
@@ -727,13 +730,21 @@ check_FD_partition_stripped <- function(attrs, df, partitions, partitions_ui) {
   }else{
     if (sum(!is.na(subsets_match)) == 1) {
       index <- which(!is.na(subsets_match))
-      main_subset <- attrs_subsets[[index]]
-      small_subset <- setdiff(attrs, main_subset)
-      main_partition <- partitions_ui$get_with_index(subsets_match[index], partitions)
-      subres <- check_FD_partition_stripped(small_subset, df, partitions, partitions_ui)
+      small_subset <- attr_indices[[index]]
+      small_subset_node <- attr_nodes[[index]]
+      main_partition <- partitions_ui$get_with_index(
+        subsets_match[index],
+        partitions
+      )
+      subres <- check_FD_partition_stripped(
+        small_subset,
+        df,
+        partitions,
+        partitions_ui
+      )
       partitions <- subres[[2]]
       small_partition <- partitions_ui$get_with_index(
-        partitions_ui$lookup_partkey(small_subset, partitions),
+        partitions_ui$lookup_node(small_subset_node, partitions),
         partitions
       )
       sp <- stripped_partition_product(
@@ -742,20 +753,23 @@ check_FD_partition_stripped <- function(attrs, df, partitions, partitions_ui) {
         nrow(df)
       )
     }else{
-      sp <- fsplit_rows(df, attrs)
+      sp <- fsplit_rows(df, attr_indices)
       sp <- unname(sp[lengths(sp) > 1])
     }
   }
-  partitions <- partitions_ui$add_partition(attrs, sp, partitions)
+  partitions <- partitions_ui$add_partition(node, sp, partitions)
   list(sum(lengths(sp)) - length(sp), partitions)
 }
 
 check_AD_cache <- function(df, rhs, lhs_set, partitions, threshold, limit, partitions_ui) {
   # e(lhs_set -> rhs)
-  ind_lhs <- partitions_ui$lookup_partkey(lhs_set, partitions)
+  lhs_set_node <- to_node(lhs_set)
+  rhs_node <- to_nodes(rhs)
+  ind_lhs <- partitions_ui$lookup_node(lhs_set_node, partitions)
   stopifnot(!is.na(ind_lhs))
   classes_lhs <- partitions_ui$get_with_index(ind_lhs, partitions)
-  ind_union <- partitions_ui$lookup_partkey(union(lhs_set, rhs), partitions)
+  classes_lhs_node <- lhs_set_node + rhs_node
+  ind_union <- partitions_ui$lookup_node(classes_lhs_node, partitions)
   stopifnot(!is.na(ind_union))
   classes_union <- partitions_ui$get_with_index(ind_union, partitions)
   e <- 0L
@@ -818,6 +832,20 @@ fsplit <- function(splitted, splitter) {
   split(splitted, single_splitter, drop = TRUE)
 }
 
-fsplit_rows <- function(df, attrs) {
-  fsplit(seq_len(nrow(df)), df[, unlist(attrs), drop = FALSE])
+fsplit_rows <- function(df, attr_indices) {
+  fsplit(seq_len(nrow(df)), df[, attr_indices, drop = FALSE])
+}
+
+pack_vals <- as.integer(2^(0:30))
+int_from_bits <- function(bits) {
+  l <- as.logical(bits)[1:31]
+  sum(l*pack_vals)
+}
+
+to_node <- function(indices) {
+  as.integer(sum(2^(indices - 1L)))
+}
+
+to_nodes <- function(indices) {
+  as.integer(2^(indices - 1L))
 }
