@@ -93,6 +93,11 @@ dfd <- function(
   report <- reporter(progress, progress_file, new = TRUE)
 
   n_cols <- ncol(df)
+  if (n_cols == 0)
+    return(functional_dependency(
+      stats::setNames(list(), character()),
+      attrs = character()
+    ))
   column_names <- colnames(df)
   duplicates <- which(duplicated(column_names))
   if (length(duplicates) > 0) {
@@ -100,13 +105,9 @@ dfd <- function(
     sorted_dup_names <- dup_names[order(match(dup_names, column_names))]
     stop("duplicate column names: ", toString(sorted_dup_names))
   }
-  if (n_cols == 0)
-    return(functional_dependency(
-      stats::setNames(list(), character()),
-      attrs = character()
-    ))
   if (any(!is.element(exclude, column_names)))
     warning("there are attribute names in exclude not present in df")
+
   valid_determinant_name <- !is.element(column_names, exclude)
   valid_determinant_class <- !vapply(
     df,
@@ -116,6 +117,7 @@ dfd <- function(
   )
   valid_determinant <- valid_determinant_name & valid_determinant_class
   valid_determinant_attrs_prefixing <- column_names[valid_determinant]
+
   # convert all columns to integers, since they're checked for duplicates more
   # quickly when calculating partitions
   df <- report$exp(
@@ -124,28 +126,17 @@ dfd <- function(
     "simplifying data types"
   )
   partitions <- list()
-  dependencies <- stats::setNames(rep(list(list()), ncol(df)), column_names)
+  dependencies <- stats::setNames(rep(list(list()), n_cols), column_names)
   fixed <- character()
-  nonfixed <- column_names
   for (i in seq_along(column_names)) {
     attr <- column_names[i]
     if (all(is.na(df[[attr]])) || all(df[[attr]] == df[[attr]][1])) {
       fixed <- report$op(fixed, c, paste(attr, "is fixed"), attr)
-      nonfixed <- setdiff(nonfixed, attr)
       dependencies[[attr]] <- list(character())
     }
   }
-  if (progress && any(!valid_determinant)) {
-    cat(
-      paste(
-        "attributes not considered as determinants:",
-        toString(column_names[!valid_determinant]),
-        "\n"
-      ),
-      file = progress_file,
-      append = TRUE
-    )
-  }
+  nonfixed <- setdiff(column_names, fixed)
+
   # For nonfixed attributes, all can be dependents, but
   # might not all be valid determinants.
   # Maximum size of determinant set for a dependent is number
@@ -153,7 +144,18 @@ dfd <- function(
   # If there are dependents that aren't valid determinants,
   # this is number of valid determinant attributes. If there
   # aren't, subtract one.
-  valid_determinant_attrs <- intersect(nonfixed, valid_determinant_attrs_prefixing)
+  valid_determinant_attrs <- intersect(
+    nonfixed,
+    valid_determinant_attrs_prefixing
+  )
+  if (length(valid_determinant_attrs) < n_cols) {
+    report$stat(
+      paste(
+        "attributes not considered as determinants:",
+        toString(setdiff(column_names, valid_determinant_attrs))
+      )
+    )
+  }
   valid_determinant_indices <- match(valid_determinant_attrs, nonfixed)
   n_dependent_only <- length(nonfixed) - length(valid_determinant_attrs)
   max_n_lhs_attrs <- length(valid_determinant_attrs) -
@@ -596,6 +598,8 @@ partition_computer <- function(df, accuracy, cache) {
     # It would also require the partkey to be representable as an integer,
     # rather than a double, which introduces a tighter constraint on the maximum
     # number of columns df can have (nonfixed attrs instead of just LHS attrs).
+    # "Nodes" in this UI refer to IDs within the partition: these are different
+    # to those used in find_LHSs and powersets.
     add_partition = function(node, val, partitions) {
       partitions$key <- c(partitions$key, node)
       partitions$value <- c(partitions$value, list(val))
