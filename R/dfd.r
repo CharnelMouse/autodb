@@ -180,7 +180,7 @@ dfd <- function(
       full_cache
     )
     for (rhs in seq_along(nonfixed)) {
-      report$stat(paste("dependent", rhs))
+      report$stat(paste("dependent", nonfixed[rhs]))
       lhs_indices <- setdiff(valid_determinant_indices, rhs)
       n_lhs_attrs <- length(lhs_indices)
       expected_n_lhs_attrs <- max_n_lhs_attrs -
