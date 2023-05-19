@@ -9,6 +9,7 @@ dfd(
   accuracy,
   full_cache = TRUE,
   store_cache = TRUE,
+  skip_bijections = FALSE,
   exclude = character(),
   exclude_class = character(),
   progress = FALSE,
@@ -31,6 +32,13 @@ inefficient for small data frames or small amounts of memory.}
 to use when finding dependencies for other dependents. This allows the
 algorithm to run more quickly by not having to re-calculate information,
 but takes up more memory.}
+
+\item{skip_bijections}{a logical, indicating whether to skip some dependecy
+searches that are made redundant by discovered bijections between
+attributes. This can significantly speed up the search if \code{df}
+contains equivalent attributes early in column order, but results in
+undefined behaviour if \code{accuracy < 1}. See Details for more
+information.}
 
 \item{exclude}{a character vector, containing names of attributes to not
 consider as members of determinant sets. If names are given that aren't
@@ -92,9 +100,25 @@ exhaust the adjacent subsets/supersets to visit when picking the next node
 to visit.
 \item We do not yet keep hashmaps to manage subset/superset relationships,
 as described in Section 3.5 of the original paper.
+\item \code{skip_bijections} allows for additional optimisation for finding
+functional dependencies when there are pairwise-equivalent attributes.
 \item Missing values (NA) are treated as a normal value, with NA = NA being
 true, and x = NA being false for any non-NA value of x.
 }
+
+Skipping bijections allows skipping redundant searches. For example, if the
+search discovers that \code{A -> B} and \code{B -> A}, then only one of those
+attributes is considered for the remainder of the search. Since the search
+time increases exponentially with the number of attributes considered, this
+can significantly speed up search times. At the moment, this is only be done
+for bijections between single attributes, such as \code{A <-> B}; if \code{A
+<-> {B, C}}, nothing is skipped. Whether bijections are skipped doesn't
+affect which functional dependencies are present in the output, but it might
+affect their order.
+
+Skipping bijections for approximate dependencies, i.e. when \code{accuracy < 1},
+should be avoided: it can result in incorrect output, since an approximate
+bijection doesn't imply equivalent approximate dependencies.
 }
 \examples{
 # simple example

@@ -98,6 +98,23 @@ describe("dfd", {
       fn(res_store, res_nostore)
     }
   }
+  terminates_with_and_without_bijection_skip_then <- function(fn, accuracy, ...) {
+    function(df) {
+      res_skip <- withTimeout(
+        dfd(df, accuracy, full_cache = TRUE, store_cache = TRUE, skip_bijections = TRUE, ...),
+        timeout = 5,
+        onTimeout = "silent"
+      )
+      expect_true(!is.null(res_skip))
+      res_noskip <- withTimeout(
+        dfd(df, accuracy, full_cache = TRUE, store_cache = TRUE, skip_bijections = FALSE, ...),
+        timeout = 5,
+        onTimeout = "silent"
+      )
+      expect_true(!is.null(res_noskip))
+      fn(res_skip, res_noskip)
+    }
+  }
 
   it("gives a deterministic result, except for per-dependent dependency order", {
     two_copies <- function(fn) {
@@ -539,6 +556,41 @@ describe("dfd", {
     forall(
       gen_df(20, 5),
       terminates_with_and_without_store_cache_then(expect_equiv_deps, accuracy = 3/4),
+      shrink.limit = Inf
+    )
+  })
+  it("is invariant to whether bijections are skipped, under full accuracy", {
+    df1 <- data.frame(
+      a = c(FALSE, FALSE, TRUE),
+      b = FALSE,
+      c = c(FALSE, TRUE, NA),
+      d = c(FALSE, NA, NA),
+      e = c(FALSE, TRUE, NA)
+    )
+    df2 <- data.frame(
+      a = c(FALSE, TRUE, NA, TRUE, NA),
+      b = c(TRUE, TRUE, TRUE, TRUE, NA),
+      c = c(FALSE, TRUE, NA, NA, NA),
+      d = c(NA, FALSE, TRUE, FALSE, TRUE),
+      e = c(FALSE, FALSE, FALSE, TRUE, TRUE)
+    )
+    df3 <- data.frame(
+      a = c(NA, TRUE, NA),
+      b = c(TRUE, FALSE, TRUE),
+      c = c(NA, NA, FALSE),
+      d = c(NA, NA, TRUE),
+      e = c(FALSE, TRUE, NA)
+    )
+    invariant_to_bijection_skip <- terminates_with_and_without_bijection_skip_then(
+      expect_equiv_deps,
+      accuracy = 1
+    )
+    invariant_to_bijection_skip(df1)
+    invariant_to_bijection_skip(df2)
+    invariant_to_bijection_skip(df3)
+    forall(
+      gen_df(20, 5),
+      invariant_to_bijection_skip,
       shrink.limit = Inf
     )
   })
