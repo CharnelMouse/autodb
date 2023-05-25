@@ -744,7 +744,7 @@ print.database_schema <- function(x, max = 10, ...) {
     "\n"
   ))
   for (n in seq_len(min(n_relations, max))) {
-    cat(paste0("schema ", n, ": ", toString(x$attrs[[n]]), "\n"))
+    cat(paste0("schema ", x$relation_names[n], ": ", toString(x$attrs[[n]]), "\n"))
     keys <- x$keys[[n]]
     n_keys <- length(keys)
     for (k in seq_len(min(n_keys, max))) {
@@ -763,7 +763,11 @@ print.database_schema <- function(x, max = 10, ...) {
     n_relationships <- length(x$relationships)
     for (r in seq_len(n_relationships)) {
       rel <- x$relationships[[r]]
-      cat(paste0(rel[[1]][1], ".", rel[[2]], " -> ", rel[[1]][2], ".", rel[[2]], "\n"))
+      cat(paste0(
+        x$relation_names[rel[[1]][1]], ".", rel[[2]],
+        " -> ",
+        x$relation_names[rel[[1]][2]], ".", rel[[2]], "\n"
+      ))
     }
     if (max < n_relationships)
       cat("... and", n_relationships - max, "other relationships\n")
