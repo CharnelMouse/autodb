@@ -248,7 +248,7 @@ dfd <- function(
           if (is.na(bij_ind))
             bijections <- c(
               bijections,
-              setNames(list(c(lhss[[1]], rhs)), lhss[[1]])
+              stats::setNames(list(c(lhss[[1]], rhs)), lhss[[1]])
             )
           else{
             bijections[[bij_ind]] <- c(
