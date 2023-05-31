@@ -20,8 +20,16 @@ present in \code{attrs}.}
 a \code{functional_dependency} object, containing the list given in
 \code{FDs}, with \code{attrs} stored in an attribute of the same name.
 Functional dependencies are returned with their determinant sets sorted
-according to the attribute order in \code{attrs}.
+according to the attribute order in \code{attrs}. Any duplicates found
+after sorting are removed.
 }
 \description{
-Creates functional dependencies with length-one dependents.
+Creates a set of functional dependencies with length-one dependents.
+}
+\details{
+When several sets of functional dependencies are concatenated, their
+\code{attrs} attributes are merged, so as to preserve all of the original
+attribute orders, if possible. If this is not possible, because the orderings
+disagree, then the returned value of the \code{attrs} attribute is their
+union instead.
 }

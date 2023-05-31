@@ -1,6 +1,12 @@
 #' Functional dependency vectors
 #'
-#' Creates functional dependencies with length-one dependents.
+#' Creates a set of functional dependencies with length-one dependents.
+#'
+#' When several sets of functional dependencies are concatenated, their
+#' \code{attrs} attributes are merged, so as to preserve all of the original
+#' attribute orders, if possible. If this is not possible, because the orderings
+#' disagree, then the returned value of the \code{attrs} attribute is their
+#' union instead.
 #'
 #' @param FDs a list of functional dependencies, in the form of two-elements
 #'   lists: the first element contains character vector of all attributes in the
@@ -13,7 +19,8 @@
 #' @return a \code{functional_dependency} object, containing the list given in
 #'   \code{FDs}, with \code{attrs} stored in an attribute of the same name.
 #'   Functional dependencies are returned with their determinant sets sorted
-#'   according to the attribute order in \code{attrs}.
+#'   according to the attribute order in \code{attrs}. Any duplicates found
+#'   after sorting are removed.
 #' @export
 functional_dependency <- function(FDs, attrs) {
   if (any(lengths(FDs) != 2))
@@ -33,7 +40,11 @@ functional_dependency <- function(FDs, attrs) {
     FDs,
     \(FD) list(FD[[1]][order(match(FD[[1]], attrs))], FD[[2]])
   )
-  structure(sorted_FDs, attrs = attrs, class = c("functional_dependency", "list"))
+  structure(
+    unique(sorted_FDs),
+    attrs = attrs,
+    class = c("functional_dependency", "list")
+  )
 }
 
 #' @export

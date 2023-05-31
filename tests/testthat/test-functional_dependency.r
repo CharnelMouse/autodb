@@ -1,19 +1,22 @@
 library(hedgehog)
 
 describe("functional_dependency", {
-  gen.fd <- gen.sample(letters, 1) |>
-    gen.and_then(\(dependent) {
-      list(
-        gen.subsequence(setdiff(sample(letters), dependent)),
-        dependent
-      )
-    }) |>
-    gen.and_then(\(lst) {
-      c(lst, list(gen.sample(unlist(lst))))
-    }) |>
-    gen.with(\(lst) {
-      functional_dependency(list(lst[1:2]), lst[[3]])
-    })
+  gen.fd <- function(x, from, to) {
+    gen.sample(x, 1) |>
+      gen.and_then(\(dependent) {
+        list(
+          gen.subsequence(setdiff(sample(x), dependent)),
+          dependent
+        )
+      }) |>
+      gen.list(from = from, to = to) |>
+      gen.and_then(\(lst) {
+        c(list(lst), list(gen.sample(unique(unlist(lst)))))
+      }) |>
+      gen.with(\(lst) {
+        functional_dependency(lst[[1]], lst[[2]])
+      })
+  }
   it("expects valid input: FD elements correct lengths, contain characters of valid lengths", {
     expect_error(
       functional_dependency(list(NULL), character()),
@@ -38,13 +41,24 @@ describe("functional_dependency", {
       "^attributes in FDs must be present in attrs$"
     )
   })
+  it("returns a set, i.e. no duplicated FD elements", {
+    forall(
+      gen.fd(letters[1:2], 2, 6),
+      Negate(anyDuplicated) %>>% expect_true
+    )
+  })
   it("orders attributes in each determinant set with respect to order in attrs", {
     detset_attributes_ordered <- function(fds) {
-      for (fd in fds) {
-        expect_false(is.unsorted(match(fd[[1]], fds$attrs)))
-      }
+      matches <- vapply(
+        fds,
+        with_args(`[[`, i = 1L) %>>%
+          with_args(match, table = attr(fds, "attrs")) %>>%
+          (Negate(is.unsorted)),
+        logical(1)
+      )
+      expect_true(all(matches))
     }
-    forall(gen.fd, detset_attributes_ordered, curry = TRUE)
+    forall(gen.fd(letters[1:6], 0, 8), detset_attributes_ordered)
   })
   it("prints", {
     expect_output(
@@ -67,13 +81,21 @@ describe("functional_dependency", {
     concatenate_within_class <- function(...) {
       expect_identical(class(c(...)), class(..1))
     }
-    forall(gen.list(gen.fd, to = 10), concatenate_within_class, curry = TRUE)
+    forall(
+      gen.fd(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
+      concatenate_within_class,
+      curry = TRUE
+    )
   })
   it("concatenates with duplicates removed", {
     concatenate_unique <- function(...) {
       expect_true(!anyDuplicated(c(...)))
     }
-    forall(gen.list(gen.fd, to = 10), concatenate_unique, curry = TRUE)
+    forall(
+      gen.fd(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
+      concatenate_unique,
+      curry = TRUE
+    )
   })
   it("concatenates without losing attributes", {
     concatenate_lossless_for_attributes <- function(...) {
@@ -84,7 +106,7 @@ describe("functional_dependency", {
       }
     }
     forall(
-      gen.list(gen.fd, to = 10),
+      gen.fd(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
       concatenate_lossless_for_attributes,
       curry = TRUE
     )
@@ -126,7 +148,8 @@ describe("functional_dependency", {
     )
 
     forall(
-      gen.list(gen.fd, from = 1, to = 10) |>
+      gen.fd(letters[1:6], 0, 8) |>
+      gen.list(from = 1, to = 10) |>
         gen.and_then(remove_inconsistent),
       concatenate_keeps_attribute_order,
       curry = TRUE
@@ -146,7 +169,7 @@ describe("functional_dependency", {
       }
     }
     forall(
-      gen.list(gen.fd, to = 10),
+      gen.fd(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
       concatenate_lossless_for_FDs,
       curry = TRUE
     )
