@@ -78,6 +78,57 @@ print.functional_dependency <- function(x, ...) {
   }
 }
 
+#' @exportS3Method
+c.functional_dependency <- function(
+  ...
+) {
+  lst <- list(...)
+  joined_dependencies <- unique(Reduce(c, lapply(lst, unclass)))
+
+  # Combining attributes pairwise can't ensure preservation of consistency, so
+  # we only add an attribute to the joined list when it's the next one in all
+  # lists containing it.
+  attrs_list <- lapply(lst, attr, "attrs")
+  pairwise <- outer(
+    attrs_list,
+    attrs_list,
+    Vectorize(\(as1, as2) {
+      one_in_two <- match(as1, as2)
+      two_in_one <- match(as2, as1)
+      !is.unsorted(one_in_two, na.rm = TRUE) &&
+        !is.unsorted(two_in_one, na.rm = TRUE)
+    })
+  )
+  if (!all(pairwise)) {
+    warning(paste(
+      "inconsistent attribute orderings,",
+      "returning attributes in order of listing"
+    ))
+    joined_attrs <- Reduce(union, attrs_list)
+  }else{
+    all_attrs <- unique(unlist(attrs_list))
+    indices <- outer(all_attrs, attrs_list, Vectorize(match))
+    stopifnot(all(apply(indices, 1, \(x) any(!is.na(x)))))
+    joined_attrs <- character()
+    while (any(!is.na(indices))) {
+      maxs <- apply(indices, 1, max, na.rm = TRUE)
+      nxt <- which(maxs == 1)
+      if (length(nxt) == 0L) {
+        warning("inconsistent orderings")
+        joined_attrs <- union(joined_attrs, all_attrs)
+        break
+      }
+      joined_attrs <- c(joined_attrs, all_attrs[[nxt[[1L]]]])
+      indices[, !is.na(indices[nxt[[1L]], ])] <-
+        indices[, !is.na(indices[nxt[[1L]], ])] - 1L
+      indices <- indices[-nxt[[1L]], , drop = FALSE]
+      all_attrs <- all_attrs[-nxt[[1L]]]
+    }
+  }
+
+  functional_dependency(joined_dependencies, joined_attrs)
+}
+
 #' Flatten functional dependency list for normalisation
 #'
 #' @param dependencies a list, containing functional dependencies as returned by
