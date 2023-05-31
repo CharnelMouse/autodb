@@ -72,8 +72,8 @@ print.functional_dependency <- function(x, ...) {
   cat(paste0("\n", length(attr(x, "attrs")), " attributes"))
   if (length(attr(x, "attrs")) > 0)
     cat(paste0(": ", toString(attr(x, "attrs"))))
+  cat("\n")
   if (length(txt) > 0L) {
-    cat("\n")
     cat(txt, sep = "\n")
   }
 }
