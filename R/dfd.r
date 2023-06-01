@@ -277,7 +277,7 @@ dfd <- function(
       nonfixed,
       column_names
     )
-  flatten(list(dependencies = dependencies, attrs = column_names))
+  flatten(dependencies, column_names)
 }
 
 find_LHSs <- function(
@@ -983,4 +983,16 @@ add_deps_implied_by_bijections <- function(
     }
   }
   dependencies
+}
+
+flatten <- function(dependencies, attributes) {
+  result <- list()
+  for (i in seq_along(dependencies)) {
+    rhs <- names(dependencies)[i]
+    result <- c(
+      result,
+      lapply(dependencies[[i]], \(lhs) list(lhs, rhs))
+    )
+  }
+  functional_dependency(result, attributes)
 }

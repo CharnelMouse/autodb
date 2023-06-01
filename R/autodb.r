@@ -1,8 +1,8 @@
 #' Create a normalised database from a data frame
 #'
 #' This is a wrapper function for applying \code{\link{dfd}},
-#' \code{\link{flatten}}, \code{\link{normalise}},
-#' \code{\link{cross_reference}}, and \code{\link{decompose}}, in order.
+#' \code{\link{normalise}}, \code{\link{cross_reference}}, and
+#' \code{\link{decompose}}, in order.
 #'
 #' Since `decompose` only works with functional dependencies, not approximate
 #' dependencies, the accuracy in `dfd` is fixed as 1.

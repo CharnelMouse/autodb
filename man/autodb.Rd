@@ -63,8 +63,8 @@ resulting "database" via Graphviz, with options to exlude some attributes at
 discovery time, or remove discovered dependencies at normalisation time.
 
 This is a wrapper function for applying \code{\link{dfd}},
-\code{\link{flatten}}, \code{\link{normalise}},
-\code{\link{cross_reference}}, and \code{\link{decompose}}, in order.
+\code{\link{normalise}}, \code{\link{cross_reference}}, and
+\code{\link{decompose}}, in order.
 }
 \details{
 Since \code{decompose} only works with functional dependencies, not approximate

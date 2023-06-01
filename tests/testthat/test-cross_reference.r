@@ -220,16 +220,19 @@ describe("cross_reference", {
       })
     returns_itself <- function(relation) {
       nonkey <- setdiff(unlist(relation$attrs), unlist(relation$keys))
-      deps <- flatten(list(
-        dependencies = setNames(
-          lapply(
-            nonkey,
-            \(x) relation$keys[[1]]
+      deps <- functional_dependency(
+        if (length(nonkey) == 0L)
+          list()
+        else
+          unlist(
+            lapply(
+              nonkey,
+              \(x) lapply(relation$keys[[1]], \(k) list(k, x))
+            ),
+            recursive = FALSE
           ),
-          nonkey
-        ),
-        attrs = relation$attrs[[1]]
-      ))
+        relation$attrs[[1]]
+      )
       redo <- cross_reference(normalise(deps), ensure_lossless = TRUE)
       expect_length(redo$attrs, 1)
       expect_identical(redo$attrs[[1]], relation$attrs[[1]])

@@ -139,25 +139,3 @@ c.functional_dependency <- function(
 
   functional_dependency(joined_dependencies, joined_attrs)
 }
-
-#' Flatten functional dependency list for normalisation
-#'
-#' @param dependencies a list, containing functional dependencies as returned by
-#'   \code{\link{dfd}}.
-#'
-#' @return A list of \code{function_dependency} objects, i.e. two-element lists,
-#'   with the dependency's determinants in the first element, and its dependent
-#'   in the second. Attributes are stored, in the original ordering, in the
-#'   \code{attrs} attributes. This is the format required by
-#'   \code{\link{normalise}}.
-flatten <- function(dependencies) {
-  result <- list()
-  for (i in seq_along(dependencies$dependencies)) {
-    rhs <- names(dependencies$dependencies)[i]
-    result <- c(
-      result,
-      lapply(dependencies$dependencies[[i]], \(lhs) list(lhs, rhs))
-    )
-  }
-  functional_dependency(result, dependencies$attrs)
-}

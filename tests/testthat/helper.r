@@ -276,26 +276,36 @@ gen_unnamed_flat_deps <- function(n_attrs, max_dets) {
 }
 
 gen_flat_deps_fixed_names <- function(n, max_dets, len = 9) {
+  if (n == 0L)
+    return(gen.impure(functional_dependency(list(), character())))
   attrs <- LETTERS[seq.int(n)]
   generate(for (unnamed_deps in gen_unnamed_flat_deps(length(attrs), max_dets)) {
-    unindexed_deps <- lapply(unnamed_deps, \(ud) lapply(ud, \(cs) attrs[cs]))
-    names(unindexed_deps) <- attrs
-    flatten(list(
-      dependencies = unindexed_deps,
-      attrs = attrs
-    ))
+    deps <- unlist(
+      Map(
+        \(ud, a) lapply(ud, \(cs) list(attrs[cs], a)),
+        unnamed_deps,
+        attrs
+      ),
+      recursive = FALSE
+    )
+    functional_dependency(deps, attrs)
   })
 }
 
 gen_flat_deps <- function(n, max_dets, len = 9) {
+  if (n == 0L)
+    return(gen.impure(functional_dependency(list(), character())))
   generate(for (attrs in gen_attr_names(n, len)) {
     generate(for (unnamed_deps in gen_unnamed_flat_deps(length(attrs), max_dets)) {
-      unindexed_deps <- lapply(unnamed_deps, \(ud) lapply(ud, \(cs) attrs[cs]))
-      names(unindexed_deps) <- attrs
-      flatten(list(
-        dependencies = unindexed_deps,
-        attrs = attrs
-      ))
+      deps <- unlist(
+        Map(
+          \(ud, a) lapply(ud, \(cs) list(attrs[cs], a)),
+          unnamed_deps,
+          attrs
+        ),
+        recursive = FALSE
+      )
+      functional_dependency(deps, attrs)
     })
   })
 }

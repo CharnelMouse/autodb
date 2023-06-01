@@ -14,7 +14,7 @@ normalise(
 }
 \arguments{
 \item{dependencies}{a list of functional dependencies, as given by
-\code{\link{flatten}}: each dependency is a list, containing one character
+\code{\link{dfd}}: each dependency is a list, containing one character
 vector for the determinant set, and one unit-length character vector for
 the dependent.}
 

@@ -383,19 +383,24 @@ describe("normalise", {
       expect_nofds(flat_deps$dependencies[!fds_reproduced])
     }
 
-    deps <- list(
-      dependencies = list(
-        A = list(c("C", "G")),
-        B = list("E"),
-        C = list("F", c("A", "G")),
-        D = list("F"),
-        E = list("B", c("F", "G")),
-        F = list(c("C", "D"), c("D", "G"), c("C", "E")),
-        G = list("E", c("A", "C"))
+    deps <- functional_dependency(
+      list(
+        list(c("C", "G"), "A"),
+        list("E", "B"),
+        list("F", "C"),
+        list(c("A", "G"), "C"),
+        list("F", "D"),
+        list("B", "E"),
+        list(c("F", "G"), "E"),
+        list(c("C", "D"), "F"),
+        list(c("D", "G"), "F"),
+        list(c("C", "E"), "F"),
+        list("E", "G"),
+        list(c("A", "C"), "G")
       ),
-      attrs = c("A", "B", "C", "D", "E", "F", "G")
+      c("A", "B", "C", "D", "E", "F", "G")
     )
-    reproduces_fds(flatten(deps))
+    reproduces_fds(deps)
 
     forall(
       gen_flat_deps_fixed_names(7, 20),
