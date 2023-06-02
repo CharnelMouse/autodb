@@ -10,6 +10,7 @@ Improvements:
 * Adjusted `normalise` to prefer to remove dependencies with dependents and determinant sets later in table order, and with larger dependent sets. This brings it more in line with similar decisions made in other package functions.
 * Simplified some internals of `dfd` to improve computation time.
 * Added a `skip_bijections` option to `dfd`, to speed up functional dependency searches where there are pairwise-equivalent attributes present.
+* Added an option to use Tane instead of DFD for functional dependency search.
 
 Fixes:
 
