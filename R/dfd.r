@@ -441,8 +441,7 @@ find_LHSs_dfd <- function(
       max_non_deps <- res[[5]]
       node <- res[[1]]
     }
-    new_seeds <- generate_next_seeds(max_non_deps, min_deps, simple_nodes, nodes)
-    seeds <- new_seeds
+    seeds <- generate_next_seeds(max_non_deps, min_deps, simple_nodes, nodes)
   }
   if (store_cache)
     list(
@@ -515,8 +514,7 @@ find_LHSs_tane <- function(
         nodes$category[[node]] <- -3L
       }
     }
-    new_seeds <- generate_next_seeds_tane(seeds, nodes, min_deps)
-    seeds <- new_seeds
+    seeds <- generate_next_seeds_tane(seeds, nodes, min_deps)
   }
   if (store_cache)
     list(
