@@ -7,6 +7,7 @@
 dfd(
   df,
   accuracy,
+  method = c("dfd", "tane"),
   full_cache = TRUE,
   store_cache = TRUE,
   skip_bijections = FALSE,
@@ -21,6 +22,10 @@ dfd(
 
 \item{accuracy}{a numeric in (0, 1]: the accuracy threshold required in order
 to conclude a dependency.}
+
+\item{method}{a character, indicating which search algorithm to use. The two
+available choices are DFD and Tane, depth-first and breadth-first searches
+on the determinant powerset.}
 
 \item{full_cache}{a logical, indicating whether to store information about
 how sets of attributes group the relation records (stripped partitions).

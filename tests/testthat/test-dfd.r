@@ -601,3 +601,25 @@ describe("dfd", {
     )
   })
 })
+
+describe("tane", {
+  expect_equiv_deps <- function(deps1, deps2) {
+    expect_setequal(attr(deps1, "attrs"), attr(deps2, "attrs"))
+    expect_setequal(
+      deps1,
+      functional_dependency(deps2, attr(deps1, "attrs"))
+    )
+  }
+  it("gives the same results as dfd under full accuracy", {
+    forall(
+      gen_df(4, 6),
+      \(df) {
+        res1 <- withTimeout(dfd(df, 1), timeout = 5, onTimeout = "silent")
+        expect_true(!is.null(res1))
+        res2 <- withTimeout(dfd(df, 1, method = "tane"), timeout = 5, onTimeout = "silent")
+        expect_true(!is.null(res2))
+        expect_equiv_deps(res1, res2)
+      }
+    )
+  })
+})
