@@ -124,6 +124,12 @@ dfd <- function(
     tane = find_LHSs_tane,
     stop("unrecognised method")
   )
+  use_visited <- switch(
+    method,
+    dfd = TRUE,
+    tane = FALSE,
+    stop("unrecognised method")
+  )
 
   if (skip_bijections && accuracy < 1)
     warning("skipping bijections when accuracy < 1 can result in incorrect output")
@@ -211,7 +217,8 @@ dfd <- function(
     powerset <- report$op(
       max_n_lhs_attrs,
       powerset_nodes,
-      "constructing powerset"
+      "constructing powerset",
+      use_visited
     )
     compute_partitions <- partition_computer(
       unname(df[, nonfixed, drop = FALSE]),
@@ -507,7 +514,6 @@ find_LHSs_tane <- function(
       }else{
         nodes$category[[node]] <- -3L
       }
-      nodes$visited[node] <- TRUE
     }
     new_seeds <- generate_next_seeds_tane(seeds, nodes, min_deps)
     seeds <- new_seeds
@@ -525,22 +531,29 @@ find_LHSs_tane <- function(
     )
 }
 
-powerset_nodes <- function(n) {
+powerset_nodes <- function(n, use_visited) {
   if (n == 0)
-    return(list(
-      bits = logical(),
-      children = list(),
-      parents = list(),
-      category = integer(),
-      visited = logical()
-    ))
+    return(c(
+      list(
+        bits = logical(),
+        children = list(),
+        parents = list(),
+        category = integer()
+      ),
+      if (use_visited)
+        list(visited = logical())
+    )
+    )
   if (n == 1)
-    return(list(
-      bits = list(TRUE),
-      children = list(integer()),
-      parents = list(integer()),
-      category = 0L,
-      visited = FALSE
+    return(c(
+      list(
+        bits = list(TRUE),
+        children = list(integer()),
+        parents = list(integer()),
+        category = 0L
+      ),
+      if (use_visited)
+        list(visited = FALSE)
     ))
   n_nonempty_subsets <- 2^n - 1
   node_bits <- lapply(seq_len(n_nonempty_subsets), \(i) as.logical(intToBits(i))[1:n])
@@ -552,12 +565,15 @@ powerset_nodes <- function(n) {
     parents[[x]] <- c(parents[[x]], ys)
     children[ys] <- lapply(children[ys], c, x)
   }
-  list(
-    bits = node_bits,
-    children = children,
-    parents = parents,
-    category = rep(0L, n_nonempty_subsets),
-    visited = rep(FALSE, n_nonempty_subsets)
+  c(
+    list(
+      bits = node_bits,
+      children = children,
+      parents = parents,
+      category = rep(0L, n_nonempty_subsets)
+    ),
+    if (use_visited)
+      list(visited = rep(FALSE, n_nonempty_subsets))
   )
 }
 
