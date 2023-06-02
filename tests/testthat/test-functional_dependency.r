@@ -23,16 +23,22 @@ describe("functional_dependency", {
       "^FDs elements must have length two$"
     )
     expect_error(
-      functional_dependency(list(list(integer(), "a")), character()),
-      "^FDs determinant sets must be characters$"
+      functional_dependency(list(list(integer(), "a")), "a"),
+      "^FD determinant sets must be characters$"
     )
     expect_error(
-      functional_dependency(list(list(character(), 1L)), character()),
+      functional_dependency(list(list(character(), 1L)), "1"),
       "^FDs dependents must be length-one characters$"
     )
     expect_error(
       functional_dependency(list(list(character(), character())), character()),
       "^FDs dependents must be length-one characters$"
+    )
+  })
+  it("expects valid input: no duplicate determinants", {
+    expect_error(
+      functional_dependency(list(list(c("a", "a"), "b")), c("a", "b")),
+      "^attributes in determinant sets must be unique$"
     )
   })
   it("expects valid input: all attributes given in attrs", {

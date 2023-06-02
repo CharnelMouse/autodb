@@ -27,7 +27,9 @@ functional_dependency <- function(FDs, attrs) {
     stop("FDs elements must have length two")
   det_sets <- lapply(FDs, `[[`, 1L)
   if (any(vapply(det_sets, Negate(is.character), logical(1))))
-    stop("FDs determinant sets must be characters")
+    stop("FD determinant sets must be characters")
+  if (any(!vapply(det_sets, Negate(anyDuplicated), logical(1))))
+    stop("attributes in determinant sets must be unique")
   deps <- lapply(FDs, `[[`, 2L)
   if (
     any(vapply(deps, Negate(is.character), logical(1))) ||
