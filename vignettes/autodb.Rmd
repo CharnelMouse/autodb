@@ -100,12 +100,12 @@ We can see that `ChickWeight` was split into two relations, with a weight for ea
 
 `gv` also has methods for `data.frame`, and for `database_schema`, which is introduced later.
 
-## Finding functional dependencies with DFD
+## Finding functional dependencies
 
-Having looked at the final result first, we now look at the individual steps. The first step is to find the (non-trivial and minimal) dependencies present in the given data.frame. There are various ways to do this; the package uses DFD, a depth-first search algorithm. We run this using the `dfd` function, setting `progress` to `TRUE` to see the steps taken:
+Having looked at the final result first, we now look at the individual steps. The first step is to find the (non-trivial and minimal) dependencies present in the given data.frame. There are various ways to do this; by default, the package uses DFD, a depth-first search algorithm. We run this using the `search` function, setting `progress` to `TRUE` to see the steps taken:
 
 ```{r}
-deps <- dfd(ChickWeight, accuracy = 1, progress = TRUE)
+deps <- search(ChickWeight, accuracy = 1, progress = TRUE)
 ```
 
 The `accuracy` argument expects a number between zero and one, determining what proportion of a data frame's records need to satisfy a given dependency for the algorithm to consider it valid. Setting `accuracy` to one, as done here, limits us to exact dependencies. We'll look at other values later, in the section on approximate dependencies.
@@ -157,17 +157,17 @@ Oops! The DFD algorithm found some functional dependencies where the count could
 
 There are two approaches we can take to eliminate these spurious dependencies: not letting them be detected in the first place, and removing them before using `normalise`.
 
-To stop them being detected, we can put constraints on what is discovered by `dfd`: we can ask for certain attributes to not be considered as determinants, or we can exclude attributes that inherit from certain classes. In this example, we could exclude `Freq` from being considered:
+To stop them being detected, we can put constraints on what is discovered by `search`: we can ask for certain attributes to not be considered as determinants, or we can exclude attributes that inherit from certain classes. In this example, we could exclude `Freq` from being considered:
 
 ```{r}
-titanic_deps_freqonly <- dfd(as.data.frame(Titanic), 1, exclude = "Freq")
+titanic_deps_freqonly <- search(as.data.frame(Titanic), 1, exclude = "Freq")
 titanic_deps_freqonly
 ```
 
 Alternatively, we could exclude all attributes that inherit from "numeric":
 
 ```{r}
-identical(titanic_deps_freqonly, dfd(as.data.frame(Titanic), 1, exclude_class = "numeric"))
+identical(titanic_deps_freqonly, search(as.data.frame(Titanic), 1, exclude_class = "numeric"))
 ```
 
 These can both be used as arguments to `autodb` too:
@@ -181,7 +181,7 @@ Generally, excluding numeric attributes as determinants is often useful, because
 Alternatively, we could remove unwanted dependencies before using `decompose`. Here are the found dependencies, if we don't exclude anything:
 
 ```{r}
-titanic_deps <- dfd(as.data.frame(Titanic), 1)
+titanic_deps <- search(as.data.frame(Titanic), 1)
 titanic_deps
 ```
 
@@ -248,7 +248,7 @@ This is the data set for a meta-analysis, looking at the effectiveness of "nudge
 Getting full dependency information for this relation can take a long time, so here we search for a reduced set, not considering numeric or sample size attributes as determinants:
 
 ```{r nudge_database}
-nudge_deps <- dfd(
+nudge_deps <- search(
   nudge,
   accuracy = 1,
   exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
@@ -330,7 +330,7 @@ Larger datasets can often have entry errors, without an easy way to remove or de
 Suppose that we normalise `nudge` again, without any manual dependency removal, but allowing approximate dependencies. We could cheat, knowing that the questionable data example found above showed there to be two questionable records: one for a duplicated publication ID, and one for a duplicated reference. Since `nudge` has `r nrow(nudge)` records, we can get rid of the resulting questionable dependencies by setting the accuracy to allow two discrepant records.
 
 ```{r nudge_approximate_cheat}
-nudge_approx_cheat_database_schema <- dfd(
+nudge_approx_cheat_database_schema <- search(
   nudge,
   accuracy = 1 - 2/nrow(nudge),
   exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
@@ -350,7 +350,7 @@ Compare this to the database schema we arrived at manually:
 Lowering the accuracy results in more dependencies being found, and so in more relations. The number of relations can get very large. For example, suppose we instead set the accuracy to `0.99`, returning any approximate dependencies that hold in at least `r ceiling(nrow(nudge)*0.99)` records.
 
 ```{r nudge_approximate}
-nudge_approx_database_schema <- dfd(
+nudge_approx_database_schema <- search(
   nudge,
   accuracy = 0.99,
   exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),

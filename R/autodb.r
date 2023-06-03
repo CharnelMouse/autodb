@@ -1,11 +1,11 @@
 #' Create a normalised database from a data frame
 #'
-#' This is a wrapper function for applying \code{\link{dfd}},
+#' This is a wrapper function for applying \code{\link{search}},
 #' \code{\link{normalise}}, \code{\link{cross_reference}}, and
 #' \code{\link{decompose}}, in order.
 #'
 #' Since `decompose` only works with functional dependencies, not approximate
-#' dependencies, the accuracy in `dfd` is fixed as 1.
+#' dependencies, the accuracy in `search` is fixed as 1.
 #'
 #' @param df a data.frame, containing the data to be normalised.
 #' @param name a scalar character, giving the name of the database. This name
@@ -24,12 +24,12 @@
 #'   relation name, it will be changed, with a warning, to ensure that all
 #'   relations have a unique name.
 #' @param progress a logical, for whether to display progress to the user during
-#'   dependency search in \code{\link{dfd}} and normalisation in
+#'   dependency search in \code{\link{search}} and normalisation in
 #'   \code{\link{normalise}}.
 #' @param progress_file a scalar character or a connection. If \code{progress}
 #'   is non-zero, determines where the progress is written to, in the same way
 #'   as the \code{file} argument for \code{\link[base]{cat}}.
-#' @param ... further arguments passed on to \code{\link{dfd}}.
+#' @param ... further arguments passed on to \code{\link{search}}.
 #'
 #' @return A database, represented by a list of three elements. See
 #'   \code{\link{decompose}} for details.
@@ -49,7 +49,7 @@ autodb <- function(
 ) {
   report <- reporter(progress, progress_file)
 
-  dfd(df, 1, progress = progress, progress_file = "", ...) |>
+  search(df, 1, progress = progress, progress_file = "", ...) |>
     report$op(normalise, "normalising", remove_avoidable, constants_name) |>
     report$op(cross_reference, "cross-referencing", ensure_lossless) |>
     report$op(decompose, "decomposing", df = df, name)

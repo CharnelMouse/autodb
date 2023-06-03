@@ -4,7 +4,7 @@
 library(R.utils)
 library(hedgehog)
 
-describe("dfd", {
+describe("search", {
   expect_equiv_deps <- function(deps1, deps2) {
     expect_setequal(attr(deps1, "attrs"), attr(deps2, "attrs"))
     expect_setequal(
@@ -50,16 +50,16 @@ describe("dfd", {
   }
   terminates_then <- function(fn, accuracy, ...) {
     function(df) {
-      res <- withTimeout(dfd(df, accuracy, ...), timeout = 5, onTimeout = "silent")
+      res <- withTimeout(search(df, accuracy, ...), timeout = 5, onTimeout = "silent")
       expect_true(!is.null(res))
       fn(res)
     }
   }
   both_terminate_then <- function(fn, accuracy, ...) {
     function(df1, df2) {
-      res1 <- withTimeout(dfd(df1, accuracy, ...), timeout = 5, onTimeout = "silent")
+      res1 <- withTimeout(search(df1, accuracy, ...), timeout = 5, onTimeout = "silent")
       expect_true(!is.null(res1))
-      res2 <- withTimeout(dfd(df2, accuracy, ...), timeout = 5, onTimeout = "silent")
+      res2 <- withTimeout(search(df2, accuracy, ...), timeout = 5, onTimeout = "silent")
       expect_true(!is.null(res2))
       fn(res1, res2)
     }
@@ -67,13 +67,13 @@ describe("dfd", {
   terminates_with_and_without_full_cache_then <- function(fn, accuracy, ...) {
     function(df) {
       res_cache <- withTimeout(
-        dfd(df, accuracy, full_cache = TRUE, ...),
+        search(df, accuracy, full_cache = TRUE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
       expect_true(!is.null(res_cache))
       res_nocache <- withTimeout(
-        dfd(df, accuracy, full_cache = FALSE, ...),
+        search(df, accuracy, full_cache = FALSE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
@@ -84,13 +84,13 @@ describe("dfd", {
   terminates_with_and_without_store_cache_then <- function(fn, accuracy, ...) {
     function(df) {
       res_store <- withTimeout(
-        dfd(df, accuracy, full_cache = TRUE, store_cache = TRUE, ...),
+        search(df, accuracy, full_cache = TRUE, store_cache = TRUE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
       expect_true(!is.null(res_store))
       res_nostore <- withTimeout(
-        dfd(df, accuracy, full_cache = TRUE, store_cache = FALSE, ...),
+        search(df, accuracy, full_cache = TRUE, store_cache = FALSE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
@@ -101,13 +101,13 @@ describe("dfd", {
   terminates_with_and_without_bijection_skip_then <- function(fn, accuracy, ...) {
     function(df) {
       res_skip <- withTimeout(
-        dfd(df, accuracy, full_cache = TRUE, store_cache = TRUE, skip_bijections = TRUE, ...),
+        search(df, accuracy, full_cache = TRUE, store_cache = TRUE, skip_bijections = TRUE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
       expect_true(!is.null(res_skip))
       res_noskip <- withTimeout(
-        dfd(df, accuracy, full_cache = TRUE, store_cache = TRUE, skip_bijections = FALSE, ...),
+        search(df, accuracy, full_cache = TRUE, store_cache = TRUE, skip_bijections = FALSE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
@@ -284,9 +284,9 @@ describe("dfd", {
     }
     both_bounds_terminate_then <- function(fn, ...) {
       function(df, low, high) {
-        res1 <- withTimeout(dfd(df, low, ...), timeout = 5, onTimeout = "silent")
+        res1 <- withTimeout(search(df, low, ...), timeout = 5, onTimeout = "silent")
         expect_true(!is.null(res1))
-        res2 <- withTimeout(dfd(df, high, ...), timeout = 5, onTimeout = "silent")
+        res2 <- withTimeout(search(df, high, ...), timeout = 5, onTimeout = "silent")
         expect_true(!is.null(res2))
         fn(res1, res2)
       }
@@ -313,7 +313,7 @@ describe("dfd", {
       curry = TRUE
     )
   })
-  it("dfd -> change attribute names is equivalent to change names -> dfd", {
+  it("search -> change attribute names is equivalent to change names -> search", {
     gen_df_and_name_change <- function(nrow, ncol, remove_dup_rows = FALSE) {
       gen_df(nrow, ncol, minrow = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.sample(LETTERS, ncol(df)))) |>
@@ -345,7 +345,7 @@ describe("dfd", {
       )
     )
     stopifnot(df[1, "time"] != df[2, "time"])
-    deps <- dfd(df, 1)
+    deps <- search(df, 1)
     expect_length(Filter(\(fd) fd[[2]] == "time", deps), 0L)
   })
   it("doesn't have an excluded attribute in any determinant sets", {
@@ -356,7 +356,7 @@ describe("dfd", {
     terminates_with_exclusion_then <- function(fn, accuracy, ...) {
       function(df, attr) {
         deps <- withTimeout(
-          dfd(df, accuracy, exclude = attr, ...),
+          search(df, accuracy, exclude = attr, ...),
           timeout = 5,
           onTimeout = "silent"
         )
@@ -385,13 +385,13 @@ describe("dfd", {
       function(df) {
         attrs_with_class <- names(df)[vapply(df, inherits, logical(1), class)]
         deps1 <- withTimeout(
-          dfd(df, accuracy, exclude = attrs_with_class, ...),
+          search(df, accuracy, exclude = attrs_with_class, ...),
           timeout = 5,
           onTimeout = "silent"
         )
         expect_true(!is.null(deps1))
         deps2 <- withTimeout(
-          dfd(df, accuracy, exclude_class = class, ...),
+          search(df, accuracy, exclude_class = class, ...),
           timeout = 5,
           onTimeout = "silent"
         )
@@ -410,7 +410,7 @@ describe("dfd", {
   })
   it("gives dependencies for unique attributes (in case don't want them as key)", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), C = c(1, 2, 2))
-    deps <- dfd(df, 1)
+    deps <- search(df, 1)
     A_deps <- vapply(deps, \(fd) fd[[2]] == "A", logical(1))
     A_detsets <- lapply(deps[A_deps], `[[`, 1)
     expect_identical(A_detsets, list(c("B", "C")))
@@ -438,7 +438,7 @@ describe("dfd", {
         'HI', 'HI', 'MA', 'MA', 'TX'
       )
     )
-    deps <- dfd(df, 1)
+    deps <- search(df, 1)
     expected_deps <- functional_dependency(
       list(
         list(c('player_name', 'jersey_num'), "team"),
@@ -464,7 +464,7 @@ describe("dfd", {
       state = c("MA", "IL", "FL", "TX", "HI", "TX"),
       roster_size = c(20L, 21L, 20L, 20L, 19L, 21L)
     )
-    deps <- dfd(df, 1)
+    deps <- search(df, 1)
     expected_deps <- functional_dependency(
       list(
         list("city", "team"),
@@ -497,7 +497,7 @@ describe("dfd", {
       Genre_Name = rep(c("Tutorial", "Popular science"), each = 2),
       Publisher_ID = rep(1:2, each = 2)
     )
-    deps <- dfd(df, 1)
+    deps <- search(df, 1)
     expected_deps <- functional_dependency(
       list(
         list("Title", "Author"),
@@ -526,14 +526,14 @@ describe("dfd", {
   it("correctly handles attributes with non-df-standard names", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
       stats::setNames(c("A 1", "B 2", "C 3"))
-    deps <- dfd(df, 1)
+    deps <- search(df, 1)
     A_1_deps <- vapply(deps, \(fd) fd[[2]] == "A 1", logical(1))
     A_1_detsets <- lapply(deps[A_1_deps], `[[`, 1L)
     expect_identical(A_1_detsets, list(c("B 2", "C 3")))
   })
   it("expects attribute names to be unique", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), A = c(1, 2, 2), check.names = FALSE)
-    expect_error(dfd(df, 1), "^duplicate column names: A$")
+    expect_error(search(df, 1), "^duplicate column names: A$")
   })
   it("gets the same results with and without storing partitions", {
     forall(
@@ -600,23 +600,13 @@ describe("dfd", {
       terminates_then(is_valid_minimal_functional_dependency, 1)
     )
   })
-})
-
-describe("tane", {
-  expect_equiv_deps <- function(deps1, deps2) {
-    expect_setequal(attr(deps1, "attrs"), attr(deps2, "attrs"))
-    expect_setequal(
-      deps1,
-      functional_dependency(deps2, attr(deps1, "attrs"))
-    )
-  }
-  it("gives the same results as dfd under full accuracy", {
+  it("gives the same results with each method under full accuracy", {
     forall(
       gen_df(4, 6),
       \(df) {
-        res1 <- withTimeout(dfd(df, 1), timeout = 5, onTimeout = "silent")
+        res1 <- withTimeout(search(df, 1, method = "dfd"), timeout = 5, onTimeout = "silent")
         expect_true(!is.null(res1))
-        res2 <- withTimeout(dfd(df, 1, method = "tane"), timeout = 5, onTimeout = "silent")
+        res2 <- withTimeout(search(df, 1, method = "tane"), timeout = 5, onTimeout = "silent")
         expect_true(!is.null(res2))
         expect_equiv_deps(res1, res2)
       }

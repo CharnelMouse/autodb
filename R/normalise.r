@@ -19,7 +19,7 @@
 #' Relation names are adjusted for uniqueness after synthesis.
 #'
 #' @param dependencies a list of functional dependencies, as given by
-#'   \code{\link{dfd}}: each dependency is a list, containing one character
+#'   \code{\link{search}}: each dependency is a list, containing one character
 #'   vector for the determinant set, and one unit-length character vector for
 #'   the dependent.
 #' @inheritParams autodb

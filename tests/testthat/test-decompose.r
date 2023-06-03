@@ -10,7 +10,7 @@ describe("decompose", {
       gen_df(6, 7),
       dup %>>%
         (onRight(
-          with_args(dfd, accuracy = 1) %>>%
+          with_args(search, accuracy = 1) %>>%
             normalise %>>%
             cross_reference
         )) %>>%
@@ -173,7 +173,7 @@ describe("decompose", {
       df2
     }
     gen_fd_reduction_for_df <- function(df) {
-      true_fds <- dfd(df, 1)
+      true_fds <- search(df, 1)
       nonempty_detsets <- which(vapply(
         true_fds,
         \(fd) length(fd[[1]]) > 0,
@@ -194,7 +194,7 @@ describe("decompose", {
     expect_decompose_error <- function(df, reduced_fd, removed_det) {
       if (nrow(df) <= 1)
         discard()
-      flat_deps <- dfd(df, 1)
+      flat_deps <- search(df, 1)
       reduced_index <- match(list(reduced_fd), flat_deps)
       reduced_deps <- flat_deps
       reduced_deps[[reduced_index]][[1]] <-
