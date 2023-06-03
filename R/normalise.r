@@ -46,7 +46,7 @@
 #'
 #' Removal of avoidable attributes: Ling T., Tompa F. W., Kameda T. (1981) An
 #' improved third normal form for relational databases. *ACM Trans. Database
-#' Syst.* **6, 2**, 329--346.
+#' Syst.*, **6, 2**, 329--346.
 #' @export
 normalise <- function(
   dependencies,

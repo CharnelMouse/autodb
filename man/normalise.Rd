@@ -80,5 +80,5 @@ form relations from functional dependencies. \emph{ACM Trans. Database Syst.},
 
 Removal of avoidable attributes: Ling T., Tompa F. W., Kameda T. (1981) An
 improved third normal form for relational databases. \emph{ACM Trans. Database
-Syst.} \strong{6, 2}, 329--346.
+Syst.}, \strong{6, 2}, 329--346.
 }

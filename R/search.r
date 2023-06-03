@@ -94,11 +94,16 @@
 #'   for that dependent attribute. \code{attrs} is the attribute names of
 #'   \code{df}, in order. This is kept to serve as a default priority order for
 #'   the attributes during normalisation.
+#' @encoding UTF-8
 #' @references
 #' Abedjan Z., Schulze P., Naumann F. (2014) DFD: efficient functional
 #' dependency discovery. *Proceedings of the 23rd ACM International Conference
 #' on Conference on Information and Knowledge Management (CIKM '14). New York,
 #' U.S.A.*, 949--958.
+#'
+#' Huhtala Y., Kärkkäinen J., Porkka P., Toivonen H. (1999) Tane: An Efficient
+#' Algorithm for Discovering Functional and Approximate Dependencies.
+#' *Comput. J.*, **42, 2**, 100--111.
 #' @examples
 #' # simple example
 #' search(ChickWeight, 1)
