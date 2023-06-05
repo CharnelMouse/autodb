@@ -318,7 +318,7 @@ describe("normalise", {
     }
 
     still_lossless_with_less_or_same_attributes <- function(df) {
-      flat_deps <- search(df, 1)
+      flat_deps <- discover(df, 1)
       schema_avoid_lossless <- cross_reference(normalise(
         flat_deps,
         remove_avoidable = TRUE

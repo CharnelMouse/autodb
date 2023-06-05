@@ -39,14 +39,14 @@ relation name, it will be changed, with a warning, to ensure that all
 relations have a unique name.}
 
 \item{progress}{a logical, for whether to display progress to the user during
-dependency search in \code{\link{search}} and normalisation in
+dependency search in \code{\link{discover}} and normalisation in
 \code{\link{normalise}}.}
 
 \item{progress_file}{a scalar character or a connection. If \code{progress}
 is non-zero, determines where the progress is written to, in the same way
 as the \code{file} argument for \code{\link[base]{cat}}.}
 
-\item{...}{further arguments passed on to \code{\link{search}}.}
+\item{...}{further arguments passed on to \code{\link{discover}}.}
 }
 \value{
 A database, represented by a list of three elements. See
@@ -62,13 +62,13 @@ approximate dependencies, normalisation based on those, and plotting of the
 resulting "database" via Graphviz, with options to exlude some attributes at
 discovery time, or remove discovered dependencies at normalisation time.
 
-This is a wrapper function for applying \code{\link{search}},
+This is a wrapper function for applying \code{\link{discover}},
 \code{\link{normalise}}, \code{\link{cross_reference}}, and
 \code{\link{decompose}}, in order.
 }
 \details{
 Since \code{decompose} only works with functional dependencies, not approximate
-dependencies, the accuracy in \code{search} is fixed as 1.
+dependencies, the accuracy in \code{discover} is fixed as 1.
 }
 \examples{
 # simple example

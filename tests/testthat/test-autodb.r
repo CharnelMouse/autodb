@@ -10,10 +10,10 @@ describe("autodb", {
       )
     )
   })
-  it("is the same as search >> normalise >> cross_reference >> decompose", {
+  it("is the same as discover >> normalise >> cross_reference >> decompose", {
     df <- data.frame(a = 1:4, b = 1:2)
     database <- autodb(df)
-    database2 <- search(df, 1) |>
+    database2 <- discover(df, 1) |>
       normalise() |>
       cross_reference() |>
       decompose(df = df)
@@ -26,7 +26,7 @@ describe("autodb", {
         autodb,
         dup %>>%
           onRight(
-            with_args(search, accuracy = 1) %>>%
+            with_args(discover, accuracy = 1) %>>%
               normalise %>>%
               cross_reference
           ) %>>%

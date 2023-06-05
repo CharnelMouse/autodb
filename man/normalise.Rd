@@ -14,7 +14,7 @@ normalise(
 }
 \arguments{
 \item{dependencies}{a list of functional dependencies, as given by
-\code{\link{search}}: each dependency is a list, containing one character
+\code{\link{discover}}: each dependency is a list, containing one character
 vector for the determinant set, and one unit-length character vector for
 the dependent.}
 
@@ -29,7 +29,7 @@ relation name, it will be changed, with a warning, to ensure that all
 relations have a unique name.}
 
 \item{progress}{a logical, for whether to display progress to the user during
-dependency search in \code{\link{search}} and normalisation in
+dependency search in \code{\link{discover}} and normalisation in
 \code{\link{normalise}}.}
 
 \item{progress_file}{a scalar character or a connection. If \code{progress}

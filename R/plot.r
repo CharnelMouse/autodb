@@ -61,7 +61,7 @@
 #' cat(txt_db)
 #' DiagrammeR::grViz(txt_db)
 #' # simple database_scheme
-#' scheme <- cross_reference(normalise(search(ChickWeight, 1)))
+#' scheme <- cross_reference(normalise(discover(ChickWeight, 1)))
 #' txt_scheme <- gv(scheme)
 #' cat(txt_scheme)
 #' DiagrammeR::grViz(txt_scheme)

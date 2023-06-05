@@ -106,17 +106,17 @@
 #' *Comput. J.*, **42, 2**, 100--111.
 #' @examples
 #' # simple example
-#' search(ChickWeight, 1)
+#' discover(ChickWeight, 1)
 #'
 #' # example with spurious dependencies
-#' search(CO2, 1)
+#' discover(CO2, 1)
 #' # exclude attributes that can't be determinants.
 #' # in this case, the numeric attributes are now
 #' # not determined by anything, because of repeat measurements
 #' # with no variable to mark them as such.
-#' search(CO2, 1, exclude_class = "numeric")
+#' discover(CO2, 1, exclude_class = "numeric")
 #' @export
-search <- function(
+discover <- function(
   df,
   accuracy,
   method = c("dfd", "tane"),

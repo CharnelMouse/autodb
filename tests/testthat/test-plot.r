@@ -509,8 +509,8 @@ describe("gv", {
     it("works for degenerate cases", {
       table_dum <- data.frame()
       table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
-      schema_dum <- cross_reference(normalise(search(table_dum, 1)))
-      schema_dee <- cross_reference(normalise(search(table_dee, 1)))
+      schema_dum <- cross_reference(normalise(discover(table_dum, 1)))
+      schema_dee <- cross_reference(normalise(discover(table_dee, 1)))
       expect_no_error(gv(schema_dum))
       expect_no_error(gv(schema_dee))
     })
