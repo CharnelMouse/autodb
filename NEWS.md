@@ -2,14 +2,15 @@
 
 Breaking changes:
 
-* Removed `flatten` from exported functions, in favour of flattening the functional dependencies in `dfd` instead. Since `flatten` was usually called anyway, and its output is more readable since adding a `print` method for it, the old `dfd` output format had little reason to be kept.
+* Renamed `dfd` to `search`, to reflect the generalisation to allow the use of other methods. At the moment, this includes DFD and Tane.
+* Removed `flatten` from exported functions, in favour of flattening the functional dependencies in `dfd`/`search` instead. Since `flatten` was usually called anyway, and its output is more readable since adding a `print` method for it, the old `dfd`/`search` output format had little reason to be kept.
 
 Improvements:
 
 * Added a `functional_dependency` class for flattened functional dependency sets. The attributes vector is now stored as an attribute, so that the dependencies can be accessed as a simple list without list subsetting operators. There is also a method for `c`, which attempts to merge attributes vectors while conserving the initial orderings.
 * Adjusted `normalise` to prefer to remove dependencies with dependents and determinant sets later in table order, and with larger dependent sets. This brings it more in line with similar decisions made in other package functions.
-* Simplified some internals of `dfd` to improve computation time.
-* Added a `skip_bijections` option to `dfd`, to speed up functional dependency searches where there are pairwise-equivalent attributes present.
+* Simplified some internals of `dfd`/`search` to improve computation time.
+* Added a `skip_bijections` option to `dfd`/`search`, to speed up functional dependency searches where there are pairwise-equivalent attributes present.
 * Added an option to use Tane instead of DFD for functional dependency search.
 
 Fixes:
