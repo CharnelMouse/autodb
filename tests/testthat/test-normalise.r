@@ -370,18 +370,30 @@ describe("normalise", {
       implied_fds <- synthesised_fds(schema$attrs, schema$keys)
       if (length(implied_fds) > 0)
         implied_fds <- unlist(implied_fds, recursive = FALSE)
-      implied_detsets <- lapply(implied_fds, `[[`, 1L)
-      implied_deps <- vapply(implied_fds, `[[`, character(1), 2L)
+      implied_fds <- functional_dependency(implied_fds, attrs(flat_deps))
       fds_reproduced <- vapply(
-        flat_deps$dependencies,
+        flat_deps,
         \(fd) {
-          closure <- find_closure(fd[[1]], implied_detsets, implied_deps)
+          closure <- find_closure(fd[[1]], detset(implied_fds), dependent(implied_fds))
           fd[[2]] %in% closure
         },
         logical(1)
       )
-      expect_nofds(flat_deps$dependencies[!fds_reproduced])
+      expect_nofds(flat_deps[!fds_reproduced])
     }
+
+    # Example from Darwen's lectures
+    deps <- functional_dependency(
+      list(
+        list(c("student", "course"), "organiser"),
+        list(c("student", "course"), "room"),
+        list("course", "organiser"),
+        list("organiser", "room"),
+        list("room", "organiser")
+      ),
+      c("student", "course", "organiser", "room")
+    )
+    reproduces_fds(deps)
 
     deps <- functional_dependency(
       list(
