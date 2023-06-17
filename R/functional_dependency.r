@@ -88,12 +88,8 @@ print.functional_dependency <- function(x, ...) {
   }
   dep_txt <- dependent(x)
   txt <- paste0(padding, det_txt, " -> ", dep_txt, recycle0 = TRUE)
-  cat(paste0(
-    length(x),
-    " functional dependenc",
-    if (length(x) == 1) "y" else "ies"
-  ))
-  cat(paste0("\n", length(attrs(x)), " attributes"))
+  cat(with_number(length(x), "functional dependenc", "y", "ies"))
+  cat(paste0("\n", with_number(length(attrs(x)), "attribute", "", "s")))
   if (length(attrs(x)) > 0)
     cat(paste0(": ", toString(attrs(x))))
   cat("\n")
