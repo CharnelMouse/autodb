@@ -370,8 +370,8 @@ describe("normalise", {
       implied_fds <- synthesised_fds(schema$attrs, schema$keys)
       if (length(implied_fds) > 0)
         implied_fds <- unlist(implied_fds, recursive = FALSE)
-      implied_detsets <- lapply(implied_fds, "[[", 1)
-      implied_deps <- vapply(implied_fds, "[[", character(1), 2)
+      implied_detsets <- lapply(implied_fds, `[[`, 1L)
+      implied_deps <- vapply(implied_fds, `[[`, character(1), 2L)
       fds_reproduced <- vapply(
         flat_deps$dependencies,
         \(fd) {

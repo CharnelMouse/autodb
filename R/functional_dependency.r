@@ -21,6 +21,17 @@
 #'   Functional dependencies are returned with their determinant sets sorted
 #'   according to the attribute order in \code{attrs}. Any duplicates found
 #'   after sorting are removed.
+#' @seealso \code{\link{detset}}, \code{\link{dependent}}, and
+#'   \code{\link{attrs}} for extracting parts of the information in a
+#'   \code{functional_dependency}.
+#' @examples
+#' fds <- functional_dependency(
+#'   list(list(c("a", "b"), "c"), list(character(), "d")),
+#'   attrs = c("a", "b", "c", "d")
+#' )
+#' detset(fds)
+#' dependent(fds)
+#' attrs(fds)
 #' @export
 functional_dependency <- function(FDs, attrs) {
   if (any(lengths(FDs) != 2))
@@ -75,16 +86,16 @@ print.functional_dependency <- function(x, ...) {
       character(1)
     )
   }
-  dep_txt <- vapply(x, `[[`, character(1), 2L)
+  dep_txt <- dependent(x)
   txt <- paste0(padding, det_txt, " -> ", dep_txt, recycle0 = TRUE)
   cat(paste0(
     length(x),
     " functional dependenc",
     if (length(x) == 1) "y" else "ies"
   ))
-  cat(paste0("\n", length(attr(x, "attrs")), " attributes"))
-  if (length(attr(x, "attrs")) > 0)
-    cat(paste0(": ", toString(attr(x, "attrs"))))
+  cat(paste0("\n", length(attrs(x)), " attributes"))
+  if (length(attrs(x)) > 0)
+    cat(paste0(": ", toString(attrs(x))))
   cat("\n")
   if (length(txt) > 0L) {
     cat(txt, sep = "\n")
@@ -140,4 +151,65 @@ c.functional_dependency <- function(
   }
 
   functional_dependency(joined_dependencies, joined_attrs)
+}
+
+#' Determinant sets
+#'
+#' Generic function, with the only given method fetching determinant sets for
+#' functional dependencies.
+#'
+#' @param x an R object. For the given method, a
+#'   \code{\link{functional_dependency}}.
+#' @param ... further arguments passed on to methods.
+#'
+#' @return A list containing determinant sets, each consisting of a character
+#'   vector with unique elements.
+#' @export
+detset <- function(x, ...) {
+  UseMethod("detset")
+}
+
+#' @exportS3Method
+detset.functional_dependency <- function(x, ...) {
+  lapply(x, `[[`, 1L)
+}
+
+#' Dependents
+#'
+#' Generic function, with the only given method fetching dependents for
+#' functional dependencies.
+#'
+#' @param x an R object. For the given method, a
+#'   \code{\link{functional_dependency}}.
+#' @param ... further arguments passed on to methods.
+#'
+#' @return A character vector containing dependents.
+#' @export
+dependent <- function(x, ...) {
+  UseMethod("dependent")
+}
+
+#' @exportS3Method
+dependent.functional_dependency <- function(x, ...) {
+  vapply(x, `[[`, character(1L), 2L)
+}
+
+#' Relational data attributes
+#'
+#' Generic function, with the only given method fetching attribute sets for
+#' functional dependencies.
+#'
+#' @param x an R object. For the given method, a
+#'   \code{\link{functional_dependency}}.
+#' @param ... further arguments passed on to methods.
+#'
+#' @return A character vector containing an attribute set, with unique elements.
+#' @export
+attrs <- function(x, ...) {
+  UseMethod("attrs")
+}
+
+#' @exportS3Method
+attrs.functional_dependency <- function(x, ...) {
+  attr(x, "attrs", exact = TRUE)
 }

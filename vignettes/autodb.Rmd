@@ -116,7 +116,15 @@ deps
 
 After simplifying the data to something quicker to iterate over -- specifically, by converting all attributes to have integer values -- the algorithm takes each attribute in turn as a possible dependent, and finds sets of the other attributes that determine it.
 
-The result is a list of functional dependencies, in the format `determinant set -> dependent`, with an attribute named `attrs` that gives all the attribute names in their original order.
+The result is a list of functional dependencies, in the format `determinant set -> dependent`, with an attribute named `attrs` that gives all the attribute names in their original order. Each of these three parts has its own (generic) extraction function:
+
+```{r}
+detset(deps)
+dependent(deps)
+attrs(deps)
+```
+
+The former two, especially, are useful for filtering, as we'll see later.
 
 ## Normalisation
 
@@ -188,10 +196,7 @@ titanic_deps
 We can remove the unwanted dependencies, where `Age` is the dependent:
 
 ```{r}
-titanic_deps_filtered <- Filter(
-  function(dep) dep[[2]] == "Freq", 
-  titanic_deps
-)
+titanic_deps[dependent(titanic_deps) == "Freq"]
 ```
 
 ## Adding cross-references
@@ -276,10 +281,7 @@ This would also explain why the publication ID appears in several other relation
 Since the publication ID can't be trusted, we could consider removing the attribute. Here, we'll keep it, but remove all functional dependencies where it is in the determinant set, to get the same effect without re-running DFD:
 
 ```{r nudge_filter}
-nudge_deps_filtered <- Filter(
-  function(fd) !is.element("publication_id", fd[[1]]),
-  nudge_deps
-)
+nudge_deps_filtered <- nudge_deps[!vapply(detset(nudge_deps), is.element, logical(1), el = "publication_id")]
 nudge_schema_filtered <- cross_reference(normalise(nudge_deps_filtered, remove_avoidable = TRUE))
 DiagrammeR::grViz(gv(nudge_schema_filtered))
 ```
@@ -302,10 +304,10 @@ BETA is the Behavioural Economics Team of the Australian Government, so it's not
 While the reference is useful, the relations mentioned above are not, so we'll also remove functional dependencies with the reference determining something apart from the year:
 
 ```{r nudge_filter2}
-nudge_deps_filtered2 <- Filter(
-  function(fd) !is.element("reference", fd[[1]]) || fd[[2]] == "year",
-  nudge_deps_filtered
-)
+nudge_deps_filtered2 <- nudge_deps_filtered[
+  !vapply(detset(nudge_deps_filtered), is.element, logical(1), el = "reference") |
+    dependent(nudge_deps_filtered) == "year"
+]
 nudge_schema_filtered2 <- cross_reference(normalise(nudge_deps_filtered2, remove_avoidable = TRUE))
 DiagrammeR::grViz(gv(nudge_schema_filtered2))
 ```

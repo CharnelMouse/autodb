@@ -75,8 +75,8 @@ describe("cross_reference", {
   })
   it("reintroduces attributes not in dependencies if ensuring lossless", {
     reintroduces_missing_attrs_if_lossless <- function(deps) {
-      lone_attr <- LETTERS[length(attr(deps, "attrs")) + 1]
-      attr(deps, "attrs") <- c(attr(deps, "attrs"), lone_attr)
+      lone_attr <- LETTERS[length(attrs(deps)) + 1]
+      attr(deps, "attrs") <- c(attrs(deps), lone_attr)
       schema <- normalise(deps)
       linked <- cross_reference(schema, ensure_lossless = TRUE)
       expect_true(lone_attr %in% unlist(linked$attrs))

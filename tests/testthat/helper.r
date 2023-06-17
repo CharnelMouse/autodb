@@ -17,7 +17,7 @@ is_valid_functional_dependency <- function(x) {
 
 is_valid_minimal_functional_dependency <- function(x) {
   is_valid_functional_dependency(x)
-  grouped <- split(lapply(x, `[[`, 1), vapply(x, `[[`, character(1), 2))
+  grouped <- split(detset(x), dependent(x))
   expect_true(!any(lapply(
     grouped,
     \(detsets) anyDuplicated(detsets) ||

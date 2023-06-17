@@ -6,15 +6,15 @@ library(hedgehog)
 
 describe("discover", {
   expect_equiv_deps <- function(deps1, deps2) {
-    expect_setequal(attr(deps1, "attrs"), attr(deps2, "attrs"))
+    expect_setequal(attrs(deps1), attrs(deps2))
     expect_setequal(
       deps1,
-      functional_dependency(deps2, attr(deps1, "attrs"))
+      functional_dependency(deps2, attrs(deps1))
     )
   }
   expect_equiv_deps_except_names <- function(deps1, deps2) {
-    nms1 <- attr(deps1, "attrs")
-    nms2 <- attr(deps2, "attrs")
+    nms1 <- attrs(deps1)
+    nms2 <- attrs(deps2)
     renamed_deps1 <- functional_dependency(
       lapply(
         deps1,
@@ -25,10 +25,10 @@ describe("discover", {
     expect_equiv_deps(renamed_deps1, deps2)
   }
   expect_equiv_non_removed_attr_deps <- function(deps1, deps2) {
-    removed_attr <- setdiff(attr(deps1, "attrs"), attr(deps2, "attrs"))
+    removed_attr <- setdiff(attrs(deps1), attrs(deps2))
     expect_length(removed_attr, 1)
     filtered <- deps1
-    attr(filtered, "attrs") <- setdiff(attr(deps1, "attrs"), removed_attr)
+    attr(filtered, "attrs") <- setdiff(attrs(deps1), removed_attr)
     filtered <- filtered[vapply(
       filtered,
       \(fd) !is.element(removed_attr, unlist(fd)),
@@ -37,7 +37,7 @@ describe("discover", {
     expect_equiv_deps(filtered, deps2)
   }
   expect_det_subsets_kept <- function(deps1, deps2) {
-    expect_identical(attr(deps1, "attrs"), attr(deps2, "attrs"))
+    expect_identical(attrs(deps1), attrs(deps2))
     expect_true(all(vapply(
       deps1,
       \(ds) any(vapply(
@@ -129,10 +129,7 @@ describe("discover", {
   })
   it("returns dependencies where shared dependent <=> not sub/supersets for determinants", {
     has_non_nested_determinant_sets <- function(deps) {
-      det_groups <- split(
-        lapply(deps, `[[`, 1L),
-        vapply(deps, `[[`, character(1L), 2L)
-      )
+      det_groups <- split(detset(deps), dependent(deps))
       for (det_sets in det_groups) {
         len <- length(det_sets)
         if (len <= 1)
@@ -411,8 +408,8 @@ describe("discover", {
   it("gives dependencies for unique attributes (in case don't want them as key)", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), C = c(1, 2, 2))
     deps <- discover(df, 1)
-    A_deps <- vapply(deps, \(fd) fd[[2]] == "A", logical(1))
-    A_detsets <- lapply(deps[A_deps], `[[`, 1)
+    A_deps <- dependent(deps) == "A"
+    A_detsets <- detset(deps[A_deps])
     expect_identical(A_detsets, list(c("B", "C")))
   })
   it("finds dependencies for the team data in test-normalise", {
@@ -454,7 +451,7 @@ describe("discover", {
       c("team", "jersey_num", "player_name", "city", "state")
     )
 
-    expect_identical(attr(deps, "attrs"), attr(expected_deps, "attrs"))
+    expect_identical(attrs(deps), attrs(expected_deps))
     expect_true(all(is.element(expected_deps, deps)))
   })
   it("finds dependencies for the team data in original's edit demo", {
@@ -476,7 +473,7 @@ describe("discover", {
       ),
       c("team", "city", "state", "roster_size")
     )
-    expect_identical(attr(deps, "attrs"), attr(expected_deps, "attrs"))
+    expect_identical(attrs(deps), attrs(expected_deps))
     expect_true(all(is.element(expected_deps, deps)))
   })
   it("finds dependencies for Wikipedia 1NF->2NF->3NF example", {
@@ -520,15 +517,15 @@ describe("discover", {
         "Publisher_ID"
       )
     )
-    expect_identical(attr(deps, "attrs"), attr(expected_deps, "attrs"))
+    expect_identical(attrs(deps), attrs(expected_deps))
     expect_true(all(is.element(expected_deps, deps)))
   })
   it("correctly handles attributes with non-df-standard names", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
       stats::setNames(c("A 1", "B 2", "C 3"))
     deps <- discover(df, 1)
-    A_1_deps <- vapply(deps, \(fd) fd[[2]] == "A 1", logical(1))
-    A_1_detsets <- lapply(deps[A_1_deps], `[[`, 1L)
+    A_1_deps <- dependent(deps) == "A 1"
+    A_1_detsets <- detset(deps[A_1_deps])
     expect_identical(A_1_detsets, list(c("B 2", "C 3")))
   })
   it("expects attribute names to be unique", {

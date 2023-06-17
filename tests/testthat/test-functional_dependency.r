@@ -58,7 +58,7 @@ describe("functional_dependency", {
       matches <- vapply(
         fds,
         with_args(`[[`, i = 1L) %>>%
-          with_args(match, table = attr(fds, "attrs")) %>>%
+          with_args(match, table = attrs(fds)) %>>%
           (Negate(is.unsorted)),
         logical(1)
       )
@@ -108,7 +108,7 @@ describe("functional_dependency", {
       lst <- list(...)
       res <- c(...)
       for (l in lst) {
-        expect_true(all(is.element(attr(l, "attrs"), attr(res, "attrs"))))
+        expect_true(all(is.element(attrs(l), attrs(res))))
       }
     }
     forall(
@@ -123,8 +123,8 @@ describe("functional_dependency", {
         lst,
         lst,
         Vectorize(\(fd1, fd2) {
-          as1 <- attr(fd1, "attrs")
-          as2 <- attr(fd2, "attrs")
+          as1 <- attrs(fd1)
+          as2 <- attrs(fd2)
           one_in_two <- match(as1, as2)
           two_in_one <- match(as2, as1)
           !is.unsorted(one_in_two, na.rm = TRUE) &&
@@ -139,8 +139,8 @@ describe("functional_dependency", {
       res <- c(...)
       for (index in seq_along(lst)) {
         expect_identical(
-          attr(lst[[!!index]], "attrs"),
-          intersect(attr(res, "attrs"), attr(lst[[!!index]], "attrs"))
+          attrs(lst[[!!index]]),
+          intersect(attrs(res), attrs(lst[[!!index]]))
         )
       }
     }
@@ -178,6 +178,18 @@ describe("functional_dependency", {
       gen.fd(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
       concatenate_lossless_for_FDs,
       curry = TRUE
+    )
+  })
+  it("is composed of its detset() and dependent() outputs, with attrs() attribute", {
+    forall(
+      gen.fd(letters[1:6], 0, 8),
+      \(fd) expect_identical(
+        fd,
+        functional_dependency(
+          Map(list, detset(fd), dependent(fd)),
+          attrs = attrs(fd)
+        )
+      )
     )
   })
 })

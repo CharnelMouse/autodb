@@ -33,3 +33,17 @@ attribute orders, if possible. If this is not possible, because the orderings
 disagree, then the returned value of the \code{attrs} attribute is their
 union instead.
 }
+\examples{
+fds <- functional_dependency(
+  list(list(c("a", "b"), "c"), list(character(), "d")),
+  attrs = c("a", "b", "c", "d")
+)
+detset(fds)
+dependent(fds)
+attrs(fds)
+}
+\seealso{
+\code{\link{detset}}, \code{\link{dependent}}, and
+\code{\link{attrs}} for extracting parts of the information in a
+\code{functional_dependency}.
+}
