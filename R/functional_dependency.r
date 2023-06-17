@@ -103,54 +103,61 @@ print.functional_dependency <- function(x, ...) {
 }
 
 #' @exportS3Method
-c.functional_dependency <- function(
-  ...
-) {
+c.functional_dependency <- function(...) {
   lst <- list(...)
   joined_dependencies <- unique(Reduce(c, lapply(lst, unclass)))
 
+  attrs_list <- lapply(lst, attrs)
+  joined_attrs <- do.call(merge_attribute_orderings, attrs_list)
+
+  functional_dependency(joined_dependencies, joined_attrs)
+}
+
+merge_attribute_orderings <- function(...) {
+  ordered_sets <- list(...)
   # Combining attributes pairwise can't ensure preservation of consistency, so
   # we only add an attribute to the joined list when it's the next one in all
   # lists containing it.
-  attrs_list <- lapply(lst, attr, "attrs")
-  pairwise <- outer(
-    attrs_list,
-    attrs_list,
-    Vectorize(\(as1, as2) {
-      one_in_two <- match(as1, as2)
-      two_in_one <- match(as2, as1)
-      !is.unsorted(one_in_two, na.rm = TRUE) &&
-        !is.unsorted(two_in_one, na.rm = TRUE)
-    })
-  )
-  if (!all(pairwise)) {
-    warning(paste(
-      "inconsistent attribute orderings,",
-      "returning attributes in order of listing"
-    ))
-    joined_attrs <- Reduce(union, attrs_list)
-  }else{
-    all_attrs <- unique(unlist(attrs_list))
-    indices <- outer(all_attrs, attrs_list, Vectorize(match))
-    stopifnot(all(apply(indices, 1, \(x) any(!is.na(x)))))
-    joined_attrs <- character()
-    while (any(!is.na(indices))) {
-      maxs <- apply(indices, 1, max, na.rm = TRUE)
-      nxt <- which(maxs == 1)
-      if (length(nxt) == 0L) {
-        warning("inconsistent orderings")
-        joined_attrs <- union(joined_attrs, all_attrs)
-        break
-      }
-      joined_attrs <- c(joined_attrs, all_attrs[[nxt[[1L]]]])
-      indices[, !is.na(indices[nxt[[1L]], ])] <-
-        indices[, !is.na(indices[nxt[[1L]], ])] - 1L
-      indices <- indices[-nxt[[1L]], , drop = FALSE]
-      all_attrs <- all_attrs[-nxt[[1L]]]
+  n_sets <- length(ordered_sets)
+
+  if (n_sets >= 2L) {
+    pairs <- utils::combn(seq_len(n_sets), 2)
+    if (Position(
+      \(n) {
+        as1 <- pairs[[1, n]]
+        as2 <- pairs[[2, n]]
+        is.unsorted(match(as1, as2), na.rm = TRUE) ||
+          is.unsorted(match(as2, as1), na.rm = TRUE)
+      },
+      seq_len(ncol(pairs)),
+      nomatch = 0L
+    )) {
+      warning(paste(
+        "inconsistent attribute orderings,",
+        "returning attributes in order of listing"
+      ))
+      return(Reduce(union, ordered_sets))
     }
   }
 
-  functional_dependency(joined_dependencies, joined_attrs)
+  all_attrs <- unique(unlist(ordered_sets))
+  indices <- outer(all_attrs, ordered_sets, Vectorize(match))
+  merged <- character()
+  while (any(!is.na(indices))) {
+    maxs <- apply(indices, 1, max, na.rm = TRUE)
+    top <- which(maxs == 1)
+    if (length(top) == 0L) {
+      warning("inconsistent attribute orderings")
+      return(union(merged, all_attrs))
+    }
+    nxt <- top[[1L]]
+    merged <- c(merged, all_attrs[[nxt]])
+    nxt_sets <- !is.na(indices[nxt, ])
+    indices[, nxt_sets] <- indices[, nxt_sets] - 1L
+    indices <- indices[-nxt, , drop = FALSE]
+    all_attrs <- all_attrs[-nxt]
+  }
+  merged
 }
 
 #' Determinant sets
