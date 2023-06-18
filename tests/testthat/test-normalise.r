@@ -342,18 +342,37 @@ describe("normalise", {
       tests = 1000
     )
   })
-  it("gives database schemas that reproduce the given functional dependencies", {
-    expect_nofds <- function(fds) {
-      act <- quasi_label(rlang::enquo(fds), arg = "object")
-      act$n <- length(act$val)
+  it("gives database schemas that enforce the given functional dependencies", {
+    expect_all_enforced <- function(deps, schema) {
+      implied_fds <- synthesised_fds(schema$attrs, schema$keys)
+      implied_flat_fds <- implied_fds
+      if (length(implied_flat_fds) > 0)
+        implied_flat_fds <- unlist(implied_flat_fds, recursive = FALSE)
+      implied_flat_fds <- functional_dependency(implied_flat_fds, attrs(deps))
+      fds_reproduced <- vapply(
+        deps,
+        \(fd) {
+          closure <- find_closure(
+            fd[[1]],
+            detset(implied_flat_fds),
+            dependent(implied_flat_fds)
+          )
+          fd[[2]] %in% closure
+        },
+        logical(1)
+      )
+
+      act <- quasi_label(rlang::enquo(deps), arg = "object")
+      act$nonrep <- act$val[!fds_reproduced]
+      act$n <- length(act$nonrep)
       expect(
         act$n == 0L,
         sprintf(paste0(
-          length(fds),
+          act$n,
           " dependencies not represented:\n",
           paste(
             vapply(
-              fds,
+              act$nonrep,
               \(fd) paste0("{", toString(fd[[1]]), "} -> ", fd[2]),
               character(1)
             ),
@@ -363,38 +382,14 @@ describe("normalise", {
       )
       invisible(act$val)
     }
-    reproduces_fds <- function(flat_deps) {
-      if (length(flat_deps) == 0L)
+    enforces_fds <- function(deps, remove_avoidable = FALSE) {
+      if (length(deps) == 0L)
         discard()
-      schema <- normalise(flat_deps)
-      implied_fds <- synthesised_fds(schema$attrs, schema$keys)
-      if (length(implied_fds) > 0)
-        implied_fds <- unlist(implied_fds, recursive = FALSE)
-      implied_fds <- functional_dependency(implied_fds, attrs(flat_deps))
-      fds_reproduced <- vapply(
-        flat_deps,
-        \(fd) {
-          closure <- find_closure(fd[[1]], detset(implied_fds), dependent(implied_fds))
-          fd[[2]] %in% closure
-        },
-        logical(1)
-      )
-      expect_nofds(flat_deps[!fds_reproduced])
+      schema <- normalise(deps, remove_avoidable = remove_avoidable)
+      expect_all_enforced(deps, schema)
     }
 
-    # Example from Darwen's lectures
-    deps <- functional_dependency(
-      list(
-        list(c("student", "course"), "organiser"),
-        list(c("student", "course"), "room"),
-        list("course", "organiser"),
-        list("organiser", "room"),
-        list("room", "organiser")
-      ),
-      c("student", "course", "organiser", "room")
-    )
-    reproduces_fds(deps)
-
+    # example of when no violations only if removables avoided
     deps <- functional_dependency(
       list(
         list(c("C", "G"), "A"),
@@ -412,11 +407,11 @@ describe("normalise", {
       ),
       c("A", "B", "C", "D", "E", "F", "G")
     )
-    reproduces_fds(deps)
+    enforces_fds(deps, TRUE)
 
     forall(
       gen_flat_deps_fixed_names(7, 20),
-      reproduces_fds,
+      enforces_fds,
       discard.limit = 10L
     )
   })
