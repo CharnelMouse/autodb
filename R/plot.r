@@ -61,7 +61,7 @@
 #' cat(txt_db)
 #' DiagrammeR::grViz(txt_db)
 #' # simple database_scheme
-#' scheme <- cross_reference(normalise(discover(ChickWeight, 1)))
+#' scheme <- cross_reference(synthesise(discover(ChickWeight, 1)))
 #' txt_scheme <- gv(scheme)
 #' cat(txt_scheme)
 #' DiagrammeR::grViz(txt_scheme)
@@ -131,7 +131,7 @@ gv.database <- function(x, ...) {
 #' Any foreign key references are represented by arrows
 #' between the attribute pairs.
 #'
-#' @param x a database schema, as given by \code{\link{normalise}} or
+#' @param x a database schema, as given by \code{\link{synthesise}} or
 #'   \code{\link{cross_reference}}.
 #' @param name a character scalar, giving the name of the schema, if any.
 #' @inheritParams gv

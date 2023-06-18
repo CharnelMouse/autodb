@@ -412,7 +412,7 @@ describe("discover", {
     A_detsets <- detset(deps[A_deps])
     expect_identical(A_detsets, list(c("B", "C")))
   })
-  it("finds dependencies for the team data in test-normalise", {
+  it("finds dependencies for the team data in test-synthesise", {
     df <- data.frame(
       team = c(
         'Red', 'Red', 'Red', 'Orange', 'Orange',

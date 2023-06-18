@@ -75,7 +75,7 @@ describe("reduce.database_schema", {
   it("is idempotent", {
     has_idempotent_reduction <- function(df) {
       database_schema <- discover(as.data.frame(df), 1) |>
-        normalise() |>
+        synthesise() |>
         cross_reference(ensure_lossless = TRUE)
       once_schema <- reduce(database_schema, database_schema$relation_names[1L])
       twice_schema <- reduce(once_schema, database_schema$relation_names[1L])
@@ -86,7 +86,7 @@ describe("reduce.database_schema", {
   it("removes added relations with less rows than existing non-parent relations", {
     removes_added_non_parent_with_non_maximum_nrow <- function(df) {
       database_schema <- discover(df, 1) |>
-        normalise() |>
+        synthesise() |>
         cross_reference(ensure_lossless = TRUE)
       once <- reduce(database_schema, database_schema$relation_names[1L])
       once_plus_small <- once
@@ -111,7 +111,7 @@ describe("reduce.database_schema", {
   it("returns a subset", {
     reduced_to_subset <- function(df) {
       database_schema <- discover(df, 1) |>
-        normalise() |>
+        synthesise() |>
         cross_reference(ensure_lossless = TRUE)
       reduced <- reduce(database_schema, database_schema$relation_names[1L])
       kept <- match(reduced$relation_names, database_schema$relation_names)

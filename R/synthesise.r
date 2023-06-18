@@ -1,6 +1,6 @@
-#' Normalises dependency relationships
+#' Synthesise relation schemas from functional dependencies
 #'
-#' Normalises the dependency relationships in dependencies into a database
+#' Synthesises the dependency relationships in dependencies into a database
 #' schema satisfying at least third normal form, using Bernstein's synthesis.
 #'
 #' Bernstein's synthesis is a synthesis algorithm for normalisation of a set of
@@ -48,7 +48,7 @@
 #' improved third normal form for relational databases. *ACM Trans. Database
 #' Syst.*, **6, 2**, 329--346.
 #' @export
-normalise <- function(
+synthesise <- function(
   dependencies,
   remove_avoidable = FALSE,
   constants_name = "constants",

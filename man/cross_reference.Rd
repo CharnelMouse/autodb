@@ -8,7 +8,7 @@ cross_reference(schema, ensure_lossless = TRUE)
 }
 \arguments{
 \item{schema}{a database schema without relationships, as given by
-\code{\link{normalise}}.}
+\code{\link{synthesise}}.}
 
 \item{ensure_lossless}{a logical, TRUE by default. If TRUE, and the
 decomposition isn't lossless, an extra relation is added to make the

@@ -1,7 +1,7 @@
 #' Create a normalised database from a data frame
 #'
 #' This is a wrapper function for applying \code{\link{discover}},
-#' \code{\link{normalise}}, \code{\link{cross_reference}}, and
+#' \code{\link{synthesise}}, \code{\link{cross_reference}}, and
 #' \code{\link{decompose}}, in order.
 #'
 #' Since `decompose` only works with functional dependencies, not approximate
@@ -25,7 +25,7 @@
 #'   relations have a unique name.
 #' @param progress a logical, for whether to display progress to the user during
 #'   dependency search in \code{\link{discover}} and normalisation in
-#'   \code{\link{normalise}}.
+#'   \code{\link{synthesise}}.
 #' @param progress_file a scalar character or a connection. If \code{progress}
 #'   is non-zero, determines where the progress is written to, in the same way
 #'   as the \code{file} argument for \code{\link[base]{cat}}.
@@ -50,7 +50,7 @@ autodb <- function(
   report <- reporter(progress, progress_file)
 
   discover(df, 1, progress = progress, progress_file = "", ...) |>
-    report$op(normalise, "normalising", remove_avoidable, constants_name) |>
+    report$op(synthesise, "normalising", remove_avoidable, constants_name) |>
     report$op(cross_reference, "cross-referencing", ensure_lossless) |>
     report$op(decompose, "decomposing", df = df, name)
 }

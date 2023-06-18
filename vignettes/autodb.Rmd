@@ -131,7 +131,7 @@ The former two, especially, are useful for filtering, as we'll see later.
 Now that we have a list of discovered dependencies, we can construct a database schema, where the relation schemas are normalised to third normal form. This is done using a version of Bernstein's synthesis.
 
 ```{r}
-schema <- normalise(deps)
+schema <- synthesise(deps)
 schema
 ```
 
@@ -163,7 +163,7 @@ DiagrammeR::grViz(gv(autodb(as.data.frame(Titanic))))
 
 Oops! The DFD algorithm found some functional dependencies where the count could be used to determine another attribute. These are clearly spurious: frequency count can't causally determine age, for example. However, the algorithm still finds these dependencies, because the counts are unique often enough to make these dependencies hold in the given data.
 
-There are two approaches we can take to eliminate these spurious dependencies: not letting them be detected in the first place, and removing them before using `normalise`.
+There are two approaches we can take to eliminate these spurious dependencies: not letting them be detected in the first place, and removing them before using `synthesise`.
 
 To stop them being detected, we can put constraints on what is discovered by `discover`: we can ask for certain attributes to not be considered as determinants, or we can exclude attributes that inherit from certain classes. In this example, we could exclude `Freq` from being considered:
 
@@ -259,7 +259,7 @@ nudge_deps <- discover(
   exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
   exclude_class = "numeric"
 )
-nudge_schema <- cross_reference(normalise(nudge_deps, remove_avoidable = TRUE))
+nudge_schema <- cross_reference(synthesise(nudge_deps, remove_avoidable = TRUE))
 DiagrammeR::grViz(gv(nudge_schema))
 ```
 
@@ -282,7 +282,7 @@ Since the publication ID can't be trusted, we could consider removing the attrib
 
 ```{r nudge_filter}
 nudge_deps_filtered <- nudge_deps[!vapply(detset(nudge_deps), is.element, logical(1), el = "publication_id")]
-nudge_schema_filtered <- cross_reference(normalise(nudge_deps_filtered, remove_avoidable = TRUE))
+nudge_schema_filtered <- cross_reference(synthesise(nudge_deps_filtered, remove_avoidable = TRUE))
 DiagrammeR::grViz(gv(nudge_schema_filtered))
 ```
 
@@ -308,7 +308,7 @@ nudge_deps_filtered2 <- nudge_deps_filtered[
   !vapply(detset(nudge_deps_filtered), is.element, logical(1), el = "reference") |
     dependent(nudge_deps_filtered) == "year"
 ]
-nudge_schema_filtered2 <- cross_reference(normalise(nudge_deps_filtered2, remove_avoidable = TRUE))
+nudge_schema_filtered2 <- cross_reference(synthesise(nudge_deps_filtered2, remove_avoidable = TRUE))
 DiagrammeR::grViz(gv(nudge_schema_filtered2))
 ```
 
@@ -338,7 +338,7 @@ nudge_approx_cheat_database_schema <- discover(
   exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
   exclude_class = "numeric"
 ) |>
-  normalise() |>
+  synthesise() |>
   cross_reference()
 DiagrammeR::grViz(gv(nudge_approx_cheat_database_schema))
 ```
@@ -358,7 +358,7 @@ nudge_approx_database_schema <- discover(
   exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
   exclude_class = "numeric"
 ) |>
-  normalise() |>
+  synthesise() |>
   cross_reference()
 DiagrammeR::grViz(gv(nudge_approx_database_schema))
 ```
@@ -395,16 +395,16 @@ avoid_deps <- functional_dependency(
   attrs = c("A", "B", "C", "D", "E")
 )
 avoid_deps
-avoid_schema <- cross_reference(normalise(avoid_deps))
+avoid_schema <- cross_reference(synthesise(avoid_deps))
 DiagrammeR::grViz(gv(avoid_schema))
 ```
 
 Attributes `A` and `B` are equivalent, since relation `A` has them both as a key. In other words, relation `A` is a simple lookup relation. Because of this, we could remove `B` from relation `A_C`, and replace the key `B, D` with `A, D`, which is equivalent when accounting from the lookup relation `A`.
 
-We can have this removal of avoidable attributes done automatically, using the `remove_avoidable` flag for `normalise`:
+We can have this removal of avoidable attributes done automatically, using the `remove_avoidable` flag for `synthesise`:
 
 ```{r avoid_remove}
-avoid_schema_removed <- cross_reference(normalise(
+avoid_schema_removed <- cross_reference(synthesise(
   avoid_deps,
   remove_avoidable = TRUE
 ))

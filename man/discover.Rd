@@ -56,7 +56,7 @@ they inherit from any given class.}
 
 \item{progress}{a logical, for whether to display progress to the user during
 dependency search in \code{\link{discover}} and normalisation in
-\code{\link{normalise}}.}
+\code{\link{synthesise}}.}
 
 \item{progress_file}{a scalar character or a connection. If \code{progress}
 is non-zero, determines where the progress is written to, in the same way

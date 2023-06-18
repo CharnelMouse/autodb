@@ -24,14 +24,14 @@ describe("cross_reference", {
   it("gives valid schemas", {
     # table_dum and table_dee
     empty_fds <- functional_dependency(list(), attrs = character())
-    empty_schema <- cross_reference(normalise(empty_fds))
+    empty_schema <- cross_reference(synthesise(empty_fds))
     is_valid_database_schema(empty_schema)
 
     forall(
       gen_flat_deps(7, 20),
       apply_both(
-        normalise %>>% cross_reference %>>% is_valid_database_schema,
-        normalise %>>%
+        synthesise %>>% cross_reference %>>% is_valid_database_schema,
+        synthesise %>>%
           with_args(cross_reference, ensure_lossless = FALSE) %>>%
           is_valid_database_schema
       )
@@ -39,7 +39,7 @@ describe("cross_reference", {
   })
   it("only links children to parents by exactly one parent key", {
     links_by_exactly_one_parent_key <- function(deps) {
-      schema <- normalise(deps)
+      schema <- synthesise(deps)
       if (length(schema$keys) <= 1)
         discard()
       linked <- cross_reference(schema)
@@ -77,7 +77,7 @@ describe("cross_reference", {
     reintroduces_missing_attrs_if_lossless <- function(deps) {
       lone_attr <- LETTERS[length(attrs(deps)) + 1]
       attr(deps, "attrs") <- c(attrs(deps), lone_attr)
-      schema <- normalise(deps)
+      schema <- synthesise(deps)
       linked <- cross_reference(schema, ensure_lossless = TRUE)
       expect_true(lone_attr %in% unlist(linked$attrs))
     }
@@ -88,11 +88,11 @@ describe("cross_reference", {
   })
   it("has no change in added table for losslessness if avoidable attributes removed", {
     still_lossless_with_less_or_same_attributes_dep <- function(flat_deps) {
-      norm_deps_avoid <- normalise(
+      norm_deps_avoid <- synthesise(
         flat_deps,
         remove_avoidable = TRUE
       )
-      norm_deps_noavoid <- normalise(
+      norm_deps_noavoid <- synthesise(
         flat_deps,
         remove_avoidable = FALSE
       )
@@ -163,7 +163,7 @@ describe("cross_reference", {
   })
   it("adds table with key with attributes in original order", {
     adds_ordered_primary_keys <- function(fds) {
-      schema <- cross_reference(normalise(fds), ensure_lossless = TRUE)
+      schema <- cross_reference(synthesise(fds), ensure_lossless = TRUE)
       all_keys <- unlist(schema$keys, recursive = FALSE)
       key_indices <- lapply(all_keys, match, schema$all_attrs)
       expect_false(any(vapply(key_indices, is.unsorted, logical(1))))
@@ -175,7 +175,7 @@ describe("cross_reference", {
   })
   it("only returns non-extraneous table relationships", {
     only_returns_non_extraneous_relationships <- function(deps) {
-      schema <- normalise(deps)
+      schema <- synthesise(deps)
       linked <- cross_reference(schema, ensure_lossless = TRUE)
       table_relationships <- unique(lapply(linked$relationships, `[[`, 1))
       table_relationships <- list(
@@ -195,7 +195,7 @@ describe("cross_reference", {
   it("is idempotent", {
     forall(
       gen_flat_deps(7, 20),
-      normalise %>>%
+      synthesise %>>%
         cross_reference %>>%
         expect_biidentical(identity, cross_reference)
     )
@@ -233,7 +233,7 @@ describe("cross_reference", {
           ),
         relation$attrs[[1]]
       )
-      redo <- cross_reference(normalise(deps), ensure_lossless = TRUE)
+      redo <- cross_reference(synthesise(deps), ensure_lossless = TRUE)
       expect_length(redo$attrs, 1)
       expect_identical(redo$attrs[[1]], relation$attrs[[1]])
       expect_identical(redo$keys[[1]], relation$keys[[1]])

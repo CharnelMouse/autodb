@@ -11,7 +11,7 @@ describe("decompose", {
       dup %>>%
         (onRight(
           with_args(discover, accuracy = 1) %>>%
-            normalise %>>%
+            synthesise %>>%
             cross_reference
         )) %>>%
         uncurry(decompose) %>>%
@@ -199,7 +199,7 @@ describe("decompose", {
       reduced_deps <- flat_deps
       reduced_deps[[reduced_index]][[1]] <-
         flat_deps[[reduced_index]][[1]][-removed_det]
-      schema <- cross_reference(normalise(reduced_deps))
+      schema <- cross_reference(synthesise(reduced_deps))
       expect_error(
         decompose(df, schema),
         paste0(

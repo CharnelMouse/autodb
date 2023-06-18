@@ -496,10 +496,10 @@ describe("gv", {
     })
   })
   describe("database_schema", {
-    it("works for normalise and cross_reference outputs", {
+    it("works for synthesise and cross_reference outputs", {
       forall(
         gen_flat_deps(7, 20),
-        normalise %>>%
+        synthesise %>>%
           apply_both(
             gv %>>% expect_no_error,
             cross_reference %>>% gv %>>% expect_no_error
@@ -509,8 +509,8 @@ describe("gv", {
     it("works for degenerate cases", {
       table_dum <- data.frame()
       table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
-      schema_dum <- cross_reference(normalise(discover(table_dum, 1)))
-      schema_dee <- cross_reference(normalise(discover(table_dee, 1)))
+      schema_dum <- cross_reference(synthesise(discover(table_dum, 1)))
+      schema_dee <- cross_reference(synthesise(discover(table_dee, 1)))
       expect_no_error(gv(schema_dum))
       expect_no_error(gv(schema_dee))
     })

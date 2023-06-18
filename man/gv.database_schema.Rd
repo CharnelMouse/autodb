@@ -7,7 +7,7 @@
 \method{gv}{database_schema}(x, name = NA_character_, ...)
 }
 \arguments{
-\item{x}{a database schema, as given by \code{\link{normalise}} or
+\item{x}{a database schema, as given by \code{\link{synthesise}} or
 \code{\link{cross_reference}}.}
 
 \item{name}{a character scalar, giving the name of the schema, if any.}

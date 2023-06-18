@@ -3,7 +3,7 @@ library(hedgehog)
 gen.nonempty_key <- gen.sample.int(2, gen.int(5), replace = TRUE)
 gen.key <- gen.sample.int(2, gen.sample(0:5, 1), replace = TRUE)
 
-describe("normalise", {
+describe("synthesise", {
   expect_database_schema <- function(current, target) {
     expect_identical(
       current,
@@ -11,7 +11,7 @@ describe("normalise", {
     )
   }
   gets_unique_table_names <- function(fds) {
-    expect_true(!anyDuplicated(normalise(fds)$relation_names))
+    expect_true(!anyDuplicated(synthesise(fds)$relation_names))
   }
 
   it("gives valid schemas", {
@@ -36,16 +36,16 @@ describe("normalise", {
     )
     deps |>
       (apply_both(
-        normalise %>>% is_valid_database_schema,
-        with_args(normalise, remove_avoidable = TRUE) %>>%
+        synthesise %>>% is_valid_database_schema,
+        with_args(synthesise, remove_avoidable = TRUE) %>>%
           is_valid_database_schema
       ))()
 
     forall(
       gen_flat_deps(7, 20),
       apply_both(
-        normalise %>>% is_valid_database_schema,
-        with_args(normalise, remove_avoidable = TRUE) %>>%
+        synthesise %>>% is_valid_database_schema,
+        with_args(synthesise, remove_avoidable = TRUE) %>>%
           is_valid_database_schema
       )
     )
@@ -55,7 +55,7 @@ describe("normalise", {
       gen.and_then(\(fds) list(fds, gen.sample(fds)))
     normalisation_permutation_invariant <- if_discard_else(
       uncurry(identical),
-      with_args(lapply, normalise) %>>% (uncurry(expect_identical))
+      with_args(lapply, synthesise) %>>% (uncurry(expect_identical))
     )
 
     # currently-rarely-generated case:
@@ -75,7 +75,7 @@ describe("normalise", {
     forall(gen_permutation, normalisation_permutation_invariant)
   })
   it("removes longer/later-attributed dependency sets if given a choce", {
-    schema <- normalise(functional_dependency(
+    schema <- synthesise(functional_dependency(
       list(
         list(c("C", "D"), "B"),
         list(c("A", "B"), "C"),
@@ -96,7 +96,7 @@ describe("normalise", {
       ),
       attrs = c("a", "b", "c")
     )
-    norm.dependencies <- normalise(dependencies)
+    norm.dependencies <- synthesise(dependencies)
     expect_database_schema(
       norm.dependencies,
       list(
@@ -116,7 +116,7 @@ describe("normalise", {
       ),
       attrs = c("a", "b", "c")
     )
-    norm.dependencies <- normalise(dependencies)
+    norm.dependencies <- synthesise(dependencies)
     expect_database_schema(
       norm.dependencies,
       list(
@@ -137,7 +137,7 @@ describe("normalise", {
       ),
       attrs = c("a", "b", "c", "d")
     )
-    norm.dependencies <- normalise(dependencies)
+    norm.dependencies <- synthesise(dependencies)
     expect_database_schema(
       norm.dependencies,
       list(
@@ -157,7 +157,7 @@ describe("normalise", {
       ),
       attrs = c("a", "b")
     )
-    norm.df <- normalise(dependencies)
+    norm.df <- synthesise(dependencies)
     expect_database_schema(
       norm.df,
       list(
@@ -184,7 +184,7 @@ describe("normalise", {
       ),
       attrs = c("a", "b", "c", "d", "e", "f")
     )
-    norm.dependencies <- normalise(dependencies)
+    norm.dependencies <- synthesise(dependencies)
     expect_database_schema(
       norm.dependencies,
       list(
@@ -208,7 +208,7 @@ describe("normalise", {
       ),
       attrs = c("x1", "x2", "a", "b", "c", "d")
     )
-    norm.dep <- normalise(dependencies)
+    norm.dep <- synthesise(dependencies)
     expected_attrs <- list(
       c("x1", "x2", "c", "d"), # contains a if trans_deps not removed
       c("x1", "a", "b"),
@@ -239,7 +239,7 @@ describe("normalise", {
       ),
       attrs = c("A", "B", "C", "D", "E", "F")
     )
-    norm.dep <- normalise(dependencies)
+    norm.dep <- synthesise(dependencies)
     expect_database_schema(
       norm.dep,
       list(
@@ -275,7 +275,7 @@ describe("normalise", {
       ),
       attrs = c("A", "B", "C", "D", "E")
     )
-    norm.deps <- normalise(deps, remove_avoidable = FALSE)
+    norm.deps <- synthesise(deps, remove_avoidable = FALSE)
     expect_database_schema(
       norm.deps,
       list(
@@ -285,7 +285,7 @@ describe("normalise", {
         relation_names = c("A", "A_C")
       )
     )
-    norm.deps2 <- normalise(deps, remove_avoidable = TRUE)
+    norm.deps2 <- synthesise(deps, remove_avoidable = TRUE)
     expect_database_schema(
       norm.deps2,
       list(
@@ -297,11 +297,11 @@ describe("normalise", {
     )
 
     still_lossless_with_less_or_same_attributes_dep <- function(flat_deps) {
-      norm_deps_avoid <- normalise(
+      norm_deps_avoid <- synthesise(
         flat_deps,
         remove_avoidable = TRUE
       )
-      norm_deps_noavoid <- normalise(
+      norm_deps_noavoid <- synthesise(
         flat_deps,
         remove_avoidable = FALSE
       )
@@ -319,7 +319,7 @@ describe("normalise", {
 
     still_lossless_with_less_or_same_attributes <- function(df) {
       flat_deps <- discover(df, 1)
-      schema_avoid_lossless <- cross_reference(normalise(
+      schema_avoid_lossless <- cross_reference(synthesise(
         flat_deps,
         remove_avoidable = TRUE
       ))
@@ -385,7 +385,7 @@ describe("normalise", {
     enforces_fds <- function(deps, remove_avoidable = FALSE) {
       if (length(deps) == 0L)
         discard()
-      schema <- normalise(deps, remove_avoidable = remove_avoidable)
+      schema <- synthesise(deps, remove_avoidable = remove_avoidable)
       expect_all_enforced(deps, schema)
     }
 
