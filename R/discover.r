@@ -88,12 +88,10 @@
 #'   they inherit from any given class.
 #' @inheritParams autodb
 #'
-#' @return A named list with two elements. \code{dependencies} is a named list,
-#'   where the names give the dependent attribute, and each element is a list of
-#'   character vectors. Each character vector is a set of determinant attributes
-#'   for that dependent attribute. \code{attrs} is the attribute names of
-#'   \code{df}, in order. This is kept to serve as a default priority order for
-#'   the attributes during normalisation.
+#' @return A \code{\link{functional_dependency}} object, containing the discovered
+#'   dependencies. The column names of \code{df} are stored in the \code{attrs}
+#'   attribute, in order, to serve as a default priority order for the
+#'   attributes during normalisation.
 #' @encoding UTF-8
 #' @references
 #' Abedjan Z., Schulze P., Naumann F. (2014) DFD: efficient functional
