@@ -10,12 +10,11 @@ describe("autodb", {
       )
     )
   })
-  it("is the same as discover >> synthesise >> cross_reference >> decompose", {
+  it("is the same as discover >> normalise >> decompose", {
     df <- data.frame(a = 1:4, b = 1:2)
     database <- autodb(df)
     database2 <- discover(df, 1) |>
-      synthesise() |>
-      cross_reference() |>
+      normalise() |>
       decompose(df = df)
     expect_identical(database, database2)
     expect_silent(gv(database))
@@ -27,8 +26,7 @@ describe("autodb", {
         dup %>>%
           onRight(
             with_args(discover, accuracy = 1) %>>%
-              synthesise %>>%
-              cross_reference
+              normalise
           ) %>>%
           uncurry(decompose)
       )

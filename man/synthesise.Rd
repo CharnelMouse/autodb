@@ -13,10 +13,8 @@ synthesise(
 )
 }
 \arguments{
-\item{dependencies}{a list of functional dependencies, as given by
-\code{\link{discover}}: each dependency is a list, containing one character
-vector for the determinant set, and one unit-length character vector for
-the dependent.}
+\item{dependencies}{a \code{\link{functional_dependency}} object, as given by
+\code{\link{discover}}.}
 
 \item{remove_avoidable}{a logical, indicating whether to remove avoidable
 attributes in relations. If so, then an attribute are removed from
@@ -29,8 +27,7 @@ relation name, it will be changed, with a warning, to ensure that all
 relations have a unique name.}
 
 \item{progress}{a logical, for whether to display progress to the user during
-dependency search in \code{\link{discover}} and normalisation in
-\code{\link{synthesise}}.}
+dependency search in \code{\link{discover}}.}
 
 \item{progress_file}{a scalar character or a connection. If \code{progress}
 is non-zero, determines where the progress is written to, in the same way

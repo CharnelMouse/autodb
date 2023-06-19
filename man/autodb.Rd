@@ -39,8 +39,7 @@ relation name, it will be changed, with a warning, to ensure that all
 relations have a unique name.}
 
 \item{progress}{a logical, for whether to display progress to the user during
-dependency search in \code{\link{discover}} and normalisation in
-\code{\link{synthesise}}.}
+dependency search in \code{\link{discover}}.}
 
 \item{progress_file}{a scalar character or a connection. If \code{progress}
 is non-zero, determines where the progress is written to, in the same way
@@ -62,9 +61,8 @@ approximate dependencies, normalisation based on those, and plotting of the
 resulting "database" via Graphviz, with options to exlude some attributes at
 discovery time, or remove discovered dependencies at normalisation time.
 
-This is a wrapper function for applying \code{\link{discover}},
-\code{\link{synthesise}}, \code{\link{cross_reference}}, and
-\code{\link{decompose}}, in order.
+This is a wrapper function for applying \code{\link{normalise}},
+\code{\link{cross_reference}}, and \code{\link{decompose}}, in order.
 }
 \details{
 Since \code{decompose} only works with functional dependencies, not approximate

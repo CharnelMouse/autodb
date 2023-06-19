@@ -4,6 +4,7 @@ Breaking changes:
 
 * Renamed `dfd` to `discover`, to reflect the generalisation to allow the use of other methods. At the moment, this includes DFD and Tane.
 * Removed `flatten` from exported functions, in favour of flattening the functional dependencies in `dfd`/`discover` instead. Since `flatten` was usually called anyway, and its output is more readable since adding a `print` method for it, the old `dfd`/`discover` output format had little reason to be kept.
+* Renamed `normalise` to `synthesise`, to reflect its only creating relation schemas, not foreign key references. `normalise` now calls a wrapper for both `synthesise` and `cross_reference`, since in most cases we don't need to do these steps separately.
 
 Improvements:
 
