@@ -42,7 +42,7 @@ describe("synthesise", {
       ))()
 
     forall(
-      gen_flat_deps(7, 20),
+      gen_flat_deps(7, 20, to = 20L),
       apply_both(
         synthesise %>>% is_valid_database_schema,
         with_args(synthesise, remove_avoidable = TRUE) %>>%
@@ -51,8 +51,20 @@ describe("synthesise", {
     )
   })
   it("is invariant to dependency reordering", {
-    gen_permutation <- gen_flat_deps(4, 5) |>
-      gen.and_then(\(fds) list(fds, gen.sample(fds)))
+    gen_permutation <- gen.int(10) |>
+      gen.and_then(\(n) list(
+        gen_named_flat_deps_fixed_size(letters[1:10], n, 5, unique = FALSE),
+        gen.sample.int(n),
+        n
+      )) |>
+      gen.with(\(lst) {
+        if (length(lst[[1]]) != length(lst[[2]]))
+          stop(print(lst))
+        lst[1:2]
+      }) |>
+      gen.with(\(lst) {
+        list(lst[[1]], lst[[1]][lst[[2]]])
+      })
     normalisation_permutation_invariant <- if_discard_else(
       uncurry(identical),
       with_args(lapply, synthesise) %>>% (uncurry(expect_identical))
@@ -337,7 +349,7 @@ describe("synthesise", {
       still_lossless_with_less_or_same_attributes
     )
     forall(
-      gen_flat_deps(7, 20),
+      gen_flat_deps(7, 20, to = 20L),
       still_lossless_with_less_or_same_attributes_dep,
       tests = 1000
     )
@@ -349,17 +361,16 @@ describe("synthesise", {
       if (length(implied_flat_fds) > 0)
         implied_flat_fds <- unlist(implied_flat_fds, recursive = FALSE)
       implied_flat_fds <- functional_dependency(implied_flat_fds, attrs(deps))
-      fds_reproduced <- vapply(
-        deps,
-        \(fd) {
-          closure <- find_closure(
-            fd[[1]],
-            detset(implied_flat_fds),
-            dependent(implied_flat_fds)
-          )
-          fd[[2]] %in% closure
-        },
-        logical(1)
+      dep_closures <- lapply(
+        detset(deps),
+        find_closure,
+        detset(implied_flat_fds),
+        dependent(implied_flat_fds)
+      )
+      fds_reproduced <- mapply(
+        \(closure, dep) dep %in% closure,
+        dep_closures,
+        dependent(deps)
       )
 
       act <- quasi_label(rlang::enquo(deps), arg = "object")
@@ -373,7 +384,7 @@ describe("synthesise", {
           paste(
             vapply(
               act$nonrep,
-              \(fd) paste0("{", toString(fd[[1]]), "} -> ", fd[2]),
+              \(fd) paste0("{", toString(detset(fd)[[1]]), "} -> ", dependent(fd)),
               character(1)
             ),
             collapse = "\n"
@@ -410,7 +421,7 @@ describe("synthesise", {
     enforces_fds(deps, TRUE)
 
     forall(
-      gen_flat_deps_fixed_names(7, 20),
+      gen_flat_deps_fixed_names(7, 20, from = 1L, to = 20L),
       enforces_fds,
       discard.limit = 10L
     )

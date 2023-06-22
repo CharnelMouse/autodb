@@ -15,6 +15,8 @@
 #' @param attrs a character vector, giving the names of all attributes. These
 #'   need not be present in \code{FDs}, but all attributes in \code{FDs} must be
 #'   present in \code{attrs}.
+#' @param unique a logical, TRUE by default, for whether to remove duplicate
+#'   dependencies.
 #'
 #' @return a \code{functional_dependency} object, containing the list given in
 #'   \code{FDs}, with \code{attrs} stored in an attribute of the same name.
@@ -33,7 +35,7 @@
 #' dependent(fds)
 #' attrs(fds)
 #' @export
-functional_dependency <- function(FDs, attrs) {
+functional_dependency <- function(FDs, attrs, unique = TRUE) {
   if (any(lengths(FDs) != 2))
     stop("FDs elements must have length two")
   det_sets <- lapply(FDs, `[[`, 1L)
@@ -54,7 +56,7 @@ functional_dependency <- function(FDs, attrs) {
     \(FD) list(FD[[1]][order(match(FD[[1]], attrs))], FD[[2]])
   )
   structure(
-    unique(sorted_FDs),
+    if (unique) unique(sorted_FDs) else sorted_FDs,
     attrs = attrs,
     class = c("functional_dependency", "list")
   )
@@ -68,13 +70,18 @@ functional_dependency <- function(FDs, attrs) {
   res
 }
 
+#' @export
+`[[.functional_dependency` <- function(x, i) {
+  if (length(i) == 0L)
+    stop("attempt to select less than one element")
+  if (length(i) > 1L)
+    stop("attempt to select more than one element")
+  x[i]
+}
+
 #' @exportS3Method
 print.functional_dependency <- function(x, ...) {
-  det_txt <- vapply(
-    x,
-    \(fd) toString(fd[[1]]),
-    character(1)
-  )
+  det_txt <- vapply(detset(x), toString, character(1))
   if (length(x) == 0L)
     padding <- character()
   else{
@@ -129,7 +136,7 @@ merge_attribute_orderings <- function(...) {
       nomatch = 0L
     )) {
       warning(paste(
-        "inconsistent attribute orderings,",
+        "pairwise-inconsistent attribute orderings,",
         "returning attributes in order of listing"
       ))
       return(Reduce(union, ordered_sets))
@@ -143,7 +150,10 @@ merge_attribute_orderings <- function(...) {
     maxs <- apply(indices, 1, max, na.rm = TRUE)
     top <- which(maxs == 1)
     if (length(top) == 0L) {
-      warning("inconsistent attribute orderings")
+      warning(paste(
+        "inconsistent attribute orderings,",
+        "returning remaining attributes in order of listing"
+      ))
       return(union(merged, all_attrs))
     }
     nxt <- top[[1L]]
@@ -174,7 +184,7 @@ detset <- function(x, ...) {
 
 #' @exportS3Method
 detset.functional_dependency <- function(x, ...) {
-  lapply(x, `[[`, 1L)
+  lapply(unclass(x), `[[`, 1L)
 }
 
 #' Dependents
@@ -194,7 +204,7 @@ dependent <- function(x, ...) {
 
 #' @exportS3Method
 dependent.functional_dependency <- function(x, ...) {
-  vapply(x, `[[`, character(1L), 2L)
+  vapply(unclass(x), `[[`, character(1L), 2L)
 }
 
 #' Relational data attributes

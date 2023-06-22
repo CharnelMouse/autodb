@@ -80,8 +80,10 @@ describe("functional_dependency", {
   })
   it("can be subsetted while preserving attributes", {
     x <- functional_dependency(list(list("a", "b")), letters[1:5])
-    y <- x[TRUE]
-    expect_identical(x, y)
+    expect_identical(x[TRUE], x)
+    expect_identical(x[[1]], x)
+    expect_error(x[[integer()]])
+    expect_error(x[[c(1, 1)]])
   })
   it("concatenates within class", {
     concatenate_within_class <- function(...) {
@@ -136,7 +138,7 @@ describe("functional_dependency", {
     }
     concatenate_keeps_attribute_order <- function(...) {
       lst <- list(...)
-      res <- c(...)
+      expect_silent(res <- c(...))
       for (index in seq_along(lst)) {
         expect_identical(
           attrs(lst[[!!index]]),
@@ -147,18 +149,27 @@ describe("functional_dependency", {
 
     forall(
       gen.sample(letters[1:8], gen.sample(1:3)) |>
-        gen.and_then(sort %>>% with_args(functional_dependency, FDs = list())) |>
+        gen.with(sort %>>% with_args(functional_dependency, FDs = list())) |>
         gen.list(from = 2, to = 5),
       concatenate_keeps_attribute_order,
       curry = TRUE
     )
 
+    # example where attributes aren't consistent, but are pairwise
+    deps <- list(
+      functional_dependency(list(), c("a", "b")),
+      functional_dependency(list(), c("b", "c")),
+      functional_dependency(list(), c("c", "a"))
+    )
+    expect_failure(do.call(concatenate_keeps_attribute_order, deps))
+
     forall(
-      gen.fd(letters[1:6], 0, 8) |>
-      gen.list(from = 1, to = 10) |>
-        gen.and_then(remove_inconsistent),
+      gen.subsequence(letters[1:6]) |>
+        gen.with(\(attrs) functional_dependency(list(), attrs)) |>
+        gen.list(from = 2, to = 10),
       concatenate_keeps_attribute_order,
-      curry = TRUE
+      curry = TRUE,
+      discard.limit = 10
     )
   })
   it("concatenates without losing FDs", {
@@ -169,8 +180,8 @@ describe("functional_dependency", {
         expect_true(all(is.element(
           # sort determinant sets to keep test independent from that for
           # attribute orderings
-          lapply(l, \(fd) list(sort(fd[[1]]), fd[[2]])),
-          lapply(res, \(fd) list(sort(fd[[1]]), fd[[2]]))
+          lapply(unclass(l), \(fd) list(sort(fd[[1]]), fd[[2]])),
+          lapply(unclass(res), \(fd) list(sort(fd[[1]]), fd[[2]]))
         )))
       }
     }

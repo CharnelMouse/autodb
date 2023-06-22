@@ -498,7 +498,7 @@ describe("gv", {
   describe("database_schema", {
     it("works for synthesise and cross_reference outputs", {
       forall(
-        gen_flat_deps(7, 20),
+        gen_flat_deps(7, 20, to = 20L),
         synthesise %>>%
           apply_both(
             gv %>>% expect_no_error,

@@ -4,7 +4,7 @@
 \alias{functional_dependency}
 \title{Functional dependency vectors}
 \usage{
-functional_dependency(FDs, attrs)
+functional_dependency(FDs, attrs, unique = TRUE)
 }
 \arguments{
 \item{FDs}{a list of functional dependencies, in the form of two-elements
@@ -15,6 +15,9 @@ attribute.}
 \item{attrs}{a character vector, giving the names of all attributes. These
 need not be present in \code{FDs}, but all attributes in \code{FDs} must be
 present in \code{attrs}.}
+
+\item{unique}{a logical, TRUE by default, for whether to remove duplicate
+dependencies.}
 }
 \value{
 a \code{functional_dependency} object, containing the list given in

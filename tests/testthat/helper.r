@@ -1,13 +1,16 @@
 is_valid_functional_dependency <- function(x) {
   expect_s3_class(x, "functional_dependency")
   attrs <- attr(x, "attrs")
-  expect_true(all(lengths(x) == 2L))
-  expect_true(all(lengths(lapply(x, `[[`, 2L)) == 1L))
-  expect_true(all(vapply(x, \(fd) is.character(fd[[1]]), logical(1))))
-  lhs <- lapply(x, `[[`, 1L)
+  expect_true(all(lengths(unclass(x)) == 2L))
+  expect_silent(dependent(x))
+  expect_true(all(lengths(dependent(x)) == 1L))
+  expect_true(all(vapply(detset(x), is.character, logical(1))))
+  lhs <- detset(x)
 
   expect_true(all(is.element(unlist(x), attrs)))
-  expect_true(all(vapply(x, \(fd) !is.element(fd[[2]], fd[[1]]), logical(1))))
+  expect_true(all(
+    mapply(\(dets, dep) !is.element(dep, dets), detset(x), dependent(x))
+  ))
   expect_true(all(vapply(
     lhs,
     \(detset) !is.unsorted(match(detset, attrs)),
@@ -18,19 +21,22 @@ is_valid_functional_dependency <- function(x) {
 is_valid_minimal_functional_dependency <- function(x) {
   is_valid_functional_dependency(x)
   grouped <- split(detset(x), dependent(x))
-  expect_true(!any(lapply(
-    grouped,
-    \(detsets) anyDuplicated(detsets) ||
-      any(outer(
-        detsets,
-        detsets,
-        Vectorize(\(d1, d2) {
-          both <- intersect(d1, d2)
-          !setequal(d1, d2) &&
-            (setequal(both, d1) || setequal(both, d2))
-        })
-      ))
-  )))
+  expect_true(!any(
+    vapply(
+      grouped,
+      \(detsets) anyDuplicated(detsets) ||
+        any(outer(
+          detsets,
+          detsets,
+          Vectorize(\(d1, d2) {
+            both <- intersect(d1, d2)
+            !setequal(d1, d2) &&
+              (setequal(both, d1) || setequal(both, d2))
+          })
+        )),
+      logical(1)
+    )
+  ))
 }
 
 is_valid_database_schema <- function(x) {
@@ -221,51 +227,30 @@ gen_df <- function(nrow, ncol, minrow = 0L, remove_dup_rows = FALSE) {
 }
 
 gen_attr_name <- function(len) {
-  generate(for (clen in gen.int(len)) {
-    generate(for (attr_name in gen.sample(c(letters, "_", " ", "."), clen)) {
-      paste(attr_name, collapse = "")
-    })
-  })
+  gen.sample(c(letters, "_", " ", "."), gen.int(len)) |>
+    gen.with(\(attr_name) paste(attr_name, collapse = ""))
 }
 
 gen_attr_names <- function(n, len) {
-  generate(for (attr_names in gen.c(gen_attr_name(len), of = n)) {
-    make.unique(as.character(attr_names)) # as.character for length-0 NULL value
-  })
+  gen_attr_name(len) |>
+    gen.c(of = n) |>
+    # as.character for length-0 NULL value
+    gen.with(\(attr_names) make.unique(as.character(attr_names)))
 }
 
 gen_subsequence <- function(x) {
-  generate(for (n in gen.sample(seq.int(0, length(x)), 1)) {
-    generate(for (sample in gen.sample(x, n)) {
-      sample[order(match(sample, x))]
-    })
-  })
-}
-
-gen_det <- function(n_attrs, n) {
-  gen_subsequence(setdiff(seq_len(n_attrs), n))
-}
-
-gen_dets <- function(n_attrs, n, max_dets) {
-  gen.list(
-    gen_det(n_attrs, n),
-    from = 0,
-    to = min(max_dets, n_attrs - 1)
-  )
+  gen.sample(x, gen.sample(seq.int(0, length(x)), 1)) |>
+    gen.with(\(sample) sample[order(match(sample, x))])
 }
 
 gen_unique_dets <- function(n_attrs, n, max_dets) {
   # should also check no redundancy
-  generate(for (dets in gen_dets(
-    n_attrs,
-    n,
-    min(max_dets, n_attrs - 1)
-  )) {
-    unique(dets)
-  })
+  gen_subsequence(setdiff(seq_len(n_attrs), n)) |>
+    gen.list(from = 0, to = min(max_dets, n_attrs - 1)) |>
+    gen.with(unique)
 }
 
-gen_unnamed_flat_deps <- function(n_attrs, max_dets) {
+gen_detset_lists <- function(n_attrs, max_dets) {
   md <- min(max_dets, n_attrs - 1)
   gen.structure(lapply(
     seq_len(n_attrs),
@@ -275,39 +260,57 @@ gen_unnamed_flat_deps <- function(n_attrs, max_dets) {
   ))
 }
 
-gen_flat_deps_fixed_names <- function(n, max_dets, len = 9) {
-  if (n == 0L)
-    return(gen.impure(functional_dependency(list(), character())))
-  attrs <- LETTERS[seq.int(n)]
-  generate(for (unnamed_deps in gen_unnamed_flat_deps(length(attrs), max_dets)) {
-    deps <- unlist(
-      Map(
-        \(ud, a) lapply(ud, \(cs) list(attrs[cs], a)),
-        unnamed_deps,
-        attrs
-      ),
-      recursive = FALSE
-    )
-    functional_dependency(deps, attrs)
-  })
+gen_named_flat_deps_fixed_size <- function(attrs, n, max_detset_size, unique = TRUE) {
+  list(
+    gen.sample(attrs, n, replace = TRUE),
+    gen.sample(attrs, gen.sample(0:max_detset_size)) |>
+      gen.list(of = n)
+  ) |>
+    gen.with(\(lst) functional_dependency(
+      Map(\(x, y) list(setdiff(x, y), y), lst[[2]], lst[[1]]),
+      attrs,
+      unique = unique
+    ))
 }
 
-gen_flat_deps <- function(n, max_dets, len = 9) {
-  if (n == 0L)
-    return(gen.impure(functional_dependency(list(), character())))
-  generate(for (attrs in gen_attr_names(n, len)) {
-    generate(for (unnamed_deps in gen_unnamed_flat_deps(length(attrs), max_dets)) {
-      deps <- unlist(
-        Map(
-          \(ud, a) lapply(ud, \(cs) list(attrs[cs], a)),
-          unnamed_deps,
-          attrs
-        ),
-        recursive = FALSE
-      )
-      functional_dependency(deps, attrs)
-    })
-  })
+gen_named_flat_deps <- function(
+  attrs,
+  max_detset_size,
+  from = 0L,
+  to = NULL,
+  of = NULL
+) {
+  max_detset_size <- min(max_detset_size, length(attrs) - 1L)
+  (
+    if (missing(of) || is.null(of))
+      gen.sample(seq.int(from, to), 1)
+    else
+      gen.pure(of)
+  ) |>
+    gen.and_then(\(m) gen_named_flat_deps_fixed_size(attrs, m, max_detset_size))
+}
+
+gen_flat_deps_fixed_names <- function(
+  n_attrs,
+  max_detset_size,
+  from = 0L,
+  to = NULL,
+  of = NULL
+) {
+  attrs <- LETTERS[seq.int(n_attrs)]
+  gen_named_flat_deps(attrs, max_detset_size, from, to, of)
+}
+
+gen_flat_deps <- function(
+  n_attrs,
+  max_detset_size,
+  max_attr_nchar = 9,
+  from = 0L,
+  to = NULL,
+  of = NULL
+) {
+  gen_attr_names(n_attrs, max_attr_nchar) |>
+    gen.and_then(\(attrs) gen_named_flat_deps(attrs, max_detset_size, from, to, of))
 }
 
 # generating key / determinant set lists

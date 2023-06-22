@@ -8,7 +8,7 @@ describe("normalise", {
     is_valid_database_schema(empty_schema)
 
     forall(
-      gen_flat_deps(7, 6),
+      gen_flat_deps(7, 6, to = 6L),
       apply_both(
         normalise %>>% is_valid_database_schema,
         with_args(normalise, ensure_lossless = FALSE) %>>%
@@ -18,7 +18,7 @@ describe("normalise", {
   })
   it("is the same as synthesise >> cross_reference", {
     forall(
-      gen_flat_deps(7, 6),
+      gen_flat_deps(7, 6, to = 6L),
       expect_biidentical(
         normalise,
         synthesise %>>% cross_reference

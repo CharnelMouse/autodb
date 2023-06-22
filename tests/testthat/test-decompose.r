@@ -173,15 +173,11 @@ describe("decompose", {
     }
     gen_fd_reduction_for_df <- function(df) {
       true_fds <- discover(df, 1)
-      nonempty_detsets <- which(vapply(
-        true_fds,
-        \(fd) length(fd[[1]]) > 0,
-        logical(1)
-      ))
+      nonempty_detsets <- which(lengths(detset(true_fds)) > 0L)
       if (length(nonempty_detsets) == 0)
         return(gen.pure(list(df, NULL, NULL)))
       gen.element(nonempty_detsets) |>
-        gen.with(\(index) true_fds[[index]]) |>
+        gen.with(\(index) list(detset(true_fds)[[index]], dependent(true_fds)[[index]])) |>
         gen.and_then(\(fd) list(fd, gen.int(length(fd[[1]])))) |>
         gen.with(\(lst) c(list(df), lst))
     }
@@ -195,9 +191,10 @@ describe("decompose", {
         discard()
       flat_deps <- discover(df, 1)
       reduced_index <- match(list(reduced_fd), flat_deps)
-      reduced_deps <- flat_deps
+      reduced_deps <- unclass(flat_deps)
       reduced_deps[[reduced_index]][[1]] <-
-        flat_deps[[reduced_index]][[1]][-removed_det]
+        reduced_deps[[reduced_index]][[1]][-removed_det]
+      reduced_deps <- functional_dependency(reduced_deps, attrs(flat_deps))
       schema <- normalise(reduced_deps)
       expect_error(
         decompose(df, schema),

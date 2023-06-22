@@ -9,16 +9,17 @@ describe("discover", {
     expect_setequal(attrs(deps1), attrs(deps2))
     expect_setequal(
       deps1,
-      functional_dependency(deps2, attrs(deps1))
+      functional_dependency(unclass(deps2), attrs(deps1))
     )
   }
   expect_equiv_deps_except_names <- function(deps1, deps2) {
     nms1 <- attrs(deps1)
     nms2 <- attrs(deps2)
     renamed_deps1 <- functional_dependency(
-      lapply(
-        deps1,
-        \(fd) list(nms2[match(fd[[1]], nms1)], nms2[[match(fd[[2]], nms1)]])
+      Map(
+        list,
+        lapply(detset(deps1), \(dets) nms2[match(dets, nms1)]),
+        nms2[match(dependent(deps1), nms1)]
       ),
       nms2
     )
@@ -40,11 +41,14 @@ describe("discover", {
     expect_identical(attrs(deps1), attrs(deps2))
     expect_true(all(vapply(
       deps1,
-      \(ds) any(vapply(
-        deps2,
-        \(ds2) identical(ds2[[2]], ds[[2]]) && all(is.element(ds2[[1]], ds[[1]])),
-        logical(1)
-      )),
+      \(ds) any(
+        vapply(dependent(deps2), identical, logical(1), dependent(ds)) &
+          vapply(
+            detset(deps2),
+            \(detset) all(is.element(detset, detset(ds)[[1L]])),
+            logical(1)
+          )
+      ),
       logical(1)
     )))
   }
@@ -245,6 +249,7 @@ describe("discover", {
           list(df, df[, perm, drop = FALSE])
         })
     }
+
     forall(
       gen_df_and_attr_perm(4, 6),
       both_terminate_then(expect_equiv_deps, 1),
@@ -362,7 +367,7 @@ describe("discover", {
       }
     }
     exclusion_not_in_determinant_sets <- function(deps, attr) {
-      for (det_sets in lapply(deps, `[[`, 1L)) {
+      for (det_sets in detset(deps)) {
         for (det_set in det_sets) {
           expect_false(is.element(attr, det_set))
         }

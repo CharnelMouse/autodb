@@ -29,7 +29,7 @@ describe("cross_reference", {
     is_valid_database_schema(empty_schema)
 
     forall(
-      gen_flat_deps(7, 20),
+      gen_flat_deps(7, 20, to = 20L),
       apply_both(
         normalise %>>% is_valid_database_schema,
         with_args(normalise, ensure_lossless = FALSE) %>>%
@@ -67,7 +67,7 @@ describe("cross_reference", {
       }
     }
     forall(
-      gen_flat_deps(20, 2),
+      gen_flat_deps(20, 2, from = 10L, to = 20L),
       links_by_exactly_one_parent_key,
       discard.limit = 10
     )
@@ -80,7 +80,7 @@ describe("cross_reference", {
       expect_true(lone_attr %in% unlist(linked$attrs))
     }
     forall(
-      gen_flat_deps(7, 20),
+      gen_flat_deps(7, 20, to = 20L),
       reintroduces_missing_attrs_if_lossless
     )
   })
@@ -150,7 +150,7 @@ describe("cross_reference", {
     }
 
     forall(
-      gen_flat_deps(7, 20),
+      gen_flat_deps(7, 20, to = 20L),
       still_lossless_with_less_or_same_attributes_dep
     )
   })
@@ -162,7 +162,7 @@ describe("cross_reference", {
       expect_false(any(vapply(key_indices, is.unsorted, logical(1))))
     }
     forall(
-      gen_flat_deps(7, 20),
+      gen_flat_deps(7, 20, to = 20L),
       adds_ordered_primary_keys
     )
   })
@@ -180,13 +180,13 @@ describe("cross_reference", {
       )
     }
     forall(
-      gen_flat_deps(7, 20),
+      gen_flat_deps(7, 20, to = 20L),
       only_returns_non_extraneous_relationships
     )
   })
   it("is idempotent", {
     forall(
-      gen_flat_deps(7, 20),
+      gen_flat_deps(7, 20, to = 20L),
       normalise %>>%
         expect_biidentical(identity, cross_reference)
     )
