@@ -238,14 +238,9 @@ gen_attr_names <- function(n, len) {
     gen.with(\(attr_names) make.unique(as.character(attr_names)))
 }
 
-gen_subsequence <- function(x) {
-  gen.sample(x, gen.sample(seq.int(0, length(x)), 1)) |>
-    gen.with(\(sample) sample[order(match(sample, x))])
-}
-
 gen_unique_dets <- function(n_attrs, n, max_dets) {
   # should also check no redundancy
-  gen_subsequence(setdiff(seq_len(n_attrs), n)) |>
+  gen.subsequence(setdiff(seq_len(n_attrs), n)) |>
     gen.list(from = 0, to = min(max_dets, n_attrs - 1)) |>
     gen.with(unique)
 }
