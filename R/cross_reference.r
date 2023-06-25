@@ -27,10 +27,10 @@
 #'  }
 #' @export
 cross_reference <- function(schema, ensure_lossless = TRUE) {
-  all_attrs <- schema$all_attrs
-  attrs <- schema$attrs
-  keys <- schema$keys
-  relation_names <- schema$relation_names
+  all_attrs <- all_attrs(schema)
+  attrs <- attrs(schema)
+  keys <- keys(schema)
+  relation_names <- names(schema)
 
   if (ensure_lossless) {
     G <- synthesised_fds(attrs, keys)

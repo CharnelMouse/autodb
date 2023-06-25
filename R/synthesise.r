@@ -107,8 +107,10 @@ synthesise <- function(
     warning("constants_name appears in generated relation names, and will be changed to keep relation names unique")
   relation_names <- make.names(relation_names, unique = TRUE)
   stopifnot(!anyDuplicated(relation_names))
-  inter$relation_names <- relation_names
-  structure(inter, class = c("database_schema", "list"))
+  relation_schema(
+    stats::setNames(Map(list, inter$attrs, inter$keys), relation_names),
+    inter$all_attrs
+  )
 }
 
 convert_to_vectors <- function(flat_dependencies) {

@@ -4,14 +4,17 @@ gen.nonempty_key <- gen.sample.int(2, gen.int(5), replace = TRUE)
 gen.key <- gen.sample.int(2, gen.sample(0:5, 1), replace = TRUE)
 
 describe("synthesise", {
-  expect_database_schema <- function(current, target) {
+  expect_relation_schema <- function(current, target) {
     expect_identical(
       current,
-      structure(target, class = c("database_schema", "list"))
+      relation_schema(
+        setNames(Map(list, target$attrs, target$keys), target$relation_names),
+        target$all_attrs
+      )
     )
   }
   gets_unique_table_names <- function(fds) {
-    expect_true(!anyDuplicated(synthesise(fds)$relation_names))
+    expect_true(!anyDuplicated(names(synthesise(fds))))
   }
 
   it("gives valid schemas", {
@@ -36,17 +39,17 @@ describe("synthesise", {
     )
     deps |>
       (apply_both(
-        synthesise %>>% is_valid_database_schema,
+        synthesise %>>% is_valid_relation_schema,
         with_args(synthesise, remove_avoidable = TRUE) %>>%
-          is_valid_database_schema
+          is_valid_relation_schema
       ))()
 
     forall(
       gen_flat_deps(7, 20, to = 20L),
       apply_both(
-        synthesise %>>% is_valid_database_schema,
+        synthesise %>>% is_valid_relation_schema,
         with_args(synthesise, remove_avoidable = TRUE) %>>%
-          is_valid_database_schema
+          is_valid_relation_schema
       )
     )
   })
@@ -96,9 +99,9 @@ describe("synthesise", {
       ),
       attrs = c("A", "B", "C", "D")
     ))
-    expect_setequal(schema$relation_names, c("A_B", "A_D", "C_D"))
-    ord <- match("A_D", schema$relation_names)
-    expect_identical(setdiff(schema$attrs[[ord]], c("A", "D")), "B")
+    expect_setequal(names(schema), c("A_B", "A_D", "C_D"))
+    ord <- match("A_D", names(schema))
+    expect_identical(setdiff(attrs(schema)[[ord]], c("A", "D")), "B")
   })
   it("removes extraneous attributes", {
     dependencies <- functional_dependency(
@@ -109,7 +112,7 @@ describe("synthesise", {
       attrs = c("a", "b", "c")
     )
     norm.dependencies <- synthesise(dependencies)
-    expect_database_schema(
+    expect_relation_schema(
       norm.dependencies,
       list(
         attrs = list(c("a", "b", "c")),
@@ -129,7 +132,7 @@ describe("synthesise", {
       attrs = c("a", "b", "c")
     )
     norm.dependencies <- synthesise(dependencies)
-    expect_database_schema(
+    expect_relation_schema(
       norm.dependencies,
       list(
         attrs = list(c("a", "b"), c("b", "c")),
@@ -150,7 +153,7 @@ describe("synthesise", {
       attrs = c("a", "b", "c", "d")
     )
     norm.dependencies <- synthesise(dependencies)
-    expect_database_schema(
+    expect_relation_schema(
       norm.dependencies,
       list(
         attrs = list(c("a", "d", "b"), c("b", "c", "a")),
@@ -170,7 +173,7 @@ describe("synthesise", {
       attrs = c("a", "b")
     )
     norm.df <- synthesise(dependencies)
-    expect_database_schema(
+    expect_relation_schema(
       norm.df,
       list(
         attrs = list(c("a", "b")),
@@ -197,7 +200,7 @@ describe("synthesise", {
       attrs = c("a", "b", "c", "d", "e", "f")
     )
     norm.dependencies <- synthesise(dependencies)
-    expect_database_schema(
+    expect_relation_schema(
       norm.dependencies,
       list(
         attrs = list(c("a", "b", "c", "d", "f"), c("d", "e"), c("f", "e")),
@@ -233,11 +236,11 @@ describe("synthesise", {
       list(c("x2", "b")),
       list("c")
     )
-    expect_setequal(norm.dep$attrs, expected_attrs)
-    expect_setequal(norm.dep$keys, expected_keys)
+    expect_setequal(attrs(norm.dep), expected_attrs)
+    expect_setequal(keys(norm.dep), expected_keys)
     expect_identical(
-      match(norm.dep$attrs, expected_attrs),
-      match(norm.dep$keys, expected_keys)
+      match(attrs(norm.dep), expected_attrs),
+      match(keys(norm.dep), expected_keys)
     )
   })
   it("replaces keys / non-key attributes with their bijection set's chosen index", {
@@ -252,7 +255,7 @@ describe("synthesise", {
       attrs = c("A", "B", "C", "D", "E", "F")
     )
     norm.dep <- synthesise(dependencies)
-    expect_database_schema(
+    expect_relation_schema(
       norm.dep,
       list(
         attrs = list(c("C", "A", "B", "D"), c("C", "E", "F")),
@@ -288,7 +291,7 @@ describe("synthesise", {
       attrs = c("A", "B", "C", "D", "E")
     )
     norm.deps <- synthesise(deps, remove_avoidable = FALSE)
-    expect_database_schema(
+    expect_relation_schema(
       norm.deps,
       list(
         attrs = list(c("A", "B"), c("A", "C", "B", "D", "E")),
@@ -298,7 +301,7 @@ describe("synthesise", {
       )
     )
     norm.deps2 <- synthesise(deps, remove_avoidable = TRUE)
-    expect_database_schema(
+    expect_relation_schema(
       norm.deps2,
       list(
         attrs = list(c("A", "B"), c("A", "C", "D", "E")),
@@ -356,7 +359,10 @@ describe("synthesise", {
   })
   it("gives database schemas that enforce the given functional dependencies", {
     expect_all_enforced <- function(deps, schema) {
-      implied_fds <- synthesised_fds(schema$attrs, schema$keys)
+      implied_fds <- synthesised_fds(
+        attrs(schema),
+        keys(schema)
+      )
       implied_flat_fds <- implied_fds
       if (length(implied_flat_fds) > 0)
         implied_flat_fds <- unlist(implied_flat_fds, recursive = FALSE)

@@ -496,14 +496,10 @@ describe("gv", {
     })
   })
   describe("database_schema", {
-    it("works for synthesise and cross_reference outputs", {
+    it("works for normalise/cross_reference outputs", {
       forall(
         gen_flat_deps(7, 20, to = 20L),
-        synthesise %>>%
-          apply_both(
-            gv %>>% expect_no_error,
-            cross_reference %>>% gv %>>% expect_no_error
-          )
+        normalise %>>% gv %>>% expect_no_error
       )
     })
     it("works for degenerate cases", {
@@ -692,6 +688,62 @@ describe("gv", {
         class = c("database_schema", "list")
       )
       plot_string <- gv(database)
+      expect_identical(substr(plot_string, 1, 9), "digraph {")
+    })
+  })
+  describe("relation_schema", {
+    it("works for synthesise outputs", {
+      forall(
+        gen_flat_deps(7, 20, to = 20L),
+        synthesise %>>% gv %>>% expect_no_error
+      )
+    })
+    it("works for degenerate cases", {
+      table_dum <- data.frame()
+      table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
+      schema_dum <- synthesise(discover(table_dum, 1))
+      schema_dee <- synthesise(discover(table_dee, 1))
+      expect_no_error(gv(schema_dum))
+      expect_no_error(gv(schema_dee))
+    })
+    it("converts attribute/df names to snake case for labels (inc. spaces, periods)", {
+      schema <- relation_schema(
+        list(
+          `Genre ID` = list(
+            c("Genre ID", "Genre Name"),
+            list("Genre ID")
+          )
+        ),
+        c("Genre ID", "Genre Name")
+      )
+      expected_string <- paste(
+        "digraph book {",
+        "  rankdir = \"LR\"",
+        "  node [shape=plaintext];",
+        "",
+        "  genre_id [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD COLSPAN=\"2\">Genre ID</TD></TR>",
+        "    <TR><TD PORT=\"TO_genre_id\">Genre ID</TD><TD PORT =\"FROM_genre_id\" BGCOLOR=\"black\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_genre_name\">Genre Name</TD><TD PORT =\"FROM_genre_name\"></TD></TR>",
+        "    </TABLE>>];",
+        "}",
+        "",
+        sep = "\n"
+      )
+      expect_identical(
+        gv(schema, "book"),
+        expected_string
+      )
+    })
+    it("doesn't give a graph ID if name is missing", {
+      schema <- relation_schema(
+        list(
+          a = list(c("a", "b"), list("a"))
+        ),
+        c("a", "b")
+      )
+      plot_string <- gv(schema)
       expect_identical(substr(plot_string, 1, 9), "digraph {")
     })
   })

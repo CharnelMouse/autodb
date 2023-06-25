@@ -39,6 +39,55 @@ is_valid_minimal_functional_dependency <- function(x) {
   ))
 }
 
+is_valid_relation_schema <- function(x) {
+  expect_s3_class(x, "relation_schema")
+  expect_true(!anyDuplicated(names(x)))
+  expect_true(all(nchar(names(x)) > 0L))
+  expect_true(all(lengths(unclass(x)) == 2))
+  attrs <- attrs(x)
+  keys <- keys(x)
+  key_els <- lapply(keys, \(ks) unique(unlist(ks)))
+  expect_identical(
+    Map(\(as, n) as[seq_len(n)], attrs, lengths(key_els)),
+    key_els
+  )
+  nonprime_attrs <- Map(
+    \(as, n) as[setdiff(seq_along(as), seq_len(n))],
+    attrs,
+    lengths(key_els)
+  )
+  expect_true(all(vapply(
+    keys,
+    \(ks) all(vapply(ks, \(k) !is.unsorted(match(k, all_attrs(x))), logical(1))),
+    logical(1)
+  )))
+  expect_true(all(vapply(
+    nonprime_attrs,
+    \(as) all(vapply(as, \(a) !is.unsorted(match(a, all_attrs(x))), logical(1))),
+    logical(1)
+  )))
+  expect_true(all(vapply(keys, Negate(anyDuplicated), logical(1))))
+  expect_lte(sum(vapply(keys, identical, logical(1), list(character()))), 1L)
+
+  implied_fds <- functional_dependency(
+    unlist(
+      Map(
+        \(ks, as) {
+          unlist(
+            lapply(ks, \(k) lapply(setdiff(as, k), \(a) list(k, a))),
+            recursive = FALSE
+          )
+        },
+        keys,
+        attrs
+      ),
+      recursive = FALSE
+    ),
+    attr(x, "all_attrs")
+  )
+  expect_true(!anyDuplicated(implied_fds))
+}
+
 is_valid_database_schema <- function(x) {
   expect_s3_class(x, "database_schema")
   expect_true(!anyDuplicated(x$relation_names))

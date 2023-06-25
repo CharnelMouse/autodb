@@ -1,7 +1,7 @@
 library(hedgehog)
 
 describe("functional_dependency", {
-  gen.fd <- function(x, from, to) {
+  gen.fd <- function(x, from, to, unique = TRUE) {
     gen.sample(x, 1) |>
       gen.and_then(\(dependent) {
         list(
@@ -14,7 +14,7 @@ describe("functional_dependency", {
         c(list(lst), list(gen.sample(unique(unlist(lst)))))
       }) |>
       gen.with(\(lst) {
-        functional_dependency(lst[[1]], lst[[2]])
+        functional_dependency(lst[[1]], lst[[2]], unique = unique)
       })
   }
   it("expects valid input: FD elements correct lengths, contain characters of valid lengths", {
@@ -84,6 +84,12 @@ describe("functional_dependency", {
     expect_identical(x[[1]], x)
     expect_error(x[[integer()]])
     expect_error(x[[c(1, 1)]])
+  })
+  it("can be made unique within class", {
+    forall(
+      gen.fd(letters[1:6], 0, 8, unique = FALSE),
+      unique %>>% class %>>% with_args(expect_identical, "functional_dependency")
+    )
   })
   it("concatenates within class", {
     concatenate_within_class <- function(...) {
