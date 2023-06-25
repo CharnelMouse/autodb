@@ -58,7 +58,7 @@ functional_dependency <- function(FDs, attrs, unique = TRUE) {
   structure(
     if (unique) unique(sorted_FDs) else sorted_FDs,
     attrs = attrs,
-    class = c("functional_dependency", "list")
+    class = "functional_dependency"
   )
 }
 
@@ -106,14 +106,19 @@ print.functional_dependency <- function(x, ...) {
 }
 
 #' @exportS3Method
-c.functional_dependency <- function(...) {
+unique.functional_dependency <- function(x, ...) {
+  functional_dependency(unclass(x), attrs(x), unique = TRUE)
+}
+
+#' @exportS3Method
+c.functional_dependency <- function(..., unique = TRUE) {
   lst <- list(...)
-  joined_dependencies <- unique(Reduce(c, lapply(lst, unclass)))
+  joined_dependencies <- Reduce(c, lapply(lst, unclass))
 
   attrs_list <- lapply(lst, attrs)
   joined_attrs <- do.call(merge_attribute_orderings, attrs_list)
 
-  functional_dependency(joined_dependencies, joined_attrs)
+  functional_dependency(joined_dependencies, joined_attrs, unique = unique)
 }
 
 merge_attribute_orderings <- function(...) {

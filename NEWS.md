@@ -9,7 +9,7 @@ Breaking changes:
 
 Improvements:
 
-* Added a `functional_dependency` class for flattened functional dependency sets. The attributes vector is now stored as an attribute, so that the dependencies can be accessed as a simple list without list subsetting operators. There are `[` and `[[` methods to facilitate this vector-like access. There is also a method for `c`, which attempts to merge attributes vectors while conserving the initial orderings, and `detset`, `dependent`, and `attrs` generic functions for extracting the relevant parts. `detset` and `dependent`, in particular, should be useful for the purposes of filtering predicates.
+* Added a `functional_dependency` class for flattened functional dependency sets. The attributes vector is now stored as an attribute, so that the dependencies can be accessed as a simple list without list subsetting operators. There are `[`, `[[`, and `unique` methods to facilitate this vector-like access. There is also a method for `c`, which attempts to merge attributes vectors while conserving the initial orderings, and `detset`, `dependent`, and `attrs` generic functions for extracting the relevant parts. `detset` and `dependent`, in particular, should be useful for the purposes of filtering predicates.
 * Adjusted `normalise` to prefer to remove dependencies with dependents and determinant sets later in table order, and with larger dependent sets. This brings it more in line with similar decisions made in other package functions.
 * Simplified some internals of `dfd`/`discover` to improve computation time.
 * Added a `skip_bijections` option to `dfd`/`discover`, to speed up functional dependency searches where there are pairwise-equivalent attributes present.
