@@ -108,7 +108,7 @@ print.functional_dependency <- function(x, ...) {
 
 #' @exportS3Method
 unique.functional_dependency <- function(x, ...) {
-  functional_dependency(unclass(x), attrs(x), unique = TRUE)
+  x[!duplicated(x)]
 }
 
 #' @exportS3Method

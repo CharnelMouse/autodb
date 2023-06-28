@@ -161,7 +161,7 @@ attrs_order.relation_schema <- function(x, ...) {
 
 #' @exportS3Method
 unique.relation_schema <- function(x, ...) {
-  relation_schema(unclass(x), attrs_order(x), unique = TRUE)
+  x[!duplicated(x)]
 }
 
 #' @exportS3Method
