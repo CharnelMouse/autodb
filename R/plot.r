@@ -48,8 +48,8 @@
 #'
 #' @return A scalar character, containing text input for Graphviz or the
 #'   \code{DiagrammeR} package.
-#' @seealso \code{\link{gv.data.frame}}, \code{\link{gv.database_schema}},
-#'   \code{\link{gv.database}}
+#' @seealso \code{\link{gv.data.frame}}, \code{\link{gv.relation_schema}},
+#'   \code{\link{gv.database_schema}}, \code{\link{gv.database}}
 #' @examples
 #' # simple data.frame example
 #' txt_df <- gv(ChickWeight, "chick")
@@ -60,11 +60,16 @@
 #' txt_db <- gv(db)
 #' cat(txt_db)
 #' DiagrammeR::grViz(txt_db)
-#' # simple database_scheme
-#' scheme <- normalise(discover(ChickWeight, 1))
-#' txt_scheme <- gv(scheme)
-#' cat(txt_scheme)
-#' DiagrammeR::grViz(txt_scheme)
+#' # simple relation schemas
+#' rschema <- synthesise(discover(ChickWeight, 1))
+#' txt_rschema <- gv(rschema)
+#' cat(txt_rschema)
+#' DiagrammeR::grViz(txt_rschema)
+#' # simple database schema
+#' dschema <- normalise(discover(ChickWeight, 1))
+#' txt_dschema <- gv(dschema)
+#' cat(txt_dschema)
+#' DiagrammeR::grViz(txt_dschema)
 #' @export
 gv <- function(x, ...) {
   UseMethod("gv", x)

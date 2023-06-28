@@ -41,6 +41,7 @@ fds <- functional_dependency(
   list(list(c("a", "b"), "c"), list(character(), "d")),
   attrs = c("a", "b", "c", "d")
 )
+print(fds)
 detset(fds)
 dependent(fds)
 attrs(fds)

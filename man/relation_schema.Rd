@@ -50,3 +50,7 @@ keys(schemas)
 all_attrs(schemas)
 names(schemas)
 }
+\seealso{
+\code{\link{attrs}}, \code{\link{keys}}, and \code{\link{all_attrs}}
+for extracting parts of the information in a \code{relation_schema}.
+}

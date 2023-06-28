@@ -26,6 +26,8 @@
 #'   sorted by priority order. Attributes in the schema are also sorted, first
 #'   by order of appearance in the sorted keys, then by order in
 #'   \code{all_attrs} for non-prime attributes.
+#' @seealso \code{\link{attrs}}, \code{\link{keys}}, and \code{\link{all_attrs}}
+#'   for extracting parts of the information in a \code{relation_schema}.
 #' @export
 #' @examples
 #' schemas <- relation_schema(
@@ -129,39 +131,9 @@ attrs.relation_schema <- function(x, ...) {
   lapply(unclass(x), `[[`, 1L)
 }
 
-#' Relational data keys
-#'
-#' Generic function, with the only given method fetching candidate key lists for
-#' relation schemas.
-#'
-#' @param x an R object. For the given method, a \code{\link{relation_schema}}.
-#' @param ... further arguments passed on to methods.
-#'
-#' @return A list containing lists of unique character vectors, representing
-#'   candidate keys for each schema.
-#' @export
-keys <- function(x, ...) {
-  UseMethod("keys")
-}
-
 #' @exportS3Method
 keys.relation_schema <- function(x, ...) {
   lapply(unclass(x), `[[`, 2L)
-}
-
-#' Relational data attribute order
-#'
-#' Generic function, with the only given method fetching attribute order for
-#' relation schemas.
-#'
-#' @param x an R object. For the given method, a \code{\link{relation_schema}}.
-#' @param ... further arguments passed on to methods.
-#'
-#' @return A character vector, giving attributes in the order in which they're
-#'   prioritised for sorting attributes and keys in the schema.
-#' @export
-all_attrs <- function(x, ...) {
-  UseMethod("all_attrs")
 }
 
 #' @exportS3Method

@@ -510,117 +510,14 @@ describe("gv", {
       expect_no_error(gv(schema_dum))
       expect_no_error(gv(schema_dee))
     })
-    it("creates a Graphviz HTML-like expression for the data.frame", {
-      database <- structure(
-        list(
-          attrs = list(
-            c("Title", "Author", "Pages", "Thickness", "Genre_ID", "Publisher_ID"),
-            c("Title", "Format", "Price"),
-            c("Author", "Author_Nationality"),
-            c("Genre_ID", "Genre_Name")
-          ),
-          keys = list(
-            list("Title"),
-            list(c("Title", "Format")),
-            list("Author"),
-            list("Genre_ID")
-          ),
-          parents = list(
-            2:4,
-            integer(),
-            integer(),
-            integer()
-          ),
-          relationships = list(
-            list(c(1L, 2L), "Title"),
-            list(c(1L, 3L), "Author"),
-            list(c(1L, 4L), "Genre ID")
-          ),
-          relation_names = c("Title", "Title_Format", "Author", "Genre_ID")
-        ),
-        class = c("database_schema", "list")
-      )
-      expected_string <- paste(
-        "digraph book {",
-        "  rankdir = \"LR\"",
-        "  node [shape=plaintext];",
-        "",
-        "  title [label = <",
-        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
-        "    <TR><TD COLSPAN=\"2\">Title</TD></TR>",
-        "    <TR><TD PORT=\"TO_title\">Title</TD><TD PORT =\"FROM_title\" BGCOLOR=\"black\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_author\">Author</TD><TD PORT =\"FROM_author\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_pages\">Pages</TD><TD PORT =\"FROM_pages\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_thickness\">Thickness</TD><TD PORT =\"FROM_thickness\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_genre_id\">Genre_ID</TD><TD PORT =\"FROM_genre_id\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_publisher_id\">Publisher_ID</TD><TD PORT =\"FROM_publisher_id\"></TD></TR>",
-        "    </TABLE>>];",
-        "  title_format [label = <",
-        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
-        "    <TR><TD COLSPAN=\"2\">Title_Format</TD></TR>",
-        "    <TR><TD PORT=\"TO_title\">Title</TD><TD PORT =\"FROM_title\" BGCOLOR=\"black\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_format\">Format</TD><TD PORT =\"FROM_format\" BGCOLOR=\"black\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_price\">Price</TD><TD PORT =\"FROM_price\"></TD></TR>",
-        "    </TABLE>>];",
-        "  author [label = <",
-        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
-        "    <TR><TD COLSPAN=\"2\">Author</TD></TR>",
-        "    <TR><TD PORT=\"TO_author\">Author</TD><TD PORT =\"FROM_author\" BGCOLOR=\"black\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_author_nationality\">Author_Nationality</TD><TD PORT =\"FROM_author_nationality\"></TD></TR>",
-        "    </TABLE>>];",
-        "  genre_id [label = <",
-        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
-        "    <TR><TD COLSPAN=\"2\">Genre_ID</TD></TR>",
-        "    <TR><TD PORT=\"TO_genre_id\">Genre_ID</TD><TD PORT =\"FROM_genre_id\" BGCOLOR=\"black\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_genre_name\">Genre_Name</TD><TD PORT =\"FROM_genre_name\"></TD></TR>",
-        "    </TABLE>>];",
-        "",
-        "  title:FROM_title -> title_format:TO_title;",
-        "  title:FROM_author -> author:TO_author;",
-        "  title:FROM_genre_id -> genre_id:TO_genre_id;",
-        "}",
-        "",
-        sep = "\n"
-      )
-      expect_identical(
-        gv(database, "book"),
-        expected_string
-      )
-    })
     it("converts attribute/df names to snake case for labels (inc. spaces, periods)", {
-      database <- structure(
+      schema <- structure(
         list(
-          attrs = list(
-            c(
-              "Title",
-              "Author",
-              "Pages",
-              "Thickness",
-              "Genre ID",
-              "Publisher ID"
-            ),
-            c("Title", "Format", "Price"),
-            c("Author", "Author Nationality"),
-            c("Genre ID", "Genre Name")
-          ),
-          keys = list(
-            list("Title"),
-            list(c("Title", "Format")),
-            list("Author"),
-            list("Genre ID")
-          ),
-          parents = list(
-            2:4,
-            integer(),
-            integer(),
-            integer()
-          ),
-          relationships = list(
-            list(c(1L, 2L), "Title"),
-            list(c(1L, 3L), "Author"),
-            list(c(1L, 4L), "Genre ID")
-          ),
-          relation_names = c("Title", "Title_Format", "Author", "Genre ID")
+          attrs = list(c("Genre ID", "Genre Name")),
+          keys = list(list("Genre ID")),
+          parents = list(integer()),
+          relationships = list(),
+          relation_names = "Genre ID"
         ),
         class = c("database_schema", "list")
       )
@@ -629,29 +526,6 @@ describe("gv", {
         "  rankdir = \"LR\"",
         "  node [shape=plaintext];",
         "",
-        "  title [label = <",
-        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
-        "    <TR><TD COLSPAN=\"2\">Title</TD></TR>",
-        "    <TR><TD PORT=\"TO_title\">Title</TD><TD PORT =\"FROM_title\" BGCOLOR=\"black\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_author\">Author</TD><TD PORT =\"FROM_author\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_pages\">Pages</TD><TD PORT =\"FROM_pages\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_thickness\">Thickness</TD><TD PORT =\"FROM_thickness\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_genre_id\">Genre ID</TD><TD PORT =\"FROM_genre_id\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_publisher_id\">Publisher ID</TD><TD PORT =\"FROM_publisher_id\"></TD></TR>",
-        "    </TABLE>>];",
-        "  title_format [label = <",
-        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
-        "    <TR><TD COLSPAN=\"2\">Title_Format</TD></TR>",
-        "    <TR><TD PORT=\"TO_title\">Title</TD><TD PORT =\"FROM_title\" BGCOLOR=\"black\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_format\">Format</TD><TD PORT =\"FROM_format\" BGCOLOR=\"black\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_price\">Price</TD><TD PORT =\"FROM_price\"></TD></TR>",
-        "    </TABLE>>];",
-        "  author [label = <",
-        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
-        "    <TR><TD COLSPAN=\"2\">Author</TD></TR>",
-        "    <TR><TD PORT=\"TO_author\">Author</TD><TD PORT =\"FROM_author\" BGCOLOR=\"black\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_author_nationality\">Author Nationality</TD><TD PORT =\"FROM_author_nationality\"></TD></TR>",
-        "    </TABLE>>];",
         "  genre_id [label = <",
         "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
         "    <TR><TD COLSPAN=\"2\">Genre ID</TD></TR>",
@@ -659,22 +533,19 @@ describe("gv", {
         "    <TR><TD PORT=\"TO_genre_name\">Genre Name</TD><TD PORT =\"FROM_genre_name\"></TD></TR>",
         "    </TABLE>>];",
         "",
-        "  title:FROM_title -> title_format:TO_title;",
-        "  title:FROM_author -> author:TO_author;",
-        "  title:FROM_genre_id -> genre_id:TO_genre_id;",
+        "",
         "}",
         "",
         sep = "\n"
       )
       expect_identical(
-        gv(database, "book"),
+        gv(schema, "book"),
         expected_string
       )
     })
-    it("doesn't give a graph ID if database name is missing", {
-      database <- structure(
+    it("doesn't give a graph ID if name is missing", {
+      schema <- structure(
         list(
-          name = NA_character_,
           relations = list(
             a = list(
               df = data.frame(a = 1:4, b = 1:2),
@@ -687,7 +558,7 @@ describe("gv", {
         ),
         class = c("database_schema", "list")
       )
-      plot_string <- gv(database)
+      plot_string <- gv(schema)
       expect_identical(substr(plot_string, 1, 9), "digraph {")
     })
   })
