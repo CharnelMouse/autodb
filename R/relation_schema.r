@@ -4,42 +4,42 @@
 #' candidate keys.
 #'
 #' When several sets of relation schemas are concatenated, their
-#' \code{all_attrs} attributes are merged, so as to preserve all of the original
+#' \code{attrs_order} attributes are merged, so as to preserve all of the original
 #' attribute orders, if possible. If this is not possible, because the orderings
-#' disagree, then the returned value of the \code{all_attrs} attribute is their
+#' disagree, then the returned value of the \code{attrs_order} attribute is their
 #' union instead.
 #'
 #' @param schemas a named list of schemas, in the form of two-element lists: the
 #'   first element contains a character vector of all attributes in the relation
 #'   schema, and the second element contains a list of character vectors,
 #'   each representing a candidate key.
-#' @param all_attrs a character vector, giving the names of all attributes.
+#' @param attrs_order a character vector, giving the names of all attributes.
 #'   These need not be present in \code{schemas}, but all attributes in
-#'   \code{schemas} must be present in \code{all_attrs}.
+#'   \code{schemas} must be present in \code{attrs_order}.
 #' @param unique a logical, TRUE by default, for whether to remove duplicate
 #'   schemas.
 #'
 #' @return A \code{relation_schema} object, containing the list given in
-#'   \code{schemas}, with \code{all_attrs} stored in an attribute of the same
+#'   \code{schemas}, with \code{attrs_order} stored in an attribute of the same
 #'   name. Relation schemas are returned with their keys' attributes sorted
-#'   according to the attribute order in \code{all_attrs}, and the keys then
+#'   according to the attribute order in \code{attrs_order}, and the keys then
 #'   sorted by priority order. Attributes in the schema are also sorted, first
 #'   by order of appearance in the sorted keys, then by order in
-#'   \code{all_attrs} for non-prime attributes.
-#' @seealso \code{\link{attrs}}, \code{\link{keys}}, and \code{\link{all_attrs}}
+#'   \code{attrs_order} for non-prime attributes.
+#' @seealso \code{\link{attrs}}, \code{\link{keys}}, and \code{\link{attrs_order}}
 #'   for extracting parts of the information in a \code{relation_schema}.
 #' @export
 #' @examples
 #' schemas <- relation_schema(
 #'   list(a = list(c("a", "b"), list("a")), b = list(c("b", "c"), list("b", "c"))),
-#'   all_attrs = c("a", "b", "c", "d")
+#'   attrs_order = c("a", "b", "c", "d")
 #' )
 #' print(schemas)
 #' attrs(schemas)
 #' keys(schemas)
-#' all_attrs(schemas)
+#' attrs_order(schemas)
 #' names(schemas)
-relation_schema <- function(schemas, all_attrs, unique = TRUE) {
+relation_schema <- function(schemas, attrs_order, unique = TRUE) {
   if (!all(lengths(schemas) == 2L))
     stop("schema elements must have length two")
   if (!all(vapply(schemas, \(s) is.character(s[[1]]), logical(1))))
@@ -50,8 +50,8 @@ relation_schema <- function(schemas, all_attrs, unique = TRUE) {
     stop("schema key sets must have at least one element")
   if (!all(vapply(schemas, \(s) all(vapply(s[[2]], is.character, logical(1))), logical(1))))
     stop("schema key sets must have character elements")
-  if (!is.character(all_attrs))
-    stop("expected character all_attrs")
+  if (!is.character(attrs_order))
+    stop("expected character attrs_order")
   if (!is.character(names(schemas)))
     stop("relations must be named")
   if (anyDuplicated(names(schemas)))
@@ -64,23 +64,23 @@ relation_schema <- function(schemas, all_attrs, unique = TRUE) {
     logical(1)
   )))
     stop("relation key attributes must be unique")
-  if (anyDuplicated(all_attrs))
-    stop("all_attrs must be unique")
-  if (!all(is.element(unlist(schemas, recursive = TRUE), all_attrs)))
-    stop("attributes in schema must be present in all_attrs")
+  if (anyDuplicated(attrs_order))
+    stop("attrs_order must be unique")
+  if (!all(is.element(unlist(schemas, recursive = TRUE), attrs_order)))
+    stop("attributes in schema must be present in attrs_order")
   for (s in schemas)
     if (!all(is.element(unlist(s[[2]]), s[[1]])))
       stop("attributes in keys must be present in relation")
   schemas <- lapply(
     schemas,
     \(s) {
-      within_sorted_keys <- unique(lapply(s[[2]], \(as) as[order(match(as, all_attrs))]))
+      within_sorted_keys <- unique(lapply(s[[2]], \(as) as[order(match(as, attrs_order))]))
       sorted_keys <- within_sorted_keys[keys_order(lapply(
         within_sorted_keys,
         match,
-        all_attrs
+        attrs_order
       ))]
-      sorted_attrs <- s[[1]][order(match(s[[1]], all_attrs))]
+      sorted_attrs <- s[[1]][order(match(s[[1]], attrs_order))]
       sorted_attrs <- c(
         unique(unlist(sorted_keys)),
         setdiff(sorted_attrs, unlist(sorted_keys))
@@ -93,7 +93,7 @@ relation_schema <- function(schemas, all_attrs, unique = TRUE) {
   )
   structure(
     schemas[if (unique) !duplicated(schemas) else rep(TRUE, length(schemas))],
-    all_attrs = all_attrs,
+    attrs_order = attrs_order,
     class = "relation_schema"
   )
 }
@@ -106,9 +106,9 @@ print.relation_schema <- function(x, max = 10, ...) {
     "\n"
   ))
 
-  cat(with_number(length(all_attrs(x)), "attribute", "", "s"))
-  if (length(all_attrs(x)) > 0L)
-    cat(":", toString(all_attrs(x)))
+  cat(with_number(length(attrs_order(x)), "attribute", "", "s"))
+  if (length(attrs_order(x)) > 0L)
+    cat(":", toString(attrs_order(x)))
   cat("\n")
 
   for (n in seq_len(min(n_relations, max))) {
@@ -137,8 +137,8 @@ keys.relation_schema <- function(x, ...) {
 }
 
 #' @exportS3Method
-all_attrs.relation_schema <- function(x, ...) {
-  attr(x, "all_attrs")
+attrs_order.relation_schema <- function(x, ...) {
+  attr(x, "attrs_order")
 }
 
 #' @export
@@ -161,7 +161,7 @@ all_attrs.relation_schema <- function(x, ...) {
 
 #' @exportS3Method
 unique.relation_schema <- function(x, ...) {
-  relation_schema(unclass(x), all_attrs(x), unique = TRUE)
+  relation_schema(unclass(x), attrs_order(x), unique = TRUE)
 }
 
 #' @exportS3Method
@@ -173,8 +173,8 @@ c.relation_schema <- function(..., unique = TRUE) {
   else
     make.unique(names(joined_schemas))
 
-  all_attrs_list <- lapply(lst, all_attrs)
-  joined_all_attrs <- do.call(merge_attribute_orderings, all_attrs_list)
+  attrs_order_list <- lapply(lst, attrs_order)
+  joined_attrs_order <- do.call(merge_attribute_orderings, attrs_order_list)
 
-  relation_schema(joined_schemas, joined_all_attrs, unique = unique)
+  relation_schema(joined_schemas, joined_attrs_order, unique = unique)
 }

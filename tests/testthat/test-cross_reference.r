@@ -7,7 +7,7 @@ describe("cross_reference", {
         a = list(c("a", "b"), list("a")),
         b = list(c("b", "c"), list("b"))
       ),
-      all_attrs = c("a", "b", "c")
+      attrs_order = c("a", "b", "c")
     )
     database <- cross_reference(schema)
     expected_parents = list(2L, integer())
@@ -154,7 +154,7 @@ describe("cross_reference", {
     adds_ordered_primary_keys <- function(fds) {
       schema <- normalise(fds, ensure_lossless = TRUE)
       all_keys <- unlist(schema$keys, recursive = FALSE)
-      key_indices <- lapply(all_keys, match, schema$all_attrs)
+      key_indices <- lapply(all_keys, match, schema$attrs_order)
       expect_false(any(vapply(key_indices, is.unsorted, logical(1))))
     }
     forall(
@@ -200,7 +200,7 @@ describe("cross_reference", {
             parents = list(integer()),
             relationships = list(),
             relation_names = paste(key, collapse = "_"),
-            all_attrs = letters[1:10]
+            attrs_order = letters[1:10]
           ),
           class = c("database_schema", "list")
         )
@@ -225,7 +225,7 @@ describe("cross_reference", {
       expect_identical(redo$attrs[[1]], relation$attrs[[1]])
       expect_identical(redo$keys[[1]], relation$keys[[1]])
       expect_identical(redo$relation_names, relation$relation_names)
-      expect_setequal(redo$all_attrs, relation$all_attrs)
+      expect_setequal(redo$attrs_order, relation$attrs_order)
     }
     forall(gen.relation, returns_itself)
   })

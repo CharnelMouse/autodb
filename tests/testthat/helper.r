@@ -58,12 +58,12 @@ is_valid_relation_schema <- function(x) {
   )
   expect_true(all(vapply(
     keys,
-    \(ks) all(vapply(ks, \(k) !is.unsorted(match(k, all_attrs(x))), logical(1))),
+    \(ks) all(vapply(ks, \(k) !is.unsorted(match(k, attrs_order(x))), logical(1))),
     logical(1)
   )))
   expect_true(all(vapply(
     nonprime_attrs,
-    \(as) all(vapply(as, \(a) !is.unsorted(match(a, all_attrs(x))), logical(1))),
+    \(as) all(vapply(as, \(a) !is.unsorted(match(a, attrs_order(x))), logical(1))),
     logical(1)
   )))
   expect_true(all(vapply(keys, Negate(anyDuplicated), logical(1))))
@@ -83,7 +83,7 @@ is_valid_relation_schema <- function(x) {
       ),
       recursive = FALSE
     ),
-    attr(x, "all_attrs")
+    attr(x, "attrs_order")
   )
   expect_true(!anyDuplicated(implied_fds))
 }
@@ -105,12 +105,12 @@ is_valid_database_schema <- function(x) {
   )
   expect_true(all(vapply(
     x$keys,
-    \(ks) all(vapply(ks, \(k) !is.unsorted(match(k, x$all_attrs)), logical(1))),
+    \(ks) all(vapply(ks, \(k) !is.unsorted(match(k, x$attrs_order)), logical(1))),
     logical(1)
   )))
   expect_true(all(vapply(
     nonprime_attrs,
-    \(as) all(vapply(as, \(a) !is.unsorted(match(a, x$all_attrs)), logical(1))),
+    \(as) all(vapply(as, \(a) !is.unsorted(match(a, x$attrs_order)), logical(1))),
     logical(1)
   )))
   expect_true(all(vapply(x$keys, Negate(anyDuplicated), logical(1))))
@@ -130,7 +130,7 @@ is_valid_database_schema <- function(x) {
       ),
       recursive = FALSE
     ),
-    x$all_attrs
+    x$attrs_order
   )
   expect_true(!anyDuplicated(implied_fds))
 

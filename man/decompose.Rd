@@ -30,7 +30,7 @@ name of the linked attribute in the parent relation. Currently, the
 attribute is expected to have the same name in both relations.
 \item \code{attributes} contains the attribute names in priority order.
 This order can be taken from their order in \code{df}, or from the
-\code{all_attrs} element in \code{schema}; these orderings must be the
+\code{attrs_order} element in \code{schema}; these orderings must be the
 same.
 }
 

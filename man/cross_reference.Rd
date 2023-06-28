@@ -32,7 +32,7 @@ parent relation schemas, and a scalar character, giving the name of the
 linked attribute in both relation schemas.
 \item \code{relation_names} is a character vector, containing the names
 of the relation schemas
-\item \code{all_attrs} is a character vector, containing all attribute
+\item \code{attrs_order} is a character vector, containing all attribute
 names in priority order for placement and key ordering, i.e. as ordered
 in the original data frame.
 }

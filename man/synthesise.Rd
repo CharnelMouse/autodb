@@ -41,7 +41,7 @@ character vectors:
 relation schemas, with attributes in keys given first.
 \item \code{keys} elements contain a list of the candidate keys for the
 relation schemas.
-\item \code{all_attrs} is a character vector, containing all attribute
+\item \code{attrs_order} is a character vector, containing all attribute
 names in priority order for placement and key ordering, i.e. as ordered
 in the original data frame.
 \item \code{relation_names} is a character vector, containing the names

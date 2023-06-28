@@ -9,7 +9,7 @@ describe("synthesise", {
       current,
       relation_schema(
         setNames(Map(list, target$attrs, target$keys), target$relation_names),
-        target$all_attrs
+        target$attrs_order
       )
     )
   }
@@ -117,7 +117,7 @@ describe("synthesise", {
       list(
         attrs = list(c("a", "b", "c")),
         keys = list(list("a")),
-        all_attrs = c("a", "b", "c"),
+        attrs_order = c("a", "b", "c"),
         relation_names = "a"
       )
     )
@@ -137,7 +137,7 @@ describe("synthesise", {
       list(
         attrs = list(c("a", "b"), c("b", "c")),
         keys = list(list("a"), list("b")),
-        all_attrs = c("a", "b", "c"),
+        attrs_order = c("a", "b", "c"),
         relation_names = c("a", "b")
       )
     )
@@ -158,7 +158,7 @@ describe("synthesise", {
       list(
         attrs = list(c("a", "d", "b"), c("b", "c", "a")),
         keys = list(list("a", "d"), list(c("b", "c"))),
-        all_attrs = c("a", "b", "c", "d"),
+        attrs_order = c("a", "b", "c", "d"),
         relation_names = c("a", "b_c")
       )
     )
@@ -178,7 +178,7 @@ describe("synthesise", {
       list(
         attrs = list(c("a", "b")),
         keys = list(list("a", "b")),
-        all_attrs = c("a", "b"),
+        attrs_order = c("a", "b"),
         relation_names = "a"
       )
     )
@@ -205,7 +205,7 @@ describe("synthesise", {
       list(
         attrs = list(c("a", "b", "c", "d", "f"), c("d", "e"), c("f", "e")),
         keys = list(list("a", "b"), list("d"), list("f")),
-        all_attrs = c("a", "b", "c", "d", "e", "f"),
+        attrs_order = c("a", "b", "c", "d", "e", "f"),
         relation_names = c("a", "d", "f")
       )
     )
@@ -260,7 +260,7 @@ describe("synthesise", {
       list(
         attrs = list(c("C", "A", "B", "D"), c("C", "E", "F")),
         keys = list(list("C", c("A", "B")), list(c("C", "E"))),
-        all_attrs = c("A", "B", "C", "D", "E", "F"),
+        attrs_order = c("A", "B", "C", "D", "E", "F"),
         relation_names = c("C", "C_E")
       )
     )
@@ -296,7 +296,7 @@ describe("synthesise", {
       list(
         attrs = list(c("A", "B"), c("A", "C", "B", "D", "E")),
         keys = list(list("A", "B"), list(c("A", "C"), c("B", "D"))),
-        all_attrs = c("A", "B", "C", "D", "E"),
+        attrs_order = c("A", "B", "C", "D", "E"),
         relation_names = c("A", "A_C")
       )
     )
@@ -306,7 +306,7 @@ describe("synthesise", {
       list(
         attrs = list(c("A", "B"), c("A", "C", "D", "E")),
         keys = list(list("A", "B"), list(c("A", "C"), c("A", "D"))),
-        all_attrs = c("A", "B", "C", "D", "E"),
+        attrs_order = c("A", "B", "C", "D", "E"),
         relation_names = c("A", "A_C")
       )
     )

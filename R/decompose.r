@@ -30,7 +30,7 @@
 #'     attribute is expected to have the same name in both relations.
 #'     \item \code{attributes} contains the attribute names in priority order.
 #'     This order can be taken from their order in \code{df}, or from the
-#'     \code{all_attrs} element in \code{schema}; these orderings must be the
+#'     \code{attrs_order} element in \code{schema}; these orderings must be the
 #'     same.
 #'   }
 #'
@@ -47,7 +47,7 @@
 decompose <- function(df, schema, name = NA_character_) {
   relation_names <- schema$relation_names
   stopifnot(!anyDuplicated(relation_names))
-  stopifnot(identical(names(df), schema$all_attrs))
+  stopifnot(identical(names(df), schema$attrs_order))
 
   inferred_fds <- synthesised_fds(schema$attrs, schema$keys)
   if (length(inferred_fds) > 0L)
@@ -111,7 +111,7 @@ decompose <- function(df, schema, name = NA_character_) {
       name = name,
       relations = stats::setNames(relation_list, relation_names),
       relationships = relationships,
-      attributes = schema$all_attrs
+      attributes = schema$attrs_order
     ),
     class = c("database", "list")
   )

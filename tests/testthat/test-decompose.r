@@ -25,7 +25,7 @@ describe("decompose", {
       parents = list(integer()),
       relationships = list(),
       relation_names = "a",
-      all_attrs = c("a", "b", "c")
+      attrs_order = c("a", "b", "c")
     )
     norm.df <- decompose(df, schema)
     expect_database(
@@ -50,7 +50,7 @@ describe("decompose", {
       parents = list(integer()),
       relationships = list(),
       relation_names = "a",
-      all_attrs = c("a", "b")
+      attrs_order = c("a", "b")
     )
     norm.df <- decompose(df, schema)
     expect_identical(
@@ -100,7 +100,7 @@ describe("decompose", {
         list(1:2, "hemisphere")
       ),
       relation_names = c("id", "month_hemisphere"),
-      all_attrs = c("id", "month", "hemisphere", "is_winter")
+      attrs_order = c("id", "month", "hemisphere", "is_winter")
     )
     new_dfs <- decompose(df, schema)
     expected_dfs <- list(
@@ -160,7 +160,7 @@ describe("decompose", {
         list(2:3, "b")
       ),
       relation_names = c("a", "b_c", "b"),
-      all_attrs = c("a", "b", "c", "d", "e")
+      attrs_order = c("a", "b", "c", "d", "e")
     )
     new_dfs <- decompose(df, schema)
     expect_identical(new_dfs$relations$a$parents, "b_c")
@@ -245,7 +245,7 @@ describe("decompose", {
           list(3:2, "city")
         ),
         relation_names = c("player_name_jersey_num", "city", "team"),
-        all_attrs = c("player_name", "jersey_num", "team", "city", "state")
+        attrs_order = c("player_name", "jersey_num", "team", "city", "state")
       )
       depdfs <- decompose(df, schema)
       expect_identical(length(depdfs$relations), 3L)
@@ -300,7 +300,7 @@ describe("decompose", {
         keys = list(list("A 1", c("B 2", "C 3"))),
         parents = list(integer()),
         relationships = list(),
-        all_attrs = c("A 1", "B 2", "C 3")
+        attrs_order = c("A 1", "B 2", "C 3")
       ),
       class = c("database_schema", "list")
     )
@@ -319,7 +319,7 @@ describe("decompose", {
       parents = list(integer(), 1L),
       relationships = list(list(2:1, "a")),
       relation_names = c("a", "a_c"),
-      all_attrs = c("a", "b", "c")
+      attrs_order = c("a", "b", "c")
     )
     norm.df <- decompose(df, schema)
     expect_identical(

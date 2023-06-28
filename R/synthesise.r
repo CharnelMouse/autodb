@@ -27,7 +27,7 @@
 #'     relation schemas, with attributes in keys given first.
 #'     \item \code{keys} elements contain a list of the candidate keys for the
 #'     relation schemas.
-#'     \item \code{all_attrs} is a character vector, containing all attribute
+#'     \item \code{attrs_order} is a character vector, containing all attribute
 #'     names in priority order for placement and key ordering, i.e. as ordered
 #'     in the original data frame.
 #'     \item \code{relation_names} is a character vector, containing the names
@@ -109,7 +109,7 @@ synthesise <- function(
   stopifnot(!anyDuplicated(relation_names))
   relation_schema(
     stats::setNames(Map(list, inter$attrs, inter$keys), relation_names),
-    inter$all_attrs
+    inter$attrs_order
   )
 }
 
@@ -117,13 +117,13 @@ convert_to_vectors <- function(flat_dependencies) {
   list(
     determinant_sets = detset(flat_dependencies),
     dependents = dependent(flat_dependencies),
-    all_attrs = attrs(flat_dependencies)
+    attrs_order = attrs(flat_dependencies)
   )
 }
 
 convert_to_integer_attributes <- function(vecs) {
-  vecs$determinant_sets <- lapply(vecs$determinant_sets, match, vecs$all_attrs)
-  vecs$dependents <- match(vecs$dependents, vecs$all_attrs)
+  vecs$determinant_sets <- lapply(vecs$determinant_sets, match, vecs$attrs_order)
+  vecs$dependents <- match(vecs$dependents, vecs$attrs_order)
   vecs
 }
 
@@ -197,7 +197,7 @@ partition_dependencies <- function(vecs) {
     partition_determinant_set = partition_det_set,
     partition_dependents = partition_deps,
     unique_determinant_sets = unique_det_sets,
-    all_attrs = vecs$all_attrs
+    attrs_order = vecs$attrs_order
   )
 }
 
@@ -269,7 +269,7 @@ merge_equivalent_keys <- function(vecs) {
     partition_keys = partition_keys[nonempty | in_bijections],
     bijection_determinant_sets = bijection_determinant_sets,
     bijection_dependent_sets = bijection_dependent_sets,
-    all_attrs = vecs$all_attrs
+    attrs_order = vecs$attrs_order
   )
 }
 
@@ -328,7 +328,7 @@ remove_transitive_dependencies <- function(vecs) {
     partition_keys = vecs$partition_keys,
     bijection_determinant_sets = flat_bijection_determinant_sets,
     bijection_dependents = flat_bijection_dependents,
-    all_attrs = vecs$all_attrs
+    attrs_order = vecs$attrs_order
   )
 }
 
@@ -363,7 +363,7 @@ add_bijections <- function(vecs) {
     flat_partition_dependents = flat_partition_dependents,
     flat_groups = flat_groups,
     bijection_groups = vecs$partition_keys[lengths(vecs$partition_keys) > 1],
-    all_attrs = vecs$all_attrs
+    attrs_order = vecs$attrs_order
   )
 }
 
@@ -452,15 +452,15 @@ construct_relation_schemas <- function(vecs) {
       key_ord <- keys_order(keys)
       sorted_keys <- keys[key_ord]
       nonprimes <- nonprimes[order(nonprimes)]
-      all_attrs <- union(unlist(sorted_keys), nonprimes)
-      attrs <- c(attrs, list(all_attrs))
+      attrs_order <- union(unlist(sorted_keys), nonprimes)
+      attrs <- c(attrs, list(attrs_order))
       rel_keys <- c(rel_keys, list(sorted_keys))
     }
   }
   list(
     attrs = attrs,
     keys = rel_keys,
-    all_attrs = vecs$all_attrs
+    attrs_order = vecs$attrs_order
   )
 }
 
@@ -470,10 +470,10 @@ remove_avoidable_attributes <- function(vecs) {
 
   attrs <- vecs$attrs
   keys <- vecs$keys
-  all_attrs <- vecs$all_attrs
+  attrs_order <- vecs$attrs_order
   G <- synthesised_fds(attrs, keys)
 
-  for (attr in rev(seq_along(all_attrs))) {
+  for (attr in rev(seq_along(attrs_order))) {
     for (relation in seq_along(attrs)) {
       relation_attrs <- attrs[[relation]]
       if (!is.element(attr, relation_attrs))
@@ -608,8 +608,8 @@ minimal_subset <- function(
 }
 
 convert_to_character_attributes <- function(vecs) {
-  vecs$attrs <- lapply(vecs$attrs, \(a) vecs$all_attrs[a])
-  vecs$keys <- lapply(vecs$keys, \(ks) lapply(ks, \(k) vecs$all_attrs[k]))
+  vecs$attrs <- lapply(vecs$attrs, \(a) vecs$attrs_order[a])
+  vecs$keys <- lapply(vecs$keys, \(ks) lapply(ks, \(k) vecs$attrs_order[k]))
   vecs
 }
 

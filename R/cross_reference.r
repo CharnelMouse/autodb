@@ -21,13 +21,13 @@
 #'     linked attribute in both relation schemas.
 #'     \item \code{relation_names} is a character vector, containing the names
 #'     of the relation schemas
-#'     \item \code{all_attrs} is a character vector, containing all attribute
+#'     \item \code{attrs_order} is a character vector, containing all attribute
 #'     names in priority order for placement and key ordering, i.e. as ordered
 #'     in the original data frame.
 #'  }
 #' @export
 cross_reference <- function(schema, ensure_lossless = TRUE) {
-  all_attrs <- all_attrs(schema)
+  attrs_order <- attrs_order(schema)
   attrs <- attrs(schema)
   keys <- keys(schema)
   relation_names <- names(schema)
@@ -38,8 +38,8 @@ cross_reference <- function(schema, ensure_lossless = TRUE) {
     G_deps <- vapply(unlist(G, recursive = FALSE), `[[`, character(1), 2)
     primaries <- lapply(keys, `[[`, 1)
     closures <- lapply(primaries, find_closure, G_det_sets, G_deps)
-    if (!any(vapply(closures, setequal, logical(1), all_attrs))) {
-      new_key <- minimal_subset(all_attrs, all_attrs, G_det_sets, G_deps)
+    if (!any(vapply(closures, setequal, logical(1), attrs_order))) {
+      new_key <- minimal_subset(attrs_order, attrs_order, G_det_sets, G_deps)
       attrs <- c(attrs, list(new_key))
       keys <- c(keys, list(list(new_key)))
       relation_names <- c(relation_names, paste(new_key, collapse = "_"))
@@ -71,7 +71,7 @@ cross_reference <- function(schema, ensure_lossless = TRUE) {
       parents = parents,
       relationships = relationships,
       relation_names = relation_names,
-      all_attrs = all_attrs
+      attrs_order = attrs_order
     ),
     class = c("database_schema", "list")
   )

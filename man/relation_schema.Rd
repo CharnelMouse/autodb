@@ -4,7 +4,7 @@
 \alias{relation_schema}
 \title{Relation schema vectors}
 \usage{
-relation_schema(schemas, all_attrs, unique = TRUE)
+relation_schema(schemas, attrs_order, unique = TRUE)
 }
 \arguments{
 \item{schemas}{a named list of schemas, in the form of two-element lists: the
@@ -12,21 +12,21 @@ first element contains a character vector of all attributes in the relation
 schema, and the second element contains a list of character vectors,
 each representing a candidate key.}
 
-\item{all_attrs}{a character vector, giving the names of all attributes.
+\item{attrs_order}{a character vector, giving the names of all attributes.
 These need not be present in \code{schemas}, but all attributes in
-\code{schemas} must be present in \code{all_attrs}.}
+\code{schemas} must be present in \code{attrs_order}.}
 
 \item{unique}{a logical, TRUE by default, for whether to remove duplicate
 schemas.}
 }
 \value{
 A \code{relation_schema} object, containing the list given in
-\code{schemas}, with \code{all_attrs} stored in an attribute of the same
+\code{schemas}, with \code{attrs_order} stored in an attribute of the same
 name. Relation schemas are returned with their keys' attributes sorted
-according to the attribute order in \code{all_attrs}, and the keys then
+according to the attribute order in \code{attrs_order}, and the keys then
 sorted by priority order. Attributes in the schema are also sorted, first
 by order of appearance in the sorted keys, then by order in
-\code{all_attrs} for non-prime attributes.
+\code{attrs_order} for non-prime attributes.
 }
 \description{
 Creates a set of relation schemas, including the relation's attributes and
@@ -34,23 +34,23 @@ candidate keys.
 }
 \details{
 When several sets of relation schemas are concatenated, their
-\code{all_attrs} attributes are merged, so as to preserve all of the original
+\code{attrs_order} attributes are merged, so as to preserve all of the original
 attribute orders, if possible. If this is not possible, because the orderings
-disagree, then the returned value of the \code{all_attrs} attribute is their
+disagree, then the returned value of the \code{attrs_order} attribute is their
 union instead.
 }
 \examples{
 schemas <- relation_schema(
   list(a = list(c("a", "b"), list("a")), b = list(c("b", "c"), list("b", "c"))),
-  all_attrs = c("a", "b", "c", "d")
+  attrs_order = c("a", "b", "c", "d")
 )
 print(schemas)
 attrs(schemas)
 keys(schemas)
-all_attrs(schemas)
+attrs_order(schemas)
 names(schemas)
 }
 \seealso{
-\code{\link{attrs}}, \code{\link{keys}}, and \code{\link{all_attrs}}
+\code{\link{attrs}}, \code{\link{keys}}, and \code{\link{attrs_order}}
 for extracting parts of the information in a \code{relation_schema}.
 }

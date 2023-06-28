@@ -70,7 +70,7 @@ describe("relation_schema", {
     )
     expect_error(
       relation_schema(list(list(character(), list(character()))), 1L),
-      "^expected character all_attrs$"
+      "^expected character attrs_order$"
     )
   })
   it("expect valid input: named schemas", {
@@ -103,16 +103,16 @@ describe("relation_schema", {
       "^relation key attributes must be unique$"
     )
   })
-  it("expects valid input: no duplicate all_attrs", {
+  it("expects valid input: no duplicate attrs_order", {
     expect_error(
       relation_schema(list(a = list("a", list("a"))), c("a", "a")),
-      "^all_attrs must be unique$"
+      "^attrs_order must be unique$"
     )
   })
-  it("expects valid input: all attributes given in all_attrs", {
+  it("expects valid input: all attributes given in attrs_order", {
     expect_error(
       relation_schema(list(a = list("a", list("a"))), "b"),
-      "^attributes in schema must be present in all_attrs$"
+      "^attributes in schema must be present in attrs_order$"
     )
   })
   it("expects valid input: key attributes are in relation", {
@@ -129,13 +129,13 @@ describe("relation_schema", {
         expect_true
     )
   })
-  it("orders key attributes with respect to order in all_attrs", {
+  it("orders key attributes with respect to order in attrs_order", {
     key_attributes_ordered <- function(rs) {
       keys_matches <- vapply(
         keys(rs),
         with_args(
           vapply,
-          with_args(match, table = all_attrs(rs)) %>>%
+          with_args(match, table = attrs_order(rs)) %>>%
             (Negate(is.unsorted)),
           logical(1)
         ) %>>%
@@ -146,7 +146,7 @@ describe("relation_schema", {
     }
     forall(gen.rs(letters[1:6], 1, 8), key_attributes_ordered)
   })
-  it("orders attributes with respect to appearance in keys, then by all_attrs", {
+  it("orders attributes with respect to appearance in keys, then by attrs_order", {
     attributes_ordered <- function(rs) {
       attr_matches <- vapply(
         seq_along(rs),
@@ -159,7 +159,7 @@ describe("relation_schema", {
             as,
             c(
               key_given,
-              rest[order(match(rest, all_attrs(rs)))]
+              rest[order(match(rest, attrs_order(rs)))]
             )
           )
         },
@@ -230,16 +230,16 @@ describe("relation_schema", {
     )
   })
   it("concatenates without losing attributes", {
-    concatenate_lossless_for_all_attrs <- function(...) {
+    concatenate_lossless_for_attrs_order <- function(...) {
       lst <- list(...)
       res <- c(...)
       for (l in lst) {
-        expect_true(all(is.element(all_attrs(l), all_attrs(res))))
+        expect_true(all(is.element(attrs_order(l), attrs_order(res))))
       }
     }
     forall(
       gen.rs(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
-      concatenate_lossless_for_all_attrs,
+      concatenate_lossless_for_attrs_order,
       curry = TRUE
     )
   })
@@ -265,8 +265,8 @@ describe("relation_schema", {
       expect_silent(res <- c(...))
       for (index in seq_along(lst)) {
         expect_identical(
-          all_attrs(lst[[!!index]]),
-          intersect(all_attrs(res), all_attrs(lst[[!!index]]))
+          attrs_order(lst[[!!index]]),
+          intersect(attrs_order(res), attrs_order(lst[[!!index]]))
         )
       }
     }
@@ -322,14 +322,14 @@ describe("relation_schema", {
       curry = TRUE
     )
   })
-  it("is composed of its attrs(), keys(), names() and all_attrs()", {
+  it("is composed of its attrs(), keys(), names() and attrs_order()", {
     forall(
       gen.rs(letters[1:6], 0, 8),
       \(rs) expect_identical(
         rs,
         relation_schema(
           setNames(Map(list, attrs(rs), keys(rs)), names(rs)),
-          all_attrs = all_attrs(rs)
+          attrs_order = attrs_order(rs)
         )
       )
     )

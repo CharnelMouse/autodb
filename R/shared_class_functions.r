@@ -70,8 +70,8 @@ keys <- function(x, ...) {
 #' @return A character vector, giving attributes in the order in which they're
 #'   prioritised for sorting attributes and keys in the schema.
 #' @export
-all_attrs <- function(x, ...) {
-  UseMethod("all_attrs")
+attrs_order <- function(x, ...) {
+  UseMethod("attrs_order")
 }
 
 merge_attribute_orderings <- function(...) {
@@ -101,8 +101,8 @@ merge_attribute_orderings <- function(...) {
     }
   }
 
-  all_attrs <- unique(unlist(ordered_sets))
-  indices <- outer(all_attrs, ordered_sets, Vectorize(match))
+  attrs_order <- unique(unlist(ordered_sets))
+  indices <- outer(attrs_order, ordered_sets, Vectorize(match))
   merged <- character()
   while (any(!is.na(indices))) {
     maxs <- apply(indices, 1, max, na.rm = TRUE)
@@ -112,14 +112,14 @@ merge_attribute_orderings <- function(...) {
         "inconsistent attribute orderings,",
         "returning remaining attributes in order of listing"
       ))
-      return(union(merged, all_attrs))
+      return(union(merged, attrs_order))
     }
     nxt <- top[[1L]]
-    merged <- c(merged, all_attrs[[nxt]])
+    merged <- c(merged, attrs_order[[nxt]])
     nxt_sets <- !is.na(indices[nxt, ])
     indices[, nxt_sets] <- indices[, nxt_sets] - 1L
     indices <- indices[-nxt, , drop = FALSE]
-    all_attrs <- all_attrs[-nxt]
+    attrs_order <- attrs_order[-nxt]
   }
   merged
 }

@@ -95,10 +95,10 @@ describe("reduce.database_schema", {
         once_plus_small$relation_names,
         "extra_table"
       )
-      once_plus_small$all_attrs <- c(once_plus_small$all_attrs, "extra_attr")
+      once_plus_small$attrs_order <- c(once_plus_small$attrs_order, "extra_attr")
       twice <- reduce(once_plus_small, database_schema$relation_names[1L])
       twice_minus_small_attr <- twice
-      twice_minus_small_attr$all_attrs <- setdiff(twice$all_attrs, "extra_attr")
+      twice_minus_small_attr$attrs_order <- setdiff(twice$attrs_order, "extra_attr")
       expect_identical(twice_minus_small_attr, once)
     }
     forall(
@@ -133,7 +133,7 @@ describe("reduce.database_schema", {
           \(r) {r[[1]] <- database_schema$relation_names[r[[1]]]; r}
         )
       )
-      expect_identical(reduced$all_attrs, database_schema$all_attrs)
+      expect_identical(reduced$attrs_order, database_schema$attrs_order)
     }
     forall(gen_df(6, 7, minrow = 1L), reduced_to_subset)
   })
