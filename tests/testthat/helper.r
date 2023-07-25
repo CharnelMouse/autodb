@@ -39,7 +39,7 @@ is_valid_minimal_functional_dependency <- function(x) {
   ))
 }
 
-is_valid_relation_schema <- function(x) {
+is_valid_relation_schema <- function(x, unique = FALSE, single_empty_key = FALSE) {
   expect_s3_class(x, "relation_schema")
   expect_true(!anyDuplicated(names(x)))
   expect_true(all(nchar(names(x)) > 0L))
@@ -67,98 +67,62 @@ is_valid_relation_schema <- function(x) {
     logical(1)
   )))
   expect_true(all(vapply(keys, Negate(anyDuplicated), logical(1))))
-  expect_lte(sum(vapply(keys, identical, logical(1), list(character()))), 1L)
+  if (single_empty_key)
+    expect_lte(sum(vapply(keys, identical, logical(1), list(character()))), 1L)
 
-  implied_fds <- functional_dependency(
-    unlist(
-      Map(
-        \(ks, as) {
-          unlist(
-            lapply(ks, \(k) lapply(setdiff(as, k), \(a) list(k, a))),
-            recursive = FALSE
-          )
-        },
-        keys,
-        attrs
+  if (unique) {
+    expect_true(!anyDuplicated(x))
+
+    implied_fds <- functional_dependency(
+      unlist(
+        Map(
+          \(ks, as) {
+            unlist(
+              lapply(ks, \(k) lapply(setdiff(as, k), \(a) list(k, a))),
+              recursive = FALSE
+            )
+          },
+          keys,
+          attrs
+        ),
+        recursive = FALSE
       ),
-      recursive = FALSE
-    ),
-    attr(x, "attrs_order")
-  )
-  expect_true(!anyDuplicated(implied_fds))
+      attr(x, "attrs_order")
+    )
+    expect_true(!anyDuplicated(implied_fds))
+  }
 }
 
-is_valid_database_schema <- function(x) {
+is_valid_database_schema <- function(x, unique = FALSE, single_empty_key = FALSE) {
+  is_valid_relation_schema(x, unique, single_empty_key)
+
   expect_s3_class(x, "database_schema")
-  expect_true(!anyDuplicated(x$relation_names))
-  expect_true(all(nchar(x$relation_names) > 0L))
-  expect_identical(length(x$attrs), length(x$keys))
-  key_els <- lapply(x$keys, \(ks) unique(unlist(ks)))
-  expect_identical(
-    Map(\(as, n) as[seq_len(n)], x$attrs, lengths(key_els)),
-    key_els
-  )
-  nonprime_attrs <- Map(
-    \(as, n) as[setdiff(seq_along(as), seq_len(n))],
-    x$attrs,
-    lengths(key_els)
-  )
-  expect_true(all(vapply(
-    x$keys,
-    \(ks) all(vapply(ks, \(k) !is.unsorted(match(k, x$attrs_order)), logical(1))),
-    logical(1)
-  )))
-  expect_true(all(vapply(
-    nonprime_attrs,
-    \(as) all(vapply(as, \(a) !is.unsorted(match(a, x$attrs_order)), logical(1))),
-    logical(1)
-  )))
-  expect_true(all(vapply(x$keys, Negate(anyDuplicated), logical(1))))
-  expect_lte(sum(vapply(x$keys, identical, logical(1), list(character()))), 1L)
+  fks <- relationships(x)
+  parents <- parents(x)
 
-  implied_fds <- functional_dependency(
-    unlist(
-      Map(
-        \(ks, as) {
-          unlist(
-            lapply(ks, \(k) lapply(setdiff(as, k), \(a) list(k, a))),
-            recursive = FALSE
-          )
-        },
-        x$keys,
-        x$attrs
-      ),
-      recursive = FALSE
-    ),
-    x$attrs_order
-  )
-  expect_true(!anyDuplicated(implied_fds))
-
-  if (!is.null(x$relationships)) {
-    fks <- x$relationships
-    for (fk in fks) {
-      expect_length(fk, 2L)
-      expect_identical(lengths(fk), 2:1)
-      expect_true(is.integer(fk[[1]]))
-      expect_true(is.character(fk[[2]]))
-      expect_false(fk[[1]][1] == fk[[1]][2])
-      expect_true(is.element(fk[[2]], x$attrs[[fk[[1]][1]]]))
-      expect_true(is.element(fk[[2]], x$attrs[[fk[[1]][2]]]))
-    }
-    expect_true(!anyDuplicated(fks))
-    fk_relations <- lapply(fks, "[[", 1L)
-    fk_children <- vapply(fk_relations, "[", integer(1), 1L)
-    fk_parents <- vapply(fk_relations, "[", integer(1), 2L)
-    fk_parent_sets <- split(fk_parents, fk_children)
-    children <- strtoi(names(fk_parent_sets))
-    nonchildren <- setdiff(seq_along(x$relation_names), children)
-    Map(
-      expect_setequal,
-      fk_parent_sets[as.character(children)],
-      x$parents[children]
-    )
-    lapply(x$parents[nonchildren], expect_identical, integer())
+  for (fk in fks) {
+    expect_length(fk, 2L)
+    expect_identical(lengths(fk), 2:1)
+    expect_true(is.integer(fk[[1]]))
+    expect_true(is.character(fk[[2]]))
+    expect_false(fk[[1]][1] == fk[[1]][2])
+    expect_true(all(is.element(fk[[1]], seq_along(x))))
+    expect_true(is.element(fk[[2]], attrs(x)[[fk[[1]][1]]]))
+    expect_true(is.element(fk[[2]], attrs(x)[[fk[[1]][2]]]))
   }
+  if (unique) expect_true(!anyDuplicated(fks))
+  fk_relations <- lapply(fks, "[[", 1L)
+  fk_children <- vapply(fk_relations, "[", integer(1), 1L)
+  fk_parents <- vapply(fk_relations, "[", integer(1), 2L)
+  fk_parent_sets <- split(fk_parents, fk_children)
+  children <- strtoi(names(fk_parent_sets))
+  nonchildren <- setdiff(seq_along(names(x)), children)
+  Map(
+    expect_setequal,
+    fk_parent_sets[as.character(children)],
+    parents[children]
+  )
+  lapply(parents[nonchildren], expect_identical, integer())
 }
 
 is_valid_database <- function(x) {
@@ -357,6 +321,83 @@ gen_flat_deps <- function(
     gen.and_then(\(attrs) gen_named_flat_deps(attrs, max_detset_size, from, to, of))
 }
 
+gen.keys <- function(attrs) {
+  gen.subsequence(attrs) |>
+    gen.list(to = 3) |>
+    gen.with(\(keys) {
+      uniq <- unique(keys)
+      superset <- outer(
+        uniq,
+        uniq,
+        Vectorize(\(sup, sub) {
+          all(is.element(sub, sup)) && !all(is.element(sup, sub))
+        })
+      )
+      rem <- uniq[!apply(superset, 1, any)]
+      rem[keys_order(lapply(rem, match, attrs))]
+    })
+}
+gen.relation_schema <- function(x, from, to) {
+  gen.subsequence(x) |>
+    gen.and_then(\(attrs) list(gen.pure(attrs), gen.keys(attrs))) |>
+    gen.list(from = from, to = to) |>
+    gen.with(\(lst) {
+      # only one schema can have an empty key
+      rels_with_empty_keys <- which(vapply(
+        lst,
+        \(schema) any(lengths(schema[[2]]) == 0L),
+        logical(1)
+      ))
+      if (length(rels_with_empty_keys) > 1L)
+        lst <- lst[-rels_with_empty_keys[-1]]
+
+      nms <- make.names(
+        vapply(lst, \(rel) name_dataframe(rel[[2]][[1]]), character(1)),
+        unique = TRUE
+      )
+      list(setNames(lst, nms), x)
+    }) |>
+    gen.with(\(lst) {
+      do.call(relation_schema, lst)
+    })
+}
+
+gen.relationships <- function(rs) {
+  gen.relationships_for_index_and_key <- function(rs, n, k) {
+    contains_key <- setdiff(
+      which(vapply(
+        attrs(rs),
+        \(as) all(is.element(k, as)),
+        logical(1)
+      )),
+      n
+    )
+    gen.subsequence(contains_key) |>
+      gen.with(\(citers) {
+        lst <- lapply(
+          citers,
+          \(citer) lapply(k, \(a) list(c(citer, n), a))
+        )
+        if (length(lst) == 0) list() else unlist(lst, recursive = FALSE)
+      })
+  }
+  gen.relationships_for_index <- function(rs, n) {
+    ks <- keys(rs)[[n]]
+    lapply(ks, gen.relationships_for_index_and_key, rs = rs, n = n) |>
+      gen.with(\(lst) {
+        if (length(lst) == 0L) list() else unique(unlist(lst, recursive = FALSE))
+      })
+  }
+  lapply(seq_along(rs), gen.relationships_for_index, rs = rs) |>
+    gen.with(\(lst) if (length(lst) == 0L) list() else unlist(lst, recursive = FALSE))
+}
+
+gen.database_schema <- function(x, from, to) {
+  gen.relation_schema(x, from, to) |>
+    gen.and_then(\(rs) list(gen.pure(rs), gen.relationships(rs))) |>
+    gen.with(\(lst) do.call(database_schema, lst))
+}
+
 # generating key / determinant set lists
 gen.nonempty_list <- function(generator, to)
   gen.list(generator, from = 1, to = to)
@@ -367,7 +408,7 @@ gen.list_with_dups <- function(generator, n_unique)
   gen.and_then(\(lst) gen.sample(lst, ceiling(1.5*length(lst)), replace = TRUE))
 
 # functional utility functions for tests
-`%>>%` <- function(fn1, fn2) function(x) fn2(fn1(x))
+`%>>%` <- function(fn1, fn2) function(...) fn2(fn1(...))
 expect_biequal <- function(fn1, fn2) function(x) expect_equal(fn1(x), fn2(x))
 expect_biidentical <- function(fn1, fn2)
   function(x) expect_identical(fn1(x), fn2(x))
@@ -377,7 +418,11 @@ sort_by <- function(fn) function(x) x[order(fn(x))]
 if_discard_else <- function(cond, fn)
   function(x) if (cond(x)) discard() else fn(x)
 uncurry <- function(fn) function(x) fn(x[[1]], x[[2]])
-with_args <- function(fn, ...) function(x) fn(x, ...)
+with_args <- function(fn, ...) {
+  lst <- list(...)
+  function(...) do.call(fn, c(list(...), lst))
+}
 apply_both <- function(fn1, fn2) function(x) {fn1(x); fn2(x)}
 dup <- function(x) list(x, x)
+onLeft <- function(f) function(x) list(f(x[[1]]), x[[2]])
 onRight <- function(f) function(x) list(x[[1]], f(x[[2]]))

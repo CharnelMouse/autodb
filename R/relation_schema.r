@@ -3,6 +3,9 @@
 #' Creates a set of relation schemas, including the relation's attributes and
 #' candidate keys.
 #'
+#' Duplicate schemas, after ordering by attribute, are allowed, and can be
+#' removed with `\code{\link{unique}}`.
+#'
 #' When several sets of relation schemas are concatenated, their
 #' \code{attrs_order} attributes are merged, so as to preserve all of the original
 #' attribute orders, if possible. If this is not possible, because the orderings
@@ -16,8 +19,6 @@
 #' @param attrs_order a character vector, giving the names of all attributes.
 #'   These need not be present in \code{schemas}, but all attributes in
 #'   \code{schemas} must be present in \code{attrs_order}.
-#' @param unique a logical, TRUE by default, for whether to remove duplicate
-#'   schemas.
 #'
 #' @return A \code{relation_schema} object, containing the list given in
 #'   \code{schemas}, with \code{attrs_order} stored in an attribute of the same
@@ -39,7 +40,7 @@
 #' keys(schemas)
 #' attrs_order(schemas)
 #' names(schemas)
-relation_schema <- function(schemas, attrs_order, unique = TRUE) {
+relation_schema <- function(schemas, attrs_order) {
   if (!all(lengths(schemas) == 2L))
     stop("schema elements must have length two")
   if (!all(vapply(schemas, \(s) is.character(s[[1]]), logical(1))))
@@ -92,7 +93,7 @@ relation_schema <- function(schemas, attrs_order, unique = TRUE) {
     }
   )
   structure(
-    schemas[if (unique) !duplicated(schemas) else rep(TRUE, length(schemas))],
+    schemas,
     attrs_order = attrs_order,
     class = "relation_schema"
   )
@@ -131,6 +132,14 @@ attrs.relation_schema <- function(x, ...) {
   lapply(unclass(x), `[[`, 1L)
 }
 
+#' @export
+`attrs<-.relation_schema` <- function(x, ..., value) {
+  relation_schema(
+    stats::setNames(Map(list, value, keys(x)), names(x)),
+    attrs_order(x)
+  )
+}
+
 #' @exportS3Method
 keys.relation_schema <- function(x, ...) {
   lapply(unclass(x), `[[`, 2L)
@@ -140,6 +149,7 @@ keys.relation_schema <- function(x, ...) {
 attrs_order.relation_schema <- function(x, ...) {
   attr(x, "attrs_order")
 }
+
 
 #' @export
 `[.relation_schema` <- function(x, i) {
@@ -165,7 +175,7 @@ unique.relation_schema <- function(x, ...) {
 }
 
 #' @exportS3Method
-c.relation_schema <- function(..., unique = TRUE) {
+c.relation_schema <- function(..., single_empty_key = FALSE) {
   lst <- list(...)
   joined_schemas <- Reduce(c, lapply(lst, unclass))
   names(joined_schemas) <- if (is.null(names(joined_schemas)))
@@ -176,5 +186,23 @@ c.relation_schema <- function(..., unique = TRUE) {
   attrs_order_list <- lapply(lst, attrs_order)
   joined_attrs_order <- do.call(merge_attribute_orderings, attrs_order_list)
 
-  relation_schema(joined_schemas, joined_attrs_order, unique = unique)
+  res <- relation_schema(joined_schemas, joined_attrs_order)
+
+  if (single_empty_key) {
+    empty_keys <- which(vapply(
+      keys(res),
+      identical,
+      logical(1),
+      list(character())
+    ))
+    if (length(empty_keys) >= 2L) {
+      as <- unique(unlist(attrs(res[empty_keys])))
+      to_keep <- empty_keys[[1]]
+      to_remove <- empty_keys[-1]
+      attrs(res)[[to_keep]] <- as
+      res <- res[-to_remove]
+    }
+  }
+
+  res
 }

@@ -16,27 +16,8 @@
 #'   decomposition lossless.
 #' @inheritParams autodb
 #'
-#' @return A database schema with foreign key references, represented by a named
-#'   list of three lists and two character vectors, with the first four having
-#'   equal length and representing relation schemas:
-#'   \itemize{
-#'     \item \code{attrs} elements contain the attributes present in the
-#'     relation schemas, with attributes in keys given first.
-#'     \item \code{keys} elements contain a list of the candidate keys for the
-#'     relation schemas.
-#'     \item \code{parents} elements contain integers, representing a relation
-#'     schema's parent relation schemas by their position in the paired lists.
-#'     \item \code{relationships} contains a list of relationships, each
-#'     represented by a list containing two elements. In order, the elements
-#'     are a two-length integer vector, giving the positions of the child and
-#'     parent relation schemas, and a scalar character, giving the name of the
-#'     linked attribute in both relation schemas.
-#'     \item \code{relation_names} is a character vector, containing the names
-#'     of the relation schemas
-#'     \item \code{attrs_order} is a character vector, containing all attribute
-#'     names in priority order for placement and key ordering, i.e. as ordered
-#'     in the original data frame.
-#'  }
+#' @return A \code{\link{database_schema}} object, containing the synthesis
+#'   relation schemas and the created foreign key references.
 #' @export
 normalise <- function(
   dependencies,

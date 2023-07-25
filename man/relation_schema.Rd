@@ -4,7 +4,7 @@
 \alias{relation_schema}
 \title{Relation schema vectors}
 \usage{
-relation_schema(schemas, attrs_order, unique = TRUE)
+relation_schema(schemas, attrs_order)
 }
 \arguments{
 \item{schemas}{a named list of schemas, in the form of two-element lists: the
@@ -15,9 +15,6 @@ each representing a candidate key.}
 \item{attrs_order}{a character vector, giving the names of all attributes.
 These need not be present in \code{schemas}, but all attributes in
 \code{schemas} must be present in \code{attrs_order}.}
-
-\item{unique}{a logical, TRUE by default, for whether to remove duplicate
-schemas.}
 }
 \value{
 A \code{relation_schema} object, containing the list given in
@@ -33,6 +30,9 @@ Creates a set of relation schemas, including the relation's attributes and
 candidate keys.
 }
 \details{
+Duplicate schemas, after ordering by attribute, are allowed, and can be
+removed with \verb{\code{\link{unique}}}.
+
 When several sets of relation schemas are concatenated, their
 \code{attrs_order} attributes are merged, so as to preserve all of the original
 attribute orders, if possible. If this is not possible, because the orderings

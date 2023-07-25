@@ -45,11 +45,11 @@
 #'   }
 #' @export
 decompose <- function(df, schema, name = NA_character_) {
-  relation_names <- schema$relation_names
+  relation_names <- names(schema)
   stopifnot(!anyDuplicated(relation_names))
-  stopifnot(identical(names(df), schema$attrs_order))
+  stopifnot(identical(names(df), attrs_order(schema)))
 
-  inferred_fds <- synthesised_fds(schema$attrs, schema$keys)
+  inferred_fds <- synthesised_fds(attrs(schema), keys(schema))
   if (length(inferred_fds) > 0L)
     inferred_fds <- unlist(inferred_fds, recursive = FALSE)
   check_fd <- function(df, fd) {
@@ -96,12 +96,12 @@ decompose <- function(df, schema, name = NA_character_) {
         parents = relation_names[parents]
       )
     },
-    schema$attrs,
-    schema$keys,
-    schema$parents
+    attrs(schema),
+    keys(schema),
+    parents(schema)
   )
   relationships <- lapply(
-    schema$relationships,
+    relationships(schema),
     \(r) {
       c(relation_names[r[[1]][1]], r[[2]], relation_names[r[[1]][2]], r[[2]])
     }
@@ -111,7 +111,7 @@ decompose <- function(df, schema, name = NA_character_) {
       name = name,
       relations = stats::setNames(relation_list, relation_names),
       relationships = relationships,
-      attributes = schema$attrs_order
+      attributes = attrs_order(schema)
     ),
     class = c("database", "list")
   )

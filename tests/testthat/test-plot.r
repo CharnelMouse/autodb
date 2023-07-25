@@ -511,16 +511,13 @@ describe("gv", {
       expect_no_error(gv(schema_dee))
     })
     it("converts attribute/df names to snake case for labels (inc. spaces, periods)", {
-      schema <- structure(
+      schema <- relation_schema(
         list(
-          attrs = list(c("Genre ID", "Genre Name")),
-          keys = list(list("Genre ID")),
-          parents = list(integer()),
-          relationships = list(),
-          relation_names = "Genre ID"
+          `Genre ID` = list(c("Genre ID", "Genre Name"), list("Genre ID"))
         ),
-        class = c("database_schema", "list")
-      )
+        attrs_order = c("Genre ID", "Genre Name")
+      ) |>
+        database_schema(relationships = list())
       expected_string <- paste(
         "digraph book {",
         "  rankdir = \"LR\"",
@@ -544,22 +541,25 @@ describe("gv", {
       )
     })
     it("doesn't give a graph ID if name is missing", {
-      schema <- structure(
-        list(
-          relations = list(
-            a = list(
-              df = data.frame(a = 1:4, b = 1:2),
-              keys = list("a"),
-              index = "a",
-              parents = character()
-            )
-          ),
-          relationships = list()
-        ),
-        class = c("database_schema", "list")
-      )
+      schema <- relation_schema(
+        list(a = list(c("a", "b"), list("a"))),
+        attrs_order = c("a", "b")
+      ) |>
+        database_schema(relationships = list())
       plot_string <- gv(schema)
       expect_identical(substr(plot_string, 1, 9), "digraph {")
+    })
+    it("gives the foreign key references", {
+      schema <- relation_schema(
+        list(
+          a = list(c("a", "b"), list("a")),
+          b = list(c("b", "c"), list("b"))
+        ),
+        c("a", "b", "c")
+      ) |>
+        database_schema(relationships = list(list(1:2, "b")))
+      plot_string <- gv(schema)
+      expect_true(grepl("\\n  a.FROM_b -> b.TO_b", plot_string))
     })
   })
   describe("relation_schema", {

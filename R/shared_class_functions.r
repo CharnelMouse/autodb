@@ -44,6 +44,15 @@ attrs <- function(x, ...) {
   UseMethod("attrs")
 }
 
+#' @rdname attrs
+#'
+#' @param value A character vector of the same length as \code{attrs(x, ...)}.
+#'
+#' @export
+`attrs<-` <- function(x, ..., value) {
+  UseMethod("attrs<-")
+}
+
 #' Relational data keys
 #'
 #' Generic function, with the only given method fetching candidate key lists for
@@ -72,6 +81,56 @@ keys <- function(x, ...) {
 #' @export
 attrs_order <- function(x, ...) {
   UseMethod("attrs_order")
+}
+
+#' Schema relationships
+#'
+#' Generic function, returning present relationships.
+#'
+#' @param x an R object.
+#' @param ... further arguments passed on to methods.
+#'
+#' @return a list, giving relationships.
+#' @export
+relationships <- function(x, ...) {
+  UseMethod("relationships")
+}
+
+#' @rdname relationships
+#'
+#' @param value A list, of the same length as \code{relationships}(x, ...).
+#'
+#' @export
+`relationships<-` <- function(x, value) {
+  UseMethod("relationships<-")
+}
+
+#' Schema parents
+#'
+#' Generic function I intend to remove.
+#'
+#' @param x an R object.
+#' @param ... further arguments passed on to methods.
+#'
+#' @return A list.
+#' @export
+parents <- function(x, ...) {
+  UseMethod("parents")
+}
+
+#' Schema subschemas
+#'
+#' Generic function, returning subschemas for \code{x}.
+#'
+#' @param x an R object, intended to be some sort of schema that contains other
+#'   schemas.
+#' @param ... further arguments passed on to methods.
+#'
+#' @return a schema-type object, or a list of schema-type objects if the
+#'   subschema isn't vectorised.
+#' @export
+subschemas <- function(x, ...) {
+  UseMethod("subschemas")
 }
 
 merge_attribute_orderings <- function(...) {

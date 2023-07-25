@@ -146,24 +146,24 @@ gv.database <- function(x, ...) {
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
 gv.database_schema <- function(x, name = NA_character_, ...) {
-  empty_names <- which(x$relation_names == "" | x$relation_names == "empty")
-  x$relation_names[empty_names] <- make.names(
+  empty_names <- which(names(x) == "" | names(x) == "empty")
+  names(x)[empty_names] <- make.names(
     rep("empty", length(empty_names)),
     unique = TRUE
   )
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     relation_schema_string,
-    x$attrs,
-    x$keys,
-    x$relation_names
+    attrs(x),
+    keys(x),
+    names(x)
   ) |>
     paste(collapse = "\n")
   reference_strings <- vapply(
-    x$relationships,
+    relationships(x),
     dbs_reference_string,
     character(1),
-    x$relation_names
+    names(x)
   ) |>
     paste(collapse = "\n")
   teardown_string <- "}\n"

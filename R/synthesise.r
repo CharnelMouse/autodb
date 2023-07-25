@@ -20,21 +20,8 @@
 #'
 #' @inheritParams normalise
 #'
-#' @return A database schema, represented by a named list of two lists and two
-#'   character vectors:
-#'   \itemize{
-#'     \item \code{attrs} elements contain the attributes present in the
-#'     relation schemas, with attributes in keys given first.
-#'     \item \code{keys} elements contain a list of the candidate keys for the
-#'     relation schemas.
-#'     \item \code{attrs_order} is a character vector, containing all attribute
-#'     names in priority order for placement and key ordering, i.e. as ordered
-#'     in the original data frame.
-#'     \item \code{relation_names} is a character vector, containing the names
-#'     of the relation schemas
-#'   }
-#'   The lists and the \code{relation_names} vector are of equal length,
-#'   representing relation schemas.
+#' @return A \code{\link{relation_schema}} object, containing the synthesised
+#'   relation schemas.
 #' @references
 #' 3NF synthesis algorithm: Bernstein P. A. (1976) Synthesizing third normal
 #' form relations from functional dependencies. *ACM Trans. Database Syst.*,
@@ -729,45 +716,4 @@ keys_rank <- function(keys) {
   cum_lengths <- cumsum(lengths(rank_within_lengths))
   starts <- c(0L, cum_lengths[-length(cum_lengths)])
   unsplit(Map("+", rank_within_lengths, starts), lens)
-}
-
-#' @exportS3Method
-print.database_schema <- function(x, max = 10, ...) {
-  n_relations <- length(x$attrs)
-  cat(paste0(
-    "database schema with ",
-    n_relations,
-    " relation schema",
-    if (n_relations != 1) "s",
-    "\n"
-  ))
-  for (n in seq_len(min(n_relations, max))) {
-    cat(paste0("schema ", x$relation_names[n], ": ", toString(x$attrs[[n]]), "\n"))
-    keys <- x$keys[[n]]
-    n_keys <- length(keys)
-    for (k in seq_len(min(n_keys, max))) {
-      cat(paste0("  key ", k, ": ", toString(keys[[k]]), "\n"))
-    }
-    if (max < n_keys)
-      cat("  ... and", n_keys - max, "other keys\n")
-  }
-  if (max < n_relations) {
-    cat("... and", n_relations - max, "other schemas\n")
-  }
-  if (length(x$relationships) == 0)
-    cat("no relationships\n")
-  else {
-    cat(paste("relationships:\n"))
-    n_relationships <- length(x$relationships)
-    for (r in seq_len(n_relationships)) {
-      rel <- x$relationships[[r]]
-      cat(paste0(
-        x$relation_names[rel[[1]][1]], ".", rel[[2]],
-        " -> ",
-        x$relation_names[rel[[1]][2]], ".", rel[[2]], "\n"
-      ))
-    }
-    if (max < n_relationships)
-      cat("... and", n_relationships - max, "other relationships\n")
-  }
 }

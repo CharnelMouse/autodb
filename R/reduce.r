@@ -80,7 +80,7 @@ reduce.database <- function(x, ...) {
 #'   relationships removed.
 #' @exportS3Method
 reduce.database_schema <- function(x, main, ...) {
-  main_indices <- match(main, x$relation_names)
+  main_indices <- match(main, names(x))
   if (anyNA(main_indices))
     stop(
       "main contains names for relations not present: ",
@@ -92,28 +92,21 @@ reduce.database_schema <- function(x, main, ...) {
     current <- queue[1]
     queue <- queue[-1]
     kept <- union(kept, current)
-    current_parents <- x$parents[[current]]
+    current_parents <- parents(x)[[current]]
     queue <- union(queue, setdiff(current_parents, kept))
   }
   sorted_kept <- sort(kept)
-  x$attrs <- x$attrs[sorted_kept]
-  x$keys <- x$keys[sorted_kept]
-  x$parents <- lapply(x$parents[sorted_kept], \(p) match(p, sorted_kept))
-  x$relation_names <- x$relation_names[sorted_kept]
-  x$relationships <- Filter(
+  rels <- relationships(x)
+  rels <- Filter(
     \(r) all(is.element(r[[1]], sorted_kept)),
-    x$relationships
+    rels
   )
-  x$relationships <- Filter(
-    \(r) is.element(r[[2]], x$relation_names),
-    x$relationships
-  )
-  x$relationships <- lapply(
-    x$relationships,
+  rels <- lapply(
+    rels,
     \(r) {
       r[[1]] <- match(r[[1]], sorted_kept)
       r
     }
   )
-  x
+  database_schema(subschemas(x)[sorted_kept], rels)
 }

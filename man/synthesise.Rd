@@ -34,21 +34,8 @@ is non-zero, determines where the progress is written to, in the same way
 as the \code{file} argument for \code{\link[base]{cat}}.}
 }
 \value{
-A database schema, represented by a named list of two lists and two
-character vectors:
-\itemize{
-\item \code{attrs} elements contain the attributes present in the
-relation schemas, with attributes in keys given first.
-\item \code{keys} elements contain a list of the candidate keys for the
+A \code{\link{relation_schema}} object, containing the synthesised
 relation schemas.
-\item \code{attrs_order} is a character vector, containing all attribute
-names in priority order for placement and key ordering, i.e. as ordered
-in the original data frame.
-\item \code{relation_names} is a character vector, containing the names
-of the relation schemas
-}
-The lists and the \code{relation_names} vector are of equal length,
-representing relation schemas.
 }
 \description{
 Synthesises the dependency relationships in dependencies into a database

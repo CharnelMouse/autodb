@@ -1,52 +1,6 @@
 library(hedgehog)
 
 describe("relation_schema", {
-  gen.rs_inputs <- function(x, from, to) {
-    gen.sample(x, gen.sample(0:length(x), 1)) |>
-      gen.and_then(\(attrs) {
-        list(
-          attrs,
-          gen.sample(attrs, gen.sample(0:length(attrs), 1)) |>
-            gen.list(to = 3) |>
-            gen.with(\(keys) {
-              uniq <- unique(keys)
-              superset <- outer(
-                uniq,
-                uniq,
-                Vectorize(\(sup, sub) {
-                  all(is.element(sub, sup)) && !all(is.element(sup, sub))
-                })
-              )
-              rem <- uniq[!apply(superset, 1, any)]
-              rem[keys_order(lapply(rem, match, attrs))]
-            })
-        )
-      }) |>
-      gen.list(from = from, to = to) |>
-      gen.with(\(lst) {
-        # only one schema can have an empty key
-        rels_with_empty_keys <- which(vapply(
-          lst,
-          \(schema) any(lengths(schema[[2]]) == 0L),
-          logical(1)
-        ))
-        if (length(rels_with_empty_keys) > 1L)
-          lst <- lst[-rels_with_empty_keys[-1]]
-
-        nms <- make.names(
-          vapply(lst, \(rel) name_dataframe(rel[[2]][[1]]), character(1)),
-          unique = TRUE
-        )
-        list(setNames(lst, nms), x)
-      })
-  }
-  gen.rs <- function(x, from, to, unique = TRUE) {
-    gen.rs_inputs(x, from, to) |>
-      gen.with(\(lst) do.call(relation_schema, c(lst, list(unique = unique))))
-  }
-  it("generates valid relation schemas", {
-    forall(gen.rs(letters[1:6], 0, 8), is_valid_relation_schema)
-  })
   it("expects valid input: schema elements correct lengths, contain characters of valid lengths", {
     expect_error(
       relation_schema(list(NULL), character()),
@@ -121,12 +75,11 @@ describe("relation_schema", {
       "^attributes in keys must be present in relation$"
     )
   })
-  it("returns a set, i.e. no duplicated relations, when unique = TRUE (default)", {
+
+  it("returns a valid relation schema", {
     forall(
-      gen.rs_inputs(letters[1:2], 2, 20),
-      (\(lst) do.call(relation_schema, lst)) %>>%
-        Negate(anyDuplicated) %>>%
-        expect_true
+      gen.relation_schema(letters[1:2], 2, 20),
+      is_valid_relation_schema
     )
   })
   it("orders key attributes with respect to order in attrs_order", {
@@ -144,7 +97,7 @@ describe("relation_schema", {
       )
       expect_true(all(keys_matches))
     }
-    forall(gen.rs(letters[1:6], 1, 8), key_attributes_ordered)
+    forall(gen.relation_schema(letters[1:6], 1, 8), key_attributes_ordered)
   })
   it("orders attributes with respect to appearance in keys, then by attrs_order", {
     attributes_ordered <- function(rs) {
@@ -167,7 +120,7 @@ describe("relation_schema", {
       )
       expect_true(all(attr_matches))
     }
-    forall(gen.rs(letters[1:6], 1, 8), attributes_ordered)
+    forall(gen.relation_schema(letters[1:6], 1, 8), attributes_ordered)
   })
   it("prints", {
     expect_output(
@@ -192,6 +145,22 @@ describe("relation_schema", {
       perl = TRUE
     )
   })
+  it("is subsetted to a valid relation schema", {
+    forall(
+      gen.relation_schema(letters[1:6], 0, 8) |>
+        gen.and_then(\(rs) list(
+          gen.pure(rs),
+          gen.sample(c(FALSE, TRUE), length(rs), replace = TRUE)
+        )),
+      \(rs, i) {
+        is_valid_relation_schema(rs[i])
+        is_valid_relation_schema(rs[which(i)])
+        expect_identical(rs[i], rs[which(i)])
+        expect_length(rs[i], sum(i))
+      },
+      curry = TRUE
+    )
+  })
   it("can be subsetted while preserving attributes", {
     x <- relation_schema(list(a = list(c("a", "b"), list("a"))), letters[1:5])
     expect_identical(x[TRUE], x)
@@ -203,10 +172,20 @@ describe("relation_schema", {
     expect_error(x[[integer()]])
     expect_error(x[[c(1, 1)]])
   })
-  it("can be made unique within class", {
+  it("is made unique to a valid relation schema", {
     forall(
-      gen.rs(letters[1:6], 0, 8, unique = FALSE),
-      unique %>>% class %>>% with_args(expect_identical, "relation_schema")
+      gen.relation_schema(letters[1:6], 0, 8),
+      unique %>>% is_valid_relation_schema
+    )
+  })
+  it("is made unique with no duplicate schemas", {
+    forall(
+      gen.relation_schema(letters[1:6], 1, 8),
+      \(rs) {
+        rs2 <- c(rs, rs)
+        expect_false(Negate(anyDuplicated)(rs2))
+        expect_true(Negate(anyDuplicated)(unique(rs2)))
+      }
     )
   })
   it("concatenates within class", {
@@ -214,19 +193,26 @@ describe("relation_schema", {
       expect_identical(class(c(...)), class(..1))
     }
     forall(
-      gen.rs(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
+      gen.relation_schema(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
       concatenate_within_class,
       curry = TRUE
     )
   })
-  it("concatenates with duplicates removed", {
-    concatenate_unique <- function(...) {
-      expect_true(!anyDuplicated(c(...)))
-    }
+  it("concatenates to a valid relation schema", {
     forall(
-      gen.rs(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
-      concatenate_unique,
+      gen.relation_schema(letters[1:6], 0, 4) |>
+        gen.list(from = 1, to = 3),
+      c %>>% is_valid_relation_schema,
       curry = TRUE
+    )
+  })
+  it("concatenates with duplicates preserved", {
+    forall(
+      gen.relation_schema(letters[1:6], 1, 8) |>
+        gen.with(\(rs) list(rs, rs)),
+      \(lst) {
+        expect_length(do.call(c, lst), sum(lengths(lst)))
+      }
     )
   })
   it("concatenates without losing attributes", {
@@ -238,7 +224,7 @@ describe("relation_schema", {
       }
     }
     forall(
-      gen.rs(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
+      gen.relation_schema(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
       concatenate_lossless_for_attrs_order,
       curry = TRUE
     )
@@ -317,14 +303,14 @@ describe("relation_schema", {
       }
     }
     forall(
-      gen.rs(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
+      gen.relation_schema(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
       concatenate_lossless_for_schemas,
       curry = TRUE
     )
   })
   it("is composed of its attrs(), keys(), names() and attrs_order()", {
     forall(
-      gen.rs(letters[1:6], 0, 8),
+      gen.relation_schema(letters[1:6], 0, 8),
       \(rs) expect_identical(
         rs,
         relation_schema(

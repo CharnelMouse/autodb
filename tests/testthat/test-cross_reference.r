@@ -1,6 +1,30 @@
 library(hedgehog)
 
 describe("cross_reference", {
+  gen.relation <- function(x = letters[1:10]) {
+    gen.subsequence(x) |>
+      gen.with(function(key) {
+        nonkey <- setdiff(x, key)
+        attrs <- list(c(key, nonkey))
+        keys <- list(list(key))
+        nm <- if (length(key) == 0L)
+          "constants"
+        else
+          paste(key, collapse = "_")
+        rs <- relation_schema(
+          setNames(
+            Map(list, attrs, keys),
+            nm
+          ),
+          attrs_order = x
+        )
+        database_schema(rs, relationships = list())
+      })
+  }
+  it("generates valid schemas", {
+    forall(gen.relation(), is_valid_database_schema)
+    forall(gen.relation(character()), is_valid_database_schema)
+  })
   it("returns relationships", {
     schema <- relation_schema(
       list(
@@ -14,8 +38,8 @@ describe("cross_reference", {
     expected_relations <- list(
       list(c(1L, 2L), "b")
     )
-    expect_identical(database$parents, expected_parents)
-    expect_identical(database$relationships, expected_relations)
+    expect_identical(attr(database, "parents"), expected_parents)
+    expect_identical(attr(database, "relationships"), expected_relations)
   })
   it("gives valid schemas", {
     # same as test for normalise, need synthesis result generator
@@ -36,12 +60,12 @@ describe("cross_reference", {
   it("only links children to parents by exactly one parent key", {
     links_by_exactly_one_parent_key <- function(deps) {
       schema <- normalise(deps)
-      if (length(schema$keys) <= 1)
+      if (length(keys(schema)) <= 1)
         discard()
-      if (length(schema$relationships) == 0)
+      if (length(attr(schema, "relationships")) == 0)
         discard()
-      relationship_tables <- lapply(schema$relationships, `[[`, 1)
-      relationship_attrs <- vapply(schema$relationships, `[[`, character(1), 2)
+      relationship_tables <- lapply(attr(schema, "relationships"), `[[`, 1)
+      relationship_attrs <- vapply(attr(schema, "relationships"), `[[`, character(1), 2)
       tables_index <- as.data.frame(do.call(rbind, relationship_tables))
       link_sets <- tapply(
         relationship_attrs,
@@ -57,7 +81,7 @@ describe("cross_reference", {
           logical(1)
         )])
         expect_length(
-          setdiff(attribute_sets, lapply(schema$keys[[parent]], sort)),
+          setdiff(attribute_sets, lapply(keys(schema)[[parent]], sort)),
           0
         )
       }
@@ -73,7 +97,7 @@ describe("cross_reference", {
       lone_attr <- LETTERS[length(attrs(deps)) + 1]
       attr(deps, "attrs") <- c(attrs(deps), lone_attr)
       linked <- normalise(deps, ensure_lossless = TRUE)
-      expect_true(lone_attr %in% unlist(linked$attrs))
+      expect_true(lone_attr %in% unlist(attrs(linked)))
     }
     forall(
       gen_flat_deps(7, 20, to = 20L),
@@ -102,10 +126,10 @@ describe("cross_reference", {
         ensure_lossless = TRUE,
         remove_avoidable = FALSE
       )
-      lengths_avoid_lossy <- lengths(schema_avoid_lossy$attrs)
-      lengths_noavoid_lossy <- lengths(schema_noavoid_lossy$attrs)
-      lengths_avoid_lossless <- lengths(schema_avoid_lossless$attrs)
-      lengths_noavoid_lossless <- lengths(schema_noavoid_lossless$attrs)
+      lengths_avoid_lossy <- lengths(attrs(schema_avoid_lossy))
+      lengths_noavoid_lossy <- lengths(attrs(schema_noavoid_lossy))
+      lengths_avoid_lossless <- lengths(attrs(schema_avoid_lossless))
+      lengths_noavoid_lossless <- lengths(attrs(schema_noavoid_lossless))
 
       # losslessness should add 0 or 1 tables
       expect_gte(
@@ -140,8 +164,8 @@ describe("cross_reference", {
       # if extra table added, avoidance shouldn't affect its attributes
       if (length(lengths_avoid_lossless) > length(lengths_avoid_lossy))
         expect_identical(
-          schema_avoid_lossless$attrs[[lossless_length]],
-          schema_noavoid_lossless$attrs[[lossless_length]]
+          attrs(schema_avoid_lossless)[[lossless_length]],
+          attrs(schema_noavoid_lossless)[[lossless_length]]
         )
     }
 
@@ -153,8 +177,8 @@ describe("cross_reference", {
   it("adds table with key with attributes in original order", {
     adds_ordered_primary_keys <- function(fds) {
       schema <- normalise(fds, ensure_lossless = TRUE)
-      all_keys <- unlist(schema$keys, recursive = FALSE)
-      key_indices <- lapply(all_keys, match, schema$attrs_order)
+      all_keys <- unlist(keys(schema), recursive = FALSE)
+      key_indices <- lapply(all_keys, match, attrs_order(schema))
       expect_false(any(vapply(key_indices, is.unsorted, logical(1))))
     }
     forall(
@@ -165,7 +189,7 @@ describe("cross_reference", {
   it("only returns non-extraneous table relationships", {
     only_returns_non_extraneous_relationships <- function(deps) {
       linked <- normalise(deps, ensure_lossless = TRUE)
-      table_relationships <- unique(lapply(linked$relationships, `[[`, 1))
+      table_relationships <- unique(lapply(attr(linked, "relationships"), `[[`, 1))
       table_relationships <- list(
         determinant_sets = lapply(table_relationships, `[`, 1),
         dependents = vapply(table_relationships, `[`, integer(1), 2)
@@ -180,33 +204,16 @@ describe("cross_reference", {
       only_returns_non_extraneous_relationships
     )
   })
-  # it("is idempotent", {
-  #   forall(
-  #     gen_flat_deps(7, 20, to = 20L),
-  #     normalise %>>%
-  #       expect_biidentical(identity, cross_reference)
-  #   )
-  # })
+  it("is idempotent", {
+    forall(
+      gen_flat_deps(7, 20, to = 20L),
+      normalise %>>%
+        expect_biidentical(identity, cross_reference)
+    )
+  })
   it("returns relations that return themselves if normalised again, if lossless", {
-    gen.key <- gen.sample(letters[1:10], gen.int(10)) |>
-      gen.with(sort)
-    gen.relation <- gen.key |>
-      gen.and_then(function(key) {
-        nonkey <- setdiff(letters[1:10], key)
-        structure(
-          list(
-            attrs = list(c(key, nonkey)),
-            keys = list(list(key)),
-            parents = list(integer()),
-            relationships = list(),
-            relation_names = paste(key, collapse = "_"),
-            attrs_order = letters[1:10]
-          ),
-          class = c("database_schema", "list")
-        )
-      })
     returns_itself <- function(relation) {
-      nonkey <- setdiff(unlist(relation$attrs), unlist(relation$keys))
+      nonkey <- setdiff(unlist(attrs(relation)), unlist(keys(relation)))
       deps <- functional_dependency(
         if (length(nonkey) == 0L)
           list()
@@ -214,19 +221,19 @@ describe("cross_reference", {
           unlist(
             lapply(
               nonkey,
-              \(x) lapply(relation$keys[[1]], \(k) list(k, x))
+              \(x) lapply(keys(relation)[[1]], \(k) list(k, x))
             ),
             recursive = FALSE
           ),
-        relation$attrs[[1]]
+        attrs(relation)[[1]]
       )
       redo <- normalise(deps, ensure_lossless = TRUE)
-      expect_length(redo$attrs, 1)
-      expect_identical(redo$attrs[[1]], relation$attrs[[1]])
-      expect_identical(redo$keys[[1]], relation$keys[[1]])
-      expect_identical(redo$relation_names, relation$relation_names)
-      expect_setequal(redo$attrs_order, relation$attrs_order)
+      expect_length(attrs(redo), 1)
+      expect_identical(attrs(redo)[[1]], attrs(relation)[[1]])
+      expect_identical(keys(redo)[[1]], keys(relation)[[1]])
+      expect_identical(names(redo), names(relation))
+      expect_setequal(attrs_order(redo), attrs_order(relation))
     }
-    forall(gen.relation, returns_itself)
+    forall(gen.relation(), returns_itself)
   })
 })

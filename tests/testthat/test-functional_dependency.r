@@ -78,6 +78,22 @@ describe("functional_dependency", {
       perl = TRUE
     )
   })
+  it("is subsetted to a valid functional dependency object", {
+    forall(
+      gen.fd(letters[1:6], 0, 8) |>
+        gen.and_then(\(fd) list(
+          gen.pure(fd),
+          gen.sample(c(FALSE, TRUE), length(fd), replace = TRUE)
+        )),
+      \(fd, i) {
+        is_valid_functional_dependency(fd[i])
+        is_valid_functional_dependency(fd[which(i)])
+        expect_identical(fd[i], fd[which(i)])
+        expect_length(fd[i], sum(i))
+      },
+      curry = TRUE
+    )
+  })
   it("can be subsetted while preserving attributes", {
     x <- functional_dependency(list(list("a", "b")), letters[1:5])
     expect_identical(x[TRUE], x)
@@ -126,22 +142,6 @@ describe("functional_dependency", {
     )
   })
   it("concatenates without losing attribute orderings, if consistent", {
-    remove_inconsistent <- function(lst) {
-      pairwise <- outer(
-        lst,
-        lst,
-        Vectorize(\(fd1, fd2) {
-          as1 <- attrs(fd1)
-          as2 <- attrs(fd2)
-          one_in_two <- match(as1, as2)
-          two_in_one <- match(as2, as1)
-          !is.unsorted(one_in_two, na.rm = TRUE) &&
-            !is.unsorted(two_in_one, na.rm = TRUE)
-        })
-      )
-      # remove if ordering inconsistent with earlier ones
-      lst[apply(pairwise | upper.tri(pairwise), 1, all)]
-    }
     concatenate_keeps_attribute_order <- function(...) {
       lst <- list(...)
       expect_silent(res <- c(...))

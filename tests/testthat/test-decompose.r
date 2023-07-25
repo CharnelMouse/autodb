@@ -19,14 +19,11 @@ describe("decompose", {
   })
   it("removes extraneous dependencies", {
     df <- data.frame(a = integer(), b = integer(), c = integer())
-    schema <- list(
-      attrs = list(c("a", "b", "c")),
-      keys = list(list("a")),
-      parents = list(integer()),
-      relationships = list(),
-      relation_names = "a",
+    schema <- relation_schema(
+      list(a = list(c("a", "b", "c"), list("a"))),
       attrs_order = c("a", "b", "c")
-    )
+    ) |>
+      database_schema(relationships = list())
     norm.df <- decompose(df, schema)
     expect_database(
       norm.df,
@@ -44,14 +41,11 @@ describe("decompose", {
   })
   it("resolves a simple bijection with no splits", {
     df <- data.frame(a = integer(), b = integer())
-    schema <- list(
-      attrs = list(c("a", "b")),
-      keys = list(list("a", "b")),
-      parents = list(integer()),
-      relationships = list(),
-      relation_names = "a",
+    schema <- relation_schema(
+      list(a = list(c("a", "b"), list("a", "b"))),
       attrs_order = c("a", "b")
-    )
+    ) |>
+      database_schema(relationships = list())
     norm.df <- decompose(df, schema)
     expect_identical(
       norm.df$relations,
@@ -81,27 +75,26 @@ describe("decompose", {
         TRUE, TRUE, TRUE, FALSE, FALSE
       )
     )
-    schema <- list(
-      attrs = list(
-        c("id", "month", "hemisphere"),
-        c("month", "hemisphere", "is_winter")
-      ),
-      keys = list(
-        list("id"),
-        list(
-          c("month", "hemisphere"),
-          c("month", "is_winter"),
-          c("hemisphere", "is_winter")
+    schema <- relation_schema(
+      list(
+        id = list(c("id", "month", "hemisphere"), list("id")),
+        month_hemisphere = list(
+          c("month", "hemisphere", "is_winter"),
+          list(
+            c("month", "hemisphere"),
+            c("month", "is_winter"),
+            c("hemisphere", "is_winter")
+          )
         )
       ),
-      parents = list(2L, integer()),
-      relationships = list(
-        list(1:2, "month"),
-        list(1:2, "hemisphere")
-      ),
-      relation_names = c("id", "month_hemisphere"),
       attrs_order = c("id", "month", "hemisphere", "is_winter")
-    )
+    ) |>
+      database_schema(
+        relationships = list(
+          list(1:2, "month"),
+          list(1:2, "hemisphere")
+        )
+      )
     new_dfs <- decompose(df, schema)
     expected_dfs <- list(
       name = NA_character_,
@@ -142,26 +135,21 @@ describe("decompose", {
       d = 1L,
       e = 1L
     )
-    schema <- list(
-      attrs = list(
-        c("a", "b", "c"),
-        c("b", "c", "d"),
-        c("b", "e")
+    schema <- relation_schema(
+      list(
+        a = list(c("a", "b", "c"), list("a")),
+        b_c = list(c("b", "c", "d"), list(c("b", "c"))),
+        b = list(c("b", "e"), list("b"))
       ),
-      keys = list(
-        list("a"),
-        list(c("b", "c")),
-        list("b")
-      ),
-      parents = list(2L, 3L, integer()),
-      relationships = list(
-        list(1:2, "b"),
-        list(1:2, "c"),
-        list(2:3, "b")
-      ),
-      relation_names = c("a", "b_c", "b"),
       attrs_order = c("a", "b", "c", "d", "e")
-    )
+    ) |>
+      database_schema(
+        relationships = list(
+          list(1:2, "b"),
+          list(1:2, "c"),
+          list(2:3, "b")
+        )
+      )
     new_dfs <- decompose(df, schema)
     expect_identical(new_dfs$relations$a$parents, "b_c")
   })
@@ -224,29 +212,33 @@ describe("decompose", {
         city = integer(),
         state = integer()
       )
-      schema <- list(
-        attrs = list(
-          c("player_name", "jersey_num",  "team"),
-          c("city",  "state"),
-          c("team", "city")
-        ),
-        keys = list(
-          list(
-            c("player_name", "jersey_num"),
-            c("player_name", "team"),
-            c("team", "jersey_num")
+      schema <- relation_schema(
+        list(
+          player_name_jersey_num = list(
+            c("player_name", "jersey_num", "team"),
+            list(
+              c("player_name", "jersey_num"),
+              c("player_name", "team"),
+              c("team", "jersey_num")
+            )
           ),
-          list("city", "state"),
-          list("team")
+          city = list(
+            c("city", "state"),
+            list("city", "state")
+          ),
+          team = list(
+            c("team", "city"),
+            list("team")
+          )
         ),
-        parents = list(3L, integer(), 2L),
-        relationships = list(
-          list(c(1L, 3L), "team"),
-          list(3:2, "city")
-        ),
-        relation_names = c("player_name_jersey_num", "city", "team"),
         attrs_order = c("player_name", "jersey_num", "team", "city", "state")
-      )
+      ) |>
+        database_schema(
+          relationships = list(
+            list(c(1L, 3L), "team"),
+            list(3:2, "city")
+          )
+        )
       depdfs <- decompose(df, schema)
       expect_identical(length(depdfs$relations), 3L)
       expected_depdfs <- list(
@@ -261,7 +253,7 @@ describe("decompose", {
             keys = list(
               c("player_name", "jersey_num"),
               c("player_name", "team"),
-              c("team", "jersey_num")
+              c("jersey_num", "team")
             ),
             parents = "team"
           ),
@@ -294,16 +286,16 @@ describe("decompose", {
   it("correctly handles attributes with non-df-standard names", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
       stats::setNames(c("A 1", "B 2", "C 3"))
-    schema <- structure(
+    schema <- relation_schema(
       list(
-        attrs = list(c("A 1", "B 2", "C 3")),
-        keys = list(list("A 1", c("B 2", "C 3"))),
-        parents = list(integer()),
-        relationships = list(),
-        attrs_order = c("A 1", "B 2", "C 3")
+        `A 1` = list(
+          c("A 1", "B 2", "C 3"),
+          list("A 1", c("B 2", "C 3"))
+        )
       ),
-      class = c("database_schema", "list")
-    )
+      attrs_order = c("A 1", "B 2", "C 3")
+    ) |>
+      database_schema(relationships = list())
     norm.df <- decompose(df, schema)
     expect_setequal(names(norm.df$relations[[1]]$df), c("A 1", "B 2", "C 3"))
   })
@@ -313,14 +305,14 @@ describe("decompose", {
       b = c(1L, 2L, 1L, 2L),
       c = c(1L, 1L, 2L, 2L)
     )
-    schema <- list(
-      attrs = list(c("a", "b"), c("a", "c")),
-      keys = list(list("a", "b"), list(c("a", "c"))),
-      parents = list(integer(), 1L),
-      relationships = list(list(2:1, "a")),
-      relation_names = c("a", "a_c"),
+    schema <- relation_schema(
+      list(
+        a = list(c("a", "b"), list("a", "b")),
+        a_c = list(c("a", "c"), list(c("a", "c")))
+      ),
       attrs_order = c("a", "b", "c")
-    )
+    ) |>
+      database_schema(relationships = list(list(2:1, "a")))
     norm.df <- decompose(df, schema)
     expect_identical(
       norm.df$relations$a_c,

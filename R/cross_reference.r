@@ -4,27 +4,8 @@
 #'   \code{\link{synthesise}}.
 #' @inheritParams normalise
 #'
-#' @return A database schema with relationships, represented by a named list of
-#'   three lists and two character vectors, with the first four having equal
-#'   length and representing relation schemas:
-#'   \itemize{
-#'     \item \code{attrs} elements contain the attributes present in the
-#'     relation schemas, with attributes in keys given first.
-#'     \item \code{keys} elements contain a list of the candidate keys for the
-#'     relation schemas.
-#'     \item \code{parents} elements contain integers, representing a relation
-#'     schema's parent relation schemas by their position in the paired lists.
-#'     \item \code{relationships} contains a list of relationships, each
-#'     represented by a list containing two elements. In order, the elements
-#'     are a two-length integer vector, giving the positions of the child and
-#'     parent relation schemas, and a scalar character, giving the name of the
-#'     linked attribute in both relation schemas.
-#'     \item \code{relation_names} is a character vector, containing the names
-#'     of the relation schemas
-#'     \item \code{attrs_order} is a character vector, containing all attribute
-#'     names in priority order for placement and key ordering, i.e. as ordered
-#'     in the original data frame.
-#'  }
+#' @return A \code{\link{database_schema}} object, containing the given relation
+#'   schemas and the created foreign key references.
 #' @export
 cross_reference <- function(schema, ensure_lossless = TRUE) {
   attrs_order <- attrs_order(schema)
@@ -42,20 +23,27 @@ cross_reference <- function(schema, ensure_lossless = TRUE) {
       new_key <- minimal_subset(attrs_order, attrs_order, G_det_sets, G_deps)
       attrs <- c(attrs, list(new_key))
       keys <- c(keys, list(list(new_key)))
-      relation_names <- c(relation_names, paste(new_key, collapse = "_"))
+      new_name <- paste(new_key, collapse = "_")
+      if (nchar(new_name) == 0L)
+        new_name <- "constants"
+      relation_names <- c(relation_names, new_name)
       stopifnot(sum(nchar(relation_names) == 0L) <= 1L)
       relation_names[nchar(relation_names) == 0L] <- "empty"
       relation_names <- make.names(relation_names, unique = TRUE)
+      schema <- c(
+        schema,
+        relation_schema(
+          stats::setNames(
+            list(list(new_key, list(new_key))),
+            relation_names[length(relation_names)]
+          ),
+          attrs_order
+        )
+      )
     }
   }
 
   references <- calculate_references(keys, attrs)
-
-  n_relations <- length(attrs)
-  parents <- replicate(n_relations, integer())
-  for (n in seq_len(n_relations)) {
-    parents[[n]] <- sort(unique(references$parent[references$child == n]))
-  }
 
   relationships <- Map(
     \(child, parent, attr) list(c(child, parent), attr),
@@ -64,17 +52,7 @@ cross_reference <- function(schema, ensure_lossless = TRUE) {
     references$attr
   )
 
-  structure(
-    list(
-      attrs = attrs,
-      keys = keys,
-      parents = parents,
-      relationships = relationships,
-      relation_names = relation_names,
-      attrs_order = attrs_order
-    ),
-    class = c("database_schema", "list")
-  )
+  database_schema(schema, relationships)
 }
 
 calculate_references <- function(keys, attrs) {

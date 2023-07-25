@@ -84,23 +84,39 @@ describe("reduce.database_schema", {
   })
   it("removes added relations with less rows than existing non-parent relations", {
     removes_added_non_parent_with_non_maximum_nrow <- function(df) {
-      database_schema <- discover(df, 1) |>
+      ds <- discover(df, 1) |>
         normalise(ensure_lossless = TRUE)
-      once <- reduce(database_schema, database_schema$relation_names[1L])
-      once_plus_small <- once
-      once_plus_small$attrs <- c(once_plus_small$attrs, list("extra_attr"))
-      once_plus_small$keys <- c(once_plus_small$keys, list(list("extra_attr")))
-      once_plus_small$parents <- c(once_plus_small$parents, list(integer()))
-      once_plus_small$relation_names <- c(
-        once_plus_small$relation_names,
-        "extra_table"
-      )
-      once_plus_small$attrs_order <- c(once_plus_small$attrs_order, "extra_attr")
-      twice <- reduce(once_plus_small, database_schema$relation_names[1L])
-      twice_minus_small_attr <- twice
-      twice_minus_small_attr$attrs_order <- setdiff(twice$attrs_order, "extra_attr")
+      once <- reduce(ds, names(ds)[[1L]])
+
+      once_plus_small <- relation_schema(
+        Map(
+          list,
+          c(attrs(once), list("extra_attr")),
+          c(keys(once), list(list("extra_attr"))
+          )
+        ),
+        c(attrs_order(once), "extra_attr")
+      ) |>
+        database_schema(relationships = attr(once, "relationships"))
+
+      twice <- reduce(once_plus_small, names(ds)[1L])
+      twice_minus_small_attr <- relation_schema(
+        Map(list, attrs(twice), keys(twice)),
+        setdiff(attrs_order(twice), "extra_attr")
+      ) |>
+        database_schema(relationships = attr(twice, "relationships"))
       expect_identical(twice_minus_small_attr, once)
     }
+
+    df <- data.frame(
+      a = c(F, F, T, T, NA, NA),
+      b = c(1L, 1L, NA, 1L, NA, NA),
+      c = c(0L, 0L, 1L, NA, NA, 1L),
+      d = c(NA, NA, 0L, 0L, NA, 0L),
+      e = c(0L, 1L, 1L, NA, NA, NA)
+    )
+    removes_added_non_parent_with_non_maximum_nrow(df)
+
     forall(
       gen_df(6, 7, minrow = 1L),
       removes_added_non_parent_with_non_maximum_nrow
