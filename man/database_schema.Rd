@@ -52,7 +52,7 @@ schemas.
 
 As with \code{\link{relation_schema}}, duplicate relation schemas, after
 ordering by attribute, are allowed, and can be removed with
-\verb{\code{\link{unique}}}.
+\code{\link{unique}}.
 
 Subsetting removes any relationships that involve removed relation schemas.
 Removing duplicates with \code{\link{unique}} changes relationships involving
