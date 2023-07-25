@@ -5,8 +5,10 @@
 #'
 #' Unlike \code{\link{functional_dependency}} and \code{\link{relation_schema}},
 #' \code{database_schema} is not designed to be vector-like: it only holds a
-#' single schema. This adheres to the usual use case, where a single data frame
-#' is being analysed at a time.
+#' single database schema. This adheres to the usual package use case, where a
+#' single data frame is being analysed at a time. However, it inherits from
+#' \code{\link{relation_schema}}, so is vectorised with respect to its relation
+#' schemas.
 #'
 #' As with \code{\link{relation_schema}}, duplicate relation schemas, after
 #' ordering by attribute, are allowed, and can be removed with
