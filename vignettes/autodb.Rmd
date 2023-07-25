@@ -468,32 +468,20 @@ DiagrammeR::grViz(gv(autodb(df_nas)))
 In this case, a missing death date represents no death, and we would prefer to move death information to a separate relation, containing only patients with a death date, in this case patient 3:
 
 ```{r example_data_frame_with_NAs_nullably_normalised}
-ideal_db <- structure(
-  list(
-    name = "patients",
-    relations = list(
-      patient = list(
-        df = data.frame(
-          patient_id = c(1L, 2L, 3L, 4L),
-          trial_entry_date = as.Date(c("2022/05/02", "2022/06/06", "2022/04/01", "2022/03/19"))
-        ),
-        keys = list("patient_id"),
-        parents = character()
+ideal_db <- decompose(
+  df_nas,
+  database_schema(
+    relation_schema(
+      list(
+        patient = list(c("patient_id", "trial_entry_date"), list("patient_id")),
+        death = list(c("patient_id", "death_date"), list("patient_id"))
       ),
-      death = list(
-        df = data.frame(
-          patient_id = 3L,
-          death_date = as.Date("2022/10/07")
-        ),
-        keys = list("patient_id"),
-        parents = "patient"
-      )
+      names(df_nas)
     ),
-    relationships = list(c("death", "patient_id", "patient", "patient_id")),
-    attributes = c("patient_id", "trial_entry_date", "death_date")
-  ),
-  class = c("database", "list")
+    list(list(2:1, "patient_id"))
+  )
 )
+ideal_db$relations$death$df <- subset(ideal_db$relations$death$df, !is.na(death_date))
 DiagrammeR::grViz(gv(ideal_db))
 ```
 
