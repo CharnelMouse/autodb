@@ -133,10 +133,6 @@ describe("reduce.database_schema", {
       expect_identical(reduced$attrs, database_schema$attrs[kept])
       expect_identical(reduced$keys, database_schema$keys[kept])
       expect_identical(
-        lapply(reduced$parents, \(p) reduced$relation_names[p]),
-        lapply(database_schema$parents[kept], \(p) database_schema$relation_names[p])
-      )
-      expect_identical(
         lapply(
           reduced$relationships,
           \(r) {r[[1]] <- reduced$relation_names[r[[1]]]; r}

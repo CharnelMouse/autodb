@@ -34,11 +34,9 @@ describe("cross_reference", {
       attrs_order = c("a", "b", "c")
     )
     database <- cross_reference(schema)
-    expected_parents = list(2L, integer())
     expected_relations <- list(
       list(c(1L, 2L), "b")
     )
-    expect_identical(attr(database, "parents"), expected_parents)
     expect_identical(attr(database, "relationships"), expected_relations)
   })
   it("gives valid schemas", {

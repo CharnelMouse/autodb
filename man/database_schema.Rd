@@ -24,8 +24,6 @@ length and representing relation schemas:
 relation schemas, with attributes in keys given first.
 \item \code{keys} elements contain a list of the candidate keys for the
 relation schemas.
-\item \code{parents} elements contain integers, representing a relation
-schema's parent relation schemas by their position in the paired lists.
 \item \code{relationships} contains a list of relationships, each
 represented by a list containing two elements. In order, the elements
 are a two-length integer vector, giving the positions of the child and

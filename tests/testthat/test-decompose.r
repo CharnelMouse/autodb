@@ -31,8 +31,7 @@ describe("decompose", {
         name = NA_character_,
         relations = list(a = list(
           df = df,
-          keys = list("a"),
-          parents = character()
+          keys = list("a")
         )),
         relationships = list(),
         attributes = c("a", "b", "c")
@@ -51,8 +50,7 @@ describe("decompose", {
       norm.df$relations,
       list(a = list(
         df = df,
-        keys = list("a", "b"),
-        parents = character()
+        keys = list("a", "b")
       ))
     )
   })
@@ -101,8 +99,7 @@ describe("decompose", {
       relations = list(
         id = list(
           df = df[, c("id", "month", "hemisphere")],
-          keys = list("id"),
-          parents = "month_hemisphere"
+          keys = list("id")
         ),
         month_hemisphere = list(
           df = data.frame(
@@ -115,8 +112,7 @@ describe("decompose", {
             c("month", "hemisphere"),
             c("month", "is_winter"),
             c("hemisphere", "is_winter")
-          ),
-          parents = character()
+          )
         )
       ),
       relationships = list(
@@ -151,7 +147,6 @@ describe("decompose", {
         )
       )
     new_dfs <- decompose(df, schema)
-    expect_identical(new_dfs$relations$a$parents, "b_c")
   })
   it("returns a error if data.frame doesn't satisfy FDs in the schema", {
     add_id_attribute <- function(df) {
@@ -254,24 +249,21 @@ describe("decompose", {
               c("player_name", "jersey_num"),
               c("player_name", "team"),
               c("jersey_num", "team")
-            ),
-            parents = "team"
+            )
           ),
           city = list(
             df = data.frame(
               city = integer(),
               state = integer()
             ),
-            keys = list("city", "state"),
-            parents = character()
+            keys = list("city", "state")
           ),
           team = list(
             df = data.frame(
               team = integer(),
               city = integer()
             ),
-            keys = list("team"),
-            parents = "city"
+            keys = list("team")
           )
         ),
         relationships = list(
@@ -318,8 +310,7 @@ describe("decompose", {
       norm.df$relations$a_c,
       list(
         df = data.frame(a = 1:2, c = rep(1:2, each = 2), row.names = 1:4),
-        keys = list(c("a", "c")),
-        parents = "a"
+        keys = list(c("a", "c"))
       )
     )
   })

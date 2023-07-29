@@ -105,19 +105,6 @@ relationships <- function(x, ...) {
   UseMethod("relationships<-")
 }
 
-#' Schema parents
-#'
-#' Generic function I intend to remove.
-#'
-#' @param x an R object.
-#' @param ... further arguments passed on to methods.
-#'
-#' @return A list.
-#' @export
-parents <- function(x, ...) {
-  UseMethod("parents")
-}
-
 #' Schema subschemas
 #'
 #' Generic function, returning subschemas for \code{x}.

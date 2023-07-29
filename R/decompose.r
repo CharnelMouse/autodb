@@ -40,8 +40,6 @@
 #'     \item \code{keys}, a list of character vectors representing
 #'     (candidate) keys for the relation. The first key in the list is the
 #'     primary key.
-#'     \item \code{parents}, a character vector containing names of parent
-#'     relations, i.e. relations referenced in foreign keys.
 #'   }
 #' @export
 decompose <- function(df, schema, name = NA_character_) {
@@ -84,7 +82,7 @@ decompose <- function(df, schema, name = NA_character_) {
   }
 
   relation_list <- Map(
-    \(attrs, keys, parents) {
+    \(attrs, keys) {
       list(
         # conditional needed to handle 0-attrs case,
         # i.e. decomposing to table_dum and table_dee
@@ -92,13 +90,11 @@ decompose <- function(df, schema, name = NA_character_) {
           df[seq_len(nrow(df) >= 1L), attrs, drop = FALSE]
         else
           unique(df[, attrs, drop = FALSE]),
-        keys = keys,
-        parents = relation_names[parents]
+        keys = keys
       )
     },
     attrs(schema),
-    keys(schema),
-    parents(schema)
+    keys(schema)
   )
   relationships <- lapply(
     relationships(schema),

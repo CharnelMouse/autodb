@@ -117,8 +117,6 @@ describe("database_schema", {
         uncurry(expect_identical)
     )
   })
-  # should have checks for parents agreeing with relationships, but I'm planning
-  # on removing parents entirely
   it("prints", {
     expect_output(
       print(database_schema(

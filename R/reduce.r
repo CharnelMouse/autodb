@@ -92,7 +92,9 @@ reduce.database_schema <- function(x, main, ...) {
     current <- queue[1]
     queue <- queue[-1]
     kept <- union(kept, current)
-    current_parents <- parents(x)[[current]]
+    current_parents <- Filter(\(r) r[[1]][[1]] == current, relationships(x)) |>
+      vapply(\(r) r[[1]][[2]], integer(1)) |>
+      unique()
     queue <- union(queue, setdiff(current_parents, kept))
   }
   sorted_kept <- sort(kept)

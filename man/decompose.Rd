@@ -40,8 +40,6 @@ Relations are lists with the following elements:
 \item \code{keys}, a list of character vectors representing
 (candidate) keys for the relation. The first key in the list is the
 primary key.
-\item \code{parents}, a character vector containing names of parent
-relations, i.e. relations referenced in foreign keys.
 }
 }
 \description{

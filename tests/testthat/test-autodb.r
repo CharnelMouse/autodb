@@ -187,8 +187,7 @@ describe("autodb", {
       database$relations$a_c,
       list(
         df = data.frame(a = 1:2, c = rep(1:2, each = 2), row.names = 1:4),
-        keys = list(c("a", "c")),
-        parents = "a"
+        keys = list(c("a", "c"))
       )
     )
   })

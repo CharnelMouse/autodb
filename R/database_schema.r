@@ -33,8 +33,6 @@
 #'     relation schemas, with attributes in keys given first.
 #'     \item \code{keys} elements contain a list of the candidate keys for the
 #'     relation schemas.
-#'     \item \code{parents} elements contain integers, representing a relation
-#'     schema's parent relation schemas by their position in the paired lists.
 #'     \item \code{relationships} contains a list of relationships, each
 #'     represented by a list containing two elements. In order, the elements
 #'     are a two-length integer vector, giving the positions of the child and
@@ -84,20 +82,9 @@ database_schema <- function(relations, relationships) {
   )))
     stop("relationship attributes must be within referer's attributes and referee's keys")
 
-  grouped_parents <- lapply(
-    unname(split(
-      vapply(relationships, \(r) r[[1]][[2]], integer(1)),
-      factor(
-        vapply(relationships, \(r) r[[1]][[1]], integer(1)),
-        seq_along(relations)
-      )
-    )),
-    \(ps) sort(unique(ps))
-  )
   structure(
     relations,
     relationships = relationships,
-    parents = grouped_parents,
     class = c("database_schema", "relation_schema")
   )
 }
@@ -157,11 +144,6 @@ relationships.database_schema <- function(x, ...) {
 #' @export
 `relationships<-.database_schema` <- function(x, value) {
   database_schema(subschemas(x), value)
-}
-
-#' @exportS3Method
-parents.database_schema <- function(x, ...) {
-  attr(x, "parents")
 }
 
 #' @exportS3Method

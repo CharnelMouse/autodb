@@ -98,7 +98,6 @@ is_valid_database_schema <- function(x, unique = FALSE, single_empty_key = FALSE
 
   expect_s3_class(x, "database_schema")
   fks <- relationships(x)
-  parents <- parents(x)
 
   for (fk in fks) {
     expect_length(fk, 2L)
@@ -111,18 +110,6 @@ is_valid_database_schema <- function(x, unique = FALSE, single_empty_key = FALSE
     expect_true(is.element(fk[[2]], attrs(x)[[fk[[1]][2]]]))
   }
   if (unique) expect_true(!anyDuplicated(fks))
-  fk_relations <- lapply(fks, "[[", 1L)
-  fk_children <- vapply(fk_relations, "[", integer(1), 1L)
-  fk_parents <- vapply(fk_relations, "[", integer(1), 2L)
-  fk_parent_sets <- split(fk_parents, fk_children)
-  children <- strtoi(names(fk_parent_sets))
-  nonchildren <- setdiff(seq_along(names(x)), children)
-  Map(
-    expect_setequal,
-    fk_parent_sets[as.character(children)],
-    parents[children]
-  )
-  lapply(parents[nonchildren], expect_identical, integer())
 }
 
 is_valid_database <- function(x) {
@@ -187,16 +174,6 @@ is_valid_database <- function(x) {
   fk_parent_sets <- split(fk_parents, fk_children)
   children <- names(fk_parent_sets)
   nonchildren <- setdiff(names(x$relations), children)
-  Map(
-    expect_setequal,
-    fk_parent_sets[children],
-    lapply(x$relations[children], \(r) r$parents)
-  )
-  lapply(
-    lapply(x$relations[nonchildren], \(r) r$parents),
-    expect_identical,
-    character()
-  )
 }
 
 expect_identical_unordered_table <- function(new, original) {

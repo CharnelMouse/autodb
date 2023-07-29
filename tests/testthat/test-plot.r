@@ -155,8 +155,7 @@ describe("gv", {
                   "Publisher ID"
                 )),
               keys = list("Title"),
-              index = "Title",
-              parents = c("Format Price", "Author", "Genre")
+              index = "Title"
             ),
             `Format Price` = list(
               df = data.frame(
@@ -170,8 +169,7 @@ describe("gv", {
                 Price = c(4999L, 2234L, 1388L, 3999L)
               ),
               keys = list(c("Title", "Format")),
-              index = c("Title", "Format"),
-              parents = character()
+              index = c("Title", "Format")
             ),
             Author = list(
               df = data.frame(
@@ -180,8 +178,7 @@ describe("gv", {
               ) |>
                 stats::setNames(c("Author", "Author Nationality")),
               keys = list("Author"),
-              index = "Author",
-              parents = character()
+              index = "Author"
             ),
             Genre = list(
               df = data.frame(
@@ -190,8 +187,7 @@ describe("gv", {
               ) |>
                 stats::setNames(c("Genre ID", "Genre Name")),
               keys = list("Genre ID"),
-              index = "Genre ID",
-              parents = character()
+              index = "Genre ID"
             )
           ),
           relationships = list(
@@ -329,8 +325,7 @@ describe("gv", {
                   "Publisher ID"
                 )),
               keys = list("Title"),
-              index = "Title",
-              parents = c("Format Price", "Author", "Genre")
+              index = "Title"
             ),
             `Format Price` = list(
               df = data.frame(
@@ -344,8 +339,7 @@ describe("gv", {
                 Price = c(4999L, 2234L, 1388L, 3999L)
               ),
               keys = list(c("Title", "Format")),
-              index = c("Title", "Format"),
-              parents = character()
+              index = c("Title", "Format")
             ),
             Author = list(
               df = data.frame(
@@ -354,8 +348,7 @@ describe("gv", {
               ) |>
                 stats::setNames(c("Author", "Author Nationality")),
               keys = list("Author"),
-              index = "Author",
-              parents = character()
+              index = "Author"
             ),
             Genre = list(
               df = data.frame(
@@ -364,8 +357,7 @@ describe("gv", {
               ) |>
                 stats::setNames(c("Genre ID", "Genre Name")),
               keys = list("Genre ID"),
-              index = "Genre ID",
-              parents = character()
+              index = "Genre ID"
             )
           ),
           relationships = list(
@@ -483,8 +475,7 @@ describe("gv", {
             a = list(
               df = data.frame(a = 1:4, b = 1:2),
               keys = list("a"),
-              index = "a",
-              parents = character()
+              index = "a"
             )
           ),
           relationships = list()
