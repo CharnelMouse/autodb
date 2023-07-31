@@ -3,7 +3,7 @@ library(hedgehog)
 describe("normalise", {
   it("gives valid schemas", {
     # table_dum and table_dee
-    empty_fds <- functional_dependency(list(), attrs = character())
+    empty_fds <- functional_dependency(list(), attrs_order = character())
     empty_schema <- normalise(empty_fds)
     is_valid_database_schema(empty_schema)
 

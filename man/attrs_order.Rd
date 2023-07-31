@@ -2,14 +2,19 @@
 % Please edit documentation in R/shared_class_functions.r
 \name{attrs_order}
 \alias{attrs_order}
+\alias{attrs_order<-}
 \title{Relational data attribute order}
 \usage{
 attrs_order(x, ...)
+
+attrs_order(x, ...) <- value
 }
 \arguments{
 \item{x}{an R object. For the given method, a \code{\link{relation_schema}}.}
 
 \item{...}{further arguments passed on to methods.}
+
+\item{value}{A character vector of the same length as \code{attrs_order(x, ...)}.}
 }
 \value{
 A character vector, giving attributes in the order in which they're

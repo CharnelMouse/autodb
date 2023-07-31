@@ -1,6 +1,6 @@
 is_valid_functional_dependency <- function(x) {
   expect_s3_class(x, "functional_dependency")
-  attrs <- attr(x, "attrs")
+  attrs <- attrs_order(x)
   expect_true(all(lengths(unclass(x)) == 2L))
   expect_silent(dependent(x))
   expect_true(all(lengths(dependent(x)) == 1L))

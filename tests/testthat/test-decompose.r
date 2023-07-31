@@ -177,7 +177,7 @@ describe("decompose", {
       reduced_deps <- unclass(flat_deps)
       reduced_deps[[reduced_index]][[1]] <-
         reduced_deps[[reduced_index]][[1]][-removed_det]
-      reduced_deps <- functional_dependency(reduced_deps, attrs(flat_deps))
+      reduced_deps <- functional_dependency(reduced_deps, attrs_order(flat_deps))
       schema <- normalise(reduced_deps)
       expect_error(
         decompose(df, schema),

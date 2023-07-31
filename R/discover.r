@@ -149,7 +149,7 @@ discover <- function(
   if (n_cols == 0)
     return(functional_dependency(
       stats::setNames(list(), character()),
-      attrs = character()
+      attrs_order = character()
     ))
   column_names <- colnames(df)
   duplicates <- which(duplicated(column_names))

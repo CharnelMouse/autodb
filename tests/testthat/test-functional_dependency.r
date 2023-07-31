@@ -41,10 +41,10 @@ describe("functional_dependency", {
       "^attributes in determinant sets must be unique$"
     )
   })
-  it("expects valid input: all attributes given in attrs", {
+  it("expects valid input: all attributes given in attrs_order", {
     expect_error(
       functional_dependency(list(list(character(), "a")), "b"),
-      "^attributes in FDs must be present in attrs$"
+      "^attributes in FDs must be present in attrs_order$"
     )
   })
   it("returns a set, i.e. no duplicated FD elements", {
@@ -53,12 +53,12 @@ describe("functional_dependency", {
       Negate(anyDuplicated) %>>% expect_true
     )
   })
-  it("orders attributes in each determinant set with respect to order in attrs", {
+  it("orders attributes in each determinant set with respect to order in attrs_order", {
     detset_attributes_ordered <- function(fds) {
       matches <- vapply(
         fds,
         with_args(`[[`, i = 1L) %>>%
-          with_args(match, table = attrs(fds)) %>>%
+          with_args(match, table = attrs_order(fds)) %>>%
           (Negate(is.unsorted)),
         logical(1)
       )
@@ -132,7 +132,7 @@ describe("functional_dependency", {
       lst <- list(...)
       res <- c(...)
       for (l in lst) {
-        expect_true(all(is.element(attrs(l), attrs(res))))
+        expect_true(all(is.element(attrs_order(l), attrs_order(res))))
       }
     }
     forall(
@@ -147,8 +147,8 @@ describe("functional_dependency", {
       expect_silent(res <- c(...))
       for (index in seq_along(lst)) {
         expect_identical(
-          attrs(lst[[!!index]]),
-          intersect(attrs(res), attrs(lst[[!!index]]))
+          attrs_order(lst[[!!index]]),
+          intersect(attrs_order(res), attrs_order(lst[[!!index]]))
         )
       }
     }
@@ -197,14 +197,14 @@ describe("functional_dependency", {
       curry = TRUE
     )
   })
-  it("is composed of its detset() and dependent() outputs, with attrs() attribute", {
+  it("is composed of its detset() and dependent() outputs, with attrs_order() attribute", {
     forall(
       gen.fd(letters[1:6], 0, 8),
       \(fd) expect_identical(
         fd,
         functional_dependency(
           Map(list, detset(fd), dependent(fd)),
-          attrs = attrs(fd)
+          attrs_order = attrs_order(fd)
         )
       )
     )

@@ -12,31 +12,31 @@
 #'   lists: the first element contains character vector of all attributes in the
 #'   determinant set, and the second element contains the single dependent
 #'   attribute.
-#' @param attrs a character vector, giving the names of all attributes. These
+#' @param attrs_order a character vector, giving the names of all attributes. These
 #'   need not be present in \code{FDs}, but all attributes in \code{FDs} must be
 #'   present in \code{attrs}.
 #' @param unique a logical, TRUE by default, for whether to remove duplicate
 #'   dependencies.
 #'
 #' @return a \code{functional_dependency} object, containing the list given in
-#'   \code{FDs}, with \code{attrs} stored in an attribute of the same name.
+#'   \code{FDs}, with \code{attrs_order} stored in an attribute of the same name.
 #'   Functional dependencies are returned with their determinant sets sorted
 #'   according to the attribute order in \code{attrs}. Any duplicates found
 #'   after sorting are removed.
 #' @seealso \code{\link{detset}}, \code{\link{dependent}}, and
-#'   \code{\link{attrs}} for extracting parts of the information in a
+#'   \code{\link{attrs_order}} for extracting parts of the information in a
 #'   \code{functional_dependency}.
 #' @examples
 #' fds <- functional_dependency(
 #'   list(list(c("a", "b"), "c"), list(character(), "d")),
-#'   attrs = c("a", "b", "c", "d")
+#'   attrs_order = c("a", "b", "c", "d")
 #' )
 #' print(fds)
 #' detset(fds)
 #' dependent(fds)
-#' attrs(fds)
+#' attrs_order(fds)
 #' @export
-functional_dependency <- function(FDs, attrs, unique = TRUE) {
+functional_dependency <- function(FDs, attrs_order, unique = TRUE) {
   if (any(lengths(FDs) != 2))
     stop("FDs elements must have length two")
   det_sets <- lapply(FDs, `[[`, 1L)
@@ -50,15 +50,15 @@ functional_dependency <- function(FDs, attrs, unique = TRUE) {
     any(lengths(deps) != 1L)
   )
     stop("FDs dependents must be length-one characters")
-  if (any(!is.element(unlist(FDs), attrs)))
-    stop("attributes in FDs must be present in attrs")
+  if (any(!is.element(unlist(FDs), attrs_order)))
+    stop("attributes in FDs must be present in attrs_order")
   sorted_FDs <- lapply(
     FDs,
-    \(FD) list(FD[[1]][order(match(FD[[1]], attrs))], FD[[2]])
+    \(FD) list(FD[[1]][order(match(FD[[1]], attrs_order))], FD[[2]])
   )
   structure(
     if (unique) unique(sorted_FDs) else sorted_FDs,
-    attrs = attrs,
+    attrs_order = attrs_order,
     class = "functional_dependency"
   )
 }
@@ -97,9 +97,9 @@ print.functional_dependency <- function(x, ...) {
   dep_txt <- dependent(x)
   txt <- paste0(padding, det_txt, " -> ", dep_txt, recycle0 = TRUE)
   cat(with_number(length(x), "functional dependenc", "y", "ies"))
-  cat(paste0("\n", with_number(length(attrs(x)), "attribute", "", "s")))
-  if (length(attrs(x)) > 0)
-    cat(paste0(": ", toString(attrs(x))))
+  cat(paste0("\n", with_number(length(attrs_order(x)), "attribute", "", "s")))
+  if (length(attrs_order(x)) > 0)
+    cat(paste0(": ", toString(attrs_order(x))))
   cat("\n")
   if (length(txt) > 0L) {
     cat(txt, sep = "\n")
@@ -116,7 +116,7 @@ c.functional_dependency <- function(..., unique = TRUE) {
   lst <- list(...)
   joined_dependencies <- Reduce(c, lapply(lst, unclass))
 
-  attrs_list <- lapply(lst, attrs)
+  attrs_list <- lapply(lst, attrs_order)
   joined_attrs <- do.call(merge_attribute_orderings, attrs_list)
 
   functional_dependency(joined_dependencies, joined_attrs, unique = unique)
@@ -133,6 +133,14 @@ dependent.functional_dependency <- function(x, ...) {
 }
 
 #' @exportS3Method
-attrs.functional_dependency <- function(x, ...) {
-  attr(x, "attrs", exact = TRUE)
+attrs_order.functional_dependency <- function(x, ...) {
+  attr(x, "attrs_order", exact = TRUE)
+}
+
+#' @export
+`attrs_order<-.functional_dependency` <- function(x, ..., value) {
+  functional_dependency(
+    Map(list, detset(x), dependent(x)),
+    attrs_order = value
+  )
 }

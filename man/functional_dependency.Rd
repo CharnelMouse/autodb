@@ -4,7 +4,7 @@
 \alias{functional_dependency}
 \title{Functional dependency vectors}
 \usage{
-functional_dependency(FDs, attrs, unique = TRUE)
+functional_dependency(FDs, attrs_order, unique = TRUE)
 }
 \arguments{
 \item{FDs}{a list of functional dependencies, in the form of two-elements
@@ -12,7 +12,7 @@ lists: the first element contains character vector of all attributes in the
 determinant set, and the second element contains the single dependent
 attribute.}
 
-\item{attrs}{a character vector, giving the names of all attributes. These
+\item{attrs_order}{a character vector, giving the names of all attributes. These
 need not be present in \code{FDs}, but all attributes in \code{FDs} must be
 present in \code{attrs}.}
 
@@ -21,7 +21,7 @@ dependencies.}
 }
 \value{
 a \code{functional_dependency} object, containing the list given in
-\code{FDs}, with \code{attrs} stored in an attribute of the same name.
+\code{FDs}, with \code{attrs_order} stored in an attribute of the same name.
 Functional dependencies are returned with their determinant sets sorted
 according to the attribute order in \code{attrs}. Any duplicates found
 after sorting are removed.
@@ -39,15 +39,15 @@ union instead.
 \examples{
 fds <- functional_dependency(
   list(list(c("a", "b"), "c"), list(character(), "d")),
-  attrs = c("a", "b", "c", "d")
+  attrs_order = c("a", "b", "c", "d")
 )
 print(fds)
 detset(fds)
 dependent(fds)
-attrs(fds)
+attrs_order(fds)
 }
 \seealso{
 \code{\link{detset}}, \code{\link{dependent}}, and
-\code{\link{attrs}} for extracting parts of the information in a
+\code{\link{attrs_order}} for extracting parts of the information in a
 \code{functional_dependency}.
 }

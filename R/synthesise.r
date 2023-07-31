@@ -104,7 +104,7 @@ convert_to_vectors <- function(flat_dependencies) {
   list(
     determinant_sets = detset(flat_dependencies),
     dependents = dependent(flat_dependencies),
-    attrs_order = attrs(flat_dependencies)
+    attrs_order = attrs_order(flat_dependencies)
   )
 }
 

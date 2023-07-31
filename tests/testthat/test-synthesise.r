@@ -366,7 +366,7 @@ describe("synthesise", {
       implied_flat_fds <- implied_fds
       if (length(implied_flat_fds) > 0)
         implied_flat_fds <- unlist(implied_flat_fds, recursive = FALSE)
-      implied_flat_fds <- functional_dependency(implied_flat_fds, attrs(deps))
+      implied_flat_fds <- functional_dependency(implied_flat_fds, attrs_order(deps))
       dep_closures <- lapply(
         detset(deps),
         find_closure,

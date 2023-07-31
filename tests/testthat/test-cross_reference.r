@@ -42,7 +42,7 @@ describe("cross_reference", {
   it("gives valid schemas", {
     # same as test for normalise, need synthesis result generator
     # table_dum and table_dee
-    empty_fds <- functional_dependency(list(), attrs = character())
+    empty_fds <- functional_dependency(list(), attrs_order = character())
     empty_schema <- normalise(empty_fds)
     is_valid_database_schema(empty_schema)
 
@@ -92,8 +92,8 @@ describe("cross_reference", {
   })
   it("reintroduces attributes not in dependencies if ensuring lossless", {
     reintroduces_missing_attrs_if_lossless <- function(deps) {
-      lone_attr <- LETTERS[length(attrs(deps)) + 1]
-      attr(deps, "attrs") <- c(attrs(deps), lone_attr)
+      lone_attr <- LETTERS[length(attrs_order(deps)) + 1]
+      attrs_order(deps) <- c(attrs_order(deps), lone_attr)
       linked <- normalise(deps, ensure_lossless = TRUE)
       expect_true(lone_attr %in% unlist(attrs(linked)))
     }

@@ -83,6 +83,15 @@ attrs_order <- function(x, ...) {
   UseMethod("attrs_order")
 }
 
+#' @rdname attrs_order
+#'
+#' @param value A character vector of the same length as \code{attrs_order(x, ...)}.
+#'
+#' @export
+`attrs_order<-` <- function(x, ..., value) {
+  UseMethod("attrs_order<-")
+}
+
 #' Schema relationships
 #'
 #' Generic function, returning present relationships.
