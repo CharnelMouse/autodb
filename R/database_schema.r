@@ -178,7 +178,7 @@ unique.database_schema <- function(x, ...) {
       ),
       integer(1)
     )
-    result_lst <- remove_schemas2(schemas, rels, dups, dups_prec)
+    result_lst <- remove_schemas(schemas, rels, dups, dups_prec)
     schemas <- result_lst[[1]]
     rels <- unique(result_lst[[2]])
   }
@@ -224,7 +224,8 @@ c.database_schema <- function(..., single_empty_key = FALSE) {
       to_keep <- empty_keys[[1]]
       to_remove <- empty_keys[-1]
       result_lst <- remove_schemas(
-        result_lst,
+        result_lst[[1]],
+        result_lst[[2]],
         to_remove,
         rep(to_keep, length(to_remove))
       )
@@ -235,11 +236,7 @@ c.database_schema <- function(..., single_empty_key = FALSE) {
   do.call(database_schema, result_lst)
 }
 
-remove_schemas <- function(result_lst, to_remove, replace_with) {
-  remove_schemas2(result_lst[[1]], result_lst[[2]], to_remove, replace_with)
-}
-
-remove_schemas2 <- function(schemas, rels, to_remove, replace_with) {
+remove_schemas <- function(schemas, rels, to_remove, replace_with) {
   remaining_inds <- setdiff(seq_along(schemas), to_remove)
   ind_map <- seq_along(schemas)
   ind_map[to_remove] <- replace_with
