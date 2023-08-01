@@ -35,7 +35,7 @@ describe("cross_reference", {
     )
     database <- cross_reference(schema)
     expected_relations <- list(
-      list(c(1L, 2L), "b")
+      list(c(1L, 2L), c("b", "b"))
     )
     expect_identical(attr(database, "relationships"), expected_relations)
   })
@@ -60,14 +60,14 @@ describe("cross_reference", {
       schema <- normalise(deps)
       if (length(keys(schema)) <= 1)
         discard()
-      if (length(attr(schema, "relationships")) == 0)
+      if (length(relationships(schema)) == 0)
         discard()
-      relationship_tables <- lapply(attr(schema, "relationships"), `[[`, 1)
-      relationship_attrs <- vapply(attr(schema, "relationships"), `[[`, character(1), 2)
+      relationship_tables <- lapply(relationships(schema), `[[`, 1)
+      relationship_attrs <- vapply(relationships(schema), `[[`, character(2), 2)
       tables_index <- as.data.frame(do.call(rbind, relationship_tables))
       link_sets <- tapply(
-        relationship_attrs,
-        tables_index,
+        t(relationship_attrs),
+        rbind(tables_index, tables_index),
         \(as) sort(unique(as))
       )
       for (column in seq_len(ncol(link_sets))) {

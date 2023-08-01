@@ -30,11 +30,11 @@ describe("database_schema", {
       c("a", "b", "c")
     )
     expect_error(
-      database_schema(rs, list(list(c("a", "b"), "c"))),
+      database_schema(rs, list(list(c("a", "b"), c("c", "c")))),
       "^relationship elements must have length-two integer first elements"
     )
     expect_error(
-      database_schema(rs, list(list(1:3, "a"))),
+      database_schema(rs, list(list(1:3, c("a", "a")))),
       "^relationship elements must have length-two integer first elements"
     )
   })
@@ -48,15 +48,15 @@ describe("database_schema", {
       c("a", "b", "c")
     )
     expect_error(
-      database_schema(rs, list(list(3:4, "b"))),
+      database_schema(rs, list(list(3:4, c("b", "b")))),
       "^relationship table indices must be within relation schema indices$"
     )
     expect_error(
-      database_schema(rs, list(list(4:3, "b"))),
+      database_schema(rs, list(list(4:3, c("b", "b")))),
       "^relationship table indices must be within relation schema indices$"
     )
     expect_error(
-      database_schema(rs, list(list(0:1, "a"))),
+      database_schema(rs, list(list(0:1, c("a", "a")))),
       "^relationship table indices must be within relation schema indices$"
     )
   })
@@ -71,11 +71,11 @@ describe("database_schema", {
     )
     expect_error(
       database_schema(rs, list(list(1:2, 1L))),
-      "^relationship attributes must be length-one characters$"
+      "^relationship attributes must be length-two characters$"
     )
     expect_error(
       database_schema(rs, list(list(1:2, character()))),
-      "^relationship attributes must be length-one characters$"
+      "^relationship attributes must be length-two characters$"
     )
     rs2 <- relation_schema(
       list(
@@ -86,9 +86,10 @@ describe("database_schema", {
     )
     expect_error(
       database_schema(rs2, list(list(1:2, c("a", "b", "d")))),
-      "^relationship attributes must be length-one characters$"
+      "^relationship attributes must be length-two characters$"
     )
   })
+
   it("expects valid input: second relationship element is within referer's attributes and referee's keys", {
     expect_error(
       database_schema(
@@ -99,7 +100,7 @@ describe("database_schema", {
           ),
           c("a", "b", "c")
         ),
-        list(list(1:2, "b"))
+        list(list(1:2, c("b", "b")))
       ),
       "^relationship attributes must be within referer's attributes and referee's keys$"
     )
@@ -143,7 +144,7 @@ describe("database_schema", {
           ),
           c("a", "b", "c")
         ),
-        list(list(1:2, "b"))
+        list(list(1:2, c("b", "b")))
       )),
       paste0(
         "\\A",

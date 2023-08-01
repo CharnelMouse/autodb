@@ -478,7 +478,7 @@ ideal_db <- decompose(
       ),
       names(df_nas)
     ),
-    list(list(2:1, "patient_id"))
+    list(list(2:1, c("patient_id", "patient_id")))
   )
 )
 ideal_db$relations$death$df <- subset(ideal_db$relations$death$df, !is.na(death_date))

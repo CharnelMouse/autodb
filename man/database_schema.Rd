@@ -11,9 +11,9 @@ database_schema(relations, relationships)
 \code{\link{synthesise}} or \code{\link{relation_schema}}.}
 
 \item{relationships}{a list, whose elements each have two elements: a
-two-length integer vector, giving the index of the referencing and
-referenced relations, and a length-one character vector, giving the
-attribute.}
+length-two integer vector, giving the index of the referencing and
+referenced relations, and a length-two character vector, giving the
+reference attribute in each respectively.}
 }
 \value{
 A database schema with relationships, represented by a named list of

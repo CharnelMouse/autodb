@@ -414,13 +414,13 @@ dbs_reference_string <- function(reference, relation_names) {
     "  ",
     paste(
       snakecase::to_snake_case(reference[[1]][1]),
-      paste0("FROM_", snakecase::to_snake_case(reference[[2]])),
+      paste0("FROM_", snakecase::to_snake_case(reference[[2]][[1]])),
       sep = ":"
     ),
     " -> ",
     paste(
       snakecase::to_snake_case(reference[[1]][2]),
-      paste0("TO_", snakecase::to_snake_case(reference[[2]])),
+      paste0("TO_", snakecase::to_snake_case(reference[[2]][[2]])),
       sep = ":"
     ),
     ";"

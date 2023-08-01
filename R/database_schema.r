@@ -21,9 +21,9 @@
 #' @param relations a \code{relation_schema} object, as returned by
 #'   \code{\link{synthesise}} or \code{\link{relation_schema}}.
 #' @param relationships a list, whose elements each have two elements: a
-#'   two-length integer vector, giving the index of the referencing and
-#'   referenced relations, and a length-one character vector, giving the
-#'   attribute.
+#'   length-two integer vector, giving the index of the referencing and
+#'   referenced relations, and a length-two character vector, giving the
+#'   reference attribute in each respectively.
 #'
 #' @return A database schema with relationships, represented by a named list of
 #'   three lists and two character vectors, with the first four having equal
@@ -68,15 +68,15 @@ database_schema <- function(relations, relationships) {
   }
   if (any(!vapply(
     relationships,
-    \(r) is.character(r[[2]]) && length(r[[2]]) == 1L,
+    \(r) is.character(r[[2]]) && length(r[[2]]) == 2L,
     logical(1)
   )))
-    stop("relationship attributes must be length-one characters")
+    stop("relationship attributes must be length-two characters")
   if (any(!vapply(
     relationships,
     \(r) {
-      r[[2]] %in% attrs(relations)[[r[[1]][[1]]]] &&
-        r[[2]] %in% unlist(keys(relations)[[r[[1]][[2]]]])
+      r[[2]][[1]] %in% attrs(relations)[[r[[1]][[1]]]] &&
+        r[[2]][[2]] %in% unlist(keys(relations)[[r[[1]][[2]]]])
     },
     logical(1)
   )))
@@ -126,9 +126,9 @@ print.database_schema <- function(x, max = 10, ...) {
     for (r in seq_len(n_relationships)) {
       rel <- relationships(x)[[r]]
       cat(paste0(
-        names(x)[rel[[1]][1]], ".", rel[[2]],
+        names(x)[rel[[1]][1]], ".", rel[[2]][[1]],
         " -> ",
-        names(x)[rel[[1]][2]], ".", rel[[2]], "\n"
+        names(x)[rel[[1]][2]], ".", rel[[2]][[2]], "\n"
       ))
     }
     if (max < n_relationships)
