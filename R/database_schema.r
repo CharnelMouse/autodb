@@ -81,6 +81,12 @@ database_schema <- function(relations, relationships) {
     logical(1)
   )))
     stop("relationship attributes must be within referer's attributes and referee's keys")
+  if (any(vapply(
+    relationships,
+    \(r) r[[1]][[1]] == r[[1]][[2]],
+    logical(1)
+  )))
+    stop("relationship cannot be from a relation's attribute to itself")
 
   structure(
     relations,

@@ -85,7 +85,6 @@ describe("database_schema", {
       "^relationship attributes must be length-two characters$"
     )
   })
-
   it("expects valid input: relationship attribute names are within referer's attributes and referee's keys", {
     expect_error(
       database_schema(
@@ -104,6 +103,15 @@ describe("database_schema", {
 
     # should have something about collected FK being a key of the citee,
     # waiting on FK grouping first
+  })
+  it("expects valid input: relationship relations are different", {
+    expect_error(
+      database_schema(
+        relation_schema(list(a = list(c("a", "b"), list("a"))), c("a", "b")),
+        list(list(c("a", "a"), c("b", "a")))
+      ),
+      "^relationship cannot be from a relation's attribute to itself$"
+    )
   })
 
   it("returns the relation_schema, with the additional attributes unmodified", {
