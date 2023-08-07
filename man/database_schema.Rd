@@ -10,10 +10,10 @@ database_schema(relations, relationships)
 \item{relations}{a \code{relation_schema} object, as returned by
 \code{\link{synthesise}} or \code{\link{relation_schema}}.}
 
-\item{relationships}{a list, whose elements each have two elements: a
-length-two character vector, giving the names of the referencing and
-referenced relations, and a length-two character vector, giving the
-reference attribute in each respectively.}
+\item{relationships}{a list, whose elements are length-four character
+vectors, giving the names of the referencing relation, the referencing
+attribute, the referenced relation, and the reference attribute,
+respectively.}
 }
 \value{
 A database schema with relationships, represented by a named list of
@@ -51,6 +51,10 @@ schemas.
 As with \code{\link{relation_schema}}, duplicate relation schemas, after
 ordering by attribute, are allowed, and can be removed with
 \code{\link{unique}}.
+
+Relationships, i.e. foreign key references, are allowed to have different
+attribute names in the child and parent relations; this can't occur in the
+output for \code{\link{cross_reference}} and \code{\link{normalise}}.
 
 Subsetting removes any relationships that involve removed relation schemas.
 Removing duplicates with \code{\link{unique}} changes relationships involving

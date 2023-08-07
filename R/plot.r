@@ -161,7 +161,7 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
     paste(collapse = "\n")
   reference_strings <- vapply(
     relationships(x),
-    dbs_reference_string,
+    reference_string,
     character(1)
   ) |>
     paste(collapse = "\n")
@@ -393,32 +393,14 @@ reference_string <- function(reference) {
   paste0(
     "  ",
     paste(
-      snakecase::to_snake_case(reference[1]),
-      paste0("FROM_", snakecase::to_snake_case(reference[2])),
+      snakecase::to_snake_case(reference[[1]]),
+      paste0("FROM_", snakecase::to_snake_case(reference[[2]])),
       sep = ":"
     ),
     " -> ",
     paste(
-      snakecase::to_snake_case(reference[3]),
-      paste0("TO_", snakecase::to_snake_case(reference[4])),
-      sep = ":"
-    ),
-    ";"
-  )
-}
-
-dbs_reference_string <- function(reference) {
-  paste0(
-    "  ",
-    paste(
-      snakecase::to_snake_case(reference[[1]][1]),
-      paste0("FROM_", snakecase::to_snake_case(reference[[2]][[1]])),
-      sep = ":"
-    ),
-    " -> ",
-    paste(
-      snakecase::to_snake_case(reference[[1]][2]),
-      paste0("TO_", snakecase::to_snake_case(reference[[2]][[2]])),
+      snakecase::to_snake_case(reference[[3]]),
+      paste0("TO_", snakecase::to_snake_case(reference[[4]])),
       sep = ":"
     ),
     ";"

@@ -548,7 +548,7 @@ describe("gv", {
         ),
         c("a", "b", "c")
       ) |>
-        database_schema(relationships = list(list(c("a", "b"), c("b", "b"))))
+        database_schema(relationships = list(c("a", "b", "b", "b")))
       plot_string <- gv(schema)
       expect_true(grepl("\\n  a.FROM_b -> b.TO_b", plot_string))
     })

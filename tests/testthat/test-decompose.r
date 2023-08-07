@@ -89,8 +89,8 @@ describe("decompose", {
     ) |>
       database_schema(
         relationships = list(
-          list(c("id", "month_hemisphere"), c("month", "month")),
-          list(c("id", "month_hemisphere"), c("hemisphere", "hemisphere"))
+          c("id", "month", "month_hemisphere", "month"),
+          c("id", "hemisphere", "month_hemisphere", "hemisphere")
         )
       )
     new_dfs <- decompose(df, schema)
@@ -141,9 +141,9 @@ describe("decompose", {
     ) |>
       database_schema(
         relationships = list(
-          list(c("a", "b_c"), c("b", "b")),
-          list(c("a", "b_c"), c("c", "c")),
-          list(c("b_c", "b"), c("b", "b"))
+          c("a", "b", "b_c", "b"),
+          c("a", "c", "b_c", "c"),
+          c("b_c", "b", "b", "b")
         )
       )
     new_dfs <- decompose(df, schema)
@@ -230,8 +230,8 @@ describe("decompose", {
       ) |>
         database_schema(
           relationships = list(
-            list(c("player_name_jersey_num", "team"), c("team", "team")),
-            list(c("team", "city"), c("city", "city"))
+            c("player_name_jersey_num", "team", "team", "team"),
+            c("team", "city", "city", "city")
           )
         )
       depdfs <- decompose(df, schema)
@@ -304,7 +304,7 @@ describe("decompose", {
       ),
       attrs_order = c("a", "b", "c")
     ) |>
-      database_schema(relationships = list(list(c("a_c", "a"), c("a", "a"))))
+      database_schema(relationships = list(c("a_c", "a", "a", "a")))
     norm.df <- decompose(df, schema)
     expect_identical(
       norm.df$relations$a_c,

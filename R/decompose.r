@@ -96,20 +96,11 @@ decompose <- function(df, schema, name = NA_character_) {
     attrs(schema),
     keys(schema)
   )
-  relationships <- lapply(
-    relationships(schema),
-    \(r) {
-      c(
-        r[[1]][1], r[[2]][[1]],
-        r[[1]][2], r[[2]][[2]]
-      )
-    }
-  )
   structure(
     list(
       name = name,
       relations = stats::setNames(relation_list, relation_names),
-      relationships = relationships,
+      relationships = relationships(schema),
       attributes = attrs_order(schema)
     ),
     class = c("database", "list")

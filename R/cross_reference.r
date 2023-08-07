@@ -46,7 +46,12 @@ cross_reference <- function(schema, ensure_lossless = TRUE) {
   references <- calculate_references(keys, attrs)
 
   relationships <- Map(
-    \(child, parent, attr) list(names(schema)[c(child, parent)], c(attr, attr)),
+    \(child, parent, attr) c(
+      names(schema)[[child]],
+      attr,
+      names(schema)[[parent]],
+      attr
+    ),
     references$child,
     references$parent,
     references$attr

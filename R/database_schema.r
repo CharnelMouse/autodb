@@ -14,16 +14,20 @@
 #' ordering by attribute, are allowed, and can be removed with
 #' \code{\link{unique}}.
 #'
+#' Relationships, i.e. foreign key references, are allowed to have different
+#' attribute names in the child and parent relations; this can't occur in the
+#' output for \code{\link{cross_reference}} and \code{\link{normalise}}.
+#'
 #' Subsetting removes any relationships that involve removed relation schemas.
 #' Removing duplicates with \code{\link{unique}} changes relationships involving
 #' duplicates to involve the kept equivalent schemas instead.
 #'
 #' @param relations a \code{relation_schema} object, as returned by
 #'   \code{\link{synthesise}} or \code{\link{relation_schema}}.
-#' @param relationships a list, whose elements each have two elements: a
-#'   length-two character vector, giving the names of the referencing and
-#'   referenced relations, and a length-two character vector, giving the
-#'   reference attribute in each respectively.
+#' @param relationships a list, whose elements are length-four character
+#'   vectors, giving the names of the referencing relation, the referencing
+#'   attribute, the referenced relation, and the reference attribute,
+#'   respectively.
 #'
 #' @return A database schema with relationships, represented by a named list of
 #'   three lists and two character vectors, with the first four having equal
@@ -51,39 +55,30 @@ database_schema <- function(relations, relationships) {
     stop("relations must be a relation_schema")
   if (!is.list(relationships))
     stop("relationships must be a list")
-  if (any(lengths(relationships) != 2L))
-    stop("relationship elements must have length two")
+  if (any(
+    lengths(relationships) != 4L |
+    !vapply(relationships, is.character, logical(1))
+  ))
+    stop("relationship elements must be length-four characters")
   if (any(!vapply(
     relationships,
-    \(r) is.character(r[[1]]) && length(r[[1]]) == 2,
-    logical(1)
-  )))
-    stop("relationship elements must have length-two character first elements")
-  if (any(!vapply(
-    relationships,
-    \(r) all(r[[1]] %in% names(relations)),
+    \(r) all(r[c(1L, 3L)] %in% names(relations)),
     logical(1)
   ))) {
     stop("relationship relation names must be within relation schema names")
   }
   if (any(!vapply(
     relationships,
-    \(r) is.character(r[[2]]) && length(r[[2]]) == 2L,
-    logical(1)
-  )))
-    stop("relationship attributes must be length-two characters")
-  if (any(!vapply(
-    relationships,
     \(r) {
-      r[[2]][[1]] %in% attrs(relations)[[r[[1]][[1]]]] &&
-        r[[2]][[2]] %in% unlist(keys(relations)[[r[[1]][[2]]]])
+      r[[2]] %in% attrs(relations)[[r[[1]]]] &&
+        r[[4]] %in% unlist(keys(relations)[[r[[3]]]])
     },
     logical(1)
   )))
     stop("relationship attributes must be within referer's attributes and referee's keys")
   if (any(vapply(
     relationships,
-    \(r) r[[1]][[1]] == r[[1]][[2]],
+    \(r) r[[1]] == r[[3]],
     logical(1)
   )))
     stop("relationship cannot be from a relation's attribute to itself")
@@ -132,9 +127,9 @@ print.database_schema <- function(x, max = 10, ...) {
     for (r in seq_len(n_relationships)) {
       rel <- relationships(x)[[r]]
       cat(paste0(
-        rel[[1]][1], ".", rel[[2]][[1]],
+        rel[[1]], ".", rel[[2]],
         " -> ",
-        rel[[1]][2], ".", rel[[2]][[2]], "\n"
+        rel[[3]], ".", rel[[4]], "\n"
       ))
     }
     if (max < n_relationships)
@@ -188,7 +183,7 @@ unique.database_schema <- function(x, ...) {
     schemas <- result_lst[[1]]
     rels <- unique(result_lst[[2]])
   }
-  rels <- rels[vapply(rels, \(r) r[[1]][[1]] != r[[1]][[2]], logical(1))]
+  rels <- rels[vapply(rels, \(r) r[[1]] != r[[3]], logical(1))]
   database_schema(schemas, rels)
 }
 
@@ -203,7 +198,10 @@ c.database_schema <- function(..., single_empty_key = FALSE) {
 
   relationships_list <- lapply(lst, relationships)
   new_relationships <- Map(
-    \(rls, old, new) lapply(rls, \(rl) list(new[match(rl[[1]], old)], rl[[2]])),
+    \(rls, old, new) lapply(
+      rls,
+      \(rl) c(new[match(rl[[1]], old)], rl[[2]], new[match(rl[[3]], old)], rl[[4]])
+    ),
     relationships_list,
     lapply(lst, names),
     unname(split(
@@ -250,7 +248,12 @@ remove_schemas <- function(schemas, rels, to_remove, replace_with) {
   schemas <- schemas[-to_remove]
   rels <- lapply(
     rels,
-    \(rel) list(names(schemas)[ind_map[match(rel[[1]], old_names)]], rel[[2]])
+    \(rel) c(
+      names(schemas)[ind_map[match(rel[[1]], old_names)]],
+      rel[[2]],
+      names(schemas)[ind_map[match(rel[[3]], old_names)]],
+      rel[[4]]
+    )
   )
   list(schemas, rels)
 }

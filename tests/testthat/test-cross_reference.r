@@ -40,9 +40,7 @@ describe("cross_reference", {
       attrs_order = c("a", "b", "c")
     )
     database <- cross_reference(schema)
-    expected_relations <- list(
-      list(c("a", "b"), c("b", "b"))
-    )
+    expected_relations <- list(c("a", "b", "b", "b"))
     expect_identical(attr(database, "relationships"), expected_relations)
   })
   it("gives valid schemas", {
@@ -68,8 +66,8 @@ describe("cross_reference", {
         discard()
       if (length(relationships(schema)) == 0)
         discard()
-      relationship_tables <- lapply(relationships(schema), `[[`, 1)
-      relationship_attrs <- vapply(relationships(schema), `[[`, character(2), 2)
+      relationship_tables <- lapply(relationships(schema), `[`, c(1, 3))
+      relationship_attrs <- vapply(relationships(schema), `[`, character(2), c(2, 4))
       tables_names <- as.data.frame(do.call(rbind, relationship_tables))
       link_sets <- tapply(
         t(relationship_attrs),
@@ -193,7 +191,7 @@ describe("cross_reference", {
   it("only returns non-extraneous table relationships", {
     only_returns_non_extraneous_relationships <- function(deps) {
       linked <- normalise(deps, ensure_lossless = TRUE)
-      table_relationships <- unique(lapply(attr(linked, "relationships"), `[[`, 1))
+      table_relationships <- unique(lapply(relationships(linked), `[`, c(1, 3)))
       table_relationships <- list(
         determinant_sets = vapply(table_relationships, `[[`, character(1), 1),
         dependents = vapply(table_relationships, `[[`, character(1), 2)

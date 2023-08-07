@@ -105,16 +105,14 @@ is_valid_database_schema <- function(
   fks <- relationships(x)
 
   for (fk in fks) {
-    expect_length(fk, 2L)
-    expect_identical(lengths(fk), c(2L, 2L))
-    expect_true(is.character(fk[[1]]))
-    expect_true(is.character(fk[[2]]))
-    expect_false(fk[[1]][1] == fk[[1]][2])
+    expect_true(is.character(fk))
+    expect_length(fk, 4L)
+    expect_false(fk[[1]] == fk[[3]])
     if (same_attr_name)
-      expect_identical(fk[[2]][[1]], fk[[2]][[2]])
-    expect_true(all(is.element(fk[[1]], names(x))))
-    expect_true(is.element(fk[[2]][[1]], attrs(x)[[fk[[1]][1]]]))
-    expect_true(is.element(fk[[2]][[2]], attrs(x)[[fk[[1]][2]]]))
+      expect_identical(fk[[2]], fk[[4]])
+    expect_true(all(is.element(fk[c(1L, 3L)], names(x))))
+    expect_true(is.element(fk[[2]], attrs(x)[[fk[[1]]]]))
+    expect_true(is.element(fk[[4]], attrs(x)[[fk[[3]]]]))
   }
   if (unique) expect_true(!anyDuplicated(fks))
 }
@@ -360,7 +358,10 @@ gen.relationships_same_attrs <- function(rs) {
       gen.with(\(citers) {
         lst <- lapply(
           citers,
-          \(citer) lapply(k, \(a) list(names(rs)[c(citer, n)], c(a, a)))
+          \(citer) lapply(
+            k,
+            \(a) c(names(rs)[[citer]], a, names(rs)[[n]], a)
+          )
         )
         if (length(lst) == 0) list() else unlist(lst, recursive = FALSE)
       })
@@ -399,9 +400,12 @@ gen.relationships_different_attrs <- function(rs) {
             gen.sample(attrs(rs)[[citer]], length(k)) |>
               gen.with(\(attrs) {
                 Map(
-                  \(key_attr, citing_attr) {
-                    list(names(rs)[c(citer, n)], c(citing_attr, key_attr))
-                  },
+                  \(key_attr, citing_attr) c(
+                    names(rs)[[citer]],
+                    citing_attr,
+                    names(rs)[[n]],
+                    key_attr
+                  ),
                   k,
                   attrs
                 )
