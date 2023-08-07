@@ -93,7 +93,12 @@ is_valid_relation_schema <- function(x, unique = FALSE, single_empty_key = FALSE
   }
 }
 
-is_valid_database_schema <- function(x, unique = FALSE, single_empty_key = FALSE) {
+is_valid_database_schema <- function(
+    x,
+    unique = FALSE,
+    single_empty_key = FALSE,
+    same_attr_name = FALSE
+) {
   is_valid_relation_schema(x, unique, single_empty_key)
 
   expect_s3_class(x, "database_schema")
@@ -105,6 +110,8 @@ is_valid_database_schema <- function(x, unique = FALSE, single_empty_key = FALSE
     expect_true(is.character(fk[[1]]))
     expect_true(is.character(fk[[2]]))
     expect_false(fk[[1]][1] == fk[[1]][2])
+    if (same_attr_name)
+      expect_identical(fk[[2]][[1]], fk[[2]][[2]])
     expect_true(all(is.element(fk[[1]], names(x))))
     expect_true(is.element(fk[[2]][[1]], attrs(x)[[fk[[1]][1]]]))
     expect_true(is.element(fk[[2]][[2]], attrs(x)[[fk[[1]][2]]]))
@@ -339,7 +346,7 @@ gen.relation_schema <- function(x, from, to) {
     })
 }
 
-gen.relationships <- function(rs) {
+gen.relationships_same_attrs <- function(rs) {
   gen.relationships_for_index_and_key <- function(rs, n, k) {
     contains_key <- setdiff(
       which(vapply(
@@ -360,7 +367,12 @@ gen.relationships <- function(rs) {
   }
   gen.relationships_for_index <- function(rs, n) {
     ks <- keys(rs)[[n]]
-    lapply(ks, gen.relationships_for_index_and_key, rs = rs, n = n) |>
+    lapply(
+      ks[lengths(ks) > 0L],
+      gen.relationships_for_index_and_key,
+      rs = rs,
+      n = n
+    ) |>
       gen.with(\(lst) {
         if (length(lst) == 0L) list() else unique(unlist(lst, recursive = FALSE))
       })
@@ -369,9 +381,71 @@ gen.relationships <- function(rs) {
     gen.with(\(lst) if (length(lst) == 0L) list() else unlist(lst, recursive = FALSE))
 }
 
-gen.database_schema <- function(x, from, to) {
+gen.relationships_different_attrs <- function(rs) {
+  gen.relationships_for_index_and_key <- function(rs, n, k) {
+    contains_key_length <- setdiff(
+      which(vapply(
+        attrs(rs),
+        \(as) length(as) >= length(k),
+        logical(1)
+      )),
+      n
+    )
+    gen.subsequence(contains_key_length) |>
+      gen.and_then(\(citers) {
+        lapply(
+          citers,
+          \(citer) {
+            gen.sample(attrs(rs)[[citer]], length(k)) |>
+              gen.with(\(attrs) {
+                Map(
+                  \(key_attr, citing_attr) {
+                    list(names(rs)[c(citer, n)], c(citing_attr, key_attr))
+                  },
+                  k,
+                  attrs
+                )
+              })
+          }
+        )
+      }) |>
+      gen.with(\(lst) {
+        if (length(lst) == 0) list() else unlist(lst, recursive = FALSE)
+      })
+  }
+  gen.relationships_for_index <- function(rs, n) {
+    ks <- keys(rs)[[n]]
+    lapply(
+      ks[lengths(ks) > 0L],
+      gen.relationships_for_index_and_key,
+      rs = rs,
+      n = n
+    ) |>
+      gen.with(\(lst) {
+        if (length(lst) == 0L) list() else unique(unlist(lst, recursive = FALSE))
+      })
+  }
+  lapply(seq_along(rs), gen.relationships_for_index, rs = rs) |>
+    gen.with(\(lst) if (length(lst) == 0L) list() else unlist(lst, recursive = FALSE))
+}
+
+gen.relationships <- function(rs) {
+  gen.choice(
+    gen.relationships_same_attrs(rs),
+    gen.relationships_different_attrs(rs)
+  )
+}
+
+gen.database_schema <- function(x, from, to, same_attr_name = FALSE) {
   gen.relation_schema(x, from, to) |>
-    gen.and_then(\(rs) list(gen.pure(rs), gen.relationships(rs))) |>
+    gen.and_then(\(rs) {
+      list(
+        gen.pure(rs),
+        if (same_attr_name)
+          gen.relationships_same_attrs(rs)
+        else
+          gen.relationships(rs))
+    }) |>
     gen.with(\(lst) do.call(database_schema, lst))
 }
 

@@ -171,14 +171,21 @@ describe("database_schema", {
 
   it("is subsetted to a valid database schema", {
     forall(
-      gen.database_schema(letters[1:6], 0, 8) |>
-        gen.and_then(\(ds) list(
-          gen.pure(ds),
-          gen.sample(c(FALSE, TRUE), length(ds), replace = TRUE)
+      gen.sample(c(FALSE, TRUE), 1L) |>
+        gen.and_then(\(san) {
+          list(
+            gen.pure(san),
+            gen.database_schema(letters[1:6], 0, 8, same_attr_name = san)
+          )
+        }) |>
+        gen.and_then(\(lst) list(
+          gen.pure(lst[[1]]),
+          gen.pure(lst[[2]]),
+          gen.sample(c(FALSE, TRUE), length(lst[[2]]), replace = TRUE)
         )),
-      \(ds, i) {
-        is_valid_database_schema(ds[i])
-        is_valid_database_schema(ds[which(i)])
+      \(san, ds, i) {
+        is_valid_database_schema(ds[i], same_attr_name = san)
+        is_valid_database_schema(ds[which(i)], same_attr_name = san)
         expect_identical(ds[i], ds[which(i)])
         expect_length(ds[i], sum(i))
       },
@@ -190,7 +197,7 @@ describe("database_schema", {
       expect_identical(attrs_order(op(ds, indices)), attrs_order(ds))
     }
     forall(
-      gen.database_schema(letters[1:6], 0, 8) |>
+      gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE) |>
         gen.and_then(\(ds) list(
           ds = gen.pure(ds),
           indices = gen.sample(seq_along(ds), gen.sample(0:length(ds)), replace = TRUE)
@@ -200,7 +207,7 @@ describe("database_schema", {
       curry = TRUE
     )
     forall(
-      gen.database_schema(letters[1:6], 1, 8) |>
+      gen.database_schema(letters[1:6], 1, 8, same_attr_name = FALSE) |>
         gen.and_then(\(ds) list(
           ds = gen.pure(ds),
           indices = gen.int(length(ds))
@@ -220,7 +227,7 @@ describe("database_schema", {
       )
     }
     forall(
-      gen.database_schema(letters[1:6], 0, 8) |>
+      gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE) |>
         gen.and_then(\(ds) list(
           ds = gen.pure(ds),
           indices = gen.sample(seq_along(ds), gen.sample(0:length(ds)), replace = TRUE)
@@ -230,7 +237,7 @@ describe("database_schema", {
       curry = TRUE
     )
     forall(
-      gen.database_schema(letters[1:6], 1, 8) |>
+      gen.database_schema(letters[1:6], 1, 8, same_attr_name = FALSE) |>
         gen.and_then(\(ds) list(
           ds = gen.pure(ds),
           indices = gen.int(length(ds))
@@ -242,19 +249,29 @@ describe("database_schema", {
   })
   it("can be made unique within class", {
     forall(
-      gen.database_schema(letters[1:6], 0, 8),
+      gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE),
       expect_biidentical(class, unique %>>% class)
     )
   })
   it("is made unique to a valid database schema", {
     forall(
-      gen.database_schema(letters[1:6], 0, 8),
-      unique %>>% with_args(is_valid_database_schema, unique = TRUE)
+      gen.sample(c(FALSE, TRUE), 1) |>
+        gen.and_then(\(san) {
+          list(
+            gen.pure(san),
+            gen.database_schema(letters[1:6], 0, 8, same_attr_name = san)
+          )
+        }),
+      \(san, ds) {
+        unique(ds) |> is_valid_database_schema(unique = TRUE, same_attr_name = san)
+      },
+      curry = TRUE
     )
   })
   it("is made unique with relationships preserved", {
     forall(
-      gen.database_schema(letters[1:3], 0, 8) |> gen.with(unique),
+      gen.database_schema(letters[1:3], 0, 8, same_attr_name = FALSE) |>
+        gen.with(unique),
       expect_biidentical(
         dup %>>% uncurry(c) %>>% unique %>>% relationships,
         relationships
@@ -264,8 +281,13 @@ describe("database_schema", {
 
   it("concatenates to a valid database schema", {
     forall(
-      gen.database_schema(letters[1:6], 0, 8) |> gen.list(from = 1, to = 3),
-      c %>>% is_valid_database_schema,
+      gen.sample(c(FALSE, TRUE), 1) |>
+        gen.and_then(\(san) list(
+          gen.pure(san),
+          gen.database_schema(letters[1:6], 0, 8, same_attr_name = san) |>
+            gen.list(from = 1, to = 3)
+        )),
+      \(san, dss) do.call(c, dss) |> is_valid_database_schema(same_attr_name = san),
       curry = TRUE
     )
   })
@@ -277,7 +299,8 @@ describe("database_schema", {
       }
     }
     forall(
-      gen.database_schema(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
+      gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE) |>
+        gen.list(from = 1, to = 10),
       concatenate_lossless_for_attrs_order
     )
   })
@@ -361,7 +384,8 @@ describe("database_schema", {
       }
     }
     forall(
-      gen.database_schema(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
+      gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE) |>
+        gen.list(from = 1, to = 10),
       concatenate_lossless_for_relationships
     )
   })
@@ -399,13 +423,14 @@ describe("database_schema", {
       }
     }
     forall(
-      gen.database_schema(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
+      gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE) |>
+        gen.list(from = 1, to = 10),
       concatenate_lossless_for_schemas
     )
   })
   it("is composed of its attrs(), keys(), names(), attrs_order(), and relationships()", {
     forall(
-      gen.database_schema(letters[1:6], 0, 8),
+      gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE),
       \(ds) expect_identical(
         database_schema(
           relation_schema(
@@ -420,7 +445,7 @@ describe("database_schema", {
   })
   it("is composed of its subschemas() and relationships()", {
     forall(
-      gen.database_schema(letters[1:6], 0, 8),
+      gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE),
       \(ds) expect_identical(
         database_schema(subschemas(ds), relationships(ds)),
         ds
