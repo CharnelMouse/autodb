@@ -21,7 +21,7 @@
 #' @param relations a \code{relation_schema} object, as returned by
 #'   \code{\link{synthesise}} or \code{\link{relation_schema}}.
 #' @param relationships a list, whose elements each have two elements: a
-#'   length-two integer vector, giving the index of the referencing and
+#'   length-two character vector, giving the names of the referencing and
 #'   referenced relations, and a length-two character vector, giving the
 #'   reference attribute in each respectively.
 #'
@@ -55,16 +55,16 @@ database_schema <- function(relations, relationships) {
     stop("relationship elements must have length two")
   if (any(!vapply(
     relationships,
-    \(r) is.integer(r[[1]]) && length(r[[1]]) == 2,
+    \(r) is.character(r[[1]]) && length(r[[1]]) == 2,
     logical(1)
   )))
-    stop("relationship elements must have length-two integer first elements")
+    stop("relationship elements must have length-two character first elements")
   if (any(!vapply(
     relationships,
-    \(r) all(r[[1]] %in% seq_along(relations)),
+    \(r) all(r[[1]] %in% names(relations)),
     logical(1)
   ))) {
-    stop("relationship table indices must be within relation schema indices")
+    stop("relationship relation names must be within relation schema names")
   }
   if (any(!vapply(
     relationships,
@@ -126,9 +126,9 @@ print.database_schema <- function(x, max = 10, ...) {
     for (r in seq_len(n_relationships)) {
       rel <- relationships(x)[[r]]
       cat(paste0(
-        names(x)[rel[[1]][1]], ".", rel[[2]][[1]],
+        rel[[1]][1], ".", rel[[2]][[1]],
         " -> ",
-        names(x)[rel[[1]][2]], ".", rel[[2]][[2]], "\n"
+        rel[[1]][2], ".", rel[[2]][[2]], "\n"
       ))
     }
     if (max < n_relationships)
@@ -196,18 +196,16 @@ c.database_schema <- function(..., single_empty_key = FALSE) {
     make.unique(names(joined_schemas))
 
   relationships_list <- lapply(lst, relationships)
-  rl_offsets <- cumsum(utils::head(
-    c(0L, lengths(lst)),
-    length(lst)
-  ))
-  rl_indices_incremented <- Map(
-    \(rls, offset) {
-      lapply(rls, \(rl) list(rl[[1]] + offset, rl[[2]]))
-    },
+  new_relationships <- Map(
+    \(rls, old, new) lapply(rls, \(rl) list(new[match(rl[[1]], old)], rl[[2]])),
     relationships_list,
-    rl_offsets
+    lapply(lst, names),
+    unname(split(
+      names(joined_schemas),
+      rep(factor(seq_along(lst)), lengths(lst))
+    ))
   )
-  joined_relationships <- do.call(c, rl_indices_incremented)
+  joined_relationships <- do.call(c, new_relationships)
 
   result_lst <- list(joined_schemas, joined_relationships)
 
@@ -242,10 +240,11 @@ remove_schemas <- function(schemas, rels, to_remove, replace_with) {
   ind_map[to_remove] <- replace_with
   ind_map <- seq_along(remaining_inds)[match(ind_map, remaining_inds)]
 
+  old_names <- names(schemas)
   schemas <- schemas[-to_remove]
   rels <- lapply(
     rels,
-    \(rel) list(ind_map[rel[[1]]], rel[[2]])
+    \(rel) list(names(schemas)[ind_map[match(rel[[1]], old_names)]], rel[[2]])
   )
   list(schemas, rels)
 }

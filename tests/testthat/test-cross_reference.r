@@ -35,7 +35,7 @@ describe("cross_reference", {
     )
     database <- cross_reference(schema)
     expected_relations <- list(
-      list(c(1L, 2L), c("b", "b"))
+      list(c("a", "b"), c("b", "b"))
     )
     expect_identical(attr(database, "relationships"), expected_relations)
   })
@@ -64,14 +64,14 @@ describe("cross_reference", {
         discard()
       relationship_tables <- lapply(relationships(schema), `[[`, 1)
       relationship_attrs <- vapply(relationships(schema), `[[`, character(2), 2)
-      tables_index <- as.data.frame(do.call(rbind, relationship_tables))
+      tables_names <- as.data.frame(do.call(rbind, relationship_tables))
       link_sets <- tapply(
         t(relationship_attrs),
-        rbind(tables_index, tables_index),
+        rbind(tables_names, tables_names),
         \(as) sort(unique(as))
       )
       for (column in seq_len(ncol(link_sets))) {
-        parent <- strtoi(colnames(link_sets)[column])
+        parent <- colnames(link_sets)[column]
         attribute_sets <- link_sets[, column]
         attribute_sets <- na.omit(attribute_sets[!vapply(
           attribute_sets,
@@ -189,12 +189,16 @@ describe("cross_reference", {
       linked <- normalise(deps, ensure_lossless = TRUE)
       table_relationships <- unique(lapply(attr(linked, "relationships"), `[[`, 1))
       table_relationships <- list(
-        determinant_sets = lapply(table_relationships, `[`, 1),
-        dependents = vapply(table_relationships, `[`, integer(1), 2)
+        determinant_sets = vapply(table_relationships, `[[`, character(1), 1),
+        dependents = vapply(table_relationships, `[[`, character(1), 2)
+      )
+      table_relationships_indices <- lapply(
+        table_relationships,
+        \(nms) match(nms, names(linked))
       )
       expect_identical(
-        remove_extraneous_dependencies(table_relationships),
-        table_relationships
+        remove_extraneous_dependencies(table_relationships_indices),
+        table_relationships_indices
       )
     }
     forall(

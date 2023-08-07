@@ -100,8 +100,8 @@ decompose <- function(df, schema, name = NA_character_) {
     relationships(schema),
     \(r) {
       c(
-        relation_names[r[[1]][1]], r[[2]][[1]],
-        relation_names[r[[1]][2]], r[[2]][[2]]
+        r[[1]][1], r[[2]][[1]],
+        r[[1]][2], r[[2]][[2]]
       )
     }
   )

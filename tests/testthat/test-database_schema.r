@@ -20,7 +20,7 @@ describe("database_schema", {
       "^relationship elements must have length two$"
     )
   })
-  it("expects valid input: first relationship element is a length-two integer", {
+  it("expects valid input: relationship relation names are a length-two character", {
     rs <- relation_schema(
       list(
         r1 = list(c("a", "c"), list("a")),
@@ -30,15 +30,15 @@ describe("database_schema", {
       c("a", "b", "c")
     )
     expect_error(
-      database_schema(rs, list(list(c("a", "b"), c("c", "c")))),
-      "^relationship elements must have length-two integer first elements"
+      database_schema(rs, list(list(1:2, c("c", "c")))),
+      "^relationship elements must have length-two character first elements"
     )
     expect_error(
-      database_schema(rs, list(list(1:3, c("a", "a")))),
-      "^relationship elements must have length-two integer first elements"
+      database_schema(rs, list(list(paste0("r", 1:3), c("a", "a")))),
+      "^relationship elements must have length-two character first elements"
     )
   })
-  it("expects valid input: first relationship element integers are within relation count", {
+  it("expects valid input: relationship relation names are within relation names", {
     rs <- relation_schema(
       list(
         r1 = list(c("a", "c"), list("a")),
@@ -48,19 +48,15 @@ describe("database_schema", {
       c("a", "b", "c")
     )
     expect_error(
-      database_schema(rs, list(list(3:4, c("b", "b")))),
-      "^relationship table indices must be within relation schema indices$"
+      database_schema(rs, list(list(paste0("r", 3:4), c("b", "b")))),
+      "^relationship relation names must be within relation schema names$"
     )
     expect_error(
-      database_schema(rs, list(list(4:3, c("b", "b")))),
-      "^relationship table indices must be within relation schema indices$"
-    )
-    expect_error(
-      database_schema(rs, list(list(0:1, c("a", "a")))),
-      "^relationship table indices must be within relation schema indices$"
+      database_schema(rs, list(list(paste0("r", 4:3), c("b", "b")))),
+      "^relationship relation names must be within relation schema names$"
     )
   })
-  it("expects valid input: second relationship element is a length-one character", {
+  it("expects valid input: relationship attributes are a length-two character", {
     rs <- relation_schema(
       list(
         r1 = list(c("a", "c"), list("a")),
@@ -70,11 +66,11 @@ describe("database_schema", {
       c("a", "b", "c")
     )
     expect_error(
-      database_schema(rs, list(list(1:2, 1L))),
+      database_schema(rs, list(list(paste0("r", 1:2), 1L))),
       "^relationship attributes must be length-two characters$"
     )
     expect_error(
-      database_schema(rs, list(list(1:2, character()))),
+      database_schema(rs, list(list(paste0("r", 1:2), character()))),
       "^relationship attributes must be length-two characters$"
     )
     rs2 <- relation_schema(
@@ -85,12 +81,12 @@ describe("database_schema", {
       c("a", "b", "c", "d", "e")
     )
     expect_error(
-      database_schema(rs2, list(list(1:2, c("a", "b", "d")))),
+      database_schema(rs2, list(list(paste0("r", 1:2), c("a", "b", "d")))),
       "^relationship attributes must be length-two characters$"
     )
   })
 
-  it("expects valid input: second relationship element is within referer's attributes and referee's keys", {
+  it("expects valid input: relationship attribute names are within referer's attributes and referee's keys", {
     expect_error(
       database_schema(
         relation_schema(
@@ -100,10 +96,12 @@ describe("database_schema", {
           ),
           c("a", "b", "c")
         ),
-        list(list(1:2, c("b", "b")))
+        list(list(c("a", "X"), c("b", "b")))
       ),
       "^relationship attributes must be within referer's attributes and referee's keys$"
     )
+    # need more examples here
+
     # should have something about collected FK being a key of the citee,
     # waiting on FK grouping first
   })
@@ -144,7 +142,7 @@ describe("database_schema", {
           ),
           c("a", "b", "c")
         ),
-        list(list(1:2, c("b", "b")))
+        list(list(c("a", "b"), c("b", "b")))
       )),
       paste0(
         "\\A",
@@ -345,7 +343,7 @@ describe("database_schema", {
             rl_replacements <- apply(
               do.call(expand.grid, index_replacements),
               1,
-              \(x) list(c(x[[1]], x[[2]]), rl[[2]])
+              \(x) list(names(res)[c(x[[1]], x[[2]])], rl[[2]])
             )
             any(is.element(rl_replacements, relationships(res)))
           },

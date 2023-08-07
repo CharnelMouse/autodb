@@ -102,10 +102,10 @@ is_valid_database_schema <- function(x, unique = FALSE, single_empty_key = FALSE
   for (fk in fks) {
     expect_length(fk, 2L)
     expect_identical(lengths(fk), c(2L, 2L))
-    expect_true(is.integer(fk[[1]]))
+    expect_true(is.character(fk[[1]]))
     expect_true(is.character(fk[[2]]))
     expect_false(fk[[1]][1] == fk[[1]][2])
-    expect_true(all(is.element(fk[[1]], seq_along(x))))
+    expect_true(all(is.element(fk[[1]], names(x))))
     expect_true(is.element(fk[[2]][[1]], attrs(x)[[fk[[1]][1]]]))
     expect_true(is.element(fk[[2]][[2]], attrs(x)[[fk[[1]][2]]]))
   }
@@ -353,7 +353,7 @@ gen.relationships <- function(rs) {
       gen.with(\(citers) {
         lst <- lapply(
           citers,
-          \(citer) lapply(k, \(a) list(c(citer, n), c(a, a)))
+          \(citer) lapply(k, \(a) list(names(rs)[c(citer, n)], c(a, a)))
         )
         if (length(lst) == 0) list() else unlist(lst, recursive = FALSE)
       })

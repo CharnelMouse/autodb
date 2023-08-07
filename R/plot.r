@@ -162,8 +162,7 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
   reference_strings <- vapply(
     relationships(x),
     dbs_reference_string,
-    character(1),
-    names(x)
+    character(1)
   ) |>
     paste(collapse = "\n")
   teardown_string <- "}\n"
@@ -408,8 +407,7 @@ reference_string <- function(reference) {
   )
 }
 
-dbs_reference_string <- function(reference, relation_names) {
-  reference[[1]] <- relation_names[reference[[1]]]
+dbs_reference_string <- function(reference) {
   paste0(
     "  ",
     paste(
