@@ -69,6 +69,23 @@ describe("reduce.database", {
       all_non_parents_in_reduction_have_same_nrow
     )
   })
+  it("returns at least one relation with maximal number of records, and any parents", {
+    contains_maximal_row_relation_and_parents <- function(df) {
+      db <- autodb(df, ensure_lossless = TRUE)
+      reduced <- reduce(db)
+      nrows <- vapply(reduced$relations, \(r) nrow(r$df), integer(1))
+      expect_identical(max(nrows), nrow(df))
+      base <- names(reduced$relations)[which.max(nrows)]
+      parents <- db$relationships |>
+        Filter(f = \(r) r[[1]] == base) |>
+        vapply(\(r) r[[3]], character(1))
+      expect_true(all(is.element(parents, names(reduced$relations))))
+    }
+    forall(
+      gen_df(6, 7, minrow = 1L, remove_dup_rows = TRUE),
+      contains_maximal_row_relation_and_parents
+    )
+  })
 })
 
 describe("reduce.database_schema", {

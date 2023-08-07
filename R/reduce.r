@@ -48,7 +48,8 @@ reduce.database <- function(x, ...) {
     current <- queue[1]
     queue <- queue[-1]
     kept <- union(kept, current)
-    current_parents <- x$relations[[current]]$parents
+    current_parents <- Filter(\(r) r[[1]] == current, x$relationships) |>
+      vapply(\(r) r[[3]], character(1))
     queue <- union(queue, setdiff(current_parents, kept))
   }
   sorted_kept <- kept[order(match(kept, names(x$relations)))]
