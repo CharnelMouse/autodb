@@ -59,34 +59,37 @@ describe("cross_reference", {
       )
     )
   })
-  it("only links children to parents by exactly one parent key", {
+  it("only links children to parents by exactly one parent key each", {
     links_by_exactly_one_parent_key <- function(deps) {
       schema <- normalise(deps)
-      if (length(keys(schema)) <= 1)
+      if (length(keys(schema)) <= 1 || length(relationships(schema)) == 0)
         discard()
-      if (length(relationships(schema)) == 0)
-        discard()
-      relationship_tables <- lapply(relationships(schema), `[`, c(1, 3))
-      relationship_attrs <- vapply(relationships(schema), `[`, character(2), c(2, 4))
-      tables_names <- as.data.frame(do.call(rbind, relationship_tables))
-      link_sets <- tapply(
-        t(relationship_attrs),
-        rbind(tables_names, tables_names),
+      relationships_mat <- do.call(rbind, relationships(schema))
+      char_sorted_relationship_attributes <- tapply(
+        relationships_mat[, 4],
+        list(relationships_mat[, 1], relationships_mat[, 3]),
         \(as) sort(unique(as))
       )
-      for (column in seq_len(ncol(link_sets))) {
-        parent <- colnames(link_sets)[column]
-        attribute_sets <- link_sets[, column]
-        attribute_sets <- na.omit(attribute_sets[!vapply(
-          attribute_sets,
-          is.null,
-          logical(1)
-        )])
-        expect_length(
-          setdiff(attribute_sets, lapply(keys(schema)[[parent]], sort)),
-          0
-        )
-      }
+      key_match <- vapply(
+        seq_len(ncol(char_sorted_relationship_attributes)),
+        \(column) {
+          parent <- colnames(char_sorted_relationship_attributes)[[column]]
+          char_sorted_parent_keys <- lapply(keys(schema)[[parent]], sort)
+          attribute_sets <- char_sorted_relationship_attributes[, column]
+          vapply(
+            attribute_sets,
+            \(as) is.null(as) ||
+              is.na(as) ||
+              is.element(list(as), char_sorted_parent_keys),
+            logical(1)
+          )
+        },
+        logical(nrow(char_sorted_relationship_attributes))
+      )
+      expect_identical(
+        as.vector(key_match),
+        rep(TRUE, length(char_sorted_relationship_attributes))
+      )
     }
     forall(
       gen_flat_deps(20, 2, from = 10L, to = 20L),
