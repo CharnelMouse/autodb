@@ -493,6 +493,12 @@ describe("gv", {
         normalise %>>% gv %>>% expect_no_error
       )
     })
+    it("works for generated cases", {
+      forall(
+        gen.database_schema(letters[1:8], 0, 10, same_attr_name = FALSE),
+        gv %>>% expect_no_error
+      )
+    })
     it("works for degenerate cases", {
       table_dum <- data.frame()
       table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
@@ -551,6 +557,17 @@ describe("gv", {
         database_schema(relationships = list(c("a", "b", "b", "b")))
       plot_string <- gv(schema)
       expect_true(grepl("\\n  a.FROM_b -> b.TO_b", plot_string))
+
+      schema <- relation_schema(
+        list(
+          a = list(c("a", "b"), list("a")),
+          b = list(c("b", "c"), list("b"))
+        ),
+        c("a", "b", "c")
+      ) |>
+        database_schema(relationships = list(c("a", "a", "b", "b")))
+      plot_string <- gv(schema)
+      expect_true(grepl("\\n  a.FROM_a -> b.TO_b", plot_string))
     })
   })
   describe("relation_schema", {
@@ -558,6 +575,12 @@ describe("gv", {
       forall(
         gen_flat_deps(7, 20, to = 20L),
         synthesise %>>% gv %>>% expect_no_error
+      )
+    })
+    it("works for generated cases", {
+      forall(
+        gen.relation_schema(letters[1:8], 0, 10),
+        gv %>>% expect_no_error
       )
     })
     it("works for degenerate cases", {
@@ -620,10 +643,11 @@ describe("gv", {
       expect_no_error(gv(table_dum, "table_dum"))
       expect_no_error(gv(table_dee, "table_dee"))
     })
-    it("works for data frames", {
+    it("works for generated cases", {
       forall(
-        gen_df(6, 7) |> gen.and_then(\(df) list(df, gen_attr_name(5))),
-        uncurry(gv) %>>% expect_no_error
+        list(gen_df(6, 7), gen_attr_name(5)),
+        gv %>>% expect_no_error,
+        curry = TRUE
       )
     })
     it("creates a Graphviz HTML-like expression for the data.frame", {
