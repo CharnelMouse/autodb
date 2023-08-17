@@ -212,30 +212,38 @@ c.database_schema <- function(..., single_empty_key = FALSE) {
   joined_relationships <- do.call(c, new_relationships)
 
   result_lst <- list(joined_schemas, joined_relationships)
+  res <- do.call(database_schema, result_lst)
 
-  if (single_empty_key) {
-    # combine relations schemas with empty key, since can only have one
-    empty_keys <- which(vapply(
-      keys(result_lst[[1]]),
-      identical,
-      logical(1),
-      list(character())
-    ))
-    if (length(empty_keys) >= 2L) {
-      as <- unique(unlist(attrs(result_lst[[1]][empty_keys])))
-      to_keep <- empty_keys[[1]]
-      to_remove <- empty_keys[-1]
-      result_lst <- remove_schemas(
-        result_lst[[1]],
-        result_lst[[2]],
-        to_remove,
-        rep(to_keep, length(to_remove))
-      )
-      attrs(result_lst[[1]])[[to_keep]] <- as
-    }
+  if (single_empty_key)
+    res <- merge_empty_keys_ds(res)
+
+  res
+}
+
+merge_empty_keys_ds <- function(x) {
+  schemas <- subschemas(x)
+  rels <- relationships(x)
+  empty_keys <- which(vapply(
+    keys(schemas),
+    identical,
+    logical(1),
+    list(character())
+  ))
+  if (length(empty_keys) >= 2L) {
+    as <- unique(unlist(attrs(schemas[empty_keys])))
+    to_keep <- empty_keys[[1]]
+    to_remove <- empty_keys[-1]
+    result_lst <- remove_schemas(
+      schemas,
+      rels,
+      to_remove,
+      rep(to_keep, length(to_remove))
+    )
+    schemas <- result_lst[[1]]
+    rels <- result_lst[[2]]
+    attrs(schemas)[[to_keep]] <- as
   }
-
-  do.call(database_schema, result_lst)
+  database_schema(schemas, rels)
 }
 
 remove_schemas <- function(schemas, rels, to_remove, replace_with) {
