@@ -188,7 +188,7 @@ unique.database_schema <- function(x, ...) {
 }
 
 #' @exportS3Method
-c.database_schema <- function(..., single_empty_key = FALSE) {
+c.database_schema <- function(...) {
   lst <- list(...)
   joined_schemas <- do.call(c, lapply(lst, subschemas))
   names(joined_schemas) <- if (is.null(names(joined_schemas)))
@@ -212,38 +212,7 @@ c.database_schema <- function(..., single_empty_key = FALSE) {
   joined_relationships <- do.call(c, new_relationships)
 
   result_lst <- list(joined_schemas, joined_relationships)
-  res <- do.call(database_schema, result_lst)
-
-  if (single_empty_key)
-    res <- merge_empty_keys_ds(res)
-
-  res
-}
-
-merge_empty_keys_ds <- function(x) {
-  schemas <- subschemas(x)
-  rels <- relationships(x)
-  empty_keys <- which(vapply(
-    keys(schemas),
-    identical,
-    logical(1),
-    list(character())
-  ))
-  if (length(empty_keys) >= 2L) {
-    as <- unique(unlist(attrs(schemas[empty_keys])))
-    to_keep <- empty_keys[[1]]
-    to_remove <- empty_keys[-1]
-    result_lst <- remove_schemas(
-      schemas,
-      rels,
-      to_remove,
-      rep(to_keep, length(to_remove))
-    )
-    schemas <- result_lst[[1]]
-    rels <- result_lst[[2]]
-    attrs(schemas)[[to_keep]] <- as
-  }
-  database_schema(schemas, rels)
+  do.call(database_schema, result_lst)
 }
 
 remove_schemas <- function(schemas, rels, to_remove, replace_with) {

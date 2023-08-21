@@ -175,7 +175,7 @@ unique.relation_schema <- function(x, ...) {
 }
 
 #' @exportS3Method
-c.relation_schema <- function(..., single_empty_key = FALSE) {
+c.relation_schema <- function(...) {
   lst <- list(...)
   joined_schemas <- Reduce(c, lapply(lst, unclass))
   names(joined_schemas) <- if (is.null(names(joined_schemas)))
@@ -186,27 +186,5 @@ c.relation_schema <- function(..., single_empty_key = FALSE) {
   attrs_order_list <- lapply(lst, attrs_order)
   joined_attrs_order <- do.call(merge_attribute_orderings, attrs_order_list)
 
-  res <- relation_schema(joined_schemas, joined_attrs_order)
-
-  if (single_empty_key)
-    res <- merge_empty_keys_rs(res)
-
-  res
-}
-
-merge_empty_keys_rs <- function(x) {
-  empty_keys <- which(vapply(
-    keys(x),
-    identical,
-    logical(1),
-    list(character())
-  ))
-  if (length(empty_keys) >= 2L) {
-    as <- unique(unlist(attrs(x[empty_keys])))
-    to_keep <- empty_keys[[1]]
-    to_remove <- empty_keys[-1]
-    attrs(x)[[to_keep]] <- as
-    x <- x[-to_remove]
-  }
-  x
+  relation_schema(joined_schemas, joined_attrs_order)
 }

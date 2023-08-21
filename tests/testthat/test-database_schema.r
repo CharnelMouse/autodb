@@ -403,18 +403,17 @@ describe("database_schema", {
       concatenate_lossless_for_schemas
     )
   })
-  it("can concatenate with merging of empty-key schemas", {
-    concatenate_with_up_to_one_empty_key <- function(lst) {
-      res <- do.call(c, c(lst, list(single_empty_key = TRUE)))
+  it("can have empty-key schemas merged", {
+    up_to_one_empty_key <- function(ds) {
+      res <- merge_empty_keys(ds)
       expect_lte(
         sum(vapply(keys(res), identical, logical(1), list(character()))),
         1L
       )
     }
     forall(
-      gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE) |>
-        gen.list(from = 1, to = 10),
-      concatenate_with_up_to_one_empty_key
+      gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE),
+      up_to_one_empty_key
     )
   })
   it("is composed of its attrs(), keys(), names(), attrs_order(), and relationships()", {

@@ -178,3 +178,65 @@ merge_attribute_orderings <- function(...) {
   }
   merged
 }
+
+#' Merge relation schemas with empty keys
+#'
+#' Generic function, merging relation schemas with empty keys. The remaining
+#' such schema contains all attributes contained in such schemas.
+#'
+#' For \code{\link{database_schema}} objects, relationships involving the
+#' schemas with empty keys are updated to refer to the merged schema.
+#'
+#' @param x an R object.
+#'
+#' @return an R object of the same class as \code{x}, where relations with an
+#'   empty key have been merged into a single relation.
+#' @export
+merge_empty_keys <- function(x) {
+  UseMethod("merge_empty_keys")
+}
+
+#' @exportS3Method
+merge_empty_keys.database_schema <- function(x) {
+  schemas <- subschemas(x)
+  rels <- relationships(x)
+  empty_keys <- which(vapply(
+    keys(schemas),
+    identical,
+    logical(1),
+    list(character())
+  ))
+  if (length(empty_keys) >= 2L) {
+    as <- unique(unlist(attrs(schemas[empty_keys])))
+    to_keep <- empty_keys[[1]]
+    to_remove <- empty_keys[-1]
+    result_lst <- remove_schemas(
+      schemas,
+      rels,
+      to_remove,
+      rep(to_keep, length(to_remove))
+    )
+    schemas <- result_lst[[1]]
+    rels <- result_lst[[2]]
+    attrs(schemas)[[to_keep]] <- as
+  }
+  database_schema(schemas, rels)
+}
+
+#' @exportS3Method
+merge_empty_keys.relation_schema <- function(x) {
+  empty_keys <- which(vapply(
+    keys(x),
+    identical,
+    logical(1),
+    list(character())
+  ))
+  if (length(empty_keys) >= 2L) {
+    as <- unique(unlist(attrs(x[empty_keys])))
+    to_keep <- empty_keys[[1]]
+    to_remove <- empty_keys[-1]
+    attrs(x)[[to_keep]] <- as
+    x <- x[-to_remove]
+  }
+  x
+}

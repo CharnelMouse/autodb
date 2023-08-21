@@ -308,18 +308,17 @@ describe("relation_schema", {
       curry = TRUE
     )
   })
-  it("can concatenate with merging of empty-key schemas", {
-    concatenate_with_up_to_one_empty_key <- function(lst) {
-      res <- do.call(c, c(lst, list(single_empty_key = TRUE)))
+  it("can have empty-key schemas merged", {
+    up_to_one_empty_key <- function(rs) {
+      res <- merge_empty_keys(rs)
       expect_lte(
         sum(vapply(keys(res), identical, logical(1), list(character()))),
         1L
       )
     }
     forall(
-      gen.relation_schema(letters[1:6], 0, 8) |>
-        gen.list(from = 1, to = 10),
-      concatenate_with_up_to_one_empty_key
+      gen.relation_schema(letters[1:6], 0, 8),
+      up_to_one_empty_key
     )
   })
   it("is composed of its attrs(), keys(), names() and attrs_order()", {
