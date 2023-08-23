@@ -128,240 +128,244 @@ describe("gv", {
     })
     it("creates a Graphviz HTML-like expression for the data.frame", {
       db <- database(
-        list(
-          Book = list(
-            df = data.frame(
-              Title = c(
-                "Beginning MySQL Database Design and Optimization",
-                "The Relational Model for Database Management: Version 2"
-              ),
-              Author = c(
-                "Chad Russel",
-                "EF Codd"
-              ),
-              Pages = c(520L, 538L),
-              Thickness = "Thick",
-              Genre_ID = 1:2,
-              Publisher_ID = 1:2
-            ) |>
-              stats::setNames(c(
-                "Title",
-                "Author",
-                "Pages",
-                "Thickness",
-                "Genre ID",
-                "Publisher ID"
-              )),
-            keys = list("Title"),
-            index = "Title"
-          ),
-          `Format Price` = list(
-            df = data.frame(
-              Title = c(
-                "Beginning MySQL Database Design and Optimization",
-                "Beginning MySQL Database Design and Optimization",
-                "The Relational Model for Database Management: Version 2",
-                "The Relational Model for Database Management: Version 2"
-              ),
-              Format = c("Hardcover", "E-book", "E-book", "Paperback"),
-              Price = c(4999L, 2234L, 1388L, 3999L)
+        relation(
+          list(
+            Book = list(
+              df = data.frame(
+                Title = c(
+                  "Beginning MySQL Database Design and Optimization",
+                  "The Relational Model for Database Management: Version 2"
+                ),
+                Author = c(
+                  "Chad Russel",
+                  "EF Codd"
+                ),
+                Pages = c(520L, 538L),
+                Thickness = "Thick",
+                Genre_ID = 1:2,
+                Publisher_ID = 1:2
+              ) |>
+                stats::setNames(c(
+                  "Title",
+                  "Author",
+                  "Pages",
+                  "Thickness",
+                  "Genre ID",
+                  "Publisher ID"
+                )),
+              keys = list("Title"),
+              index = "Title"
             ),
-            keys = list(c("Title", "Format")),
-            index = c("Title", "Format")
+            `Format Price` = list(
+              df = data.frame(
+                Title = c(
+                  "Beginning MySQL Database Design and Optimization",
+                  "Beginning MySQL Database Design and Optimization",
+                  "The Relational Model for Database Management: Version 2",
+                  "The Relational Model for Database Management: Version 2"
+                ),
+                Format = c("Hardcover", "E-book", "E-book", "Paperback"),
+                Price = c(4999L, 2234L, 1388L, 3999L)
+              ),
+              keys = list(c("Title", "Format")),
+              index = c("Title", "Format")
+            ),
+            Author = list(
+              df = data.frame(
+                Author = c("Chad Russell", "EF Codd"),
+                Author_Nationality = c("American", "British")
+              ) |>
+                stats::setNames(c("Author", "Author Nationality")),
+              keys = list("Author"),
+              index = "Author"
+            ),
+            Genre = list(
+              df = data.frame(
+                Genre_ID = 1:2,
+                Genre_Name = c("Tutorial", "Popular science")
+              ) |>
+                stats::setNames(c("Genre ID", "Genre Name")),
+              keys = list("Genre ID"),
+              index = "Genre ID"
+            )
           ),
-          Author = list(
-            df = data.frame(
-              Author = c("Chad Russell", "EF Codd"),
-              Author_Nationality = c("American", "British")
-            ) |>
-              stats::setNames(c("Author", "Author Nationality")),
-            keys = list("Author"),
-            index = "Author"
-          ),
-          Genre = list(
-            df = data.frame(
-              Genre_ID = 1:2,
-              Genre_Name = c("Tutorial", "Popular science")
-            ) |>
-              stats::setNames(c("Genre ID", "Genre Name")),
-            keys = list("Genre ID"),
-            index = "Genre ID"
-          )
+          attrs_order = character()
         ),
         relationships = list(
           c("Book", "Title", "Format Price", "Title"),
           c("Book", "Author", "Author", "Author"),
           c("Book", "Genre ID", "Genre", "Genre ID")
         ),
-        attrs_order = character(),
         name = "Book"
       )
-      expected_string <- paste(
-        "digraph book {",
-        "  rankdir = \"LR\"",
-        "  node [shape=plaintext];",
+        expected_string <- paste(
+          "digraph book {",
+          "  rankdir = \"LR\"",
+          "  node [shape=plaintext];",
 
-        "",
+          "",
 
-        test_df_strings(
-          "Book",
-          "book",
-          2,
-          "records",
-          c("Title", "Author", "Pages", "Thickness", "Genre ID", "Publisher ID"),
-          c("title", "author", "pages", "thickness", "genre_id", "publisher_id"),
-          c("character", "character", "integer", "character", "integer", "integer"),
-          matrix(
-            c(
-              TRUE,
-              FALSE,
-              FALSE,
-              FALSE,
-              FALSE,
-              FALSE
-            ),
-            nrow = 6,
-            byrow = TRUE
-          )
-        ),
+          test_df_strings(
+            "Book",
+            "book",
+            2,
+            "records",
+            c("Title", "Author", "Pages", "Thickness", "Genre ID", "Publisher ID"),
+            c("title", "author", "pages", "thickness", "genre_id", "publisher_id"),
+            c("character", "character", "integer", "character", "integer", "integer"),
+            matrix(
+              c(
+                TRUE,
+                FALSE,
+                FALSE,
+                FALSE,
+                FALSE,
+                FALSE
+              ),
+              nrow = 6,
+              byrow = TRUE
+            )
+          ),
 
-        test_df_strings(
-          "Format Price",
-          "format_price",
-          4,
-          "records",
-          c("Title", "Format", "Price"),
-          c("title", "format", "price"),
-          c("character", "character", "integer"),
-          matrix(
-            c(
-              TRUE,
-              TRUE,
-              FALSE
-            ),
-            nrow = 3,
-            byrow = TRUE
-          )
-        ),
+          test_df_strings(
+            "Format Price",
+            "format_price",
+            4,
+            "records",
+            c("Title", "Format", "Price"),
+            c("title", "format", "price"),
+            c("character", "character", "integer"),
+            matrix(
+              c(
+                TRUE,
+                TRUE,
+                FALSE
+              ),
+              nrow = 3,
+              byrow = TRUE
+            )
+          ),
 
-        test_df_strings(
-          "Author",
-          "author",
-          2,
-          "records",
-          c("Author", "Author Nationality"),
-          c("author", "author_nationality"),
-          c("character", "character"),
-          matrix(
-            c(
-              TRUE,
-              FALSE
-            ),
-            nrow = 2,
-            byrow = TRUE
-          )
-        ),
+          test_df_strings(
+            "Author",
+            "author",
+            2,
+            "records",
+            c("Author", "Author Nationality"),
+            c("author", "author_nationality"),
+            c("character", "character"),
+            matrix(
+              c(
+                TRUE,
+                FALSE
+              ),
+              nrow = 2,
+              byrow = TRUE
+            )
+          ),
 
-        test_df_strings(
-          "Genre",
-          "genre",
-          2,
-          "records",
-          c("Genre ID", "Genre Name"),
-          c("genre_id", "genre_name"),
-          c("integer", "character"),
-          matrix(
-            c(
-              TRUE,
-              FALSE
-            ),
-            nrow = 2,
-            byrow = TRUE
-          )
-        ),
+          test_df_strings(
+            "Genre",
+            "genre",
+            2,
+            "records",
+            c("Genre ID", "Genre Name"),
+            c("genre_id", "genre_name"),
+            c("integer", "character"),
+            matrix(
+              c(
+                TRUE,
+                FALSE
+              ),
+              nrow = 2,
+              byrow = TRUE
+            )
+          ),
 
-        "",
+          "",
 
-        "  book:FROM_title -> format_price:TO_title;",
-        "  book:FROM_author -> author:TO_author;",
-        "  book:FROM_genre_id -> genre:TO_genre_id;",
-        "}",
-        "",
-        sep = "\n"
-      )
-      expect_identical(
-        gv(db),
-        expected_string
-      )
-    })
-    it("converts attribute/df names to snake case for labels (inc. spaces, periods)", {
+          "  book:FROM_title -> format_price:TO_title;",
+          "  book:FROM_author -> author:TO_author;",
+          "  book:FROM_genre_id -> genre:TO_genre_id;",
+          "}",
+          "",
+          sep = "\n"
+        )
+        expect_identical(
+          gv(db),
+          expected_string
+        )
+        })
+      it("converts attribute/df names to snake case for labels (inc. spaces, periods)", {
       db <- database(
-        list(
-          Book = list(
-            df = data.frame(
-              Title = c(
-                "Beginning MySQL Database Design and Optimization",
-                "The Relational Model for Database Management: Version 2"
-              ),
-              Author = c(
-                "Chad Russel",
-                "EF Codd"
-              ),
-              Pages = c(520L, 538L),
-              Thickness = "Thick",
-              Genre_ID = 1:2,
-              Publisher_ID = 1:2
-            ) |>
-              stats::setNames(c(
-                "Title",
-                "Author",
-                "Pages",
-                "Thickness",
-                "Genre ID",
-                "Publisher ID"
-              )),
-            keys = list("Title"),
-            index = "Title"
-          ),
-          `Format Price` = list(
-            df = data.frame(
-              Title = c(
-                "Beginning MySQL Database Design and Optimization",
-                "Beginning MySQL Database Design and Optimization",
-                "The Relational Model for Database Management: Version 2",
-                "The Relational Model for Database Management: Version 2"
-              ),
-              Format = c("Hardcover", "E-book", "E-book", "Paperback"),
-              Price = c(4999L, 2234L, 1388L, 3999L)
+        relation(
+          list(
+            Book = list(
+              df = data.frame(
+                Title = c(
+                  "Beginning MySQL Database Design and Optimization",
+                  "The Relational Model for Database Management: Version 2"
+                ),
+                Author = c(
+                  "Chad Russel",
+                  "EF Codd"
+                ),
+                Pages = c(520L, 538L),
+                Thickness = "Thick",
+                Genre_ID = 1:2,
+                Publisher_ID = 1:2
+              ) |>
+                stats::setNames(c(
+                  "Title",
+                  "Author",
+                  "Pages",
+                  "Thickness",
+                  "Genre ID",
+                  "Publisher ID"
+                )),
+              keys = list("Title"),
+              index = "Title"
             ),
-            keys = list(c("Title", "Format")),
-            index = c("Title", "Format")
+            `Format Price` = list(
+              df = data.frame(
+                Title = c(
+                  "Beginning MySQL Database Design and Optimization",
+                  "Beginning MySQL Database Design and Optimization",
+                  "The Relational Model for Database Management: Version 2",
+                  "The Relational Model for Database Management: Version 2"
+                ),
+                Format = c("Hardcover", "E-book", "E-book", "Paperback"),
+                Price = c(4999L, 2234L, 1388L, 3999L)
+              ),
+              keys = list(c("Title", "Format")),
+              index = c("Title", "Format")
+            ),
+            Author = list(
+              df = data.frame(
+                Author = c("Chad Russell", "EF Codd"),
+                Author_Nationality = c("American", "British")
+              ) |>
+                stats::setNames(c("Author", "Author Nationality")),
+              keys = list("Author"),
+              index = "Author"
+            ),
+            Genre = list(
+              df = data.frame(
+                Genre_ID = 1:2,
+                Genre_Name = c("Tutorial", "Popular science")
+              ) |>
+                stats::setNames(c("Genre ID", "Genre Name")),
+              keys = list("Genre ID"),
+              index = "Genre ID"
+            )
           ),
-          Author = list(
-            df = data.frame(
-              Author = c("Chad Russell", "EF Codd"),
-              Author_Nationality = c("American", "British")
-            ) |>
-              stats::setNames(c("Author", "Author Nationality")),
-            keys = list("Author"),
-            index = "Author"
-          ),
-          Genre = list(
-            df = data.frame(
-              Genre_ID = 1:2,
-              Genre_Name = c("Tutorial", "Popular science")
-            ) |>
-              stats::setNames(c("Genre ID", "Genre Name")),
-            keys = list("Genre ID"),
-            index = "Genre ID"
-          )
+          attrs_order = character()
         ),
         relationships = list(
           c("Book", "Title", "Format Price", "Title"),
           c("Book", "Author", "Author", "Author"),
           c("Book", "Genre ID", "Genre", "Genre ID")
         ),
-        attrs_order = character(),
         name = "Book"
       )
       expected_string <- paste(
@@ -465,15 +469,17 @@ describe("gv", {
     })
     it("doesn't give a graph ID if database name is missing", {
       db <- database(
-        list(
-          a = list(
-            df = data.frame(a = 1:4, b = 1:2),
-            keys = list("a"),
-            index = "a"
-          )
+        relation(
+          list(
+            a = list(
+              df = data.frame(a = 1:4, b = 1:2),
+              keys = list("a"),
+              index = "a"
+            )
+          ),
+          attrs_order = character()
         ),
         relationships = list(),
-        attrs_order = character(),
         name = NA_character_
       )
       plot_string <- gv(db)

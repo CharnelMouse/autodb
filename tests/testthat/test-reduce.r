@@ -24,9 +24,11 @@ describe("reduce.database", {
         )
       )
       once_plus_small <- database(
-        new_relations,
+        relation(
+          new_relations,
+          attrs_order = attrs_order(once)
+        ),
         relationships = relationships(once),
-        attrs_order = attrs_order(once),
         name(once)
       )
       twice <- reduce(once_plus_small)

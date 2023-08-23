@@ -84,13 +84,12 @@ decompose <- function(df, schema, name = NA_character_) {
   database(
     relations,
     relationships(schema),
-    attrs_order(schema),
     name
   )
 }
 
 create_insert <- function(df, schema) {
-  stats::setNames(
+  relations <- stats::setNames(
     Map(
       \(attrs, keys) {
         list(
@@ -107,6 +106,15 @@ create_insert <- function(df, schema) {
       keys(schema)
     ),
     names(schema)
+  )
+  relation(relations, attrs_order(schema))
+}
+
+relation <- function(relations, attrs_order) {
+  structure(
+    relations,
+    attrs_order = attrs_order,
+    class = "relation"
   )
 }
 

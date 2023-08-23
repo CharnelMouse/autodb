@@ -1,16 +1,13 @@
-database <- function(relations, relationships, attrs_order, name = NA_character_) {
-  if (!is.list(relations))
-    stop("relations must be a list")
+database <- function(relations, relationships, name = NA_character_) {
+  if (!inherits(relations, "relation"))
+    stop("relations must be a relation")
   if (!is.list(relationships))
     stop("relationships must be a list")
-  if (!is.character(attrs_order))
-    stop("attrs_order must be a character")
   if (!is.character(name) || length(name) != 1L)
     stop("name must be a scalar character")
 
   structure(
     relations,
-    attrs_order = attrs_order,
     name = name,
     relationships = relationships,
     class = c("database", "list")

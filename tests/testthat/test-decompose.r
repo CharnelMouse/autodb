@@ -1,18 +1,6 @@
 library(hedgehog)
 
 describe("decompose", {
-  expect_database <- function(current, target) {
-    expect_identical(
-      current,
-      database(
-        target$relations,
-        attrs_order = target$attributes,
-        relationships = target$relationships,
-        name = target$name
-      )
-    )
-  }
-
   it("returns valid databases", {
     forall(
       gen_df(6, 7),
@@ -32,17 +20,19 @@ describe("decompose", {
       attrs_order = c("a", "b", "c")
     ) |>
       database_schema(relationships = list())
-    norm.df <- decompose(df, schema)
-    expect_database(
-      norm.df,
-      list(
+    db <- decompose(df, schema)
+    expect_identical(
+      db,
+      database(
+        relation(
+          list(a = list(
+            df = df,
+            keys = list("a")
+          )),
+          attrs_order = c("a", "b", "c")
+        ),
         name = NA_character_,
-        relations = list(a = list(
-          df = df,
-          keys = list("a")
-        )),
-        relationships = list(),
-        attributes = c("a", "b", "c")
+        relationships = list()
       )
     )
   })
@@ -53,13 +43,12 @@ describe("decompose", {
       attrs_order = c("a", "b")
     ) |>
       database_schema(relationships = list())
-    norm.df <- decompose(df, schema)
+    db <- decompose(df, schema)
     expect_identical(
-      norm.df,
+      db,
       database(
-        list(a = list(df = df, keys = list("a", "b"))),
-        list(),
-        c("a", "b")
+        relation(list(a = list(df = df, keys = list("a", "b"))), c("a", "b")),
+        list()
       )
     )
   })
@@ -102,35 +91,37 @@ describe("decompose", {
           c("id", "hemisphere", "month_hemisphere", "hemisphere")
         )
       )
-    new_dfs <- decompose(df, schema)
-    expected_dfs <- list(
-      name = NA_character_,
-      relations = list(
-        id = list(
-          df = df[, c("id", "month", "hemisphere")],
-          keys = list("id")
-        ),
-        month_hemisphere = list(
-          df = data.frame(
-            month = c("dec", "jul", "dec", "jul"),
-            hemisphere = c("N", "N", "S", "S"),
-            is_winter = c(TRUE, FALSE, FALSE, TRUE),
-            row.names = c(1L, 3L, 5:6)
+    new_db <- decompose(df, schema)
+    expected_db <- database(
+      relation(
+        list(
+          id = list(
+            df = df[, c("id", "month", "hemisphere")],
+            keys = list("id")
           ),
-          keys = list(
-            c("month", "hemisphere"),
-            c("month", "is_winter"),
-            c("hemisphere", "is_winter")
+          month_hemisphere = list(
+            df = data.frame(
+              month = c("dec", "jul", "dec", "jul"),
+              hemisphere = c("N", "N", "S", "S"),
+              is_winter = c(TRUE, FALSE, FALSE, TRUE),
+              row.names = c(1L, 3L, 5:6)
+            ),
+            keys = list(
+              c("month", "hemisphere"),
+              c("month", "is_winter"),
+              c("hemisphere", "is_winter")
+            )
           )
-        )
+        ),
+        attrs_order = c("id", "month", "hemisphere", "is_winter")
       ),
+      name = NA_character_,
       relationships = list(
         c("id", "month", "month_hemisphere", "month"),
         c("id", "hemisphere", "month_hemisphere", "hemisphere")
-      ),
-      attributes = c("id", "month", "hemisphere", "is_winter")
+      )
     )
-    expect_database(new_dfs, expected_dfs)
+    expect_identical(new_db, expected_db)
   })
   it("removes transitive relationships", {
     df <- data.frame(
@@ -155,7 +146,7 @@ describe("decompose", {
           c("b_c", "b", "b", "b")
         )
       )
-    new_dfs <- decompose(df, schema)
+    new_db <- decompose(df, schema)
   })
   it("returns a error if data.frame doesn't satisfy FDs in the schema", {
     add_id_attribute <- function(df) {
@@ -243,45 +234,47 @@ describe("decompose", {
             c("team", "city", "city", "city")
           )
         )
-      depdfs <- decompose(df, schema)
-      expect_identical(length(depdfs), 3L)
-      expected_depdfs <- list(
-        name = NA_character_,
-        relations = list(
-          player_name_jersey_num = list(
-            df = data.frame(
-              player_name = integer(),
-              jersey_num = integer(),
-              team = integer()
+      db <- decompose(df, schema)
+      expect_identical(length(db), 3L)
+      expected_db <- database(
+        relation(
+          list(
+            player_name_jersey_num = list(
+              df = data.frame(
+                player_name = integer(),
+                jersey_num = integer(),
+                team = integer()
+              ),
+              keys = list(
+                c("player_name", "jersey_num"),
+                c("player_name", "team"),
+                c("jersey_num", "team")
+              )
             ),
-            keys = list(
-              c("player_name", "jersey_num"),
-              c("player_name", "team"),
-              c("jersey_num", "team")
+            city = list(
+              df = data.frame(
+                city = integer(),
+                state = integer()
+              ),
+              keys = list("city", "state")
+            ),
+            team = list(
+              df = data.frame(
+                team = integer(),
+                city = integer()
+              ),
+              keys = list("team")
             )
           ),
-          city = list(
-            df = data.frame(
-              city = integer(),
-              state = integer()
-            ),
-            keys = list("city", "state")
-          ),
-          team = list(
-            df = data.frame(
-              team = integer(),
-              city = integer()
-            ),
-            keys = list("team")
-          )
+          attrs_order = c("player_name", "jersey_num", "team", "city", "state")
         ),
+        name = NA_character_,
         relationships = list(
           c("player_name_jersey_num", "team", "team", "team"),
           c("team", "city", "city", "city")
-        ),
-        attributes = c("player_name", "jersey_num", "team", "city", "state")
+        )
       )
-      expect_database(depdfs, expected_depdfs)
+      expect_identical(db, expected_db)
     })
   })
   it("correctly handles attributes with non-df-standard names", {
@@ -297,8 +290,8 @@ describe("decompose", {
       attrs_order = c("A 1", "B 2", "C 3")
     ) |>
       database_schema(relationships = list())
-    norm.df <- decompose(df, schema)
-    expect_setequal(names(norm.df[[1]]$df), c("A 1", "B 2", "C 3"))
+    db <- decompose(df, schema)
+    expect_setequal(names(db[[1]]$df), c("A 1", "B 2", "C 3"))
   })
   it("links added key relations", {
     df <- data.frame(
@@ -314,9 +307,9 @@ describe("decompose", {
       attrs_order = c("a", "b", "c")
     ) |>
       database_schema(relationships = list(c("a_c", "a", "a", "a")))
-    norm.df <- decompose(df, schema)
+    db <- decompose(df, schema)
     expect_identical(
-      norm.df$a_c,
+      db$a_c,
       list(
         df = data.frame(a = 1:2, c = rep(1:2, each = 2), row.names = 1:4),
         keys = list(c("a", "c"))

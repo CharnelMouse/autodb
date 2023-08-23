@@ -2,31 +2,29 @@ library(hedgehog)
 
 describe("database", {
   empty_rs <- relation_schema(setNames(list(), character()), character())
-  it("expects valid input: relations is a list", {
+  it("expects valid input: relations is a relation", {
     expect_error(
-      database(1L, list(), character()),
-      "^relations must be a list$"
+      database(1L, list()),
+      "^relations must be a relation$"
+    )
+    expect_error(
+      database(list(), list()),
+      "^relations must be a relation$"
     )
   })
   it("expects valid input: relationships is a list", {
     expect_error(
-      database(list(), 1L, character()),
+      database(relation(list(), character()), 1L),
       "^relationships must be a list$"
-    )
-  })
-  it("expects valid input: attrs_order is a character", {
-    expect_error(
-      database(list(), list(), 1L),
-      "^attrs_order must be a character$"
     )
   })
   it("expects valid input: name is a scalar character", {
     expect_error(
-      database(list(), list(), character(), 1L),
+      database(relation(list(), character()), list(), 1L),
       "^name must be a scalar character$"
     )
     expect_error(
-      database(list(), list(), character(), c("a", "b")),
+      database(relation(list(), character()), list(), c("a", "b")),
       "^name must be a scalar character$"
     )
   })
@@ -36,9 +34,8 @@ describe("database", {
   it("prints", {
     expect_output(
       print(database(
-        list(),
-        list(),
-        character()
+        relation(list(), character()),
+        list()
       )),
       paste0(
         "\\A",
@@ -51,12 +48,14 @@ describe("database", {
     )
     expect_output(
       print(database(
-        list(
-          a = list(df = data.frame(a = logical(), b = logical()), keys = list("a")),
-          b = list(df = data.frame(b = logical(), c = logical()), keys = list("b", "c"))
+        relation(
+          list(
+            a = list(df = data.frame(a = logical(), b = logical()), keys = list("a")),
+            b = list(df = data.frame(b = logical(), c = logical()), keys = list("b", "c"))
+          ),
+          c("a", "b", "c")
         ),
         list(c("a", "b", "b", "b")),
-        c("a", "b", "c"),
         "nm"
       )),
       paste0(

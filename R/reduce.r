@@ -55,12 +55,14 @@ reduce.database <- function(x, ...) {
   sorted_kept <- kept[order(match(kept, names(x)))]
   new_rels <- x[sorted_kept]
   database(
-    new_rels,
+    relation(
+      new_rels,
+      attrs_order(x)
+    ),
     Filter(
       \(r) all(is.element(r[c(1, 3)], sorted_kept)),
       relationships(x)
     ),
-    attrs_order(x),
     name(x)
   )
 }
