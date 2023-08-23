@@ -43,8 +43,7 @@
 #'   }
 #' @export
 decompose <- function(df, schema, name = NA_character_) {
-  relation_names <- names(schema)
-  stopifnot(!anyDuplicated(relation_names))
+  stopifnot(!anyDuplicated(names(schema)))
   stopifnot(identical(names(df), attrs_order(schema)))
 
   inferred_fds <- synthesised_fds(attrs(schema), keys(schema))
@@ -81,26 +80,33 @@ decompose <- function(df, schema, name = NA_character_) {
     ))
   }
 
-  relation_list <- Map(
-    \(attrs, keys) {
-      list(
-        # conditional needed to handle 0-attrs case,
-        # i.e. decomposing to table_dum and table_dee
-        df = if (length(attrs) == 0L)
-          df[seq_len(nrow(df) >= 1L), attrs, drop = FALSE]
-        else
-          unique(df[, attrs, drop = FALSE]),
-        keys = keys
-      )
-    },
-    attrs(schema),
-    keys(schema)
-  )
+  relations <- create_insert(df, schema)
   database(
-    stats::setNames(relation_list, relation_names),
+    relations,
     relationships(schema),
     attrs_order(schema),
     name
+  )
+}
+
+create_insert <- function(df, schema) {
+  stats::setNames(
+    Map(
+      \(attrs, keys) {
+        list(
+          # conditional needed to handle 0-attrs case,
+          # i.e. decomposing to table_dum and table_dee
+          df = if (length(attrs) == 0L)
+            df[seq_len(nrow(df) >= 1L), attrs, drop = FALSE]
+          else
+            unique(df[, attrs, drop = FALSE]),
+          keys = keys
+        )
+      },
+      attrs(schema),
+      keys(schema)
+    ),
+    names(schema)
   )
 }
 
