@@ -119,16 +119,15 @@ is_valid_database_schema <- function(
 
 is_valid_database <- function(x) {
   expect_s3_class(x, "database")
-  expect_setequal(names(x), c("name", "relations", "relationships", "attributes"))
 
-  expect_is(x$name, "character")
+  expect_is(name(x), "character")
 
-  expect_true(!anyDuplicated(names(x$relations)))
-  expect_true(all(nchar(names(x$relations)) > 0L))
+  expect_true(!anyDuplicated(names(x)))
+  expect_true(all(nchar(names(x)) > 0L))
 
-  rel_keys <- Map(\(r) r$keys, x$relations)
+  rel_keys <- Map(\(r) r$keys, x)
   rel_key_els <- Map(\(ks) unique(unlist(ks)), rel_keys)
-  rel_attrs <- Map(\(r) names(r$df), x$relations)
+  rel_attrs <- Map(\(r) names(r$df), x)
   Map(
     \(ks, as) expect_identical(as[seq_along(ks)], ks),
     rel_key_els,
@@ -141,18 +140,18 @@ is_valid_database <- function(x) {
   )
   expect_true(all(vapply(
     rel_keys,
-    \(ks) all(vapply(ks, \(k) !is.unsorted(match(k, x$attributes)), logical(1))),
+    \(ks) all(vapply(ks, \(k) !is.unsorted(match(k, attrs_order(x))), logical(1))),
     logical(1)
   )))
   expect_true(all(vapply(
     nonprime_attrs,
-    \(as) all(vapply(as, \(a) !is.unsorted(match(a, x$attributes)), logical(1))),
+    \(as) all(vapply(as, \(a) !is.unsorted(match(a, attrs_order(x))), logical(1))),
     logical(1)
   )))
   expect_true(all(vapply(rel_keys, Negate(anyDuplicated), logical(1))))
   expect_lte(sum(vapply(rel_keys, identical, logical(1), list(character()))), 1L)
   expect_true(all(vapply(
-    x$relations,
+    x,
     \(r) all(vapply(
       r$keys,
       \(k) !anyDuplicated(r$df[, k, drop = FALSE]),
@@ -161,16 +160,16 @@ is_valid_database <- function(x) {
     logical(1)
   )))
 
-  fks <- x$relationships
+  fks <- relationships(x)
   for (fk in fks) {
     expect_is(fk, "character")
     expect_length(fk, 4L)
     expect_false(fk[1] == fk[3])
-    expect_true(is.element(fk[2], names(x$relations[[fk[1]]]$df)))
-    expect_true(is.element(fk[4], names(x$relations[[fk[3]]]$df)))
+    expect_true(is.element(fk[2], names(x[[fk[1]]]$df)))
+    expect_true(is.element(fk[4], names(x[[fk[3]]]$df)))
     expect_true(all(is.element(
-      x$relations[[fk[1]]]$df[[fk[2]]],
-      x$relations[[fk[3]]]$df[[fk[4]]]
+      x[[fk[1]]]$df[[fk[2]]],
+      x[[fk[3]]]$df[[fk[4]]]
     )))
   }
   expect_true(!anyDuplicated(fks))
@@ -178,7 +177,7 @@ is_valid_database <- function(x) {
   fk_parents <- vapply(fks, "[", character(1), 3L)
   fk_parent_sets <- split(fk_parents, fk_children)
   children <- names(fk_parent_sets)
-  nonchildren <- setdiff(names(x$relations), children)
+  nonchildren <- setdiff(names(x), children)
 }
 
 expect_identical_unordered_table <- function(new, original) {
@@ -451,6 +450,12 @@ gen.database_schema <- function(x, from, to, same_attr_name = FALSE) {
           gen.relationships(rs))
     }) |>
     gen.with(\(lst) do.call(database_schema, lst))
+}
+
+gen.database <- function(nrow_to, ncol_to, nrow_from = 0L, unique = FALSE) {
+  # placeholder, need to generate more directly
+  gen_df(nrow_to, ncol_to, minrow = nrow_from, remove_dup_rows = unique) |>
+    gen.with(autodb)
 }
 
 # generating key / determinant set lists

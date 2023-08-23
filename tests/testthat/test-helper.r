@@ -23,3 +23,10 @@ test_that("gen.database_schema generates valid database schemas", {
     curry = TRUE
   )
 })
+
+test_that("gen.database generates valid databases", {
+  forall(
+    gen.database(6, 7, nrow_from = 0L, unique = FALSE),
+    is_valid_database
+  )
+})

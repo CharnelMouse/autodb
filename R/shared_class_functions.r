@@ -92,6 +92,16 @@ attrs_order <- function(x, ...) {
   UseMethod("attrs_order<-")
 }
 
+#' Name
+#'
+#' @param x an R object.
+#' @param ... further arguments passed on to methods.
+#'
+#' @export
+name <- function(x, ...) {
+  UseMethod("name")
+}
+
 #' Schema relationships
 #'
 #' Generic function, returning present relationships.

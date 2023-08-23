@@ -96,14 +96,11 @@ decompose <- function(df, schema, name = NA_character_) {
     attrs(schema),
     keys(schema)
   )
-  structure(
-    list(
-      name = name,
-      relations = stats::setNames(relation_list, relation_names),
-      relationships = relationships(schema),
-      attributes = attrs_order(schema)
-    ),
-    class = c("database", "list")
+  database(
+    stats::setNames(relation_list, relation_names),
+    relationships(schema),
+    attrs_order(schema),
+    name
   )
 }
 
@@ -140,52 +137,4 @@ Mode <- function(x) {
   uniqs <- unique(x)
   tabs <- tabulate(match(x, uniqs))
   uniqs[[which.max(tabs)]]
-}
-
-#' @exportS3Method
-print.database <- function(x, max = 10, ...) {
-  n_relations <- length(x$relations)
-  cat(paste0(
-    "database ",
-    x$name,
-    " with ",
-    n_relations,
-    " relation",
-    if (n_relations != 1) "s",
-    "\n"
-  ))
-  for (n in seq_len(min(n_relations, max))) {
-    rows <- nrow(x$relations[[n]]$df)
-    cat(paste0(
-      "relation ",
-      names(x$relations)[n],
-      ": ",
-      toString(names(x$relations[[n]]$df)),
-      "; ",
-      rows,
-      " record", if (rows != 1) "s", "\n"
-    ))
-    keys <- x$relations[[n]]$keys
-    n_keys <- length(keys)
-    for (k in seq_len(min(n_keys, max))) {
-      cat(paste0("  key ", k, ": ", toString(keys[[k]]), "\n"))
-    }
-    if (max < n_keys)
-      cat("  ... and", n_keys - max, "other keys\n")
-  }
-  if (max < n_relations) {
-    cat("... and", n_relations - max, "other relations\n")
-  }
-  if (length(x$relationships) == 0)
-    cat("no relationships\n")
-  else {
-    cat(paste("relationships:\n"))
-    n_relationships <- length(x$relationships)
-    for (r in seq_len(min(n_relationships, max))) {
-      rel <- x$relationships[[r]]
-      cat(paste0(rel[1], ".", rel[2], " -> ", rel[3], ".", rel[4], "\n"))
-    }
-    if (max < n_relationships)
-      cat("... and", n_relationships - max, "other relationships\n")
-  }
 }

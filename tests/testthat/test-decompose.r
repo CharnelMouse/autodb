@@ -2,7 +2,15 @@ library(hedgehog)
 
 describe("decompose", {
   expect_database <- function(current, target) {
-    expect_identical(current, structure(target, class = c("database", "list")))
+    expect_identical(
+      current,
+      database(
+        target$relations,
+        attrs_order = target$attributes,
+        relationships = target$relationships,
+        name = target$name
+      )
+    )
   }
 
   it("returns valid databases", {
@@ -47,11 +55,12 @@ describe("decompose", {
       database_schema(relationships = list())
     norm.df <- decompose(df, schema)
     expect_identical(
-      norm.df$relations,
-      list(a = list(
-        df = df,
-        keys = list("a", "b")
-      ))
+      norm.df,
+      database(
+        list(a = list(df = df, keys = list("a", "b"))),
+        list(),
+        c("a", "b")
+      )
     )
   })
   it("correctly splits example data.frame for original make_indexes() test", {
@@ -235,7 +244,7 @@ describe("decompose", {
           )
         )
       depdfs <- decompose(df, schema)
-      expect_identical(length(depdfs$relations), 3L)
+      expect_identical(length(depdfs), 3L)
       expected_depdfs <- list(
         name = NA_character_,
         relations = list(
@@ -289,7 +298,7 @@ describe("decompose", {
     ) |>
       database_schema(relationships = list())
     norm.df <- decompose(df, schema)
-    expect_setequal(names(norm.df$relations[[1]]$df), c("A 1", "B 2", "C 3"))
+    expect_setequal(names(norm.df[[1]]$df), c("A 1", "B 2", "C 3"))
   })
   it("links added key relations", {
     df <- data.frame(
@@ -307,7 +316,7 @@ describe("decompose", {
       database_schema(relationships = list(c("a_c", "a", "a", "a")))
     norm.df <- decompose(df, schema)
     expect_identical(
-      norm.df$relations$a_c,
+      norm.df$a_c,
       list(
         df = data.frame(a = 1:2, c = rep(1:2, each = 2), row.names = 1:4),
         keys = list(c("a", "c"))

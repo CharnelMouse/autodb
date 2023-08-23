@@ -92,21 +92,21 @@ gv <- function(x, ...) {
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
 gv.database <- function(x, ...) {
-  empty_names <- which(names(x$relations) == "" | names(x$relations) == "empty")
-  names(x$relations)[empty_names] <- make.names(
+  empty_names <- which(names(x) == "" | names(x) == "empty")
+  names(x)[empty_names] <- make.names(
     rep("empty", length(empty_names)),
     unique = TRUE
   )
-  setup_string <- gv_setup_string(x$name)
+  setup_string <- gv_setup_string(name(x))
   df_strings <- mapply(
     relation_string,
-    x$relations,
-    names(x$relations),
+    x,
+    names(x),
     "record"
   ) |>
     paste(collapse = "\n")
   reference_strings <- vapply(
-    x$relationships,
+    relationships(x),
     reference_string,
     character(1)
   ) |>

@@ -14,17 +14,20 @@ describe("reduce.database", {
     removes_added_non_parent_with_non_maximum_nrow <- function(df) {
       database <- autodb(df, ensure_lossless = TRUE)
       once <- reduce(database)
-      once_plus_small <- once
-      once_plus_small$relations <- c(
-        once_plus_small$relations,
+      new_relations <- c(
+        once,
         list(
           extra_table = list(
             df = data.frame(extra_attr = logical()),
-            keys = list("extra_attr"),
-            index = "extra_attr",
-            parents = character()
+            keys = list("extra_attr")
           )
         )
+      )
+      once_plus_small <- database(
+        new_relations,
+        relationships = relationships(once),
+        attrs_order = attrs_order(once),
+        name(once)
       )
       twice <- reduce(once_plus_small)
       expect_identical(twice, once)
@@ -38,29 +41,29 @@ describe("reduce.database", {
     reduced_to_subset <- function(df) {
       database <- autodb(df, ensure_lossless = FALSE)
       reduced <- reduce(database)
-      expect_identical(reduced$name, database$name)
-      expect_true(all(reduced$relations %in% database$relations))
-      expect_true(all(reduced$relationships %in% database$relationships))
+      expect_identical(name(reduced), name(database))
+      expect_true(all(reduced %in% database))
+      expect_true(all(relationships(reduced) %in% relationships(database)))
     }
     forall(gen_df(6, 7, minrow = 1L), reduced_to_subset)
   })
   it("returns a database where non-parent relations have the same maximal number of rows", {
     all_non_parents_in_reduction_have_same_nrow <- function(df) {
       database <- autodb(df, ensure_lossless = FALSE)
-      if (length(database$relations) == 0)
+      if (length(database) == 0)
         succeed()
       else{
         reduced <- reduce(database)
         non_parents <- setdiff(
-          names(reduced$relations),
-          vapply(reduced$relationships, `[`, character(1), 3)
+          names(reduced),
+          vapply(relationships(reduced), `[`, character(1), 3)
         )
         non_parent_nrows <- vapply(
-          reduced$relations[non_parents],
+          reduced[non_parents],
           \(table) nrow(table$df),
           integer(1)
         )
-        max_table_nrow <- max(vapply(database$relations, \(table) nrow(table$df), integer(1)))
+        max_table_nrow <- max(vapply(database, \(table) nrow(table$df), integer(1)))
         expect_true(all(non_parent_nrows == max_table_nrow))
       }
     }
@@ -73,13 +76,13 @@ describe("reduce.database", {
     contains_maximal_row_relation_and_parents <- function(df) {
       db <- autodb(df, ensure_lossless = TRUE)
       reduced <- reduce(db)
-      nrows <- vapply(reduced$relations, \(r) nrow(r$df), integer(1))
+      nrows <- vapply(reduced, \(r) nrow(r$df), integer(1))
       expect_identical(max(nrows), nrow(df))
-      base <- names(reduced$relations)[which.max(nrows)]
-      parents <- db$relationships |>
+      base <- names(reduced)[which.max(nrows)]
+      parents <- relationships(db) |>
         Filter(f = \(r) r[[1]] == base) |>
         vapply(\(r) r[[3]], character(1))
-      expect_true(all(is.element(parents, names(reduced$relations))))
+      expect_true(all(is.element(parents, names(reduced))))
     }
     forall(
       gen_df(6, 7, minrow = 1L, remove_dup_rows = TRUE),
@@ -151,13 +154,13 @@ describe("reduce.database_schema", {
       expect_identical(reduced$keys, database_schema$keys[kept])
       expect_identical(
         lapply(
-          reduced$relationships,
+          relationships(reduced),
           \(r) {r[[1]] <- reduced$relation_names[r[[1]]]; r}
         ),
         lapply(
           Filter(
             \(r) all(r[[1]] %in% kept) && r[[2]] %in% reduced$relation_names,
-            database_schema$relationships
+            relationships(database_schema)
           ),
           \(r) {r[[1]] <- database_schema$relation_names[r[[1]]]; r}
         )
@@ -165,5 +168,22 @@ describe("reduce.database_schema", {
       expect_identical(reduced$attrs_order, database_schema$attrs_order)
     }
     forall(gen_df(6, 7, minrow = 1L), reduced_to_subset)
+  })
+  it("returns a schema with named subschema, and any parents", {
+    contains_named_relation_and_parents <- function(df) {
+      ds <- discover(df, 1) |>
+        normalise(ensure_lossless = TRUE)
+      base <- names(ds)[[1]]
+      reduced <- reduce(ds, base)
+      expect_identical(base, names(ds)[[1]])
+      parents <- relationships(ds) |>
+        Filter(f = \(r) r[[1]] == base) |>
+        vapply(\(r) r[[3]], character(1))
+      expect_true(all(is.element(parents, names(reduced))))
+    }
+    forall(
+      gen_df(6, 7, minrow = 1L, remove_dup_rows = TRUE),
+      contains_named_relation_and_parents
+    )
   })
 })

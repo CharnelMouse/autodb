@@ -52,10 +52,10 @@ describe("autodb", {
     )
     database <- autodb(df)
     expect_true(!anyDuplicated(database))
-    expect_identical(length(database$relations), 3L)
-    expect_setequal(names(database$relations), c("Price", "Title", "constants"))
+    expect_identical(length(database), 3L)
+    expect_setequal(names(database), c("Price", "Title", "constants"))
     expect_setequal(
-      database$relationships,
+      relationships(database),
       list(c("Price", "Title", "Title", "Title"))
     )
   })
@@ -79,20 +79,20 @@ describe("autodb", {
     )
     database_nonfiltered <- autodb(df)
     expect_setequal(
-      names(database_nonfiltered$relations),
+      names(database_nonfiltered),
       c("Price", "Title", "constants")
     )
     expect_identical(
-      database_nonfiltered$relations$Price$keys,
+      database_nonfiltered$Price$keys,
       list("Price", c("Title", "Format"))
     )
     database_filtered <- autodb(df, exclude_class = "numeric")
     expect_setequal(
-      names(database_filtered$relations),
+      names(database_filtered),
       c("Title_Format", "Title", "constants")
     )
     expect_identical(
-      database_filtered$relations$Title_Format$keys,
+      database_filtered$Title_Format$keys,
       list(c("Title", "Format"))
     )
   })
@@ -116,20 +116,20 @@ describe("autodb", {
     )
     database_nonfiltered <- autodb(df)
     expect_setequal(
-      names(database_nonfiltered$relations),
+      names(database_nonfiltered),
       c("Price", "Title", "constants")
     )
     expect_identical(
-      database_nonfiltered$relations$Price$keys,
+      database_nonfiltered$Price$keys,
       list("Price", c("Title", "Format"))
     )
     database_filtered <- autodb(df, exclude = "Price")
     expect_setequal(
-      names(database_filtered$relations),
+      names(database_filtered),
       c("Title_Format", "Title", "constants")
     )
     expect_identical(
-      database_filtered$relations$Title_Format$keys,
+      database_filtered$Title_Format$keys,
       list(c("Title", "Format"))
     )
   })
@@ -153,20 +153,20 @@ describe("autodb", {
     )
     database_nonfiltered <- autodb(df)
     expect_setequal(
-      names(database_nonfiltered$relations),
+      names(database_nonfiltered),
       c("Price", "Title", "constants")
     )
     expect_identical(
-      database_nonfiltered$relations$Price$keys,
+      database_nonfiltered$Price$keys,
       list("Price", c("Title", "Format"))
     )
     database_filtered <- autodb(df, exclude_class = "integer")
     expect_setequal(
-      names(database_filtered$relations),
+      names(database_filtered),
       c("Title_Format", "Title", "constants")
     )
     expect_identical(
-      database_filtered$relations$Title_Format$keys,
+      database_filtered$Title_Format$keys,
       list(c("Title", "Format"))
     )
   })
@@ -174,7 +174,7 @@ describe("autodb", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
       stats::setNames(c("A 1", "B 2", "C 3"))
     database <- autodb(df)
-    expect_identical(names(database$relations[[1]]$df), c("A 1", "B 2", "C 3"))
+    expect_identical(names(database[[1]]$df), c("A 1", "B 2", "C 3"))
   })
   it("adds a key table if none given in normalisation", {
     df <- data.frame(
@@ -184,7 +184,7 @@ describe("autodb", {
     )
     database <- autodb(df)
     expect_identical(
-      database$relations$a_c,
+      database$a_c,
       list(
         df = data.frame(a = 1:2, c = rep(1:2, each = 2), row.names = 1:4),
         keys = list(c("a", "c"))
@@ -198,10 +198,10 @@ describe("autodb", {
     db_dum <- autodb(table_dum)
     db_dee <- autodb(table_dee)
     db_deux <- autodb(table_deux)
-    expect_length(db_dum$relations, 1L)
-    expect_length(db_dee$relations, 1L)
-    expect_identical(nrow(db_dum$relations[[1]]$df), 0L)
-    expect_identical(nrow(db_dee$relations[[1]]$df), 1L)
+    expect_length(db_dum, 1L)
+    expect_length(db_dee, 1L)
+    expect_identical(nrow(db_dum[[1]]$df), 0L)
+    expect_identical(nrow(db_dee[[1]]$df), 1L)
     expect_identical(db_deux, db_dee)
   })
 })

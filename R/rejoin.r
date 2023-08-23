@@ -29,14 +29,13 @@
 #' mapply(identical, rj, as.data.frame(ChickWeight))
 #' @export
 rejoin <- function(database) {
-  relations <- database$relations
-  if (length(relations) == 0)
+  if (length(database) == 0)
     return(data.frame())
-  if (length(relations) == 1)
-    return(relations[[1]]$df[, database$attributes, drop = FALSE])
-  attrs <- lapply(relations, \(r) names(r$df))
+  if (length(database) == 1)
+    return(database[[1]]$df[, attrs_order(database), drop = FALSE])
+  attrs <- lapply(database, \(r) names(r$df))
   attrs_order <- unique(unlist(attrs))
-  keys <- lapply(relations, \(r) r$keys)
+  keys <- lapply(database, \(r) r$keys)
   G <- synthesised_fds(attrs, keys)
   G_det_sets <- lapply(unlist(G, recursive = FALSE), `[[`, 1)
   G_deps <- vapply(unlist(G, recursive = FALSE), `[[`, character(1), 2)
@@ -54,11 +53,11 @@ rejoin <- function(database) {
     stop("database is not lossless")
   to_merge <- unique(G_relations[closure_usedlists[[which(is_main)[1]]]])
   stopifnot(!is.null(names(is_main)))
-  main_relation <- relations[[which(is_main)]]$df
+  main_relation <- database[[which(is_main)]]$df
   while (length(to_merge) > 0) {
     mergee <- to_merge[1]
     to_merge <- to_merge[-1]
-    mergee_relation <- relations[[mergee]]
+    mergee_relation <- database[[mergee]]
     current_attrs <- names(main_relation)
     mergee_attrs <- names(mergee_relation$df)
     key <- Find(\(k) all(is.element(k, current_attrs)), mergee_relation$keys)
@@ -72,5 +71,5 @@ rejoin <- function(database) {
     )
     stopifnot(identical(nrow(main_relation), old_nrow))
   }
-  main_relation[, database$attributes, drop = FALSE]
+  main_relation[, attrs_order(database), drop = FALSE]
 }

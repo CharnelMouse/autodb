@@ -275,7 +275,7 @@ However, the publication-level relation this refers to is not determined by the 
 
 ```{r nudge_publication_check}
 nudge_database <- decompose(nudge, nudge_schema, "nudge")
-nudge_title_relation <- nudge_database$relations$title$df
+nudge_title_relation <- nudge_database$title$df
 nudge_pid_duplicates <- unique(nudge_title_relation$publication_id[
   duplicated(nudge_title_relation$publication_id)
 ])
@@ -314,7 +314,7 @@ As mentioned, we'd expect the reference to uniquely identify the publication: ho
 
 ```{r nudge_reference_check}
 nudge_database_filtered <- decompose(nudge, nudge_schema_filtered, "nudge")
-nudge_title_relation_filtered <- nudge_database_filtered$relations$title$df
+nudge_title_relation_filtered <- nudge_database_filtered$title$df
 nudge_reference_duplicates <- unique(nudge_title_relation_filtered$reference[
   duplicated(nudge_title_relation_filtered$reference)
 ])
@@ -481,7 +481,7 @@ ideal_db <- decompose(
     list(c("death", "patient_id", "patient", "patient_id"))
   )
 )
-ideal_db$relations$death$df <- subset(ideal_db$relations$death$df, !is.na(death_date))
+ideal_db$death$df <- subset(ideal_db$death$df, !is.na(death_date))
 DiagrammeR::grViz(gv(ideal_db))
 ```
 

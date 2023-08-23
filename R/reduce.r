@@ -41,24 +41,28 @@ reduce <- function(x, ...) {
 #'   relationships removed.
 #' @exportS3Method
 reduce.database <- function(x, ...) {
-  relation_nrows <- vapply(x$relations, \(x) nrow(x$df), integer(1))
+  relation_nrows <- vapply(x, \(x) nrow(x$df), integer(1))
   queue <- names(relation_nrows)[relation_nrows == max(relation_nrows)]
   kept <- character()
   while (length(queue) > 0) {
     current <- queue[1]
     queue <- queue[-1]
     kept <- union(kept, current)
-    current_parents <- Filter(\(r) r[[1]] == current, x$relationships) |>
+    current_parents <- Filter(\(r) r[[1]] == current, relationships(x)) |>
       vapply(\(r) r[[3]], character(1))
     queue <- union(queue, setdiff(current_parents, kept))
   }
-  sorted_kept <- kept[order(match(kept, names(x$relations)))]
-  x$relations <- x$relations[sorted_kept]
-  x$relationships <- Filter(
-    \(r) all(is.element(r[c(1, 3)], sorted_kept)),
-    x$relationships
+  sorted_kept <- kept[order(match(kept, names(x)))]
+  new_rels <- x[sorted_kept]
+  database(
+    new_rels,
+    Filter(
+      \(r) all(is.element(r[c(1, 3)], sorted_kept)),
+      relationships(x)
+    ),
+    attrs_order(x),
+    name(x)
   )
-  x
 }
 
 #' Remove database schema relations not linked to the given relations
@@ -87,29 +91,22 @@ reduce.database_schema <- function(x, main, ...) {
       "main contains names for relations not present: ",
       toString(main[is.na(main_indices)])
     )
-  queue <- main_indices
+  queue <- main
   kept <- integer()
   while (length(queue) > 0) {
     current <- queue[1]
     queue <- queue[-1]
     kept <- union(kept, current)
-    current_parents <- Filter(\(r) r[[1]][[1]] == current, relationships(x)) |>
-      vapply(\(r) r[[1]][[2]], integer(1)) |>
+    current_parents <- Filter(\(r) r[[1]] == current, relationships(x)) |>
+      vapply(`[[`, character(1), 3L) |>
       unique()
     queue <- union(queue, setdiff(current_parents, kept))
   }
   sorted_kept <- sort(kept)
   rels <- relationships(x)
   rels <- Filter(
-    \(r) all(is.element(r[[1]], sorted_kept)),
+    \(r) all(is.element(r[c(1L, 3L)], sorted_kept)),
     rels
   )
-  rels <- lapply(
-    rels,
-    \(r) {
-      r[[1]] <- match(r[[1]], sorted_kept)
-      r
-    }
-  )
-  database_schema(subschemas(x)[sorted_kept], rels)
+  database_schema(subschemas(x)[match(sorted_kept, names(x))], rels)
 }
