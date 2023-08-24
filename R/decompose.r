@@ -110,14 +110,6 @@ create_insert <- function(df, schema) {
   relation(relations, attrs_order(schema))
 }
 
-relation <- function(relations, attrs_order) {
-  structure(
-    relations,
-    attrs_order = attrs_order,
-    class = "relation"
-  )
-}
-
 drop_primary_dups <- function(df, prim_key) {
   # Reduces a data.frame to have unique values of the attributes in the given
   # primary key. If the other columns are not uniquely determined by the primary

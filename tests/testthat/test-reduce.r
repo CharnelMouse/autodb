@@ -26,13 +26,15 @@ describe("reduce.database", {
       once_plus_small <- database(
         relation(
           new_relations,
-          attrs_order = attrs_order(once)
+          attrs_order = c(attrs_order(once), "extra_attr")
         ),
         relationships = relationships(once),
         name(once)
       )
       twice <- reduce(once_plus_small)
-      expect_identical(twice, once)
+      once_plus_attr <- once
+      attrs_order(once_plus_attr) <- attrs_order(twice)
+      expect_identical(twice, once_plus_attr)
     }
     forall(
       gen_df(6, 7, minrow = 1L),
@@ -119,14 +121,14 @@ describe("reduce.database_schema", {
         ),
         c(attrs_order(once), "extra_attr")
       ) |>
-        database_schema(relationships = attr(once, "relationships"))
+        database_schema(relationships = relationships(once))
 
       twice <- reduce(once_plus_small, names(ds)[1L])
       twice_minus_small_attr <- relation_schema(
         Map(list, attrs(twice), keys(twice)),
         setdiff(attrs_order(twice), "extra_attr")
       ) |>
-        database_schema(relationships = attr(twice, "relationships"))
+        database_schema(relationships = relationships(twice))
       expect_identical(twice_minus_small_attr, once)
     }
 

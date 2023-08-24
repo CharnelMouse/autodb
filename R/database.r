@@ -10,13 +10,22 @@ database <- function(relations, relationships, name = NA_character_) {
     relations,
     name = name,
     relationships = relationships,
-    class = c("database", "list")
+    class = c("database", "relation", "list")
   )
 }
 
 #' @exportS3Method
 attrs_order.database <- function(x, ...) {
   attr(x, "attrs_order")
+}
+
+#' @export
+`attrs_order<-.database` <- function(x, ..., value) {
+  database(
+    relation(x, attrs_order = value),
+    relationships = relationships(x),
+    name = name(x)
+  )
 }
 
 #' @exportS3Method

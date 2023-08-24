@@ -117,10 +117,8 @@ is_valid_database_schema <- function(
   if (unique) expect_true(!anyDuplicated(fks))
 }
 
-is_valid_database <- function(x) {
-  expect_s3_class(x, "database")
-
-  expect_is(name(x), "character")
+is_valid_relation <- function(x) {
+  expect_s3_class(x, "relation")
 
   expect_true(!anyDuplicated(names(x)))
   expect_true(all(nchar(names(x)) > 0L))
@@ -159,6 +157,11 @@ is_valid_database <- function(x) {
     )),
     logical(1)
   )))
+}
+
+is_valid_database <- function(x) {
+  expect_s3_class(x, "database")
+  is_valid_relation(x)
 
   fks <- relationships(x)
   for (fk in fks) {

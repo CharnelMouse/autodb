@@ -153,8 +153,7 @@ describe("gv", {
                   "Genre ID",
                   "Publisher ID"
                 )),
-              keys = list("Title"),
-              index = "Title"
+              keys = list("Title")
             ),
             `Format Price` = list(
               df = data.frame(
@@ -167,8 +166,7 @@ describe("gv", {
                 Format = c("Hardcover", "E-book", "E-book", "Paperback"),
                 Price = c(4999L, 2234L, 1388L, 3999L)
               ),
-              keys = list(c("Title", "Format")),
-              index = c("Title", "Format")
+              keys = list(c("Title", "Format"))
             ),
             Author = list(
               df = data.frame(
@@ -176,8 +174,7 @@ describe("gv", {
                 Author_Nationality = c("American", "British")
               ) |>
                 stats::setNames(c("Author", "Author Nationality")),
-              keys = list("Author"),
-              index = "Author"
+              keys = list("Author")
             ),
             Genre = list(
               df = data.frame(
@@ -185,11 +182,22 @@ describe("gv", {
                 Genre_Name = c("Tutorial", "Popular science")
               ) |>
                 stats::setNames(c("Genre ID", "Genre Name")),
-              keys = list("Genre ID"),
-              index = "Genre ID"
+              keys = list("Genre ID")
             )
           ),
-          attrs_order = character()
+          attrs_order = c(
+            "Title",
+            "Author",
+            "Author Nationality",
+            "Format",
+            "Price",
+            "Subject",
+            "Pages",
+            "Thickness",
+            "Genre ID",
+            "Genre Name",
+            "Publisher ID"
+          )
         ),
         relationships = list(
           c("Book", "Title", "Format Price", "Title"),
@@ -323,8 +331,7 @@ describe("gv", {
                   "Genre ID",
                   "Publisher ID"
                 )),
-              keys = list("Title"),
-              index = "Title"
+              keys = list("Title")
             ),
             `Format Price` = list(
               df = data.frame(
@@ -337,8 +344,7 @@ describe("gv", {
                 Format = c("Hardcover", "E-book", "E-book", "Paperback"),
                 Price = c(4999L, 2234L, 1388L, 3999L)
               ),
-              keys = list(c("Title", "Format")),
-              index = c("Title", "Format")
+              keys = list(c("Title", "Format"))
             ),
             Author = list(
               df = data.frame(
@@ -346,8 +352,7 @@ describe("gv", {
                 Author_Nationality = c("American", "British")
               ) |>
                 stats::setNames(c("Author", "Author Nationality")),
-              keys = list("Author"),
-              index = "Author"
+              keys = list("Author")
             ),
             Genre = list(
               df = data.frame(
@@ -355,11 +360,22 @@ describe("gv", {
                 Genre_Name = c("Tutorial", "Popular science")
               ) |>
                 stats::setNames(c("Genre ID", "Genre Name")),
-              keys = list("Genre ID"),
-              index = "Genre ID"
+              keys = list("Genre ID")
             )
           ),
-          attrs_order = character()
+          attrs_order = c(
+            "Title",
+            "Author",
+            "Author Nationality",
+            "Format",
+            "Price",
+            "Subject",
+            "Pages",
+            "Thickness",
+            "Genre ID",
+            "Genre Name",
+            "Publisher ID"
+          )
         ),
         relationships = list(
           c("Book", "Title", "Format Price", "Title"),
@@ -473,11 +489,10 @@ describe("gv", {
           list(
             a = list(
               df = data.frame(a = 1:4, b = 1:2),
-              keys = list("a"),
-              index = "a"
+              keys = list("a")
             )
           ),
-          attrs_order = character()
+          attrs_order = c("a", "b")
         ),
         relationships = list(),
         name = NA_character_
