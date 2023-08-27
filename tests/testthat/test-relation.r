@@ -51,4 +51,44 @@ describe("relation", {
       "a"
     ))
   })
+
+  it("prints", {
+    expect_output(
+      print(relation(setNames(list(), character()), character())),
+      "\\A0 relations\\n0 attributes\\Z",
+      perl = TRUE
+    )
+    expect_output(
+      print(relation(
+        list(a = list(df = data.frame(a = logical(), b = logical()), keys = list("a"))),
+        c("a", "b")
+      )),
+      paste0(
+        "\\A",
+        "1 relation",
+        "\\n",
+        "2 attributes: a, b",
+        "\\n",
+        "relation a: a, b; 0 records\\n  key 1: a",
+        "\\Z"
+      ),
+      perl = TRUE
+    )
+    expect_output(
+      print(relation(
+        list(a = list(df = data.frame(a = FALSE, b = TRUE), keys = list("a"))),
+        c("a", "b")
+      )),
+      paste0(
+        "\\A",
+        "1 relation",
+        "\\n",
+        "2 attributes: a, b",
+        "\\n",
+        "relation a: a, b; 1 record\\n  key 1: a",
+        "\\Z"
+      ),
+      perl = TRUE
+    )
+  })
 })
