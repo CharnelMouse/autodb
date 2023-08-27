@@ -139,6 +139,21 @@ subschemas <- function(x, ...) {
   UseMethod("subschemas")
 }
 
+#' Database subrelations
+#'
+#' Generic function, returning subrelations for \code{x}.
+#'
+#' @param x an R object, intended to be some sort of database-like object that
+#'   contains relations.
+#' @param ... further arguments passed on to methods.
+#'
+#' @return a relation-type object, or a list of relation-type objects if the
+#'   subrelation isn't vectorised.
+#' @export
+subrelations <- function(x, ...) {
+  UseMethod("subrelations")
+}
+
 merge_attribute_orderings <- function(...) {
   ordered_sets <- list(...)
   # Combining attributes pairwise can't ensure preservation of consistency, so
@@ -262,4 +277,17 @@ merge_empty_keys.relation_schema <- function(x) {
 #' @export
 create <- function(x, ...) {
   UseMethod("create")
+}
+
+#' Insert data
+#'
+#' @param x an R object, into which to insert data.
+#' @param vals a data frame, containing data to insert.
+#' @param ... further arguments pass on to methods.
+#'
+#' @return an R object of the same class as \code{x}, containing the additional
+#'   new data.
+#' @export
+insert <- function(x, vals, ...) {
+  UseMethod("insert")
 }

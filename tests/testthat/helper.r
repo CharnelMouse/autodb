@@ -346,6 +346,11 @@ gen.relation_schema <- function(x, from, to) {
     })
 }
 
+gen.relation <- function(nrow_to, ncol_to, nrow_from = 0L, unique = FALSE) {
+  gen.database(nrow_to, ncol_to, nrow_from, unique) |>
+    gen.with(subrelations)
+}
+
 gen.relationships_same_attrs <- function(rs) {
   gen.relationships_for_index_and_key <- function(rs, n, k) {
     contains_key <- setdiff(

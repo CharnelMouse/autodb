@@ -93,3 +93,18 @@ print.relation <- function(x, max = 10, ...) {
     cat("... and", with_number(n_relations - max, "other schema", "", "s"), "\n")
   }
 }
+
+#' @exportS3Method
+insert.relation <- function(x, vals, ...) {
+  x[] <- lapply(
+    x,
+    \(rel) {
+      rel$df <- rbind(
+        rel$df,
+        vals[, names(rel$df), drop = FALSE]
+      )
+      rel
+    }
+  )
+  x
+}
