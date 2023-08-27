@@ -188,3 +188,18 @@ c.relation_schema <- function(...) {
 
   relation_schema(joined_schemas, joined_attrs_order)
 }
+
+#' @exportS3Method
+create.relation_schema <- function(x, ...) {
+  relation(
+    Map(
+      \(df, ks) list(df = df, keys = ks),
+      lapply(
+        attrs(x),
+        \(as) data.frame(stats::setNames(lapply(as, \(x) logical()), as))
+      ),
+      keys(x)
+    ),
+    attrs_order(x)
+  )
+}

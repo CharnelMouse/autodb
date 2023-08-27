@@ -234,3 +234,11 @@ remove_schemas <- function(schemas, rels, to_remove, replace_with) {
   )
   list(schemas, rels)
 }
+
+#' @exportS3Method
+create.database_schema <- function(x, ...) {
+  database(
+    create(subschemas(x)),
+    relationships(x)
+  )
+}

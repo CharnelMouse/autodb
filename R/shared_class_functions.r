@@ -250,3 +250,16 @@ merge_empty_keys.relation_schema <- function(x) {
   }
   x
 }
+
+#' Create instance of a schema
+#'
+#' @param x an R object, representing the schema to create an instance of.
+#' @param ... further arguments passed on to methods.
+#'
+#' @return an instance of the schema. For example, calling \code{create} on a
+#'   \code{\link{database_schema}} creates a \code{\link{database}}, where all
+#'   the relations contain zero records.
+#' @export
+create <- function(x, ...) {
+  UseMethod("create")
+}
