@@ -194,39 +194,25 @@ gen_df <- function(
   mincol = 0L,
   remove_dup_rows = FALSE
 ) {
-  gen_ncol <- gen.sample(seq.int(mincol, ncol), 1)
-  gen_len <- gen.sample(seq.int(minrow, nrow), 1)
-  gen_classes <- generate(for (ncol in gen_ncol) {
-    classes <- c("logical", "integer", "numeric", "character")
-    gen.sample(classes, ncol, replace = TRUE)
-  })
-  gen_lst <- generate(
-    for (classes in gen_classes) {
-      generate(
-        for (len_inc in gen_len) {
-          generate(
-            for (nms in gen_attr_names(length(classes), 9)) {
-              lapply(
-                classes,
-                \(class) gen.sample(
-                  as(c(FALSE, TRUE, NA), class),
-                  len_inc,
-                  replace = TRUE
-                )
-              ) |>
-                setNames(nms)
-            }
-          )
-        }
-      )
-    }
-  )
-  generate(for (lst in gen_lst) {
-    if (remove_dup_rows)
-      unique(as.data.frame(lst))
-    else
-      as.data.frame(lst)
-  })
+  asable_classes <- c("logical", "integer", "numeric", "character")
+  list(
+    gen.sample(seq.int(min(mincol, ncol), ncol), 1) |>
+      gen.and_then(\(n) list(
+        classes = gen.element(asable_classes) |> gen.c(of = n),
+        nms = gen_attr_names(n, 9)
+      )),
+    len_inc = gen.sample(seq.int(min(minrow, nrow), nrow), 1)
+  ) |>
+    gen.with(\(lst) c(lst[[1]], lst[2])) |>
+    gen.and_then(\(lst) {
+      lapply(
+        lst$classes,
+        with_args(as, object = c(FALSE, TRUE, NA)) %>>%
+          with_args(gen.sample, size = lst$len_inc, replace = TRUE)
+      ) |>
+        setNames(lst$nms)
+    }) |>
+    gen.with(as.data.frame %>>% (if (remove_dup_rows) unique else identity))
 }
 
 gen_attr_name <- function(len) {
@@ -238,7 +224,7 @@ gen_attr_names <- function(n, len) {
   gen_attr_name(len) |>
     gen.c(of = n) |>
     # as.character for length-0 NULL value
-    gen.with(\(attr_names) make.unique(as.character(attr_names)))
+    gen.with(as.character %>>% make.unique)
 }
 
 gen_unique_dets <- function(n_attrs, n, max_dets) {
