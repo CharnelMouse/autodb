@@ -1,6 +1,16 @@
 library(hedgehog)
 
 describe("create", {
+  it("creates a valid structure", {
+    forall(
+      gen.relation_schema(letters[1:6], 0, 10),
+      create %>>% is_valid_relation
+    )
+    forall(
+      gen.database_schema(letters[1:6], 0, 10),
+      create %>>% is_valid_database
+    )
+  })
   it("is commutative with adding foreign key constraints", {
     # need the same for create_insert and create %>>% insert once generating data
     forall(
