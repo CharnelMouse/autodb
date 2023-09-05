@@ -52,3 +52,27 @@ describe("insert", {
     )
   })
 })
+
+describe("subrelations", {
+  it("returns a valid relation for database", {
+    forall(
+      gen.database(letters[1:6], 0, 6),
+      subrelations %>>% is_valid_relation
+    )
+  })
+})
+
+describe("subrelations", {
+  it("returns a valid relation_schema for database_schema", {
+    forall(
+      gen.element(c(FALSE, TRUE)) |>
+        gen.and_then(with_args(
+          gen.database_schema,
+          x = letters[1:6],
+          from = 0,
+          to = 6
+        )),
+      subschemas %>>% is_valid_relation_schema
+    )
+  })
+})

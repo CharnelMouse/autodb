@@ -41,6 +41,7 @@ is_valid_minimal_functional_dependency <- function(x) {
 
 is_valid_relation_schema <- function(x, unique = FALSE, single_empty_key = FALSE) {
   expect_s3_class(x, "relation_schema")
+  expect_true(is.character(names(x)))
   expect_true(!anyDuplicated(names(x)))
   expect_true(all(nchar(names(x)) > 0L))
   expect_true(all(lengths(unclass(x)) == 2))
@@ -120,6 +121,7 @@ is_valid_database_schema <- function(
 is_valid_relation <- function(x) {
   expect_s3_class(x, "relation")
 
+  expect_true(is.character(names(x)))
   expect_true(!anyDuplicated(names(x)))
   expect_true(all(nchar(names(x)) > 0L))
 
