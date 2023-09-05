@@ -488,38 +488,46 @@ gen.database <- function(x, from, to, same_attr_name = TRUE) {
   gen.database_schema(x, from, to, same_attr_name = same_attr_name) |>
     gen.and_then(\(ds) {
       gen.relation_from_schema(ds) |>
-        gen.with(\(r) {
-          if (length(relationships(ds)) > 0L) {
-            rels_df <- as.data.frame(do.call(rbind, relationships(ds)))
-            grouped_rels <- split(
-              rels_df,
-              rels_df[, c(1L, 3L), drop = FALSE],
-              drop = TRUE
-            )
-            change <- TRUE
-            while (change) {
-              change <- FALSE
-              for (ref in grouped_rels) {
-                child_name <- ref[[1, 1]]
-                child <- r[[child_name]]$df[, ref[, 2], drop = FALSE]
-                if (nrow(child) > 0L) {
-                  parent_name <- ref[[1, 3]]
-                  parent <- r[[parent_name]]$df[, ref[, 4], drop = FALSE]
-                  valid <- vapply(
-                    seq_len(nrow(child)),
-                    \(n) nrow(merge(child[n, , drop = FALSE], parent)) > 0L,
-                    logical(1)
-                  )
-                  r[[child_name]]$df <- r[[child_name]]$df[valid, , drop = FALSE]
-                  if (!all(valid))
-                    change <- TRUE
-                }
-              }
-            }
-          }
-          database(r, relationships(ds))
-        })
+        gen.with(
+          with_args(
+            remove_relationship_violations,
+            relationships = relationships(ds)
+          ) %>>%
+            with_args(database, relationships = relationships(ds))
+        )
     })
+}
+
+remove_relationship_violations <- function(relation, relationships) {
+  if (length(relationships) == 0L)
+    return(relation)
+  rels_df <- as.data.frame(do.call(rbind, relationships))
+  grouped_rels <- split(
+    rels_df,
+    rels_df[, c(1L, 3L), drop = FALSE],
+    drop = TRUE
+  )
+  change <- TRUE
+  while (change) {
+    change <- FALSE
+    for (ref in grouped_rels) {
+      child_name <- ref[[1, 1]]
+      child <- relation[[child_name]]$df[, ref[, 2], drop = FALSE]
+      if (nrow(child) > 0L) {
+        parent_name <- ref[[1, 3]]
+        parent <- relation[[parent_name]]$df[, ref[, 4], drop = FALSE]
+        valid <- vapply(
+          seq_len(nrow(child)),
+          \(n) nrow(merge(child[n, , drop = FALSE], parent)) > 0L,
+          logical(1)
+        )
+        relation[[child_name]]$df <- relation[[child_name]]$df[valid, , drop = FALSE]
+        if (!all(valid))
+          change <- TRUE
+      }
+    }
+  }
+  relation
 }
 
 # generating key / determinant set lists
