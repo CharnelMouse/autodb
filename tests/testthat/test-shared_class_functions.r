@@ -25,7 +25,7 @@ describe("create", {
 describe("insert", {
   it("does nothing when inserting nothing", {
     forall(
-      gen.relation(6L, 6L),
+      gen.relation(letters[1:4], 0L, 6L),
       expect_biidentical(
         identity,
         \(r) insert(

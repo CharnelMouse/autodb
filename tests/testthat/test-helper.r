@@ -26,7 +26,7 @@ test_that("gen.database_schema generates valid database schemas", {
 
 test_that("gen.relation generates valid relations", {
   forall(
-    gen.relation(6, 7, nrow_from = 0L, unique = FALSE),
+    gen.relation(letters[1:4], 6, 7),
     is_valid_relation
   )
 })

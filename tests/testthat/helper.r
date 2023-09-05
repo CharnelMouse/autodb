@@ -346,9 +346,44 @@ gen.relation_schema <- function(x, from, to) {
     })
 }
 
-gen.relation <- function(nrow_to, ncol_to, nrow_from = 0L, unique = FALSE) {
-  gen.database(nrow_to, ncol_to, nrow_from, unique) |>
-    gen.with(subrelations)
+gen.relation <- function(x, from, to) {
+  gen.relation_schema(x, from, to) |>
+    gen.with(create) |>
+    gen.and_then(\(empty_rel) {
+      list(
+        lapply(
+          empty_rel,
+          \(r) {
+            gen.sample(0:10, 1) |>
+              gen.and_then(\(n) {
+                gen.sample(c(FALSE, TRUE, NA), n, replace = TRUE) |>
+                  gen.list(of = ncol(r$df))
+              }) |>
+              gen.with(
+                as.data.frame %>>%
+                  with_args(setNames, names(r$df)) %>>%
+                  unique
+              ) |>
+              gen.with(\(df) list(df = df, keys = r$keys)) |>
+              gen.with(\(rel) {
+                for (k in rel$keys) {
+                  rel$df <- rel$df[
+                    !duplicated(rel$df[, k, drop = FALSE]),
+                    ,
+                    drop  = FALSE
+                  ]
+                }
+                rel
+              })
+          }
+        ),
+        gen.pure(attributes(empty_rel))
+      )
+    }) |>
+    gen.with(uncurry(\(rels, attrs) {
+      attributes(rels) <- attrs
+      rels
+    }))
 }
 
 gen.relationships_same_attrs <- function(rs) {
