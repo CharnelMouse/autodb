@@ -85,7 +85,7 @@ print.database <- function(x, max = 10, ...) {
 subrelations.database <- function(x, ...) {
   y <- unclass(x)
   attributes(y) <- NULL
-  relation(y, attrs_order(x))
+  relation(stats::setNames(y, names(x)), attrs_order(x))
 }
 
 #' @exportS3Method

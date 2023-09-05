@@ -33,7 +33,7 @@ test_that("gen.relation generates valid relations", {
 
 test_that("gen.database generates valid databases", {
   forall(
-    gen.database(6, 7, nrow_from = 0L, unique = FALSE),
+    gen.database(letters[1:7], from = 0, to = 6, same_attr_name = TRUE),
     is_valid_database
   )
 })

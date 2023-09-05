@@ -38,7 +38,7 @@ describe("insert", {
       )
     )
     forall(
-      gen.database(6L, 6L),
+      gen.database(letters[1:6], 0L, 6L),
       expect_biidentical(
         identity,
         \(db) insert(

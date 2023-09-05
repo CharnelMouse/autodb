@@ -484,10 +484,42 @@ gen.database_schema <- function(x, from, to, same_attr_name = FALSE) {
     gen.with(\(lst) do.call(database_schema, lst))
 }
 
-gen.database <- function(nrow_to, ncol_to, nrow_from = 0L, unique = FALSE) {
-  # placeholder, need to generate more directly
-  gen_df(nrow_to, ncol_to, minrow = nrow_from, remove_dup_rows = unique) |>
-    gen.with(autodb)
+gen.database <- function(x, from, to, same_attr_name = TRUE) {
+  gen.database_schema(x, from, to, same_attr_name = same_attr_name) |>
+    gen.and_then(\(ds) {
+      gen.relation_from_schema(ds) |>
+        gen.with(\(r) {
+          if (length(relationships(ds)) > 0L) {
+            rels_df <- as.data.frame(do.call(rbind, relationships(ds)))
+            grouped_rels <- split(
+              rels_df,
+              rels_df[, c(1L, 3L), drop = FALSE],
+              drop = TRUE
+            )
+            change <- TRUE
+            while (change) {
+              change <- FALSE
+              for (ref in grouped_rels) {
+                child_name <- ref[[1, 1]]
+                child <- r[[child_name]]$df[, ref[, 2], drop = FALSE]
+                if (nrow(child) > 0L) {
+                  parent_name <- ref[[1, 3]]
+                  parent <- r[[parent_name]]$df[, ref[, 4], drop = FALSE]
+                  valid <- vapply(
+                    seq_len(nrow(child)),
+                    \(n) nrow(merge(child[n, , drop = FALSE], parent)) > 0L,
+                    logical(1)
+                  )
+                  r[[child_name]]$df <- r[[child_name]]$df[valid, , drop = FALSE]
+                  if (!all(valid))
+                    change <- TRUE
+                }
+              }
+            }
+          }
+          database(r, relationships(ds))
+        })
+    })
 }
 
 # generating key / determinant set lists
