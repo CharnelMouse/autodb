@@ -161,11 +161,11 @@ describe("decompose", {
         return(gen.pure(list(df, NULL, NULL)))
       gen.element(nonempty_detsets) |>
         gen.with(\(index) list(detset(true_fds)[[index]], dependent(true_fds)[[index]])) |>
-        gen.and_then(\(fd) list(fd, gen.int(length(fd[[1]])))) |>
+        gen.and_then(\(fd) list(gen.pure(fd), gen.int(length(fd[[1]])))) |>
         gen.with(\(lst) c(list(df), lst))
     }
     gen_df_and_fd_reduction <- function(nrow, ncol) {
-      gen_df(nrow, ncol, minrow = 2L, remove_dup_rows = TRUE) |>
+      gen_df(nrow, ncol, minrow = 2L, mincol = 2L, remove_dup_rows = TRUE) |>
         gen.with(add_id_attribute) |>
         gen.and_then(gen_fd_reduction_for_df)
     }

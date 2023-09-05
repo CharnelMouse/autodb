@@ -163,7 +163,7 @@ describe("discover", {
       ncol,
       remove_dup_rows = FALSE
     ) {
-      gen_df(nrow, ncol, minrow = 1L, remove_dup_rows) |>
+      gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.int(ncol(df)))) |>
         gen.and_then(\(lst) c(lst, list(gen_perm(lst[[1]][[lst[[2]]]])))) |>
         gen.with(\(lst) {
@@ -188,7 +188,7 @@ describe("discover", {
       remove_dup_rows = FALSE
     ) {
       classes <- c("logical", "integer", "numeric", "character")
-      gen_df(nrow, ncol, minrow = 1L, remove_dup_rows) |>
+      gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.sample(ncol(df)))) |>
         gen.and_then(\(lst) {
           c(
@@ -241,7 +241,7 @@ describe("discover", {
       ncol,
       remove_dup_rows = FALSE
     ) {
-      gen_df(nrow, ncol, minrow = 1L, remove_dup_rows) |>
+      gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, sample.int(ncol(df)))) |>
         gen.with(\(lst) {
           df <- lst[[1]]
@@ -258,7 +258,7 @@ describe("discover", {
   })
   it("loses FDs involving a removed attribute, keeps the rest", {
     gen_df_and_remove_col <- function(nrow, ncol, remove_dup_rows = FALSE) {
-      gen_df(nrow, ncol, minrow = 1L, remove_dup_rows) |>
+      gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.int(ncol(df)))) |>
         gen.with(\(lst) {
           df <- lst[[1]]
@@ -274,7 +274,7 @@ describe("discover", {
   })
   it("is invariant to changes of accuracy within same required row count", {
     gen_df_and_accuracy_nrow <- function(nrow, ncol, remove_dup_rows = FALSE) {
-      gen_df(nrow, ncol, minrow = 1L, remove_dup_rows) |>
+      gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.int(nrow(df)))) |>
         gen.with(\(lst) {
           df <- lst[[1]]
@@ -301,7 +301,7 @@ describe("discover", {
   })
   it("keeps subsets of all FDs if a row is removed, might have more", {
     gen_df_and_remove_row <- function(nrow, ncol) {
-      gen_df(nrow, ncol, minrow = 1L, remove_dup_rows = TRUE) |>
+      gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows = TRUE) |>
         gen.and_then(\(df) list(df, gen.element(seq_len(nrow(df))))) |>
         gen.with(\(lst) {
           df <- lst[[1]]
@@ -317,7 +317,7 @@ describe("discover", {
   })
   it("discover -> change attribute names is equivalent to change names -> discover", {
     gen_df_and_name_change <- function(nrow, ncol, remove_dup_rows = FALSE) {
-      gen_df(nrow, ncol, minrow = 1L, remove_dup_rows) |>
+      gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.sample(LETTERS, ncol(df)))) |>
         gen.with(\(lst) {
           df <- lst[[1]]
@@ -352,7 +352,7 @@ describe("discover", {
   })
   it("doesn't have an excluded attribute in any determinant sets", {
     gen_df_and_exclude <- function(nrow, ncol, remove_dup_rows = FALSE) {
-      gen_df(nrow, ncol, minrow = 1L, remove_dup_rows) |>
+      gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.sample(names(df), 1)))
     }
     terminates_with_exclusion_then <- function(fn, accuracy, ...) {

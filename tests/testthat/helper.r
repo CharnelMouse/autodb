@@ -187,8 +187,8 @@ expect_identical_unordered_table <- function(new, original) {
   expect_true(df_equiv(new, original))
 }
 
-gen_df <- function(nrow, ncol, minrow = 0L, remove_dup_rows = FALSE) {
-  gen_ncol <- gen.sample(seq.int(minrow, ncol), 1)
+gen_df <- function(nrow, ncol, minrow = 0L, mincol = 0L, remove_dup_rows = FALSE) {
+  gen_ncol <- gen.sample(seq.int(mincol, ncol), 1)
   gen_len <- gen.sample(seq.int(minrow, nrow), 1)
   gen_classes <- generate(for (ncol in gen_ncol) {
     classes <- c("logical", "integer", "numeric", "character")

@@ -37,7 +37,7 @@ describe("reduce.database", {
       expect_identical(twice, once_plus_attr)
     }
     forall(
-      gen_df(6, 7, minrow = 1L),
+      gen_df(6, 7, minrow = 1L, mincol = 1L),
       removes_added_non_parent_with_non_maximum_nrow
     )
   })
@@ -72,7 +72,7 @@ describe("reduce.database", {
       }
     }
     forall(
-      gen_df(6, 7, minrow = 1L),
+      gen_df(6, 7, minrow = 1L, mincol = 1L),
       all_non_parents_in_reduction_have_same_nrow
     )
   })
@@ -89,7 +89,7 @@ describe("reduce.database", {
       expect_true(all(is.element(parents, names(reduced))))
     }
     forall(
-      gen_df(6, 7, minrow = 1L, remove_dup_rows = TRUE),
+      gen_df(6, 7, minrow = 1L, mincol = 1L, remove_dup_rows = TRUE),
       contains_maximal_row_relation_and_parents
     )
   })
@@ -142,7 +142,7 @@ describe("reduce.database_schema", {
     removes_added_non_parent_with_non_maximum_nrow(df)
 
     forall(
-      gen_df(6, 7, minrow = 1L),
+      gen_df(6, 7, minrow = 1L, mincol = 1L),
       removes_added_non_parent_with_non_maximum_nrow
     )
   })
@@ -171,7 +171,7 @@ describe("reduce.database_schema", {
       )
       expect_identical(reduced$attrs_order, database_schema$attrs_order)
     }
-    forall(gen_df(6, 7, minrow = 1L), reduced_to_subset)
+    forall(gen_df(6, 7, minrow = 1L, mincol = 1L), reduced_to_subset)
   })
   it("returns a schema with named subschema, and any parents", {
     contains_named_relation_and_parents <- function(df) {
@@ -186,7 +186,7 @@ describe("reduce.database_schema", {
       expect_true(all(is.element(parents, names(reduced))))
     }
     forall(
-      gen_df(6, 7, minrow = 1L, remove_dup_rows = TRUE),
+      gen_df(6, 7, minrow = 1L, mincol = 1L, remove_dup_rows = TRUE),
       contains_named_relation_and_parents
     )
   })
