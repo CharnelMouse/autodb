@@ -1,34 +1,15 @@
 library(hedgehog)
 
 describe("cross_reference", {
-  gen.relation <- function(x = letters[1:10]) {
-    gen.subsequence(x) |>
-      gen.with(function(key) {
-        nonkey <- setdiff(x, key)
-        attrs <- list(c(key, nonkey))
-        keys <- list(list(key))
-        nm <- if (length(key) == 0L)
-          "constants"
-        else
-          paste(key, collapse = "_")
-        rs <- relation_schema(
-          setNames(
-            Map(list, attrs, keys),
-            nm
-          ),
-          attrs_order = x
-        )
-        database_schema(rs, relationships = list())
-      })
-  }
   it("generates valid schemas with same-attribute-names foreign key references", {
     forall(
-      gen.relation(),
-      with_args(is_valid_database_schema, same_attr_name = TRUE)
-    )
-    forall(
-      gen.relation(character()),
-      with_args(is_valid_database_schema, same_attr_name = TRUE)
+      list(
+        schema = gen.relation_schema(letters[1:4], 0, 6),
+        ensure_lossless = gen.sample(c(FALSE, TRUE), 1)
+      ),
+      cross_reference %>>%
+        with_args(is_valid_database_schema, same_attr_name = TRUE),
+      curry = TRUE
     )
   })
   it("returns relationships", {
@@ -221,28 +202,43 @@ describe("cross_reference", {
     )
   })
   it("returns relations that return themselves if normalised again, if lossless", {
-    returns_itself <- function(relation) {
-      nonkey <- setdiff(unlist(attrs(relation)), unlist(keys(relation)))
-      deps <- functional_dependency(
-        if (length(nonkey) == 0L)
-          list()
-        else
-          unlist(
-            lapply(
-              nonkey,
-              \(x) lapply(keys(relation)[[1]], \(k) list(k, x))
+    gen.database_schema_single_lossless <- function(x) {
+      gen.choice(
+        gen.pure(x),
+        gen.pure(x[FALSE]),
+        gen.subsequence(x)
+      ) |>
+        gen.with(function(key) {
+          nonkey <- setdiff(x, key)
+          attrs <- list(c(key, nonkey))
+          keys <- list(list(key))
+          nm <- if (length(key) == 0L)
+            "constants"
+          else
+            paste(key, collapse = "_")
+          database_schema(
+            relation_schema(
+              setNames(
+                Map(list, attrs, keys),
+                nm
+              ),
+              attrs_order = x
             ),
-            recursive = FALSE
-          ),
-        attrs(relation)[[1]]
-      )
-      redo <- normalise(deps, ensure_lossless = TRUE)
-      expect_length(attrs(redo), 1)
-      expect_identical(attrs(redo)[[1]], attrs(relation)[[1]])
-      expect_identical(keys(redo)[[1]], keys(relation)[[1]])
-      expect_identical(names(redo), names(relation))
-      expect_setequal(attrs_order(redo), attrs_order(relation))
+            list()
+          )
+        })
     }
-    forall(gen.relation(), returns_itself)
+    returns_itself <- function(relation) {
+      deps <- functional_dependency(
+        unlist(synthesised_fds(attrs(relation), keys(relation)), recursive = FALSE),
+        attrs_order(relation)
+      )
+      redo <- normalise(deps)
+      expect_identical(redo, relation)
+    }
+    forall(
+      gen.database_schema_single_lossless(letters[1:10]),
+      returns_itself
+    )
   })
 })
