@@ -358,21 +358,22 @@ gen.relation_from_schema <- function(rs) {
               nms = names(r$df),
               remove_dup_rows = TRUE
             )) |>
-            gen.with(\(df) list(df = df, keys = r$keys)) |>
-            gen.with(\(rel) {
-              for (k in rel$keys) {
-                rel$df <- rel$df[
-                  !duplicated(rel$df[, k, drop = FALSE]),
-                  ,
-                  drop  = FALSE
-                ]
-              }
-              rel
-            })
+            gen.with(\(df) list(
+              df = remove_key_violations(df, r$keys),
+              keys = r$keys
+            ))
         }
       ) |>
         gen.with(with_args(relation, attrs_order = attrs_order(empty_rel)))
     })
+}
+
+remove_key_violations <- function(df, keys) {
+  Reduce(
+    \(df, key) df[!duplicated(df[, key, drop = FALSE]), , drop  = FALSE],
+    keys,
+    init = df
+  )
 }
 
 gen.relationships_same_attrs <- function(rs) {
