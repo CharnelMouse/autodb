@@ -61,6 +61,33 @@ describe("insert", {
       )
     )
   })
+  it("is commutative with adding foreign key constraints", {
+    forall(
+      gen.relation(letters[1:4], 0, 6) |>
+        gen.and_then(\(r) {
+          list(
+            gen.pure(r),
+            gen.int(10) |>
+              gen.and_then(with_args(
+                gen.df_fixed_ranges,
+                classes = rep("logical", 4),
+                nms = letters[1:4],
+                remove_dup_rows = TRUE
+              )),
+            gen.relationships(r)
+          )
+        }),
+      \(r, df, rels) {
+        expect_biidentical(
+          with_args(database, relationships = rels) %>>%
+            with_args(insert, vals = df),
+          with_args(insert, vals = df) %>>%
+            with_args(database, relationships = rels)
+        )(r)
+      },
+      curry = TRUE
+    )
+  })
 })
 
 describe("subrelations", {
