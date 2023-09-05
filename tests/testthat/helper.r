@@ -342,7 +342,11 @@ gen.relation_schema <- function(x, from, to) {
 
 gen.relation <- function(x, from, to) {
   gen.relation_schema(x, from, to) |>
-    gen.with(create) |>
+    gen.and_then(gen.relation_from_schema)
+}
+
+gen.relation_from_schema <- function(rs) {
+  create(rs) |>
     gen.and_then(\(empty_rel) {
       lapply(
         empty_rel,
