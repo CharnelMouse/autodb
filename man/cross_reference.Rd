@@ -7,7 +7,7 @@
 cross_reference(schema, ensure_lossless = TRUE)
 }
 \arguments{
-\item{schema}{a database schema without relationships, as given by
+\item{schema}{a \code{\link{relation_schema}} object, as given by
 \code{\link{synthesise}}.}
 
 \item{ensure_lossless}{a logical, TRUE by default. If TRUE, and the

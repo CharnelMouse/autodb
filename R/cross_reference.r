@@ -1,6 +1,6 @@
 #' Add foreign key relationships to a normalised database
 #'
-#' @param schema a database schema without relationships, as given by
+#' @param schema a \code{\link{relation_schema}} object, as given by
 #'   \code{\link{synthesise}}.
 #' @inheritParams normalise
 #'
