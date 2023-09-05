@@ -344,40 +344,31 @@ gen.relation <- function(x, from, to) {
   gen.relation_schema(x, from, to) |>
     gen.with(create) |>
     gen.and_then(\(empty_rel) {
-      list(
-        lapply(
-          empty_rel,
-          \(r) {
-            gen.sample(0:10, 1) |>
-              gen.and_then(\(n) {
-                gen.sample(c(FALSE, TRUE, NA), n, replace = TRUE) |>
-                  gen.list(of = ncol(r$df))
-              }) |>
-              gen.with(
-                as.data.frame %>>%
-                  with_args(setNames, names(r$df)) %>>%
-                  unique
-              ) |>
-              gen.with(\(df) list(df = df, keys = r$keys)) |>
-              gen.with(\(rel) {
-                for (k in rel$keys) {
-                  rel$df <- rel$df[
-                    !duplicated(rel$df[, k, drop = FALSE]),
-                    ,
-                    drop  = FALSE
-                  ]
-                }
-                rel
-              })
-          }
-        ),
-        gen.pure(attributes(empty_rel))
-      )
-    }) |>
-    gen.with(uncurry(\(rels, attrs) {
-      attributes(rels) <- attrs
-      rels
-    }))
+      lapply(
+        empty_rel,
+        \(r) {
+          gen.sample(0:10, 1L) |>
+            gen.and_then(with_args(
+              gen.df_fixed_ranges,
+              classes = rep("logical", ncol(r$df)),
+              nms = names(r$df),
+              remove_dup_rows = TRUE
+            )) |>
+            gen.with(\(df) list(df = df, keys = r$keys)) |>
+            gen.with(\(rel) {
+              for (k in rel$keys) {
+                rel$df <- rel$df[
+                  !duplicated(rel$df[, k, drop = FALSE]),
+                  ,
+                  drop  = FALSE
+                ]
+              }
+              rel
+            })
+        }
+      ) |>
+        gen.with(with_args(relation, attrs_order = attrs_order(empty_rel)))
+    })
 }
 
 gen.relationships_same_attrs <- function(rs) {
