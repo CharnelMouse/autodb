@@ -203,15 +203,17 @@ gen_df <- function(
       )),
     len_inc = gen.sample(seq.int(min(minrow, nrow), nrow), 1)
   ) |>
-    gen.with(\(lst) c(lst[[1]], lst[2])) |>
-    gen.and_then(\(lst) {
-      lapply(
-        lst$classes,
-        with_args(as, object = c(FALSE, TRUE, NA)) %>>%
-          with_args(gen.sample, size = lst$len_inc, replace = TRUE)
-      ) |>
-        setNames(lst$nms)
-    }) |>
+    gen.with(\(lst) c(lst[[1]], lst[2], list(remove_dup_rows = remove_dup_rows))) |>
+    gen.and_then(uncurry(gen.df_fixed_ranges))
+}
+
+gen.df_fixed_ranges <- function(classes, nms, len_inc, remove_dup_rows) {
+  lapply(
+    classes,
+    with_args(as, object = c(FALSE, TRUE, NA)) %>>%
+      with_args(gen.sample, size = len_inc, replace = TRUE)
+  ) |>
+    gen.with(with_args(setNames, nm = nms)) |>
     gen.with(as.data.frame %>>% (if (remove_dup_rows) unique else identity))
 }
 
