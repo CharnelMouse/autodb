@@ -87,18 +87,3 @@ subrelations.database <- function(x, ...) {
   attributes(y) <- NULL
   relation(stats::setNames(y, names(x)), attrs_order(x))
 }
-
-#' @exportS3Method
-insert.database <- function(x, vals, ...) {
-  x[] <- lapply(
-    x,
-    \(rel) {
-      rel$df <- rbind(
-        rel$df,
-        vals[, names(rel$df), drop = FALSE]
-      )
-      rel
-    }
-  )
-  x
-}
