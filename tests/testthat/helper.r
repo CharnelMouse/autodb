@@ -95,10 +95,10 @@ is_valid_relation_schema <- function(x, unique = FALSE, single_empty_key = FALSE
 }
 
 is_valid_database_schema <- function(
-    x,
-    unique = FALSE,
-    single_empty_key = FALSE,
-    same_attr_name = FALSE
+  x,
+  unique = FALSE,
+  single_empty_key = FALSE,
+  same_attr_name = FALSE
 ) {
   is_valid_relation_schema(x, unique, single_empty_key)
 
