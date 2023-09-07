@@ -94,28 +94,90 @@ is_valid_relation_schema <- function(x, unique = FALSE, single_empty_key = FALSE
   }
 }
 
+is_valid_relationships <- function(
+  x,
+  same_attr_name = FALSE,
+  single_key_pairs = FALSE
+) {
+  act <- quasi_label(rlang::enquo(x), arg = "x")
+
+  relationships <- relationships(x)
+  attrs <- attrs(x)
+  if (length(relationships) == 0L)
+    return(invisible(act$val))
+
+  if (anyDuplicated(relationships))
+    fail(sprintf("%s has duplicate relationships", act$lab))
+  for (fk in relationships) {
+    if (!is(fk, "character"))
+      fail(sprintf(
+        "%s has non-character relationships",
+        act$lab
+      ))
+    if (length(fk) != 4L)
+      fail(sprintf(
+        "%s has non-length-four relationships",
+        act$lab
+      ))
+    if (!all(is.element(fk[c(1L, 3L)], names(attrs))))
+      fail(sprintf(
+        "%s has relationships over non-present relation names",
+        act$lab
+      ))
+    if (fk[[1]] == fk[[3]]) # no self-references, relax this?
+      fail(sprintf(
+        "%s has self-references in relationships",
+        act$lab
+      ))
+    if (same_attr_name && !identical(fk[[2]], fk[[4]]))
+      fail(sprintf(
+        "%s has non-matching attribute names in relationships",
+        act$lab
+      ))
+    if (!is.element(fk[[2]], attrs[[fk[[1]]]]))
+      fail(sprintf(
+        "%s has invalid child attribute names in relationships",
+        act$lab
+      ))
+    if (!is.element(fk[[4]], attrs[[fk[[3]]]]))
+      fail(sprintf(
+        "%s has invalid parent attribute names in relationships",
+        act$lab
+      ))
+  }
+  df <- as.data.frame(do.call(rbind, relationships))
+  grp <- split(df, df[, c(1, 3)])
+  # only uses each attribute each.
+  # necessary, but not sufficient, for pairs only being linked
+  # by a single key.
+  for (g in grp) {
+    if (single_key_pairs) {
+      if (anyDuplicated(g[, 2]))
+        fail(sprintf(
+          "%s has duplicate child attribute appearances in relationships",
+          act$lab
+        ))
+      if (anyDuplicated(g[, 4]))
+        fail(sprintf(
+          "%s has duplicate parent attribute appearances in relationships",
+          act$lab
+        ))
+    }
+  }
+
+  invisible(act$val)
+}
+
 is_valid_database_schema <- function(
   x,
   unique = FALSE,
   single_empty_key = FALSE,
-  same_attr_name = FALSE
+  same_attr_name = FALSE,
+  single_key_pairs = FALSE
 ) {
   is_valid_relation_schema(x, unique, single_empty_key)
-
   expect_s3_class(x, "database_schema")
-  fks <- relationships(x)
-
-  for (fk in fks) {
-    expect_true(is.character(fk))
-    expect_length(fk, 4L)
-    expect_false(fk[[1]] == fk[[3]])
-    if (same_attr_name)
-      expect_identical(fk[[2]], fk[[4]])
-    expect_true(all(is.element(fk[c(1L, 3L)], names(x))))
-    expect_true(is.element(fk[[2]], attrs(x)[[fk[[1]]]]))
-    expect_true(is.element(fk[[4]], attrs(x)[[fk[[3]]]]))
-  }
-  if (unique) expect_true(!anyDuplicated(fks))
+  is_valid_relationships(x, same_attr_name, single_key_pairs)
 }
 
 is_valid_relation <- function(x) {
@@ -161,23 +223,22 @@ is_valid_relation <- function(x) {
   )))
 }
 
-is_valid_database <- function(x) {
+is_valid_database <- function(
+  x,
+  same_attr_name = FALSE,
+  single_key_pairs = FALSE
+) {
   expect_s3_class(x, "database")
   is_valid_relation(x)
 
   fks <- relationships(x)
+  is_valid_relationships(x, same_attr_name, single_key_pairs)
   for (fk in fks) {
-    expect_is(fk, "character")
-    expect_length(fk, 4L)
-    expect_false(fk[1] == fk[3])
-    expect_true(is.element(fk[2], names(x[[fk[1]]]$df)))
-    expect_true(is.element(fk[4], names(x[[fk[3]]]$df)))
     expect_true(all(is.element(
       x[[fk[1]]]$df[[fk[2]]],
       x[[fk[3]]]$df[[fk[4]]]
     )))
   }
-  expect_true(!anyDuplicated(fks))
   fk_children <- vapply(fks, "[", character(1), 1L)
   fk_parents <- vapply(fks, "[", character(1), 3L)
   fk_parent_sets <- split(fk_parents, fk_children)

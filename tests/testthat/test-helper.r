@@ -19,7 +19,11 @@ test_that("gen.database_schema generates valid database schemas", {
         gen.pure(san),
         gen.database_schema(letters[1:6], 0, 8, same_attr_name = san)
       )),
-    \(san, ds) is_valid_database_schema(ds, same_attr_name = san),
+    \(san, ds) is_valid_database_schema(
+      ds,
+      same_attr_name = san,
+      single_key_pairs = san
+    ),
     curry = TRUE
   )
 })
