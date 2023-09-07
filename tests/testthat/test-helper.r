@@ -14,7 +14,7 @@ test_that("gen.relation_schema generates valid relation schemas", {
 
 test_that("gen.database_schema generates valid database schemas", {
   forall(
-    gen.sample(c(FALSE, TRUE), 1) |>
+    gen.element(c(FALSE, TRUE)) |>
       gen.and_then(\(san) list(
         gen.pure(san),
         gen.database_schema(letters[1:6], 0, 8, same_attr_name = san)
