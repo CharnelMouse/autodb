@@ -24,10 +24,13 @@
 #'
 #' @param relations a \code{relation_schema} object, as returned by
 #'   \code{\link{synthesise}} or \code{\link{relation_schema}}.
-#' @param relationships a list, whose elements are length-four character
-#'   vectors, giving the names of the referencing relation, the referencing
-#'   attribute, the referenced relation, and the reference attribute,
-#'   respectively.
+#' @param relationships a list of relationships, each
+#'  represented by a list containing four character elements. In order, the
+#'  elements are a scalar giving the name of the child schema, a vector giving
+#'  the child attribute names, a scalar giving the name of the parent schema,
+#'  and a vector giving the parent attribute names. The vectors must be of the
+#'  same length and contain names for attributes present in their respective
+#'  schemas, and the parent attributes must form a key, in order.
 #'
 #' @return A database schema with relationships, represented by a named list of
 #'   three lists and two character vectors, with the first four having equal
@@ -37,11 +40,7 @@
 #'     relation schemas, with attributes in keys given first.
 #'     \item \code{keys} elements contain a list of the candidate keys for the
 #'     relation schemas.
-#'     \item \code{relationships} contains a list of relationships, each
-#'     represented by a list containing two elements. In order, the elements
-#'     are a two-length integer vector, giving the positions of the child and
-#'     parent relation schemas, and a scalar character, giving the name of the
-#'     linked attribute in both relation schemas.
+#'     \item \code{relationships} contains the \code{relationships} argument.
 #'     \item \code{relation_names} is a character vector, containing the names
 #'     of the relation schemas
 #'     \item \code{attrs_order} is a character vector, containing all attribute
@@ -57,9 +56,9 @@ database_schema <- function(relations, relationships) {
     stop("relationships must be a list")
   if (any(
     lengths(relationships) != 4L |
-    !vapply(relationships, is.character, logical(1))
+    !vapply(relationships, is.list, logical(1))
   ))
-    stop("relationship elements must be length-four characters")
+    stop("relationship elements must be length-four lists")
   if (any(!vapply(
     relationships,
     \(r) all(r[c(1L, 3L)] %in% names(relations)),
@@ -70,8 +69,8 @@ database_schema <- function(relations, relationships) {
   if (any(!vapply(
     relationships,
     \(r) {
-      r[[2]] %in% attrs(relations)[[r[[1]]]] &&
-        r[[4]] %in% unlist(keys(relations)[[r[[3]]]])
+      all(r[[2]] %in% attrs(relations)[[r[[1]]]]) &&
+        all(r[[4]] %in% unlist(keys(relations)[[r[[3]]]]))
     },
     logical(1)
   )))
@@ -127,9 +126,9 @@ print.database_schema <- function(x, max = 10, ...) {
     for (r in seq_len(n_relationships)) {
       rel <- relationships(x)[[r]]
       cat(paste0(
-        rel[[1]], ".", rel[[2]],
-        " -> ",
-        rel[[3]], ".", rel[[4]], "\n"
+        rel[[1]], ".{", toString(rel[[2]]),
+        "} -> ",
+        rel[[3]], ".{", toString(rel[[4]]), "}\n"
       ))
     }
     if (max < n_relationships)
@@ -200,7 +199,7 @@ c.database_schema <- function(...) {
   new_relationships <- Map(
     \(rls, old, new) lapply(
       rls,
-      \(rl) c(new[match(rl[[1]], old)], rl[[2]], new[match(rl[[3]], old)], rl[[4]])
+      \(rl) list(new[match(rl[[1]], old)], rl[[2]], new[match(rl[[3]], old)], rl[[4]])
     ),
     relationships_list,
     lapply(lst, names),
@@ -225,7 +224,7 @@ remove_schemas <- function(schemas, rels, to_remove, replace_with) {
   schemas <- schemas[-to_remove]
   rels <- lapply(
     rels,
-    \(rel) c(
+    \(rel) list(
       names(schemas)[ind_map[match(rel[[1]], old_names)]],
       rel[[2]],
       names(schemas)[ind_map[match(rel[[3]], old_names)]],

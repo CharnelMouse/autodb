@@ -86,10 +86,12 @@ describe("decompose", {
       attrs_order = c("id", "month", "hemisphere", "is_winter")
     ) |>
       database_schema(
-        relationships = list(
-          c("id", "month", "month_hemisphere", "month"),
-          c("id", "hemisphere", "month_hemisphere", "hemisphere")
-        )
+        relationships = list(list(
+          "id",
+          c("month", "hemisphere"),
+          "month_hemisphere",
+          c("month", "hemisphere")
+        ))
       )
     new_db <- decompose(df, schema)
     expected_db <- database(
@@ -116,10 +118,12 @@ describe("decompose", {
         attrs_order = c("id", "month", "hemisphere", "is_winter")
       ),
       name = NA_character_,
-      relationships = list(
-        c("id", "month", "month_hemisphere", "month"),
-        c("id", "hemisphere", "month_hemisphere", "hemisphere")
-      )
+      relationships = list(list(
+        "id",
+        c("month", "hemisphere"),
+        "month_hemisphere",
+        c("month", "hemisphere")
+      ))
     )
     expect_identical(new_db, expected_db)
   })
@@ -141,9 +145,8 @@ describe("decompose", {
     ) |>
       database_schema(
         relationships = list(
-          c("a", "b", "b_c", "b"),
-          c("a", "c", "b_c", "c"),
-          c("b_c", "b", "b", "b")
+          list("a", c("b", "c"), "b_c", c("b", "c")),
+          list("b_c", "b", "b", "b")
         )
       )
     new_db <- decompose(df, schema)
@@ -230,8 +233,8 @@ describe("decompose", {
       ) |>
         database_schema(
           relationships = list(
-            c("player_name_jersey_num", "team", "team", "team"),
-            c("team", "city", "city", "city")
+            list("player_name_jersey_num", "team", "team", "team"),
+            list("team", "city", "city", "city")
           )
         )
       db <- decompose(df, schema)
@@ -270,8 +273,8 @@ describe("decompose", {
         ),
         name = NA_character_,
         relationships = list(
-          c("player_name_jersey_num", "team", "team", "team"),
-          c("team", "city", "city", "city")
+          list("player_name_jersey_num", "team", "team", "team"),
+          list("team", "city", "city", "city")
         )
       )
       expect_identical(db, expected_db)
@@ -306,7 +309,7 @@ describe("decompose", {
       ),
       attrs_order = c("a", "b", "c")
     ) |>
-      database_schema(relationships = list(c("a_c", "a", "a", "a")))
+      database_schema(relationships = list(list("a_c", "a", "a", "a")))
     db <- decompose(df, schema)
     expect_identical(
       db$a_c,

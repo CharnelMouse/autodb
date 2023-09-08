@@ -56,7 +56,7 @@ describe("autodb", {
     expect_setequal(names(database), c("Price", "Title", "constants"))
     expect_setequal(
       relationships(database),
-      list(c("Price", "Title", "Title", "Title"))
+      list(list("Price", "Title", "Title", "Title"))
     )
   })
   it("doesn't choose keys containing attributes with types in exclude_class", {

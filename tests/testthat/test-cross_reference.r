@@ -21,7 +21,7 @@ describe("cross_reference", {
       attrs_order = c("a", "b", "c")
     )
     database <- cross_reference(schema)
-    expected_relations <- list(c("a", "b", "b", "b"))
+    expected_relations <- list(list("a", "b", "b", "b"))
     expect_identical(attr(database, "relationships"), expected_relations)
   })
   it("gives valid schemas", {
@@ -45,32 +45,31 @@ describe("cross_reference", {
       schema <- normalise(deps)
       if (length(keys(schema)) <= 1 || length(relationships(schema)) == 0)
         discard()
-      relationships_mat <- do.call(rbind, relationships(schema))
-      char_sorted_relationship_attributes <- tapply(
-        relationships_mat[, 4],
-        list(relationships_mat[, 1], relationships_mat[, 3]),
-        \(as) sort(unique(as))
-      )
-      key_match <- vapply(
-        seq_len(ncol(char_sorted_relationship_attributes)),
-        \(column) {
-          parent <- colnames(char_sorted_relationship_attributes)[[column]]
-          char_sorted_parent_keys <- lapply(keys(schema)[[parent]], sort)
-          attribute_sets <- char_sorted_relationship_attributes[, column]
-          vapply(
-            attribute_sets,
-            \(as) is.null(as) ||
-              is.na(as) ||
-              is.element(list(as), char_sorted_parent_keys),
+
+      relationship_rels <- as.data.frame(do.call(
+        rbind,
+        lapply(
+          relationships(schema),
+          `[`,
+          c(1L, 3L)
+        )
+      ))
+      expect_true(!anyDuplicated(relationship_rels))
+
+      key_single_match <- vapply(
+        relationships(schema),
+        \(rel) {
+          parent <- rel[[3]]
+          parent_keys <- keys(schema)[[parent]]
+          sum(vapply(
+            parent_keys,
+            \(k) identical(sort(k), sort(rel[[4]])),
             logical(1)
-          )
+          )) == 1L
         },
-        logical(nrow(char_sorted_relationship_attributes))
+        logical(1)
       )
-      expect_identical(
-        as.vector(key_match),
-        rep(TRUE, length(char_sorted_relationship_attributes))
-      )
+      expect_identical(key_single_match, rep(TRUE, length(key_single_match)))
     }
     forall(
       gen_flat_deps(20, 2, from = 10L, to = 20L),

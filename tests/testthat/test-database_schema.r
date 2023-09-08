@@ -14,10 +14,10 @@ describe("database_schema", {
       "^relationships must be a list$"
     )
   })
-  it("expects valid input: relationship elements are length-four characters", {
+  it("expects valid input: relationship elements are length-four lists", {
     expect_error(
       database_schema(empty_rs, list("a")),
-      "^relationship elements must be length-four characters$"
+      "^relationship elements must be length-four lists$"
     )
     rs <- relation_schema(
       list(
@@ -29,11 +29,11 @@ describe("database_schema", {
     )
     expect_error(
       database_schema(rs, list(1:4)),
-      "^relationship elements must be length-four characters$"
+      "^relationship elements must be length-four lists$"
     )
     expect_error(
-      database_schema(rs, list(paste0("r", 1:3))),
-      "^relationship elements must be length-four characters$"
+      database_schema(rs, list(as.list(paste0("r", 1:3)))),
+      "^relationship elements must be length-four lists$"
     )
   })
   it("expects valid input: relationship relation names are within relation names", {
@@ -46,11 +46,11 @@ describe("database_schema", {
       c("a", "b", "c")
     )
     expect_error(
-      database_schema(rs, list(c("r3", "b", "r4", "b"))),
+      database_schema(rs, list(list("r3", "b", "r4", "b"))),
       "^relationship relation names must be within relation schema names$"
     )
     expect_error(
-      database_schema(rs, list(c("r4", "b", "r3", "b"))),
+      database_schema(rs, list(list("r4", "b", "r3", "b"))),
       "^relationship relation names must be within relation schema names$"
     )
   })
@@ -64,7 +64,7 @@ describe("database_schema", {
           ),
           c("a", "b", "c")
         ),
-        list(c("a", "b", "X", "b"))
+        list(list("a", "b", "X", "b"))
       ),
       "^relationship attributes must be within referer's attributes and referee's keys$"
     )
@@ -77,7 +77,7 @@ describe("database_schema", {
     expect_error(
       database_schema(
         relation_schema(list(a = list(c("a", "b"), list("a"))), c("a", "b")),
-        list(c("a", "b", "a", "a"))
+        list(list("a", "b", "a", "a"))
       ),
       "^relationship cannot be from a relation's attribute to itself$"
     )
@@ -119,7 +119,7 @@ describe("database_schema", {
           ),
           c("a", "b", "c")
         ),
-        list(c("a", "b", "b", "b"))
+        list(list("a", "b", "b", "b"))
       )),
       paste0(
         "\\A",
@@ -131,7 +131,33 @@ describe("database_schema", {
         "\\n",
         "schema b: b, c\\n  key 1: b\\n  key 2: c",
         "\\n",
-        "relationships:\\na\\.b -> b\\.b",
+        "relationships:\\na\\.\\{b\\} -> b\\.\\{b\\}",
+        "\\Z"
+      ),
+      perl = TRUE
+    )
+    expect_output(
+      print(database_schema(
+        relation_schema(
+          list(
+            a = list(c("a", "b", "c"), list("a")),
+            b = list(c("b", "c"), list(c("b", "c")))
+          ),
+          c("a", "b", "c")
+        ),
+        list(list("a", c("b", "c"), "b", c("b", "c")))
+      )),
+      paste0(
+        "\\A",
+        "database schema with 2 relation schemas",
+        "\\n",
+        "3 attributes: a, b, c",
+        "\\n",
+        "schema a: a, b, c\\n  key 1: a",
+        "\\n",
+        "schema b: b, c\\n  key 1: b, c",
+        "\\n",
+        "relationships:\\na\\.\\{b, c\\} -> b\\.\\{b, c\\}",
         "\\Z"
       ),
       perl = TRUE
@@ -343,7 +369,7 @@ describe("database_schema", {
             rl_replacements <- apply(
               do.call(expand.grid, index_replacements),
               1,
-              \(x) c(
+              \(x) list(
                 names(res)[[x[[1]]]],
                 rl[[2]],
                 names(res)[[x[[2]]]],

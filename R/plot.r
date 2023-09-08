@@ -403,6 +403,7 @@ reference_string <- function(reference) {
       paste0("TO_", snakecase::to_snake_case(reference[[4]])),
       sep = ":"
     ),
-    ";"
+    ";",
+    collapse = "\n"
   )
 }

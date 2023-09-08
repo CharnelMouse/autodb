@@ -200,9 +200,9 @@ describe("gv", {
           )
         ),
         relationships = list(
-          c("Book", "Title", "Format Price", "Title"),
-          c("Book", "Author", "Author", "Author"),
-          c("Book", "Genre ID", "Genre", "Genre ID")
+          list("Book", "Title", "Format Price", "Title"),
+          list("Book", "Author", "Author", "Author"),
+          list("Book", "Genre ID", "Genre", "Genre ID")
         ),
         name = "Book"
       )
@@ -378,9 +378,9 @@ describe("gv", {
           )
         ),
         relationships = list(
-          c("Book", "Title", "Format Price", "Title"),
-          c("Book", "Author", "Author", "Author"),
-          c("Book", "Genre ID", "Genre", "Genre ID")
+          list("Book", "Title", "Format Price", "Title"),
+          list("Book", "Author", "Author", "Author"),
+          list("Book", "Genre ID", "Genre", "Genre ID")
         ),
         name = "Book"
       )
@@ -569,7 +569,7 @@ describe("gv", {
         ),
         c("a", "b", "c")
       ) |>
-        database_schema(relationships = list(c("a", "b", "b", "b")))
+        database_schema(relationships = list(list("a", "b", "b", "b")))
       plot_string <- gv(schema)
       expect_true(grepl("\\n  a.FROM_b -> b.TO_b", plot_string))
 
@@ -580,7 +580,7 @@ describe("gv", {
         ),
         c("a", "b", "c")
       ) |>
-        database_schema(relationships = list(c("a", "a", "b", "b")))
+        database_schema(relationships = list(list("a", "a", "b", "b")))
       plot_string <- gv(schema)
       expect_true(grepl("\\n  a.FROM_a -> b.TO_b", plot_string))
     })

@@ -60,7 +60,7 @@ describe("reduce.database", {
         reduced <- reduce(database)
         non_parents <- setdiff(
           names(reduced),
-          vapply(relationships(reduced), `[`, character(1), 3)
+          vapply(relationships(reduced), `[[`, character(1), 3)
         )
         non_parent_nrows <- vapply(
           reduced[non_parents],

@@ -66,7 +66,32 @@ describe("database", {
         "\\n",
         "relation b: b, c; 0 records\\n  key 1: b\\n  key 2: c",
         "\\n",
-        "relationships:\\na\\.b -> b\\.b",
+        "relationships:\\na\\.\\{b\\} -> b\\.\\{b\\}",
+        "\\Z"
+      ),
+      perl = TRUE
+    )
+    expect_output(
+      print(database(
+        relation(
+          list(
+            a = list(df = data.frame(a = logical(), b = logical(), c = logical()), keys = list("a")),
+            b = list(df = data.frame(b = logical(), c = logical()), keys = list(c("b", "c")))
+          ),
+          c("a", "b", "c")
+        ),
+        list(list("a", c("b", "c"), "b", c("b", "c"))),
+        "nm"
+      )),
+      paste0(
+        "\\A",
+        "database nm with 2 relations",
+        "\\n",
+        "relation a: a, b, c; 0 records\\n  key 1: a",
+        "\\n",
+        "relation b: b, c; 0 records\\n  key 1: b, c",
+        "\\n",
+        "relationships:\\na\\.\\{b, c\\} -> b\\.\\{b, c\\}",
         "\\Z"
       ),
       perl = TRUE

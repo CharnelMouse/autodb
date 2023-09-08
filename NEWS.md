@@ -14,6 +14,7 @@ Improvements:
 * Added a `database_schema` class for database schemas, as returned by `normalise`. This inherits from `relation_schema`, and has foreign key references as an additional `relationships` attribute. There are `[`, `[[`, `unique`, `c`, and `merge_empty_keys` methods that conserve validity of the foreign key references.
 * The `database` class no longer assigns a `parents` attribute to each relation, since this duplicates the foreign key reference information given in `relationships`.
 * Adjusted `normalise` to prefer to remove dependencies with dependents and determinant sets later in table order, and with larger dependent sets. This brings it more in line with similar decisions made in other package functions.
+* `relationships` in `database_schema` and `database` objects are now stored in a format that better reflects their being foreign key constraints: instead of an element for each pair of attributes in a foreign key, there is one element for the whole foreign key, containing all of the involved attributes. Similarly, they are now printed in the format "child.{c1, c2, ...} -> parent.{p1, p2, ...}" instead of "child.c1 -> parent.p1; child.c2 -> parent.p2; ...".
 * Simplified some internals of `dfd`/`discover` to improve computation time.
 * Added a `skip_bijections` option to `dfd`/`discover`, to speed up functional dependency searches where there are pairwise-equivalent attributes present.
 * Added an option to use Tane instead of DFD for functional dependency search.

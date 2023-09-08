@@ -46,7 +46,7 @@ cross_reference <- function(schema, ensure_lossless = TRUE) {
   references <- calculate_references(keys, attrs)
 
   relationships <- Map(
-    \(child, parent, attr) c(
+    \(child, parent, attr) list(
       names(schema)[[child]],
       attr,
       names(schema)[[parent]],
@@ -68,7 +68,7 @@ calculate_references <- function(keys, attrs) {
   seq_rel <- seq_along(keys)
   for (parent in seq_rel) {
     for (child in seq_rel[-parent]) {
-      for (key in seq_along(keys[[parent]])) {
+      for (key in seq_along(keys[[parent]])[lengths(keys[[parent]]) > 0L]) {
         parent_key <- keys[[parent]][[key]]
         if (all(parent_key %in% attrs[[child]])) {
           child_ref_attrs <- c(child_ref_attrs, child)
@@ -95,8 +95,8 @@ calculate_references <- function(keys, attrs) {
   filtered_attrs <- ref_attrs[kept]
 
   list(
-    child = rep(unlist(filtered_vecs$determinant_sets), lengths(filtered_attrs)),
-    parent = rep(filtered_vecs$dependents, lengths(filtered_attrs)),
-    attr = unlist(filtered_attrs)
+    child = filtered_vecs$determinant_sets,
+    parent = filtered_vecs$dependents,
+    attr = filtered_attrs
   )
 }

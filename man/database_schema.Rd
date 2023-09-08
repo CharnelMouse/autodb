@@ -10,10 +10,13 @@ database_schema(relations, relationships)
 \item{relations}{a \code{relation_schema} object, as returned by
 \code{\link{synthesise}} or \code{\link{relation_schema}}.}
 
-\item{relationships}{a list, whose elements are length-four character
-vectors, giving the names of the referencing relation, the referencing
-attribute, the referenced relation, and the reference attribute,
-respectively.}
+\item{relationships}{a list of relationships, each
+represented by a list containing four character elements. In order, the
+elements are a scalar giving the name of the child schema, a vector giving
+the child attribute names, a scalar giving the name of the parent schema,
+and a vector giving the parent attribute names. The vectors must be of the
+same length and contain names for attributes present in their respective
+schemas, and the parent attributes must form a key, in order.}
 }
 \value{
 A database schema with relationships, represented by a named list of
@@ -24,11 +27,7 @@ length and representing relation schemas:
 relation schemas, with attributes in keys given first.
 \item \code{keys} elements contain a list of the candidate keys for the
 relation schemas.
-\item \code{relationships} contains a list of relationships, each
-represented by a list containing two elements. In order, the elements
-are a two-length integer vector, giving the positions of the child and
-parent relation schemas, and a scalar character, giving the name of the
-linked attribute in both relation schemas.
+\item \code{relationships} contains the \code{relationships} argument.
 \item \code{relation_names} is a character vector, containing the names
 of the relation schemas
 \item \code{attrs_order} is a character vector, containing all attribute

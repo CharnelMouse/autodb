@@ -74,7 +74,11 @@ print.database <- function(x, max = 10, ...) {
     n_relationships <- length(relationships(x))
     for (r in seq_len(min(n_relationships, max))) {
       rel <- relationships(x)[[r]]
-      cat(paste0(rel[1], ".", rel[2], " -> ", rel[3], ".", rel[4], "\n"))
+      cat(paste0(
+        rel[[1]], ".{", toString(rel[[2]]),
+        "} -> ",
+        rel[[3]], ".{", toString(rel[[4]]), "}\n"
+      ))
     }
     if (max < n_relationships)
       cat("... and", n_relationships - max, "other relationships\n")
