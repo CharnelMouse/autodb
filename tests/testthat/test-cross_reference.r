@@ -5,7 +5,7 @@ describe("cross_reference", {
     forall(
       list(
         schema = gen.relation_schema(letters[1:4], 0, 6),
-        ensure_lossless = gen.sample(c(FALSE, TRUE), 1)
+        ensure_lossless = gen.element(c(FALSE, TRUE))
       ),
       cross_reference %>>%
         with_args(is_valid_database_schema, same_attr_name = TRUE),
@@ -24,68 +24,15 @@ describe("cross_reference", {
     expected_relations <- list(list("a", "b", "b", "b"))
     expect_identical(attr(database, "relationships"), expected_relations)
   })
-  it("gives valid schemas", {
-    # same as test for normalise, need synthesis result generator
-    # table_dum and table_dee
-    empty_fds <- functional_dependency(list(), attrs_order = character())
-    empty_schema <- normalise(empty_fds)
-    is_valid_database_schema(empty_schema, same_attr_name = TRUE)
-
-    forall(
-      gen_flat_deps(7, 20, to = 20L),
-      apply_both(
-        normalise %>>% with_args(is_valid_database_schema, same_attr_name = TRUE),
-        with_args(normalise, ensure_lossless = FALSE) %>>%
-          with_args(is_valid_database_schema, same_attr_name = TRUE)
-      )
-    )
-  })
-  it("only links children to parents by exactly one parent key each", {
-    links_by_exactly_one_parent_key <- function(deps) {
-      schema <- normalise(deps)
-      if (length(keys(schema)) <= 1 || length(relationships(schema)) == 0)
-        discard()
-
-      relationship_rels <- as.data.frame(do.call(
-        rbind,
-        lapply(
-          relationships(schema),
-          `[`,
-          c(1L, 3L)
-        )
-      ))
-      expect_true(!anyDuplicated(relationship_rels))
-
-      key_single_match <- vapply(
-        relationships(schema),
-        \(rel) {
-          parent <- rel[[3]]
-          parent_keys <- keys(schema)[[parent]]
-          sum(vapply(
-            parent_keys,
-            \(k) identical(sort(k), sort(rel[[4]])),
-            logical(1)
-          )) == 1L
-        },
-        logical(1)
-      )
-      expect_identical(key_single_match, rep(TRUE, length(key_single_match)))
-    }
-    forall(
-      gen_flat_deps(20, 2, from = 10L, to = 20L),
-      links_by_exactly_one_parent_key,
-      discard.limit = 10
-    )
-  })
   it("reintroduces attributes not in dependencies if ensuring lossless", {
-    reintroduces_missing_attrs_if_lossless <- function(deps) {
-      lone_attr <- LETTERS[length(attrs_order(deps)) + 1]
-      attrs_order(deps) <- c(attrs_order(deps), lone_attr)
-      linked <- normalise(deps, ensure_lossless = TRUE)
-      expect_true(lone_attr %in% unlist(attrs(linked)))
+    reintroduces_missing_attrs_if_lossless <- function(rs) {
+      lone_attr <- LETTERS[length(attrs_order(rs)) + 1]
+      attrs_order(rs) <- c(attrs_order(rs), lone_attr)
+      linked <- cross_reference(rs, ensure_lossless = TRUE)
+      expect_true(all(is.element(attrs_order(rs), unlist(attrs(linked)))))
     }
     forall(
-      gen_flat_deps(7, 20, to = 20L),
+      gen.relation_schema(letters[1:7], 0, 6),
       reintroduces_missing_attrs_if_lossless
     )
   })
@@ -195,9 +142,18 @@ describe("cross_reference", {
   })
   it("is idempotent", {
     forall(
-      gen_flat_deps(7, 20, to = 20L),
-      normalise %>>%
-        expect_biidentical(identity, cross_reference)
+      list(
+        gen.relation_schema(letters[1:7], 0, 6),
+        gen.element(c(FALSE, TRUE))
+      ),
+      \(rs, el) {
+        cross_reference(rs, ensure_lossless = el) |>
+          expect_biidentical(
+            identity,
+            with_args(cross_reference, ensure_lossless = el)
+          )()
+      },
+      curry = TRUE
     )
   })
   it("returns relations that return themselves if normalised again, if lossless", {

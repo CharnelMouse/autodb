@@ -150,6 +150,15 @@ attrs_order.relation_schema <- function(x, ...) {
   attr(x, "attrs_order")
 }
 
+#' @export
+`attrs_order<-.relation_schema` <- function(x, ..., value) {
+  rels <- unclass(x)
+  attr(rels, "attrs_order") <- NULL
+  relation_schema(
+    rels,
+    attrs_order = value
+  )
+}
 
 #' @export
 `[.relation_schema` <- function(x, i) {
