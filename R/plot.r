@@ -105,12 +105,7 @@ gv.database <- function(x, ...) {
     "record"
   ) |>
     paste(collapse = "\n")
-  reference_strings <- vapply(
-    relationships(x),
-    reference_string,
-    character(1)
-  ) |>
-    paste(collapse = "\n")
+  reference_strings <- reference_strings(x)
   teardown_string <- "}\n"
   paste(
     setup_string,
@@ -159,12 +154,7 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
     names(x)
   ) |>
     paste(collapse = "\n")
-  reference_strings <- vapply(
-    relationships(x),
-    reference_string,
-    character(1)
-  ) |>
-    paste(collapse = "\n")
+  reference_strings <- reference_strings(x)
   teardown_string <- "}\n"
   paste(
     setup_string,
@@ -389,6 +379,16 @@ relation_schema_string <- function(attrs, keys, relation_name) {
   )
 }
 
+reference_strings <- function(x) {
+  lapply(
+    relationships(x),
+    reference_string
+  ) |>
+    do.call(what = c) |>
+    unique() |> # can have dups if child-parent pairs are linked by multiple keys
+    paste(collapse = "\n")
+}
+
 reference_string <- function(reference) {
   paste0(
     "  ",
@@ -403,7 +403,6 @@ reference_string <- function(reference) {
       paste0("TO_", snakecase::to_snake_case(reference[[4]])),
       sep = ":"
     ),
-    ";",
-    collapse = "\n"
+    ";"
   )
 }

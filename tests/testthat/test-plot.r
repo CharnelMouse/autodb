@@ -500,6 +500,27 @@ describe("gv", {
       plot_string <- gv(db)
       expect_identical(substr(plot_string, 1, 9), "digraph {")
     })
+    it("only gives each attribute pair in foreign key references once", {
+      db <- database_schema(
+        relation_schema(
+          list(
+            a_b = list(letters[1:3], list(c("a", "b"), c("b", "c"))),
+            a_b2 = list(letters[1:3], list(c("a", "b"), c("b", "c")))
+          ),
+          letters[1:3]
+        ),
+        relationships = list(
+          list("a_b", c("a", "b"), "a_b2", c("a", "b")),
+          list("a_b", c("b", "c"), "a_b2", c("b", "c"))
+        )
+      ) |>
+        create()
+      plot_string <- gv(db)
+      expect_length(
+        gregexpr("\\n  a_b.FROM_b -> a_b_2.TO_b", plot_string)[[1]],
+        1L
+      )
+    })
   })
   describe("database_schema", {
     it("works for normalise/cross_reference outputs", {
@@ -583,6 +604,26 @@ describe("gv", {
         database_schema(relationships = list(list("a", "a", "b", "b")))
       plot_string <- gv(schema)
       expect_true(grepl("\\n  a.FROM_a -> b.TO_b", plot_string))
+    })
+    it("only gives each attribute pair in foreign key references once", {
+      schema <- database_schema(
+        relation_schema(
+          list(
+            a_b = list(letters[1:3], list(c("a", "b"), c("b", "c"))),
+            a_b2 = list(letters[1:3], list(c("a", "b"), c("b", "c")))
+          ),
+          letters[1:3]
+        ),
+        relationships = list(
+          list("a_b", c("a", "b"), "a_b2", c("a", "b")),
+          list("a_b", c("b", "c"), "a_b2", c("b", "c"))
+        )
+      )
+      plot_string <- gv(schema)
+      expect_length(
+        gregexpr("\\n  a_b.FROM_b -> a_b_2.TO_b", plot_string)[[1]],
+        1L
+      )
     })
   })
   describe("relation_schema", {
