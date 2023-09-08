@@ -640,13 +640,10 @@ remove_relationship_violations <- function(relation, relationships) {
         valid <- vapply(
           seq_len(nrow(child)),
           \(n) nrow(merge(
-            # Renaming is a BAD, TEMPORARY solution for proper merging:
-            # we actually want to use by.x and by.y, but can't do that
-            # if an attribute appears several times. Once we also group
-            # relationships by which key is being referenced, this won't
-            # be an issue.
-            setNames(child[n, ref[[2]], drop = FALSE], letters[seq_along(ref[[4]])]),
-            setNames(parent[, ref[[4]], drop = FALSE], letters[seq_along(ref[[4]])])
+            child[n, , drop = FALSE],
+            parent,
+            by.x = ref[[2]],
+            by.y = ref[[4]]
           )) > 0L,
           logical(1)
         )
