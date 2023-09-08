@@ -476,7 +476,7 @@ remove_key_violations <- function(df, keys) {
   )
 }
 
-gen.relationships_same_attrs <- function(rs) {
+gen.relationships_same_attrs <- function(rs, single_key_pairs) {
   gen.relationships_for_index_and_key <- function(rs, n, k) {
     contains_key <- setdiff(
       which(vapply(
@@ -509,13 +509,19 @@ gen.relationships_same_attrs <- function(rs) {
     ) |>
       gen.with(\(lst) {
         if (length(lst) == 0L) list() else unlist(lst, recursive = FALSE)
+      }) |>
+      gen.with(\(rels) {
+        if (single_key_pairs)
+          rels[!duplicated(lapply(rels, \(r) c(r[[1]], r[[3]])))]
+        else
+          rels
       })
   }
   lapply(seq_along(rs), gen.relationships_for_index, rs = rs) |>
     gen.with(\(lst) if (length(lst) == 0L) list() else unlist(lst, recursive = FALSE))
 }
 
-gen.relationships_different_attrs <- function(rs) {
+gen.relationships_different_attrs <- function(rs, single_key_pairs) {
   gen.relationships_for_index_and_key <- function(rs, n, k) {
     contains_key_length <- setdiff(
       which(vapply(
@@ -553,16 +559,22 @@ gen.relationships_different_attrs <- function(rs) {
     ) |>
       gen.with(\(lst) {
         if (length(lst) == 0L) list() else unlist(lst, recursive = FALSE)
+      }) |>
+      gen.with(\(rels) {
+        if (single_key_pairs)
+          rels[!duplicated(lapply(rels, \(r) c(r[[1]], r[[3]])))]
+        else
+          rels
       })
   }
   lapply(seq_along(rs), gen.relationships_for_index, rs = rs) |>
     gen.with(\(lst) if (length(lst) == 0L) list() else unlist(lst, recursive = FALSE))
 }
 
-gen.relationships <- function(rs) {
+gen.relationships <- function(rs, single_key_pairs) {
   gen.choice(
-    gen.relationships_same_attrs(rs),
-    gen.relationships_different_attrs(rs)
+    gen.relationships_same_attrs(rs, single_key_pairs),
+    gen.relationships_different_attrs(rs, single_key_pairs)
   )
 }
 
@@ -578,9 +590,9 @@ gen.database_schema <- function(
       list(
         gen.pure(rs),
         if (same_attr_name)
-          gen.relationships_same_attrs(rs)
+          gen.relationships_same_attrs(rs, single_key_pairs)
         else
-          gen.relationships(rs))
+          gen.relationships(rs, single_key_pairs))
     }) |>
     gen.with(\(lst) do.call(database_schema, lst))
 }

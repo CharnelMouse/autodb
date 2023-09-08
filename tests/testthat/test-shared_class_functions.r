@@ -14,13 +14,16 @@ describe("create", {
   it("is commutative with adding foreign key constraints", {
     # need the same for create_insert and create %>>% insert once generating data
     forall(
-      gen.relation_schema(letters[1:6], 0, 10) |>
-        gen.and_then(\(rs) {
+      list(
+        gen.relation_schema(letters[1:6], 0, 10),
+        gen.element(c(FALSE, TRUE))
+      ) |>
+        gen.and_then(uncurry(\(rs, skp) {
           list(
             gen.pure(rs),
-            gen.relationships(rs)
+            gen.relationships(rs, skp)
           )
-        }),
+        })),
       \(rs, fks) {
         expect_biidentical(
           with_args(database_schema, relationships = fks) %>>% create,
@@ -63,8 +66,11 @@ describe("insert", {
   })
   it("is commutative with adding foreign key constraints", {
     forall(
-      gen.relation(letters[1:4], 0, 6) |>
-        gen.and_then(\(r) {
+      list(
+        gen.relation(letters[1:4], 0, 6),
+        gen.element(c(FALSE, TRUE))
+      ) |>
+        gen.and_then(uncurry(\(r, skp) {
           list(
             gen.pure(r),
             gen.int(10) |>
@@ -74,9 +80,9 @@ describe("insert", {
                 nms = letters[1:4],
                 remove_dup_rows = TRUE
               )),
-            gen.relationships(r)
+            gen.relationships(r, skp)
           )
-        }),
+        })),
       \(r, df, rels) {
         expect_biidentical(
           with_args(database, relationships = rels) %>>%

@@ -85,8 +85,13 @@ describe("database_schema", {
 
   it("returns the relation_schema, with the additional attributes unmodified", {
     forall(
-      gen.relation_schema(letters[1:6], 0, 8) |>
-        gen.and_then(\(rs) list(gen.pure(rs), gen.relationships(rs))),
+      list(
+        gen.relation_schema(letters[1:6], 0, 8),
+        gen.element(c(FALSE, TRUE))
+      ) |>
+        gen.and_then(uncurry(\(rs, skp) {
+          list(gen.pure(rs), gen.relationships(rs, skp))
+        })),
       dup %>>%
         onLeft(with_args(`[[`, 1)) %>>%
         onRight(with_args(do.call, what = database_schema) %>>% subschemas) %>>%
