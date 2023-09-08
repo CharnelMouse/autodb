@@ -106,7 +106,8 @@ is_valid_relationships <- function(
   if (length(relationships) == 0L)
     return(invisible(act$val))
 
-  if (anyDuplicated(relationships))
+  # former condition is temporary until relationships are properly grouped
+  if (single_key_pairs && anyDuplicated(relationships))
     fail(sprintf("%s has duplicate relationships", act$lab))
   for (fk in relationships) {
     if (!is(fk, "character"))
@@ -470,7 +471,8 @@ gen.relationships_same_attrs <- function(rs) {
       n = n
     ) |>
       gen.with(\(lst) {
-        if (length(lst) == 0L) list() else unique(unlist(lst, recursive = FALSE))
+        # make unique once relationships are properly grouped
+        if (length(lst) == 0L) list() else unlist(lst, recursive = FALSE)
       })
   }
   lapply(seq_along(rs), gen.relationships_for_index, rs = rs) |>
@@ -494,7 +496,7 @@ gen.relationships_different_attrs <- function(rs) {
           \(citer) {
             gen.sample(attrs(rs)[[citer]], length(k)) |>
               gen.with(\(attrs) {
-                Map(
+                unname(Map(
                   \(key_attr, citing_attr) c(
                     names(rs)[[citer]],
                     citing_attr,
@@ -503,7 +505,7 @@ gen.relationships_different_attrs <- function(rs) {
                   ),
                   k,
                   attrs
-                )
+                ))
               })
           }
         )
@@ -521,7 +523,8 @@ gen.relationships_different_attrs <- function(rs) {
       n = n
     ) |>
       gen.with(\(lst) {
-        if (length(lst) == 0L) list() else unique(unlist(lst, recursive = FALSE))
+        # make unique once relationships are properly grouped
+        if (length(lst) == 0L) list() else unlist(lst, recursive = FALSE)
       })
   }
   lapply(seq_along(rs), gen.relationships_for_index, rs = rs) |>
@@ -535,7 +538,13 @@ gen.relationships <- function(rs) {
   )
 }
 
-gen.database_schema <- function(x, from, to, same_attr_name = FALSE) {
+gen.database_schema <- function(
+  x,
+  from,
+  to,
+  same_attr_name = FALSE,
+  single_key_pairs = FALSE
+) {
   gen.relation_schema(x, from, to) |>
     gen.and_then(\(rs) {
       list(
@@ -548,8 +557,20 @@ gen.database_schema <- function(x, from, to, same_attr_name = FALSE) {
     gen.with(\(lst) do.call(database_schema, lst))
 }
 
-gen.database <- function(x, from, to, same_attr_name = TRUE) {
-  gen.database_schema(x, from, to, same_attr_name = same_attr_name) |>
+gen.database <- function(
+  x,
+  from,
+  to,
+  same_attr_name = TRUE,
+  single_key_pairs = TRUE
+) {
+  gen.database_schema(
+    x,
+    from,
+    to,
+    same_attr_name = same_attr_name,
+    single_key_pairs = single_key_pairs
+  ) |>
     gen.and_then(\(ds) {
       gen.relation_from_schema(ds) |>
         gen.with(
@@ -580,22 +601,34 @@ remove_relationship_violations <- function(relation, relationships) {
       if (nrow(child) > 0L) {
         parent_name <- ref[[1, 3]]
         parent <- relation[[parent_name]]$df[, ref[, 4], drop = FALSE]
-        valid <- vapply(
-          seq_len(nrow(child)),
-          \(n) nrow(merge(
-            # Renaming is a BAD, TEMPORARY solution for proper merging:
-            # we actually want to use by.x and by.y, but can't do that
-            # if an attribute appears several times. Once we also group
-            # relationships by which key is being referenced, this won't
-            # be an issue.
-            setNames(child[n, , drop = FALSE], letters[seq_len(nrow(ref))]),
-            setNames(parent, letters[seq_len(nrow(ref))])
-          )) > 0L,
-          logical(1)
-        )
-        relation[[child_name]]$df <- relation[[child_name]]$df[valid, , drop = FALSE]
-        if (!all(valid))
-          change <- TRUE
+        parent_keys <- relation[[parent_name]]$keys
+        rem <- seq_len(nrow(ref))
+        orig_rem <- rem
+        while (length(rem) > 0L) {
+          key_indices <- integer()
+          while (!is.element(list(ref[key_indices, 4]), parent_keys)) {
+            if (length(rem) == 0L)
+              stop("rem doesn't match any keys\nref: ", toString(ref[key_indices, 4]), "\nkeys: ", paste(sapply(parent_keys, toString), collapse = "; "), "\norig_rem: ", toString(ref[orig_rem, 4]), "\nrels: ", paste(sapply(relationships, toString), collapse = "; "))
+            key_indices <- c(key_indices, rem[[1]])
+            rem <- rem[-1]
+          }
+          valid <- vapply(
+            seq_len(nrow(child)),
+            \(n) nrow(merge(
+              # Renaming is a BAD, TEMPORARY solution for proper merging:
+              # we actually want to use by.x and by.y, but can't do that
+              # if an attribute appears several times. Once we also group
+              # relationships by which key is being referenced, this won't
+              # be an issue.
+              setNames(child[n, key_indices, drop = FALSE], letters[seq_along(key_indices)]),
+              setNames(parent[, key_indices, drop = FALSE], letters[seq_along(key_indices)])
+            )) > 0L,
+            logical(1)
+          )
+          relation[[child_name]]$df <- relation[[child_name]]$df[valid, , drop = FALSE]
+          if (!all(valid))
+            change <- TRUE
+        }
       }
     }
   }

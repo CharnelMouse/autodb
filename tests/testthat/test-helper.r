@@ -22,7 +22,7 @@ test_that("gen.database_schema generates valid database schemas", {
     \(san, ds) is_valid_database_schema(
       ds,
       same_attr_name = san,
-      single_key_pairs = san
+      single_key_pairs = FALSE
     ),
     curry = TRUE
   )
@@ -45,7 +45,7 @@ test_that("gen.database generates valid databases", {
     \(san, ds) is_valid_database(
       ds,
       same_attr_name = san,
-      single_key_pairs = san
+      single_key_pairs = FALSE
     ),
     curry = TRUE
   )
