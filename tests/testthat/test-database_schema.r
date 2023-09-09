@@ -343,26 +343,26 @@ describe("database_schema", {
     concatenate_lossless_for_relationships <- function(lst) {
       res <- do.call(c, lst)
       for (l in lst) {
-        equiv_relations <- lapply(
-          l,
-          \(r) {
-            as <- sort(attrs(r)[[1]])
-            ks <- lapply(keys(r)[[1]], sort)
-            schema_matches <- which(vapply(
-              res,
-              \(r2) {
-                as2 <- sort(attrs(r2)[[1]])
-                ks2 <- lapply(keys(r2)[[1]], sort)
-                identical(ks, ks2) &&
-                  (
-                    (identical(lengths(ks), 0L) && all(as %in% as2)) ||
-                    identical(as, as2)
-                  )
-              },
-              logical(1)
-            ))
-            schema_matches
-          }
+        equiv_relations <- setNames(
+          Map(
+            \(as, ks) {
+              schema_matches <- which(mapply(
+                \(as2, ks2) {
+                  identical(ks, ks2) &&
+                    (
+                      (identical(lengths(ks), 0L) && all(as %in% as2)) ||
+                        identical(as, as2)
+                    )
+                },
+                attrs(res),
+                keys(res)
+              ))
+              unname(schema_matches)
+            },
+            unname(attrs(l)),
+            unname(keys(l))
+          ),
+          names(l)
         )
         possible_equiv_relationship_present <- vapply(
           relationships(l),
