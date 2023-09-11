@@ -476,6 +476,29 @@ remove_key_violations <- function(df, keys) {
   )
 }
 
+remove_insertion_key_violations <- function(df, relation) {
+  Reduce(
+    \(df, rel) {
+      Reduce(
+        \(df, key) {
+          remove <- if (length(key) == 0L)
+            rep(nrow(rel$df) + nrow(df) > 1L, nrow(df))
+          else
+            duplicated(rbind(
+              rel$df[, key, drop = FALSE],
+              df[, key, drop = FALSE]
+            ))[-seq_len(nrow(rel$df))]
+          df[!remove, , drop = FALSE]
+        },
+        rel$keys,
+        init = df
+      )
+    },
+    relation,
+    init = df
+  )
+}
+
 gen.relationships_same_attrs <- function(rs, single_key_pairs) {
   gen.relationships_for_index_and_key <- function(rs, n, k) {
     contains_key <- setdiff(
@@ -654,6 +677,43 @@ remove_relationship_violations <- function(relation, relationships) {
     }
   }
   relation
+}
+
+remove_insertion_relationship_violations <- function(df, database) {
+  if (length(relationships(database)) == 0L)
+    return(df)
+  change <- TRUE
+  while (change) {
+    change <- FALSE
+    for (ref in relationships(database)) {
+      child_name <- ref[[1]]
+      child <- rbind(
+        database[[child_name]]$df[, ref[[2]], drop = FALSE],
+        df[, ref[[2]], drop = FALSE]
+      )
+      if (nrow(child) > 0L) {
+        parent_name <- ref[[3]]
+        parent <- rbind(
+          database[[parent_name]]$df[, ref[[4]], drop = FALSE],
+          df[, ref[[4]], drop = FALSE]
+        )
+        valid <- vapply(
+          seq_len(nrow(child)),
+          \(n) nrow(merge(
+            child[n, , drop = FALSE],
+            parent,
+            by.x = ref[[2]],
+            by.y = ref[[4]]
+          )) > 0L,
+          logical(1)
+        )
+        df <- df[valid[-seq_len(nrow(database[[child_name]]$df))], , drop = FALSE]
+        if (!all(valid))
+          change <- TRUE
+      }
+    }
+  }
+  df
 }
 
 # generating key / determinant set lists

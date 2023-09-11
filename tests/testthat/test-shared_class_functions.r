@@ -64,6 +64,47 @@ describe("insert", {
       )
     )
   })
+  it("returns a valid object when given data that can be legally inserted", {
+    forall(
+      gen.relation(letters[1:4], 0, 6) |>
+        gen.and_then(\(r) {
+          list(
+            gen.pure(r),
+            gen.int(10) |>
+              gen.and_then(with_args(
+                gen.df_fixed_ranges,
+                classes = rep("logical", length(attrs_order(r))),
+                nms = attrs_order(r),
+                remove_dup_rows = TRUE
+              )) |>
+              gen.with(with_args(remove_insertion_key_violations, relation = r))
+          )
+        }),
+      insert %>>% is_valid_relation,
+      curry = TRUE
+    )
+    forall(
+      # same_attr_name = TRUE very low high chance of FK violations
+      # to be removed, but = FALSE is invalid for common table insertion
+      gen.database(letters[1:4], 0, 6, same_attr_name = FALSE) |>
+        gen.and_then(\(d) {
+          list(
+            gen.pure(d),
+            gen.int(10) |>
+              gen.and_then(with_args(
+                gen.df_fixed_ranges,
+                classes = rep("logical", length(attrs_order(d))),
+                nms = attrs_order(d),
+                remove_dup_rows = TRUE
+              )) |>
+              gen.with(with_args(remove_insertion_key_violations, relation = d)) |>
+              gen.with(with_args(remove_insertion_relationship_violations, database = d))
+          )
+        }),
+      insert %>>% is_valid_database,
+      curry = TRUE
+    )
+  })
   it("is commutative with adding foreign key constraints", {
     forall(
       list(
