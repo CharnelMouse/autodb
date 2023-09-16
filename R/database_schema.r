@@ -1,6 +1,6 @@
 #' Database schemas
 #'
-#' Enhances a \code{relation_schema} object with foreign key reference
+#' Enhances a \code{\link{relation_schema}} object with foreign key reference
 #' information.
 #'
 #' Unlike \code{\link{functional_dependency}} and \code{\link{relation_schema}},
@@ -22,8 +22,8 @@
 #' Removing duplicates with \code{\link{unique}} changes relationships involving
 #' duplicates to involve the kept equivalent schemas instead.
 #'
-#' @param relations a \code{relation_schema} object, as returned by
-#'   \code{\link{synthesise}} or \code{\link{relation_schema}}.
+#' @param relation_schemas a \code{\link{relation_schema}} object, as returned
+#'   by \code{\link{synthesise}} or \code{\link{relation_schema}}.
 #' @param relationships a list of relationships, each
 #'  represented by a list containing four character elements. In order, the
 #'  elements are a scalar giving the name of the child schema, a vector giving
@@ -32,25 +32,14 @@
 #'  same length and contain names for attributes present in their respective
 #'  schemas, and the parent attributes must form a key, in order.
 #'
-#' @return A database schema with relationships, represented by a named list of
-#'   three lists and two character vectors, with the first four having equal
-#'   length and representing relation schemas:
-#'   \itemize{
-#'     \item \code{attrs} elements contain the attributes present in the
-#'     relation schemas, with attributes in keys given first.
-#'     \item \code{keys} elements contain a list of the candidate keys for the
-#'     relation schemas.
-#'     \item \code{relationships} contains the \code{relationships} argument.
-#'     \item \code{relation_names} is a character vector, containing the names
-#'     of the relation schemas
-#'     \item \code{attrs_order} is a character vector, containing all attribute
-#'     names in priority order for placement and key ordering, i.e. as ordered
-#'     in the original data frame.
-#'  }
+#' @return A \code{database_schema} object, containing \code{relation_schemas}
+#'   with \code{relationships} stored in an attribute of the same name.
+#'   Relationships are stored with their attributes in the order they appear in
+#'   their respective relation schemas.
 #' @export
-database_schema <- function(relations, relationships) {
+database_schema <- function(relation_schemas, relationships) {
   # should FKs be made unique?
-  if (!inherits(relations, "relation_schema"))
+  if (!inherits(relation_schemas, "relation_schema"))
     stop("relations must be a relation_schema")
   if (!is.list(relationships))
     stop("relationships must be a list")
@@ -61,7 +50,7 @@ database_schema <- function(relations, relationships) {
     stop("relationship elements must be length-four lists")
   if (any(!vapply(
     relationships,
-    \(r) all(r[c(1L, 3L)] %in% names(relations)),
+    \(r) all(r[c(1L, 3L)] %in% names(relation_schemas)),
     logical(1)
   ))) {
     stop("relationship relation names must be within relation schema names")
@@ -69,8 +58,8 @@ database_schema <- function(relations, relationships) {
   if (any(!vapply(
     relationships,
     \(r) {
-      all(r[[2]] %in% attrs(relations)[[r[[1]]]]) &&
-        all(r[[4]] %in% unlist(keys(relations)[[r[[3]]]]))
+      all(r[[2]] %in% attrs(relation_schemas)[[r[[1]]]]) &&
+        all(r[[4]] %in% unlist(keys(relation_schemas)[[r[[3]]]]))
     },
     logical(1)
   )))
@@ -83,7 +72,7 @@ database_schema <- function(relations, relationships) {
     stop("relationship cannot be from a relation's attribute to itself")
 
   structure(
-    relations,
+    relation_schemas,
     relationships = relationships,
     class = c("database_schema", "relation_schema")
   )

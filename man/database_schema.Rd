@@ -4,11 +4,11 @@
 \alias{database_schema}
 \title{Database schemas}
 \usage{
-database_schema(relations, relationships)
+database_schema(relation_schemas, relationships)
 }
 \arguments{
-\item{relations}{a \code{relation_schema} object, as returned by
-\code{\link{synthesise}} or \code{\link{relation_schema}}.}
+\item{relation_schemas}{a \code{\link{relation_schema}} object, as returned
+by \code{\link{synthesise}} or \code{\link{relation_schema}}.}
 
 \item{relationships}{a list of relationships, each
 represented by a list containing four character elements. In order, the
@@ -19,24 +19,13 @@ same length and contain names for attributes present in their respective
 schemas, and the parent attributes must form a key, in order.}
 }
 \value{
-A database schema with relationships, represented by a named list of
-three lists and two character vectors, with the first four having equal
-length and representing relation schemas:
-\itemize{
-\item \code{attrs} elements contain the attributes present in the
-relation schemas, with attributes in keys given first.
-\item \code{keys} elements contain a list of the candidate keys for the
-relation schemas.
-\item \code{relationships} contains the \code{relationships} argument.
-\item \code{relation_names} is a character vector, containing the names
-of the relation schemas
-\item \code{attrs_order} is a character vector, containing all attribute
-names in priority order for placement and key ordering, i.e. as ordered
-in the original data frame.
-}
+A \code{database_schema} object, containing \code{relation_schemas}
+with \code{relationships} stored in an attribute of the same name.
+Relationships are stored with their attributes in the order they appear in
+their respective relation schemas.
 }
 \description{
-Enhances a \code{relation_schema} object with foreign key reference
+Enhances a \code{\link{relation_schema}} object with foreign key reference
 information.
 }
 \details{

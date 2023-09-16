@@ -1,3 +1,31 @@
+#' Relation vectors
+#'
+#' Creates a set of relation schemas, including the relation's attributes and
+#' candidate keys.
+#'
+#' Duplicate schemas, after ordering by attribute, are allowed, and can be
+#' removed with `\code{\link{unique}}`.
+#'
+#' When several sets of relation schemas are concatenated, their
+#' \code{attrs_order} attributes are merged, so as to preserve all of the original
+#' attribute orders, if possible. If this is not possible, because the orderings
+#' disagree, then the returned value of the \code{attrs_order} attribute is their
+#' union instead.
+#'
+#' @inheritParams relation_schema
+#' @param relations a named list of relations, in the form of two-element lists:
+#'   the first element contains a data frame, where the column names are the
+#'   attributes in the associated schema, and the second element contains a list
+#'   of character vectors, each representing a candidate key.
+#'
+#' @return A \code{relation} object, containing the list given in
+#'   \code{relations}, with \code{attrs_order} stored in an attribute of the
+#'   same name. Relation schemas are returned with their keys' attributes sorted
+#'   according to the attribute order in \code{attrs_order}, and the keys then
+#'   sorted by priority order. Attributes in the data frame are also sorted,
+#'   first by order of appearance in the sorted keys, then by order in
+#'   \code{attrs_order} for non-prime attributes.
+#' @export
 relation <- function(relations, attrs_order) {
   stopifnot(is.list(relations))
   stopifnot(is.character(attrs_order))

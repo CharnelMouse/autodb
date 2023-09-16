@@ -1,3 +1,35 @@
+#' Databases
+#'
+#' Enhances a \code{\link{relation}} object with foreign key reference
+#' information.
+#'
+#' Unlike \code{\link{relation_schema}} and \code{link{relation}}, and like
+#' \code{\link{database_schema}}, \code{database} is not designed to be
+#' vector-like: it only holds a single database. This adheres to the usual
+#' package use case, where a single data frame is being analysed at a time.
+#' However, it inherits from \code{\link{relation}}, so is vectorised with
+#' respect to its relations.
+#'
+#' As with \code{\link{relation}}, duplicate relations, after ordering by
+#' attribute, are allowed, and can be removed with \code{\link{unique}}.
+#'
+#' Relationships, i.e. foreign key references, are allowed to have different
+#' attribute names in the child and parent relations; this can't occur in the
+#' output for \code{\link{cross_reference}} and \code{\link{normalise}}.
+#'
+#' Subsetting removes any relationships that involve removed relations.
+#' Removing duplicates with \code{\link{unique}} changes relationships involving
+#' duplicates to involve the kept equivalent relations instead.
+#'
+#' @inheritParams database_schema
+#' @inheritParams autodb
+#' @param relations a \code{\link{relation}} object.
+#'
+#' @return A \code{database} object, containing \code{relations} with
+#'   \code{relationships} stored in an attribute of the same name. Relationships
+#'   are stored with their attributes in the order they appear in their
+#'   respective relations.
+#' @export
 database <- function(relations, relationships, name = NA_character_) {
   if (!inherits(relations, "relation"))
     stop("relations must be a relation")

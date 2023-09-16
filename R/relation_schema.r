@@ -40,6 +40,8 @@
 #' keys(schemas)
 #' attrs_order(schemas)
 #' names(schemas)
+#' attrs_order(schemas) <- c("d", "c", "b", "a")
+#' print(schemas)
 relation_schema <- function(schemas, attrs_order) {
   if (!all(lengths(schemas) == 2L))
     stop("schema elements must have length two")

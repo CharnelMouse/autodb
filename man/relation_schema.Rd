@@ -49,6 +49,8 @@ attrs(schemas)
 keys(schemas)
 attrs_order(schemas)
 names(schemas)
+attrs_order(schemas) <- c("d", "c", "b", "a")
+print(schemas)
 }
 \seealso{
 \code{\link{attrs}}, \code{\link{keys}}, and \code{\link{attrs_order}}
