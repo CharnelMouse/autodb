@@ -32,4 +32,20 @@ describe("rejoin", {
         with_args(expect_s3_class, class = "data.frame")
     )
   })
+  it("handles databases with zero-column relations properly", {
+    db <- database(
+      relation(
+        list(
+          constants = list(
+            df = data.frame(a = 1L)[, FALSE, drop = FALSE],
+            keys = list(character())
+          ),
+          a = list(df = data.frame(a = 1L), keys = list("a"))
+        ),
+        "a"
+      ),
+      list()
+    )
+    expect_identical(rejoin(db), data.frame(a = 1L))
+  })
 })

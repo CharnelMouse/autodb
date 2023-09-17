@@ -629,7 +629,7 @@ find_closure <- function(attrs, determinant_sets, dependents) {
 
 find_closure_with_used <- function(attrs, determinant_sets, dependents) {
   if (length(dependents) == 0)
-    return(attrs)
+    return(list(attrs, integer()))
   checked <- rep(FALSE, length(dependents))
   change <- TRUE
   ordered_use <- integer()
