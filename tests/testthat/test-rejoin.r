@@ -19,4 +19,17 @@ describe("rejoin", {
       tests = 1000
     )
   })
+  it("is possible for any database constructed from a data frame", {
+    forall(
+      gen.choice(0, 10) |>
+        gen.list(of = 2) |>
+        gen.and_then(uncurry(\(rows, cols) {
+          gen_df(rows, cols, remove_dup_rows = TRUE)
+        })) |>
+        gen.with(with_args(autodb, ensure_lossless = TRUE)),
+      rejoin %>>%
+        with_args(try, silent = TRUE) %>>%
+        with_args(expect_s3_class, class = "data.frame")
+    )
+  })
 })
