@@ -315,8 +315,11 @@ gen.df_fixed_ranges <- function(classes, nms, n_records, remove_dup_rows) {
     with_args(as, object = c(FALSE, TRUE, NA)) %>>%
       with_args(gen.sample, size = n_records, replace = TRUE)
   ) |>
-    gen.with(with_args(setNames, nm = nms)) |>
-    gen.with(as.data.frame %>>% (if (remove_dup_rows) unique else identity))
+    gen.with(
+      with_args(setNames, nm = nms) %>>%
+        as.data.frame %>>%
+        (if (remove_dup_rows) unique else identity)
+    )
 }
 
 gen_attr_name <- function(len) {
