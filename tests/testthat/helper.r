@@ -308,6 +308,8 @@ gen_df <- function(
 }
 
 gen.df_fixed_ranges <- function(classes, nms, n_records, remove_dup_rows) {
+  if (length(classes) == 0L)
+    return(gen.pure(data.frame(a = NA)[, FALSE, drop = FALSE]))
   lapply(
     classes,
     with_args(as, object = c(FALSE, TRUE, NA)) %>>%
