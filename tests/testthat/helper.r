@@ -88,7 +88,7 @@ is_valid_relation_schema <- function(x, unique = FALSE, single_empty_key = FALSE
         ),
         recursive = FALSE
       ),
-      attr(x, "attrs_order")
+      attrs_order(x)
     )
     expect_true(!anyDuplicated(implied_fds))
   }

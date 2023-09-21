@@ -22,7 +22,7 @@ describe("cross_reference", {
     )
     database <- cross_reference(schema)
     expected_relations <- list(list("a", "b", "b", "b"))
-    expect_identical(attr(database, "relationships"), expected_relations)
+    expect_identical(relationships(database), expected_relations)
   })
   it("reintroduces attributes not in dependencies if ensuring lossless", {
     reintroduces_missing_attrs_if_lossless <- function(rs) {
