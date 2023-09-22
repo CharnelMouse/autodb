@@ -37,7 +37,8 @@ cross_reference <- function(schema, ensure_lossless = TRUE) {
             list(list(new_key, list(new_key))),
             relation_names[length(relation_names)]
           ),
-          attrs_order
+          attrs_order,
+          attrs_class(schema)
         )
       )
     }

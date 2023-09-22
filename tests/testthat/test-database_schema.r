@@ -281,12 +281,20 @@ describe("database_schema", {
 
   it("concatenates to a valid database schema", {
     forall(
-      gen.sample(c(FALSE, TRUE), 1) |>
-        gen.and_then(\(san) list(
+      list(
+        gen.attrs_class(letters[1:6]),
+        gen.sample(c(FALSE, TRUE), 1)
+      ) |>
+        gen.and_then(uncurry(\(attrs_class, san) list(
           gen.pure(san),
-          gen.database_schema(letters[1:6], 0, 8, same_attr_name = san) |>
+          gen.database_schema_given_attrs_class(
+            attrs_class,
+            0,
+            8,
+            same_attr_name = san
+          ) |>
             gen.list(from = 1, to = 3)
-        )),
+        ))),
       \(san, dss) do.call(c, dss) |> is_valid_database_schema(same_attr_name = san),
       curry = TRUE
     )
@@ -299,8 +307,19 @@ describe("database_schema", {
       }
     }
     forall(
-      gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE) |>
-        gen.list(from = 1, to = 10),
+      list(
+        gen.attrs_class(letters[1:6]),
+        gen.sample(c(FALSE, TRUE), 1)
+      ) |>
+        gen.and_then(uncurry(\(attrs_class, san) {
+          gen.database_schema_given_attrs_class(
+            attrs_class,
+            0,
+            8,
+            same_attr_name = san
+          ) |>
+            gen.list(from = 1, to = 10)
+        })),
       concatenate_lossless_for_attrs_order
     )
   })
@@ -390,8 +409,19 @@ describe("database_schema", {
       }
     }
     forall(
-      gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE) |>
-        gen.list(from = 1, to = 10),
+      list(
+        gen.attrs_class(letters[1:6]),
+        gen.sample(c(FALSE, TRUE), 1)
+      ) |>
+        gen.and_then(uncurry(\(attrs_class, san) {
+          gen.database_schema_given_attrs_class(
+            attrs_class,
+            0,
+            8,
+            same_attr_name = san
+          ) |>
+            gen.list(from = 1, to = 10)
+        })),
       concatenate_lossless_for_relationships
     )
   })
@@ -429,8 +459,19 @@ describe("database_schema", {
       }
     }
     forall(
-      gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE) |>
-        gen.list(from = 1, to = 10),
+      list(
+        gen.attrs_class(letters[1:6]),
+        gen.sample(c(FALSE, TRUE), 1)
+      ) |>
+        gen.and_then(uncurry(\(attrs_class, san) {
+          gen.database_schema_given_attrs_class(
+            attrs_class,
+            0,
+            8,
+            same_attr_name = san
+          ) |>
+            gen.list(from = 1, to = 10)
+        })),
       concatenate_lossless_for_schemas
     )
   })
@@ -447,14 +488,15 @@ describe("database_schema", {
       up_to_one_empty_key
     )
   })
-  it("is composed of its attrs(), keys(), names(), attrs_order(), and relationships()", {
+  it("is composed of its attrs(), keys(), names(), attrs_order(), attrs_class(), and relationships()", {
     forall(
       gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE),
       \(ds) expect_identical(
         database_schema(
           relation_schema(
             setNames(Map(list, attrs(ds), keys(ds)), names(ds)),
-            attrs_order(ds)
+            attrs_order(ds),
+            attrs_class(ds)
           ),
           relationships = relationships(ds)
         ),

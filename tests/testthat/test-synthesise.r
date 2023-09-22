@@ -83,7 +83,7 @@ describe("synthesise", {
         list(c("A", "D"), "B"),
         list(c("A", "D"), "C")
       ),
-      attrs = c("A", "B", "C", "D")
+      attrs_order = c("A", "B", "C", "D")
     )
     normalisation_permutation_invariant(list(deps, deps[c(1, 2, 4, 3)]))
 
@@ -97,7 +97,7 @@ describe("synthesise", {
         list(c("A", "D"), "B"),
         list(c("A", "D"), "C")
       ),
-      attrs = c("A", "B", "C", "D")
+      attrs_order = c("A", "B", "C", "D")
     ))
     expect_setequal(names(schema), c("A_B", "A_D", "C_D"))
     ord <- match("A_D", names(schema))
@@ -109,7 +109,7 @@ describe("synthesise", {
         list("a", "b"),
         list(c("a", "b"), "c")
       ),
-      attrs = c("a", "b", "c")
+      attrs_order = c("a", "b", "c")
     )
     norm.dependencies <- synthesise(dependencies)
     expect_relation_schema(
@@ -129,7 +129,7 @@ describe("synthesise", {
         list("a", "c"),
         list("b", "c")
       ),
-      attrs = c("a", "b", "c")
+      attrs_order = c("a", "b", "c")
     )
     norm.dependencies <- synthesise(dependencies)
     expect_relation_schema(
@@ -150,7 +150,7 @@ describe("synthesise", {
         list("a", "d"),
         list(c("b", "c"), "d")
       ),
-      attrs = c("a", "b", "c", "d")
+      attrs_order = c("a", "b", "c", "d")
     )
     norm.dependencies <- synthesise(dependencies)
     expect_relation_schema(
@@ -170,7 +170,7 @@ describe("synthesise", {
         list("a", "b"),
         list("b", "a")
       ),
-      attrs = c("a", "b")
+      attrs_order = c("a", "b")
     )
     norm.df <- synthesise(dependencies)
     expect_relation_schema(
@@ -197,7 +197,7 @@ describe("synthesise", {
         list("d", "e"),
         list("f", "e")
       ),
-      attrs = c("a", "b", "c", "d", "e", "f")
+      attrs_order = c("a", "b", "c", "d", "e", "f")
     )
     norm.dependencies <- synthesise(dependencies)
     expect_relation_schema(
@@ -221,7 +221,7 @@ describe("synthesise", {
         list(c("b", "x2"), "c"),
         list("c", "a")
       ),
-      attrs = c("x1", "x2", "a", "b", "c", "d")
+      attrs_order = c("x1", "x2", "a", "b", "c", "d")
     )
     norm.dep <- synthesise(dependencies)
     expected_attrs <- list(
@@ -252,7 +252,7 @@ describe("synthesise", {
         list("C", "D"),
         list(c("A", "B", "E"), "F")
       ),
-      attrs = c("A", "B", "C", "D", "E", "F")
+      attrs_order = c("A", "B", "C", "D", "E", "F")
     )
     norm.dep <- synthesise(dependencies)
     expect_relation_schema(
@@ -271,7 +271,7 @@ describe("synthesise", {
         list("constants", "a"),
         list(character(), "b")
       ),
-      attrs = c("constants", "a", "b")
+      attrs_order = c("constants", "a", "b")
     )
     gets_unique_table_names(fds)
   })
@@ -288,7 +288,7 @@ describe("synthesise", {
         list(c("A", "C"), "E"),
         list(c("B", "D"), "C")
       ),
-      attrs = c("A", "B", "C", "D", "E")
+      attrs_order = c("A", "B", "C", "D", "E")
     )
     norm.deps <- synthesise(deps, remove_avoidable = FALSE)
     expect_relation_schema(

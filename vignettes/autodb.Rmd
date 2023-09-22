@@ -415,7 +415,7 @@ avoid_deps <- functional_dependency(
     list(c("A", "C"), "E"),
     list(c("B", "D"), "C")
   ),
-  attrs = c("A", "B", "C", "D", "E")
+  attrs_order = c("A", "B", "C", "D", "E")
 )
 avoid_deps
 avoid_schema <- normalise(avoid_deps)

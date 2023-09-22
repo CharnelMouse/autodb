@@ -15,14 +15,21 @@
 #' @param attrs_order a character vector, giving the names of all attributes. These
 #'   need not be present in \code{FDs}, but all attributes in \code{FDs} must be
 #'   present in \code{attrs}.
+#' @param attrs_class a named list of character vectors, giving the default
+#'   class vectors for all attributes. By default, every attribute is assumed to
+#'   be logical. These are mostly for use in \code{\link{relation_schema}}
+#'   objects, but are included in \code{functional_dependency} objects to let
+#'   class information to be extracted when using \code{\link{discover}}.
 #' @param unique a logical, TRUE by default, for whether to remove duplicate
 #'   dependencies.
 #'
 #' @return a \code{functional_dependency} object, containing the list given in
-#'   \code{FDs}, with \code{attrs_order} stored in an attribute of the same name.
-#'   Functional dependencies are returned with their determinant sets sorted
-#'   according to the attribute order in \code{attrs}. Any duplicates found
-#'   after sorting are removed.
+#'   \code{FDs}, with \code{attrs_order} and \code{attrs_class} stored in an
+#'   \code{attrs_class} attribute. Functional dependencies are returned with
+#'   their determinant sets sorted according to the attribute order in
+#'   \code{attrs}. Any duplicates found after sorting are removed. Elements of
+#'   \code{attrs_class} are sorted to be in the same order as in
+#'   \code{attrs_order}.
 #' @seealso \code{\link{detset}}, \code{\link{dependent}}, and
 #'   \code{\link{attrs_order}} for extracting parts of the information in a
 #'   \code{functional_dependency}.
@@ -36,7 +43,15 @@
 #' dependent(fds)
 #' attrs_order(fds)
 #' @export
-functional_dependency <- function(FDs, attrs_order, unique = TRUE) {
+functional_dependency <- function(
+  FDs,
+  attrs_order,
+  attrs_class = stats::setNames(
+    rep(list("logical"), length(attrs_order)),
+    attrs_order
+  ),
+  unique = TRUE
+) {
   if (any(lengths(FDs) != 2))
     stop("FDs elements must have length two")
   det_sets <- lapply(FDs, `[[`, 1L)
@@ -58,7 +73,7 @@ functional_dependency <- function(FDs, attrs_order, unique = TRUE) {
   )
   structure(
     if (unique) unique(sorted_FDs) else sorted_FDs,
-    attrs_order = attrs_order,
+    attrs_class = attrs_class,
     class = "functional_dependency"
   )
 }
@@ -119,7 +134,22 @@ c.functional_dependency <- function(..., unique = TRUE) {
   attrs_list <- lapply(lst, attrs_order)
   joined_attrs <- do.call(merge_attribute_orderings, attrs_list)
 
-  functional_dependency(joined_dependencies, joined_attrs, unique = unique)
+  all_classes <- Reduce(c, lapply(lst, attrs_class))
+  all_classes <- all_classes[!duplicated(Map(
+    list,
+    unname(all_classes),
+    names(all_classes)
+  ))]
+  if (length(all_classes) != length(joined_attrs))
+    stop("attrs_class values are not consistent")
+  joined_classes <- all_classes[joined_attrs]
+
+  functional_dependency(
+    joined_dependencies,
+    joined_attrs,
+    joined_classes,
+    unique = unique
+  )
 }
 
 #' @exportS3Method
@@ -134,13 +164,28 @@ dependent.functional_dependency <- function(x, ...) {
 
 #' @exportS3Method
 attrs_order.functional_dependency <- function(x, ...) {
-  attr(x, "attrs_order", exact = TRUE)
+  names(attrs_class(x))
 }
 
 #' @export
 `attrs_order<-.functional_dependency` <- function(x, ..., value) {
   functional_dependency(
     Map(list, detset(x), dependent(x)),
-    attrs_order = value
+    attrs_order = value,
+    attrs_class = attrs_class(x)[value]
+  )
+}
+
+#' @exportS3Method
+attrs_class.functional_dependency <- function(x, ...) {
+  attr(x, "attrs_class", exact = TRUE)
+}
+
+#' @export
+`attrs_class<-.functional_dependency` <- function(x, ..., value) {
+  functional_dependency(
+    Map(list, detset(x), dependent(x)),
+    attrs_order = names(value),
+    attrs_class = value
   )
 }

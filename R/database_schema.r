@@ -135,9 +135,23 @@ relationships.database_schema <- function(x, ...) {
   database_schema(subschemas(x), value)
 }
 
+#' @export
+`attrs_order<-.database_schema` <- function(x, ..., value) {
+  rels <- subschemas(x)
+  attrs_order(rels) <- value
+  database_schema(rels, relationships(x))
+}
+
+#' @export
+`attrs_class<-.database_schema` <- function(x, ..., value) {
+  rels <- subschemas(x)
+  attrs_class(rels) <- value
+  database_schema(rels, relationships(x))
+}
+
 #' @exportS3Method
 subschemas.database_schema <- function(x, ...) {
-  relation_schema(unclass(x), attrs_order(x))
+  relation_schema(unclass(x), attrs_order(x), attrs_class(x))
 }
 
 #' @export

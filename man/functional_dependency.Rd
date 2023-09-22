@@ -4,7 +4,12 @@
 \alias{functional_dependency}
 \title{Functional dependency vectors}
 \usage{
-functional_dependency(FDs, attrs_order, unique = TRUE)
+functional_dependency(
+  FDs,
+  attrs_order,
+  attrs_class = stats::setNames(rep(list("logical"), length(attrs_order)), attrs_order),
+  unique = TRUE
+)
 }
 \arguments{
 \item{FDs}{a list of functional dependencies, in the form of two-elements
@@ -16,15 +21,23 @@ attribute.}
 need not be present in \code{FDs}, but all attributes in \code{FDs} must be
 present in \code{attrs}.}
 
+\item{attrs_class}{a named list of character vectors, giving the default
+class vectors for all attributes. By default, every attribute is assumed to
+be logical. These are mostly for use in \code{\link{relation_schema}}
+objects, but are included in \code{functional_dependency} objects to let
+class information to be extracted when using \code{\link{discover}}.}
+
 \item{unique}{a logical, TRUE by default, for whether to remove duplicate
 dependencies.}
 }
 \value{
 a \code{functional_dependency} object, containing the list given in
-\code{FDs}, with \code{attrs_order} stored in an attribute of the same name.
-Functional dependencies are returned with their determinant sets sorted
-according to the attribute order in \code{attrs}. Any duplicates found
-after sorting are removed.
+\code{FDs}, with \code{attrs_order} and \code{attrs_class} stored in an
+\code{attrs_class} attribute. Functional dependencies are returned with
+their determinant sets sorted according to the attribute order in
+\code{attrs}. Any duplicates found after sorting are removed. Elements of
+\code{attrs_class} are sorted to be in the same order as in
+\code{attrs_order}.
 }
 \description{
 Creates a set of functional dependencies with length-one dependents.

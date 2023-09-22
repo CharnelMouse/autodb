@@ -75,6 +75,26 @@ describe("relation_schema", {
       "^attributes in keys must be present in relation$"
     )
   })
+  it("expects valid input: attrs_class same length and names as attrs_order", {
+    expect_error(
+      relation_schema(
+        setNames(list(), character()),
+        c("a", "b"),
+        list(a = "integer")
+      ),
+      "^attrs_class must have same length as attrs_order$"
+    )
+  })
+  it("expects valid input: attrs_class must have attrs_order as (unordered) names", {
+    expect_error(
+      relation_schema(
+        setNames(list(), character()),
+        c("a", "b"),
+        list(a = "integer", d = "integer")
+      ),
+      "^attrs_class must have attrs_order as \\(unordered\\) names$"
+    )
+  })
 
   it("returns a valid relation schema", {
     forall(
@@ -121,6 +141,14 @@ describe("relation_schema", {
       expect_true(all(attr_matches))
     }
     forall(gen.relation_schema(letters[1:6], 1, 8), attributes_ordered)
+  })
+  it("orders attrs_class attrs_order", {
+    x <- relation_schema(
+      setNames(list(), character()),
+      c("a", "b"),
+      list(b = "integer", a = "logical")
+    )
+    expect_identical(attrs_class(x), list(a = "logical", b = "integer"))
   })
   it("prints", {
     expect_output(
@@ -193,15 +221,22 @@ describe("relation_schema", {
       expect_identical(class(c(...)), class(..1))
     }
     forall(
-      gen.relation_schema(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
+      gen.attrs_class(letters[1:6]) |>
+        gen.and_then(
+          with_args(gen.relation_schema_given_attrs_class, from = 0, to = 8) %>>%
+            with_args(gen.list, from = 1, to = 10)
+        ),
       concatenate_within_class,
       curry = TRUE
     )
   })
   it("concatenates to a valid relation schema", {
     forall(
-      gen.relation_schema(letters[1:6], 0, 4) |>
-        gen.list(from = 1, to = 3),
+      gen.attrs_class(letters[1:6]) |>
+        gen.and_then(
+          with_args(gen.relation_schema_given_attrs_class, from = 0, to = 4) %>>%
+            with_args(gen.list, from = 1, to = 3)
+        ),
       c %>>% is_valid_relation_schema,
       curry = TRUE
     )
@@ -224,28 +259,16 @@ describe("relation_schema", {
       }
     }
     forall(
-      gen.relation_schema(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
+      gen.attrs_class(letters[1:6]) |>
+        gen.and_then(
+          with_args(gen.relation_schema_given_attrs_class, from = 0, to = 8) %>>%
+            with_args(gen.list, from = 1, to = 10)
+        ),
       concatenate_lossless_for_attrs_order,
       curry = TRUE
     )
   })
   it("concatenates without losing attribute orderings, if consistent", {
-    remove_inconsistent <- function(lst) {
-      pairwise <- outer(
-        lst,
-        lst,
-        Vectorize(\(fd1, fd2) {
-          as1 <- attrs(fd1)
-          as2 <- attrs(fd2)
-          one_in_two <- match(as1, as2)
-          two_in_one <- match(as2, as1)
-          !is.unsorted(one_in_two, na.rm = TRUE) &&
-            !is.unsorted(two_in_one, na.rm = TRUE)
-        })
-      )
-      # remove if ordering inconsistent with earlier ones
-      lst[apply(pairwise | upper.tri(pairwise), 1, all)]
-    }
     concatenate_keeps_attribute_order <- function(...) {
       lst <- list(...)
       expect_silent(res <- c(...))
@@ -284,6 +307,32 @@ describe("relation_schema", {
       curry = TRUE
     )
   })
+  it("concatenates without losing attribute classes, if consistent", {
+    concatenate_keeps_attribute_class <- function(...) {
+      lst <- list(...)
+      expect_silent(res <- c(...))
+      for (index in seq_along(lst)) {
+        both <- intersect(
+          names(attrs_class(res)),
+          names(attrs_class(lst[[index]]))
+        )
+        expect_identical(
+          attrs_class(res)[both],
+          attrs_class(lst[[!!index]])[both]
+        )
+      }
+    }
+
+    forall(
+      gen.attrs_class(letters[1:6]) |>
+        gen.and_then(
+          gen.empty_relation_schema_given_attrs_class %>>%
+            with_args(gen.list, from = 2, to = 10)
+        ),
+      concatenate_keeps_attribute_class,
+      curry = TRUE
+    )
+  })
   it("concatenates without losing schemas", {
     concatenate_lossless_for_schemas <- function(...) {
       lst <- list(...)
@@ -303,7 +352,11 @@ describe("relation_schema", {
       }
     }
     forall(
-      gen.relation_schema(letters[1:6], 0, 8) |> gen.list(from = 1, to = 10),
+      gen.attrs_class(letters[1:6]) |>
+        gen.and_then(
+          with_args(gen.relation_schema_given_attrs_class, from = 0, to = 8) %>>%
+            with_args(gen.list, from = 1, to = 10)
+        ),
       concatenate_lossless_for_schemas,
       curry = TRUE
     )
@@ -321,16 +374,36 @@ describe("relation_schema", {
       up_to_one_empty_key
     )
   })
-  it("is composed of its attrs(), keys(), names() and attrs_order()", {
+  it("is composed of its attrs(), keys(), names(), attrs_order(), and attrs_class()", {
     forall(
       gen.relation_schema(letters[1:6], 0, 8),
       \(rs) expect_identical(
         rs,
         relation_schema(
           setNames(Map(list, attrs(rs), keys(rs)), names(rs)),
-          attrs_order = attrs_order(rs)
+          attrs_order = attrs_order(rs),
+          attrs_class = attrs_class(rs)
         )
       )
+    )
+  })
+
+  it("is created with attrs_class() for attribute classes", {
+    forall(
+      gen.relation_schema(letters[1:6], 1, 8),
+      \(rs) {
+        r <- create(rs)
+        classes <- unlist(
+          unname(lapply(r, \(rel) lapply(rel$df, class))),
+          recursive = FALSE
+        )
+        if (is.null(names(classes)))
+          names(classes) <- character()
+        expect_identical(
+          classes,
+          attrs_class(rs)[names(classes)]
+        )
+      }
     )
   })
 })

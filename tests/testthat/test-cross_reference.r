@@ -1,6 +1,23 @@
 library(hedgehog)
 
 describe("cross_reference", {
+  it("returns a valid database_schema", {
+    forall(
+      list(
+        schema = gen.relation_schema(letters[1:6], 0, 6),
+        ensure_lossless = gen.element(c(FALSE, TRUE))
+      ),
+      cross_reference %>>%
+        with_args(
+          is_valid_database_schema,
+          unique = FALSE,
+          single_empty_key = FALSE,
+          same_attr_name = TRUE,
+          single_key_pairs = TRUE
+        ),
+      curry = TRUE
+    )
+  })
   it("generates valid schemas with same-attribute-names foreign key references", {
     forall(
       list(
@@ -27,7 +44,11 @@ describe("cross_reference", {
   it("reintroduces attributes not in dependencies if ensuring lossless", {
     reintroduces_missing_attrs_if_lossless <- function(rs) {
       lone_attr <- LETTERS[length(attrs_order(rs)) + 1]
-      attrs_order(rs) <- c(attrs_order(rs), lone_attr)
+      new_rs <- relation_schema(
+        unclass(rs),
+        attrs_order = c(attrs_order(rs), lone_attr),
+        attrs_class = c(attrs_class(rs), setNames(list("logical"), lone_attr))
+      )
       linked <- cross_reference(rs, ensure_lossless = TRUE)
       expect_true(all(is.element(attrs_order(rs), unlist(attrs(linked)))))
     }
