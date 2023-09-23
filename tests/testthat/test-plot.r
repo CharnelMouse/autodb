@@ -304,7 +304,7 @@ describe("gv", {
           expected_string
         )
         })
-      it("converts attribute/df names to snake case for labels (inc. spaces, periods)", {
+    it("converts attribute/df names to snake case for labels (inc. spaces, periods)", {
       db <- database(
         relation(
           list(
