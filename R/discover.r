@@ -149,9 +149,11 @@ discover <- function(
   if (n_cols == 0)
     return(functional_dependency(
       stats::setNames(list(), character()),
-      attrs_order = character()
+      attrs_order = character(),
+      attrs_class = stats::setNames(list(), character())
     ))
   column_names <- colnames(df)
+  column_classes <- lapply(df, class)
   duplicates <- which(duplicated(column_names))
   if (length(duplicates) > 0) {
     dup_names <- unique(column_names[duplicates])
@@ -305,7 +307,7 @@ discover <- function(
       nonfixed,
       column_names
     )
-  flatten(dependencies, column_names)
+  flatten(dependencies, column_names, column_classes)
 }
 
 find_LHSs_dfd <- function(
@@ -1113,7 +1115,7 @@ add_deps_implied_by_bijections <- function(
   dependencies
 }
 
-flatten <- function(dependencies, attributes) {
+flatten <- function(dependencies, attributes, classes) {
   result <- list()
   for (i in seq_along(dependencies)) {
     rhs <- names(dependencies)[i]
@@ -1122,5 +1124,5 @@ flatten <- function(dependencies, attributes) {
       lapply(dependencies[[i]], \(lhs) list(lhs, rhs))
     )
   }
-  functional_dependency(result, attributes)
+  functional_dependency(result, attributes, classes)
 }

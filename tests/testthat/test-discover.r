@@ -7,7 +7,7 @@ library(hedgehog)
 describe("discover", {
   expect_equiv_deps <- function(deps1, deps2) {
     expect_setequal(attrs_order(deps1), attrs_order(deps2))
-    expect_setequal(attrs_class(deps1), attrs_class(deps2))
+    expect_identical(attrs_class(deps1), attrs_class(deps2)[attrs_order(deps1)])
     expect_setequal(
       deps1,
       functional_dependency(
@@ -30,6 +30,22 @@ describe("discover", {
       attrs_class(deps2)
     )
     expect_equiv_deps(renamed_deps1, deps2)
+  }
+  expect_equiv_deps_except_classes <- function(deps1, deps2) {
+    nms1 <- attrs_order(deps1)
+    nms2 <- attrs_order(deps2)
+    cl1 <- attrs_class(deps1)
+    cl2 <- attrs_class(deps2)
+    reclassed_deps1 <- functional_dependency(
+      Map(
+        list,
+        lapply(detset(deps1), \(dets) nms2[match(dets, nms1)]),
+        nms2[match(dependent(deps1), nms1)]
+      ),
+      nms1,
+      cl2
+    )
+    expect_equiv_deps(reclassed_deps1, deps2)
   }
   expect_equiv_non_removed_attr_deps <- function(deps1, deps2) {
     removed_attr <- setdiff(attrs_order(deps1), attrs_order(deps2))
@@ -141,6 +157,15 @@ describe("discover", {
       two_copies(both_terminate_then(expect_equiv_deps, accuracy = 1))
     )
   })
+  it("stores the data frame's attribute classes", {
+    forall(
+      gen_df(6, 7, remove_dup_rows = TRUE),
+      dup %>>%
+        (onLeft(with_args(discover, accuracy = 1) %>>% attrs_class)) %>>%
+        (onRight(with_args(lapply, FUN = class))) %>>%
+        (uncurry(expect_identical))
+    )
+  })
   it("returns dependencies where shared dependent <=> not sub/supersets for determinants", {
     has_non_nested_determinant_sets <- function(deps) {
       det_groups <- split(detset(deps), dependent(deps))
@@ -191,7 +216,7 @@ describe("discover", {
       curry = TRUE
     )
   })
-  it("is invariant to an attribute's class being losslessly changed (without exclusions)", {
+  it("is invariant to an attribute's class being losslessly changed (except for class info)", {
     gen_df_and_type_change <- function(
       nrow,
       ncol,
@@ -224,7 +249,7 @@ describe("discover", {
     }
     forall(
       gen_df_and_type_change(4, 6),
-      both_terminate_then(expect_equiv_deps, 1),
+      both_terminate_then(expect_equiv_deps_except_classes, 1),
       curry = TRUE
     )
   })
@@ -463,7 +488,14 @@ describe("discover", {
         list(c('player_name', 'jersey_num'), "state"),
         list('city', "state")
       ),
-      c("team", "jersey_num", "player_name", "city", "state")
+      c("team", "jersey_num", "player_name", "city", "state"),
+      list(
+        team = "character",
+        jersey_num = "numeric",
+        player_name = "character",
+        city = "character",
+        state = "character"
+      )
     )
 
     expect_identical(attrs_order(deps), attrs_order(expected_deps))
@@ -487,7 +519,13 @@ describe("discover", {
         list("team", "roster_size"),
         list("city", "roster_size")
       ),
-      c("team", "city", "state", "roster_size")
+      c("team", "city", "state", "roster_size"),
+      list(
+        team = "character",
+        city = "character",
+        state = "character",
+        roster_size = "integer"
+      )
     )
     expect_identical(attrs_order(deps), attrs_order(expected_deps))
     expect_identical(attrs_class(deps), attrs_class(expected_deps))
@@ -532,6 +570,17 @@ describe("discover", {
         "Genre_ID",
         "Genre_Name",
         "Publisher_ID"
+      ),
+      list(
+        Title = "character",
+        Format = "character",
+        Author = "character",
+        Author_Nationality = "character",
+        Price = "integer",
+        Thickness = "character",
+        Genre_ID = "integer",
+        Genre_Name = "character",
+        Publisher_ID = "integer"
       )
     )
     expect_identical(attrs_order(deps), attrs_order(expected_deps))
