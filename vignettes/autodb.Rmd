@@ -143,7 +143,9 @@ cat(schema_text)
 DiagrammeR::grViz(schema_text)
 ```
 
-This is similar to the database plot given before, but there is some information not present, that requires the data frame itself. Namely, we have no class information about the attributes, and no record counts for the individual relation schemas. Additionally, at this point we have no connections between the relation schemas, since Bernstein's synthesis doesn't supply information about foreign key references. We could use this database schema to build a database, but we'd rather add the foreign key references first.
+This is similar to the database plot given before, but there is some information not present, that requires the data frame itself. We do have class information about the attributes, extracted from the data frame during dependency discovery, but we have no record counts for the individual relation schemas. However, we do have automatically-generated names for the individual relations.
+
+Additionally, at this point we have no connections between the relation schemas, since Bernstein's synthesis doesn't supply information about foreign key references. We could use this database schema to build a database, but we'd rather add the foreign key references first.
 
 ## Tuning detection and normalisation
 
@@ -231,7 +233,7 @@ db2 <- decompose(ChickWeight, linked_schema)
 DiagrammeR::grViz(gv(db2, name = "Chick Weights"))
 ```
 
-We now have the attribute class information and record counts added, as well as automatic names for the individual relations.
+We now have the record counts added.
 
 ## Rejoin a database to a data frame
 
@@ -437,10 +439,6 @@ DiagrammeR::grViz(gv(avoid_schema_removed))
 This schema is now in LTK form, with no remaining avoidable attributes. We could have also removed `A` from relation `A_C` instead of `B`, so this process may not have a unique result. The package's implementation prefers to remove attributes that appear later in the original relation.
 
 # Planned extensions
-
-## Class information in schemas
-
-As shown in the plots above, database schemas don't contain information about the attribute classes: this is only added on database creation. This would potentially be useful if the original data frame is large, and creating the database would take a long time.
 
 ## Handling of duplicate records
 
