@@ -133,6 +133,7 @@ describe("functional_dependency", {
       res <- c(...)
       for (l in lst) {
         expect_true(all(is.element(attrs_order(l), attrs_order(res))))
+        expect_true(all(is.element(attrs_class(l), attrs_class(res))))
       }
     }
     forall(
@@ -197,14 +198,33 @@ describe("functional_dependency", {
       curry = TRUE
     )
   })
-  it("is composed of its detset() and dependent() outputs, with attrs_order() attribute", {
+  it("is composed of its detset() and dependent() outputs, with attrs_order() and attrs_class() attributes", {
     forall(
-      gen.fd(letters[1:6], 0, 8),
+      gen.element(list(
+        "logical",
+        "integer",
+        "numeric",
+        "character",
+        c("nested1", "nested2")
+      )) |>
+        gen.list(of = 6) |>
+        gen.with(\(classes) setNames(classes, letters[1:6])) |>
+        gen.and_then(\(classes) {
+          list(
+            fds = gen.fd(letters[1:6], 0, 8),
+            classes = gen.pure(classes)
+          )
+        }) |>
+        gen.with(uncurry(\(fds, classes) {
+          attrs_class(fds) <- classes
+          fds
+        })),
       \(fd) expect_identical(
         fd,
         functional_dependency(
           Map(list, detset(fd), dependent(fd)),
-          attrs_order = attrs_order(fd)
+          attrs_order = attrs_order(fd),
+          attrs_class = attrs_class(fd)
         )
       )
     )

@@ -18,6 +18,7 @@ is_valid_functional_dependency <- function(x) {
     logical(1)
   )))
 
+  expect_identical(class(attrs_class(x)), "list")
   expect_true(identical(names(classes), attrs))
   expect_true(all(vapply(classes, is.character, logical(1))))
 }

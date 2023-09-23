@@ -7,9 +7,14 @@ library(hedgehog)
 describe("discover", {
   expect_equiv_deps <- function(deps1, deps2) {
     expect_setequal(attrs_order(deps1), attrs_order(deps2))
+    expect_setequal(attrs_class(deps1), attrs_class(deps2))
     expect_setequal(
       deps1,
-      functional_dependency(unclass(deps2), attrs_order(deps1))
+      functional_dependency(
+        unclass(deps2),
+        attrs_order(deps1),
+        attrs_class(deps1)
+      )
     )
   }
   expect_equiv_deps_except_names <- function(deps1, deps2) {
@@ -21,7 +26,8 @@ describe("discover", {
         lapply(detset(deps1), \(dets) nms2[match(dets, nms1)]),
         nms2[match(dependent(deps1), nms1)]
       ),
-      nms2
+      nms2,
+      attrs_class(deps2)
     )
     expect_equiv_deps(renamed_deps1, deps2)
   }
@@ -29,16 +35,20 @@ describe("discover", {
     removed_attr <- setdiff(attrs_order(deps1), attrs_order(deps2))
     expect_length(removed_attr, 1)
     filtered <- deps1
-    filtered <- filtered[vapply(
-      filtered,
-      \(fd) !is.element(removed_attr, unlist(fd)),
-      logical(1)
-    )]
-    attrs_order(filtered) <- setdiff(attrs_order(deps1), removed_attr)
+    filtered <- functional_dependency(
+      unclass(filtered[vapply(
+        filtered,
+        \(fd) !is.element(removed_attr, unlist(fd)),
+        logical(1)
+      )]),
+      setdiff(attrs_order(deps1), removed_attr),
+      attrs_class(deps1)[attrs_order(deps1) != removed_attr]
+    )
     expect_equiv_deps(filtered, deps2)
   }
   expect_det_subsets_kept <- function(deps1, deps2) {
     expect_identical(attrs_order(deps1), attrs_order(deps2))
+    expect_identical(attrs_class(deps1), attrs_class(deps2))
     expect_true(all(vapply(
       deps1,
       \(ds) any(
@@ -457,6 +467,7 @@ describe("discover", {
     )
 
     expect_identical(attrs_order(deps), attrs_order(expected_deps))
+    expect_identical(attrs_class(deps), attrs_class(expected_deps))
     expect_true(all(is.element(expected_deps, deps)))
   })
   it("finds dependencies for the team data in original's edit demo", {
@@ -479,6 +490,7 @@ describe("discover", {
       c("team", "city", "state", "roster_size")
     )
     expect_identical(attrs_order(deps), attrs_order(expected_deps))
+    expect_identical(attrs_class(deps), attrs_class(expected_deps))
     expect_true(all(is.element(expected_deps, deps)))
   })
   it("finds dependencies for Wikipedia 1NF->2NF->3NF example", {
@@ -523,6 +535,7 @@ describe("discover", {
       )
     )
     expect_identical(attrs_order(deps), attrs_order(expected_deps))
+    expect_identical(attrs_class(deps), attrs_class(expected_deps))
     expect_true(all(is.element(expected_deps, deps)))
   })
   it("correctly handles attributes with non-df-standard names", {
