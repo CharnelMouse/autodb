@@ -151,7 +151,8 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
     relation_schema_string,
     attrs(x),
     keys(x),
-    names(x)
+    names(x),
+    lapply(attrs(x), \(as) attrs_class(x)[as])
   ) |>
     paste(collapse = "\n")
   reference_strings <- reference_strings(x)
@@ -196,7 +197,8 @@ gv.relation_schema <- function(x, name = NA_character_, ...) {
     relation_schema_string,
     attrs(x),
     keys(x),
-    names(x)
+    names(x),
+    lapply(attrs(x), \(as) attrs_class(x)[as])
   ) |>
     paste(collapse = "\n")
   teardown_string <- "}\n"
@@ -256,42 +258,16 @@ relation_string <- function(dataframe, df_name, row_name = c("record", "row")) {
   row_name <- match.arg(row_name)
   df <- dataframe$df
   keys <- dataframe$keys
-  df_snake <- snakecase::to_snake_case(df_name)
   col_names <- colnames(df)
-  col_snake <- snakecase::to_snake_case(col_names)
-  column_typing_info <- vapply(
-    seq_along(col_names),
-    \(n) {
-      col_class <- class(df[[n]])[[1]]
-      key_memberships <- vapply(keys, is.element, el = col_names[n], logical(1))
-      paste0(
-        "    <TR><TD PORT=\"TO_",
-        col_snake[n],
-        "\">",
-        col_names[n],
-        "</TD>",
-        paste(
-          vapply(
-            key_memberships,
-            \(m) if (m) "<TD BGCOLOR=\"black\"></TD>" else "<TD></TD>",
-            character(1)
-          ),
-          collapse = ""
-        ),
-        "<TD PORT=\"", paste0("FROM_", col_snake[n]), "\">", col_class, "</TD>",
-        "</TR>"
-      )
-    },
-    character(1)
-  )
-  columns_string <- paste(column_typing_info, collapse = "\n")
+  df_snake <- snakecase::to_snake_case(df_name)
+  col_classes <- vapply(df, \(a) class(a)[[1]], character(1))
 
-  nrows <- nrow(df)
+  columns_string <- columns_string(colnames(df), keys, col_classes)
   label <- paste0(
     "    <TR><TD COLSPAN=\"", length(keys) + 2, "\">",
     df_name,
     " (",
-    with_number(nrows, row_name, "", "s"),
+    with_number(nrow(df), row_name, "", "s"),
     ")",
     "</TD></TR>",
     "\n",
@@ -311,60 +287,19 @@ relation_string <- function(dataframe, df_name, row_name = c("record", "row")) {
   )
 }
 
-relation_schema_string <- function(attrs, keys, relation_name) {
+relation_schema_string <- function(attrs, keys, relation_name, attrs_class) {
   col_names <- attrs
-  col_snake <- snakecase::to_snake_case(col_names)
   rel_snake <- snakecase::to_snake_case(relation_name)
-  column_typing_info <- vapply(
-    seq_along(col_names),
-    \(n) {
-      key_memberships <- vapply(
-        keys,
-        is.element,
-        el = col_names[n],
-        logical(1)
-      )
-      key_table <- paste(
-        vapply(
-          seq_along(key_memberships),
-          \(m) {
-            preamble <- if (m == length(key_memberships))
-              paste0("<TD PORT =\"FROM_", col_snake[n], "\"")
-            else
-              "<TD"
-            paste0(
-              preamble,
-              if (key_memberships[m])
-                " BGCOLOR=\"black\"></TD>"
-              else
-                "></TD>"
-            )
-          },
-          character(1)
-        ),
-        collapse = ""
-      )
-      paste0(
-        "    <TR><TD PORT=\"TO_",
-        col_snake[n],
-        "\">",
-        col_names[n],
-        "</TD>",
-        key_table,
-        "</TR>"
-      )
-    },
-    character(1)
-  )
-  columns_string <- paste(column_typing_info, collapse = "\n")
+  col_classes <- vapply(attrs_class, `[[`, character(1), 1L)
+
+  columns_string <- columns_string(attrs, keys, col_classes)
   label <- paste0(
-    "    <TR><TD COLSPAN=\"", length(keys) + 1, "\">",
+    "    <TR><TD COLSPAN=\"", length(keys) + 2, "\">",
     relation_name,
     "</TD></TR>",
     "\n",
     columns_string
   )
-
   paste0(
     "  ",
     rel_snake,
@@ -377,6 +312,37 @@ relation_schema_string <- function(attrs, keys, relation_name) {
     label,
     "\n    </TABLE>>];"
   )
+}
+
+columns_string <- function(col_names, keys, col_classes) {
+  col_snake <- snakecase::to_snake_case(col_names)
+  key_membership_strings <- vapply(
+    col_names,
+    \(nm) paste(
+      vapply(
+        keys,
+        \(key) if (is.element(nm, key))
+          "<TD BGCOLOR=\"black\"></TD>"
+        else
+          "<TD></TD>",
+        character(1)
+      ),
+      collapse = ""
+    ),
+    character(1)
+  )
+  column_typing_info <- paste0(
+    "    <TR><TD PORT=\"TO_",
+    col_snake,
+    "\">",
+    col_names,
+    "</TD>",
+    key_membership_strings,
+    "<TD PORT=\"FROM_", col_snake, "\">", col_classes, "</TD>",
+    "</TR>",
+    recycle0 = TRUE
+  )
+  paste(column_typing_info, collapse = "\n")
 }
 
 reference_strings <- function(x) {
