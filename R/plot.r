@@ -258,7 +258,6 @@ relation_string <- function(dataframe, df_name, row_name = c("record", "row")) {
   row_name <- match.arg(row_name)
   df <- dataframe$df
   keys <- dataframe$keys
-  col_names <- colnames(df)
   df_snake <- snakecase::to_snake_case(df_name)
   col_classes <- vapply(df, \(a) class(a)[[1]], character(1))
 
@@ -288,7 +287,6 @@ relation_string <- function(dataframe, df_name, row_name = c("record", "row")) {
 }
 
 relation_schema_string <- function(attrs, keys, relation_name, attrs_class) {
-  col_names <- attrs
   rel_snake <- snakecase::to_snake_case(relation_name)
   col_classes <- vapply(attrs_class, `[[`, character(1), 1L)
 
