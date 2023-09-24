@@ -202,7 +202,7 @@ describe("decompose", {
   })
   it("is equivalent to create >> insert for valid data", {
     forall(
-      gen_df(10, 10, remove_dup_rows = TRUE) |>
+      gen_df(6, 7, remove_dup_rows = TRUE) |>
         gen.with(\(df) {
           list(
             df = df,

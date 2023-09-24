@@ -124,15 +124,23 @@ print.relation <- function(x, max = 10, ...) {
 
 #' @exportS3Method
 insert.relation <- function(x, vals, ...) {
-  x[] <- lapply(
+  new_relations <- lapply(
     x,
     \(rel) {
-      rel$df <- rbind(
-        rel$df,
-        vals[, names(rel$df), drop = FALSE]
-      )
+      rel$df <- if (ncol(rel$df) == 0L)
+        vals[
+          seq_len(nrow(rel$df) + nrow(vals) >= 1L),
+          names(rel$df),
+          drop = FALSE
+        ]
+      else
+        rbind(
+          rel$df,
+          unique(vals[, names(rel$df), drop = FALSE])
+        )
       rel
     }
   )
+  x[] <- new_relations
   x
 }

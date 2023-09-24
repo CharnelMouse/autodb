@@ -119,14 +119,16 @@ describe("reduce.database_schema", {
           c(keys(once), list(list("extra_attr"))
           )
         ),
-        c(attrs_order(once), "extra_attr")
+        c(attrs_order(once), "extra_attr"),
+        c(attrs_class(once), list(extra_attr = "logical"))
       ) |>
         database_schema(relationships = relationships(once))
 
       twice <- reduce(once_plus_small, names(ds)[1L])
       twice_minus_small_attr <- relation_schema(
         Map(list, attrs(twice), keys(twice)),
-        setdiff(attrs_order(twice), "extra_attr")
+        setdiff(attrs_order(twice), "extra_attr"),
+        attrs_class(twice)[attrs_order(twice) != "extra_attr"]
       ) |>
         database_schema(relationships = relationships(twice))
       expect_identical(twice_minus_small_attr, once)
