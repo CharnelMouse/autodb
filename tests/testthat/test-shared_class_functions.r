@@ -117,8 +117,8 @@ describe("insert", {
             gen.int(10) |>
               gen.and_then(with_args(
                 gen.df_fixed_ranges,
-                classes = rep("logical", 4),
-                nms = letters[1:4],
+                classes = rep("logical", length(attrs_order(r))),
+                nms = attrs_order(r),
                 remove_dup_rows = TRUE
               )),
             gen.relationships(r, skp)
