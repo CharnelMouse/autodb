@@ -22,7 +22,11 @@ library(autodb)
 
 # Terminology
 
-To avoid confusion, this vignette is consistent with terminology: a *database* consists of *relations*, which have *records* with the same *attributes*. This is in line with terms used in the relational model; in Statistics, where we would talk about tables, which have rows with values for the same variables, with a column for each variable. For the original data set, which is a flat table, we refer to a *data frame* instead, which also consists of records with attributes.
+To avoid confusion, this vignette is consistent with terminology: a *database* consists of *relations*, which have *records* with the same *attributes*. This is in line with terms used in the relational model; in Statistics, we would talk about tables, which have rows with values for the same variables, with a column for each variable.
+
+For the original data set, which is a flat table, we refer to a *data frame* instead, which also consists of records with attributes.
+
+When we talk about the type of values an attribute can take, we talk about a *class*, as in the relational model and R, rather than a value type, as in many other programming languages.
 
 # Motivation
 
@@ -152,7 +156,7 @@ Additionally, at this point we have no connections between the relation schemas,
 Let's look at a different dataset for a moment, to look at some cases where we don't want to use the dependencies as given. We'll use the Titanic data set, also provided with base R. This data is in array form, so we first convert it to data frame form:
 
 ```{r}
-as.data.frame(Titanic)
+knitr::kable(as.data.frame(Titanic))
 ```
 
 This is a simple set of data, with a single count observation, `Freq`, for each combination of the four determining attributes. In other words, the relation is already normalised, so we only expect one relation in the normalised database.
@@ -388,7 +392,7 @@ nudge_approx_database_schema <- discover(
 DiagrammeR::grViz(gv(nudge_approx_database_schema))
 ```
 
-This is a little overwhelming, so we'll use a utility function called `reduce`. This finds the relation with the most records, which can be considered as the "main" relation, and removes any relations not linked to it by foreign key references. Reducing the approximate database gives us this set of relations:
+This is a little overwhelming, so we'll use a utility function called `reduce`. This returns only the named "main" relation, and any relations for which it is a descendant via foreign key references. Reducing the approximate schema, with the effect size table as the main table, gives us this set of relations:
 
 ```{r nudge_approximate_reduced}
 DiagrammeR::grViz(gv(reduce(nudge_approx_database_schema, "es_id")))
@@ -400,9 +404,9 @@ Questionable intermediate relations aside, we can see that there is now a public
 
 ## Avoidable attributes
 
-The next normal form after third normal form (3NF) is Boyes-Codd normal form (BCNF). It represents an issue for automatic normalisation, since not all relations can be put into BCNF. Even worse, determining whether a database schema in 3NF is in BCNF is intractable.
+The next normal form after third normal form (3NF) is Boyes-Codd normal form (BCNF). Ensuring BCNF is enforced by the database is trickier, as in some cases it can't be enforced with just relations and foreign key constrains.
 
-Instead, the package includes an option to convert to enhanced third normal form, also known as LTK form. This enhancement is tangential to BCNF, and can also be used to enhance schemas in BCNF.
+However, the package includes an option to convert to enhanced third normal form, also known as LTK form, which can be so enforced. This enhancement is tangential to BCNF, and could also be used to enhance schemas in BCNF.
 
 In brief, the standard normal forms only put constraints on the attributes present in the relations one relation at a time. The enhancement is a constraint on the attributes present in a relation, while considering their presence in other relations. If a attribute in a relation can be removed, and still be determined from that relation by joining it to others, then the attribute is "avoidable", and can be removed. If the attribute is in any of the relation's keys, they'll be replaced by keys that use the attributes not being removed. This removes attributes from relations without removing any information from the database as a whole.
 
@@ -424,7 +428,7 @@ avoid_schema <- normalise(avoid_deps)
 DiagrammeR::grViz(gv(avoid_schema))
 ```
 
-Attributes `A` and `B` are equivalent, since relation `A` has them both as a key. In other words, relation `A` is a simple lookup relation. Because of this, we could remove `B` from relation `A_C`, and replace the key `B, D` with `A, D`, which is equivalent when accounting from the lookup relation `A`.
+Attributes `A` and `B` are equivalent, since relation `A` has them both as a key. In other words, relation `A` is a simple lookup relation. Because of this, we could remove `B` from relation `A_C`, and replace the key `B, D` with `A, D`, which is equivalent when accounting for relation `A`.
 
 We can have this removal of avoidable attributes done automatically, using the `remove_avoidable` flag for `normalise`:
 
@@ -446,18 +450,28 @@ It's expected that an R user might pass a data frame into the package that has d
 
 ## Missing values
 
-In relational databases, we commonly want to avoid the presence of missing values. For example, take the following data frame:
+Strictly speaking, `autodb` does not search for functional dependencies, because these can't account for missing values. Instead, it searches for a weaker variant, which has been called a *literal* functional dependency (LFD) in the literature.
+
+The functional dependency `X -> Y` holds if, for any two possible records whose values in `X` are *equal*, their values in `Y` are also *equal*. This requires attribute values to take the *equality* operator, `==` in R. Additionally, they must take it under binary logic: whether two values are equal can only be true or false, not missing. This disallows the presence of missing values (`NA` and `NaN`), since testing for equality with a missing value returns a missing result.
+
+The literal functional dependency `X -> Y` holds, or the functional dependency `X -> Y` holds literally, if, for any two possible records whose values in `X` are *identical*, their values in `Y` are also *identical*, where values are identical if both are non-missing and equal, or both are missing. This requires attribute classes to take the *identity* operator, `identical()` with default optional parameter values in R. Again, they must take it under binary logic, but the identity operator cannot return non-binary results anyway: In R, for example, `identical()` can only return `TRUE` or `FALSE`, never `NA`. There is, therefore, no constraint on missing values in attribute classes, or on attribute classes in general.
+
+LFDs are more generic than standard functional dependencies: since practically every class takes the identity operator, they practically make no assumptions about the attribute classes present in a data set. 
+
+There are other FD variants than handle missing values, but, unlike most of them, LFDs still satisfy Armstrong's axioms, allowing them to be used in normalisation in the same way as normal FDs. For example, they still respect transitivity: if X -> Y and Y -> Z literally, then X -> Z literally.
+
+However, ignoring the special status of missing values in this way ignores important structural information. In the relational model, and ideally in relational databases, we want to have no missing values at all, partly to avoid awkward questions about what trinary logic means with respect to filtering or joining tables. For example, take the following data frame:
 
 ```{r example_data_frame_with_NAs}
 df_nas <- data.frame(
-  patient_id = c(1L, 2L, 3L, 4L),
+  patient = c(1L, 2L, 3L, 4L),
   trial_entry_date = as.Date(c("2022/05/02", "2022/06/06", "2022/04/01", "2022/03/19")),
   death_date = as.Date(c(NA, NA, "2022/10/07", NA))
 )
-df_nas
+knitr::kable(df_nas)
 ```
 
-The package currently treats `NA` as just another value, with no special treatment for normalisation or rejoining, resulting in no splitting of the above data frame:
+`autodb` currently treats `NA` as just another value, which results in the initial data frame not being split in the database schema:
 
 ```{r example_data_frame_with_NAs_autodb}
 DiagrammeR::grViz(gv(autodb(df_nas)))
@@ -471,16 +485,169 @@ ideal_db <- decompose(
   database_schema(
     relation_schema(
       list(
-        patient = list(c("patient_id", "trial_entry_date"), list("patient_id")),
-        death = list(c("patient_id", "death_date"), list("patient_id"))
+        patient = list(c("patient", "trial_entry_date"), list("patient")),
+        patient_death = list(c("patient", "death_date"), list("patient"))
       ),
       names(df_nas)
     ),
-    list(list("death", "patient_id", "patient", "patient_id"))
+    list(list("patient_death", "patient", "patient", "patient"))
   )
 )
-ideal_db$death$df <- subset(ideal_db$death$df, !is.na(death_date))
+ideal_db$patient_death$df <- subset(ideal_db$patient_death$df, !is.na(death_date))
 DiagrammeR::grViz(gv(ideal_db))
 ```
 
-Handling cases like this requires automatically detecting, and normalising, nullable functional dependencies, which account for the ambiguity of missing values.
+This makes more of the data's structure apparent, and enforceable, in the database structure, since it makes it clear that the death date is optional.
+
+Removing missing values in this way requires additional steps in dependency detection, as well as normalisation, since dependency detection is the only part of the process where the original table is searched for structure.
+
+# Handling some special cases
+
+## Disjunctive existence unions / option types
+
+As a more general case of the missing values section, we sometimes have sets $Y_1, Y_2, \ldots$ that are mutually exclusive for being non-missing, where the choice is determined by some set $X$.
+
+For example. I commonly get data sets where certain values can be given as either single values, or endpoints of an interval. Sometimes this is done within a single column, sometimes it's done across several:
+
+```{r example_data_frame_with_interval_option}
+df_options <- data.frame(
+  id = 1:10,
+  single_col = c("2.3", "2.3", "5.7", "2.4-7.1", "0-10", "2.4-10", "5.3-13.1", "2.4-25.8", "2.4-25.8", "5.6-25.8"),
+  value = c(2.3, 2.3, 5.7, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_),
+  lower_bound = c(NA_real_, NA_real_, NA_real_, 2.4, 0, 2.4, 5.3, 2.4, 2.4, 5.6),
+  upper_bound = c(NA_real_, NA_real_, NA_real_, 7.1, 10, 10, 13.1, 25.8, 25.8, 25.8),
+  type = c("value", "value", "value", "interval", "interval", "interval", "interval", "interval", "interval", "interval")
+)
+knitr::kable(df_options)
+```
+
+`autodb` has no way to know about these relationships, so it ignores them:
+
+```{r example_data_frame_with_interval_option_db}
+db_options <- autodb(df_options)
+DiagrammeR::grViz(gv(db_options))
+```
+
+However, looking at the three parent tables shows that something is going on, since whether the individual values are missing determines the type:
+
+```{r example_data_frame_with_interval_option_db_parents}
+knitr::kable(db_options$value$df)
+knitr::kable(db_options$lower_bound$df)
+knitr::kable(db_options$upper_bound$df)
+```
+
+As a general solution for finding these sorts of relationships, without manually checking relations myself, I like taking each attribute with missing values, and adding a companion attribute that states whether the value is present or missing:
+
+```{r example_data_frame_with_interval_option_nulls}
+df_options_with_presence <- data.frame(
+  id = df_options$id,
+  single_col = df_options$single_col,
+  value = df_options$value,
+  value_present = !is.na(df_options$value),
+  lower_bound = df_options$lower_bound,
+  lower_bound_present = !is.na(df_options$lower_bound),
+  upper_bound = df_options$upper_bound,
+  upper_bound_present = !is.na(df_options$upper_bound),
+  type = df_options$type
+)
+knitr::kable(df_options_with_presence)
+```
+
+This helps to make the structure more apparent in the database schema:
+
+```{r example_data_frame_with_interval_option_nulls_db}
+db_options_with_presence <- autodb(df_options_with_presence)
+DiagrammeR::grViz(gv(db_options_with_presence))
+```
+
+```{r example_data_frame_with_interval_option_nulls_rel}
+knitr::kable(db_options_with_presence$value_present$df)
+```
+
+This is still reasonable when we exclude the nullable attributes as determinants:
+
+```{r example_data_frame_with_interval_option_nulls_db_exnumeric}
+DiagrammeR::grViz(gv(autodb(df_options_with_presence, exclude_class = "numeric")))
+```
+
+Dealing with the single-column version takes more work: even with an attribute like the `type` attribute above, to indicate `single_col` contains several different types of values, it's not clear how to proceed with the normalisation. I've found an easier place to start is to split the data by the `type` value, and normalise each group separately first, to look for differences:
+
+```{r example_data_frame_with_interval_option_nulls_dbsplit}
+db_options_split <- lapply(split(df_options[, c("id", "single_col", "type")], df_options$type), autodb)
+```
+
+```{r example_data_frame_with_interval_option_nulls_dbval}
+DiagrammeR::grViz(gv(db_options_split$value))
+```
+
+```{r example_data_frame_with_interval_option_nulls_dbint}
+DiagrammeR::grViz(gv(db_options_split$interval))
+```
+
+In this case, it's not especially informative, but it's more helpful when the option type affects functional dependencies for other sets of attributes.
+
+As a rather abstract example, we could suppose that these measurements are done with two different types of machine (`device`): both can return an interval, but only one can return a value instead.
+
+```{r example_data_frame_with_interval_option_device}
+df_options_device <- cbind(
+  df_options,
+  device = c(1L, 1L, 1L, 2L, 1L, 2L, 1L, 1L, 2L, 2L)
+)
+knitr::kable(df_options_device)
+```
+
+The usual normalisation doesn't show anything:
+
+```{r example_data_frame_with_interval_option_device_db}
+DiagrammeR::grViz(gv(autodb(df_options_device)))
+```
+
+However, splitting does show something:
+
+```{r example_data_frame_with_interval_option_device_dbsplit}
+db_options_device_split <- lapply(
+  split(
+    df_options_device[, c("id", "single_col", "type", "device")],
+    df_options_device$type
+  ),
+  autodb
+)
+```
+
+```{r example_data_frame_with_interval_option_device_dbval}
+DiagrammeR::grViz(gv(db_options_device_split$value))
+```
+
+```{r example_data_frame_with_interval_option_device_dbint}
+DiagrammeR::grViz(gv(db_options_device_split$interval))
+```
+
+Seeing that all measurements with value type used the same device is something that then might raise our attention. Of course, this wouldn't happen if there were more than two types of device, with some able to give values and some not.
+
+This is much easier when the measurement is split across multiple columns, and we add presence companion attributes:
+
+```{r example_data_frame_with_interval_option_device_dball}
+df_options_deviceall <- cbind(
+  df_options_with_presence,
+  device = df_options_device$device
+)
+DiagrammeR::grViz(gv(autodb(df_options_deviceall)))
+```
+
+```{r example_data_frame_with_interval_option_device_dbsplitall}
+db_options_device_splitall <- lapply(
+  split(
+    df_options_deviceall,
+    df_options_deviceall$type
+  ),
+  autodb
+)
+```
+
+```{r example_data_frame_with_interval_option_device_dbvalall}
+DiagrammeR::grViz(gv(db_options_device_splitall$value))
+```
+
+```{r example_data_frame_with_interval_option_device_dbintall}
+DiagrammeR::grViz(gv(db_options_device_splitall$interval))
+```
