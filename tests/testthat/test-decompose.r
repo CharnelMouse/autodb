@@ -200,6 +200,24 @@ describe("decompose", {
       curry = TRUE
     )
   })
+  it("is equivalent to create >> insert for valid data", {
+    forall(
+      gen_df(10, 10, remove_dup_rows = TRUE) |>
+        gen.with(\(df) {
+          list(
+            df = df,
+            schema = normalise(discover(df, 1), remove_avoidable = TRUE)
+          )
+        }),
+      \(df, schema) {
+        expect_identical(
+          decompose(df, schema),
+          create(schema) |> insert(df)
+        )
+      },
+      curry = TRUE
+    )
+  })
 
   describe("Dependencies", {
     it("DepDF", {
