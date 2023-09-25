@@ -129,7 +129,7 @@ insert.relation <- function(x, vals, ...) {
     \(rel) {
       rel$df <- if (ncol(rel$df) == 0L)
         vals[
-          seq_len(nrow(rel$df) + nrow(vals) >= 1L),
+          seq_len(nrow(rel$df) + (nrow(vals) >= 1L)),
           names(rel$df),
           drop = FALSE
         ]
@@ -141,6 +141,39 @@ insert.relation <- function(x, vals, ...) {
       rel
     }
   )
+  keydups <- lapply(
+    new_relations,
+    \(rel) {
+      vapply(
+        rel$keys,
+        \(key) {
+          if (length(key) == 0L) {
+            if (nrow(rel$df) == 0L)
+              logical()
+            else
+              c(FALSE, rep(TRUE, nrow(rel$df) - 1L))
+          }else{
+            duplicated(rel$df[, key, drop = FALSE])
+          }
+        },
+        logical(nrow(rel$df))
+      )
+    }
+  )
+  if (any(unlist(keydups))) {
+    bad_relation_names <- names(new_relations)[vapply(keydups, any, logical(1))]
+    stop(
+      "insertion violates key constraints in ",
+      with_number(
+        length(bad_relation_names),
+        "relation",
+        "",
+        "s"
+      ),
+      ": ",
+      toString(bad_relation_names)
+    )
+  }
   x[] <- new_relations
   x
 }

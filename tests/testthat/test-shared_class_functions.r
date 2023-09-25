@@ -64,6 +64,28 @@ describe("insert", {
       )
     )
   })
+  it("returns an error when inserting key violations (e.g. already-present data)", {
+    forall(
+      gen_df(6, 7, minrow = 1, remove_dup_rows = TRUE) |>
+        gen.with(\(df) {
+          list(
+            x = discover(df, 1) |>
+              synthesise() |>
+              cross_reference(ensure_lossless = TRUE) |>
+              subschemas() |>
+              create_insert(df = df),
+            vals = df
+          )
+        }),
+      \(x, vals) {
+        expect_error(
+          insert(x, vals),
+          regexp = "^insertion violates key constraints in (1 relation|(\\d)+ relations): [[:alnum:]\\._]+(, [[:alnum:]\\._]+)*$"
+        )
+      },
+      curry = TRUE
+    )
+  })
   it("returns a valid object when given data that can be legally inserted", {
     forall(
       gen.relation(letters[1:4], 0, 6) |>
@@ -120,7 +142,8 @@ describe("insert", {
                 classes = rep("logical", length(attrs_order(r))),
                 nms = attrs_order(r),
                 remove_dup_rows = TRUE
-              )),
+              )) |>
+              gen.with(with_args(remove_insertion_key_violations, relation = r)),
             gen.relationships(r, skp)
           )
         })),
