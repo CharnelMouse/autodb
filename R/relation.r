@@ -127,17 +127,24 @@ insert.relation <- function(x, vals, ...) {
   new_relations <- lapply(
     x,
     \(rel) {
-      rel$df <- if (ncol(rel$df) == 0L)
-        vals[
-          seq_len(nrow(rel$df) + (nrow(vals) >= 1L)),
-          names(rel$df),
-          drop = FALSE
-        ]
-      else
-        rbind(
-          rel$df,
+      rel$df <- if (nrow(rel$df) == 0L) {
+        if (ncol(rel$df) == 0L)
+          vals[seq_len(nrow(vals) > 0L), character(), drop = FALSE]
+        else
           unique(vals[, names(rel$df), drop = FALSE])
-        )
+      }else{
+        if (ncol(rel$df) == 0L)
+          vals[
+            seq_len(nrow(rel$df) + (nrow(vals) >= 1L)),
+            names(rel$df),
+            drop = FALSE
+          ]
+        else
+          rbind(
+            rel$df,
+            unique(vals[, names(rel$df), drop = FALSE])
+          )
+      }
       rel
     }
   )

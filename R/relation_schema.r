@@ -259,8 +259,11 @@ create.relation_schema <- function(x, ...) {
           df[] <- Map(
             \(column, classes) {
               # apply classes in reverse order, to allow coercion
-              for (cl in rev(seq_along(classes)))
+              for (cl in rev(seq_along(classes))) {
+                if (classes[[cl]] == "factor")
+                  column <- factor(column)
                 class(column) <- classes[cl:length(classes)]
+              }
               column
             },
             df,

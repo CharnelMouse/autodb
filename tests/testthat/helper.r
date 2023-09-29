@@ -303,7 +303,7 @@ gen_df <- function(
   mincol = 0L,
   remove_dup_rows = FALSE
 ) {
-  asable_classes <- c("logical", "integer", "numeric", "character")
+  asable_classes <- c("logical", "integer", "numeric", "character", "factor")
   list(
     gen.sample(seq.int(min(mincol, ncol), ncol), 1) |>
       gen.and_then(\(n) list(
@@ -317,12 +317,21 @@ gen_df <- function(
 }
 
 gen.df_fixed_ranges <- function(classes, nms, n_records, remove_dup_rows) {
+  as_fns <- list(
+    logical = as.logical,
+    integer = as.integer,
+    numeric = as.numeric,
+    character = as.character,
+    factor = with_args(factor, levels = c(FALSE, TRUE))
+  )
   if (length(classes) == 0L)
     return(gen.pure(data.frame(a = NA)[, FALSE, drop = FALSE]))
   lapply(
     classes,
-    with_args(as, object = c(FALSE, TRUE, NA)) %>>%
-      with_args(gen.sample, size = n_records, replace = TRUE)
+    \(cl) {
+      as_fns[[cl]](c(FALSE, TRUE, NA)) |>
+        gen.sample(size = n_records, replace = TRUE)
+    }
   ) |>
     gen.with(
       with_args(setNames, nm = nms) %>>%

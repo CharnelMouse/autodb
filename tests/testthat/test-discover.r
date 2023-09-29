@@ -189,8 +189,7 @@ describe("discover", {
     gen_perm <- function(vals) {
       uniq <- unique(vals)
       matches <- match(vals, uniq)
-      pool <- union(uniq, NA)
-      gen.sample(pool, length(uniq)) |>
+      gen.sample(uniq, length(uniq)) |>
         gen.with(\(perm) perm[matches])
     }
     gen_df_and_value_perm <- function(
@@ -199,7 +198,7 @@ describe("discover", {
       remove_dup_rows = FALSE
     ) {
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
-        gen.and_then(\(df) list(df, gen.int(ncol(df)))) |>
+        gen.and_then(\(df) list(gen.pure(df), gen.int(ncol(df)))) |>
         gen.and_then(\(lst) c(lst, list(gen_perm(lst[[1]][[lst[[2]]]])))) |>
         gen.with(\(lst) {
           df <- lst[[1]]
@@ -227,7 +226,8 @@ describe("discover", {
         logical = c("integer", "numeric", "character"),
         integer = c("numeric", "character"),
         numeric = c("character"),
-        character = c("logical")
+        character = c("logical"),
+        factor = c("integer", "numeric", "character")
       )
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.sample(ncol(df)))) |>
