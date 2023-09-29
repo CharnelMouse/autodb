@@ -223,29 +223,26 @@ describe("discover", {
       remove_dup_rows = FALSE
     ) {
       classes <- c("logical", "integer", "numeric", "character")
+      changes <- list(
+        logical = c("integer", "numeric", "character"),
+        integer = c("numeric", "character"),
+        numeric = c("character"),
+        character = c("logical")
+      )
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.sample(ncol(df)))) |>
-        gen.and_then(\(lst) {
-          c(
-            lst,
-            list(gen.element(classes[
-              -seq.int(min(
-                match(class(lst[[1]][[lst[[2]]]]), classes),
-                length(classes) - 1L
-              ))
-            ]))
+        gen.and_then(uncurry(\(df, attr) {
+          list(
+            gen.pure(df),
+            gen.pure(attr),
+            gen.element(changes[[class(df[[attr]])[[1]]]])
           )
-        }) |>
-        gen.with(
-          \(lst) {
-            df <- lst[[1]]
-            attr <- lst[[2]]
-            new_class <- lst[[3]]
-            permed <- df
-            permed[[attr]] <- as(permed[[attr]], new_class)
-            list(df, permed)
-          }
-        )
+        })) |>
+        gen.with(uncurry(\(df, attr, new_class) {
+          permed <- df
+          permed[[attr]] <- as(permed[[attr]], new_class)
+          list(df, permed)
+        }))
     }
     forall(
       gen_df_and_type_change(4, 6),
