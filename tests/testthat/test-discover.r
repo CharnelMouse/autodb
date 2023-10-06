@@ -7,13 +7,11 @@ library(hedgehog)
 describe("discover", {
   expect_equiv_deps <- function(deps1, deps2) {
     expect_setequal(attrs_order(deps1), attrs_order(deps2))
-    expect_identical(attrs_class(deps1), attrs_class(deps2)[attrs_order(deps1)])
     expect_setequal(
       deps1,
       functional_dependency(
         unclass(deps2),
-        attrs_order(deps1),
-        attrs_class(deps1)
+        attrs_order(deps1)
       )
     )
   }
@@ -26,24 +24,20 @@ describe("discover", {
         lapply(detset(deps1), \(dets) nms2[match(dets, nms1)]),
         nms2[match(dependent(deps1), nms1)]
       ),
-      nms2,
-      attrs_class(deps2)
+      nms2
     )
     expect_equiv_deps(renamed_deps1, deps2)
   }
   expect_equiv_deps_except_classes <- function(deps1, deps2) {
     nms1 <- attrs_order(deps1)
     nms2 <- attrs_order(deps2)
-    cl1 <- attrs_class(deps1)
-    cl2 <- attrs_class(deps2)
     reclassed_deps1 <- functional_dependency(
       Map(
         list,
         lapply(detset(deps1), \(dets) nms2[match(dets, nms1)]),
         nms2[match(dependent(deps1), nms1)]
       ),
-      nms1,
-      cl2
+      nms1
     )
     expect_equiv_deps(reclassed_deps1, deps2)
   }
@@ -57,14 +51,12 @@ describe("discover", {
         \(fd) !is.element(removed_attr, unlist(fd)),
         logical(1)
       )]),
-      setdiff(attrs_order(deps1), removed_attr),
-      attrs_class(deps1)[attrs_order(deps1) != removed_attr]
+      setdiff(attrs_order(deps1), removed_attr)
     )
     expect_equiv_deps(filtered, deps2)
   }
   expect_det_subsets_kept <- function(deps1, deps2) {
     expect_identical(attrs_order(deps1), attrs_order(deps2))
-    expect_identical(attrs_class(deps1), attrs_class(deps2))
     expect_true(all(vapply(
       deps1,
       \(ds) any(
@@ -155,15 +147,6 @@ describe("discover", {
     forall(
       gen_df(4, 6),
       two_copies(both_terminate_then(expect_equiv_deps, accuracy = 1))
-    )
-  })
-  it("stores the data frame's attribute classes", {
-    forall(
-      gen_df(6, 7, remove_dup_rows = TRUE),
-      dup %>>%
-        (onLeft(with_args(discover, accuracy = 1) %>>% attrs_class)) %>>%
-        (onRight(with_args(lapply, FUN = class))) %>>%
-        (uncurry(expect_identical))
     )
   })
   it("returns dependencies where shared dependent <=> not sub/supersets for determinants", {
@@ -485,18 +468,10 @@ describe("discover", {
         list(c('player_name', 'jersey_num'), "state"),
         list('city', "state")
       ),
-      c("team", "jersey_num", "player_name", "city", "state"),
-      list(
-        team = "character",
-        jersey_num = "numeric",
-        player_name = "character",
-        city = "character",
-        state = "character"
-      )
+      c("team", "jersey_num", "player_name", "city", "state")
     )
 
     expect_identical(attrs_order(deps), attrs_order(expected_deps))
-    expect_identical(attrs_class(deps), attrs_class(expected_deps))
     expect_true(all(is.element(expected_deps, deps)))
   })
   it("finds dependencies for the team data in original's edit demo", {
@@ -516,16 +491,9 @@ describe("discover", {
         list("team", "roster_size"),
         list("city", "roster_size")
       ),
-      c("team", "city", "state", "roster_size"),
-      list(
-        team = "character",
-        city = "character",
-        state = "character",
-        roster_size = "integer"
-      )
+      c("team", "city", "state", "roster_size")
     )
     expect_identical(attrs_order(deps), attrs_order(expected_deps))
-    expect_identical(attrs_class(deps), attrs_class(expected_deps))
     expect_true(all(is.element(expected_deps, deps)))
   })
   it("finds dependencies for Wikipedia 1NF->2NF->3NF example", {
@@ -567,21 +535,9 @@ describe("discover", {
         "Genre_ID",
         "Genre_Name",
         "Publisher_ID"
-      ),
-      list(
-        Title = "character",
-        Format = "character",
-        Author = "character",
-        Author_Nationality = "character",
-        Price = "integer",
-        Thickness = "character",
-        Genre_ID = "integer",
-        Genre_Name = "character",
-        Publisher_ID = "integer"
       )
     )
     expect_identical(attrs_order(deps), attrs_order(expected_deps))
-    expect_identical(attrs_class(deps), attrs_class(expected_deps))
     expect_true(all(is.element(expected_deps, deps)))
   })
   it("correctly handles attributes with non-df-standard names", {

@@ -151,8 +151,7 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
     relation_schema_string,
     attrs(x),
     keys(x),
-    names(x),
-    lapply(attrs(x), \(as) attrs_class(x)[as])
+    names(x)
   ) |>
     paste(collapse = "\n")
   reference_strings <- reference_strings(x)
@@ -197,8 +196,7 @@ gv.relation_schema <- function(x, name = NA_character_, ...) {
     relation_schema_string,
     attrs(x),
     keys(x),
-    names(x),
-    lapply(attrs(x), \(as) attrs_class(x)[as])
+    names(x)
   ) |>
     paste(collapse = "\n")
   teardown_string <- "}\n"
@@ -286,13 +284,12 @@ relation_string <- function(dataframe, df_name, row_name = c("record", "row")) {
   )
 }
 
-relation_schema_string <- function(attrs, keys, relation_name, attrs_class) {
+relation_schema_string <- function(attrs, keys, relation_name) {
   rel_snake <- snakecase::to_snake_case(relation_name)
-  col_classes <- vapply(attrs_class, `[[`, character(1), 1L)
 
-  columns_string <- columns_string(attrs, keys, col_classes)
+  columns_string <- columns_schema_string(attrs, keys)
   label <- paste0(
-    "    <TR><TD COLSPAN=\"", length(keys) + 2, "\">",
+    "    <TR><TD COLSPAN=\"", length(keys) + 1, "\">",
     relation_name,
     "</TD></TR>",
     "\n",
@@ -337,6 +334,43 @@ columns_string <- function(col_names, keys, col_classes) {
     "</TD>",
     key_membership_strings,
     "<TD PORT=\"FROM_", col_snake, "\">", col_classes, "</TD>",
+    "</TR>",
+    recycle0 = TRUE
+  )
+  paste(column_typing_info, collapse = "\n")
+}
+
+columns_schema_string <- function(col_names, keys) {
+  col_snake <- snakecase::to_snake_case(col_names)
+  key_membership_strings <- vapply(
+    col_names,
+    \(nm) paste(
+      vapply(
+        seq_along(keys),
+        \(n) {
+          preamble <- if (n == length(keys))
+            paste0("<TD PORT=\"FROM_", col_snake[[match(nm, col_names)]], "\"")
+          else
+            "<TD"
+          cell <- if (is.element(nm, keys[[n]]))
+            " BGCOLOR=\"black\"></TD>"
+          else
+            "></TD>"
+          paste0(preamble, cell)
+        },
+        character(1)
+      ),
+      collapse = ""
+    ),
+    character(1)
+  )
+  column_typing_info <- paste0(
+    "    <TR><TD PORT=\"TO_",
+    col_snake,
+    "\">",
+    col_names,
+    "</TD>",
+    key_membership_strings,
     "</TR>",
     recycle0 = TRUE
   )

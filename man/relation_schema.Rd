@@ -4,12 +4,7 @@
 \alias{relation_schema}
 \title{Relation schema vectors}
 \usage{
-relation_schema(
-  schemas,
-  attrs_order,
-  attrs_class = stats::setNames(rep_len(list("logical"), length(attrs_order)),
-    attrs_order)
-)
+relation_schema(schemas, attrs_order)
 }
 \arguments{
 \item{schemas}{a named list of schemas, in the form of two-element lists: the
@@ -20,22 +15,15 @@ each representing a candidate key.}
 \item{attrs_order}{a character vector, giving the names of all attributes.
 These need not be present in \code{schemas}, but all attributes in
 \code{schemas} must be present in \code{attrs_order}.}
-
-\item{attrs_class}{a named list of character vectors, giving the default class
-vectors for all attributes. By default, every attribute is assumed to be
-logical. These default classes are applied on use of \code{\link{create}},
-but get overridden by inserted data under usual R type coercion rules.}
 }
 \value{
 A \code{relation_schema} object, containing the list given in
-\code{schemas}, with \code{attrs_order} and \code{attrs_class} stored in an
-\code{attrs_order} attribute. Relation schemas are returned with their
-keys' attributes sorted according to the attribute order in
-\code{attrs_order}, and the keys then sorted by priority order. Attributes
-in the schema are also sorted, first by order of appearance in the sorted
-keys, then by order in \code{attrs_order} for non-prime attributes.
-Elements of \code{attrs_class} are sorted to be in the same order as in
-\code{attrs_order}.
+\code{schemas}, with \code{attrs_order} stored in an attribute of the same
+name. Relation schemas are returned with their keys' attributes sorted
+according to the attribute order in \code{attrs_order}, and the keys then
+sorted by priority order. Attributes in the schema are also sorted, first
+by order of appearance in the sorted keys, then by order in
+\code{attrs_order} for non-prime attributes.
 }
 \description{
 Creates a set of relation schemas, including the relation's attributes and

@@ -1,7 +1,6 @@
 is_valid_functional_dependency <- function(x) {
   expect_s3_class(x, "functional_dependency")
   attrs <- attrs_order(x)
-  classes <- attrs_class(x)
   expect_true(all(lengths(unclass(x)) == 2L))
   expect_silent(dependent(x))
   expect_true(all(lengths(dependent(x)) == 1L))
@@ -17,10 +16,6 @@ is_valid_functional_dependency <- function(x) {
     \(detset) !is.unsorted(match(detset, attrs)),
     logical(1)
   )))
-
-  expect_identical(class(attrs_class(x)), "list")
-  expect_true(identical(names(classes), attrs))
-  expect_true(all(vapply(classes, is.character, logical(1))))
 }
 
 is_valid_minimal_functional_dependency <- function(x) {
@@ -75,10 +70,6 @@ is_valid_relation_schema <- function(x, unique = FALSE, single_empty_key = FALSE
   expect_true(all(vapply(keys, Negate(anyDuplicated), logical(1))))
   if (single_empty_key)
     expect_lte(sum(vapply(keys, identical, logical(1), list(character()))), 1L)
-  expect_identical(length(attrs_order(x)), length(attrs_class(x)))
-  expect_identical(class(attrs_class(x)), "list")
-  expect_true(all(vapply(attrs_class(x), is.character, logical(1))))
-  expect_identical(names(attrs_class(x)), attrs_order(x))
 
   if (unique) {
     expect_true(!anyDuplicated(x))
@@ -440,33 +431,25 @@ gen.keys <- function(attrs) {
 }
 gen.relation_schema <- function(x, from, to) {
   gen.subsequence(x) |>
-    gen.and_then(\(attrs) list(
-      schemas = list(gen.pure(attrs), gen.keys(attrs)) |>
-        gen.list(from = from, to = to),
-      classes <- gen.element(list(
-        "logical",
-        "integer",
-        "numeric",
-        "character",
-        c("nested1", "nested2")
-      )) |>
-        gen.list(of = length(x))
-    )) |>
-    gen.with(\(lst) {
+    gen.and_then(\(attrs) {
+      list(gen.pure(attrs), gen.keys(attrs)) |>
+        gen.list(from = from, to = to)
+    }) |>
+    gen.with(\(schemas) {
       # only one schema can have an empty key
       rels_with_empty_keys <- which(vapply(
-        lst[[1]],
+        schemas,
         \(schema) any(lengths(schema[[2]]) == 0L),
         logical(1)
       ))
       if (length(rels_with_empty_keys) > 1L)
-        lst[[1]] <- lst[[1]][-rels_with_empty_keys[-1]]
+        schemas <- schemas[-rels_with_empty_keys[-1]]
 
       nms <- make.names(
-        vapply(lst[[1]], \(rel) name_dataframe(rel[[2]][[1]]), character(1)),
+        vapply(schemas, \(rel) name_dataframe(rel[[2]][[1]]), character(1)),
         unique = TRUE
       )
-      list(setNames(lst[[1]], nms), x, setNames(lst[[2]], x))
+      list(setNames(schemas, nms), x)
     }) |>
     gen.with(\(lst) {
       do.call(relation_schema, lst)
@@ -483,21 +466,6 @@ gen.attrs_class <- function(nm) {
   )) |>
     gen.list(of = length(nm)) |>
     gen.with(with_args(setNames, nm = nm))
-}
-
-gen.relation_schema_given_attrs_class <- function(attrs_class, from, to) {
-  gen.subsequence(names(attrs_class)) |>
-    gen.and_then(\(attrs) gen.relation_schema(attrs, from, to)) |>
-    gen.with(\(rs) {attrs_class(rs) <- attrs_class[attrs_order(rs)]; rs})
-}
-
-gen.empty_relation_schema_given_attrs_class <- function(attrs_class) {
-  gen.subsequence(names(attrs_class)) |>
-    gen.with(\(attrs) relation_schema(
-      setNames(list(), character()),
-      attrs_order = attrs,
-      attrs_class = attrs_class[attrs]
-    ))
 }
 
 gen.relation <- function(x, from, to) {
@@ -678,24 +646,6 @@ gen.database_schema <- function(
           gen.relationships(rs, single_key_pairs))
     }) |>
     gen.with(\(lst) do.call(database_schema, lst))
-}
-
-gen.database_schema_given_attrs_class <- function(
-  attrs_class,
-  from,
-  to,
-  same_attr_name = FALSE,
-  single_key_pairs = FALSE
-) {
-  gen.subsequence(names(attrs_class)) |>
-    gen.and_then(\(attrs) gen.database_schema(
-      attrs,
-      from,
-      to,
-      same_attr_name,
-      single_key_pairs
-    )) |>
-    gen.with(\(ds) {attrs_class(ds) <- attrs_class[attrs_order(ds)]; ds})
 }
 
 gen.database <- function(

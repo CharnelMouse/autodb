@@ -92,32 +92,6 @@ attrs_order <- function(x, ...) {
   UseMethod("attrs_order<-")
 }
 
-#' Relation data attribute default classes
-#'
-#' Generic function for schemas, giving the default class vectors for
-#' attributes. These are assigned when using \code{\link{create}}, and can be
-#' overridded when using \code{\link{insert}}.
-#'
-#' @param x an R object, intended to be a schema.
-#' @param ... further arguments passed on to methods.
-#'
-#' @return A list of character vectors, giving the default class attribute for
-#'   each attribute. Attributes are given in the same order as in
-#'   \code{\link{attrs_order}}.
-#' @export
-attrs_class <- function(x, ...) {
-  UseMethod("attrs_class")
-}
-
-#' @rdname attrs_order
-#'
-#' @param value A character vector of the same length as \code{attrs_class(x, ...)}.
-#'
-#' @export
-`attrs_class<-` <- function(x, ..., value) {
-  UseMethod("attrs_class<-")
-}
-
 #' Name
 #'
 #' @param x an R object.

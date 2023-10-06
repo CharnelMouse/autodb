@@ -19,20 +19,14 @@
 #' @param attrs_order a character vector, giving the names of all attributes.
 #'   These need not be present in \code{schemas}, but all attributes in
 #'   \code{schemas} must be present in \code{attrs_order}.
-#' @param attrs_class a named list of character vectors, giving the default class
-#'   vectors for all attributes. By default, every attribute is assumed to be
-#'   logical. These default classes are applied on use of \code{\link{create}},
-#'   but get overridden by inserted data under usual R type coercion rules.
 #'
 #' @return A \code{relation_schema} object, containing the list given in
-#'   \code{schemas}, with \code{attrs_order} and \code{attrs_class} stored in an
-#'   \code{attrs_order} attribute. Relation schemas are returned with their
-#'   keys' attributes sorted according to the attribute order in
-#'   \code{attrs_order}, and the keys then sorted by priority order. Attributes
-#'   in the schema are also sorted, first by order of appearance in the sorted
-#'   keys, then by order in \code{attrs_order} for non-prime attributes.
-#'   Elements of \code{attrs_class} are sorted to be in the same order as in
-#'   \code{attrs_order}.
+#'   \code{schemas}, with \code{attrs_order} stored in an attribute of the same
+#'   name. Relation schemas are returned with their keys' attributes sorted
+#'   according to the attribute order in \code{attrs_order}, and the keys then
+#'   sorted by priority order. Attributes in the schema are also sorted, first
+#'   by order of appearance in the sorted keys, then by order in
+#'   \code{attrs_order} for non-prime attributes.
 #' @seealso \code{\link{attrs}}, \code{\link{keys}}, and \code{\link{attrs_order}}
 #'   for extracting parts of the information in a \code{relation_schema}.
 #' @export
@@ -50,11 +44,7 @@
 #' print(schemas)
 relation_schema <- function(
   schemas,
-  attrs_order,
-  attrs_class = stats::setNames(
-    rep_len(list("logical"), length(attrs_order)),
-    attrs_order
-  )
+  attrs_order
 ) {
   if (!all(lengths(schemas) == 2L))
     stop("schema elements must have length two")
@@ -87,10 +77,6 @@ relation_schema <- function(
   for (s in schemas)
     if (!all(is.element(unlist(s[[2]]), s[[1]])))
       stop("attributes in keys must be present in relation")
-  if (length(attrs_class) != length(attrs_order))
-    stop("attrs_class must have same length as attrs_order")
-  if (!setequal(names(attrs_class), attrs_order))
-    stop("attrs_class must have attrs_order as (unordered) names")
   schemas <- lapply(
     schemas,
     \(s) {
@@ -113,7 +99,7 @@ relation_schema <- function(
   )
   structure(
     schemas,
-    attrs_class = attrs_class[attrs_order],
+    attrs_order = attrs_order,
     class = "relation_schema"
   )
 }
@@ -166,33 +152,14 @@ keys.relation_schema <- function(x, ...) {
 
 #' @exportS3Method
 attrs_order.relation_schema <- function(x, ...) {
-  names(attrs_class(x))
+  attr(x, "attrs_order")
 }
 
 #' @export
 `attrs_order<-.relation_schema` <- function(x, ..., value) {
-  rels <- unclass(x)
-  attributes(rels)[c("attrs_order", "attrs_class")] <- NULL
   relation_schema(
-    rels,
-    attrs_order = value,
-    attrs_class = attrs_class(x)[value]
-  )
-}
-
-#' @exportS3Method
-attrs_class.relation_schema <- function(x, ...) {
-  attr(x, "attrs_class")
-}
-
-#' @export
-`attrs_class<-.relation_schema` <- function(x, ..., value) {
-  rels <- unclass(x)
-  attributes(rels)[c("attrs_order", "attrs_class")] <- NULL
-  relation_schema(
-    rels,
-    attrs_order = attrs_order(x),
-    attrs_class = value
+    unclass(x),
+    attrs_order = value
   )
 }
 
@@ -232,19 +199,7 @@ c.relation_schema <- function(...) {
   attrs_order_list <- lapply(lst, attrs_order)
   joined_attrs_order <- do.call(merge_attribute_orderings, attrs_order_list)
 
-  all_classes <- Reduce(c, lapply(lst, attrs_class))
-  if (is.null(names(all_classes)))
-    names(all_classes) <- character()
-  all_classes <- all_classes[!duplicated(Map(
-    list,
-    unname(all_classes),
-    names(all_classes)
-  ))]
-  if (length(all_classes) != length(joined_attrs_order))
-    stop("attrs_class values are not consistent")
-  joined_attrs_class <- all_classes[joined_attrs_order]
-
-  relation_schema(joined_schemas, joined_attrs_order, joined_attrs_class)
+  relation_schema(joined_schemas, joined_attrs_order)
 }
 
 #' @exportS3Method
@@ -254,23 +209,7 @@ create.relation_schema <- function(x, ...) {
       \(df, ks) list(df = df, keys = ks),
       lapply(
         attrs(x),
-        \(as) {
-          df <- data.frame(stats::setNames(lapply(as, \(x) logical()), as))
-          df[] <- Map(
-            \(column, classes) {
-              # apply classes in reverse order, to allow coercion
-              for (cl in rev(seq_along(classes))) {
-                if (classes[[cl]] == "factor")
-                  column <- factor(column)
-                class(column) <- classes[cl:length(classes)]
-              }
-              column
-            },
-            df,
-            attrs_class(x)[names(df)]
-          )
-          df
-        }
+        \(as) data.frame(stats::setNames(lapply(as, \(x) logical()), as))
       ),
       keys(x)
     ),

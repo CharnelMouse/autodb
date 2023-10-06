@@ -53,15 +53,6 @@ describe("synthesise", {
       )
     )
   })
-  it("carries over class information", {
-    forall(
-      gen_flat_deps(7, 20, to = 20),
-      expect_biidentical(
-        synthesise %>>% attrs_class,
-        attrs_class
-      )
-    )
-  })
   it("is invariant to dependency reordering", {
     gen_permutation <- gen.int(10) |>
       gen.and_then(\(n) list(

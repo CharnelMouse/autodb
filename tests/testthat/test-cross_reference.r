@@ -46,8 +46,7 @@ describe("cross_reference", {
       lone_attr <- LETTERS[length(attrs_order(rs)) + 1]
       new_rs <- relation_schema(
         unclass(rs),
-        attrs_order = c(attrs_order(rs), lone_attr),
-        attrs_class = c(attrs_class(rs), setNames(list("logical"), lone_attr))
+        attrs_order = c(attrs_order(rs), lone_attr)
       )
       linked <- cross_reference(rs, ensure_lossless = TRUE)
       expect_true(all(is.element(attrs_order(rs), unlist(attrs(linked)))))

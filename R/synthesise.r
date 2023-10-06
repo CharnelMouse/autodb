@@ -96,8 +96,7 @@ synthesise <- function(
   stopifnot(!anyDuplicated(relation_names))
   relation_schema(
     stats::setNames(Map(list, inter$attrs, inter$keys), relation_names),
-    inter$attrs_order,
-    attrs_class(dependencies)
+    inter$attrs_order
   )
 }
 
