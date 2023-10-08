@@ -462,24 +462,24 @@ gen.attrs_class <- function(nm) {
     "integer",
     "numeric",
     "character",
-    c("nested1", "nested2")
+    "factor"
   )) |>
     gen.list(of = length(nm)) |>
     gen.with(with_args(setNames, nm = nm))
 }
 
-gen.relation <- function(x, from, to) {
+gen.relation <- function(x, from, to, rows_from = 0L, rows_to = 10L) {
   gen.relation_schema(x, from, to) |>
-    gen.and_then(gen.relation_from_schema)
+    gen.and_then(\(rs) gen.relation_from_schema(rs, rows_from, rows_to))
 }
 
-gen.relation_from_schema <- function(rs) {
+gen.relation_from_schema <- function(rs, rows_from = 0L, rows_to = 10L) {
   create(rs) |>
     gen.and_then(\(empty_rel) {
       lapply(
         empty_rel,
         \(r) {
-          gen.sample(0:10, 1L) |>
+          gen.sample(rows_from:rows_to, 1L) |>
             gen.and_then(with_args(
               gen.df_fixed_ranges,
               classes = rep("logical", ncol(r$df)),
@@ -653,7 +653,9 @@ gen.database <- function(
   from,
   to,
   same_attr_name = TRUE,
-  single_key_pairs = TRUE
+  single_key_pairs = TRUE,
+  rows_from = 0L,
+  rows_to = 10L
 ) {
   gen.database_schema(
     x,
@@ -663,7 +665,7 @@ gen.database <- function(
     single_key_pairs = single_key_pairs
   ) |>
     gen.and_then(\(ds) {
-      gen.relation_from_schema(ds) |>
+      gen.relation_from_schema(ds, rows_from, rows_to) |>
         gen.with(
           with_args(
             remove_relationship_violations,

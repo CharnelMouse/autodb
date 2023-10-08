@@ -36,9 +36,9 @@ describe("create", {
 })
 
 describe("insert", {
-  it("does nothing when inserting nothing", {
+  it("does nothing when inserting nothing into nonempty relations, replaces into empty", {
     forall(
-      gen.relation(letters[1:4], 0L, 6L),
+      gen.relation(letters[1:4], 0L, 6L, rows_from = 1L),
       expect_biidentical(
         identity,
         \(r) insert(
@@ -51,7 +51,38 @@ describe("insert", {
       )
     )
     forall(
-      gen.database(letters[1:6], 0L, 6L),
+      gen.relation_schema(letters[1:4], 0L, 6L) |>
+        gen.and_then(\(schema) {
+          list(
+            gen.pure(create(schema)),
+            gen.attrs_class(attrs_order(schema)) |>
+              gen.and_then(\(classes) {
+                gen.df_fixed_ranges(
+                  classes,
+                  attrs_order(schema),
+                  0L,
+                  FALSE
+                )
+              })
+          )
+        }),
+      \(rel, df) expect_identical(
+        relation(
+          lapply(
+            rel,
+            \(r) {
+              r$df <- df[, names(r$df), drop = FALSE]
+              r
+            }
+          ),
+          attrs_order(rel)
+        ),
+        insert(rel, df)
+      ),
+      curry = TRUE
+    )
+    forall(
+      gen.database(letters[1:6], 0L, 6L, rows_from = 1L),
       expect_biidentical(
         identity,
         \(db) insert(
@@ -62,6 +93,40 @@ describe("insert", {
           ))
         )
       )
+    )
+    forall(
+      gen.database_schema(letters[1:4], 0L, 6L) |>
+        gen.and_then(\(schema) {
+          list(
+            gen.pure(create(schema)),
+            gen.attrs_class(attrs_order(schema)) |>
+              gen.and_then(\(classes) {
+                gen.df_fixed_ranges(
+                  classes,
+                  attrs_order(schema),
+                  0L,
+                  FALSE
+                )
+              })
+          )
+        }),
+      \(db, df) expect_identical(
+        database(
+          relation(
+            lapply(
+              db,
+              \(r) {
+                r$df <- df[, names(r$df), drop = FALSE]
+                r
+              }
+            ),
+            attrs_order(db)
+          ),
+          relationships(db)
+        ),
+        insert(db, df)
+      ),
+      curry = TRUE
     )
   })
   it("returns an error when inserting key violations (e.g. already-present data)", {
