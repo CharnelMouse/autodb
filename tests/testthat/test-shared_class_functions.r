@@ -276,9 +276,6 @@ describe("subrelations", {
       subrelations %>>% is_valid_relation
     )
   })
-})
-
-describe("subrelations", {
   it("returns a valid relation_schema for database_schema", {
     forall(
       gen.element(c(FALSE, TRUE)) |>
