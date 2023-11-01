@@ -51,9 +51,9 @@ rejoin <- function(database) {
   is_main <- vapply(closure_attrs, setequal, logical(1), attrs_order)
   if (!any(is_main))
     stop("database is not lossless")
-  to_merge <- unique(G_relations[closure_usedlists[[which(is_main)[1]]]])
+  to_merge <- unique(G_relations[closure_usedlists[[which(is_main)[[1]]]]])
   stopifnot(!is.null(names(is_main)))
-  main_relation <- database[[which(is_main)]]$df
+  main_relation <- database[[which(is_main)[[1]]]]$df
   while (length(to_merge) > 0) {
     mergee <- to_merge[1]
     to_merge <- to_merge[-1]
