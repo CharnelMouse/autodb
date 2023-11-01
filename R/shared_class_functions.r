@@ -281,6 +281,30 @@ create <- function(x, ...) {
 
 #' Insert data
 #'
+#' Generic function for inserting a data frame of data into an object.
+#'
+#' This function is intended for inserting into an object that is itself
+#' comprised of data frames, such as a \code{\link{relation}} or a
+#' \code{\link{database}}. The given methods have the following behaviour:
+#' \itemize{
+#'   \item If an empty set of data is inserted, into a non-empty object element,
+#'   nothing happens.
+#'   \item If an empty set of data is inserted into an empty object element, the
+#'   resulting element is also empty, but takes on the attribute/column classes
+#'   of the inserted data. This is done to prevent having to know attribute
+#'   classes during object creation.
+#'   \item Insertion can fail if inserting would violate object constraints. For
+#'   example, databases cannot have data inserted that would violate
+#'   candidate/foreign key constraints.
+#'   \item For other cases, the data is inserted in an object element in the
+#'   same way as using \code{\link{rbind}}, followed by \code{\link{unique}}.
+#' }
+#'
+#' While key violations prevent insertion, re-insertion of existing records in
+#' an object element do not. This makes insertion equivalent to an `INSERT OR
+#' IGNORE` expression in SQL. In particular, it is somewhat like using this
+#' expression in SQLite, since that implementation uses dynamic typing.
+#'
 #' @param x an R object, into which to insert data.
 #' @param vals a data frame, containing data to insert.
 #' @param ... further arguments pass on to methods.
