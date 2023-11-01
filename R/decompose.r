@@ -80,12 +80,8 @@ decompose <- function(df, schema, name = NA_character_) {
     ))
   }
 
-  relations <- create_insert(df, schema)
-  database(
-    relations,
-    relationships(schema),
-    name
-  )
+  create_insert(df, schema) |>
+    database(relationships(schema), name)
 }
 
 create_insert <- function(df, schema) {

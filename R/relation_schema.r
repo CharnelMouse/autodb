@@ -209,7 +209,10 @@ create.relation_schema <- function(x, ...) {
       \(df, ks) list(df = df, keys = ks),
       lapply(
         attrs(x),
-        \(as) data.frame(stats::setNames(lapply(as, \(x) logical()), as))
+        \(as) data.frame(
+          stats::setNames(lapply(as, \(x) logical()), as),
+          check.names = FALSE
+        )
       ),
       keys(x)
     ),
