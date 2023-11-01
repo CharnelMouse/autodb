@@ -1,5 +1,27 @@
 library(hedgehog)
 
+test_that("gen_df can give a table of exact height", {
+  forall(
+    gen.element(0:6) |>
+      gen.and_then(\(n) list(
+        gen.pure(n),
+        gen_df(n, 7, minrow = n, remove_dup_rows = FALSE)
+      )),
+    onRight(nrow) %>>% (uncurry(expect_identical))
+  )
+})
+
+test_that("gen_df can give a table of exact width", {
+  forall(
+    gen.element(0:7) |>
+      gen.and_then(\(n) list(
+        gen.pure(n),
+        gen_df(6, n, mincol = n, remove_dup_rows = FALSE)
+      )),
+    onRight(ncol) %>>% (uncurry(expect_identical))
+  )
+})
+
 test_that("gen_flat_deps_fixed_names generates valid", {
   forall(gen_flat_deps_fixed_names(7, 20, to = 20L), is_valid_functional_dependency)
 })
@@ -63,6 +85,47 @@ test_that("gen.database generates valid databases", {
       same_attr_name = san,
       single_key_pairs = skp
     ),
+    curry = TRUE
+  )
+})
+
+test_that("remove_insertion_key_violations removes violations", {
+  forall(
+    gen.relation(letters[1:4], 0, 6) |>
+      gen.and_then(\(r) {
+        list(
+          gen.pure(r),
+          gen.int(10) |>
+            gen.and_then(with_args(
+              gen.df_fixed_ranges,
+              classes = rep("logical", length(attrs_order(r))),
+              nms = attrs_order(r),
+              remove_dup_rows = TRUE
+            ))
+        )
+      }) |>
+      gen.with(uncurry(\(r, df) {
+        list(
+          r,
+          unclass(r),
+          df,
+          remove_insertion_key_violations(df, r)
+        )
+      })),
+    \(r, r_unclassed, df, df_trimmed) {
+      expect_true(all(vapply(
+        r,
+        \(rel) {
+          new_rel <- unique(rbind(rel$df, df_trimmed[, names(rel$df), drop = FALSE]))
+          all(vapply(
+            rel$keys,
+            \(key) {!anyDuplicated(new_rel[, key, drop = FALSE])},
+            logical(1)
+          ))
+        },
+        logical(1)
+      )))
+    },
     curry = TRUE
   )
 })

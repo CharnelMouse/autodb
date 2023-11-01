@@ -135,15 +135,15 @@ insert.relation <- function(x, vals, ...) {
       }else{
         if (ncol(rel$df) == 0L)
           vals[
-            seq_len(nrow(rel$df) + (nrow(vals) >= 1L)),
+            seq_len((nrow(rel$df) + nrow(vals)) >= 1L),
             names(rel$df),
             drop = FALSE
           ]
         else
-          rbind(
+          unique(rbind(
             rel$df,
-            unique(vals[, names(rel$df), drop = FALSE])
-          )
+            vals[, names(rel$df), drop = FALSE]
+          ))
       }
       rel
     }

@@ -316,7 +316,12 @@ gen.df_fixed_ranges <- function(classes, nms, n_records, remove_dup_rows) {
     factor = with_args(factor, levels = c(FALSE, TRUE))
   )
   if (length(classes) == 0L)
-    return(gen.pure(data.frame(a = NA)[, FALSE, drop = FALSE]))
+    return(
+      if (remove_dup_rows)
+        gen.pure(data.frame(a = NA)[rep(1L, min(n_records, 1L)), FALSE, drop = FALSE])
+      else
+        gen.pure(data.frame(a = NA)[rep(1L, n_records), FALSE, drop = FALSE])
+    )
   lapply(
     classes,
     \(cl) {
@@ -509,13 +514,59 @@ remove_insertion_key_violations <- function(df, relation) {
     \(df, rel) {
       Reduce(
         \(df, key) {
-          remove <- if (length(key) == 0L)
-            rep(nrow(rel$df) + nrow(df) > 1L, nrow(df))
-          else
-            duplicated(rbind(
-              rel$df[, key, drop = FALSE],
-              df[, key, drop = FALSE]
-            ))[-seq_len(nrow(rel$df))]
+          remove <- if (length(key) == 0L) {
+            negind <- if (nrow(rel$df) == 0)
+              TRUE
+            else
+              -seq_len(nrow(rel$df))
+            if (ncol(rel$df) == 0L)
+              rep(FALSE, nrow(df))
+            else{
+              single_adds <- lapply(
+                seq_len(nrow(df)),
+                \(n) rbind(rel$df, df[n, names(rel$df), drop = FALSE])
+              )
+              record_new <- vapply(
+                single_adds,
+                \(sa) {
+                  nondups <- !duplicated(sa)
+                  if (length(nondups) != nrow(rel$df) + 1L)
+                    stop(paste(print(1), print(rel), print(df)))
+                  res <- nondups[negind]
+                  if (length(res) != 1)
+                    stop(paste(print(2), print(rel), print(df)))
+                  res
+                },
+                logical(1)
+              )
+              record_new
+            }
+          }else{
+            negind <- if (nrow(rel$df) == 0)
+              TRUE
+            else
+              -seq_len(nrow(rel$df))
+            comb <- rbind(rel$df, df[, names(rel$df), drop = FALSE])
+            key_dups <- duplicated(comb[, key, drop = FALSE])[negind]
+            single_adds <- lapply(
+              seq_len(nrow(df)),
+              \(n) rbind(rel$df, df[n, names(rel$df), drop = FALSE])
+            )
+            record_new <- vapply(
+              single_adds,
+              \(sa) {
+                nondups <- !duplicated(sa)
+                if (length(nondups) != nrow(rel$df) + 1L)
+                  stop(paste(print(1), print(rel), print(df)))
+                res <- nondups[negind]
+                if (length(res) != 1)
+                  stop(paste(print(2), print(rel), print(df)))
+                res
+              },
+              logical(1)
+            )
+            key_dups & record_new
+          }
           df[!remove, , drop = FALSE]
         },
         rel$keys,
@@ -525,6 +576,26 @@ remove_insertion_key_violations <- function(df, relation) {
     relation,
     init = df
   )
+}
+
+remove_violated_relationships <- function(relationships, relation) {
+  relationships[vapply(
+    relationships,
+    \(rel) {
+      child <- relation[[rel[[1]]]]$df[, rel[[2]], drop = FALSE]
+      parent <- relation[[rel[[3]]]]$df[, rel[[4]], drop = FALSE]
+      identical(
+        nrow(child),
+        nrow(merge(
+          child,
+          parent,
+          by.x = rel[[2]],
+          by.y = rel[[4]]
+        ))
+      )
+    },
+    logical(1)
+  )]
 }
 
 gen.relationships_same_attrs <- function(rs, single_key_pairs) {
@@ -757,6 +828,7 @@ gen.list_with_dups <- function(generator, n_unique)
 
 # functional utility functions for tests
 `%>>%` <- function(fn1, fn2) function(...) fn2(fn1(...))
+biapply <- function(fn1, fn2) function(x) list(fn1(x), fn2(x))
 expect_biequal <- function(fn1, fn2) function(x) expect_equal(fn1(x), fn2(x))
 expect_biidentical <- function(fn1, fn2)
   function(x) expect_identical(fn1(x), fn2(x))
