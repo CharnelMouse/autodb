@@ -206,8 +206,12 @@ merge_attribute_orderings <- function(...) {
 
 #' Merge relation schemas with empty keys
 #'
-#' Generic function, merging relation schemas with empty keys. The remaining
-#' such schema contains all attributes contained in such schemas.
+#' Merges an object's schemas with empty keys. The remaining such schema
+#' contains all attributes contained in such schemas.
+#'
+#' This function is not itself generic, but makes use of the generic functions
+#' \code{\link{keys}} and \code{\link{merge_schemas}}. Any input class with
+#' valid methods for these generic functions can be passed into this function.
 #'
 #' For \code{\link{database_schema}} objects, relationships involving the
 #' schemas with empty keys are updated to refer to the merged schema.
@@ -218,52 +222,35 @@ merge_attribute_orderings <- function(...) {
 #'   empty key have been merged into a single relation.
 #' @export
 merge_empty_keys <- function(x) {
-  UseMethod("merge_empty_keys")
-}
-
-#' @exportS3Method
-merge_empty_keys.database_schema <- function(x) {
-  schemas <- subschemas(x)
-  rels <- relationships(x)
-  empty_keys <- which(vapply(
-    keys(schemas),
-    identical,
-    logical(1),
-    list(character())
-  ))
-  if (length(empty_keys) >= 2L) {
-    as <- unique(unlist(attrs(schemas[empty_keys])))
-    to_keep <- empty_keys[[1]]
-    to_remove <- empty_keys[-1]
-    result_lst <- remove_schemas(
-      schemas,
-      rels,
-      to_remove,
-      rep(to_keep, length(to_remove))
-    )
-    schemas <- result_lst[[1]]
-    rels <- result_lst[[2]]
-    attrs(schemas)[[to_keep]] <- as
-  }
-  database_schema(schemas, rels)
-}
-
-#' @exportS3Method
-merge_empty_keys.relation_schema <- function(x) {
   empty_keys <- which(vapply(
     keys(x),
     identical,
     logical(1),
     list(character())
   ))
-  if (length(empty_keys) >= 2L) {
-    as <- unique(unlist(attrs(x[empty_keys])))
-    to_keep <- empty_keys[[1]]
-    to_remove <- empty_keys[-1]
-    attrs(x)[[to_keep]] <- as
-    x <- x[-to_remove]
-  }
-  x
+  if (length(empty_keys) < 2L)
+    return(x)
+  merge_schemas(
+    x,
+    empty_keys[-1],
+    rep(empty_keys[[1]], length(empty_keys) - 1L)
+  )
+}
+
+#' Merge relation schemas in given pairs
+#'
+#' @param x an R object.
+#' @param to_remove an integer vector, giving the indices for schemas to be
+#'   merged into other schemas, then removed.
+#' @param merge_into an integer vector of the same length as \code{to_remove},
+#'   giving the indices for the schemas into which to merge.
+#' @param ... further arguments passed on to methods.
+#'
+#' @return an R object of the same class as \code{x}, where the relations have
+#'   been merged as indicated.
+#' @export
+merge_schemas <- function(x, to_remove, merge_into, ...) {
+  UseMethod("merge_schemas")
 }
 
 #' Create instance of a schema

@@ -219,3 +219,21 @@ create.relation_schema <- function(x, ...) {
     attrs_order(x)
   )
 }
+
+#' @exportS3Method
+merge_schemas.relation_schema <- function(x, to_remove, merge_into, ...) {
+  stopifnot(length(to_remove) == length(merge_into))
+
+  for (n in seq_along(to_remove)[to_remove != merge_into]) {
+    stopifnot(identical(
+      unname(keys(x[[to_remove[[n]]]])),
+      unname(keys(x[[merge_into[[n]]]]))
+    ))
+    attrs(x)[[merge_into[[n]]]] <- unique(unlist(attrs(x[c(
+      merge_into[[n]],
+      to_remove[[n]]
+    )])))
+  }
+
+  x[-to_remove]
+}

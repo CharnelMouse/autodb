@@ -160,26 +160,21 @@ subschemas.database_schema <- function(x, ...) {
 #' @exportS3Method
 unique.database_schema <- function(x, ...) {
   schemas <- subschemas(x)
-  rels <- relationships(x)
   dups <- which(duplicated(schemas))
-  if (length(dups) > 0L) {
-    dups_prec <- vapply(
-      dups,
-      \(n) Position(
-        \(rs) {
-          identical(unname(attrs(rs)), unname(attrs(schemas[[n]]))) &&
-            identical(unname(keys(rs)), unname(keys(schemas[[n]])))
-        },
-        schemas
-      ),
-      integer(1)
-    )
-    result_lst <- remove_schemas(schemas, rels, dups, dups_prec)
-    schemas <- result_lst[[1]]
-    rels <- unique(result_lst[[2]])
-  }
-  rels <- rels[vapply(rels, \(r) r[[1]] != r[[3]], logical(1))]
-  database_schema(schemas, rels)
+  if (length(dups) == 0L)
+    return(x)
+  dups_prec <- vapply(
+    dups,
+    \(n) Position(
+      \(rs) {
+        identical(unname(attrs(rs)), unname(attrs(schemas[[n]]))) &&
+          identical(unname(keys(rs)), unname(keys(schemas[[n]])))
+      },
+      schemas
+    ),
+    integer(1)
+  )
+  merge_schemas(x, dups, dups_prec)
 }
 
 #' @exportS3Method
@@ -210,24 +205,33 @@ c.database_schema <- function(...) {
   do.call(database_schema, result_lst)
 }
 
-remove_schemas <- function(schemas, rels, to_remove, replace_with) {
-  remaining_inds <- setdiff(seq_along(schemas), to_remove)
-  ind_map <- seq_along(schemas)
-  ind_map[to_remove] <- replace_with
+#' @exportS3Method
+merge_schemas.database_schema <- function(x, to_remove, merge_into, ...) {
+  stopifnot(length(to_remove) == length(merge_into))
+
+  schemas <- merge_schemas.relation_schema(subschemas(x), to_remove, merge_into)
+
+  ind_map <- seq_along(x)
+  remaining_inds <- setdiff(ind_map, to_remove)
+  ind_map[to_remove] <- merge_into
   ind_map <- seq_along(remaining_inds)[match(ind_map, remaining_inds)]
 
-  old_names <- names(schemas)
-  schemas <- schemas[-to_remove]
-  rels <- lapply(
-    rels,
+  old_names <- names(x)
+  rels <- unique(lapply(
+    relationships(x),
     \(rel) list(
       names(schemas)[ind_map[match(rel[[1]], old_names)]],
       rel[[2]],
       names(schemas)[ind_map[match(rel[[3]], old_names)]],
       rel[[4]]
     )
-  )
-  list(schemas, rels)
+  ))
+  rels <- rels[vapply(
+    rels,
+    \(r) r[[1]] != r[[3]],
+    logical(1)
+  )]
+  database_schema(schemas, rels)
 }
 
 #' @exportS3Method

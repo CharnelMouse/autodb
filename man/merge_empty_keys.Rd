@@ -14,10 +14,14 @@ an R object of the same class as \code{x}, where relations with an
 empty key have been merged into a single relation.
 }
 \description{
-Generic function, merging relation schemas with empty keys. The remaining
-such schema contains all attributes contained in such schemas.
+Merges an object's schemas with empty keys. The remaining such schema
+contains all attributes contained in such schemas.
 }
 \details{
+This function is not itself generic, but makes use of the generic functions
+\code{\link{keys}} and \code{\link{merge_schemas}}. Any input class with
+valid methods for these generic functions can be passed into this function.
+
 For \code{\link{database_schema}} objects, relationships involving the
 schemas with empty keys are updated to refer to the merged schema.
 }
