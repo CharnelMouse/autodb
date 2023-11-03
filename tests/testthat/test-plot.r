@@ -206,104 +206,104 @@ describe("gv", {
         ),
         name = "Book"
       )
-        expected_string <- paste(
-          "digraph book {",
-          "  rankdir = \"LR\"",
-          "  node [shape=plaintext];",
+      expected_string <- paste(
+        "digraph book {",
+        "  rankdir = \"LR\"",
+        "  node [shape=plaintext];",
 
-          "",
+        "",
 
-          test_df_strings(
-            "Book",
-            "book",
-            2,
-            "records",
-            c("Title", "Author", "Pages", "Thickness", "Genre ID", "Publisher ID"),
-            c("title", "author", "pages", "thickness", "genre_id", "publisher_id"),
-            c("character", "character", "integer", "character", "integer", "integer"),
-            matrix(
-              c(
-                TRUE,
-                FALSE,
-                FALSE,
-                FALSE,
-                FALSE,
-                FALSE
-              ),
-              nrow = 6,
-              byrow = TRUE
-            )
-          ),
+        test_df_strings(
+          "Book",
+          "book",
+          2,
+          "records",
+          c("Title", "Author", "Pages", "Thickness", "Genre ID", "Publisher ID"),
+          c("title", "author", "pages", "thickness", "genre_id", "publisher_id"),
+          c("character", "character", "integer", "character", "integer", "integer"),
+          matrix(
+            c(
+              TRUE,
+              FALSE,
+              FALSE,
+              FALSE,
+              FALSE,
+              FALSE
+            ),
+            nrow = 6,
+            byrow = TRUE
+          )
+        ),
 
-          test_df_strings(
-            "Format Price",
-            "format_price",
-            4,
-            "records",
-            c("Title", "Format", "Price"),
-            c("title", "format", "price"),
-            c("character", "character", "integer"),
-            matrix(
-              c(
-                TRUE,
-                TRUE,
-                FALSE
-              ),
-              nrow = 3,
-              byrow = TRUE
-            )
-          ),
+        test_df_strings(
+          "Format Price",
+          "format_price",
+          4,
+          "records",
+          c("Title", "Format", "Price"),
+          c("title", "format", "price"),
+          c("character", "character", "integer"),
+          matrix(
+            c(
+              TRUE,
+              TRUE,
+              FALSE
+            ),
+            nrow = 3,
+            byrow = TRUE
+          )
+        ),
 
-          test_df_strings(
-            "Author",
-            "author",
-            2,
-            "records",
-            c("Author", "Author Nationality"),
-            c("author", "author_nationality"),
-            c("character", "character"),
-            matrix(
-              c(
-                TRUE,
-                FALSE
-              ),
-              nrow = 2,
-              byrow = TRUE
-            )
-          ),
+        test_df_strings(
+          "Author",
+          "author",
+          2,
+          "records",
+          c("Author", "Author Nationality"),
+          c("author", "author_nationality"),
+          c("character", "character"),
+          matrix(
+            c(
+              TRUE,
+              FALSE
+            ),
+            nrow = 2,
+            byrow = TRUE
+          )
+        ),
 
-          test_df_strings(
-            "Genre",
-            "genre",
-            2,
-            "records",
-            c("Genre ID", "Genre Name"),
-            c("genre_id", "genre_name"),
-            c("integer", "character"),
-            matrix(
-              c(
-                TRUE,
-                FALSE
-              ),
-              nrow = 2,
-              byrow = TRUE
-            )
-          ),
+        test_df_strings(
+          "Genre",
+          "genre",
+          2,
+          "records",
+          c("Genre ID", "Genre Name"),
+          c("genre_id", "genre_name"),
+          c("integer", "character"),
+          matrix(
+            c(
+              TRUE,
+              FALSE
+            ),
+            nrow = 2,
+            byrow = TRUE
+          )
+        ),
 
-          "",
+        "",
 
-          "  book:FROM_title -> format_price:TO_title;",
-          "  book:FROM_author -> author:TO_author;",
-          "  book:FROM_genre_id -> genre:TO_genre_id;",
-          "}",
-          "",
-          sep = "\n"
-        )
-        expect_identical(
-          gv(db),
-          expected_string
-        )
-        })
+        "  book:FROM_title -> format_price:TO_title;",
+        "  book:FROM_author -> author:TO_author;",
+        "  book:FROM_genre_id -> genre:TO_genre_id;",
+        "}",
+        "",
+        sep = "\n"
+      )
+      expect_identical(
+        gv(db),
+        expected_string
+      )
+    })
     it("converts attribute/df names to snake case for labels (inc. spaces, periods)", {
       db <- database(
         relation(
