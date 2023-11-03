@@ -138,6 +138,73 @@ describe("insert", {
       ),
       "^insertion violates key constraints in 1 relation: a$"
     )
+    expect_error(
+      insert(
+        autodb(df),
+        data.frame(a = 1:2, b = 2:1)
+      ),
+      "^insertion violates key constraints in 1 relation: a$"
+    )
+  })
+  it("returns an error if given extraneous attributes to inserted", {
+    df <- data.frame(a = 1:3, b = c(1L, 1L, 2L))
+    r <- decompose(df, normalise(discover(df, 1)))
+    expect_error(
+      insert(r, data.frame(a = 1L, b = 1L, c = 1L)),
+      "^inserted attributes aren't included in target: c$"
+    )
+    db <- autodb(df)
+    expect_error(
+      insert(db, data.frame(a = 1L, b = 1L, c = 1L)),
+      "^inserted attributes aren't included in target: c$"
+    )
+  })
+  it("can insert only partial sets of attributes", {
+    df <- data.frame(a = 1:4, b = c(1:3, 1L), c = c(1L, 1L, 2L, 1L))
+    r <- insert(create(synthesise(discover(df, 1))), df)
+    expect_identical(
+      insert(r, data.frame(b = 4L, c = 3L)),
+      relation(
+        list(
+          a = list(
+            df = data.frame(a = 1:4, b = c(1:3, 1L)),
+            keys = list("a")
+          ),
+          b = list(
+            df = data.frame(b = 1:4, c = c(1L, 1L, 2L, 3L)),
+            keys = list("b")
+          )
+        ),
+        letters[1:3]
+      )
+    )
+    db <- autodb(df)
+    expect_identical(
+      insert(db, data.frame(b = 4L, c = 3L)),
+      database(
+        relation(
+          list(
+            a = r$a,
+            b = list(
+              df = data.frame(b = c(1:4), c = c(1L, 1L, 2L, 3L)),
+              keys = list("b")
+            )
+          ),
+          attrs_order(r)
+        ),
+        relationships(db)
+      )
+    )
+  })
+  it("returns an error when inserting foreign key violations", {
+    df <- data.frame(a = 1:4, b = c(1:3, 1L), c = c(1L, 1L, 2L, 1L))
+    expect_error(
+      insert(
+        autodb(df),
+        data.frame(a = 5L, b = 4L)
+      ),
+      "^insertion violates 1 relationship:\na.\\{b\\} -> b.\\{b\\}$"
+    )
   })
   it("returns a valid object when given data that can be legally inserted", {
     forall(

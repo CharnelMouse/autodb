@@ -124,9 +124,17 @@ print.relation <- function(x, max = 10, ...) {
 
 #' @exportS3Method
 insert.relation <- function(x, vals, ...) {
+  extra <- setdiff(names(vals), attrs_order(x))
+  if (length(extra) > 0L)
+    stop(paste(
+      "inserted attributes aren't included in target:",
+      toString(extra)
+    ))
   new_relations <- lapply(
     x,
     \(rel) {
+      if (!all(is.element(names(rel$df), names(vals))))
+        return(rel)
       rel$df <- if (nrow(rel$df) == 0L) {
         if (ncol(rel$df) == 0L)
           vals[seq_len(nrow(vals) > 0L), character(), drop = FALSE]

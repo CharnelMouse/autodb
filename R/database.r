@@ -37,6 +37,15 @@ database <- function(relations, relationships, name = NA_character_) {
     stop("relationships must be a list")
   if (!is.character(name) || length(name) != 1L)
     stop("name must be a scalar character")
+  for (relat in relationships) {
+    referrer <- unique(relations[[relat[[1]]]]$df[, relat[[2]], drop = FALSE])
+    referee <- unique(relations[[relat[[3]]]]$df[, relat[[4]], drop = FALSE])
+    if (!identical(
+      nrow(merge(referrer, referee, by.x = relat[[2]], by.y = relat[[4]])),
+      nrow(referrer)
+    ))
+      stop("relations must satisfy relationships")
+  }
 
   structure(
     relations,
@@ -122,4 +131,39 @@ subrelations.database <- function(x, ...) {
   y <- unclass(x)
   attributes(y) <- NULL
   relation(stats::setNames(y, names(x)), attrs_order(x))
+}
+
+#' @exportS3Method
+insert.database <- function(x, vals, ...) {
+  res <- insert.relation(x, vals, ...)
+  relationship_checks <- relationships(res)[vapply(
+    relationships(res),
+    \(relat) {
+      referrer <- unique(res[[relat[[1]]]]$df[, relat[[2]], drop = FALSE])
+      referee <- unique(res[[relat[[3]]]]$df[, relat[[4]], drop = FALSE])
+      !identical(
+        nrow(merge(referrer, referee, by.x = relat[[2]], by.y = relat[[4]])),
+        nrow(referrer)
+      )
+    },
+    logical(1)
+  )]
+  if (length(relationship_checks)) {
+    error_strings <- vapply(
+      relationship_checks,
+      \(relat) paste0(
+        relat[[1]], ".{", toString(relat[[2]]),
+        "} -> ",
+        relat[[3]], ".{", toString(relat[[4]]), "}"
+      ),
+      character(1)
+    )
+    stop(
+      "insertion violates ",
+      with_number(length(error_strings), "relationship", "", "s"),
+      ":\n",
+      paste(error_strings, collapse = "\n")
+    )
+  }
+  res
 }

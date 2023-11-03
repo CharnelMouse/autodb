@@ -28,8 +28,46 @@ describe("database", {
       "^name must be a scalar character$"
     )
   })
-  it("expects valid input: relations satisfy database schema", {
-    succeed()
+  it("expects valid input: relations satisfy database schema (incl. relationships)", {
+    expect_error(
+      database(
+        relation(
+          list(
+            a = list(df = data.frame(a = 1:3, b = 3:1), keys = list("a")),
+            b = list(df = data.frame(b = 1:2, c = 3:4), keys = list("b"))
+          ),
+          letters[1:3]
+        ),
+        list(list("a", "b", "b", "b"))
+      ),
+      "^relations must satisfy relationships$"
+    )
+    expect_error(
+      database(
+        relation(
+          list(
+            a = list(df = data.frame(a = 1:3, b = 3:1), keys = list("a")),
+            c = list(df = data.frame(c = 1:2, d = 3:4), keys = list("c"))
+          ),
+          letters[1:4]
+        ),
+        list(list("a", "b", "c", "c"))
+      ),
+      "^relations must satisfy relationships$"
+    )
+    # accounts for duplicate references before checking
+    expect_silent(
+      database(
+        relation(
+          list(
+            a = list(df = data.frame(a = 1:3, b = c(1L, 1L, 2L)), keys = list("a")),
+            b = list(df = data.frame(b = 1:2), keys = list("b"))
+          ),
+          letters[1:3]
+        ),
+        list(list("a", "b", "b", "b"))
+      )
+    )
   })
   it("prints", {
     expect_output(

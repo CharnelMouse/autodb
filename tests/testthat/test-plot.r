@@ -137,7 +137,7 @@ describe("gv", {
                   "The Relational Model for Database Management: Version 2"
                 ),
                 Author = c(
-                  "Chad Russel",
+                  "Chad Russell",
                   "EF Codd"
                 ),
                 Pages = c(520L, 538L),
@@ -315,7 +315,7 @@ describe("gv", {
                   "The Relational Model for Database Management: Version 2"
                 ),
                 Author = c(
-                  "Chad Russel",
+                  "Chad Russell",
                   "EF Codd"
                 ),
                 Pages = c(520L, 538L),
