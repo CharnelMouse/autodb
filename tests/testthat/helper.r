@@ -461,7 +461,19 @@ gen.relation_schema <- function(x, from, to) {
     })
 }
 
-gen.attrs_class <- function(nm) {
+# relationships are included to ensure attributes that reference each other have
+# the same class
+gen.attrs_class <- function(nm, relationships = list()) {
+  groups <- seq_along(nm)
+  for (rel in relationships) {
+    child_attrs <- match(rel[[2]], nm)
+    parent_attrs <- match(rel[[4]], nm)
+    stopifnot(!anyNA(c(child_attrs, parent_attrs)))
+    for (n in seq_along(child_attrs)) {
+      grp <- groups[c(child_attrs[[n]], parent_attrs[[n]])]
+      groups[is.element(groups, grp)] <- min(grp)
+    }
+  }
   gen.element(list(
     "logical",
     "integer",
@@ -469,7 +481,8 @@ gen.attrs_class <- function(nm) {
     "character",
     "factor"
   )) |>
-    gen.list(of = length(nm)) |>
+    gen.list(of = length(unique(groups))) |>
+    gen.with(\(group_classes) group_classes[match(groups, sort(unique(groups)))]) |>
     gen.with(with_args(setNames, nm = nm))
 }
 
@@ -585,14 +598,18 @@ remove_violated_relationships <- function(relationships, relation) {
       child <- relation[[rel[[1]]]]$df[, rel[[2]], drop = FALSE]
       parent <- relation[[rel[[3]]]]$df[, rel[[4]], drop = FALSE]
       identical(
-        nrow(child),
-        nrow(merge(
-          child,
-          parent,
-          by.x = rel[[2]],
-          by.y = rel[[4]]
-        ))
-      )
+        unname(lapply(child, class)),
+        unname(lapply(parent, class))
+      ) &&
+        identical(
+          nrow(child),
+          nrow(merge(
+            child,
+            parent,
+            by.x = rel[[2]],
+            by.y = rel[[4]]
+          ))
+        )
     },
     logical(1)
   )]

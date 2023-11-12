@@ -200,6 +200,92 @@ describe("decompose", {
       curry = TRUE
     )
   })
+  it("returns a error if data.frame doesn't satisfy FKs in the schema", {
+    gen_fk_reduction_for_df <- function(df) {
+      true_dbs <- normalise(discover(df, 1))
+      true_fks <- relationships(true_dbs)
+      true_fk_key_switch <- lapply(
+        true_fks,
+        \(fk) {
+          len <- length(fk[[2]])
+          new_tbs <- vapply(
+            keys(true_dbs),
+            \(ks) match(len, lengths(ks)),
+            integer(1)
+          )
+          valid_new_tbs <- new_tbs[
+            !is.na(new_tbs) &
+              names(new_tbs) != fk[[1]] &
+              names(new_tbs) != fk[[3]]
+          ]
+          new_fks <- Map(
+            \(new_key_index, new_parent) {
+              new_fk <- c(
+                fk[1:2],
+                list(new_parent, keys(true_dbs)[[new_parent]][[new_key_index]])
+              )
+              stopifnot(length(new_fk) == 4)
+              if (!is.element(list(new_fk[[4]]), keys(true_dbs)[[new_fk[[3]]]]))
+                stop("argh")
+              new_fk
+            },
+            valid_new_tbs,
+            names(valid_new_tbs)
+          ) |>
+            Filter(f = \(fk) !is.element(list(fk), true_fks)) |>
+            Filter(f = \(fk) {
+              length(remove_violated_relationships(
+                list(fk),
+                decompose(df, true_dbs)
+              )) == 0
+            })
+          new_fks
+        }
+      )
+      if (all(lengths(true_fk_key_switch) == 0))
+        return(gen.pure(list(df, NULL)))
+      gen.element(which(lengths(true_fk_key_switch) > 0)) |>
+        gen.and_then(\(index) list(
+          gen.pure(df),
+          gen.element(true_fk_key_switch[[index]]) |>
+            gen.with(\(new_fk) {
+              dbs <- true_dbs
+              relationships(dbs)[[index]] <- new_fk
+              dbs
+            })
+        ))
+    }
+    gen_df_and_fk_reduction <- function(nrow, ncol) {
+      gen_df(nrow, ncol, minrow = 4L, mincol = 4L, remove_dup_rows = TRUE) |>
+        gen.and_then(gen_fk_reduction_for_df)
+    }
+    expect_fk_error <- function(df, dbs) {
+      if (nrow(df) <= 1 || is.null(dbs))
+        discard()
+      name_regexp <- "[\\w\\.]+"
+      fk_half_regexp <- paste0(
+        name_regexp,
+        "\\.\\{", name_regexp, "(, ", name_regexp, ")*\\}"
+      )
+      expect_error(
+        decompose(df, dbs),
+        paste0(
+          "\\A",
+          "relations must satisfy relationships in schema:",
+          "(\\n", fk_half_regexp, " -> ", fk_half_regexp, ")+",
+          "\\Z"
+        ),
+        perl = TRUE
+      )
+    }
+    forall(
+      gen_df_and_fk_reduction(6, 7),
+      expect_fk_error,
+      tests = 1000,
+      discard.limit = 910,
+      curry = TRUE
+    )
+  })
   it("is equivalent to create >> insert for valid data", {
     forall(
       gen_df(6, 7, remove_dup_rows = TRUE) |>

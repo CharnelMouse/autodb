@@ -40,7 +40,7 @@ describe("database", {
         ),
         list(list("a", "b", "b", "b"))
       ),
-      "^relations must satisfy relationships$"
+      "^relations must satisfy relationships in schema:\na\\.\\{b\\} -> b\\.\\{b\\}$"
     )
     expect_error(
       database(
@@ -53,7 +53,7 @@ describe("database", {
         ),
         list(list("a", "b", "c", "c"))
       ),
-      "^relations must satisfy relationships$"
+      "^relations must satisfy relationships in schema:\na\\.\\{b\\} -> c\\.\\{c\\}$"
     )
     # accounts for duplicate references before checking
     expect_silent(

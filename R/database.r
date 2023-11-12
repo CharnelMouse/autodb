@@ -37,15 +37,37 @@ database <- function(relations, relationships, name = NA_character_) {
     stop("relationships must be a list")
   if (!is.character(name) || length(name) != 1L)
     stop("name must be a scalar character")
-  for (relat in relationships) {
-    referrer <- unique(relations[[relat[[1]]]]$df[, relat[[2]], drop = FALSE])
-    referee <- unique(relations[[relat[[3]]]]$df[, relat[[4]], drop = FALSE])
-    if (!identical(
-      nrow(merge(referrer, referee, by.x = relat[[2]], by.y = relat[[4]])),
-      nrow(referrer)
+  relat_errors <- Filter(
+    \(relat) {
+      referrer <- unique(relations[[relat[[1]]]]$df[, relat[[2]], drop = FALSE])
+      referee <- unique(relations[[relat[[3]]]]$df[, relat[[4]], drop = FALSE])
+      !identical(
+        unname(lapply(referrer, class)),
+        unname(lapply(referee, class))
+      ) ||
+        !identical(
+        nrow(merge(referrer, referee, by.x = relat[[2]], by.y = relat[[4]])),
+        nrow(referrer)
+      )
+    },
+    relationships
+  )
+  if (length(relat_errors) > 0)
+    stop(paste0(
+      "relations must satisfy relationships in schema:\n",
+      paste(
+        vapply(
+          relat_errors,
+          \(relat) paste0(
+            relat[[1]], ".{", toString(relat[[2]]),
+            "} -> ",
+            relat[[3]], ".{", toString(relat[[4]]), "}"
+          ),
+          character(1)
+        ),
+        collapse = "\n"
+      )
     ))
-      stop("relations must satisfy relationships")
-  }
 
   structure(
     relations,

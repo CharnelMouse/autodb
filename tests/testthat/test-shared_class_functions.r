@@ -97,20 +97,19 @@ describe("insert", {
     forall(
       gen.database_schema(letters[1:4], 0L, 6L) |>
         gen.and_then(\(schema) {
-          list(
-            gen.pure(create(schema)),
-            gen.attrs_class(attrs_order(schema)) |>
-              gen.and_then(\(classes) {
-                gen.df_fixed_ranges(
-                  classes,
-                  attrs_order(schema),
-                  0L,
-                  FALSE
-                )
-              })
-          )
+          gen.attrs_class(attrs_order(schema), relationships(schema)) |>
+            gen.and_then(\(classes) list(
+              gen.pure(create(schema)),
+              gen.pure(classes),
+              gen.df_fixed_ranges(
+                classes,
+                attrs_order(schema),
+                0L,
+                FALSE
+              )
+            ))
         }),
-      \(db, df) expect_identical(
+      \(db, classes, df) expect_identical(
         database(
           relation(
             lapply(
