@@ -424,3 +424,19 @@ describe("decompose", {
     )
   })
 })
+
+describe("create_insert", {
+  it("is equivalent to create >> insert", {
+    forall(
+      gen_df(6, 7, remove_dup_rows = TRUE) |>
+        gen.with(\(df) list(
+          df = df,
+          schema = synthesise(discover(df, 1))
+        )),
+      expect_biidentical(
+        uncurry(create_insert),
+        onRight(create) %>>% rev %>>% uncurry(insert)
+      )
+    )
+  })
+})
