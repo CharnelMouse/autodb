@@ -296,12 +296,12 @@ gen_df <- function(
 ) {
   asable_classes <- c("logical", "integer", "numeric", "character", "factor")
   list(
-    gen.sample(seq.int(min(mincol, ncol), ncol), 1) |>
+    gen.element(seq.int(min(mincol, ncol), ncol)) |>
       gen.and_then(\(n) list(
         classes = gen.element(asable_classes) |> gen.c(of = n),
         nms = gen_attr_names(n, 9)
       )),
-    n_records = gen.sample(seq.int(min(minrow, nrow), nrow), 1)
+    n_records = gen.element(seq.int(min(minrow, nrow), nrow))
   ) |>
     gen.with(\(lst) c(lst[[1]], lst[2], list(remove_dup_rows = remove_dup_rows))) |>
     gen.and_then(uncurry(gen.df_fixed_ranges))
@@ -325,8 +325,13 @@ gen.df_fixed_ranges <- function(classes, nms, n_records, remove_dup_rows) {
   lapply(
     classes,
     \(cl) {
+      # gen.sample only shrinks by reordering,
+      # and gen.c incorrectly returns NULL when size = 0,
+      # so we need to unlist "manually"
       as_fns[[cl]](c(FALSE, TRUE, NA)) |>
-        gen.sample(size = n_records, replace = TRUE)
+        gen.element() |>
+        gen.list(of = n_records) |>
+        gen.with(\(x) vapply(x, identity, as_fns[[cl]](logical(1))))
     }
   ) |>
     gen.with(
