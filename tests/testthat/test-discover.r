@@ -368,7 +368,7 @@ describe("discover", {
   it("doesn't have an excluded attribute in any determinant sets", {
     gen_df_and_exclude <- function(nrow, ncol, remove_dup_rows = FALSE) {
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
-        gen.and_then(\(df) list(df, gen.sample(names(df), 1)))
+        gen.and_then(\(df) list(df, gen.element(names(df))))
     }
     terminates_with_exclusion_then <- function(fn, accuracy, ...) {
       function(df, attr) {

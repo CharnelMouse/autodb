@@ -171,7 +171,7 @@ describe("database_schema", {
 
   it("is subsetted to a valid database schema", {
     forall(
-      gen.sample(c(FALSE, TRUE), 1L) |>
+      gen.element(c(FALSE, TRUE)) |>
         gen.and_then(\(san) {
           list(
             gen.pure(san),
@@ -181,7 +181,7 @@ describe("database_schema", {
         gen.and_then(\(lst) list(
           gen.pure(lst[[1]]),
           gen.pure(lst[[2]]),
-          gen.sample(c(FALSE, TRUE), length(lst[[2]]), replace = TRUE)
+          gen.sample_resampleable(c(FALSE, TRUE), of = length(lst[[2]]))
         )),
       \(san, ds, i) {
         is_valid_database_schema(ds[i], same_attr_name = san)
@@ -200,7 +200,7 @@ describe("database_schema", {
       gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE) |>
         gen.and_then(\(ds) list(
           ds = gen.pure(ds),
-          indices = gen.sample(seq_along(ds), gen.sample(0:length(ds)), replace = TRUE)
+          indices = gen.sample_resampleable(seq_along(ds), from = 0, to = length(ds))
         )) |>
         gen.with(\(lst) c(lst, list(op = `[`))),
       preserves_attributes_when_subsetting,
@@ -230,7 +230,7 @@ describe("database_schema", {
       gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE) |>
         gen.and_then(\(ds) list(
           ds = gen.pure(ds),
-          indices = gen.sample(seq_along(ds), gen.sample(0:length(ds)), replace = TRUE)
+          indices = gen.sample_resampleable(seq_along(ds), from = 0, to = length(ds))
         )) |>
         gen.with(\(lst) c(lst, list(op = `[`))),
       keeps_relevant_relationships,
@@ -255,7 +255,7 @@ describe("database_schema", {
   })
   it("is made unique to a valid database schema", {
     forall(
-      gen.sample(c(FALSE, TRUE), 1) |>
+      gen.element(c(FALSE, TRUE)) |>
         gen.and_then(\(san) {
           list(
             gen.pure(san),
@@ -281,7 +281,7 @@ describe("database_schema", {
 
   it("concatenates to a valid database schema", {
     forall(
-      gen.sample(c(FALSE, TRUE), 1) |>
+      gen.element(c(FALSE, TRUE)) |>
         gen.and_then(\(san) list(
           gen.pure(san),
           gen.database_schema(letters[1:6], 0, 8, same_attr_name = san) |>
@@ -299,7 +299,7 @@ describe("database_schema", {
       }
     }
     forall(
-      gen.sample(c(FALSE, TRUE), 1) |>
+      gen.element(c(FALSE, TRUE)) |>
         gen.and_then(\(san) {
           gen.database_schema(letters[1:6], 0, 8, same_attr_name = san) |>
             gen.list(from = 1, to = 10)
@@ -325,8 +325,8 @@ describe("database_schema", {
     }
 
     forall(
-      gen.sample(letters[1:8], gen.int(3)) |>
-        gen.with(sort) |>
+      gen.subsequence(letters[1:8]) |>
+        gen.with(\(x) if (length(x) > 3) x[1:3] else x) |>
         gen.list(from = 2, to = 5),
       concatenate_keeps_attribute_order
     )
@@ -393,7 +393,7 @@ describe("database_schema", {
       }
     }
     forall(
-      gen.sample(c(FALSE, TRUE), 1) |>
+      gen.element(c(FALSE, TRUE)) |>
         gen.and_then(\(san) {
           gen.database_schema(letters[1:6], 0, 8, same_attr_name = san) |>
             gen.list(from = 1, to = 10)
@@ -435,7 +435,7 @@ describe("database_schema", {
       }
     }
     forall(
-      gen.sample(c(FALSE, TRUE), 1) |>
+      gen.element(c(FALSE, TRUE)) |>
         gen.and_then(\(san) {
           gen.database_schema(
             letters[1:6],

@@ -329,9 +329,7 @@ gen.df_fixed_ranges <- function(classes, nms, n_records, remove_dup_rows) {
       # and gen.c incorrectly returns NULL when size = 0,
       # so we need to unlist "manually"
       as_fns[[cl]](c(FALSE, TRUE, NA)) |>
-        gen.element() |>
-        gen.list(of = n_records) |>
-        gen.with(\(x) vapply(x, identity, as_fns[[cl]](logical(1))))
+        gen.sample_resampleable(of = n_records)
     }
   ) |>
     gen.with(
@@ -342,7 +340,14 @@ gen.df_fixed_ranges <- function(classes, nms, n_records, remove_dup_rows) {
 }
 
 gen_attr_name <- function(len) {
-  gen.sample(c(letters, "_", " ", "."), gen.int(len)) |>
+  gen.sample_resampleable(c(letters, "_", " ", "."), to = len) |>
+    gen.and_then(\(chars) {
+      if (all(chars == " ")) {
+        gen.element(c(letters, "_", "."))
+      }else{
+        gen.pure(chars)
+      }
+    }) |>
     gen.with(\(attr_name) paste(attr_name, collapse = ""))
 }
 
@@ -847,6 +852,33 @@ gen.emptyable_list <- function(generator, to)
 gen.list_with_dups <- function(generator, n_unique)
   gen.nonempty_list(generator, n_unique) |>
   gen.and_then(\(lst) gen.sample(lst, ceiling(1.5*length(lst)), replace = TRUE))
+
+# gen.sample with replace=TRUE, but allowing changing the sample
+# when shrinking, not just re-ordering
+gen.sample_resampleable <- function(x, from = 1, to = NULL, of = NULL) {
+  if ((!missing(from) || !missing(to)) && !missing(of))
+    stop("Specify `to` and `from`, or `of`")
+  if (!missing(of)) {
+    if (of == 0) {
+      gen.pure(x[FALSE])
+    }else{
+      gen.element(x) |>
+        gen.list(of = of) |>
+        gen.and_then(function(xs) do.call(c, xs))
+    }
+  }else {
+    gen.element(from:to) |>
+      gen.and_then(\(of) {
+        if (of == 0) {
+          gen.pure(x[FALSE])
+        }else{
+          gen.element(x) |>
+            gen.list(of = of) |>
+            gen.and_then(function(xs) do.call(c, xs))
+        }
+      })
+  }
+}
 
 # functional utility functions for tests
 `%>>%` <- function(fn1, fn2) function(...) fn2(fn1(...))

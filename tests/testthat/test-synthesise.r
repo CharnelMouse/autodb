@@ -1,7 +1,7 @@
 library(hedgehog)
 
 gen.nonempty_key <- gen.sample.int(2, gen.int(5), replace = TRUE)
-gen.key <- gen.sample.int(2, gen.sample(0:5, 1), replace = TRUE)
+gen.key <- gen.sample.int(2, gen.element(0:5), replace = TRUE)
 
 describe("synthesise", {
   expect_relation_schema <- function(current, target) {
@@ -470,13 +470,13 @@ test_that("drop_primary_dups", {
 describe("keys_order", {
   it("works like order() for single-length elements", {
     forall(
-      gen.sample.int(100, gen.sample(0:10, 1)),
+      gen.sample.int(100, gen.element(0:10)),
       expect_biidentical(as.list %>>% keys_order, order)
     )
   })
   it("gives a sorted list if applied as subsetter", {
     forall(
-      gen.sample.int(100, gen.sample(0:10, 1)),
+      gen.sample.int(100, gen.element(0:10)),
       expect_biidentical(subset_by(keys_order) %>>% keys_order, seq_along)
     )
   })

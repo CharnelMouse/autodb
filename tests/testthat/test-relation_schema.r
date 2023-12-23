@@ -150,7 +150,7 @@ describe("relation_schema", {
       gen.relation_schema(letters[1:6], 0, 8) |>
         gen.and_then(\(rs) list(
           gen.pure(rs),
-          gen.sample(c(FALSE, TRUE), length(rs), replace = TRUE)
+          gen.sample_resampleable(c(FALSE, TRUE), of = length(rs))
         )),
       \(rs, i) {
         is_valid_relation_schema(rs[i])

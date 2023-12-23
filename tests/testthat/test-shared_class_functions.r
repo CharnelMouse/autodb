@@ -276,7 +276,7 @@ describe("insert", {
       gen.and_then(uncurry(\(r, skp) {
         list(
           gen.pure(r),
-          gen.sample(40:50, 1) |>
+          gen.element(40:50) |>
             gen.and_then(with_args(
               gen.df_fixed_ranges,
               classes = rep("logical", length(attrs_order(r))),

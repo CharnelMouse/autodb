@@ -2,7 +2,7 @@ library(hedgehog)
 
 describe("functional_dependency", {
   gen.fd <- function(x, from, to, unique = TRUE) {
-    gen.sample(x, 1) |>
+    gen.element(x) |>
       gen.and_then(\(dependent) {
         list(
           gen.subsequence(setdiff(sample(x), dependent)),
@@ -83,7 +83,7 @@ describe("functional_dependency", {
       gen.fd(letters[1:6], 0, 8) |>
         gen.and_then(\(fd) list(
           gen.pure(fd),
-          gen.sample(c(FALSE, TRUE), length(fd), replace = TRUE)
+          gen.sample_resampleable(c(FALSE, TRUE), of = length(fd))
         )),
       \(fd, i) {
         is_valid_functional_dependency(fd[i])
