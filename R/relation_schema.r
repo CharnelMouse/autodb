@@ -167,7 +167,7 @@ attrs_order.relation_schema <- function(x, ...) {
 `[.relation_schema` <- function(x, i) {
   attrs <- attributes(x)
   res <- unclass(x)[i]
-  attrs$names <- attrs$names[i]
+  attrs$names <- unname(stats::setNames(nm = attrs$names)[i])
   attributes(res) <- attrs
   res
 }

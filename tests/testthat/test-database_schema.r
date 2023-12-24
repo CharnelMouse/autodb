@@ -186,7 +186,9 @@ describe("database_schema", {
       \(san, ds, i) {
         is_valid_database_schema(ds[i], same_attr_name = san)
         is_valid_database_schema(ds[which(i)], same_attr_name = san)
+        is_valid_database_schema(ds[names(ds)[i]], same_attr_name = san)
         expect_identical(ds[i], ds[which(i)])
+        expect_identical(ds[i], ds[names(ds)[i]])
         expect_length(ds[i], sum(i))
       },
       curry = TRUE

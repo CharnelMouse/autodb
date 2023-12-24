@@ -155,7 +155,9 @@ describe("relation_schema", {
       \(rs, i) {
         is_valid_relation_schema(rs[i])
         is_valid_relation_schema(rs[which(i)])
+        is_valid_relation_schema(rs[names(rs)[i]])
         expect_identical(rs[i], rs[which(i)])
+        expect_identical(rs[i], rs[names(rs)[i]])
         expect_length(rs[i], sum(i))
       },
       curry = TRUE
