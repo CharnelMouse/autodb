@@ -34,6 +34,7 @@
 #' @export
 synthesise <- function(
   dependencies,
+  ensure_lossless = TRUE,
   remove_avoidable = FALSE,
   constants_name = "constants",
   progress = FALSE,
@@ -94,13 +95,16 @@ synthesise <- function(
   ord <- keys_order(lapply(inter$keys, \(ks) ks[[1]]))
   relation_names <- make.names(relation_names[ord], unique = TRUE)
   stopifnot(!anyDuplicated(relation_names))
-  relation_schema(
+  schema <- relation_schema(
     stats::setNames(
       Map(list, inter$attrs[ord], inter$keys[ord]),
       relation_names
     ),
     inter$attrs_order
   )
+  if (ensure_lossless)
+    schema <- ensure_lossless(schema)
+  schema
 }
 
 convert_to_vectors <- function(flat_dependencies) {
@@ -546,6 +550,42 @@ remove_avoidable_attributes <- function(vecs) {
     keys
   )
   vecs
+}
+
+ensure_lossless <- function(schema) {
+  attrs_order <- attrs_order(schema)
+  attrs <- attrs(schema)
+  keys <- keys(schema)
+  relation_names <- names(schema)
+
+  G <- synthesised_fds(attrs, keys)
+  G_det_sets <- lapply(unlist(G, recursive = FALSE), `[[`, 1)
+  G_deps <- vapply(unlist(G, recursive = FALSE), `[[`, character(1), 2)
+  primaries <- lapply(keys, `[[`, 1)
+  closures <- lapply(primaries, find_closure, G_det_sets, G_deps)
+  if (any(vapply(closures, setequal, logical(1), attrs_order)))
+    return(schema)
+
+  new_key <- minimal_subset(attrs_order, attrs_order, G_det_sets, G_deps)
+  attrs <- c(attrs, list(new_key))
+  keys <- c(keys, list(list(new_key)))
+  new_name <- paste(new_key, collapse = "_")
+  if (nchar(new_name) == 0L)
+    new_name <- "constants"
+  relation_names <- c(relation_names, new_name)
+  stopifnot(sum(nchar(relation_names) == 0L) <= 1L)
+  relation_names[nchar(relation_names) == 0L] <- "empty"
+  relation_names <- make.names(relation_names, unique = TRUE)
+  c(
+    schema,
+    relation_schema(
+      stats::setNames(
+        list(list(new_key, list(new_key))),
+        relation_names[length(relation_names)]
+      ),
+      attrs_order
+    )
+  )
 }
 
 synthesised_fds <- function(attrs, keys) {

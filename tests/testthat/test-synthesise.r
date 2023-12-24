@@ -141,6 +141,76 @@ describe("synthesise", {
       )
     )
   })
+  it("has no change in added table for losslessness if avoidable attributes removed", {
+    still_lossless_with_less_or_same_attributes_dep <- function(flat_deps) {
+      schema_avoid_lossy <- synthesise(
+        flat_deps,
+        ensure_lossless = FALSE,
+        remove_avoidable = TRUE
+      )
+      schema_noavoid_lossy <- synthesise(
+        flat_deps,
+        ensure_lossless = FALSE,
+        remove_avoidable = FALSE
+      )
+      schema_avoid_lossless <- synthesise(
+        flat_deps,
+        ensure_lossless = TRUE,
+        remove_avoidable = TRUE
+      )
+      schema_noavoid_lossless <- synthesise(
+        flat_deps,
+        ensure_lossless = TRUE,
+        remove_avoidable = FALSE
+      )
+      lengths_avoid_lossy <- lengths(attrs(schema_avoid_lossy))
+      lengths_noavoid_lossy <- lengths(attrs(schema_noavoid_lossy))
+      lengths_avoid_lossless <- lengths(attrs(schema_avoid_lossless))
+      lengths_noavoid_lossless <- lengths(attrs(schema_noavoid_lossless))
+
+      # losslessness should add 0 or 1 tables
+      expect_gte(
+        length(lengths_avoid_lossless),
+        length(lengths_avoid_lossy)
+      )
+      expect_lte(
+        length(lengths_avoid_lossless),
+        length(lengths_avoid_lossy) + 1
+      )
+      expect_gte(
+        length(lengths_noavoid_lossless),
+        length(lengths_noavoid_lossy)
+      )
+      expect_lte(
+        length(lengths_noavoid_lossless),
+        length(lengths_noavoid_lossy) + 1
+      )
+
+      # removing avoidable attributes doesn't affect whether extra table added
+      expect_identical(
+        length(lengths_avoid_lossless),
+        length(lengths_noavoid_lossless)
+      )
+
+      # removing avoidable attributes can't make tables wider
+      lossless_length <- length(lengths_avoid_lossless)
+      for (l in seq_len(lossless_length)) {
+        expect_lte(lengths_avoid_lossless[l], lengths_noavoid_lossless[l])
+      }
+
+      # if extra table added, avoidance shouldn't affect its attributes
+      if (length(lengths_avoid_lossless) > length(lengths_avoid_lossy))
+        expect_identical(
+          attrs(schema_avoid_lossless)[[lossless_length]],
+          attrs(schema_noavoid_lossless)[[lossless_length]]
+        )
+    }
+
+    forall(
+      gen_flat_deps(7, 20, to = 20L),
+      still_lossless_with_less_or_same_attributes_dep
+    )
+  })
   it("merges equivalent keys", {
     dependencies <- functional_dependency(
       list(
@@ -273,6 +343,49 @@ describe("synthesise", {
       attrs_order = c("constants", "a", "b")
     )
     gets_unique_table_names(fds)
+  })
+  it("includes all attributes in tables if ensuring lossless", {
+    includes_all_attrs_if_lossless <- function(fds) {
+      lone_attr <- LETTERS[length(attrs_order(fds)) + 1]
+      new_fds <- fds
+      attrs_order(new_fds) <- c(attrs_order(fds), lone_attr)
+      rs <- synthesise(new_fds, ensure_lossless = TRUE)
+      expect_true(setequal(attrs_order(rs), unlist(attrs(rs))))
+    }
+    forall(
+      gen_flat_deps(7, 20, to = 20L),
+      includes_all_attrs_if_lossless
+    )
+  })
+  it("includes all attributes in non-extraneous FDs in tables if not ensuring lossless", {
+    includes_all_fd_attrs_if_lossless <- function(fds) {
+      nonextr_fds <- fds |>
+        convert_to_vectors() |>
+        convert_to_integer_attributes() |>
+        sort_key_contents() |>
+        remove_extraneous_attributes() |>
+        sort_dependencies() |>
+        remove_extraneous_dependencies()
+      nonextr_fds$determinant_sets <- lapply(
+        nonextr_fds$determinant_sets,
+        \(inds) attrs_order(fds)[inds]
+      )
+      nonextr_fds$dependents <- lapply(
+        nonextr_fds$dependents,
+        \(inds) attrs_order(fds)[inds]
+      )
+      nonextr_fds <- functional_dependency(
+        Map(list, nonextr_fds$determinant_sets, nonextr_fds$dependents),
+        attrs_order(fds)
+      )
+
+      rs <- synthesise(fds, ensure_lossless = FALSE)
+      expect_true(setequal(unlist(nonextr_fds), unlist(attrs(rs))))
+    }
+    forall(
+      gen_flat_deps(7, 20, to = 20L),
+      includes_all_fd_attrs_if_lossless
+    )
   })
   it("can remove avoidable attributes", {
     # example 6.24 from Maier
@@ -429,6 +542,76 @@ describe("synthesise", {
       gen_flat_deps_fixed_names(7, 20, from = 1L, to = 20L),
       enforces_fds,
       discard.limit = 10L
+    )
+  })
+  it("has no change in added table for losslessness if avoidable attributes removed", {
+    still_lossless_with_less_or_same_attributes_dep <- function(flat_deps) {
+      schema_avoid_lossy <- synthesise(
+        flat_deps,
+        ensure_lossless = FALSE,
+        remove_avoidable = TRUE
+      )
+      schema_noavoid_lossy <- synthesise(
+        flat_deps,
+        ensure_lossless = FALSE,
+        remove_avoidable = FALSE
+      )
+      schema_avoid_lossless <- synthesise(
+        flat_deps,
+        ensure_lossless = TRUE,
+        remove_avoidable = TRUE
+      )
+      schema_noavoid_lossless <- synthesise(
+        flat_deps,
+        ensure_lossless = TRUE,
+        remove_avoidable = FALSE
+      )
+      lengths_avoid_lossy <- lengths(attrs(schema_avoid_lossy))
+      lengths_noavoid_lossy <- lengths(attrs(schema_noavoid_lossy))
+      lengths_avoid_lossless <- lengths(attrs(schema_avoid_lossless))
+      lengths_noavoid_lossless <- lengths(attrs(schema_noavoid_lossless))
+
+      # losslessness should add 0 or 1 tables
+      expect_gte(
+        length(lengths_avoid_lossless),
+        length(lengths_avoid_lossy)
+      )
+      expect_lte(
+        length(lengths_avoid_lossless),
+        length(lengths_avoid_lossy) + 1
+      )
+      expect_gte(
+        length(lengths_noavoid_lossless),
+        length(lengths_noavoid_lossy)
+      )
+      expect_lte(
+        length(lengths_noavoid_lossless),
+        length(lengths_noavoid_lossy) + 1
+      )
+
+      # removing avoidable attributes doesn't affect whether extra table added
+      expect_identical(
+        length(lengths_avoid_lossless),
+        length(lengths_noavoid_lossless)
+      )
+
+      # removing avoidable attributes can't make tables wider
+      lossless_length <- length(lengths_avoid_lossless)
+      for (l in seq_len(lossless_length)) {
+        expect_lte(lengths_avoid_lossless[l], lengths_noavoid_lossless[l])
+      }
+
+      # if extra table added, avoidance shouldn't affect its attributes
+      if (length(lengths_avoid_lossless) > length(lengths_avoid_lossy))
+        expect_identical(
+          attrs(schema_avoid_lossless)[[lossless_length]],
+          attrs(schema_noavoid_lossless)[[lossless_length]]
+        )
+    }
+
+    forall(
+      gen_flat_deps(7, 20, to = 20L),
+      still_lossless_with_less_or_same_attributes_dep
     )
   })
 })

@@ -4,15 +4,11 @@
 \alias{cross_reference}
 \title{Add foreign key relationships to a normalised database}
 \usage{
-cross_reference(schema, ensure_lossless = TRUE)
+cross_reference(schema)
 }
 \arguments{
 \item{schema}{a \code{\link{relation_schema}} object, as given by
 \code{\link{synthesise}}.}
-
-\item{ensure_lossless}{a logical, TRUE by default. If TRUE, and the
-decomposition isn't lossless, an extra relation is added to make the
-decomposition lossless.}
 }
 \value{
 A \code{\link{database_schema}} object, containing the given relation

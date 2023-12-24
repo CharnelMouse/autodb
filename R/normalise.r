@@ -30,11 +30,11 @@ normalise <- function(
   cross_reference(
     synthesise(
       dependencies,
+      ensure_lossless = ensure_lossless,
       remove_avoidable = remove_avoidable,
       constants_name = constants_name,
       progress = progress,
       progress_file = progress_file
-    ),
-    ensure_lossless = ensure_lossless
+    )
   )
 }
