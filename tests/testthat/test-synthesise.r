@@ -72,7 +72,6 @@ describe("synthesise", {
       uncurry(identical),
       with_args(lapply, synthesise) %>>% (uncurry(expect_identical))
     )
-
     # currently-rarely-generated case:
     # given a choice of which dependency to remove as extraneous,
     # order matters

@@ -20,16 +20,21 @@ describe("autodb", {
     expect_silent(gv(database))
 
     forall(
-      gen_df(6, 7),
+      list(
+        gen_df(6, 7),
+        ensure_lossless = gen.element(c(FALSE, TRUE)),
+        remove_avoidable = gen.element(c(FALSE, TRUE))
+      ),
       expect_biidentical(
-        autodb,
-        dup %>>%
-          onRight(
-            with_args(discover, accuracy = 1) %>>%
-              normalise
-          ) %>>%
-          uncurry(decompose)
-      )
+        uncurry(autodb),
+        biapply(
+          with_args("[[", 1),
+          (\(x) c(list(discover(x[[1]], 1)), x[-1])) %>>%
+            (uncurry(normalise))
+        ) %>>%
+          (uncurry(decompose))
+      ),
+      curry = FALSE
     )
   })
   it("runs DFD and normalises the given data.frame", {

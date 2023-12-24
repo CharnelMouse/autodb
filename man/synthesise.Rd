@@ -55,7 +55,8 @@ key for all the original attributes, if one is not already present.
 Constant attributes, i.e. those whose only determinant set is empty, get
 assigned to a relation with no keys.
 
-Relation names are adjusted for uniqueness after synthesis.
+Relation names are adjusted for uniqueness after synthesis. Schemas are also
+sorted, to make the output independent of dependency order.
 }
 \references{
 3NF synthesis algorithm: Bernstein P. A. (1976) Synthesizing third normal

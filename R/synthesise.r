@@ -16,7 +16,8 @@
 #' Constant attributes, i.e. those whose only determinant set is empty, get
 #' assigned to a relation with no keys.
 #'
-#' Relation names are adjusted for uniqueness after synthesis.
+#' Relation names are adjusted for uniqueness after synthesis. Schemas are also
+#' sorted, to make the output independent of dependency order.
 #'
 #' @inheritParams normalise
 #'
@@ -46,12 +47,10 @@ synthesise <- function(
       "simplifying dependency format"
     ) |>
     convert_to_integer_attributes() |>
-    sort_key_contents() |>
     report$op(
       remove_extraneous_attributes,
       "removing extraneous components"
     ) |>
-    sort_dependencies() |>
     remove_extraneous_dependencies() |>
     report$op(
       partition_dependencies,
@@ -92,10 +91,14 @@ synthesise <- function(
   relation_names[nchar(relation_names) == 0] <- constants_name
   if (!missing(constants_name) && sum(relation_names == constants_name) > 1)
     warning("constants_name appears in generated relation names, and will be changed to keep relation names unique")
-  relation_names <- make.names(relation_names, unique = TRUE)
+  ord <- keys_order(lapply(inter$keys, \(ks) ks[[1]]))
+  relation_names <- make.names(relation_names[ord], unique = TRUE)
   stopifnot(!anyDuplicated(relation_names))
   relation_schema(
-    stats::setNames(Map(list, inter$attrs, inter$keys), relation_names),
+    stats::setNames(
+      Map(list, inter$attrs[ord], inter$keys[ord]),
+      relation_names
+    ),
     inter$attrs_order
   )
 }
@@ -141,11 +144,16 @@ sort_dependencies <- function(vecs) {
 }
 
 remove_extraneous_dependencies <- function(vecs) {
-  new_det_sets <- vecs$determinant_sets
+  ord <- order(keys_rank(vecs$determinant_sets), vecs$dependents)
+  inv_ord <- order(ord)
+
+  new_det_sets <- vecs$determinant_sets[ord]
   old_deps <- NULL
-  new_deps <- vecs$dependents
+  new_deps <- vecs$dependents[ord]
+  main_rem <- rep(FALSE, length(new_deps))
   while (!identical(old_deps, new_deps)) {
     old_deps <- new_deps
+    rem_ind <- which(!main_rem)
     rem <- rep(FALSE, length(new_deps))
     for (n in rev(seq_along(new_deps))) {
       det_set <- new_det_sets[[n]]
@@ -162,9 +170,14 @@ remove_extraneous_dependencies <- function(vecs) {
     }
     new_det_sets <- new_det_sets[!rem]
     new_deps <- new_deps[!rem]
+    main_rem[rem_ind] <- rem
   }
-  vecs$determinant_sets <- new_det_sets
-  vecs$dependents <- new_deps
+  stopifnot(identical(
+    new_det_sets,
+    vecs$determinant_sets[ord][!main_rem]
+  ))
+  vecs$determinant_sets <- vecs$determinant_sets[!main_rem[inv_ord]]
+  vecs$dependents <- vecs$dependents[!main_rem[inv_ord]]
   vecs
 }
 
