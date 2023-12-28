@@ -87,6 +87,24 @@ keys.relation <- function(x, ...) {
 }
 
 #' @exportS3Method
+records.relation <- function(x, ...) {
+  lapply(unclass(x), \(rel) rel$df)
+}
+
+#' @export
+`records<-.relation` <- function(x, ..., value) {
+  if (!identical(lapply(value, names), attrs(x)))
+    stop("record reassignments must have the same attributes, in the same order")
+  new <- Map(
+    \(recs, ks) list(df = recs, keys = ks),
+    value,
+    keys(x)
+  )
+  attributes(new) <- attributes(x)
+  new
+}
+
+#' @exportS3Method
 print.relation <- function(x, max = 10, ...) {
   n_relations <- length(x)
   cat(paste0(

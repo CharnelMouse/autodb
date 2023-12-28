@@ -222,7 +222,7 @@ is_valid_relation <- function(x) {
 
   rel_keys <- keys(x)
   rel_key_els <- lapply(rel_keys, \(ks) unique(unlist(ks)))
-  rel_attrs <- Map(\(r) names(r$df), x)
+  rel_attrs <- attrs(x)
   Map(
     \(ks, as) expect_identical(as[seq_along(ks)], ks),
     rel_key_els,
@@ -245,14 +245,14 @@ is_valid_relation <- function(x) {
   )))
   expect_true(all(vapply(rel_keys, Negate(anyDuplicated), logical(1))))
   expect_lte(sum(vapply(rel_keys, identical, logical(1), list(character()))), 1L)
-  expect_true(all(vapply(
-    x,
-    \(r) all(vapply(
-      r$keys,
-      \(k) !anyDuplicated(r$df[, k, drop = FALSE]),
+  expect_true(all(mapply(
+    \(recs, ks) all(vapply(
+      ks,
+      \(k) !anyDuplicated(recs[, k, drop = FALSE]),
       logical(1)
     )),
-    logical(1)
+    records(x),
+    rel_keys
   )))
 }
 
@@ -266,12 +266,13 @@ is_valid_database <- function(
 
   fks <- relationships(x)
   is_valid_relationships(x, same_attr_name, single_key_pairs)
+  recs <- records(x)
   for (fk in fks) {
     expect_true(identical(
-      nrow(x[[fk[[1]]]]$df),
+      nrow(records(x)[[fk[[1]]]]),
       nrow(merge(
-        x[[fk[[1]]]]$df[, fk[[2]], drop = FALSE],
-        x[[fk[[3]]]]$df[, fk[[4]], drop = FALSE],
+        recs[[fk[[1]]]][, fk[[2]], drop = FALSE],
+        recs[[fk[[3]]]][, fk[[4]], drop = FALSE],
         by.x = fk[[2]],
         by.y = fk[[4]]
       ))))
@@ -504,19 +505,23 @@ gen.relation <- function(x, from, to, rows_from = 0L, rows_to = 10L) {
 gen.relation_from_schema <- function(rs, rows_from = 0L, rows_to = 10L) {
   create(rs) |>
     gen.and_then(\(empty_rel) {
+      r_attrs <- attrs(empty_rel)
+      r_ncols <- lengths(r_attrs)
+      r_keys <- keys(empty_rel)
       lapply(
-        empty_rel,
-        \(r) {
+        setNames(seq_along(empty_rel), names(empty_rel)),
+        \(n) {
+          ks <- r_keys[[n]]
           gen.sample(rows_from:rows_to, 1L) |>
             gen.and_then(with_args(
               gen.df_fixed_ranges,
-              classes = rep("logical", ncol(r$df)),
-              nms = names(r$df),
+              classes = rep("logical", r_ncols[[n]]),
+              nms = r_attrs[[n]],
               remove_dup_rows = TRUE
             )) |>
             gen.with(\(df) list(
-              df = remove_key_violations(df, r$keys),
-              keys = r$keys
+              df = remove_key_violations(df, ks),
+              keys = ks
             ))
         }
       ) |>
@@ -534,30 +539,33 @@ remove_key_violations <- function(df, keys) {
 
 remove_insertion_key_violations <- function(df, relation) {
   Reduce(
-    \(df, rel) {
+    \(df, n) {
+      recs <- records(relation)
       Reduce(
         \(df, key) {
+          r_df <- recs[[n]]
+          r_attrs <- names(r_df)
           remove <- if (length(key) == 0L) {
-            negind <- if (nrow(rel$df) == 0)
+            negind <- if (nrow(r_df) == 0)
               TRUE
             else
-              -seq_len(nrow(rel$df))
-            if (ncol(rel$df) == 0L)
+              -seq_len(nrow(r_df))
+            if (length(r_attrs) == 0L)
               rep(FALSE, nrow(df))
             else{
               single_adds <- lapply(
                 seq_len(nrow(df)),
-                \(n) rbind(rel$df, df[n, names(rel$df), drop = FALSE])
+                \(n) rbind(r_df, df[n, r_attrs, drop = FALSE])
               )
               record_new <- vapply(
                 single_adds,
                 \(sa) {
                   nondups <- !duplicated(sa)
-                  if (length(nondups) != nrow(rel$df) + 1L)
-                    stop(paste(print(1), print(rel), print(df)))
+                  if (length(nondups) != nrow(r_df) + 1L)
+                    stop(paste(print(1), print(relation[[n]]), print(df)))
                   res <- nondups[negind]
                   if (length(res) != 1)
-                    stop(paste(print(2), print(rel), print(df)))
+                    stop(paste(print(2), print(relation[[n]]), print(df)))
                   res
                 },
                 logical(1)
@@ -565,25 +573,25 @@ remove_insertion_key_violations <- function(df, relation) {
               record_new
             }
           }else{
-            negind <- if (nrow(rel$df) == 0)
+            negind <- if (nrow(r_df) == 0)
               TRUE
             else
-              -seq_len(nrow(rel$df))
-            comb <- rbind(rel$df, df[, names(rel$df), drop = FALSE])
+              -seq_len(nrow(r_df))
+            comb <- rbind(r_df, df[, r_attrs, drop = FALSE])
             key_dups <- duplicated(comb[, key, drop = FALSE])[negind]
             single_adds <- lapply(
               seq_len(nrow(df)),
-              \(n) rbind(rel$df, df[n, names(rel$df), drop = FALSE])
+              \(n) rbind(r_df, df[n, r_attrs, drop = FALSE])
             )
             record_new <- vapply(
               single_adds,
               \(sa) {
                 nondups <- !duplicated(sa)
-                if (length(nondups) != nrow(rel$df) + 1L)
-                  stop(paste(print(1), print(rel), print(df)))
+                if (length(nondups) != nrow(r_df) + 1L)
+                  stop(paste(print(1), print(relation[[n]]), print(df)))
                 res <- nondups[negind]
                 if (length(res) != 1)
-                  stop(paste(print(2), print(rel), print(df)))
+                  stop(paste(print(2), print(relation[[n]]), print(df)))
                 res
               },
               logical(1)
@@ -592,21 +600,22 @@ remove_insertion_key_violations <- function(df, relation) {
           }
           df[!remove, , drop = FALSE]
         },
-        rel$keys,
+        keys(relation)[[n]],
         init = df
       )
     },
-    relation,
+    seq_along(relation),
     init = df
   )
 }
 
 remove_violated_relationships <- function(relationships, relation) {
+  recs <- records(relation)
   relationships[vapply(
     relationships,
     \(rel) {
-      child <- relation[[rel[[1]]]]$df[, rel[[2]], drop = FALSE]
-      parent <- relation[[rel[[3]]]]$df[, rel[[4]], drop = FALSE]
+      child <- recs[[rel[[1]]]][, rel[[2]], drop = FALSE]
+      parent <- recs[[rel[[3]]]][, rel[[4]], drop = FALSE]
       identical(
         unname(lapply(child, class)),
         unname(lapply(parent, class))
@@ -781,12 +790,13 @@ remove_relationship_violations <- function(relation, relationships) {
   while (change) {
     change <- FALSE
     for (ref in relationships) {
+      recs <- records(relation)
       child_name <- ref[[1]]
-      child <- relation[[child_name]]$df[, ref[[2]], drop = FALSE]
+      child <- recs[[child_name]][, ref[[2]], drop = FALSE]
       if (nrow(child) > 0L) {
         parent_name <- ref[[3]]
-        parent <- relation[[parent_name]]$df[, ref[[4]], drop = FALSE]
-        parent_keys <- relation[[parent_name]]$keys
+        parent <- recs[[parent_name]][, ref[[4]], drop = FALSE]
+        parent_keys <- keys(relation)[[parent_name]]
         stopifnot(is.element(list(ref[[4]]), parent_keys))
         valid <- vapply(
           seq_len(nrow(child)),
@@ -798,7 +808,7 @@ remove_relationship_violations <- function(relation, relationships) {
           )) > 0L,
           logical(1)
         )
-        relation[[child_name]]$df <- relation[[child_name]]$df[valid, , drop = FALSE]
+        records(relation)[[child_name]] <- recs[[child_name]][valid, , drop = FALSE]
         if (!all(valid))
           change <- TRUE
       }
@@ -810,19 +820,20 @@ remove_relationship_violations <- function(relation, relationships) {
 remove_insertion_relationship_violations <- function(df, database) {
   if (length(relationships(database)) == 0L)
     return(df)
+  recs <- records(database)
   change <- TRUE
   while (change) {
     change <- FALSE
     for (ref in relationships(database)) {
       child_name <- ref[[1]]
       child <- rbind(
-        database[[child_name]]$df[, ref[[2]], drop = FALSE],
+        recs[[child_name]][, ref[[2]], drop = FALSE],
         df[, ref[[2]], drop = FALSE]
       )
       if (nrow(child) > 0L) {
         parent_name <- ref[[3]]
         parent <- rbind(
-          database[[parent_name]]$df[, ref[[4]], drop = FALSE],
+          recs[[parent_name]][, ref[[4]], drop = FALSE],
           df[, ref[[4]], drop = FALSE]
         )
         valid <- vapply(
@@ -835,7 +846,7 @@ remove_insertion_relationship_violations <- function(df, database) {
           )) > 0L,
           logical(1)
         )
-        df <- df[valid[-seq_len(nrow(database[[child_name]]$df))], , drop = FALSE]
+        df <- df[valid[-seq_len(nrow(recs[[child_name]]))], , drop = FALSE]
         if (!all(valid))
           change <- TRUE
       }

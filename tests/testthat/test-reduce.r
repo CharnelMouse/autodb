@@ -63,11 +63,11 @@ describe("reduce.database", {
           vapply(relationships(reduced), `[[`, character(1), 3)
         )
         non_parent_nrows <- vapply(
-          reduced[non_parents],
-          \(table) nrow(table$df),
+          records(reduced)[non_parents],
+          nrow,
           integer(1)
         )
-        max_table_nrow <- max(vapply(database, \(table) nrow(table$df), integer(1)))
+        max_table_nrow <- max(vapply(records(database), nrow, integer(1)))
         expect_true(all(non_parent_nrows == max_table_nrow))
       }
     }
@@ -80,7 +80,7 @@ describe("reduce.database", {
     contains_maximal_row_relation_and_parents <- function(df) {
       db <- autodb(df, ensure_lossless = TRUE)
       reduced <- reduce(db)
-      nrows <- vapply(reduced, \(r) nrow(r$df), integer(1))
+      nrows <- vapply(records(reduced), nrow, integer(1))
       expect_identical(max(nrows), nrow(df))
       base <- names(reduced)[which.max(nrows)]
       parents <- relationships(db) |>

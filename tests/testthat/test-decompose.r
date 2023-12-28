@@ -398,7 +398,7 @@ describe("decompose", {
     ) |>
       database_schema(relationships = list())
     db <- decompose(df, schema)
-    expect_setequal(names(db[[1]]$df), c("A 1", "B 2", "C 3"))
+    expect_setequal(attrs(db)[[1]], c("A 1", "B 2", "C 3"))
   })
   it("links added key relations", {
     df <- data.frame(
@@ -416,11 +416,12 @@ describe("decompose", {
       database_schema(relationships = list(list("a_c", "a", "a", "a")))
     db <- decompose(df, schema)
     expect_identical(
-      db$a_c,
-      list(
-        df = data.frame(a = 1:2, c = rep(1:2, each = 2), row.names = 1:4),
-        keys = list(c("a", "c"))
-      )
+      records(db)$a_c,
+      data.frame(a = 1:2, c = rep(1:2, each = 2), row.names = 1:4)
+    )
+    expect_identical(
+      keys(db)$a_c,
+      list(c("a", "c"))
     )
   })
 })

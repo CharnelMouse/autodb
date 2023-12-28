@@ -51,6 +51,44 @@ describe("relation", {
       "a"
     ))
   })
+  it("is composed of its records(), keys(), names(), and attrs_order()", {
+    forall(
+      gen.relation(letters[1:6], 0, 8),
+      \(r) expect_identical(
+        r,
+        relation(
+          setNames(
+            Map(
+              \(recs, ks) list(df = recs, keys = ks),
+              records(r),
+              keys(r)
+            ),
+            names(r)
+          ),
+          attrs_order = attrs_order(r)
+        )
+      )
+    )
+  })
+  it("has record attributes given by attrs()", {
+    forall(
+      gen.relation(letters[1:6], 0, 8),
+      \(r) expect_identical(
+        attrs(r),
+        lapply(records(r), names)
+      )
+    )
+  })
+  it("expects record assignments to have same attributes and attribute order", {
+    x <- relation(
+      list(a = list(df = data.frame(a = 1:4, b = 1:2), keys = list("a"))),
+      attrs_order = c("a", "b")
+    )
+    expect_error(
+      records(x) <- list(a = data.frame(b = 1:2, a = 1:6)),
+      "^record reassignments must have the same attributes, in the same order$"
+    )
+  })
 
   it("prints", {
     expect_output(

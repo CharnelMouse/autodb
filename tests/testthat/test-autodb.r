@@ -179,7 +179,7 @@ describe("autodb", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
       stats::setNames(c("A 1", "B 2", "C 3"))
     database <- autodb(df)
-    expect_identical(names(database[[1]]$df), c("A 1", "B 2", "C 3"))
+    expect_identical(attrs(database)[[1]], c("A 1", "B 2", "C 3"))
   })
   it("adds a key table if none given in normalisation", {
     df <- data.frame(
@@ -189,11 +189,12 @@ describe("autodb", {
     )
     database <- autodb(df)
     expect_identical(
-      database$a_c,
-      list(
-        df = data.frame(a = 1:2, c = rep(1:2, each = 2), row.names = 1:4),
-        keys = list(c("a", "c"))
-      )
+      records(database)$a_c,
+      data.frame(a = 1:2, c = rep(1:2, each = 2), row.names = 1:4)
+    )
+    expect_identical(
+      keys(database)$a_c,
+      list(c("a", "c"))
     )
   })
   it("decomposes zero-column data frames correctly into TABLE_DUM or TABLE_DEE", {
@@ -205,8 +206,8 @@ describe("autodb", {
     db_deux <- autodb(table_deux)
     expect_length(db_dum, 1L)
     expect_length(db_dee, 1L)
-    expect_identical(nrow(db_dum[[1]]$df), 0L)
-    expect_identical(nrow(db_dee[[1]]$df), 1L)
+    expect_identical(nrow(records(db_dum)[[1]]), 0L)
+    expect_identical(nrow(records(db_dee)[[1]]), 1L)
     expect_identical(db_deux, db_dee)
   })
 })

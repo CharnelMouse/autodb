@@ -329,7 +329,7 @@ describe("relation_schema", {
       \(rs) {
         r <- create(rs)
         classes <- unlist(
-          unname(lapply(r, \(rel) lapply(rel$df, class))),
+          unname(lapply(records(r), \(df) lapply(df, class))),
           recursive = FALSE
         )
         if (is.null(names(classes)))

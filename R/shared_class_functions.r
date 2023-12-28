@@ -68,6 +68,32 @@ keys <- function(x, ...) {
   UseMethod("keys")
 }
 
+#' Relational data records
+#'
+#' Generic function, for retrieving data contained in a database-like structure.
+#' In particular, this is intended for such structures where the individual
+#' relations can't be accessed with subsetting.
+#'
+#' @param x  an R object.
+#' @param ... further arguments passed on to methods.
+#'
+#' @return A list containing data frames.
+#' @export
+records <- function(x, ...) {
+  UseMethod("records")
+}
+
+#' @rdname records
+#'
+#' @param value A list of data frames of the same length as \code{records(x,
+#'   ...)}, where each data frame has the same column names as that which it
+#'   will replace, in the same order.
+#'
+#' @export
+`records<-` <- function(x, ..., value) {
+  UseMethod("records<-")
+}
+
 #' Relational data attribute order
 #'
 #' Generic function, with the only given method fetching attribute order for

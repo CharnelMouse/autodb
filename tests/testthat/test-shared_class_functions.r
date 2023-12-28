@@ -66,19 +66,14 @@ describe("insert", {
               })
           )
         }),
-      \(rel, df) expect_identical(
-        relation(
-          lapply(
-            rel,
-            \(r) {
-              r$df <- df[, names(r$df), drop = FALSE]
-              r
-            }
-          ),
-          attrs_order(rel)
-        ),
-        insert(rel, df)
-      ),
+      \(rel, df) {
+        expected <- rel
+        records(expected) <- lapply(
+          records(expected),
+          \(recs) df[, names(recs), drop = FALSE]
+        )
+        expect_identical(insert(rel, df), expected)
+      },
       curry = TRUE
     )
     forall(
@@ -109,22 +104,14 @@ describe("insert", {
               )
             ))
         }),
-      \(db, classes, df) expect_identical(
-        database(
-          relation(
-            lapply(
-              db,
-              \(r) {
-                r$df <- df[, names(r$df), drop = FALSE]
-                r
-              }
-            ),
-            attrs_order(db)
-          ),
-          relationships(db)
-        ),
-        insert(db, df)
-      ),
+      \(db, classes, df) {
+        expected <- db
+        records(expected) <- lapply(
+          records(expected),
+          \(recs) df[, names(recs), drop = FALSE]
+        )
+        expect_identical(insert(db, df), expected)
+      },
       curry = TRUE
     )
   })
@@ -183,7 +170,10 @@ describe("insert", {
       database(
         relation(
           list(
-            a = r$a,
+            a = list(
+              df = records(r)$a,
+              keys = keys(r)$a
+            ),
             b = list(
               df = data.frame(b = c(1:4), c = c(1L, 1L, 2L, 3L)),
               keys = list("b")

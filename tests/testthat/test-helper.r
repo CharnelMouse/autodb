@@ -113,12 +113,15 @@ test_that("remove_insertion_key_violations removes violations", {
         )
       })),
     \(r, r_unclassed, df, df_trimmed) {
+      recs <- records(r)
+      ks <- keys(r)
       expect_true(all(vapply(
-        r,
-        \(rel) {
-          new_rel <- unique(rbind(rel$df, df_trimmed[, names(rel$df), drop = FALSE]))
+        seq_along(r),
+        \(n) {
+          r_df <- recs[[n]]
+          new_rel <- unique(rbind(r_df, df_trimmed[, names(r_df), drop = FALSE]))
           all(vapply(
-            rel$keys,
+            ks[[n]],
             \(key) {!anyDuplicated(new_rel[, key, drop = FALSE])},
             logical(1)
           ))
