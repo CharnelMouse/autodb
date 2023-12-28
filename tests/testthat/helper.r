@@ -220,8 +220,8 @@ is_valid_relation <- function(x) {
   expect_true(!anyDuplicated(names(x)))
   expect_true(all(nchar(names(x)) > 0L))
 
-  rel_keys <- Map(\(r) r$keys, x)
-  rel_key_els <- Map(\(ks) unique(unlist(ks)), rel_keys)
+  rel_keys <- keys(x)
+  rel_key_els <- lapply(rel_keys, \(ks) unique(unlist(ks)))
   rel_attrs <- Map(\(r) names(r$df), x)
   Map(
     \(ks, as) expect_identical(as[seq_along(ks)], ks),

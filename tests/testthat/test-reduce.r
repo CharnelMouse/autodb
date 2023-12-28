@@ -100,8 +100,8 @@ describe("reduce.database_schema", {
     has_idempotent_reduction <- function(df) {
       database_schema <- discover(as.data.frame(df), 1) |>
         normalise(ensure_lossless = TRUE)
-      once_schema <- reduce(database_schema, database_schema$relation_names[1L])
-      twice_schema <- reduce(once_schema, database_schema$relation_names[1L])
+      once_schema <- reduce(database_schema, names(database_schema)[[1L]])
+      twice_schema <- reduce(once_schema, names(database_schema)[[1L]])
       expect_identical(twice_schema, once_schema)
     }
     forall(gen_df(6, 7), has_idempotent_reduction)
@@ -150,26 +150,20 @@ describe("reduce.database_schema", {
     reduced_to_subset <- function(df) {
       database_schema <- discover(df, 1) |>
         normalise(ensure_lossless = TRUE)
-      reduced <- reduce(database_schema, database_schema$relation_names[1L])
-      kept <- match(reduced$relation_names, database_schema$relation_names)
+      reduced <- reduce(database_schema, names(database_schema)[[1L]])
+      kept <- match(names(reduced), names(database_schema))
       expect_true(all(!is.na(kept)))
       expect_true(!anyDuplicated(kept))
-      expect_identical(reduced$attrs, database_schema$attrs[kept])
-      expect_identical(reduced$keys, database_schema$keys[kept])
+      expect_identical(attrs(reduced), attrs(database_schema)[kept])
+      expect_identical(keys(reduced), keys(database_schema)[kept])
       expect_identical(
-        lapply(
-          relationships(reduced),
-          \(r) {r[[1]] <- reduced$relation_names[r[[1]]]; r}
-        ),
-        lapply(
-          Filter(
-            \(r) all(r[[1]] %in% kept) && r[[2]] %in% reduced$relation_names,
-            relationships(database_schema)
-          ),
-          \(r) {r[[1]] <- database_schema$relation_names[r[[1]]]; r}
+        relationships(reduced),
+        Filter(
+          \(r) all(is.element(c(r[[1]], r[[3]]), names(reduced))),
+          relationships(database_schema)
         )
       )
-      expect_identical(reduced$attrs_order, database_schema$attrs_order)
+      expect_identical(attrs_order(reduced), attrs_order(database_schema))
     }
     forall(gen_df(6, 7, minrow = 1L, mincol = 1L), reduced_to_subset)
   })

@@ -432,15 +432,24 @@ describe("synthesise", {
         flat_deps,
         remove_avoidable = FALSE
       )
-      lengths_avoid <- lengths(norm_deps_avoid$attrs)
-      lengths_noavoid <- lengths(norm_deps_noavoid$attrs)
+      shared <- intersect(names(norm_deps_avoid), names(norm_deps_noavoid))
+      norm_deps_avoid <- norm_deps_avoid[c(
+        shared,
+        setdiff(names(norm_deps_avoid), shared)
+      )]
+      norm_deps_noavoid <- norm_deps_noavoid[c(
+        shared,
+        setdiff(names(norm_deps_noavoid), shared)
+      )]
+      lengths_avoid <- lengths(attrs(norm_deps_avoid))
+      lengths_noavoid <- lengths(attrs(norm_deps_noavoid))
       expect_identical(length(lengths_avoid), length(lengths_noavoid))
       expect_true(all(lengths_avoid <= lengths_noavoid))
       expect_true(all(lengths(norm_deps_avoid) <= lengths(norm_deps_noavoid)))
       expect_true(all(mapply(
         \(av, noav) all(is.element(av, noav)),
-        norm_deps_avoid$attrs,
-        norm_deps_noavoid$attrs
+        attrs(norm_deps_avoid),
+        attrs(norm_deps_noavoid)
       )))
     }
 

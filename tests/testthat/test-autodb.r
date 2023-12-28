@@ -88,7 +88,7 @@ describe("autodb", {
       c("Price", "Title", "constants")
     )
     expect_identical(
-      database_nonfiltered$Price$keys,
+      keys(database_nonfiltered)$Price,
       list("Price", c("Title", "Format"))
     )
     database_filtered <- autodb(df, exclude_class = "numeric")
@@ -97,7 +97,7 @@ describe("autodb", {
       c("Title_Format", "Title", "constants")
     )
     expect_identical(
-      database_filtered$Title_Format$keys,
+      keys(database_filtered)$Title_Format,
       list(c("Title", "Format"))
     )
   })
@@ -125,7 +125,7 @@ describe("autodb", {
       c("Price", "Title", "constants")
     )
     expect_identical(
-      database_nonfiltered$Price$keys,
+      keys(database_nonfiltered)$Price,
       list("Price", c("Title", "Format"))
     )
     database_filtered <- autodb(df, exclude = "Price")
@@ -134,7 +134,7 @@ describe("autodb", {
       c("Title_Format", "Title", "constants")
     )
     expect_identical(
-      database_filtered$Title_Format$keys,
+      keys(database_filtered)$Title_Format,
       list(c("Title", "Format"))
     )
   })
@@ -162,7 +162,7 @@ describe("autodb", {
       c("Price", "Title", "constants")
     )
     expect_identical(
-      database_nonfiltered$Price$keys,
+      keys(database_nonfiltered)$Price,
       list("Price", c("Title", "Format"))
     )
     database_filtered <- autodb(df, exclude_class = "integer")
@@ -171,7 +171,7 @@ describe("autodb", {
       c("Title_Format", "Title", "constants")
     )
     expect_identical(
-      database_filtered$Title_Format$keys,
+      keys(database_filtered)$Title_Format,
       list(c("Title", "Format"))
     )
   })
