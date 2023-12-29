@@ -92,10 +92,10 @@ describe("database_schema", {
         gen.and_then(uncurry(\(rs, skp) {
           list(gen.pure(rs), gen.relationships(rs, skp))
         })),
-      dup %>>%
-        onLeft(with_args(`[[`, 1)) %>>%
-        onRight(with_args(do.call, what = database_schema) %>>% subschemas) %>>%
-        uncurry(expect_identical)
+      expect_biidentical(
+        with_args(`[[`, 1),
+        with_args(do.call, what = database_schema) %>>% subschemas
+      )
     )
   })
   it("prints", {
