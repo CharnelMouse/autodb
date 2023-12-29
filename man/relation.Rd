@@ -30,6 +30,16 @@ Creates a set of relation schemas, including the relation's attributes and
 candidate keys.
 }
 \details{
+Relation vectors are unlikely to be needed by the user directly, since they
+are essentially \code{\link{database}} objects that can't have foreign key
+references. They are mostly used to mirror the use of the vector-like
+\code{\link{relation_schema}} class for the \code{\link{database_schema}}
+class to be a wrapper around. This makes creating a \code{\link{database}}
+from a \code{\link{relation_schema}} a two-step process, where the two steps
+can be done in either order: creation with \code{\link{create}} and
+\code{\link{insert}}, and adding references with
+\code{\link{database_schema}} or \code{\link{database}}.
+
 Duplicate schemas, after ordering by attribute, are allowed, and can be
 removed with \verb{\code{\link{unique}}}.
 
