@@ -194,8 +194,20 @@ describe("synthesise", {
 
       # removing avoidable attributes can't make tables wider
       lossless_length <- length(lengths_avoid_lossless)
+      shared_names <- intersect(
+        names(schema_avoid_lossless),
+        names(schema_noavoid_lossless)
+      )
+      lal_sorted <- lengths_avoid_lossless[c(
+        shared_names,
+        setdiff(names(lengths_avoid_lossless), shared_names)
+      )]
+      lnl_sorted <- lengths_noavoid_lossless[c(
+        shared_names,
+        setdiff(names(lengths_noavoid_lossless), shared_names)
+      )]
       for (l in seq_len(lossless_length)) {
-        expect_lte(lengths_avoid_lossless[l], lengths_noavoid_lossless[l])
+        expect_lte(lal_sorted[l], lnl_sorted[l])
       }
 
       # if extra table added, avoidance shouldn't affect its attributes
