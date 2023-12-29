@@ -67,6 +67,49 @@ functional_dependency <- function(
   )
 }
 
+#' @exportS3Method
+detset.functional_dependency <- function(x, ...) {
+  lapply(unclass(x), `[[`, 1L)
+}
+
+#' @exportS3Method
+dependent.functional_dependency <- function(x, ...) {
+  vapply(unclass(x), `[[`, character(1L), 2L)
+}
+
+#' @exportS3Method
+attrs_order.functional_dependency <- function(x, ...) {
+  attr(x, "attrs_order")
+}
+
+#' @export
+`attrs_order<-.functional_dependency` <- function(x, ..., value) {
+  functional_dependency(
+    Map(list, detset(x), dependent(x)),
+    attrs_order = value
+  )
+}
+
+#' @exportS3Method
+unique.functional_dependency <- function(x, ...) {
+  x[!duplicated(x)]
+}
+
+#' @exportS3Method
+c.functional_dependency <- function(..., unique = TRUE) {
+  lst <- list(...)
+  joined_dependencies <- Reduce(c, lapply(lst, unclass))
+
+  attrs_list <- lapply(lst, attrs_order)
+  joined_attrs <- do.call(merge_attribute_orderings, attrs_list)
+
+  functional_dependency(
+    joined_dependencies,
+    joined_attrs,
+    unique = unique
+  )
+}
+
 #' @export
 `[.functional_dependency` <- function(x, i) {
   attrs <- attributes(x)
@@ -108,47 +151,4 @@ print.functional_dependency <- function(x, ...) {
   if (length(txt) > 0L) {
     cat(txt, sep = "\n")
   }
-}
-
-#' @exportS3Method
-unique.functional_dependency <- function(x, ...) {
-  x[!duplicated(x)]
-}
-
-#' @exportS3Method
-c.functional_dependency <- function(..., unique = TRUE) {
-  lst <- list(...)
-  joined_dependencies <- Reduce(c, lapply(lst, unclass))
-
-  attrs_list <- lapply(lst, attrs_order)
-  joined_attrs <- do.call(merge_attribute_orderings, attrs_list)
-
-  functional_dependency(
-    joined_dependencies,
-    joined_attrs,
-    unique = unique
-  )
-}
-
-#' @exportS3Method
-detset.functional_dependency <- function(x, ...) {
-  lapply(unclass(x), `[[`, 1L)
-}
-
-#' @exportS3Method
-dependent.functional_dependency <- function(x, ...) {
-  vapply(unclass(x), `[[`, character(1L), 2L)
-}
-
-#' @exportS3Method
-attrs_order.functional_dependency <- function(x, ...) {
-  attr(x, "attrs_order")
-}
-
-#' @export
-`attrs_order<-.functional_dependency` <- function(x, ..., value) {
-  functional_dependency(
-    Map(list, detset(x), dependent(x)),
-    attrs_order = value
-  )
 }

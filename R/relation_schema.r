@@ -105,34 +105,6 @@ relation_schema <- function(
 }
 
 #' @exportS3Method
-print.relation_schema <- function(x, max = 10, ...) {
-  n_relations <- length(x)
-  cat(paste0(
-    with_number(n_relations, "relation schema", "", "s"),
-    "\n"
-  ))
-
-  cat(with_number(length(attrs_order(x)), "attribute", "", "s"))
-  if (length(attrs_order(x)) > 0L)
-    cat(":", toString(attrs_order(x)))
-  cat("\n")
-
-  for (n in seq_len(min(n_relations, max))) {
-    cat(paste0("schema ", names(x)[[n]], ": ", toString(attrs(x)[[n]]), "\n"))
-    keyset <- keys(x)[[n]]
-    n_keys <- length(keyset)
-    for (k in seq_len(min(n_keys, max))) {
-      cat(paste0("  key ", k, ": ", toString(keyset[[k]]), "\n"))
-    }
-    if (max < n_keys)
-      cat("  ... and", with_number(n_keys - max, "other key", "", "s"), "\n")
-  }
-  if (max < n_relations) {
-    cat("... and", with_number(n_relations - max, "other schema", "", "s"), "\n")
-  }
-}
-
-#' @exportS3Method
 attrs.relation_schema <- function(x, ...) {
   lapply(unclass(x), `[[`, 1L)
 }
@@ -163,22 +135,22 @@ attrs_order.relation_schema <- function(x, ...) {
   )
 }
 
-#' @export
-`[.relation_schema` <- function(x, i) {
-  attrs <- attributes(x)
-  res <- unclass(x)[i]
-  attrs$names <- unname(stats::setNames(nm = attrs$names)[i])
-  attributes(res) <- attrs
-  res
-}
-
-#' @export
-`[[.relation_schema` <- function(x, i) {
-  if (length(i) == 0L)
-    stop("attempt to select less than one element")
-  if (length(i) > 1L)
-    stop("attempt to select more than one element")
-  x[i]
+#' @exportS3Method
+create.relation_schema <- function(x, ...) {
+  relation(
+    Map(
+      \(df, ks) list(df = df, keys = ks),
+      lapply(
+        attrs(x),
+        \(as) data.frame(
+          stats::setNames(lapply(as, \(x) logical()), as),
+          check.names = FALSE
+        )
+      ),
+      keys(x)
+    ),
+    attrs_order(x)
+  )
 }
 
 #' @exportS3Method
@@ -203,24 +175,6 @@ c.relation_schema <- function(...) {
 }
 
 #' @exportS3Method
-create.relation_schema <- function(x, ...) {
-  relation(
-    Map(
-      \(df, ks) list(df = df, keys = ks),
-      lapply(
-        attrs(x),
-        \(as) data.frame(
-          stats::setNames(lapply(as, \(x) logical()), as),
-          check.names = FALSE
-        )
-      ),
-      keys(x)
-    ),
-    attrs_order(x)
-  )
-}
-
-#' @exportS3Method
 merge_schemas.relation_schema <- function(x, to_remove, merge_into, ...) {
   stopifnot(length(to_remove) == length(merge_into))
 
@@ -236,4 +190,50 @@ merge_schemas.relation_schema <- function(x, to_remove, merge_into, ...) {
   }
 
   x[-to_remove]
+}
+
+#' @export
+`[.relation_schema` <- function(x, i) {
+  attrs <- attributes(x)
+  res <- unclass(x)[i]
+  attrs$names <- unname(stats::setNames(nm = attrs$names)[i])
+  attributes(res) <- attrs
+  res
+}
+
+#' @export
+`[[.relation_schema` <- function(x, i) {
+  if (length(i) == 0L)
+    stop("attempt to select less than one element")
+  if (length(i) > 1L)
+    stop("attempt to select more than one element")
+  x[i]
+}
+
+#' @exportS3Method
+print.relation_schema <- function(x, max = 10, ...) {
+  n_relations <- length(x)
+  cat(paste0(
+    with_number(n_relations, "relation schema", "", "s"),
+    "\n"
+  ))
+
+  cat(with_number(length(attrs_order(x)), "attribute", "", "s"))
+  if (length(attrs_order(x)) > 0L)
+    cat(":", toString(attrs_order(x)))
+  cat("\n")
+
+  for (n in seq_len(min(n_relations, max))) {
+    cat(paste0("schema ", names(x)[[n]], ": ", toString(attrs(x)[[n]]), "\n"))
+    keyset <- keys(x)[[n]]
+    n_keys <- length(keyset)
+    for (k in seq_len(min(n_keys, max))) {
+      cat(paste0("  key ", k, ": ", toString(keyset[[k]]), "\n"))
+    }
+    if (max < n_keys)
+      cat("  ... and", with_number(n_keys - max, "other key", "", "s"), "\n")
+  }
+  if (max < n_relations) {
+    cat("... and", with_number(n_relations - max, "other schema", "", "s"), "\n")
+  }
 }

@@ -78,16 +78,6 @@ database <- function(relations, relationships, name = NA_character_) {
 }
 
 #' @export
-`[.database` <- function(x, i) {
-  rels <- relationships(x)
-  kept_relation_names <- names(stats::setNames(seq_along(x), names(x))[i])
-  kept_rels <- rels[vapply(rels, \(r) all(c(r[[1]], r[[3]]) %in% kept_relation_names), logical(1))]
-
-  new_relations <- subrelations(x)[i]
-  database(new_relations, kept_rels)
-}
-
-#' @export
 `attrs_order<-.database` <- function(x, ..., value) {
   rels <- subrelations(x)
   attrs_order(rels) <- value
@@ -106,6 +96,59 @@ name.database <- function(x, ...) {
 #' @exportS3Method
 relationships.database <- function(x, ...) {
   attr(x, "relationships")
+}
+
+#' @exportS3Method
+subrelations.database <- function(x, ...) {
+  y <- unclass(x)
+  attributes(y) <- NULL
+  relation(stats::setNames(y, names(x)), attrs_order(x))
+}
+
+#' @exportS3Method
+insert.database <- function(x, vals, ...) {
+  res <- insert.relation(x, vals, ...)
+  dfs <- records(res)
+  relationship_checks <- relationships(res)[vapply(
+    relationships(res),
+    \(relat) {
+      referrer <- unique(dfs[[relat[[1]]]][, relat[[2]], drop = FALSE])
+      referee <- unique(dfs[[relat[[3]]]][, relat[[4]], drop = FALSE])
+      !identical(
+        nrow(merge(referrer, referee, by.x = relat[[2]], by.y = relat[[4]])),
+        nrow(referrer)
+      )
+    },
+    logical(1)
+  )]
+  if (length(relationship_checks)) {
+    error_strings <- vapply(
+      relationship_checks,
+      \(relat) paste0(
+        relat[[1]], ".{", toString(relat[[2]]),
+        "} -> ",
+        relat[[3]], ".{", toString(relat[[4]]), "}"
+      ),
+      character(1)
+    )
+    stop(
+      "insertion violates ",
+      with_number(length(error_strings), "relationship", "", "s"),
+      ":\n",
+      paste(error_strings, collapse = "\n")
+    )
+  }
+  res
+}
+
+#' @export
+`[.database` <- function(x, i) {
+  rels <- relationships(x)
+  kept_relation_names <- names(stats::setNames(seq_along(x), names(x))[i])
+  kept_rels <- rels[vapply(rels, \(r) all(c(r[[1]], r[[3]]) %in% kept_relation_names), logical(1))]
+
+  new_relations <- subrelations(x)[i]
+  database(new_relations, kept_rels)
 }
 
 #' @exportS3Method
@@ -161,47 +204,4 @@ print.database <- function(x, max = 10, ...) {
     if (max < n_relationships)
       cat("... and", n_relationships - max, "other relationships\n")
   }
-}
-
-#' @exportS3Method
-subrelations.database <- function(x, ...) {
-  y <- unclass(x)
-  attributes(y) <- NULL
-  relation(stats::setNames(y, names(x)), attrs_order(x))
-}
-
-#' @exportS3Method
-insert.database <- function(x, vals, ...) {
-  res <- insert.relation(x, vals, ...)
-  dfs <- records(res)
-  relationship_checks <- relationships(res)[vapply(
-    relationships(res),
-    \(relat) {
-      referrer <- unique(dfs[[relat[[1]]]][, relat[[2]], drop = FALSE])
-      referee <- unique(dfs[[relat[[3]]]][, relat[[4]], drop = FALSE])
-      !identical(
-        nrow(merge(referrer, referee, by.x = relat[[2]], by.y = relat[[4]])),
-        nrow(referrer)
-      )
-    },
-    logical(1)
-  )]
-  if (length(relationship_checks)) {
-    error_strings <- vapply(
-      relationship_checks,
-      \(relat) paste0(
-        relat[[1]], ".{", toString(relat[[2]]),
-        "} -> ",
-        relat[[3]], ".{", toString(relat[[4]]), "}"
-      ),
-      character(1)
-    )
-    stop(
-      "insertion violates ",
-      with_number(length(error_strings), "relationship", "", "s"),
-      ":\n",
-      paste(error_strings, collapse = "\n")
-    )
-  }
-  res
 }

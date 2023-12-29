@@ -79,53 +79,6 @@ database_schema <- function(relation_schemas, relationships) {
 }
 
 #' @exportS3Method
-print.database_schema <- function(x, max = 10, ...) {
-  n_relations <- length(attrs(x))
-  cat(paste0(
-    "database schema with ",
-    n_relations,
-    " relation schema",
-    if (n_relations != 1) "s",
-    "\n"
-  ))
-
-  cat(with_number(length(attrs_order(x)), "attribute", "", "s"))
-  if (length(attrs_order(x)) > 0L)
-    cat(":", toString(attrs_order(x)))
-  cat("\n")
-
-  for (n in seq_len(min(n_relations, max))) {
-    cat(paste0("schema ", names(x)[n], ": ", toString(attrs(x)[[n]]), "\n"))
-    keys <- keys(x)[[n]]
-    n_keys <- length(keys)
-    for (k in seq_len(min(n_keys, max))) {
-      cat(paste0("  key ", k, ": ", toString(keys[[k]]), "\n"))
-    }
-    if (max < n_keys)
-      cat("  ... and", n_keys - max, "other keys\n")
-  }
-  if (max < n_relations) {
-    cat("... and", n_relations - max, "other schemas\n")
-  }
-  if (length(relationships(x)) == 0)
-    cat("no relationships\n")
-  else {
-    cat(paste("relationships:\n"))
-    n_relationships <- length(relationships(x))
-    for (r in seq_len(n_relationships)) {
-      rel <- relationships(x)[[r]]
-      cat(paste0(
-        rel[[1]], ".{", toString(rel[[2]]),
-        "} -> ",
-        rel[[3]], ".{", toString(rel[[4]]), "}\n"
-      ))
-    }
-    if (max < n_relationships)
-      cat("... and", n_relationships - max, "other relationships\n")
-  }
-}
-
-#' @exportS3Method
 relationships.database_schema <- function(x, ...) {
   attr(x, "relationships")
 }
@@ -149,14 +102,12 @@ subschemas.database_schema <- function(x, ...) {
   relation_schema(stats::setNames(y, names(x)), attrs_order(x))
 }
 
-#' @export
-`[.database_schema` <- function(x, i) {
-  rels <- relationships(x)
-  kept_relation_names <- names(stats::setNames(seq_along(x), names(x))[i])
-  kept_rels <- rels[vapply(rels, \(r) all(c(r[[1]], r[[3]]) %in% kept_relation_names), logical(1))]
-
-  new_schemas <- subschemas(x)[i]
-  database_schema(new_schemas, kept_rels)
+#' @exportS3Method
+create.database_schema <- function(x, ...) {
+  database(
+    create(subschemas(x)),
+    relationships(x)
+  )
 }
 
 #' @exportS3Method
@@ -236,10 +187,59 @@ merge_schemas.database_schema <- function(x, to_remove, merge_into, ...) {
   database_schema(schemas, rels)
 }
 
+#' @export
+`[.database_schema` <- function(x, i) {
+  rels <- relationships(x)
+  kept_relation_names <- names(stats::setNames(seq_along(x), names(x))[i])
+  kept_rels <- rels[vapply(rels, \(r) all(c(r[[1]], r[[3]]) %in% kept_relation_names), logical(1))]
+
+  new_schemas <- subschemas(x)[i]
+  database_schema(new_schemas, kept_rels)
+}
+
 #' @exportS3Method
-create.database_schema <- function(x, ...) {
-  database(
-    create(subschemas(x)),
-    relationships(x)
-  )
+print.database_schema <- function(x, max = 10, ...) {
+  n_relations <- length(attrs(x))
+  cat(paste0(
+    "database schema with ",
+    n_relations,
+    " relation schema",
+    if (n_relations != 1) "s",
+    "\n"
+  ))
+
+  cat(with_number(length(attrs_order(x)), "attribute", "", "s"))
+  if (length(attrs_order(x)) > 0L)
+    cat(":", toString(attrs_order(x)))
+  cat("\n")
+
+  for (n in seq_len(min(n_relations, max))) {
+    cat(paste0("schema ", names(x)[n], ": ", toString(attrs(x)[[n]]), "\n"))
+    keys <- keys(x)[[n]]
+    n_keys <- length(keys)
+    for (k in seq_len(min(n_keys, max))) {
+      cat(paste0("  key ", k, ": ", toString(keys[[k]]), "\n"))
+    }
+    if (max < n_keys)
+      cat("  ... and", n_keys - max, "other keys\n")
+  }
+  if (max < n_relations) {
+    cat("... and", n_relations - max, "other schemas\n")
+  }
+  if (length(relationships(x)) == 0)
+    cat("no relationships\n")
+  else {
+    cat(paste("relationships:\n"))
+    n_relationships <- length(relationships(x))
+    for (r in seq_len(n_relationships)) {
+      rel <- relationships(x)[[r]]
+      cat(paste0(
+        rel[[1]], ".{", toString(rel[[2]]),
+        "} -> ",
+        rel[[3]], ".{", toString(rel[[4]]), "}\n"
+      ))
+    }
+    if (max < n_relationships)
+      cat("... and", n_relationships - max, "other relationships\n")
+  }
 }

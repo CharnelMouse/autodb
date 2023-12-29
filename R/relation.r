@@ -71,24 +71,6 @@ relation <- function(relations, attrs_order) {
   )
 }
 
-#' @export
-`[.relation` <- function(x, i) {
-  attrs <- attributes(x)
-  res <- unclass(x)[i]
-  attrs$names <- unname(stats::setNames(nm = attrs$names)[i])
-  attributes(res) <- attrs
-  res
-}
-
-#' @export
-`[[.relation` <- function(x, i) {
-  if (length(i) == 0L)
-    stop("attempt to select less than one element")
-  if (length(i) > 1L)
-    stop("attempt to select more than one element")
-  x[i]
-}
-
 #' @exportS3Method
 attrs.relation <- function(x, ...) {
   lapply(records(x), names)
@@ -125,45 +107,6 @@ records.relation <- function(x, ...) {
   )
   attributes(new) <- attributes(x)
   new
-}
-
-#' @exportS3Method
-print.relation <- function(x, max = 10, ...) {
-  n_relations <- length(x)
-  cat(paste0(
-    with_number(n_relations, "relation", "", "s"),
-    "\n"
-  ))
-
-  cat(with_number(length(attrs_order(x)), "attribute", "", "s"))
-  if (length(attrs_order(x)) > 0L)
-    cat(":", toString(attrs_order(x)))
-  cat("\n")
-
-  dfs <- records(x)
-  as <- attrs(x)
-  ks <- keys(x)
-  for (n in seq_len(min(n_relations, max))) {
-    cat(paste0(
-      "relation ",
-      names(x)[[n]],
-      ": ",
-      toString(as[[n]]),
-      "; ",
-      with_number(nrow(dfs[[n]]), "record", "", "s"),
-      "\n"
-    ))
-    keyset <- ks[[n]]
-    n_keys <- length(keyset)
-    for (k in seq_len(min(n_keys, max))) {
-      cat(paste0("  key ", k, ": ", toString(keyset[[k]]), "\n"))
-    }
-    if (max < n_keys)
-      cat("  ... and", with_number(n_keys - max, "other key", "", "s"), "\n")
-  }
-  if (max < n_relations) {
-    cat("... and", with_number(n_relations - max, "other schema", "", "s"), "\n")
-  }
 }
 
 #' @exportS3Method
@@ -236,4 +179,61 @@ insert.relation <- function(x, vals, ...) {
   }
   records(x) <- new_records
   x
+}
+
+#' @export
+`[.relation` <- function(x, i) {
+  attrs <- attributes(x)
+  res <- unclass(x)[i]
+  attrs$names <- unname(stats::setNames(nm = attrs$names)[i])
+  attributes(res) <- attrs
+  res
+}
+
+#' @export
+`[[.relation` <- function(x, i) {
+  if (length(i) == 0L)
+    stop("attempt to select less than one element")
+  if (length(i) > 1L)
+    stop("attempt to select more than one element")
+  x[i]
+}
+
+#' @exportS3Method
+print.relation <- function(x, max = 10, ...) {
+  n_relations <- length(x)
+  cat(paste0(
+    with_number(n_relations, "relation", "", "s"),
+    "\n"
+  ))
+
+  cat(with_number(length(attrs_order(x)), "attribute", "", "s"))
+  if (length(attrs_order(x)) > 0L)
+    cat(":", toString(attrs_order(x)))
+  cat("\n")
+
+  dfs <- records(x)
+  as <- attrs(x)
+  ks <- keys(x)
+  for (n in seq_len(min(n_relations, max))) {
+    cat(paste0(
+      "relation ",
+      names(x)[[n]],
+      ": ",
+      toString(as[[n]]),
+      "; ",
+      with_number(nrow(dfs[[n]]), "record", "", "s"),
+      "\n"
+    ))
+    keyset <- ks[[n]]
+    n_keys <- length(keyset)
+    for (k in seq_len(min(n_keys, max))) {
+      cat(paste0("  key ", k, ": ", toString(keyset[[k]]), "\n"))
+    }
+    if (max < n_keys)
+      cat("  ... and", with_number(n_keys - max, "other key", "", "s"), "\n")
+  }
+  if (max < n_relations) {
+    cat("... and", with_number(n_relations - max, "other schema", "", "s"), "\n")
+  }
 }
