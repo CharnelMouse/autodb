@@ -13,11 +13,19 @@
 #' decomposition. This is done by adding an additional relation, containing a
 #' key for all the original attributes, if one is not already present.
 #'
+#' As an additional optional step, schemas are checked for "avoidable"
+#' attributes, that can be removed without loss of information.
+#'
 #' Constant attributes, i.e. those whose only determinant set is empty, get
 #' assigned to a relation with no keys.
 #'
-#' Relation names are adjusted for uniqueness after synthesis. Schemas are also
-#' sorted, to make the output independent of dependency order.
+#' Output is independent of the order of the input dependencies: schemas are
+#' sorted according to their simplest keys.
+#'
+#' Schemas are sorted before ensuring for losslessness, or removing avoidable
+#' attributes. As a result, neither optional step changes the order of the
+#' schemas, and ensuring losslessness can only add an extra schema to the end of
+#' the output vector.
 #'
 #' @inheritParams normalise
 #'
@@ -73,6 +81,9 @@ synthesise <- function(
       construct_relation_schemas,
       "construction relation schemas"
     )
+  ord <- keys_order(lapply(inter$keys, \(ks) ks[[1]]))
+  inter$attrs <- inter$attrs[ord]
+  inter$keys <- inter$keys[ord]
   if (remove_avoidable)
     inter <- inter |>
     report$op(
@@ -92,12 +103,11 @@ synthesise <- function(
   relation_names[nchar(relation_names) == 0] <- constants_name
   if (!missing(constants_name) && sum(relation_names == constants_name) > 1)
     warning("constants_name appears in generated relation names, and will be changed to keep relation names unique")
-  ord <- keys_order(lapply(inter$keys, \(ks) ks[[1]]))
-  relation_names <- make.names(relation_names[ord], unique = TRUE)
+  relation_names <- make.names(relation_names, unique = TRUE)
   stopifnot(!anyDuplicated(relation_names))
   schema <- relation_schema(
     stats::setNames(
-      Map(list, inter$attrs[ord], inter$keys[ord]),
+      Map(list, inter$attrs, inter$keys),
       relation_names
     ),
     inter$attrs_order

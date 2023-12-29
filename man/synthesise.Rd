@@ -57,11 +57,19 @@ dependencies can be perfectly reconstructed from the relations given by the
 decomposition. This is done by adding an additional relation, containing a
 key for all the original attributes, if one is not already present.
 
+As an additional optional step, schemas are checked for "avoidable"
+attributes, that can be removed without loss of information.
+
 Constant attributes, i.e. those whose only determinant set is empty, get
 assigned to a relation with no keys.
 
-Relation names are adjusted for uniqueness after synthesis. Schemas are also
-sorted, to make the output independent of dependency order.
+Output is independent of the order of the input dependencies: schemas are
+sorted according to their simplest keys.
+
+Schemas are sorted before ensuring for losslessness, or removing avoidable
+attributes. As a result, neither optional step changes the order of the
+schemas, and ensuring losslessness can only add an extra schema to the end of
+the output vector.
 }
 \references{
 3NF synthesis algorithm: Bernstein P. A. (1976) Synthesizing third normal

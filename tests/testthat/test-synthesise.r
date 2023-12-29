@@ -141,6 +141,36 @@ describe("synthesise", {
       )
     )
   })
+  it("is order_invariant WRT ensuring lossless, added relation is last", {
+    forall(
+      list(
+        gen_flat_deps(7, 20, to = 20L),
+        gen.element(c(FALSE, TRUE))
+      ),
+      \(deps, ra) {
+        s1 <- synthesise(deps, ensure_lossless = FALSE, remove_avoidable = ra)
+        s2 <- synthesise(deps, ensure_lossless = TRUE, remove_avoidable = ra)
+        expect_identical(s2[seq_along(s1)], s1)
+      }
+    )
+  })
+  it("is order_invariant WRT removing avoidable attributes", {
+    forall(
+      list(
+        gen_flat_deps(7, 20, to = 20L),
+        gen.element(c(FALSE, TRUE))
+      ),
+      \(deps, el) {
+        s1 <- synthesise(deps, ensure_lossless = el, remove_avoidable = FALSE)
+        s2 <- synthesise(deps, ensure_lossless = el, remove_avoidable = TRUE)
+        shared_names <- intersect(names(s1), names(s2))
+        expect_identical(
+          match(shared_names, names(s1)),
+          match(shared_names, names(s2))
+        )
+      }
+    )
+  })
   it("has no change in added table for losslessness if avoidable attributes removed", {
     still_lossless_with_less_or_same_attributes_dep <- function(flat_deps) {
       schema_avoid_lossy <- synthesise(
@@ -194,20 +224,8 @@ describe("synthesise", {
 
       # removing avoidable attributes can't make tables wider
       lossless_length <- length(lengths_avoid_lossless)
-      shared_names <- intersect(
-        names(schema_avoid_lossless),
-        names(schema_noavoid_lossless)
-      )
-      lal_sorted <- lengths_avoid_lossless[c(
-        shared_names,
-        setdiff(names(lengths_avoid_lossless), shared_names)
-      )]
-      lnl_sorted <- lengths_noavoid_lossless[c(
-        shared_names,
-        setdiff(names(lengths_noavoid_lossless), shared_names)
-      )]
       for (l in seq_len(lossless_length)) {
-        expect_lte(lal_sorted[l], lnl_sorted[l])
+        expect_lte(lengths_avoid_lossless[l], lengths_noavoid_lossless[l])
       }
 
       # if extra table added, avoidance shouldn't affect its attributes
@@ -444,15 +462,6 @@ describe("synthesise", {
         flat_deps,
         remove_avoidable = FALSE
       )
-      shared <- intersect(names(norm_deps_avoid), names(norm_deps_noavoid))
-      norm_deps_avoid <- norm_deps_avoid[c(
-        shared,
-        setdiff(names(norm_deps_avoid), shared)
-      )]
-      norm_deps_noavoid <- norm_deps_noavoid[c(
-        shared,
-        setdiff(names(norm_deps_noavoid), shared)
-      )]
       lengths_avoid <- lengths(attrs(norm_deps_avoid))
       lengths_noavoid <- lengths(attrs(norm_deps_noavoid))
       expect_identical(length(lengths_avoid), length(lengths_noavoid))
