@@ -199,6 +199,11 @@ insert.relation <- function(x, vals, ...) {
   x[i]
 }
 
+#' @export
+`$.relation` <- function(x, name) {
+  x[[name]]
+}
+
 #' @exportS3Method
 print.relation <- function(x, max = 10, ...) {
   n_relations <- length(x)

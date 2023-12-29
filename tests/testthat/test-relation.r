@@ -107,6 +107,22 @@ describe("relation", {
       },
       curry = TRUE
     )
+    forall(
+      gen.relation(letters[1:6], 1, 8) |>
+        gen.and_then(\(rel) list(
+          gen.pure(rel),
+          gen.element(seq_along(rel))
+        )),
+      \(rel, i) {
+        is_valid_relation(rel[[i]])
+        is_valid_relation(rel[[names(rel)[[i]]]])
+        is_valid_relation(eval(rlang::expr(`$`(rel, !!names(rel)[[i]]))))
+        expect_identical(rel[i], rel[[i]])
+        expect_identical(rel[i], rel[[names(rel)[[i]]]])
+        expect_identical(rel[i], eval(rlang::expr(`$`(rel, !!names(rel)[[i]]))))
+      },
+      curry = TRUE
+    )
   })
   it("can be subsetted while preserving attributes", {
     x <- relation(

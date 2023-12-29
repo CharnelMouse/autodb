@@ -162,6 +162,22 @@ describe("relation_schema", {
       },
       curry = TRUE
     )
+    forall(
+      gen.relation_schema(letters[1:6], 1, 8) |>
+        gen.and_then(\(rs) list(
+          gen.pure(rs),
+          gen.element(seq_along(rs))
+        )),
+      \(rs, i) {
+        is_valid_relation_schema(rs[[i]])
+        is_valid_relation_schema(rs[[names(rs)[[i]]]])
+        is_valid_relation_schema(eval(rlang::expr(`$`(rs, !!names(rs)[[i]]))))
+        expect_identical(rs[i], rs[[i]])
+        expect_identical(rs[i], rs[[names(rs)[[i]]]])
+        expect_identical(rs[i], eval(rlang::expr(`$`(rs, !!names(rs)[[i]]))))
+      },
+      curry = TRUE
+    )
   })
   it("can be subsetted while preserving attributes", {
     x <- relation_schema(list(a = list(c("a", "b"), list("a"))), letters[1:5])

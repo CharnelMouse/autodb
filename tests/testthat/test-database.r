@@ -103,6 +103,22 @@ describe("database", {
       },
       curry = TRUE
     )
+    forall(
+      gen.database(letters[1:6], 1, 8) |>
+        gen.and_then(\(db) list(
+          gen.pure(db),
+          gen.element(seq_along(db))
+        )),
+      \(db, i) {
+        is_valid_relation(db[[i]])
+        is_valid_relation(db[[names(db)[[i]]]])
+        is_valid_relation(eval(rlang::expr(`$`(db, !!names(db)[[i]]))))
+        expect_identical(db[i], db[[i]])
+        expect_identical(db[i], db[[names(db)[[i]]]])
+        expect_identical(db[i], eval(rlang::expr(`$`(db, !!names(db)[[i]]))))
+      },
+      curry = TRUE
+    )
   })
   it("can be subsetted while preserving attributes order", {
     preserves_attributes_when_subsetting <- function(db, indices, op) {

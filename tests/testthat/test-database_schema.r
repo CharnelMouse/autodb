@@ -193,6 +193,22 @@ describe("database_schema", {
       },
       curry = TRUE
     )
+    forall(
+      gen.database_schema(letters[1:6], 1, 8) |>
+        gen.and_then(\(ds) list(
+          gen.pure(ds),
+          gen.element(seq_along(ds))
+        )),
+      \(ds, i) {
+        is_valid_database_schema(ds[[i]])
+        is_valid_database_schema(ds[[names(ds)[[i]]]])
+        is_valid_database_schema(eval(rlang::expr(`$`(ds, !!names(ds)[[i]]))))
+        expect_identical(ds[i], ds[[i]])
+        expect_identical(ds[i], ds[[names(ds)[[i]]]])
+        expect_identical(ds[i], eval(rlang::expr(`$`(ds, !!names(ds)[[i]]))))
+      },
+      curry = TRUE
+    )
   })
   it("can be subsetted while preserving attributes order", {
     preserves_attributes_when_subsetting <- function(ds, indices, op) {

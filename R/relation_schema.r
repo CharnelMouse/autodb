@@ -210,6 +210,11 @@ merge_schemas.relation_schema <- function(x, to_remove, merge_into, ...) {
   x[i]
 }
 
+#' @export
+`$.relation_schema` <- function(x, name) {
+  x[[name]]
+}
+
 #' @exportS3Method
 print.relation_schema <- function(x, max = 10, ...) {
   n_relations <- length(x)
