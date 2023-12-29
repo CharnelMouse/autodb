@@ -4,7 +4,7 @@ Breaking changes:
 
 * Renamed `dfd` to `discover`, to reflect the generalisation to allow the use of other methods. At the moment, this includes DFD and Tane.
 * Removed `flatten` from exported functions, in favour of flattening the functional dependencies in `dfd`/`discover` instead. Since `flatten` was usually called anyway, and its output is more readable since adding a `print` method for it, the old `dfd`/`discover` output format had little reason to be kept.
-* Renamed `normalise` to `synthesise`, to reflect its only creating relation schemas, not foreign key references. `normalise` now calls a wrapper for both `synthesise` and `cross_reference`, since in most cases we don't need to do these steps separately.
+* Renamed `normalise` to `synthesise`, to reflect its only creating relation schemas, not foreign key references. `normalise` now calls a wrapper for both `synthesise` and `cross_reference`, since in most cases we don't need to do these steps separately. Additionally, `ensure_lossless` is now an argument for `synthesise` rather than `cross_reference`: this is a more nature place to put it, since `synthesise` creates relations, and `cross_reference` adds foreign key references.
 * As noted in improvements, functional dependency objects now have their own subsetting methods. In particular, they have a `[[` method, so code that used `[[` to extract determinant sets or dependents from functional dependencies will no longer work. These should be extracted with the new `detset` and `dependent` functions instead.
 
 Improvements:
