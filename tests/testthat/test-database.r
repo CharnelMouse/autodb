@@ -69,6 +69,99 @@ describe("database", {
       )
     )
   })
+
+  it("is subsetted to a valid database schema", {
+    forall(
+      gen.element(c(FALSE, TRUE)) |>
+        gen.list(of = 2) |>
+        gen.and_then(uncurry(\(san, skp) {
+          list(
+            gen.pure(san),
+            gen.pure(skp),
+            gen.database(
+              letters[1:6],
+              0,
+              8,
+              same_attr_name = san,
+              single_key_pairs = skp
+            )
+          )
+        })) |>
+        gen.and_then(\(lst) list(
+          gen.pure(lst[[1]]),
+          gen.pure(lst[[2]]),
+          gen.pure(lst[[3]]),
+          gen.sample_resampleable(c(FALSE, TRUE), of = length(lst[[3]]))
+        )),
+      \(san, skp, db, i) {
+        is_valid_database(db[i], same_attr_name = san, single_key_pairs = skp)
+        is_valid_database(db[which(i)], same_attr_name = san, single_key_pairs = skp)
+        is_valid_database(db[names(db)[i]], same_attr_name = san, single_key_pairs = skp)
+        expect_identical(db[i], db[which(i)])
+        expect_identical(db[i], db[names(db)[i]])
+        expect_length(db[i], sum(i))
+      },
+      curry = TRUE
+    )
+  })
+  it("can be subsetted while preserving attributes order", {
+    preserves_attributes_when_subsetting <- function(db, indices, op) {
+      expect_identical(attrs_order(op(db, indices)), attrs_order(db))
+    }
+    forall(
+      gen.database(letters[1:6], 0, 8, same_attr_name = FALSE) |>
+        gen.and_then(\(db) list(
+          db = gen.pure(db),
+          indices = gen.sample_resampleable(seq_along(db), from = 0, to = length(db))
+        )) |>
+        gen.with(\(lst) c(lst, list(op = `[`))),
+      preserves_attributes_when_subsetting,
+      curry = TRUE
+    )
+    forall(
+      gen.database_schema(letters[1:6], 1, 8, same_attr_name = FALSE) |>
+        gen.and_then(\(db) list(
+          db = gen.pure(db),
+          indices = gen.int(length(db))
+        )) |>
+        gen.with(\(lst) c(lst, list(op = `[[`))),
+      preserves_attributes_when_subsetting,
+      curry = TRUE
+    )
+  })
+  it("keeps relevant relationships when subsetted", {
+    keeps_relevant_relationships <- function(db, indices, op) {
+      expect_identical(
+        relationships(op(db, indices)),
+        # this is too close to replicating the code for my liking
+        Filter(
+          \(r) all(c(r[[1]], r[[3]]) %in% names(db)[indices]),
+          relationships(db)
+        )
+      )
+    }
+    forall(
+      gen.database(letters[1:6], 0, 8, same_attr_name = FALSE) |>
+        gen.and_then(\(db) list(
+          db = gen.pure(db),
+          indices = gen.sample_resampleable(seq_along(db), from = 0, to = length(db))
+        )) |>
+        gen.with(\(lst) c(lst, list(op = `[`))),
+      keeps_relevant_relationships,
+      curry = TRUE
+    )
+    forall(
+      gen.database(letters[1:6], 1, 8, same_attr_name = FALSE) |>
+        gen.and_then(\(db) list(
+          db = gen.pure(db),
+          indices = gen.int(length(db))
+        )) |>
+        gen.with(\(lst) c(lst, list(op = `[[`))),
+      keeps_relevant_relationships,
+      curry = TRUE
+    )
+  })
+
   it("prints", {
     expect_output(
       print(database(

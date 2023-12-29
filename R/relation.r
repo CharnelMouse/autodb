@@ -71,9 +71,27 @@ relation <- function(relations, attrs_order) {
   )
 }
 
+#' @export
+`[.relation` <- function(x, i) {
+  attrs <- attributes(x)
+  res <- unclass(x)[i]
+  attrs$names <- unname(stats::setNames(nm = attrs$names)[i])
+  attributes(res) <- attrs
+  res
+}
+
+#' @export
+`[[.relation` <- function(x, i) {
+  if (length(i) == 0L)
+    stop("attempt to select less than one element")
+  if (length(i) > 1L)
+    stop("attempt to select more than one element")
+  x[i]
+}
+
 #' @exportS3Method
 attrs.relation <- function(x, ...) {
-  lapply(x, \(rel) names(rel$df))
+  lapply(records(x), names)
 }
 
 #' @exportS3Method
@@ -83,7 +101,7 @@ attrs_order.relation <- function(x, ...) {
 
 #' @exportS3Method
 keys.relation <- function(x, ...) {
-  lapply(x, \(rel) rel$keys)
+  lapply(unclass(x), \(rel) rel$keys)
 }
 
 #' @exportS3Method
@@ -117,17 +135,20 @@ print.relation <- function(x, max = 10, ...) {
     cat(":", toString(attrs_order(x)))
   cat("\n")
 
+  dfs <- records(x)
+  as <- attrs(x)
+  ks <- keys(x)
   for (n in seq_len(min(n_relations, max))) {
     cat(paste0(
       "relation ",
       names(x)[[n]],
       ": ",
-      toString(attrs(x)[[n]]),
+      toString(as[[n]]),
       "; ",
-      with_number(nrow(x[[n]]$df), "record", "", "s"),
+      with_number(nrow(dfs[[n]]), "record", "", "s"),
       "\n"
     ))
-    keyset <- keys(x)[[n]]
+    keyset <- ks[[n]]
     n_keys <- length(keyset)
     for (k in seq_len(min(n_keys, max))) {
       cat(paste0("  key ", k, ": ", toString(keyset[[k]]), "\n"))
@@ -148,53 +169,54 @@ insert.relation <- function(x, vals, ...) {
       "inserted attributes aren't included in target:",
       toString(extra)
     ))
-  new_relations <- lapply(
-    x,
-    \(rel) {
-      if (!all(is.element(names(rel$df), names(vals))))
-        return(rel)
-      rel$df <- if (nrow(rel$df) == 0L) {
-        if (ncol(rel$df) == 0L)
+  new_records <- lapply(
+    records(x),
+    \(df) {
+      if (!all(is.element(names(df), names(vals))))
+        return(df)
+      df <- if (nrow(df) == 0L) {
+        if (ncol(df) == 0L)
           vals[seq_len(nrow(vals) > 0L), character(), drop = FALSE]
         else
-          unique(vals[, names(rel$df), drop = FALSE])
+          unique(vals[, names(df), drop = FALSE])
       }else{
-        if (ncol(rel$df) == 0L)
+        if (ncol(df) == 0L)
           vals[
-            seq_len((nrow(rel$df) + nrow(vals)) >= 1L),
-            names(rel$df),
+            seq_len((nrow(df) + nrow(vals)) >= 1L),
+            names(df),
             drop = FALSE
           ]
         else
           unique(rbind(
-            rel$df,
-            vals[, names(rel$df), drop = FALSE]
+            df,
+            vals[, names(df), drop = FALSE]
           ))
       }
-      rel
+      df
     }
   )
-  keydups <- lapply(
-    new_relations,
-    \(rel) {
+  keydups <- Map(
+    \(df, ks) {
       vapply(
-        rel$keys,
+        ks,
         \(key) {
           if (length(key) == 0L) {
-            if (nrow(rel$df) == 0L)
+            if (nrow(df) == 0L)
               logical()
             else
-              c(FALSE, rep(TRUE, nrow(rel$df) - 1L))
+              c(FALSE, rep(TRUE, nrow(df) - 1L))
           }else{
-            duplicated(rel$df[, key, drop = FALSE])
+            duplicated(df[, key, drop = FALSE])
           }
         },
-        logical(nrow(rel$df))
+        logical(nrow(df))
       )
-    }
+    },
+    new_records,
+    keys(x)
   )
   if (any(unlist(keydups))) {
-    bad_relation_names <- names(new_relations)[vapply(keydups, any, logical(1))]
+    bad_relation_names <- names(new_records)[vapply(keydups, any, logical(1))]
     stop(
       "insertion violates key constraints in ",
       with_number(
@@ -207,6 +229,6 @@ insert.relation <- function(x, vals, ...) {
       toString(bad_relation_names)
     )
   }
-  x[] <- new_relations
+  records(x) <- new_records
   x
 }

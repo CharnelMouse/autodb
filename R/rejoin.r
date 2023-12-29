@@ -32,10 +32,10 @@ rejoin <- function(database) {
   if (length(database) == 0)
     return(data.frame())
   if (length(database) == 1)
-    return(database[[1]]$df[, attrs_order(database), drop = FALSE])
-  attrs <- lapply(database, \(r) names(r$df))
+    return(records(database)[[1]][, attrs_order(database), drop = FALSE])
+  attrs <- attrs(database)
   attrs_order <- unique(unlist(attrs))
-  keys <- lapply(database, \(r) r$keys)
+  keys <- keys(database)
   G <- synthesised_fds(attrs, keys)
   G_det_sets <- lapply(unlist(G, recursive = FALSE), `[[`, 1)
   G_deps <- vapply(unlist(G, recursive = FALSE), `[[`, character(1), 2)
@@ -53,19 +53,22 @@ rejoin <- function(database) {
     stop("database is not lossless")
   to_merge <- unique(G_relations[closure_usedlists[[which(is_main)[[1]]]]])
   stopifnot(!is.null(names(is_main)))
-  main_relation <- database[[which(is_main)[[1]]]]$df
+  main_relation <- records(database)[[which(is_main)[[1]]]]
+  r_dfs <- records(database)
+  r_keys <- keys(database)
   while (length(to_merge) > 0) {
     mergee <- to_merge[1]
     to_merge <- to_merge[-1]
-    mergee_relation <- database[[mergee]]
+    mergee_df <- r_dfs[[mergee]]
+    mergee_keys <- r_keys[[mergee]]
     current_attrs <- names(main_relation)
-    mergee_attrs <- names(mergee_relation$df)
-    key <- Find(\(k) all(is.element(k, current_attrs)), mergee_relation$keys)
+    mergee_attrs <- names(mergee_df)
+    key <- Find(\(k) all(is.element(k, current_attrs)), mergee_keys)
     new_attrs <- setdiff(mergee_attrs, current_attrs)
     old_nrow <- nrow(main_relation)
     main_relation <- merge(
       main_relation,
-      mergee_relation$df[, c(key, new_attrs), drop = FALSE],
+      mergee_df[, c(key, new_attrs), drop = FALSE],
       by = key,
       sort = FALSE
     )

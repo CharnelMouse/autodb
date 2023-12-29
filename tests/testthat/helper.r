@@ -503,7 +503,7 @@ gen.relation <- function(x, from, to, rows_from = 0L, rows_to = 10L) {
 }
 
 gen.relation_from_schema <- function(rs, rows_from = 0L, rows_to = 10L) {
-  create(rs) |>
+  gen.pure(create(rs)) |>
     gen.and_then(\(empty_rel) {
       r_attrs <- attrs(empty_rel)
       r_ncols <- lengths(r_attrs)

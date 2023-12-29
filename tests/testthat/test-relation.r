@@ -90,6 +90,42 @@ describe("relation", {
     )
   })
 
+  it("is subsetted to a valid relation schema", {
+    forall(
+      gen.relation(letters[1:6], 0, 8) |>
+        gen.and_then(\(rs) list(
+          gen.pure(rs),
+          gen.sample_resampleable(c(FALSE, TRUE), of = length(rs))
+        )),
+      \(rs, i) {
+        is_valid_relation(rs[i])
+        is_valid_relation(rs[which(i)])
+        is_valid_relation(rs[names(rs)[i]])
+        expect_identical(rs[i], rs[which(i)])
+        expect_identical(rs[i], rs[names(rs)[i]])
+        expect_length(rs[i], sum(i))
+      },
+      curry = TRUE
+    )
+  })
+  it("can be subsetted while preserving attributes", {
+    x <- relation(
+      list(a = list(
+        df = data.frame(a = logical(), b = logical()),
+        keys = list("a")
+      )),
+      letters[1:5]
+    )
+    expect_identical(x[TRUE], x)
+    expect_identical(
+      x[FALSE],
+      relation(setNames(list(), character()), letters[1:5])
+    )
+    expect_identical(x[[1]], x)
+    expect_error(x[[integer()]])
+    expect_error(x[[c(1, 1)]])
+  })
+
   it("prints", {
     expect_output(
       print(relation(setNames(list(), character()), character())),

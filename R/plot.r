@@ -100,7 +100,8 @@ gv.database <- function(x, ...) {
   setup_string <- gv_setup_string(name(x))
   df_strings <- mapply(
     relation_string,
-    x,
+    records(x),
+    keys(x),
     names(x),
     "record"
   ) |>
@@ -230,7 +231,7 @@ gv.data.frame <- function(x, name, ...) {
   if (name == "")
     stop("name must be non-empty")
   setup_string <- gv_setup_string(name)
-  table_string <- relation_string(list(df = x, keys = list()), name, "row")
+  table_string <- relation_string(x, list(), name, "row")
   teardown_string <- "}\n"
   paste(
     setup_string,
@@ -252,16 +253,14 @@ gv_setup_string <- function(df_name) {
   )
 }
 
-relation_string <- function(dataframe, df_name, row_name = c("record", "row")) {
+relation_string <- function(df, df_keys, df_name, row_name = c("record", "row")) {
   row_name <- match.arg(row_name)
-  df <- dataframe$df
-  keys <- dataframe$keys
   df_snake <- snakecase::to_snake_case(df_name)
   col_classes <- vapply(df, \(a) class(a)[[1]], character(1))
 
-  columns_string <- columns_string(colnames(df), keys, col_classes)
+  columns_string <- columns_string(colnames(df), df_keys, col_classes)
   label <- paste0(
-    "    <TR><TD COLSPAN=\"", length(keys) + 2, "\">",
+    "    <TR><TD COLSPAN=\"", length(df_keys) + 2, "\">",
     df_name,
     " (",
     with_number(nrow(df), row_name, "", "s"),

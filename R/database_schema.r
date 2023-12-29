@@ -150,11 +150,11 @@ subschemas.database_schema <- function(x, ...) {
 #' @export
 `[.database_schema` <- function(x, i) {
   rels <- relationships(x)
-  kept_indices <- seq_along(x)[i]
-  kept_rels <- rels[vapply(rels, \(r) all(r[[1]] %in% kept_indices), logical(1))]
-  new_rels <- lapply(kept_rels, \(r) list(match(r[[1]], kept_indices), r[[2]]))
+  kept_relation_names <- names(stats::setNames(seq_along(x), names(x))[i])
+  kept_rels <- rels[vapply(rels, \(r) all(c(r[[1]], r[[3]]) %in% kept_relation_names), logical(1))]
+
   new_schemas <- subschemas(x)[i]
-  database_schema(new_schemas, new_rels)
+  database_schema(new_schemas, kept_rels)
 }
 
 #' @exportS3Method

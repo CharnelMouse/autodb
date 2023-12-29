@@ -41,7 +41,7 @@ reduce <- function(x, ...) {
 #'   relationships removed.
 #' @exportS3Method
 reduce.database <- function(x, ...) {
-  relation_nrows <- vapply(x, \(x) nrow(x$df), integer(1))
+  relation_nrows <- vapply(records(x), nrow, integer(1))
   queue <- names(relation_nrows)[relation_nrows == max(relation_nrows)]
   kept <- character()
   while (length(queue) > 0) {
@@ -53,7 +53,7 @@ reduce.database <- function(x, ...) {
     queue <- union(queue, setdiff(current_parents, kept))
   }
   sorted_kept <- kept[order(match(kept, names(x)))]
-  new_rels <- x[sorted_kept]
+  new_rels <- unclass(x)[sorted_kept]
   database(
     relation(
       new_rels,

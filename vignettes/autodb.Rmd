@@ -281,7 +281,7 @@ However, the publication-level relation this refers to is not determined by the 
 
 ```{r nudge_publication_check}
 nudge_database <- decompose(nudge, nudge_schema, "nudge")
-nudge_title_relation <- nudge_database$title$df
+nudge_title_relation <- records(nudge_database)$title
 nudge_pid_duplicates <- unique(nudge_title_relation$publication_id[
   duplicated(nudge_title_relation$publication_id)
 ])
@@ -320,7 +320,7 @@ As mentioned, we'd expect the reference to uniquely identify the publication: ho
 
 ```{r nudge_reference_check}
 nudge_database_filtered <- decompose(nudge, nudge_schema_filtered, "nudge")
-nudge_title_relation_filtered <- nudge_database_filtered$title$df
+nudge_title_relation_filtered <- records(nudge_database_filtered)$title
 nudge_reference_duplicates <- unique(nudge_title_relation_filtered$reference[
   duplicated(nudge_title_relation_filtered$reference)
 ])
@@ -493,7 +493,7 @@ ideal_db <- decompose(
     list(list("patient_death", "patient", "patient", "patient"))
   )
 )
-ideal_db$patient_death$df <- subset(ideal_db$patient_death$df, !is.na(death_date))
+records(ideal_db)$patient_death <- subset(records(ideal_db)$patient_death, !is.na(death_date))
 DiagrammeR::grViz(gv(ideal_db))
 ```
 
@@ -531,9 +531,9 @@ DiagrammeR::grViz(gv(db_options))
 However, looking at the three parent tables shows that something is going on, since whether the individual values are missing determines the type:
 
 ```{r example_data_frame_with_interval_option_db_parents}
-knitr::kable(db_options$value$df)
-knitr::kable(db_options$lower_bound$df)
-knitr::kable(db_options$upper_bound$df)
+knitr::kable(records(db_options)$value)
+knitr::kable(records(db_options)$lower_bound)
+knitr::kable(records(db_options)$upper_bound)
 ```
 
 As a general solution for finding these sorts of relationships, without manually checking relations myself, I like taking each attribute with missing values, and adding a companion attribute that states whether the value is present or missing:
@@ -561,7 +561,7 @@ DiagrammeR::grViz(gv(db_options_with_presence))
 ```
 
 ```{r example_data_frame_with_interval_option_nulls_rel}
-knitr::kable(db_options_with_presence$value_present$df)
+knitr::kable(records(db_options_with_presence)$value_present)
 ```
 
 This is still reasonable when we exclude the nullable attributes as determinants:

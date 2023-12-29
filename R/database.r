@@ -39,8 +39,8 @@ database <- function(relations, relationships, name = NA_character_) {
     stop("name must be a scalar character")
   relat_errors <- Filter(
     \(relat) {
-      referrer <- unique(relations[[relat[[1]]]]$df[, relat[[2]], drop = FALSE])
-      referee <- unique(relations[[relat[[3]]]]$df[, relat[[4]], drop = FALSE])
+      referrer <- unique(records(relations)[[relat[[1]]]][, relat[[2]], drop = FALSE])
+      referee <- unique(records(relations)[[relat[[3]]]][, relat[[4]], drop = FALSE])
       !identical(
         unname(lapply(referrer, class)),
         unname(lapply(referee, class))
@@ -78,9 +78,20 @@ database <- function(relations, relationships, name = NA_character_) {
 }
 
 #' @export
+`[.database` <- function(x, i) {
+  rels <- relationships(x)
+  kept_relation_names <- names(stats::setNames(seq_along(x), names(x))[i])
+  kept_rels <- rels[vapply(rels, \(r) all(c(r[[1]], r[[3]]) %in% kept_relation_names), logical(1))]
+
+  relations <- relation(unclass(x), attrs_order(x))
+  new_relations <- relations[i]
+  database(new_relations, kept_rels)
+}
+
+#' @export
 `attrs_order<-.database` <- function(x, ..., value) {
   database(
-    relation(x, attrs_order = value),
+    relation(unclass(x), attrs_order = value),
     relationships = relationships(x),
     name = name(x)
   )
@@ -108,18 +119,21 @@ print.database <- function(x, max = 10, ...) {
     if (n_relations != 1) "s",
     "\n"
   ))
+  dfs <- records(x)
+  as <- attrs(x)
+  ks <- keys(x)
   for (n in seq_len(min(n_relations, max))) {
-    rows <- nrow(x[[n]]$df)
+    rows <- nrow(dfs[[n]])
     cat(paste0(
       "relation ",
       names(x)[n],
       ": ",
-      toString(names(x[[n]]$df)),
+      toString(as[[n]]),
       "; ",
       rows,
       " record", if (rows != 1) "s", "\n"
     ))
-    keys <- x[[n]]$keys
+    keys <- ks[[n]]
     n_keys <- length(keys)
     for (k in seq_len(min(n_keys, max))) {
       cat(paste0("  key ", k, ": ", toString(keys[[k]]), "\n"))
@@ -158,11 +172,12 @@ subrelations.database <- function(x, ...) {
 #' @exportS3Method
 insert.database <- function(x, vals, ...) {
   res <- insert.relation(x, vals, ...)
+  dfs <- records(res)
   relationship_checks <- relationships(res)[vapply(
     relationships(res),
     \(relat) {
-      referrer <- unique(res[[relat[[1]]]]$df[, relat[[2]], drop = FALSE])
-      referee <- unique(res[[relat[[3]]]]$df[, relat[[4]], drop = FALSE])
+      referrer <- unique(dfs[[relat[[1]]]][, relat[[2]], drop = FALSE])
+      referee <- unique(dfs[[relat[[3]]]][, relat[[4]], drop = FALSE])
       !identical(
         nrow(merge(referrer, referee, by.x = relat[[2]], by.y = relat[[4]])),
         nrow(referrer)

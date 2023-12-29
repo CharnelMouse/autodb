@@ -224,8 +224,10 @@ describe("database_schema", {
       expect_identical(
         relationships(op(ds, indices)),
         # this is too close to replicating the code for my liking
-        Filter(\(r) all(r[[1]] %in% indices), relationships(ds)) |>
-          lapply(\(r) list(match(r[[1]], indices), r[[2]]))
+        Filter(
+          \(r) all(c(r[[1]], r[[3]]) %in% names(ds)[indices]),
+          relationships(ds)
+        )
       )
     }
     forall(
