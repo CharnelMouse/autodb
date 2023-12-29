@@ -83,15 +83,16 @@ database <- function(relations, relationships, name = NA_character_) {
   kept_relation_names <- names(stats::setNames(seq_along(x), names(x))[i])
   kept_rels <- rels[vapply(rels, \(r) all(c(r[[1]], r[[3]]) %in% kept_relation_names), logical(1))]
 
-  relations <- relation(unclass(x), attrs_order(x))
-  new_relations <- relations[i]
+  new_relations <- subrelations(x)[i]
   database(new_relations, kept_rels)
 }
 
 #' @export
 `attrs_order<-.database` <- function(x, ..., value) {
+  rels <- subrelations(x)
+  attrs_order(rels) <- value
   database(
-    relation(unclass(x), attrs_order = value),
+    rels,
     relationships = relationships(x),
     name = name(x)
   )

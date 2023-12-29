@@ -144,7 +144,9 @@ relationships.database_schema <- function(x, ...) {
 
 #' @exportS3Method
 subschemas.database_schema <- function(x, ...) {
-  relation_schema(unclass(x), attrs_order(x))
+  y <- unclass(x)
+  attributes(y) <- NULL
+  relation_schema(stats::setNames(y, names(x)), attrs_order(x))
 }
 
 #' @export

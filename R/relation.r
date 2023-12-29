@@ -99,6 +99,11 @@ attrs_order.relation <- function(x, ...) {
   attr(x, "attrs_order")
 }
 
+#' @export
+`attrs_order<-.relation` <- function(x, ..., value) {
+  relation(unclass(x), value)
+}
+
 #' @exportS3Method
 keys.relation <- function(x, ...) {
   lapply(unclass(x), \(rel) rel$keys)
