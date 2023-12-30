@@ -14,22 +14,20 @@ describe("reduce.database", {
     removes_added_non_parent_with_non_maximum_nrow <- function(df) {
       database <- autodb(df, ensure_lossless = TRUE)
       once <- reduce(database)
-      new_relations <- c(
+      once_plus_small <- c(
         once,
-        list(
-          extra_table = list(
-            df = data.frame(extra_attr = logical()),
-            keys = list("extra_attr")
-          )
+        database(
+          relation(
+            list(
+              extra_table = list(
+                df = data.frame(extra_attr = logical()),
+                keys = list("extra_attr")
+              )
+            ),
+            "extra_attr"
+          ),
+          list()
         )
-      )
-      once_plus_small <- database(
-        relation(
-          new_relations,
-          attrs_order = c(attrs_order(once), "extra_attr")
-        ),
-        relationships = relationships(once),
-        name(once)
       )
       twice <- reduce(once_plus_small)
       once_plus_attr <- once

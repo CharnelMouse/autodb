@@ -213,7 +213,7 @@ is_valid_database_schema <- function(
   is_valid_relationships(x, same_attr_name, single_key_pairs)
 }
 
-is_valid_relation <- function(x) {
+is_valid_relation <- function(x, single_empty_key = FALSE) {
   expect_s3_class(x, "relation")
 
   expect_true(is.character(names(x)))
@@ -244,7 +244,8 @@ is_valid_relation <- function(x) {
     logical(1)
   )))
   expect_true(all(vapply(rel_keys, Negate(anyDuplicated), logical(1))))
-  expect_lte(sum(vapply(rel_keys, identical, logical(1), list(character()))), 1L)
+  if (single_empty_key)
+    expect_lte(sum(vapply(rel_keys, identical, logical(1), list(character()))), 1L)
   expect_true(all(mapply(
     \(recs, ks) all(vapply(
       ks,

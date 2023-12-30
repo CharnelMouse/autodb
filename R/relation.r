@@ -120,6 +120,22 @@ records.relation <- function(x, ...) {
 }
 
 #' @exportS3Method
+c.relation <- function(...) {
+  lst <- list(...)
+  joined_rels <- Reduce(c, lapply(lst, unclass))
+  names(joined_rels) <- if (is.null(names(joined_rels))) {
+    character(length(joined_rels))
+  }else{
+    make.unique(names(joined_rels))
+  }
+
+  attrs_order_list <- lapply(lst, attrs_order)
+  joined_attrs_order <- do.call(merge_attribute_orderings, attrs_order_list)
+
+  relation(joined_rels, joined_attrs_order)
+}
+
+#' @exportS3Method
 insert.relation <- function(x, vals, ...) {
   extra <- setdiff(names(vals), attrs_order(x))
   if (length(extra) > 0L)

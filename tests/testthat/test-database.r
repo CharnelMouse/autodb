@@ -178,6 +178,176 @@ describe("database", {
     )
   })
 
+  it("concatenates to a valid database", {
+    forall(
+      gen.element(c(FALSE, TRUE)) |>
+        gen.and_then(\(san) list(
+          gen.pure(san),
+          gen.database(letters[1:6], 0, 8, same_attr_name = san) |>
+            gen.list(from = 1, to = 3)
+        )),
+      \(san, dss) do.call(c, dss) |> is_valid_database(same_attr_name = san),
+      curry = TRUE
+    )
+  })
+  it("concatenates without losing an attribute order", {
+    concatenate_lossless_for_attrs_order <- function(lst) {
+      res <- do.call(c, lst)
+      for (l in lst) {
+        expect_true(all(is.element(attrs_order(l), attrs_order(res))))
+      }
+    }
+    forall(
+      gen.element(c(FALSE, TRUE)) |>
+        gen.and_then(\(san) {
+          gen.database(letters[1:6], 0, 8, same_attr_name = san) |>
+            gen.list(from = 1, to = 10)
+        }),
+      concatenate_lossless_for_attrs_order
+    )
+  })
+  it("concatenates without losing attribute orderings, if consistent", {
+    empty_schema_from_attrs <- with_args(
+      relation,
+      relations = setNames(list(), character())
+    ) %>>%
+      with_args(database, relationships = list())
+    concatenate_keeps_attribute_order <- function(attrs_lst) {
+      lst <- lapply(attrs_lst, empty_schema_from_attrs)
+      expect_silent(res <- do.call(c, lst))
+      for (index in seq_along(lst)) {
+        expect_identical(
+          attrs_order(lst[[!!index]]),
+          intersect(attrs_order(res), attrs_order(lst[[!!index]]))
+        )
+      }
+    }
+
+    forall(
+      gen.subsequence(letters[1:8]) |>
+        gen.with(\(x) if (length(x) > 3) x[1:3] else x) |>
+        gen.list(from = 2, to = 5),
+      concatenate_keeps_attribute_order
+    )
+
+    # example where attributes aren't consistent, but are pairwise
+    expect_failure(concatenate_keeps_attribute_order(
+      list(c("a", "b"), c("b", "c"), c("c", "a"))
+    ))
+
+    forall(
+      gen.subsequence(letters[1:6]) |>
+        gen.list(from = 2, to = 10),
+      concatenate_keeps_attribute_order
+    )
+  })
+  it("concatenates without losing relationships", {
+    concatenate_lossless_for_relationships <- function(lst) {
+      res <- do.call(c, lst)
+      for (l in lst) {
+        equiv_relations <- setNames(
+          Map(
+            \(as, ks) {
+              schema_matches <- which(mapply(
+                \(as2, ks2) {
+                  identical(ks, ks2) &&
+                    (
+                      (identical(lengths(ks), 0L) && all(as %in% as2)) ||
+                        identical(as, as2)
+                    )
+                },
+                attrs(res),
+                keys(res)
+              ))
+              unname(schema_matches)
+            },
+            unname(attrs(l)),
+            unname(keys(l))
+          ),
+          names(l)
+        )
+        possible_equiv_relationship_present <- vapply(
+          relationships(l),
+          \(rl) {
+            index_replacements <- list(
+              equiv_relations[[rl[[1]]]],
+              equiv_relations[[rl[[3]]]]
+            )
+            rl_replacements <- apply(
+              do.call(expand.grid, index_replacements),
+              1,
+              \(x) list(
+                names(res)[[x[[1]]]],
+                rl[[2]],
+                names(res)[[x[[2]]]],
+                rl[[4]]
+              ),
+              simplify = FALSE
+            )
+            any(is.element(rl_replacements, relationships(res)))
+          },
+          logical(1)
+        )
+        expect_true(all(possible_equiv_relationship_present))
+      }
+    }
+    forall(
+      gen.element(c(FALSE, TRUE)) |>
+        gen.and_then(\(san) {
+          gen.database(letters[1:6], 0, 8, same_attr_name = san) |>
+            gen.list(from = 1, to = 10)
+        }),
+      concatenate_lossless_for_relationships
+    )
+  })
+  it("concatenates without losing schemas", {
+    concatenate_lossless_for_schemas <- function(lst) {
+      res <- do.call(c, lst)
+      # sort attrs to keep test independent from that for attribute orderings
+      sorted_joined <- Map(
+        \(as, ks) list(sort(as), lapply(ks, sort)),
+        attrs(res),
+        keys(res)
+      )
+      for (l in lst) {
+        sorted <- Map(
+          \(as, ks) list(sort(as), lapply(ks, sort)),
+          attrs(l),
+          keys(l)
+        )
+        expect_true(all(
+          vapply(
+            sorted,
+            \(s) {
+              any(vapply(
+                sorted_joined,
+                \(sj) {
+                  all(is.element(s[[1]], sj[[1]])) &&
+                    identical(s[[2]], sj[[2]])
+                },
+                logical(1)
+              ))
+            },
+            logical(1)
+          )
+        ))
+      }
+    }
+    forall(
+      gen.element(c(FALSE, TRUE)) |>
+        gen.and_then(\(san) {
+          gen.database(
+            letters[1:6],
+            0,
+            8,
+            same_attr_name = san
+          ) |>
+            gen.list(from = 1, to = 10)
+        }),
+      concatenate_lossless_for_schemas
+    )
+  })
+
   it("prints", {
     expect_output(
       print(database(

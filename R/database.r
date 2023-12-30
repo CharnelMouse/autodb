@@ -106,6 +106,34 @@ subrelations.database <- function(x, ...) {
 }
 
 #' @exportS3Method
+c.database <- function(...) {
+  lst <- list(...)
+  joined_rels <- do.call(c, lapply(lst, subrelations))
+  names(joined_rels) <- if (is.null(names(joined_rels)))
+    character(length(joined_rels))
+  else
+    make.unique(names(joined_rels))
+
+  relationships_list <- lapply(lst, relationships)
+  new_relationships <- Map(
+    \(rls, old, new) lapply(
+      rls,
+      \(rl) list(new[match(rl[[1]], old)], rl[[2]], new[match(rl[[3]], old)], rl[[4]])
+    ),
+    relationships_list,
+    lapply(lst, names),
+    unname(split(
+      names(joined_rels),
+      rep(factor(seq_along(lst)), lengths(lst))
+    ))
+  )
+  joined_relationships <- do.call(c, new_relationships)
+
+  result_lst <- list(joined_rels, joined_relationships)
+  do.call(database, result_lst)
+}
+
+#' @exportS3Method
 insert.database <- function(x, vals, ...) {
   res <- insert.relation(x, vals, ...)
   dfs <- records(res)

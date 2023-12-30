@@ -292,17 +292,14 @@ describe("relation_schema", {
     concatenate_lossless_for_schemas <- function(...) {
       lst <- list(...)
       res <- c(...)
-      sorted_joined <- lapply(
-        unclass(res),
-        \(schema) list(sort(schema[[1]]), lapply(schema[[2]], sort))
-      )
       for (l in lst) {
-        sorted <- lapply(unclass(l), \(schema) list(sort(schema[[1]]), schema[[2]]))
+        sorted <- l
+        # sort attrs to keep test independent from that for
+        # attribute orderings
+        attrs_order(sorted) <- attrs_order(res)
         expect_true(all(is.element(
-          # sort attrs to keep test independent from that for
-          # attribute orderings
           sorted,
-          sorted_joined
+          res
         )))
       }
     }

@@ -142,6 +142,111 @@ describe("relation", {
     expect_error(x[[c(1, 1)]])
   })
 
+  it("concatenates within class", {
+    concatenate_within_class <- function(...) {
+      expect_identical(class(c(...)), class(..1))
+    }
+    forall(
+      gen.relation(letters[1:6], from = 0, to = 8) |>
+        gen.list(from = 1, to = 10),
+      concatenate_within_class,
+      curry = TRUE
+    )
+  })
+  it("concatenates to a valid relation schema", {
+    forall(
+      gen.relation(letters[1:6], from = 0, to = 4) |>
+        gen.list(from = 1, to = 3),
+      c %>>% with_args(is_valid_relation, single_empty_key = FALSE),
+      curry = TRUE
+    )
+  })
+  it("concatenates with duplicates preserved", {
+    forall(
+      gen.relation(letters[1:6], 1, 8) |>
+        gen.with(\(rs) list(rs, rs)),
+      \(lst) {
+        expect_length(do.call(c, lst), sum(lengths(lst)))
+      }
+    )
+  })
+  it("concatenates without losing attributes", {
+    concatenate_lossless_for_attrs_order <- function(...) {
+      lst <- list(...)
+      res <- c(...)
+      for (l in lst) {
+        expect_true(all(is.element(attrs_order(l), attrs_order(res))))
+      }
+    }
+    forall(
+      gen.relation(letters[1:6], from = 0, to = 8) |>
+        gen.list(from = 1, to = 10),
+      concatenate_lossless_for_attrs_order,
+      curry = TRUE
+    )
+  })
+  it("concatenates without losing attribute orderings, if consistent", {
+    concatenate_keeps_attribute_order <- function(...) {
+      lst <- list(...)
+      expect_silent(res <- c(...))
+      for (index in seq_along(lst)) {
+        expect_identical(
+          attrs_order(lst[[!!index]]),
+          intersect(attrs_order(res), attrs_order(lst[[!!index]]))
+        )
+      }
+    }
+
+    forall(
+      gen.sample(letters[1:8], gen.sample(1:3)) |>
+        gen.with(
+          sort %>>%
+            with_args(relation, relations = setNames(list(), character()))
+        ) |>
+        gen.list(from = 2, to = 5),
+      concatenate_keeps_attribute_order,
+      curry = TRUE
+    )
+
+    # example where attributes aren't consistent, but are pairwise
+    schemas <- list(
+      relation_schema(setNames(list(), character()), c("a", "b")),
+      relation_schema(setNames(list(), character()), c("b", "c")),
+      relation_schema(setNames(list(), character()), c("c", "a"))
+    )
+    expect_failure(do.call(concatenate_keeps_attribute_order, schemas))
+
+    forall(
+      gen.subsequence(letters[1:6]) |>
+        gen.with(\(attrs) relation(setNames(list(), character()), attrs)) |>
+        gen.list(from = 2, to = 10),
+      concatenate_keeps_attribute_order,
+      curry = TRUE
+    )
+  })
+  it("concatenates without losing schemas", {
+    concatenate_lossless_for_schemas <- function(...) {
+      lst <- list(...)
+      res <- c(...)
+      for (l in lst) {
+        sorted <- l
+        # sort attrs to keep test independent from that for
+        # attribute orderings
+        attrs_order(sorted) <- attrs_order(res)
+        expect_true(all(is.element(
+          sorted,
+          res
+        )))
+      }
+    }
+    forall(
+      gen.relation(letters[1:6], from = 0, to = 8) |>
+        gen.list(from = 1, to = 10),
+      concatenate_lossless_for_schemas,
+      curry = TRUE
+    )
+  })
+
   it("prints", {
     expect_output(
       print(relation(setNames(list(), character()), character())),
