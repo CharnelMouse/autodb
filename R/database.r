@@ -98,11 +98,82 @@ relationships.database <- function(x, ...) {
   attr(x, "relationships")
 }
 
+#' @export
+`relationships<-.database` <- function(x, value) {
+  database(subrelations(x), value)
+}
+
 #' @exportS3Method
 subrelations.database <- function(x, ...) {
   y <- unclass(x)
   attributes(y) <- NULL
   relation(stats::setNames(y, names(x)), attrs_order(x))
+}
+
+#' @exportS3Method
+unique.database <- function(x, ...) {
+  relations <- subrelations(x)
+  dups <- which(duplicated(relations))
+  if (length(dups) == 0L)
+    return(x)
+  y <- sort_records(relations)
+  dups_prec <- vapply(
+    dups,
+    \(n) Position(
+      \(rs) {
+        identical(unname(records(rs)), unname(records(y[[n]]))) &&
+          identical(unname(keys(rs)), unname(keys(y[[n]])))
+      },
+      y
+    ),
+    integer(1)
+  )
+  merge_database_relations(x, dups, dups_prec)
+}
+
+merge_database_relations <- function(x, to_remove, merge_into, ...) {
+  stopifnot(length(to_remove) == length(merge_into))
+
+  relations <- merge_relations(subrelations(x), to_remove, merge_into)
+
+  ind_map <- seq_along(x)
+  remaining_inds <- setdiff(ind_map, to_remove)
+  ind_map[to_remove] <- merge_into
+  ind_map <- seq_along(remaining_inds)[match(ind_map, remaining_inds)]
+
+  old_names <- names(x)
+  rels <- unique(lapply(
+    relationships(x),
+    \(rel) list(
+      names(relations)[ind_map[match(rel[[1]], old_names)]],
+      rel[[2]],
+      names(relations)[ind_map[match(rel[[3]], old_names)]],
+      rel[[4]]
+    )
+  ))
+  rels <- rels[vapply(
+    rels,
+    \(r) r[[1]] != r[[3]],
+    logical(1)
+  )]
+  database(relations, rels)
+}
+
+merge_relations <- function(x, to_remove, merge_into, ...) {
+  stopifnot(length(to_remove) == length(merge_into))
+
+  for (n in seq_along(to_remove)[to_remove != merge_into]) {
+    stopifnot(identical(
+      unname(keys(x[[to_remove[[n]]]])),
+      unname(keys(x[[merge_into[[n]]]]))
+    ))
+    stopifnot(identical(
+      unname(attrs(x[[to_remove[[n]]]])),
+      unname(attrs(x[[merge_into[[n]]]]))
+    ))
+  }
+
+  x[-to_remove]
 }
 
 #' @exportS3Method

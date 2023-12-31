@@ -120,6 +120,39 @@ records.relation <- function(x, ...) {
 }
 
 #' @exportS3Method
+unique.relation <- function(x, ...) {
+  x[!duplicated(x)]
+}
+
+#' @exportS3Method
+duplicated.relation <- function(x, incomparables = FALSE, ...) {
+  y <- sort_records(x)
+  duplicated(unclass(y))
+}
+
+sort_records <- function(relations) {
+  res <- relations
+  records(res) <- Map(
+    \(df, ks) {
+      if (nrow(df) <= 1)
+        df
+      else # 2+ rows => non-empty keys
+        `rownames<-`(
+          df[
+            do.call(order, df[, ks[[1]], drop = FALSE]),
+            ,
+            drop = FALSE
+          ],
+          NULL
+        )
+    },
+    records(res),
+    keys(res)
+  )
+  res
+}
+
+#' @exportS3Method
 c.relation <- function(...) {
   lst <- list(...)
   joined_rels <- Reduce(c, lapply(lst, unclass))

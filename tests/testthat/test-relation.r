@@ -142,6 +142,33 @@ describe("relation", {
     expect_error(x[[c(1, 1)]])
   })
 
+  it("is made unique to a valid relation", {
+    forall(
+      gen.relation(letters[1:6], 0, 8),
+      unique %>>% is_valid_relation
+    )
+  })
+  it("is made unique with no duplicate schemas", {
+    forall(
+      gen.relation(letters[1:6], 1, 8),
+      \(rs) {
+        rs2 <- c(rs, rs)
+        expect_false(Negate(anyDuplicated)(rs2))
+        expect_true(Negate(anyDuplicated)(unique(rs2)))
+      }
+    )
+  })
+  it("is made unique where tables with permuted rows count as duplicates", {
+    rels <- relation(
+      list(
+        a = list(df = data.frame(a = c(T, F)), keys = list("a")),
+        a.1 = list(df = data.frame(a = c(F, T)), keys = list("a"))
+      ),
+      "a"
+    )
+    expect_length(unique(rels), 1L)
+  })
+
   it("concatenates within class", {
     concatenate_within_class <- function(...) {
       expect_identical(class(c(...)), class(..1))

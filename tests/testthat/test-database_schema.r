@@ -297,6 +297,63 @@ describe("database_schema", {
         relationships
       )
     )
+
+    forall(
+      gen.database_schema(letters[1:3], 0, 8, same_attr_name = FALSE) |>
+        gen.with(unique),
+      expect_biidentical(
+        dup %>>%
+          onLeft(\(db) {
+            len <- length(relationships(db))
+            relationships(db) <- relationships(db)[seq_len(floor(len))]
+            db
+          }) %>>%
+          onRight(\(db) {
+            len <- length(relationships(db))
+            relationships(db) <- relationships(db)[setdiff(
+              seq_len(len),
+              seq_len(floor(len))
+            )]
+            db
+          }) %>>%
+          uncurry(c) %>>% unique %>>% relationships,
+        relationships
+      )
+    )
+
+    # special case: unique must merge two tables to keep both relationships
+    ds <- database_schema(
+      relation_schema(
+        list(
+          a.1 = list(c("a", "b"), list("a")),
+          a.2 = list(c("a", "b"), list("a")),
+          b.1 = list(c("b", "c"), list("b")),
+          b.2 = list(c("b", "d"), list("b"))
+        ),
+        letters[1:4]
+      ),
+      list(
+        list("a.1", "b", "b.1", "b"),
+        list("a.2", "b", "b.2", "b")
+      )
+    )
+    expect_identical(
+      unique(ds),
+      database_schema(
+        relation_schema(
+          list(
+            a.1 = list(c("a", "b"), list("a")),
+            b.1 = list(c("b", "c"), list("b")),
+            b.2 = list(c("b", "d"), list("b"))
+          ),
+          letters[1:4]
+        ),
+        list(
+          list("a.1", "b", "b.1", "b"),
+          list("a.1", "b", "b.2", "b")
+        )
+      )
+    )
   })
 
   it("concatenates to a valid database schema", {

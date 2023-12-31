@@ -213,7 +213,7 @@ is_valid_database_schema <- function(
   is_valid_relationships(x, same_attr_name, single_key_pairs)
 }
 
-is_valid_relation <- function(x, single_empty_key = FALSE) {
+is_valid_relation <- function(x, unique = FALSE, single_empty_key = FALSE) {
   expect_s3_class(x, "relation")
 
   expect_true(is.character(names(x)))
@@ -255,15 +255,37 @@ is_valid_relation <- function(x, single_empty_key = FALSE) {
     records(x),
     rel_keys
   )))
+  if (unique) {
+    expect_true(!anyDuplicated(x))
+    implied_fds <- functional_dependency(
+      unlist(
+        Map(
+          \(ks, as) {
+            unlist(
+              lapply(ks, \(k) lapply(setdiff(as, k), \(a) list(k, a))),
+              recursive = FALSE
+            )
+          },
+          rel_keys,
+          rel_attrs
+        ),
+        recursive = FALSE
+      ),
+      attrs_order(x)
+    )
+    expect_true(!anyDuplicated(implied_fds))
+  }
 }
 
 is_valid_database <- function(
   x,
+  unique = FALSE,
+  single_empty_key = FALSE,
   same_attr_name = FALSE,
   single_key_pairs = FALSE
 ) {
+  is_valid_relation(x, unique, single_empty_key)
   expect_s3_class(x, "database")
-  is_valid_relation(x)
 
   fks <- relationships(x)
   is_valid_relationships(x, same_attr_name, single_key_pairs)
