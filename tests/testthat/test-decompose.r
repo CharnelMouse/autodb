@@ -262,7 +262,7 @@ describe("decompose", {
     expect_fk_error <- function(df, dbs) {
       if (nrow(df) <= 1 || is.null(dbs))
         discard()
-      name_regexp <- "[\\w\\.]+"
+      name_regexp <- "[\\w\\. ]+"
       fk_half_regexp <- paste0(
         name_regexp,
         "\\.\\{", name_regexp, "(, ", name_regexp, ")*\\}"

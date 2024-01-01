@@ -358,7 +358,7 @@ gen.df_fixed_ranges <- function(classes, nms, n_records, remove_dup_rows) {
   ) |>
     gen.with(
       with_args(setNames, nm = nms) %>>%
-        as.data.frame %>>%
+        with_args(as.data.frame, check.names = FALSE) %>>%
         (if (remove_dup_rows) unique else identity)
     )
 }
@@ -535,7 +535,7 @@ gen.relation_from_schema <- function(rs, rows_from = 0L, rows_to = 10L) {
         setNames(seq_along(empty_rel), names(empty_rel)),
         \(n) {
           ks <- r_keys[[n]]
-          gen.sample(rows_from:rows_to, 1L) |>
+          gen.element(rows_from:rows_to) |>
             gen.and_then(with_args(
               gen.df_fixed_ranges,
               classes = rep("logical", r_ncols[[n]]),
