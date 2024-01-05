@@ -1,8 +1,12 @@
 library(hedgehog)
 
 describe("relation", {
-  it("expects valid input: relations is a list", {
+  it("expects valid input: relations is a named list", {
     expect_error(relation(1L, character()))
+    expect_error(
+      relation(list(), character()),
+      "^relations must be named$"
+    )
   })
   it("expects valid input: list elements contain df and keys elements, and no others", {
     expect_error(relation(list(list(df = data.frame())), character()))
@@ -11,7 +15,7 @@ describe("relation", {
       character()
     ))
     expect_silent(relation(
-      list(list(keys = list(), df = data.frame())),
+      list(X = list(keys = setNames(list(), character()), df = data.frame())),
       character()
     ))
   })
@@ -20,15 +24,15 @@ describe("relation", {
   })
   it("expects valid input: df columns are from attrs_order, in order of key mentions first", {
     expect_error(relation(
-      list(list(df = data.frame(a = integer()), keys = list("a"))),
+      list(a = list(df = data.frame(a = integer()), keys = list("a"))),
       "b"
     ))
     expect_error(relation(
-      list(list(df = data.frame(b = integer(), a = integer()), keys = list("a"))),
+      list(a = list(df = data.frame(b = integer(), a = integer()), keys = list("a"))),
       c("a", "b")
     ))
     expect_silent(relation(
-      list(list(df = data.frame(b = integer(), a = integer()), keys = list("b"))),
+      list(b = list(df = data.frame(b = integer(), a = integer()), keys = list("b"))),
       c("a", "b")
     ))
   })

@@ -40,6 +40,8 @@ relation <- function(relations, attrs_order) {
   stopifnot(is.list(relations))
   stopifnot(is.character(attrs_order))
 
+  if (!is.character(names(relations)))
+    stop("relations must be named")
   stopifnot(all(lengths(relations) == 2L))
   stopifnot(all(vapply(
     relations,

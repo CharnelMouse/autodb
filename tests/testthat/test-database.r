@@ -14,17 +14,17 @@ describe("database", {
   })
   it("expects valid input: relationships is a list", {
     expect_error(
-      database(relation(list(), character()), 1L),
+      database(relation(setNames(list(), character()), character()), 1L),
       "^relationships must be a list$"
     )
   })
   it("expects valid input: name is a scalar character", {
     expect_error(
-      database(relation(list(), character()), list(), 1L),
+      database(relation(setNames(list(), character()), character()), list(), 1L),
       "^name must be a scalar character$"
     )
     expect_error(
-      database(relation(list(), character()), list(), c("a", "b")),
+      database(relation(setNames(list(), character()), character()), list(), c("a", "b")),
       "^name must be a scalar character$"
     )
   })
@@ -444,7 +444,7 @@ describe("database", {
   it("prints", {
     expect_output(
       print(database(
-        relation(list(), character()),
+        relation(setNames(list(), character()), character()),
         list()
       )),
       paste0(
