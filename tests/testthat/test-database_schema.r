@@ -198,12 +198,6 @@ describe("database_schema", {
     )
   })
 
-  it("can be made unique within class", {
-    forall(
-      gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE),
-      expect_biidentical(class, unique %>>% class)
-    )
-  })
   it("is made unique to a valid database schema", {
     forall(
       gen.element(c(FALSE, TRUE)) |>
@@ -488,7 +482,17 @@ describe("database_schema", {
   })
   it("is composed of its subschemas() and relationships()", {
     forall(
-      gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE),
+      gen.element(c(FALSE, TRUE)) |>
+        gen.list(of = 2) |>
+        gen.and_then(uncurry(\(san, skp) {
+          gen.database_schema(
+            letters[1:6],
+            0,
+            8,
+            same_attr_name = san,
+            single_key_pairs = skp
+          )
+        })),
       \(ds) expect_identical(
         database_schema(subschemas(ds), relationships(ds)),
         ds

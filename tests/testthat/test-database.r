@@ -246,12 +246,6 @@ describe("database", {
     )
   })
 
-  it("can be made unique within class", {
-    forall(
-      gen.database(letters[1:6], 0, 8, same_attr_name = FALSE),
-      expect_biidentical(class, unique %>>% class)
-    )
-  })
   it("is made unique to a valid database", {
     forall(
       gen.element(c(FALSE, TRUE)) |>

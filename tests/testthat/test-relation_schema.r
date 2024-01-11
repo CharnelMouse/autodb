@@ -40,7 +40,7 @@ describe("relation_schema", {
       "^expected character attrs_order$"
     )
   })
-  it("expect valid input: unique schema names", {
+  it("expects valid input: unique schema names", {
     expect_error(
       relation_schema(
         list(
@@ -129,29 +129,7 @@ describe("relation_schema", {
     }
     forall(gen.relation_schema(letters[1:6], 1, 8), attributes_ordered)
   })
-  it("prints", {
-    expect_output(
-      print(relation_schema(setNames(list(), character()), character())),
-      "\\A0 relation schemas\\n0 attributes\\Z",
-      perl = TRUE
-    )
-    expect_output(
-      print(relation_schema(
-        list(a = list(c("a", "b"), list("a"))),
-        c("a", "b")
-      )),
-      paste0(
-        "\\A",
-        "1 relation schema",
-        "\\n",
-        "2 attributes: a, b",
-        "\\n",
-        "schema a: a, b\\n  key 1: a",
-        "\\Z"
-      ),
-      perl = TRUE
-    )
-  })
+
   it("is subsetted to a valid relation schema", {
     forall(
       gen.relation_schema(letters[1:6], 0, 8) |>
@@ -197,6 +175,7 @@ describe("relation_schema", {
     expect_error(x[[integer()]])
     expect_error(x[[c(1, 1)]])
   })
+
   it("is made unique to a valid relation schema", {
     forall(
       gen.relation_schema(letters[1:6], 0, 8),
@@ -213,17 +192,7 @@ describe("relation_schema", {
       }
     )
   })
-  it("concatenates within class", {
-    concatenate_within_class <- function(...) {
-      expect_identical(class(c(...)), class(..1))
-    }
-    forall(
-      gen.relation_schema(letters[1:6], from = 0, to = 8) |>
-        gen.list(from = 1, to = 10),
-      concatenate_within_class,
-      curry = TRUE
-    )
-  })
+
   it("concatenates to a valid relation schema", {
     forall(
       gen.relation_schema(letters[1:6], from = 0, to = 4) |>
@@ -317,6 +286,7 @@ describe("relation_schema", {
       curry = TRUE
     )
   })
+
   it("can have empty-key schemas merged", {
     up_to_one_empty_key <- function(rs) {
       res <- merge_empty_keys(rs)
@@ -359,6 +329,30 @@ describe("relation_schema", {
           rep(list("logical"), length(classes))
         )
       }
+    )
+  })
+
+  it("prints", {
+    expect_output(
+      print(relation_schema(setNames(list(), character()), character())),
+      "\\A0 relation schemas\\n0 attributes\\Z",
+      perl = TRUE
+    )
+    expect_output(
+      print(relation_schema(
+        list(a = list(c("a", "b"), list("a"))),
+        c("a", "b")
+      )),
+      paste0(
+        "\\A",
+        "1 relation schema",
+        "\\n",
+        "2 attributes: a, b",
+        "\\n",
+        "schema a: a, b\\n  key 1: a",
+        "\\Z"
+      ),
+      perl = TRUE
     )
   })
 })
