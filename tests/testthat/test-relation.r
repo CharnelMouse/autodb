@@ -8,6 +8,12 @@ describe("relation", {
       "^relations must be named$"
     )
   })
+  it("expects valid input: relation elements correct lengths", {
+    expect_error(
+      relation(list(NULL), character()),
+      "^relation elements must have length two$"
+    )
+  })
   it("expects valid input: list elements contain df and keys elements, and no others", {
     expect_error(relation(list(list(df = data.frame())), character()))
     expect_error(relation(

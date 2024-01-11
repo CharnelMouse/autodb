@@ -87,7 +87,7 @@ describe("database", {
     # should have something about collected FK being a key of the citee,
     # waiting on FK grouping first
   })
-  it("expects valid input: relationship relations are different", {
+  it("expects valid input: relationships aren't self-references", {
     expect_error(
       database(
         create(relation_schema(list(a = list(c("a", "b"), list("a"))), c("a", "b"))),
@@ -96,7 +96,7 @@ describe("database", {
       "^relationship cannot be from a relation's attribute to itself$"
     )
   })
-  it("expects valid input: relations satisfy database schema (incl. relationships)", {
+  it("expects valid input: records satisfy database schema", {
     expect_error(
       database(
         relation(
@@ -506,6 +506,38 @@ describe("database", {
             gen.list(from = 1, to = 10)
         }),
       concatenate_lossless_for_schemas
+    )
+  })
+
+  it("is composed of its records(), keys(), names(), attrs_order(), and relationships()", {
+    forall(
+      gen.database(letters[1:6], 0, 8, same_attr_name = FALSE),
+      \(db) expect_identical(
+        database(
+          relation(
+            setNames(
+              Map(
+                list %>>% with_args(setNames, c("df", "keys")),
+                records(db),
+                keys(db)
+              ),
+              names(db)
+            ),
+            attrs_order(db)
+          ),
+          relationships = relationships(db)
+        ),
+        db
+      )
+    )
+  })
+  it("is composed of its subrelations() and relationships()", {
+    forall(
+      gen.database(letters[1:6], 0, 8, same_attr_name = FALSE),
+      \(db) expect_identical(
+        database(subrelations(db), relationships(db)),
+        db
+      )
     )
   })
 

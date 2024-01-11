@@ -59,7 +59,7 @@ relation_schema <- function(
   if (!is.character(attrs_order))
     stop("expected character attrs_order")
   if (!is.character(names(schemas)))
-    stop("relations must be named")
+    stop("schemas must be named")
   if (anyDuplicated(names(schemas)))
     stop("relation names must be unique")
   if (!all(vapply(schemas, \(s) !anyDuplicated(s[[1]]), logical(1))))

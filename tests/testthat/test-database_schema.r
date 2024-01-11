@@ -2,7 +2,7 @@ library(hedgehog)
 
 describe("database_schema", {
   empty_rs <- relation_schema(setNames(list(), character()), character())
-  it("expects valid input: relation_schema is a relation_schema", {
+  it("expects valid input: relation_schemas is a relation_schema", {
     expect_error(
       database_schema(1L, list()),
       "^relations must be a relation_schema$"
@@ -73,7 +73,7 @@ describe("database_schema", {
     # should have something about collected FK being a key of the citee,
     # waiting on FK grouping first
   })
-  it("expects valid input: relationship relations are different", {
+  it("expects valid input: relationships aren't self-references", {
     expect_error(
       database_schema(
         relation_schema(list(a = list(c("a", "b"), list("a"))), c("a", "b")),
@@ -96,76 +96,6 @@ describe("database_schema", {
         with_args(`[[`, 1),
         with_args(do.call, what = database_schema) %>>% subschemas
       )
-    )
-  })
-  it("prints", {
-    expect_output(
-      print(database_schema(
-        relation_schema(setNames(list(), character()), character()),
-        list()
-      )),
-      paste0(
-        "\\A",
-        "database schema with 0 relation schemas",
-        "\\n",
-        "0 attributes",
-        "\\n",
-        "no relationships",
-        "\\Z"
-      ),
-      perl = TRUE
-    )
-    expect_output(
-      print(database_schema(
-        relation_schema(
-          list(
-            a = list(c("a", "b"), list("a")),
-            b = list(c("b", "c"), list("b", "c"))
-          ),
-          c("a", "b", "c")
-        ),
-        list(list("a", "b", "b", "b"))
-      )),
-      paste0(
-        "\\A",
-        "database schema with 2 relation schemas",
-        "\\n",
-        "3 attributes: a, b, c",
-        "\\n",
-        "schema a: a, b\\n  key 1: a",
-        "\\n",
-        "schema b: b, c\\n  key 1: b\\n  key 2: c",
-        "\\n",
-        "relationships:\\na\\.\\{b\\} -> b\\.\\{b\\}",
-        "\\Z"
-      ),
-      perl = TRUE
-    )
-    expect_output(
-      print(database_schema(
-        relation_schema(
-          list(
-            a = list(c("a", "b", "c"), list("a")),
-            b = list(c("b", "c"), list(c("b", "c")))
-          ),
-          c("a", "b", "c")
-        ),
-        list(list("a", c("b", "c"), "b", c("b", "c")))
-      )),
-      paste0(
-        "\\A",
-        "database schema with 2 relation schemas",
-        "\\n",
-        "3 attributes: a, b, c",
-        "\\n",
-        "schema a: a, b, c\\n  key 1: a",
-        "\\n",
-        "schema b: b, c\\n  key 1: b, c",
-        "\\n",
-        "relationships:\\na\\.\\{b, c\\} -> b\\.\\{b, c\\}",
-        "\\Z"
-      ),
-      perl = TRUE
     )
   })
 
@@ -267,6 +197,7 @@ describe("database_schema", {
       curry = TRUE
     )
   })
+
   it("can be made unique within class", {
     forall(
       gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE),
@@ -525,16 +456,18 @@ describe("database_schema", {
       concatenate_lossless_for_schemas
     )
   })
+
   it("can have empty-key schemas merged", {
     up_to_one_empty_key <- function(ds) {
       res <- merge_empty_keys(ds)
+      is_valid_database_schema(ds)
       expect_lte(
         sum(vapply(keys(res), identical, logical(1), list(character()))),
         1L
       )
     }
     forall(
-      gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE),
+      gen.database_schema(letters[1:6], 0, 8, single_key_pairs = FALSE),
       up_to_one_empty_key
     )
   })
@@ -560,6 +493,77 @@ describe("database_schema", {
         database_schema(subschemas(ds), relationships(ds)),
         ds
       )
+    )
+  })
+
+  it("prints", {
+    expect_output(
+      print(database_schema(
+        relation_schema(setNames(list(), character()), character()),
+        list()
+      )),
+      paste0(
+        "\\A",
+        "database schema with 0 relation schemas",
+        "\\n",
+        "0 attributes",
+        "\\n",
+        "no relationships",
+        "\\Z"
+      ),
+      perl = TRUE
+    )
+    expect_output(
+      print(database_schema(
+        relation_schema(
+          list(
+            a = list(c("a", "b"), list("a")),
+            b = list(c("b", "c"), list("b", "c"))
+          ),
+          c("a", "b", "c")
+        ),
+        list(list("a", "b", "b", "b"))
+      )),
+      paste0(
+        "\\A",
+        "database schema with 2 relation schemas",
+        "\\n",
+        "3 attributes: a, b, c",
+        "\\n",
+        "schema a: a, b\\n  key 1: a",
+        "\\n",
+        "schema b: b, c\\n  key 1: b\\n  key 2: c",
+        "\\n",
+        "relationships:\\na\\.\\{b\\} -> b\\.\\{b\\}",
+        "\\Z"
+      ),
+      perl = TRUE
+    )
+    expect_output(
+      print(database_schema(
+        relation_schema(
+          list(
+            a = list(c("a", "b", "c"), list("a")),
+            b = list(c("b", "c"), list(c("b", "c")))
+          ),
+          c("a", "b", "c")
+        ),
+        list(list("a", c("b", "c"), "b", c("b", "c")))
+      )),
+      paste0(
+        "\\A",
+        "database schema with 2 relation schemas",
+        "\\n",
+        "3 attributes: a, b, c",
+        "\\n",
+        "schema a: a, b, c\\n  key 1: a",
+        "\\n",
+        "schema b: b, c\\n  key 1: b, c",
+        "\\n",
+        "relationships:\\na\\.\\{b, c\\} -> b\\.\\{b, c\\}",
+        "\\Z"
+      ),
+      perl = TRUE
     )
   })
 })

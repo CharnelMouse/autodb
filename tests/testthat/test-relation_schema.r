@@ -1,7 +1,20 @@
 library(hedgehog)
 
 describe("relation_schema", {
-  it("expects valid input: schema elements correct lengths, contain characters of valid lengths", {
+  it("expects valid input: schemas is a named list", {
+    expect_error(relation_schema(1L, character()))
+    expect_error(
+      relation_schema(list(), character()),
+      "^schemas must be named$"
+    )
+  })
+  it("expects valid input: schema elements correct lengths", {
+    expect_error(
+      relation_schema(list(NULL), character()),
+      "^schema elements must have length two$"
+    )
+  })
+  it("expects valid input: schema elements contain characters of valid lengths", {
     expect_error(
       relation_schema(list(NULL), character()),
       "^schema elements must have length two$"
