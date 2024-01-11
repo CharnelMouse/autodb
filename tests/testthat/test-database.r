@@ -135,7 +135,7 @@ describe("database", {
       curry = TRUE
     )
     forall(
-      gen.database_schema(letters[1:6], 1, 8, same_attr_name = FALSE) |>
+      gen.database(letters[1:6], 1, 8, same_attr_name = FALSE) |>
         gen.and_then(\(db) list(
           db = gen.pure(db),
           indices = gen.int(length(db))
