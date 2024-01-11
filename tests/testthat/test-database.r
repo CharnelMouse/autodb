@@ -28,6 +28,74 @@ describe("database", {
       "^name must be a scalar character$"
     )
   })
+  it("expects valid input: relationship elements are length-four lists", {
+    expect_error(
+      database(create(empty_rs), list("a")),
+      "^relationship elements must be length-four lists$"
+    )
+    rs <- create(relation_schema(
+      list(
+        r1 = list(c("a", "c"), list("a")),
+        r2 = list(c("b", "c"), list("c")),
+        r3 = list("b", list("b"))
+      ),
+      c("a", "b", "c")
+    ))
+    expect_error(
+      database(rs, list(1:4)),
+      "^relationship elements must be length-four lists$"
+    )
+    expect_error(
+      database(rs, list(as.list(paste0("r", 1:3)))),
+      "^relationship elements must be length-four lists$"
+    )
+  })
+  it("expects valid input: relationship relation names are within relation names", {
+    rs <- create(relation_schema(
+      list(
+        r1 = list(c("a", "c"), list("a")),
+        r2 = list(c("b", "c"), list("c")),
+        r3 = list("b", list("b"))
+      ),
+      c("a", "b", "c")
+    ))
+    expect_error(
+      database(rs, list(list("r3", "b", "r4", "b"))),
+      "^relationship relation names must be within relation names$"
+    )
+    expect_error(
+      database(rs, list(list("r4", "b", "r3", "b"))),
+      "^relationship relation names must be within relation names$"
+    )
+  })
+  it("expects valid input: relationship attribute names are within referer's attributes and referee's keys", {
+    expect_error(
+      database(
+        create(relation_schema(
+          list(
+            a = list(c("a", "b", "c"), list("a")),
+            X = list(c("a", "b"), list("a"))
+          ),
+          c("a", "b", "c")
+        )),
+        list(list("a", "b", "X", "b"))
+      ),
+      "^relationship attributes must be within referer's attributes and referee's keys$"
+    )
+    # need more examples here
+
+    # should have something about collected FK being a key of the citee,
+    # waiting on FK grouping first
+  })
+  it("expects valid input: relationship relations are different", {
+    expect_error(
+      database(
+        create(relation_schema(list(a = list(c("a", "b"), list("a"))), c("a", "b"))),
+        list(list("a", "b", "a", "a"))
+      ),
+      "^relationship cannot be from a relation's attribute to itself$"
+    )
+  })
   it("expects valid input: relations satisfy database schema (incl. relationships)", {
     expect_error(
       database(
@@ -465,7 +533,7 @@ describe("database", {
           ),
           c("a", "b", "c")
         ),
-        list(c("a", "b", "b", "b")),
+        list(list("a", "b", "b", "b")),
         "nm"
       )),
       paste0(

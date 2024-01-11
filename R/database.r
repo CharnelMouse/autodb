@@ -37,6 +37,19 @@ database <- function(relations, relationships, name = NA_character_) {
     stop("relationships must be a list")
   if (!is.character(name) || length(name) != 1L)
     stop("name must be a scalar character")
+  if (any(
+    lengths(relationships) != 4L |
+    !vapply(relationships, is.list, logical(1))
+  ))
+    stop("relationship elements must be length-four lists")
+  if (any(!reference_names_element(relationships, names(relations)))) {
+    stop("relationship relation names must be within relation names")
+  }
+  if (any(!reference_valid_attrs(relationships, relations)))
+    stop("relationship attributes must be within referer's attributes and referee's keys")
+  if (any(self_reference(relationships)))
+    stop("relationship cannot be from a relation's attribute to itself")
+
   relat_errors <- Filter(
     \(relat) {
       referrer <- unique(records(relations)[[relat[[1]]]][, relat[[2]], drop = FALSE])
@@ -133,29 +146,14 @@ unique.database <- function(x, ...) {
 
 merge_database_relations <- function(x, to_remove, merge_into, ...) {
   stopifnot(length(to_remove) == length(merge_into))
-
   relations <- merge_relations(subrelations(x), to_remove, merge_into)
-
-  ind_map <- seq_along(x)
-  remaining_inds <- setdiff(ind_map, to_remove)
-  ind_map[to_remove] <- merge_into
-  ind_map <- seq_along(remaining_inds)[match(ind_map, remaining_inds)]
-
-  old_names <- names(x)
-  rels <- unique(lapply(
+  rels <- merge_reference_referands(
     relationships(x),
-    \(rel) list(
-      names(relations)[ind_map[match(rel[[1]], old_names)]],
-      rel[[2]],
-      names(relations)[ind_map[match(rel[[3]], old_names)]],
-      rel[[4]]
-    )
-  ))
-  rels <- rels[vapply(
-    rels,
-    \(r) r[[1]] != r[[3]],
-    logical(1)
-  )]
+    to_remove,
+    merge_into,
+    names(x),
+    names(relations)
+  )
   database(relations, rels)
 }
 
@@ -187,10 +185,7 @@ c.database <- function(...) {
 
   relationships_list <- lapply(lst, relationships)
   new_relationships <- Map(
-    \(rls, old, new) lapply(
-      rls,
-      \(rl) list(new[match(rl[[1]], old)], rl[[2]], new[match(rl[[3]], old)], rl[[4]])
-    ),
+    rename_reference_referands,
     relationships_list,
     lapply(lst, names),
     unname(split(
@@ -244,7 +239,7 @@ insert.database <- function(x, vals, ...) {
 `[.database` <- function(x, i) {
   rels <- relationships(x)
   kept_relation_names <- names(stats::setNames(seq_along(x), names(x))[i])
-  kept_rels <- rels[vapply(rels, \(r) all(c(r[[1]], r[[3]]) %in% kept_relation_names), logical(1))]
+  kept_rels <- rels[reference_names_element(rels, kept_relation_names)]
 
   new_relations <- subrelations(x)[i]
   database(new_relations, kept_rels)
@@ -287,20 +282,5 @@ print.database <- function(x, max = 10, ...) {
   if (max < n_relations) {
     cat("... and", n_relations - max, "other relations\n")
   }
-  if (length(relationships(x)) == 0)
-    cat("no relationships\n")
-  else {
-    cat(paste("relationships:\n"))
-    n_relationships <- length(relationships(x))
-    for (r in seq_len(min(n_relationships, max))) {
-      rel <- relationships(x)[[r]]
-      cat(paste0(
-        rel[[1]], ".{", toString(rel[[2]]),
-        "} -> ",
-        rel[[3]], ".{", toString(rel[[4]]), "}\n"
-      ))
-    }
-    if (max < n_relationships)
-      cat("... and", n_relationships - max, "other relationships\n")
-  }
+  print_references(relationships(x), max)
 }
