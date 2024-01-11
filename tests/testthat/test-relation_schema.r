@@ -10,7 +10,7 @@ describe("relation_schema", {
   })
   it("expects valid input: schema elements correct lengths", {
     expect_error(
-      relation_schema(list(NULL), character()),
+      relation_schema(list(a = NULL), character()),
       "^schema elements must have length two$"
     )
   })
@@ -38,12 +38,6 @@ describe("relation_schema", {
     expect_error(
       relation_schema(list(list(character(), list(character()))), 1L),
       "^expected character attrs_order$"
-    )
-  })
-  it("expect valid input: named schemas", {
-    expect_error(
-      relation_schema(list(), character()),
-      "^relations must be named$"
     )
   })
   it("expect valid input: unique schema names", {

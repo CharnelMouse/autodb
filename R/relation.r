@@ -42,7 +42,8 @@ relation <- function(relations, attrs_order) {
 
   if (!is.character(names(relations)))
     stop("relations must be named")
-  stopifnot(all(lengths(relations) == 2L))
+  if (!all(lengths(relations) == 2L))
+    stop("relation elements must have length two")
   stopifnot(all(vapply(
     relations,
     \(rel) setequal(names(rel), c("df", "keys")),

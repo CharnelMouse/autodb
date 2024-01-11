@@ -10,7 +10,7 @@ describe("relation", {
   })
   it("expects valid input: relation elements correct lengths", {
     expect_error(
-      relation(list(NULL), character()),
+      relation(list(a = NULL), character()),
       "^relation elements must have length two$"
     )
   })
