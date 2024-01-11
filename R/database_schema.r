@@ -166,32 +166,7 @@ merge_schemas.database_schema <- function(x, to_remove, merge_into, ...) {
 
 #' @exportS3Method
 print.database_schema <- function(x, max = 10, ...) {
-  n_relations <- length(attrs(x))
-  cat(paste0(
-    "database schema with ",
-    n_relations,
-    " relation schema",
-    if (n_relations != 1) "s",
-    "\n"
-  ))
-
-  cat(with_number(length(attrs_order(x)), "attribute", "", "s"))
-  if (length(attrs_order(x)) > 0L)
-    cat(":", toString(attrs_order(x)))
-  cat("\n")
-
-  for (n in seq_len(min(n_relations, max))) {
-    cat(paste0("schema ", names(x)[n], ": ", toString(attrs(x)[[n]]), "\n"))
-    keys <- keys(x)[[n]]
-    n_keys <- length(keys)
-    for (k in seq_len(min(n_keys, max))) {
-      cat(paste0("  key ", k, ": ", toString(keys[[k]]), "\n"))
-    }
-    if (max < n_keys)
-      cat("  ... and", n_keys - max, "other keys\n")
-  }
-  if (max < n_relations) {
-    cat("... and", n_relations - max, "other schemas\n")
-  }
+  cat("database schema with ")
+  print(subschemas(x), max = max, ...)
   print_references(relationships(x), max)
 }

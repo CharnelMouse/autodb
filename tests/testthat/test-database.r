@@ -519,6 +519,8 @@ describe("database", {
         "\\A",
         "database NA with 0 relations",
         "\\n",
+        "0 attributes",
+        "\\n",
         "no relationships",
         "\\Z"
       ),
@@ -539,6 +541,8 @@ describe("database", {
       paste0(
         "\\A",
         "database nm with 2 relations",
+        "\\n",
+        "3 attributes: a, b, c",
         "\\n",
         "relation a: a, b; 0 records\\n  key 1: a",
         "\\n",
@@ -564,6 +568,8 @@ describe("database", {
       paste0(
         "\\A",
         "database nm with 2 relations",
+        "\\n",
+        "3 attributes: a, b, c",
         "\\n",
         "relation a: a, b, c; 0 records\\n  key 1: a",
         "\\n",

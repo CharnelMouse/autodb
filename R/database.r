@@ -247,40 +247,7 @@ insert.database <- function(x, vals, ...) {
 
 #' @exportS3Method
 print.database <- function(x, max = 10, ...) {
-  n_relations <- length(x)
-  cat(paste0(
-    "database ",
-    name(x),
-    " with ",
-    n_relations,
-    " relation",
-    if (n_relations != 1) "s",
-    "\n"
-  ))
-  dfs <- records(x)
-  as <- attrs(x)
-  ks <- keys(x)
-  for (n in seq_len(min(n_relations, max))) {
-    rows <- nrow(dfs[[n]])
-    cat(paste0(
-      "relation ",
-      names(x)[n],
-      ": ",
-      toString(as[[n]]),
-      "; ",
-      rows,
-      " record", if (rows != 1) "s", "\n"
-    ))
-    keys <- ks[[n]]
-    n_keys <- length(keys)
-    for (k in seq_len(min(n_keys, max))) {
-      cat(paste0("  key ", k, ": ", toString(keys[[k]]), "\n"))
-    }
-    if (max < n_keys)
-      cat("  ... and", n_keys - max, "other keys\n")
-  }
-  if (max < n_relations) {
-    cat("... and", n_relations - max, "other relations\n")
-  }
+  cat(paste0("database ", name(x), " with "))
+  print(subrelations(x), max = max, ...)
   print_references(relationships(x), max)
 }
