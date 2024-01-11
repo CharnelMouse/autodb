@@ -41,20 +41,7 @@ database_schema <- function(relation_schemas, relationships) {
   # should FKs be made unique?
   if (!inherits(relation_schemas, "relation_schema"))
     stop("relations must be a relation_schema")
-  if (!is.list(relationships))
-    stop("relationships must be a list")
-  if (any(
-    lengths(relationships) != 4L |
-    !vapply(relationships, is.list, logical(1))
-  ))
-    stop("relationship elements must be length-four lists")
-  if (any(!reference_names_element(relationships, names(relation_schemas)))) {
-    stop("relationship relation names must be within relation schema names")
-  }
-  if (any(!reference_valid_attrs(relationships, relation_schemas)))
-    stop("relationship attributes must be within referer's attributes and referee's keys")
-  if (any(self_reference(relationships)))
-    stop("relationship cannot be from a relation's attribute to itself")
+  check_valid_reference(relationships, relation_schemas, "relation schema")
 
   structure(
     relation_schemas,

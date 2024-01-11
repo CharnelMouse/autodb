@@ -2,6 +2,32 @@
 # currently a class in their own right, they have common manipulation patterns,
 # that are collected here.
 
+check_valid_reference <- function(
+  relationships,
+  relation_schemas,
+  type = c("relation schema", "relation")
+) {
+  type <- match.arg(type)
+  if (!is.list(relationships))
+    stop("relationships must be a list")
+  if (any(
+    lengths(relationships) != 4L |
+    !vapply(relationships, is.list, logical(1))
+  ))
+    stop("relationship elements must be length-four lists")
+  if (any(!reference_names_element(relationships, names(relation_schemas)))) {
+    stop(paste(
+      "relationship relation names must be within",
+      type,
+      "names"
+    ))
+  }
+  if (any(!reference_valid_attrs(relationships, relation_schemas)))
+    stop("relationship attributes must be within referer's attributes and referee's keys")
+  if (any(self_reference(relationships)))
+    stop("relationship cannot be from a relation's attribute to itself")
+}
+
 self_reference <- function(references) {
   vapply(references, \(r) r[[1]] == r[[3]], logical(1))
 }
