@@ -31,7 +31,10 @@ test_that("gen_flat_deps generates valid", {
 })
 
 test_that("gen.relation_schema generates valid relation schemas", {
-  forall(gen.relation_schema(letters[1:6], 0, 8), is_valid_relation_schema)
+  forall(
+    gen.relation_schema(letters[1:6], 0, 8),
+    with_args(is_valid_relation_schema, single_empty_key = TRUE)
+  )
 })
 
 test_that("gen.database_schema generates valid database schemas", {
@@ -51,6 +54,7 @@ test_that("gen.database_schema generates valid database schemas", {
       ))),
     \(san, skp, ds) is_valid_database_schema(
       ds,
+      single_empty_key = TRUE,
       same_attr_name = san,
       single_key_pairs = skp
     ),
@@ -61,7 +65,7 @@ test_that("gen.database_schema generates valid database schemas", {
 test_that("gen.relation generates valid relations", {
   forall(
     gen.relation(letters[1:4], 6, 7),
-    is_valid_relation
+    with_args(is_valid_relation, single_empty_key = TRUE)
   )
 })
 
@@ -82,6 +86,7 @@ test_that("gen.database generates valid databases", {
       ))),
     \(san, skp, ds) is_valid_database(
       ds,
+      single_empty_key = TRUE,
       same_attr_name = san,
       single_key_pairs = skp
     ),
