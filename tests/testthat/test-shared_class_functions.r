@@ -21,13 +21,13 @@ describe("create", {
         gen.and_then(uncurry(\(rs, skp) {
           list(
             gen.pure(rs),
-            gen.relationships(rs, skp)
+            gen.references(rs, skp)
           )
         })),
       \(rs, fks) {
         expect_biidentical(
-          with_args(database_schema, relationships = fks) %>>% create,
-          create %>>% with_args(database, relationships = fks)
+          with_args(database_schema, references = fks) %>>% create,
+          create %>>% with_args(database, references = fks)
         )(rs)
       },
       curry = TRUE
@@ -92,7 +92,7 @@ describe("insert", {
     forall(
       gen.database_schema(letters[1:4], 0L, 6L) |>
         gen.and_then(\(schema) {
-          gen.attrs_class(attrs_order(schema), relationships(schema)) |>
+          gen.attrs_class(attrs_order(schema), references(schema)) |>
             gen.and_then(\(classes) list(
               gen.pure(create(schema)),
               gen.pure(classes),
@@ -181,7 +181,7 @@ describe("insert", {
           ),
           attrs_order(r)
         ),
-        relationships(db)
+        references(db)
       )
     )
   })
@@ -192,7 +192,7 @@ describe("insert", {
         autodb(df),
         data.frame(a = 5L, b = 4L)
       ),
-      "^insertion violates 1 relationship:\na.\\{b\\} -> b.\\{b\\}$"
+      "^insertion violates 1 reference:\na.\\{b\\} -> b.\\{b\\}$"
     )
   })
   it("returns a valid object when given data that can be legally inserted", {
@@ -229,7 +229,7 @@ describe("insert", {
                 remove_dup_rows = TRUE
               )) |>
               gen.with(with_args(remove_insertion_key_violations, relation = d)) |>
-              gen.with(with_args(remove_insertion_relationship_violations, database = d))
+              gen.with(with_args(remove_insertion_reference_violations, database = d))
           )
         }),
       insert %>>% is_valid_database,
@@ -238,7 +238,7 @@ describe("insert", {
   })
   it("is commutative with adding foreign key constraints", {
     gen.ex_from_table <- list(
-      # mincol to give good chance of non-zero count for relationships
+      # mincol to give good chance of non-zero count for references
       gen_df(6, 7, minrow = 2, mincol = 3, remove_dup_rows = FALSE),
       gen.element(c(FALSE, TRUE))
     ) |>
@@ -254,7 +254,7 @@ describe("insert", {
           nrow(df1) >= 1,
           nrow(df2) >= 1
         )
-        relats <- relationships(db_schema)
+        relats <- references(db_schema)
         rel <- create(rel_schema) |> insert(df1)
         list(rel, df1, df2, relats)
       }))
@@ -274,18 +274,18 @@ describe("insert", {
               remove_dup_rows = TRUE
             )) |>
             gen.with(with_args(remove_insertion_key_violations, relation = r)),
-          gen.relationships(r, skp) |>
-            gen.with(with_args(remove_violated_relationships, relation = r))
+          gen.references(r, skp) |>
+            gen.with(with_args(remove_violated_references, relation = r))
         ) |>
           gen.with(uncurry(\(r, df, rels) {
             changed <- TRUE
             n <- 0L
             while (changed) {
-              new_df <- remove_insertion_relationship_violations(
+              new_df <- remove_insertion_reference_violations(
                 df,
                 database(r, rels)
               )
-              new_rels <- remove_violated_relationships(
+              new_rels <- remove_violated_references(
                 rels,
                 insert(r, new_df)
               )
@@ -310,10 +310,10 @@ describe("insert", {
           discard()
         (
           biapply(
-            with_args(database, relationships = rels) %>>%
+            with_args(database, references = rels) %>>%
               with_args(insert, vals = df),
             with_args(insert, vals = df) %>>%
-              with_args(database, relationships = rels)
+              with_args(database, references = rels)
           ) %>>%
             (uncurry(expect_both_valid_db_then(expect_identical)))
         )(r)

@@ -2,7 +2,7 @@
 #'
 #' Filters an object's relations, keeping only the main relations, and those
 #' considered ancestors via foreign key references. Foreign key
-#' relationships involving removed relations are also removed.
+#' references involving removed relations are also removed.
 #'
 #' Details on how the main tables are chosen are given in individual methods.
 #'
@@ -16,7 +16,7 @@
 #' @param ... further arguments passed to or from other methods.
 #'
 #' @return An object of the same class as \code{x}, with the auxiliary relations
-#'   and foreign key relationships removed.
+#'   and foreign key references removed.
 #' @export
 reduce <- function(x, ...) {
   UseMethod("reduce", x)
@@ -26,7 +26,7 @@ reduce <- function(x, ...) {
 #'
 #' Filters a database's relations, keeping only the main relations, and those
 #' considered ancestors via foreign key references. Foreign
-#' key relationships involving removed relations are also removed.
+#' key references involving removed relations are also removed.
 #'
 #' The main relations are considered to be the relations with the largest number
 #' of records.
@@ -38,7 +38,7 @@ reduce <- function(x, ...) {
 #' @inheritParams reduce
 #'
 #' @return A database, with the auxiliary relations and foreign key
-#'   relationships removed.
+#'   references removed.
 #' @exportS3Method
 reduce.database <- function(x, ...) {
   relation_nrows <- vapply(records(x), nrow, integer(1))
@@ -48,7 +48,7 @@ reduce.database <- function(x, ...) {
     current <- queue[1]
     queue <- queue[-1]
     kept <- union(kept, current)
-    current_parents <- Filter(\(r) r[[1]] == current, relationships(x)) |>
+    current_parents <- Filter(\(r) r[[1]] == current, references(x)) |>
       vapply(\(r) r[[3]], character(1))
     queue <- union(queue, setdiff(current_parents, kept))
   }
@@ -61,7 +61,7 @@ reduce.database <- function(x, ...) {
     ),
     Filter(
       \(r) all(is.element(r[c(1, 3)], sorted_kept)),
-      relationships(x)
+      references(x)
     ),
     name(x)
   )
@@ -71,7 +71,7 @@ reduce.database <- function(x, ...) {
 #'
 #' Filters a database schema's relations, keeping only the given relations, and
 #' those considered ancestors via foreign key references. Foreign key
-#' relationships involving removed relations are also removed.
+#' references involving removed relations are also removed.
 #'
 #' This method takes a given set of main relations, rather than inferring them.
 #'
@@ -84,7 +84,7 @@ reduce.database <- function(x, ...) {
 #' @inheritParams reduce
 #'
 #' @return A database schema, with the auxiliary relations and foreign key
-#'   relationships removed.
+#'   references removed.
 #' @exportS3Method
 reduce.database_schema <- function(x, main, ...) {
   main_indices <- match(main, names(x))
@@ -99,13 +99,13 @@ reduce.database_schema <- function(x, main, ...) {
     current <- queue[1]
     queue <- queue[-1]
     kept <- union(kept, current)
-    current_parents <- Filter(\(r) r[[1]] == current, relationships(x)) |>
+    current_parents <- Filter(\(r) r[[1]] == current, references(x)) |>
       vapply(`[[`, character(1), 3L) |>
       unique()
     queue <- union(queue, setdiff(current_parents, kept))
   }
   sorted_kept <- sort(kept)
-  rels <- relationships(x)
+  rels <- references(x)
   rels <- Filter(
     \(r) all(is.element(r[c(1L, 3L)], sorted_kept)),
     rels

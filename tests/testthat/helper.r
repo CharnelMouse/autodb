@@ -94,106 +94,106 @@ is_valid_relation_schema <- function(x, unique = FALSE, single_empty_key = FALSE
   }
 }
 
-is_valid_relationships <- function(
+is_valid_references <- function(
   x,
   same_attr_name = FALSE,
   single_key_pairs = FALSE
 ) {
   act <- quasi_label(rlang::enquo(x), arg = "x")
 
-  relationships <- relationships(x)
+  references <- references(x)
   attrs <- attrs(x)
-  if (length(relationships) == 0L)
+  if (length(references) == 0L)
     return(invisible(act$val))
 
-  # former condition is temporary until relationships are properly grouped
-  if (single_key_pairs && anyDuplicated(relationships))
-    fail(sprintf("%s has duplicate relationships", act$lab))
-  for (fk in relationships) {
+  # former condition is temporary until references are properly grouped
+  if (single_key_pairs && anyDuplicated(references))
+    fail(sprintf("%s has duplicate references", act$lab))
+  for (fk in references) {
     if (!is(fk, "list"))
       fail(sprintf(
-        "%s has non-list relationships",
+        "%s has non-list references",
         act$lab
       ))
     if (length(fk) != 4L)
       fail(sprintf(
-        "%s has non-length-four relationships",
+        "%s has non-length-four references",
         act$lab
       ))
     if (!is.character(fk[[1]]))
       fail(sprintf(
-        "%s has non-character relationship child names",
+        "%s has non-character reference child names",
         act$lab
       ))
     if (!is.character(fk[[2]]))
       fail(sprintf(
-        "%s has non-character relationship child attributes",
+        "%s has non-character reference child attributes",
         act$lab
       ))
     if (!is.character(fk[[3]]))
       fail(sprintf(
-        "%s has non-character relationship parent names",
+        "%s has non-character reference parent names",
         act$lab
       ))
     if (!is.character(fk[[4]]))
       fail(sprintf(
-        "%s has non-character relationship parent attributes",
+        "%s has non-character reference parent attributes",
         act$lab
       ))
     if (!all(is.element(unlist(fk[c(1L, 3L)]), names(attrs))))
       fail(sprintf(
-        "%s has relationships over non-present relation names",
+        "%s has references over non-present relation names",
         act$lab
       ))
     if (fk[[1]] == fk[[3]]) # no self-references, relax this?
       fail(sprintf(
-        "%s has self-references in relationships",
+        "%s has self-references in references",
         act$lab
       ))
     if (same_attr_name && !identical(fk[[2]], fk[[4]]))
       fail(sprintf(
-        "%s has non-matching attribute names in relationships",
+        "%s has non-matching attribute names in references",
         act$lab
       ))
     if (anyDuplicated(fk[[2]]))
       fail(sprintf(
-        "%s has relationships with non-unique child attribute names",
+        "%s has references with non-unique child attribute names",
         act$lab
       ))
     if (anyDuplicated(fk[[4]]))
       fail(sprintf(
-        "%s has relationships with non-unique parent attribute names",
+        "%s has references with non-unique parent attribute names",
         act$lab
       ))
     if (length(fk[[2]]) == 0L || length(fk[[4]]) == 0L)
       fail(sprintf(
-        "%s has relationships with zero-length attribute sets",
+        "%s has references with zero-length attribute sets",
         act$lab
       ))
     if (length(fk[[2]]) != length(fk[[4]]))
       fail(sprintf(
-        "%s has relationships with different attribute set lengths",
+        "%s has references with different attribute set lengths",
         act$lab
       ))
     if (!all(is.element(fk[[2]], attrs[[fk[[1]]]])))
       fail(sprintf(
-        "%s has invalid child attribute names in relationships",
+        "%s has invalid child attribute names in references",
         act$lab
       ))
     if (!all(is.element(fk[[4]], attrs[[fk[[3]]]])))
       fail(sprintf(
-        "%s has invalid parent attribute names in relationships",
+        "%s has invalid parent attribute names in references",
         act$lab
       ))
   }
   if (single_key_pairs) {
     relnames_df <- as.data.frame(do.call(
       rbind,
-      lapply(relationships, \(r) unlist(r[c(1L, 3L)]))
+      lapply(references, \(r) unlist(r[c(1L, 3L)]))
     ))
     if (anyDuplicated(relnames_df))
       fail(sprintf(
-        "%s has relationship pairs with multiple keys",
+        "%s has reference pairs with multiple keys",
         act$lab
       ))
   }
@@ -210,7 +210,7 @@ is_valid_database_schema <- function(
 ) {
   is_valid_relation_schema(x, unique, single_empty_key)
   expect_s3_class(x, "database_schema")
-  is_valid_relationships(x, same_attr_name, single_key_pairs)
+  is_valid_references(x, same_attr_name, single_key_pairs)
 }
 
 is_valid_relation <- function(x, unique = FALSE, single_empty_key = FALSE) {
@@ -287,8 +287,8 @@ is_valid_database <- function(
   is_valid_relation(x, unique, single_empty_key)
   expect_s3_class(x, "database")
 
-  fks <- relationships(x)
-  is_valid_relationships(x, same_attr_name, single_key_pairs)
+  fks <- references(x)
+  is_valid_references(x, same_attr_name, single_key_pairs)
   recs <- records(x)
   for (fk in fks) {
     expect_true(identical(
@@ -514,11 +514,11 @@ gen.relation_schema_empty_keys <- function(x, from, to, min_empty) {
     })
 }
 
-# relationships are included to ensure attributes that reference each other have
+# references are included to ensure attributes that reference each other have
 # the same class
-gen.attrs_class <- function(nm, relationships = list()) {
+gen.attrs_class <- function(nm, references = list()) {
   groups <- seq_along(nm)
-  for (rel in relationships) {
+  for (rel in references) {
     child_attrs <- match(rel[[2]], nm)
     parent_attrs <- match(rel[[4]], nm)
     stopifnot(!anyNA(c(child_attrs, parent_attrs)))
@@ -658,10 +658,10 @@ remove_insertion_key_violations <- function(df, relation) {
   )
 }
 
-remove_violated_relationships <- function(relationships, relation) {
+remove_violated_references <- function(references, relation) {
   recs <- records(relation)
-  relationships[vapply(
-    relationships,
+  references[vapply(
+    references,
     \(rel) {
       child <- recs[[rel[[1]]]][, rel[[2]], drop = FALSE]
       parent <- recs[[rel[[3]]]][, rel[[4]], drop = FALSE]
@@ -683,8 +683,8 @@ remove_violated_relationships <- function(relationships, relation) {
   )]
 }
 
-gen.relationships_same_attrs <- function(rs, single_key_pairs) {
-  gen.relationships_for_index_and_key <- function(rs, n, k) {
+gen.references_same_attrs <- function(rs, single_key_pairs) {
+  gen.references_for_index_and_key <- function(rs, n, k) {
     contains_key <- setdiff(
       which(vapply(
         attrs(rs),
@@ -706,11 +706,11 @@ gen.relationships_same_attrs <- function(rs, single_key_pairs) {
         )
       })
   }
-  gen.relationships_for_index <- function(rs, n) {
+  gen.references_for_index <- function(rs, n) {
     ks <- keys(rs)[[n]]
     lapply(
       ks[lengths(ks) > 0L],
-      gen.relationships_for_index_and_key,
+      gen.references_for_index_and_key,
       rs = rs,
       n = n
     ) |>
@@ -724,12 +724,12 @@ gen.relationships_same_attrs <- function(rs, single_key_pairs) {
           rels
       })
   }
-  lapply(seq_along(rs), gen.relationships_for_index, rs = rs) |>
+  lapply(seq_along(rs), gen.references_for_index, rs = rs) |>
     gen.with(\(lst) if (length(lst) == 0L) list() else unlist(lst, recursive = FALSE))
 }
 
-gen.relationships_different_attrs <- function(rs, single_key_pairs) {
-  gen.relationships_for_index_and_key <- function(rs, n, k) {
+gen.references_different_attrs <- function(rs, single_key_pairs) {
+  gen.references_for_index_and_key <- function(rs, n, k) {
     contains_key_length <- setdiff(
       which(vapply(
         attrs(rs),
@@ -756,11 +756,11 @@ gen.relationships_different_attrs <- function(rs, single_key_pairs) {
         )
       })
   }
-  gen.relationships_for_index <- function(rs, n) {
+  gen.references_for_index <- function(rs, n) {
     ks <- keys(rs)[[n]]
     lapply(
       ks[lengths(ks) > 0L],
-      gen.relationships_for_index_and_key,
+      gen.references_for_index_and_key,
       rs = rs,
       n = n
     ) |>
@@ -774,14 +774,14 @@ gen.relationships_different_attrs <- function(rs, single_key_pairs) {
           rels
       })
   }
-  lapply(seq_along(rs), gen.relationships_for_index, rs = rs) |>
+  lapply(seq_along(rs), gen.references_for_index, rs = rs) |>
     gen.with(\(lst) if (length(lst) == 0L) list() else unlist(lst, recursive = FALSE))
 }
 
-gen.relationships <- function(rs, single_key_pairs) {
+gen.references <- function(rs, single_key_pairs) {
   gen.choice(
-    gen.relationships_same_attrs(rs, single_key_pairs),
-    gen.relationships_different_attrs(rs, single_key_pairs)
+    gen.references_same_attrs(rs, single_key_pairs),
+    gen.references_different_attrs(rs, single_key_pairs)
   )
 }
 
@@ -798,9 +798,9 @@ gen.database_schema <- function(
       list(
         gen.pure(rs),
         if (same_attr_name)
-          gen.relationships_same_attrs(rs, single_key_pairs)
+          gen.references_same_attrs(rs, single_key_pairs)
         else
-          gen.relationships(rs, single_key_pairs))
+          gen.references(rs, single_key_pairs))
     }) |>
     gen.with(\(lst) do.call(database_schema, lst))
 }
@@ -817,9 +817,9 @@ gen.database_schema_empty_keys <- function(
       list(
         gen.pure(rs),
         if (same_attr_name)
-          gen.relationships_same_attrs(rs, single_key_pairs)
+          gen.references_same_attrs(rs, single_key_pairs)
         else
-          gen.relationships(rs, single_key_pairs))
+          gen.references(rs, single_key_pairs))
     }) |>
     gen.with(\(lst) do.call(database_schema, lst))
 }
@@ -846,21 +846,21 @@ gen.database <- function(
       gen.relation_from_schema(ds, rows_from, rows_to) |>
         gen.with(
           with_args(
-            remove_relationship_violations,
-            relationships = relationships(ds)
+            remove_reference_violations,
+            references = references(ds)
           ) %>>%
-            with_args(database, relationships = relationships(ds))
+            with_args(database, references = references(ds))
         )
     })
 }
 
-remove_relationship_violations <- function(relation, relationships) {
-  if (length(relationships) == 0L)
+remove_reference_violations <- function(relation, references) {
+  if (length(references) == 0L)
     return(relation)
   change <- TRUE
   while (change) {
     change <- FALSE
-    for (ref in relationships) {
+    for (ref in references) {
       recs <- records(relation)
       child_name <- ref[[1]]
       child <- recs[[child_name]][, ref[[2]], drop = FALSE]
@@ -888,14 +888,14 @@ remove_relationship_violations <- function(relation, relationships) {
   relation
 }
 
-remove_insertion_relationship_violations <- function(df, database) {
-  if (length(relationships(database)) == 0L)
+remove_insertion_reference_violations <- function(df, database) {
+  if (length(references(database)) == 0L)
     return(df)
   recs <- records(database)
   change <- TRUE
   while (change) {
     change <- FALSE
-    for (ref in relationships(database)) {
+    for (ref in references(database)) {
       child_name <- ref[[1]]
       child <- rbind(
         recs[[child_name]][, ref[[2]], drop = FALSE],

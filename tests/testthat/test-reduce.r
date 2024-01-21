@@ -45,7 +45,7 @@ describe("reduce.database", {
       reduced <- reduce(database)
       expect_identical(name(reduced), name(database))
       expect_true(all(reduced %in% database))
-      expect_true(all(relationships(reduced) %in% relationships(database)))
+      expect_true(all(references(reduced) %in% references(database)))
     }
     forall(gen_df(6, 7, minrow = 1L), reduced_to_subset)
   })
@@ -58,7 +58,7 @@ describe("reduce.database", {
         reduced <- reduce(database)
         non_parents <- setdiff(
           names(reduced),
-          vapply(relationships(reduced), `[[`, character(1), 3)
+          vapply(references(reduced), `[[`, character(1), 3)
         )
         non_parent_nrows <- vapply(
           records(reduced)[non_parents],
@@ -81,7 +81,7 @@ describe("reduce.database", {
       nrows <- vapply(records(reduced), nrow, integer(1))
       expect_identical(max(nrows), nrow(df))
       base <- names(reduced)[which.max(nrows)]
-      parents <- relationships(db) |>
+      parents <- references(db) |>
         Filter(f = \(r) r[[1]] == base) |>
         vapply(\(r) r[[3]], character(1))
       expect_true(all(is.element(parents, names(reduced))))
@@ -119,14 +119,14 @@ describe("reduce.database_schema", {
         ),
         c(attrs_order(once), "extra_attr")
       ) |>
-        database_schema(relationships = relationships(once))
+        database_schema(references = references(once))
 
       twice <- reduce(once_plus_small, names(ds)[1L])
       twice_minus_small_attr <- relation_schema(
         Map(list, attrs(twice), keys(twice)),
         setdiff(attrs_order(twice), "extra_attr")
       ) |>
-        database_schema(relationships = relationships(twice))
+        database_schema(references = references(twice))
       expect_identical(twice_minus_small_attr, once)
     }
 
@@ -155,10 +155,10 @@ describe("reduce.database_schema", {
       expect_identical(attrs(reduced), attrs(database_schema)[kept])
       expect_identical(keys(reduced), keys(database_schema)[kept])
       expect_identical(
-        relationships(reduced),
+        references(reduced),
         Filter(
           \(r) all(is.element(c(r[[1]], r[[3]]), names(reduced))),
-          relationships(database_schema)
+          references(database_schema)
         )
       )
       expect_identical(attrs_order(reduced), attrs_order(database_schema))
@@ -172,7 +172,7 @@ describe("reduce.database_schema", {
       base <- names(ds)[[1]]
       reduced <- reduce(ds, base)
       expect_identical(base, names(ds)[[1]])
-      parents <- relationships(ds) |>
+      parents <- references(ds) |>
         Filter(f = \(r) r[[1]] == base) |>
         vapply(\(r) r[[3]], character(1))
       expect_true(all(is.element(parents, names(reduced))))

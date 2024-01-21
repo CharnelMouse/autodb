@@ -19,7 +19,7 @@ describe("decompose", {
       list(a = list(c("a", "b", "c"), list("a"))),
       attrs_order = c("a", "b", "c")
     ) |>
-      database_schema(relationships = list())
+      database_schema(references = list())
     db <- decompose(df, schema)
     expect_identical(
       db,
@@ -32,7 +32,7 @@ describe("decompose", {
           attrs_order = c("a", "b", "c")
         ),
         name = NA_character_,
-        relationships = list()
+        references = list()
       )
     )
   })
@@ -42,7 +42,7 @@ describe("decompose", {
       list(a = list(c("a", "b"), list("a", "b"))),
       attrs_order = c("a", "b")
     ) |>
-      database_schema(relationships = list())
+      database_schema(references = list())
     db <- decompose(df, schema)
     expect_identical(
       db,
@@ -86,7 +86,7 @@ describe("decompose", {
       attrs_order = c("id", "month", "hemisphere", "is_winter")
     ) |>
       database_schema(
-        relationships = list(list(
+        references = list(list(
           "id",
           c("month", "hemisphere"),
           "month_hemisphere",
@@ -118,7 +118,7 @@ describe("decompose", {
         attrs_order = c("id", "month", "hemisphere", "is_winter")
       ),
       name = NA_character_,
-      relationships = list(list(
+      references = list(list(
         "id",
         c("month", "hemisphere"),
         "month_hemisphere",
@@ -127,7 +127,7 @@ describe("decompose", {
     )
     expect_identical(new_db, expected_db)
   })
-  it("removes transitive relationships", {
+  it("removes transitive references", {
     df <- data.frame(
       a = 1L,
       b = 1L,
@@ -144,7 +144,7 @@ describe("decompose", {
       attrs_order = c("a", "b", "c", "d", "e")
     ) |>
       database_schema(
-        relationships = list(
+        references = list(
           list("a", c("b", "c"), "b_c", c("b", "c")),
           list("b_c", "b", "b", "b")
         )
@@ -203,7 +203,7 @@ describe("decompose", {
   it("returns a error if data.frame doesn't satisfy FKs in the schema", {
     gen_fk_reduction_for_df <- function(df) {
       true_dbs <- normalise(discover(df, 1))
-      true_fks <- relationships(true_dbs)
+      true_fks <- references(true_dbs)
       true_fk_key_switch <- lapply(
         true_fks,
         \(fk) {
@@ -234,7 +234,7 @@ describe("decompose", {
           ) |>
             Filter(f = \(fk) !is.element(list(fk), true_fks)) |>
             Filter(f = \(fk) {
-              length(remove_violated_relationships(
+              length(remove_violated_references(
                 list(fk),
                 decompose(df, true_dbs)
               )) == 0
@@ -250,7 +250,7 @@ describe("decompose", {
           gen.element(true_fk_key_switch[[index]]) |>
             gen.with(\(new_fk) {
               dbs <- true_dbs
-              relationships(dbs)[[index]] <- new_fk
+              references(dbs)[[index]] <- new_fk
               dbs
             })
         ))
@@ -271,7 +271,7 @@ describe("decompose", {
         decompose(df, dbs),
         paste0(
           "\\A",
-          "relations must satisfy relationships in schema:",
+          "relations must satisfy references in schema:",
           "(\\n", fk_half_regexp, " -> ", fk_half_regexp, ")+",
           "\\Z"
         ),
@@ -336,7 +336,7 @@ describe("decompose", {
         attrs_order = c("player_name", "jersey_num", "team", "city", "state")
       ) |>
         database_schema(
-          relationships = list(
+          references = list(
             list("player_name_jersey_num", "team", "team", "team"),
             list("team", "city", "city", "city")
           )
@@ -376,7 +376,7 @@ describe("decompose", {
           attrs_order = c("player_name", "jersey_num", "team", "city", "state")
         ),
         name = NA_character_,
-        relationships = list(
+        references = list(
           list("player_name_jersey_num", "team", "team", "team"),
           list("team", "city", "city", "city")
         )
@@ -396,7 +396,7 @@ describe("decompose", {
       ),
       attrs_order = c("A 1", "B 2", "C 3")
     ) |>
-      database_schema(relationships = list())
+      database_schema(references = list())
     db <- decompose(df, schema)
     expect_setequal(attrs(db)[[1]], c("A 1", "B 2", "C 3"))
   })
@@ -413,7 +413,7 @@ describe("decompose", {
       ),
       attrs_order = c("a", "b", "c")
     ) |>
-      database_schema(relationships = list(list("a_c", "a", "a", "a")))
+      database_schema(references = list(list("a_c", "a", "a", "a")))
     db <- decompose(df, schema)
     expect_identical(
       records(db)$a_c,

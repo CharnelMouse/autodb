@@ -199,7 +199,7 @@ describe("gv", {
             "Publisher ID"
           )
         ),
-        relationships = list(
+        references = list(
           list("Book", "Title", "Format Price", "Title"),
           list("Book", "Author", "Author", "Author"),
           list("Book", "Genre ID", "Genre", "Genre ID")
@@ -377,7 +377,7 @@ describe("gv", {
             "Publisher ID"
           )
         ),
-        relationships = list(
+        references = list(
           list("Book", "Title", "Format Price", "Title"),
           list("Book", "Author", "Author", "Author"),
           list("Book", "Genre ID", "Genre", "Genre ID")
@@ -494,7 +494,7 @@ describe("gv", {
           ),
           attrs_order = c("a", "b")
         ),
-        relationships = list(),
+        references = list(),
         name = NA_character_
       )
       plot_string <- gv(db)
@@ -509,7 +509,7 @@ describe("gv", {
           ),
           letters[1:3]
         ),
-        relationships = list(
+        references = list(
           list("a_b", c("a", "b"), "a_b2", c("a", "b")),
           list("a_b", c("b", "c"), "a_b2", c("b", "c"))
         )
@@ -550,7 +550,7 @@ describe("gv", {
         ),
         attrs_order = c("Genre ID", "Genre Name")
       ) |>
-        database_schema(relationships = list())
+        database_schema(references = list())
       expected_string <- paste(
         "digraph book {",
         "  rankdir = \"LR\"",
@@ -578,7 +578,7 @@ describe("gv", {
         list(a = list(c("a", "b"), list("a"))),
         attrs_order = c("a", "b")
       ) |>
-        database_schema(relationships = list())
+        database_schema(references = list())
       plot_string <- gv(schema)
       expect_identical(substr(plot_string, 1, 9), "digraph {")
     })
@@ -590,7 +590,7 @@ describe("gv", {
         ),
         c("a", "b", "c")
       ) |>
-        database_schema(relationships = list(list("a", "b", "b", "b")))
+        database_schema(references = list(list("a", "b", "b", "b")))
       plot_string <- gv(schema)
       expect_true(grepl("\\n  a.FROM_b -> b.TO_b", plot_string))
 
@@ -601,7 +601,7 @@ describe("gv", {
         ),
         c("a", "b", "c")
       ) |>
-        database_schema(relationships = list(list("a", "a", "b", "b")))
+        database_schema(references = list(list("a", "a", "b", "b")))
       plot_string <- gv(schema)
       expect_true(grepl("\\n  a.FROM_a -> b.TO_b", plot_string))
     })
@@ -614,7 +614,7 @@ describe("gv", {
           ),
           letters[1:3]
         ),
-        relationships = list(
+        references = list(
           list("a_b", c("a", "b"), "a_b2", c("a", "b")),
           list("a_b", c("b", "c"), "a_b2", c("b", "c"))
         )

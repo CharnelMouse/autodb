@@ -4,12 +4,12 @@
 \alias{database}
 \title{Databases}
 \usage{
-database(relations, relationships, name = NA_character_)
+database(relations, references, name = NA_character_)
 }
 \arguments{
 \item{relations}{a \code{\link{relation}} object.}
 
-\item{relationships}{a list of relationships, each
+\item{references}{a list of references, each
 represented by a list containing four character elements. In order, the
 elements are a scalar giving the name of the child schema, a vector giving
 the child attribute names, a scalar giving the name of the parent schema,
@@ -23,7 +23,7 @@ allow for easier combining of graphs into a single diagram if required.}
 }
 \value{
 A \code{database} object, containing \code{relations} with
-\code{relationships} stored in an attribute of the same name. Relationships
+\code{references} stored in an attribute of the same name. References
 are stored with their attributes in the order they appear in their
 respective relations.
 }
@@ -42,11 +42,11 @@ respect to its relations.
 As with \code{\link{relation}}, duplicate relations, after ordering by
 attribute, are allowed, and can be removed with \code{\link{unique}}.
 
-Relationships, i.e. foreign key references, are allowed to have different
+References, i.e. foreign key references, are allowed to have different
 attribute names in the child and parent relations; this can't occur in the
 output for \code{\link{cross_reference}} and \code{\link{normalise}}.
 
-Subsetting removes any relationships that involve removed relations.
-Removing duplicates with \code{\link{unique}} changes relationships involving
+Subsetting removes any references that involve removed relations.
+Removing duplicates with \code{\link{unique}} changes references involving
 duplicates to involve the kept equivalent relations instead.
 }

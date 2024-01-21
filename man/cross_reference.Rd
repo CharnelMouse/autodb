@@ -2,7 +2,7 @@
 % Please edit documentation in R/cross_reference.r
 \name{cross_reference}
 \alias{cross_reference}
-\title{Add foreign key relationships to a normalised database}
+\title{Add foreign key references to a normalised database}
 \usage{
 cross_reference(schema)
 }
@@ -15,5 +15,5 @@ A \code{\link{database_schema}} object, containing the given relation
 schemas and the created foreign key references.
 }
 \description{
-Add foreign key relationships to a normalised database
+Add foreign key references to a normalised database
 }

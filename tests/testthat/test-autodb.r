@@ -60,7 +60,7 @@ describe("autodb", {
     expect_identical(length(database), 3L)
     expect_setequal(names(database), c("Price", "Title", "constants"))
     expect_setequal(
-      relationships(database),
+      references(database),
       list(list("Price", "Title", "Title", "Title"))
     )
   })

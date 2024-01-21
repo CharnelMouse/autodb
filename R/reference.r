@@ -3,29 +3,29 @@
 # that are collected here.
 
 check_valid_reference <- function(
-  relationships,
+  references,
   relation_schemas,
   type = c("relation schema", "relation")
 ) {
   type <- match.arg(type)
-  if (!is.list(relationships))
-    stop("relationships must be a list")
+  if (!is.list(references))
+    stop("references must be a list")
   if (any(
-    lengths(relationships) != 4L |
-    !vapply(relationships, is.list, logical(1))
+    lengths(references) != 4L |
+    !vapply(references, is.list, logical(1))
   ))
-    stop("relationship elements must be length-four lists")
-  if (any(!reference_names_element(relationships, names(relation_schemas)))) {
+    stop("reference elements must be length-four lists")
+  if (any(!reference_names_element(references, names(relation_schemas)))) {
     stop(paste(
-      "relationship relation names must be within",
+      "reference relation names must be within",
       type,
       "names"
     ))
   }
-  if (any(!reference_valid_attrs(relationships, relation_schemas)))
-    stop("relationship attributes must be within referer's attributes and referee's keys")
-  if (any(self_reference(relationships)))
-    stop("relationship cannot be from a relation's attribute to itself")
+  if (any(!reference_valid_attrs(references, relation_schemas)))
+    stop("reference attributes must be within referer's attributes and referee's keys")
+  if (any(self_reference(references)))
+    stop("reference cannot be from a relation's attribute to itself")
 }
 
 self_reference <- function(references) {
@@ -82,11 +82,11 @@ merge_reference_referands <- function(
 
 print_references <- function(x, max) {
   if (length(x) == 0) {
-    cat("no relationships\n")
+    cat("no references\n")
   }else{
-    cat(paste("relationships:\n"))
-    n_relationships <- length(x)
-    for (r in seq_len(n_relationships)) {
+    cat(paste("references:\n"))
+    n_references <- length(x)
+    for (r in seq_len(n_references)) {
       rel <- x[[r]]
       cat(paste0(
         rel[[1]], ".{", toString(rel[[2]]),
@@ -94,7 +94,7 @@ print_references <- function(x, max) {
         rel[[3]], ".{", toString(rel[[4]]), "}\n"
       ))
     }
-    if (max < n_relationships)
-      cat("... and", n_relationships - max, "other relationships\n")
+    if (max < n_references)
+      cat("... and", n_references - max, "other references\n")
   }
 }

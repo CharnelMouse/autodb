@@ -137,26 +137,26 @@ name <- function(x, ...) {
   UseMethod("name")
 }
 
-#' Schema relationships
+#' Schema references
 #'
-#' Generic function, returning present relationships.
+#' Generic function, returning present (foreign key) references.
 #'
 #' @param x an R object.
 #' @param ... further arguments passed on to methods.
 #'
-#' @return a list, giving relationships.
+#' @return a list, giving references.
 #' @export
-relationships <- function(x, ...) {
-  UseMethod("relationships")
+references <- function(x, ...) {
+  UseMethod("references")
 }
 
-#' @rdname relationships
+#' @rdname references
 #'
-#' @param value A list, of the same length as \code{relationships}(x, ...).
+#' @param value A list, of the same length as \code{references}(x, ...).
 #'
 #' @export
-`relationships<-` <- function(x, value) {
-  UseMethod("relationships<-")
+`references<-` <- function(x, value) {
+  UseMethod("references<-")
 }
 
 #' Schema subschemas
@@ -248,7 +248,7 @@ merge_attribute_orderings <- function(...) {
 #' \code{\link{keys}} and \code{\link{merge_schemas}}. Any input class with
 #' valid methods for these generic functions can be passed into this function.
 #'
-#' For \code{\link{database_schema}} objects, relationships involving the
+#' For \code{\link{database_schema}} objects, references involving the
 #' schemas with empty keys are updated to refer to the merged schema.
 #'
 #' @param x an R object.

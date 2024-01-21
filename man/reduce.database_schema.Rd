@@ -16,12 +16,12 @@ considered as the "main" relations.}
 }
 \value{
 A database schema, with the auxiliary relations and foreign key
-relationships removed.
+references removed.
 }
 \description{
 Filters a database schema's relations, keeping only the given relations, and
 those considered ancestors via foreign key references. Foreign key
-relationships involving removed relations are also removed.
+references involving removed relations are also removed.
 }
 \details{
 This method takes a given set of main relations, rather than inferring them.

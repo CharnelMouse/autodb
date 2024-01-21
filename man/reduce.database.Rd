@@ -13,12 +13,12 @@
 }
 \value{
 A database, with the auxiliary relations and foreign key
-relationships removed.
+references removed.
 }
 \description{
 Filters a database's relations, keeping only the main relations, and those
 considered ancestors via foreign key references. Foreign
-key relationships involving removed relations are also removed.
+key references involving removed relations are also removed.
 }
 \details{
 The main relations are considered to be the relations with the largest number

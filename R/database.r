@@ -13,12 +13,12 @@
 #' As with \code{\link{relation}}, duplicate relations, after ordering by
 #' attribute, are allowed, and can be removed with \code{\link{unique}}.
 #'
-#' Relationships, i.e. foreign key references, are allowed to have different
+#' References, i.e. foreign key references, are allowed to have different
 #' attribute names in the child and parent relations; this can't occur in the
 #' output for \code{\link{cross_reference}} and \code{\link{normalise}}.
 #'
-#' Subsetting removes any relationships that involve removed relations.
-#' Removing duplicates with \code{\link{unique}} changes relationships involving
+#' Subsetting removes any references that involve removed relations.
+#' Removing duplicates with \code{\link{unique}} changes references involving
 #' duplicates to involve the kept equivalent relations instead.
 #'
 #' @inheritParams database_schema
@@ -26,16 +26,16 @@
 #' @param relations a \code{\link{relation}} object.
 #'
 #' @return A \code{database} object, containing \code{relations} with
-#'   \code{relationships} stored in an attribute of the same name. Relationships
+#'   \code{references} stored in an attribute of the same name. References
 #'   are stored with their attributes in the order they appear in their
 #'   respective relations.
 #' @export
-database <- function(relations, relationships, name = NA_character_) {
+database <- function(relations, references, name = NA_character_) {
   if (!inherits(relations, "relation"))
     stop("relations must be a relation")
   if (!is.character(name) || length(name) != 1L)
     stop("name must be a scalar character")
-  check_valid_reference(relationships, relations, "relation")
+  check_valid_reference(references, relations, "relation")
 
   relat_errors <- Filter(
     \(relat) {
@@ -50,11 +50,11 @@ database <- function(relations, relationships, name = NA_character_) {
         nrow(referrer)
       )
     },
-    relationships
+    references
   )
   if (length(relat_errors) > 0)
     stop(paste0(
-      "relations must satisfy relationships in schema:\n",
+      "relations must satisfy references in schema:\n",
       paste(
         vapply(
           relat_errors,
@@ -72,7 +72,7 @@ database <- function(relations, relationships, name = NA_character_) {
   structure(
     relations,
     name = name,
-    relationships = relationships,
+    references = references,
     class = c("database", "relation", "list")
   )
 }
@@ -83,7 +83,7 @@ database <- function(relations, relationships, name = NA_character_) {
   attrs_order(rels) <- value
   database(
     rels,
-    relationships = relationships(x),
+    references = references(x),
     name = name(x)
   )
 }
@@ -94,12 +94,12 @@ name.database <- function(x, ...) {
 }
 
 #' @exportS3Method
-relationships.database <- function(x, ...) {
-  attr(x, "relationships")
+references.database <- function(x, ...) {
+  attr(x, "references")
 }
 
 #' @export
-`relationships<-.database` <- function(x, value) {
+`references<-.database` <- function(x, value) {
   database(subrelations(x), value)
 }
 
@@ -135,7 +135,7 @@ merge_database_relations <- function(x, to_remove, merge_into, ...) {
   stopifnot(length(to_remove) == length(merge_into))
   relations <- merge_relations(subrelations(x), to_remove, merge_into)
   rels <- merge_reference_referands(
-    relationships(x),
+    references(x),
     to_remove,
     merge_into,
     names(x),
@@ -170,19 +170,19 @@ c.database <- function(...) {
   else
     make.unique(names(joined_rels))
 
-  relationships_list <- lapply(lst, relationships)
-  new_relationships <- Map(
+  references_list <- lapply(lst, references)
+  new_references <- Map(
     rename_reference_referands,
-    relationships_list,
+    references_list,
     lapply(lst, names),
     unname(split(
       names(joined_rels),
       rep(factor(seq_along(lst)), lengths(lst))
     ))
   )
-  joined_relationships <- do.call(c, new_relationships)
+  joined_references <- do.call(c, new_references)
 
-  result_lst <- list(joined_rels, joined_relationships)
+  result_lst <- list(joined_rels, joined_references)
   do.call(database, result_lst)
 }
 
@@ -190,8 +190,8 @@ c.database <- function(...) {
 insert.database <- function(x, vals, ...) {
   res <- insert.relation(x, vals, ...)
   dfs <- records(res)
-  relationship_checks <- relationships(res)[vapply(
-    relationships(res),
+  reference_checks <- references(res)[vapply(
+    references(res),
     \(relat) {
       referrer <- unique(dfs[[relat[[1]]]][, relat[[2]], drop = FALSE])
       referee <- unique(dfs[[relat[[3]]]][, relat[[4]], drop = FALSE])
@@ -202,9 +202,9 @@ insert.database <- function(x, vals, ...) {
     },
     logical(1)
   )]
-  if (length(relationship_checks)) {
+  if (length(reference_checks)) {
     error_strings <- vapply(
-      relationship_checks,
+      reference_checks,
       \(relat) paste0(
         relat[[1]], ".{", toString(relat[[2]]),
         "} -> ",
@@ -214,7 +214,7 @@ insert.database <- function(x, vals, ...) {
     )
     stop(
       "insertion violates ",
-      with_number(length(error_strings), "relationship", "", "s"),
+      with_number(length(error_strings), "reference", "", "s"),
       ":\n",
       paste(error_strings, collapse = "\n")
     )
@@ -224,7 +224,7 @@ insert.database <- function(x, vals, ...) {
 
 #' @export
 `[.database` <- function(x, i) {
-  rels <- relationships(x)
+  rels <- references(x)
   kept_relation_names <- names(stats::setNames(seq_along(x), names(x))[i])
   kept_rels <- rels[reference_names_element(rels, kept_relation_names)]
 
@@ -236,5 +236,5 @@ insert.database <- function(x, vals, ...) {
 print.database <- function(x, max = 10, ...) {
   cat(paste0("database ", name(x), " with "))
   print(subrelations(x), max = max, ...)
-  print_references(relationships(x), max)
+  print_references(references(x), max)
 }

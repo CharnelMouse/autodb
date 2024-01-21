@@ -12,10 +12,10 @@ describe("database", {
       "^relations must be a relation$"
     )
   })
-  it("expects valid input: relationships is a list", {
+  it("expects valid input: references is a list", {
     expect_error(
       database(relation(setNames(list(), character()), character()), 1L),
-      "^relationships must be a list$"
+      "^references must be a list$"
     )
   })
   it("expects valid input: name is a scalar character", {
@@ -28,10 +28,10 @@ describe("database", {
       "^name must be a scalar character$"
     )
   })
-  it("expects valid input: relationship elements are length-four lists", {
+  it("expects valid input: reference elements are length-four lists", {
     expect_error(
       database(create(empty_rs), list("a")),
-      "^relationship elements must be length-four lists$"
+      "^reference elements must be length-four lists$"
     )
     rs <- create(relation_schema(
       list(
@@ -43,14 +43,14 @@ describe("database", {
     ))
     expect_error(
       database(rs, list(1:4)),
-      "^relationship elements must be length-four lists$"
+      "^reference elements must be length-four lists$"
     )
     expect_error(
       database(rs, list(as.list(paste0("r", 1:3)))),
-      "^relationship elements must be length-four lists$"
+      "^reference elements must be length-four lists$"
     )
   })
-  it("expects valid input: relationship relation names are within relation names", {
+  it("expects valid input: reference relation names are within relation names", {
     rs <- create(relation_schema(
       list(
         r1 = list(c("a", "c"), list("a")),
@@ -61,14 +61,14 @@ describe("database", {
     ))
     expect_error(
       database(rs, list(list("r3", "b", "r4", "b"))),
-      "^relationship relation names must be within relation names$"
+      "^reference relation names must be within relation names$"
     )
     expect_error(
       database(rs, list(list("r4", "b", "r3", "b"))),
-      "^relationship relation names must be within relation names$"
+      "^reference relation names must be within relation names$"
     )
   })
-  it("expects valid input: relationship attribute names are within referer's attributes and referee's keys", {
+  it("expects valid input: reference attribute names are within referer's attributes and referee's keys", {
     expect_error(
       database(
         create(relation_schema(
@@ -80,20 +80,20 @@ describe("database", {
         )),
         list(list("a", "b", "X", "b"))
       ),
-      "^relationship attributes must be within referer's attributes and referee's keys$"
+      "^reference attributes must be within referer's attributes and referee's keys$"
     )
     # need more examples here
 
     # should have something about collected FK being a key of the citee,
     # waiting on FK grouping first
   })
-  it("expects valid input: relationships aren't self-references", {
+  it("expects valid input: references aren't self-references", {
     expect_error(
       database(
         create(relation_schema(list(a = list(c("a", "b"), list("a"))), c("a", "b"))),
         list(list("a", "b", "a", "a"))
       ),
-      "^relationship cannot be from a relation's attribute to itself$"
+      "^reference cannot be from a relation's attribute to itself$"
     )
   })
   it("expects valid input: records satisfy database schema", {
@@ -108,7 +108,7 @@ describe("database", {
         ),
         list(list("a", "b", "b", "b"))
       ),
-      "^relations must satisfy relationships in schema:\na\\.\\{b\\} -> b\\.\\{b\\}$"
+      "^relations must satisfy references in schema:\na\\.\\{b\\} -> b\\.\\{b\\}$"
     )
     expect_error(
       database(
@@ -121,7 +121,7 @@ describe("database", {
         ),
         list(list("a", "b", "c", "c"))
       ),
-      "^relations must satisfy relationships in schema:\na\\.\\{b\\} -> c\\.\\{c\\}$"
+      "^relations must satisfy references in schema:\na\\.\\{b\\} -> c\\.\\{c\\}$"
     )
     # accounts for duplicate references before checking
     expect_silent(
@@ -213,14 +213,14 @@ describe("database", {
       curry = TRUE
     )
   })
-  it("keeps relevant relationships when subsetted", {
-    keeps_relevant_relationships <- function(db, indices, op) {
+  it("keeps relevant references when subsetted", {
+    keeps_relevant_references <- function(db, indices, op) {
       expect_identical(
-        relationships(op(db, indices)),
+        references(op(db, indices)),
         # this is too close to replicating the code for my liking
         Filter(
           \(r) all(c(r[[1]], r[[3]]) %in% names(db)[indices]),
-          relationships(db)
+          references(db)
         )
       )
     }
@@ -231,7 +231,7 @@ describe("database", {
           indices = gen.sample_resampleable(seq_along(db), from = 0, to = length(db))
         )) |>
         gen.with(\(lst) c(lst, list(op = `[`))),
-      keeps_relevant_relationships,
+      keeps_relevant_references,
       curry = TRUE
     )
     forall(
@@ -241,7 +241,7 @@ describe("database", {
           indices = gen.int(length(db))
         )) |>
         gen.with(\(lst) c(lst, list(op = `[[`))),
-      keeps_relevant_relationships,
+      keeps_relevant_references,
       curry = TRUE
     )
   })
@@ -261,13 +261,13 @@ describe("database", {
       curry = TRUE
     )
   })
-  it("is made unique with relationships preserved", {
+  it("is made unique with references preserved", {
     forall(
       gen.database(letters[1:3], 0, 8, same_attr_name = FALSE) |>
         gen.with(unique),
       expect_biidentical(
-        dup %>>% uncurry(c) %>>% unique %>>% relationships,
-        relationships
+        dup %>>% uncurry(c) %>>% unique %>>% references,
+        references
       )
     )
 
@@ -277,24 +277,24 @@ describe("database", {
       expect_biidentical(
         dup %>>%
           onLeft(\(db) {
-            len <- length(relationships(db))
-            relationships(db) <- relationships(db)[seq_len(floor(len))]
+            len <- length(references(db))
+            references(db) <- references(db)[seq_len(floor(len))]
             db
           }) %>>%
           onRight(\(db) {
-            len <- length(relationships(db))
-            relationships(db) <- relationships(db)[setdiff(
+            len <- length(references(db))
+            references(db) <- references(db)[setdiff(
               seq_len(len),
               seq_len(floor(len))
             )]
             db
           }) %>>%
-          uncurry(c) %>>% unique %>>% relationships,
-        relationships
+          uncurry(c) %>>% unique %>>% references,
+        references
       )
     )
 
-    # special case: unique must merge two tables to keep both relationships
+    # special case: unique must merge two tables to keep both references
     ds <- database_schema(
       relation_schema(
         list(
@@ -312,7 +312,7 @@ describe("database", {
     )
     db <- create(ds)
     expect_identical(
-      relationships(unique(db)),
+      references(unique(db)),
       list(
         list("a.1", "b", "b.1", "b"),
         list("a.1", "b", "b.2", "b")
@@ -366,7 +366,7 @@ describe("database", {
       relation,
       relations = setNames(list(), character())
     ) %>>%
-      with_args(database, relationships = list())
+      with_args(database, references = list())
     concatenate_keeps_attribute_order <- function(attrs_lst) {
       lst <- lapply(attrs_lst, empty_schema_from_attrs)
       expect_silent(res <- do.call(c, lst))
@@ -396,8 +396,8 @@ describe("database", {
       concatenate_keeps_attribute_order
     )
   })
-  it("concatenates without losing relationships", {
-    concatenate_lossless_for_relationships <- function(lst) {
+  it("concatenates without losing references", {
+    concatenate_lossless_for_references <- function(lst) {
       res <- do.call(c, lst)
       for (l in lst) {
         equiv_relations <- setNames(
@@ -421,8 +421,8 @@ describe("database", {
           ),
           names(l)
         )
-        possible_equiv_relationship_present <- vapply(
-          relationships(l),
+        possible_equiv_reference_present <- vapply(
+          references(l),
           \(rl) {
             index_replacements <- list(
               equiv_relations[[rl[[1]]]],
@@ -439,11 +439,11 @@ describe("database", {
               ),
               simplify = FALSE
             )
-            any(is.element(rl_replacements, relationships(res)))
+            any(is.element(rl_replacements, references(res)))
           },
           logical(1)
         )
-        expect_true(all(possible_equiv_relationship_present))
+        expect_true(all(possible_equiv_reference_present))
       }
     }
     forall(
@@ -452,7 +452,7 @@ describe("database", {
           gen.database(letters[1:6], 0, 8, same_attr_name = san) |>
             gen.list(from = 1, to = 10)
         }),
-      concatenate_lossless_for_relationships
+      concatenate_lossless_for_references
     )
   })
   it("concatenates without losing schemas", {
@@ -503,7 +503,7 @@ describe("database", {
     )
   })
 
-  it("is composed of its records(), keys(), names(), attrs_order(), and relationships()", {
+  it("is composed of its records(), keys(), names(), attrs_order(), and references()", {
     forall(
       gen.database(letters[1:6], 0, 8, same_attr_name = FALSE),
       \(db) expect_identical(
@@ -519,17 +519,17 @@ describe("database", {
             ),
             attrs_order(db)
           ),
-          relationships = relationships(db)
+          references = references(db)
         ),
         db
       )
     )
   })
-  it("is composed of its subrelations() and relationships()", {
+  it("is composed of its subrelations() and references()", {
     forall(
       gen.database(letters[1:6], 0, 8, same_attr_name = FALSE),
       \(db) expect_identical(
-        database(subrelations(db), relationships(db)),
+        database(subrelations(db), references(db)),
         db
       )
     )
@@ -547,7 +547,7 @@ describe("database", {
         "\\n",
         "0 attributes",
         "\\n",
-        "no relationships",
+        "no references",
         "\\Z"
       ),
       perl = TRUE
@@ -574,7 +574,7 @@ describe("database", {
         "\\n",
         "relation b: b, c; 0 records\\n  key 1: b\\n  key 2: c",
         "\\n",
-        "relationships:\\na\\.\\{b\\} -> b\\.\\{b\\}",
+        "references:\\na\\.\\{b\\} -> b\\.\\{b\\}",
         "\\Z"
       ),
       perl = TRUE
@@ -601,7 +601,7 @@ describe("database", {
         "\\n",
         "relation b: b, c; 0 records\\n  key 1: b, c",
         "\\n",
-        "relationships:\\na\\.\\{b, c\\} -> b\\.\\{b, c\\}",
+        "references:\\na\\.\\{b, c\\} -> b\\.\\{b, c\\}",
         "\\Z"
       ),
       perl = TRUE

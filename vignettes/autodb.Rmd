@@ -298,7 +298,7 @@ Another option is to simply remove the offending relations in the current schema
 nudge_schema_relfiltered <- nudge_schema[!grepl("publication_id", names(nudge_schema), fixed = TRUE)]
 ```
 
-Subsetting a database schema also removes any foreign key relationships involving removed schemas, so the resulting schema is still valid. However, any foreign key reference chains with removed schemas in the middle are broken. Amongst others, in this case we lose the relationship between the three relations for the three hierarchical data levels:
+Subsetting a database schema also removes any foreign key references involving removed schemas, so the resulting schema is still valid. However, any foreign key reference chains with removed schemas in the middle are broken. Amongst others, in this case we lose the reference between the three relations for the three hierarchical data levels:
 
 ```{r nudge_publication_badfilter_gv}
 DiagrammeR::grViz(gv(nudge_schema_relfiltered))

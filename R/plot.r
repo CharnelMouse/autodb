@@ -378,7 +378,7 @@ columns_schema_string <- function(col_names, keys) {
 
 reference_strings <- function(x) {
   lapply(
-    relationships(x),
+    references(x),
     reference_string
   ) |>
     do.call(what = c) |>

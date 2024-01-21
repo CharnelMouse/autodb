@@ -13,12 +13,12 @@ reduce(x, ...)
 }
 \value{
 An object of the same class as \code{x}, with the auxiliary relations
-and foreign key relationships removed.
+and foreign key references removed.
 }
 \description{
 Filters an object's relations, keeping only the main relations, and those
 considered ancestors via foreign key references. Foreign key
-relationships involving removed relations are also removed.
+references involving removed relations are also removed.
 }
 \details{
 Details on how the main tables are chosen are given in individual methods.

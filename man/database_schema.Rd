@@ -4,13 +4,13 @@
 \alias{database_schema}
 \title{Database schemas}
 \usage{
-database_schema(relation_schemas, relationships)
+database_schema(relation_schemas, references)
 }
 \arguments{
 \item{relation_schemas}{a \code{\link{relation_schema}} object, as returned
 by \code{\link{synthesise}} or \code{\link{relation_schema}}.}
 
-\item{relationships}{a list of relationships, each
+\item{references}{a list of references, each
 represented by a list containing four character elements. In order, the
 elements are a scalar giving the name of the child schema, a vector giving
 the child attribute names, a scalar giving the name of the parent schema,
@@ -20,8 +20,8 @@ schemas, and the parent attributes must form a key, in order.}
 }
 \value{
 A \code{database_schema} object, containing \code{relation_schemas}
-with \code{relationships} stored in an attribute of the same name.
-Relationships are stored with their attributes in the order they appear in
+with \code{references} stored in an attribute of the same name.
+References are stored with their attributes in the order they appear in
 their respective relation schemas.
 }
 \description{
@@ -40,11 +40,11 @@ As with \code{\link{relation_schema}}, duplicate relation schemas, after
 ordering by attribute, are allowed, and can be removed with
 \code{\link{unique}}.
 
-Relationships, i.e. foreign key references, are allowed to have different
+References, i.e. foreign key references, are allowed to have different
 attribute names in the child and parent relations; this can't occur in the
 output for \code{\link{cross_reference}} and \code{\link{normalise}}.
 
-Subsetting removes any relationships that involve removed relation schemas.
-Removing duplicates with \code{\link{unique}} changes relationships involving
+Subsetting removes any references that involve removed relation schemas.
+Removing duplicates with \code{\link{unique}} changes references involving
 duplicates to involve the kept equivalent schemas instead.
 }

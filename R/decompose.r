@@ -13,7 +13,7 @@
 #' and database schemas.
 #'
 #' @param df a data.frame, containing the data to be normalised.
-#' @param schema a database schema with foreign key relationships, as given by
+#' @param schema a database schema with foreign key references, as given by
 #'   \code{\link{cross_reference}}.
 #' @inheritParams autodb
 #'
@@ -22,12 +22,12 @@
 #'     \item \code{name} contains the assigned name of the relation set, if any;
 #'     \item \code{relations} contains a list of relations in third normal form,
 #'     that can reproduce the original data.frame;
-#'     \item \code{relationships} contains relationships between the relations,
-#'     represented as a list of length-four character vectors. In order, the
-#'     elements are the name of the child relation, the name of the linked
-#'     attribute in the child relation, the name of the parent relation, and the
-#'     name of the linked attribute in the parent relation. Currently, the
-#'     attribute is expected to have the same name in both relations.
+#'     \item \code{references} contains foreign key references between the
+#'     relations, represented as a list of length-four character vectors. In
+#'     order, the elements are the name of the child relation, the name of the
+#'     linked attribute in the child relation, the name of the parent relation,
+#'     and the name of the linked attribute in the parent relation. Currently,
+#'     the attribute is expected to have the same name in both relations.
 #'     \item \code{attributes} contains the attribute names in priority order.
 #'     This order can be taken from their order in \code{df}, or from the
 #'     \code{attrs_order} element in \code{schema}; these orderings must be the
@@ -81,7 +81,7 @@ decompose <- function(df, schema, name = NA_character_) {
   }
 
   create_insert(df, schema) |>
-    database(relationships(schema), name)
+    database(references(schema), name)
 }
 
 create_insert <- function(df, schema) {

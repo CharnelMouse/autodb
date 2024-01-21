@@ -1,4 +1,4 @@
-#' Add foreign key relationships to a normalised database
+#' Add foreign key references to a normalised database
 #'
 #' @param schema a \code{\link{relation_schema}} object, as given by
 #'   \code{\link{synthesise}}.
@@ -8,7 +8,7 @@
 #' @export
 cross_reference <- function(schema) {
   references <- calculate_references(keys(schema), attrs(schema))
-  relationships <- Map(
+  references <- Map(
     \(child, parent, attr) list(
       names(schema)[[child]],
       attr,
@@ -19,7 +19,7 @@ cross_reference <- function(schema) {
     references$parent,
     references$attr
   )
-  database_schema(schema, relationships)
+  database_schema(schema, references)
 }
 
 calculate_references <- function(keys, attrs) {
@@ -42,7 +42,7 @@ calculate_references <- function(keys, attrs) {
     }
   }
 
-  # remove extraneous relationships, i.e. those that skip relations in the
+  # remove extraneous references, i.e. those that skip relations in the
   # hierarchy, and duplicates
   vecs <- list(
     determinant_sets = child_ref_attrs,
