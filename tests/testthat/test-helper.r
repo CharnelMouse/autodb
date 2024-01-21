@@ -32,29 +32,36 @@ test_that("gen_flat_deps generates valid", {
 
 test_that("gen.relation_schema generates valid relation schemas", {
   forall(
-    gen.relation_schema(letters[1:6], 0, 8),
-    with_args(is_valid_relation_schema, single_empty_key = TRUE)
+    gen.element(c(FALSE, TRUE)) |>
+      gen.and_then(\(sek) list(
+        sek,
+        gen.relation_schema(letters[1:6], 0, 8, single_empty_key = sek)
+      )),
+    \(sek, rs) is_valid_relation_schema(rs, single_empty_key = sek),
+    curry = TRUE
   )
 })
 
 test_that("gen.database_schema generates valid database schemas", {
   forall(
     gen.element(c(FALSE, TRUE)) |>
-      gen.list(of = 2) |>
-      gen.and_then(uncurry(\(san, skp) list(
+      gen.list(of = 3) |>
+      gen.and_then(uncurry(\(sek, san, skp) list(
+        gen.pure(sek),
         gen.pure(san),
         gen.pure(skp),
         gen.database_schema(
           letters[1:6],
           0,
           8,
+          single_empty_key = sek,
           same_attr_name = san,
           single_key_pairs = skp
         )
       ))),
-    \(san, skp, ds) is_valid_database_schema(
+    \(sek, san, skp, ds) is_valid_database_schema(
       ds,
-      single_empty_key = TRUE,
+      single_empty_key = sek,
       same_attr_name = san,
       single_key_pairs = skp
     ),
@@ -64,29 +71,36 @@ test_that("gen.database_schema generates valid database schemas", {
 
 test_that("gen.relation generates valid relations", {
   forall(
-    gen.relation(letters[1:4], 6, 7),
-    with_args(is_valid_relation, single_empty_key = TRUE)
+    gen.element(c(FALSE, TRUE)) |>
+      gen.and_then(\(sek) list(
+        gen.pure(sek),
+        gen.relation(letters[1:4], 6, 7, single_empty_key = sek)
+      )),
+    \(sek, r) is_valid_relation(r, single_empty_key = sek),
+    curry = TRUE
   )
 })
 
 test_that("gen.database generates valid databases", {
   forall(
     gen.element(c(FALSE, TRUE)) |>
-      gen.list(of = 2) |>
-      gen.and_then(uncurry(\(san, skp) list(
+      gen.list(of = 3) |>
+      gen.and_then(uncurry(\(sek, san, skp) list(
+        gen.pure(sek),
         gen.pure(san),
         gen.pure(skp),
         gen.database(
           letters[1:7],
           from = 0,
           to = 6,
+          single_empty_key = sek,
           same_attr_name = san,
           single_key_pairs = skp
         )
       ))),
-    \(san, skp, ds) is_valid_database(
+    \(sek, san, skp, ds) is_valid_database(
       ds,
-      single_empty_key = TRUE,
+      single_empty_key = sek,
       same_attr_name = san,
       single_key_pairs = skp
     ),

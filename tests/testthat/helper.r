@@ -468,21 +468,23 @@ gen.keys <- function(attrs) {
       rem[keys_order(lapply(rem, match, attrs))]
     })
 }
-gen.relation_schema <- function(x, from, to) {
+gen.relation_schema <- function(x, from, to, single_empty_key = FALSE) {
   gen.subsequence(x) |>
     gen.and_then(\(attrs) {
       list(gen.pure(attrs), gen.keys(attrs)) |>
         gen.list(from = from, to = to)
     }) |>
     gen.with(\(schemas) {
-      # only one schema can have an empty key
-      rels_with_empty_keys <- which(vapply(
-        schemas,
-        \(schema) any(lengths(schema[[2]]) == 0L),
-        logical(1)
-      ))
-      if (length(rels_with_empty_keys) > 1L)
-        schemas <- schemas[-rels_with_empty_keys[-1]]
+      if (single_empty_key) {
+        # only one schema can have an empty key
+        rels_with_empty_keys <- which(vapply(
+          schemas,
+          \(schema) any(lengths(schema[[2]]) == 0L),
+          logical(1)
+        ))
+        if (length(rels_with_empty_keys) > 1L)
+          schemas <- schemas[-rels_with_empty_keys[-1]]
+      }
 
       nms <- make.names(
         vapply(schemas, \(rel) name_dataframe(rel[[2]][[1]]), character(1)),
@@ -520,8 +522,15 @@ gen.attrs_class <- function(nm, relationships = list()) {
     gen.with(with_args(setNames, nm = nm))
 }
 
-gen.relation <- function(x, from, to, rows_from = 0L, rows_to = 10L) {
-  gen.relation_schema(x, from, to) |>
+gen.relation <- function(
+  x,
+  from,
+  to,
+  rows_from = 0L,
+  rows_to = 10L,
+  single_empty_key = FALSE
+) {
+  gen.relation_schema(x, from, to, single_empty_key = single_empty_key) |>
     gen.and_then(\(rs) gen.relation_from_schema(rs, rows_from, rows_to))
 }
 
@@ -763,10 +772,11 @@ gen.database_schema <- function(
   x,
   from,
   to,
+  single_empty_key = FALSE,
   same_attr_name = FALSE,
   single_key_pairs = FALSE
 ) {
-  gen.relation_schema(x, from, to) |>
+  gen.relation_schema(x, from, to, single_empty_key = single_empty_key) |>
     gen.and_then(\(rs) {
       list(
         gen.pure(rs),
@@ -782,6 +792,7 @@ gen.database <- function(
   x,
   from,
   to,
+  single_empty_key = FALSE,
   same_attr_name = TRUE,
   single_key_pairs = TRUE,
   rows_from = 0L,
@@ -791,6 +802,7 @@ gen.database <- function(
     x,
     from,
     to,
+    single_empty_key = single_empty_key,
     same_attr_name = same_attr_name,
     single_key_pairs = single_key_pairs
   ) |>
