@@ -83,7 +83,7 @@ gv <- function(x, ...) {
 #' attribute in the relation. These rows include information about the attribute
 #' classes.
 #'
-#' @param x a database, as returned by \code{\link{cross_reference}} or
+#' @param x a database, as returned by \code{\link{autoref}} or
 #'   \code{\link{autodb}}.
 #' @inheritParams gv
 #'
@@ -133,7 +133,7 @@ gv.database <- function(x, ...) {
 #' between the attribute pairs.
 #'
 #' @param x a database schema, as given by \code{\link{normalise}},
-#'   \code{\link{synthesise}}, or \code{\link{cross_reference}}.
+#'   \code{\link{synthesise}}, or \code{\link{autoref}}.
 #' @param name a character scalar, giving the name of the schema, if any.
 #' @inheritParams gv
 #'

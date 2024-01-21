@@ -8,7 +8,7 @@
 }
 \arguments{
 \item{x}{a database schema, as given by \code{\link{normalise}},
-\code{\link{synthesise}}, or \code{\link{cross_reference}}.}
+\code{\link{synthesise}}, or \code{\link{autoref}}.}
 
 \item{name}{a character scalar, giving the name of the schema, if any.}
 

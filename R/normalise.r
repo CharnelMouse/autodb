@@ -4,7 +4,7 @@
 #' least third normal form, using Bernstein's synthesis.
 #'
 #' This is a wrapper function for applying \code{\link{synthesise}} and
-#' \code{\link{cross_reference}}, in order. For creating relation schemas and
+#' \code{\link{autoref}}, in order. For creating relation schemas and
 #' foreign key references separately, use these functions directly.
 #'
 #' For details on the synthesis algorithm used, see \code{\link{synthesise}}.
@@ -27,7 +27,7 @@ normalise <- function(
   progress = FALSE,
   progress_file = ""
 ) {
-  cross_reference(
+  autoref(
     synthesise(
       dependencies,
       ensure_lossless = ensure_lossless,

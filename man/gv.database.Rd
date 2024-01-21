@@ -7,7 +7,7 @@
 \method{gv}{database}(x, ...)
 }
 \arguments{
-\item{x}{a database, as returned by \code{\link{cross_reference}} or
+\item{x}{a database, as returned by \code{\link{autoref}} or
 \code{\link{autodb}}.}
 
 \item{...}{further arguments passed to or from other methods.}

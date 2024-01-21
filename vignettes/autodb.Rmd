@@ -207,14 +207,14 @@ titanic_deps[dependent(titanic_deps) == "Freq"]
 
 ## Adding cross-references
 
-Getting back to our `ChickWeight` example, we now have a database schema, consisting of a list of `relation` schemas. However, we have no information about how these relation schemas are linked to each other. In particular, we have no information about foreign keys. We can add this information using `cross_reference`:
+Getting back to our `ChickWeight` example, we now have a database schema, consisting of a list of `relation` schemas. However, we have no information about how these relation schemas are linked to each other. In particular, we have no information about foreign keys. We can add this information using `autoref`:
 
 ```{r}
-linked_schema <- cross_reference(schema)
+linked_schema <- autoref(schema)
 linked_schema
 ```
 
-We could also have used `normalise`, instead of `synthesise` and `cross_reference` separately:
+We could also have used `normalise`, instead of `synthesise` and `autoref` separately:
 
 ```{r}
 normalise(deps)

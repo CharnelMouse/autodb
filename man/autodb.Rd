@@ -52,7 +52,7 @@ A database, represented by a list of three elements. See
 }
 \description{
 This is a wrapper function for applying \code{\link{normalise}},
-\code{\link{cross_reference}}, and \code{\link{decompose}}, in order.
+\code{\link{autoref}}, and \code{\link{decompose}}, in order.
 }
 \details{
 Since \code{decompose} only works with functional dependencies, not approximate

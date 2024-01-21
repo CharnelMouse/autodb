@@ -48,7 +48,7 @@ least third normal form, using Bernstein's synthesis.
 }
 \details{
 This is a wrapper function for applying \code{\link{synthesise}} and
-\code{\link{cross_reference}}, in order. For creating relation schemas and
+\code{\link{autoref}}, in order. For creating relation schemas and
 foreign key references separately, use these functions directly.
 
 For details on the synthesis algorithm used, see \code{\link{synthesise}}.

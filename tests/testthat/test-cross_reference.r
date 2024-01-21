@@ -1,10 +1,10 @@
 library(hedgehog)
 
-describe("cross_reference", {
+describe("autoref", {
   it("returns a valid database_schema", {
     forall(
       gen.relation_schema(letters[1:6], 0, 6),
-      cross_reference %>>%
+      autoref %>>%
         with_args(
           is_valid_database_schema,
           unique = FALSE,
@@ -17,7 +17,7 @@ describe("cross_reference", {
   it("generates valid schemas with same-attribute-names foreign key references", {
     forall(
       gen.relation_schema(letters[1:4], 0, 6),
-      cross_reference %>>%
+      autoref %>>%
         with_args(is_valid_database_schema, same_attr_name = TRUE)
     )
   })
@@ -29,7 +29,7 @@ describe("cross_reference", {
       ),
       attrs_order = c("a", "b", "c")
     )
-    database <- cross_reference(schema)
+    database <- autoref(schema)
     expected_relations <- list(list("a", "b", "b", "b"))
     expect_identical(references(database), expected_relations)
   })
@@ -37,14 +37,14 @@ describe("cross_reference", {
     forall(
       gen.relation_schema(letters[1:7], 0, 6),
       expect_biidentical(
-        cross_reference,
-        cross_reference %>>% cross_reference
+        autoref,
+        autoref %>>% autoref
       )
     )
   })
   it("only returns non-extraneous table references", {
     only_returns_non_extraneous_references <- function(rs) {
-      linked <- cross_reference(rs)
+      linked <- autoref(rs)
       table_references <- unique(lapply(references(linked), `[`, c(1, 3)))
       table_references <- list(
         determinant_sets = vapply(table_references, `[[`, character(1), 1),

@@ -44,7 +44,7 @@ attribute, are allowed, and can be removed with \code{\link{unique}}.
 
 References, i.e. foreign key references, are allowed to have different
 attribute names in the child and parent relations; this can't occur in the
-output for \code{\link{cross_reference}} and \code{\link{normalise}}.
+output for \code{\link{autoref}} and \code{\link{normalise}}.
 
 Subsetting removes any references that involve removed relations.
 Removing duplicates with \code{\link{unique}} changes references involving

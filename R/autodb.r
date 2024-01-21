@@ -1,7 +1,7 @@
 #' Create a normalised database from a data frame
 #'
 #' This is a wrapper function for applying \code{\link{normalise}},
-#' \code{\link{cross_reference}}, and \code{\link{decompose}}, in order.
+#' \code{\link{autoref}}, and \code{\link{decompose}}, in order.
 #'
 #' Since `decompose` only works with functional dependencies, not approximate
 #' dependencies, the accuracy in `discover` is fixed as 1.

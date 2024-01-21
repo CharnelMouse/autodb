@@ -523,7 +523,7 @@ describe("gv", {
     })
   })
   describe("database_schema", {
-    it("works for normalise/cross_reference outputs", {
+    it("works for normalise/autoref outputs", {
       forall(
         gen_flat_deps(7, 20, to = 20L),
         normalise %>>% gv %>>% expect_no_error

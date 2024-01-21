@@ -476,7 +476,7 @@ describe("synthesise", {
 
     still_lossless_with_less_or_same_attributes <- function(df) {
       flat_deps <- discover(df, 1)
-      schema_avoid_lossless <- cross_reference(synthesise(
+      schema_avoid_lossless <- autoref(synthesise(
         flat_deps,
         remove_avoidable = TRUE
       ))

@@ -10,7 +10,7 @@ decompose(df, schema, name = NA_character_)
 \item{df}{a data.frame, containing the data to be normalised.}
 
 \item{schema}{a database schema with foreign key references, as given by
-\code{\link{cross_reference}}.}
+\code{\link{autoref}}.}
 
 \item{name}{a scalar character, giving the name of the database. This name
 is used for the resulting graph when using \code{\link{gv.database}}, to

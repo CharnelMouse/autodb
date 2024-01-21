@@ -6,7 +6,7 @@
 #' @return A \code{\link{database_schema}} object, containing the given relation
 #'   schemas and the created foreign key references.
 #' @export
-cross_reference <- function(schema) {
+autoref <- function(schema) {
   references <- calculate_references(keys(schema), attrs(schema))
   references <- Map(
     \(child, parent, attr) list(

@@ -27,12 +27,12 @@ describe("normalise", {
       curry = TRUE
     )
   })
-  it("is the same as synthesise >> cross_reference", {
+  it("is the same as synthesise >> autoref", {
     forall(
       gen_flat_deps(7, 6, to = 6L),
       expect_biidentical(
         normalise,
-        synthesise %>>% cross_reference
+        synthesise %>>% autoref
       )
     )
   })

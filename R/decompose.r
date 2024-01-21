@@ -14,7 +14,7 @@
 #'
 #' @param df a data.frame, containing the data to be normalised.
 #' @param schema a database schema with foreign key references, as given by
-#'   \code{\link{cross_reference}}.
+#'   \code{\link{autoref}}.
 #' @inheritParams autodb
 #'
 #' @return A database, represented by a named list, with three elements:
