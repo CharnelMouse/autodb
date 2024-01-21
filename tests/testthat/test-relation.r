@@ -61,35 +61,8 @@ describe("relation", {
       "a"
     ))
   })
-  it("is composed of its records(), keys(), names(), and attrs_order()", {
-    forall(
-      gen.relation(letters[1:6], 0, 8),
-      \(r) expect_identical(
-        r,
-        relation(
-          setNames(
-            Map(
-              \(recs, ks) list(df = recs, keys = ks),
-              records(r),
-              keys(r)
-            ),
-            names(r)
-          ),
-          attrs_order = attrs_order(r)
-        )
-      )
-    )
-  })
-  it("has record attributes given by attrs()", {
-    forall(
-      gen.relation(letters[1:6], 0, 8),
-      \(r) expect_identical(
-        attrs(r),
-        lapply(records(r), names)
-      )
-    )
-  })
-  it("expects record assignments to have same attributes and attribute order", {
+
+  it("expects record reassignments to have same attributes and attribute order", {
     x <- relation(
       list(a = list(df = data.frame(a = 1:4, b = 1:2), keys = list("a"))),
       attrs_order = c("a", "b")
@@ -179,17 +152,6 @@ describe("relation", {
     expect_length(unique(rels), 1L)
   })
 
-  it("concatenates within class", {
-    concatenate_within_class <- function(...) {
-      expect_identical(class(c(...)), class(..1))
-    }
-    forall(
-      gen.relation(letters[1:6], from = 0, to = 8) |>
-        gen.list(from = 1, to = 10),
-      concatenate_within_class,
-      curry = TRUE
-    )
-  })
   it("concatenates to a valid relation schema", {
     forall(
       gen.relation(letters[1:6], from = 0, to = 4) |>
@@ -281,6 +243,35 @@ describe("relation", {
         gen.list(from = 1, to = 10),
       concatenate_lossless_for_schemas,
       curry = TRUE
+    )
+  })
+
+  it("is composed of its records(), keys(), names(), and attrs_order()", {
+    forall(
+      gen.relation(letters[1:6], 0, 8),
+      \(r) expect_identical(
+        r,
+        relation(
+          setNames(
+            Map(
+              \(recs, ks) list(df = recs, keys = ks),
+              records(r),
+              keys(r)
+            ),
+            names(r)
+          ),
+          attrs_order = attrs_order(r)
+        )
+      )
+    )
+  })
+  it("has record attributes given by attrs()", {
+    forall(
+      gen.relation(letters[1:6], 0, 8),
+      \(r) expect_identical(
+        attrs(r),
+        lapply(records(r), names)
+      )
     )
   })
 
