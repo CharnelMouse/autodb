@@ -496,6 +496,23 @@ gen.relation_schema <- function(x, from, to, single_empty_key = FALSE) {
       do.call(relation_schema, lst)
     })
 }
+gen.relation_schema_empty_keys <- function(x, from, to, min_empty) {
+  if (min_empty > from)
+    stop("can't guarantee more empty keys than minimum schema count")
+  gen.relation_schema(x, from, to) |>
+    gen.and_then(\(rs) {
+      gen.element(floor(max(0L, min_empty)):length(rs)) |>
+        gen.and_then(\(n_empty) {
+          if (n_empty == 0)
+            return(gen.pure(rs))
+          gen.sample(seq_along(rs), n_empty, replace = FALSE) |>
+            gen.with(\(empty) {
+              keys(rs)[empty] <- rep(list(list(character())), n_empty)
+              rs
+            })
+        })
+    })
+}
 
 # relationships are included to ensure attributes that reference each other have
 # the same class
@@ -777,6 +794,25 @@ gen.database_schema <- function(
   single_key_pairs = FALSE
 ) {
   gen.relation_schema(x, from, to, single_empty_key = single_empty_key) |>
+    gen.and_then(\(rs) {
+      list(
+        gen.pure(rs),
+        if (same_attr_name)
+          gen.relationships_same_attrs(rs, single_key_pairs)
+        else
+          gen.relationships(rs, single_key_pairs))
+    }) |>
+    gen.with(\(lst) do.call(database_schema, lst))
+}
+gen.database_schema_empty_keys <- function(
+  x,
+  from,
+  to,
+  min_empty,
+  same_attr_name = FALSE,
+  single_key_pairs = FALSE
+) {
+  gen.relation_schema_empty_keys(x, from, to, min_empty) |>
     gen.and_then(\(rs) {
       list(
         gen.pure(rs),

@@ -42,6 +42,35 @@ test_that("gen.relation_schema generates valid relation schemas", {
   )
 })
 
+test_that("gen.relation_schema_empty_keys generates valid relation schemas, enough empty keys", {
+  forall(
+    gen.element(0:4) |>
+      gen.and_then(\(from) {
+        gen.element(0:from) |>
+          gen.and_then(\(me) {
+            list(
+              gen.pure(from),
+              gen.pure(me),
+              gen.relation_schema_empty_keys(
+                letters[1:6],
+                from = from,
+                to = 8,
+                min_empty = me
+              )
+            )
+          })
+      }),
+    \(from, me, rs) {
+      is_valid_relation_schema(rs)
+      expect_gte(
+        sum(vapply(keys(rs), identical, logical(1), list(character()))),
+        me
+      )
+    },
+    curry = TRUE
+  )
+})
+
 test_that("gen.database_schema generates valid database schemas", {
   forall(
     gen.element(c(FALSE, TRUE)) |>
@@ -65,6 +94,49 @@ test_that("gen.database_schema generates valid database schemas", {
       same_attr_name = san,
       single_key_pairs = skp
     ),
+    curry = TRUE
+  )
+})
+
+test_that("gen.database_schema_empty_keys generates valid relation schemas, enough empty keys", {
+  forall(
+    list(
+      gen.element(c(FALSE, TRUE)),
+      gen.element(c(FALSE, TRUE)),
+      gen.element(0:4)
+    ) |>
+      gen.and_then(uncurry(\(san, skp, from) list(
+        gen.pure(san),
+        gen.pure(skp),
+        gen.element(0:from) |>
+          gen.and_then(\(me) {
+            list(
+              gen.pure(me),
+              gen.database_schema_empty_keys(
+                letters[1:6],
+                from = from,
+                to = 8,
+                min_empty = me,
+                same_attr_name = san,
+                single_key_pairs = skp
+              )
+            )
+          })
+      ))) |>
+      gen.with(uncurry(\(san, skp, lst) {
+        c(list(san, skp), lst)
+      })),
+    \(san, skp, me, ds) {
+      is_valid_database_schema(
+        ds,
+        same_attr_name = san,
+        single_key_pairs = skp
+      )
+      expect_gte(
+        sum(vapply(keys(ds), identical, logical(1), list(character()))),
+        me
+      )
+    },
     curry = TRUE
   )
 })

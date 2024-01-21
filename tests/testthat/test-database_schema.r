@@ -453,6 +453,8 @@ describe("database_schema", {
 
   it("can have empty-key schemas merged", {
     up_to_one_empty_key <- function(ds) {
+      if (sum(vapply(keys(ds), identical, logical(1), list(character()))) <= 1)
+        discard()
       res <- merge_empty_keys(ds)
       is_valid_database_schema(ds)
       expect_lte(
@@ -461,7 +463,13 @@ describe("database_schema", {
       )
     }
     forall(
-      gen.database_schema(letters[1:6], 0, 8, single_key_pairs = FALSE),
+      gen.database_schema_empty_keys(
+        letters[1:6],
+        1,
+        8,
+        single_key_pairs = FALSE,
+        min_empty = 1
+      ),
       up_to_one_empty_key
     )
   })

@@ -289,14 +289,17 @@ describe("relation_schema", {
 
   it("can have empty-key schemas merged", {
     up_to_one_empty_key <- function(rs) {
+      if (sum(vapply(keys(rs), identical, logical(1), list(character()))) <= 1)
+        discard()
       res <- merge_empty_keys(rs)
+      is_valid_relation_schema(rs)
       expect_lte(
         sum(vapply(keys(res), identical, logical(1), list(character()))),
         1L
       )
     }
     forall(
-      gen.relation_schema(letters[1:6], 0, 8),
+      gen.relation_schema_empty_keys(letters[1:6], 1, 8, min_empty = 1),
       up_to_one_empty_key
     )
   })

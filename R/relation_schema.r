@@ -122,6 +122,14 @@ keys.relation_schema <- function(x, ...) {
   lapply(unclass(x), `[[`, 2L)
 }
 
+#' @export
+`keys<-.relation_schema` <- function(x, ..., value) {
+  relation_schema(
+    stats::setNames(Map(list, attrs(x), value), names(x)),
+    attrs_order(x)
+  )
+}
+
 #' @exportS3Method
 attrs_order.relation_schema <- function(x, ...) {
   attr(x, "attrs_order")

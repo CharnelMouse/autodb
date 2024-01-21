@@ -68,6 +68,15 @@ keys <- function(x, ...) {
   UseMethod("keys")
 }
 
+#' @rdname keys
+#'
+#' @param value A character vector of the same length as \code{keys(x, ...)}.
+#'
+#' @export
+`keys<-` <- function(x, ..., value) {
+  UseMethod("keys<-")
+}
+
 #' Relational data records
 #'
 #' Generic function, for retrieving data contained in a database-like structure.
