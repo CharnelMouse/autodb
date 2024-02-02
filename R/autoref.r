@@ -7,12 +7,12 @@
 #'   schemas and the created foreign key references.
 #' @export
 autoref <- function(schema) {
-  references <- calculate_references(keys(schema), attrs(schema))
+  references <- calculate_references(schema)
   references <- Map(
     \(child, parent, attr) list(
-      names(schema)[[child]],
+      child,
       attr,
-      names(schema)[[parent]],
+      parent,
       attr
     ),
     references$child,
@@ -22,7 +22,9 @@ autoref <- function(schema) {
   database_schema(schema, references)
 }
 
-calculate_references <- function(keys, attrs) {
+calculate_references <- function(schema) {
+  keys <- keys(schema)
+  attrs <- attrs(schema)
   # find all links for indexes (should be any candidate key instead)
   child_ref_attrs <- integer()
   parent_ref_attrs <- integer()
@@ -44,14 +46,20 @@ calculate_references <- function(keys, attrs) {
 
   # remove extraneous references, i.e. those that skip relations in the
   # hierarchy, and duplicates
-  vecs <- list(
-    determinant_sets = child_ref_attrs,
-    dependents = parent_ref_attrs
+  # we do this by abusing the remove_extraneous_dependencies function
+  # for functional dependencies
+  fds <- functional_dependency(
+    Map(list, names(schema)[child_ref_attrs], names(schema)[parent_ref_attrs]),
+    names(schema)
   )
-  filtered_vecs <- remove_extraneous_dependencies(vecs)
+  filtered_fds <- remove_extraneous_dependencies(fds)
+  filtered_vecs <- list(
+    determinant_sets = detset(filtered_fds),
+    dependents = dependent(filtered_fds)
+  )
 
-  relation_pairs <- do.call(Map, unname(c(list(c), vecs)))
-  filtered_relation_pairs <- do.call(Map, unname(c(list(c), filtered_vecs)))
+  relation_pairs <- fds
+  filtered_relation_pairs <- filtered_fds
   kept <- match(filtered_relation_pairs, relation_pairs)
   stopifnot(!anyNA(kept))
   filtered_attrs <- ref_attrs[kept]

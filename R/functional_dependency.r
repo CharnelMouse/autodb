@@ -72,9 +72,25 @@ detset.functional_dependency <- function(x, ...) {
   lapply(unclass(x), `[[`, 1L)
 }
 
+#' @export
+`detset<-.functional_dependency` <- function(x, ..., value) {
+  functional_dependency(
+    Map(list, value, dependent(x)),
+    attrs_order(x)
+  )
+}
+
 #' @exportS3Method
 dependent.functional_dependency <- function(x, ...) {
   vapply(unclass(x), `[[`, character(1L), 2L)
+}
+
+#' @export
+`dependent<-.functional_dependency` <- function(x, ..., value) {
+  functional_dependency(
+    Map(list, detset(x), value),
+    attrs_order(x)
+  )
 }
 
 #' @exportS3Method

@@ -52,15 +52,14 @@ synthesise <- function(
 
   inter <- dependencies |>
     report$op(
+      remove_extraneous,
+      "removing extraneous components"
+    ) |>
+    report$op(
       convert_to_vectors,
       "simplifying dependency format"
     ) |>
     convert_to_integer_attributes() |>
-    report$op(
-      remove_extraneous_attributes,
-      "removing extraneous components"
-    ) |>
-    remove_extraneous_dependencies() |>
     report$op(
       partition_dependencies,
       "partitioning dependencies"
@@ -136,18 +135,27 @@ sort_key_contents <- function(vecs) {
   vecs
 }
 
-remove_extraneous_attributes <- function(vecs) {
-  for (n in seq_along(vecs$dependents)) {
-    lhs <- vecs$determinant_sets[[n]]
-    rhs <- vecs$dependents[n]
+remove_extraneous <- function(deps) {
+  deps |>
+    remove_extraneous_attributes() |>
+    remove_extraneous_dependencies()
+}
+
+remove_extraneous_attributes <- function(deps) {
+  dts <- detset(deps)
+  dps <- dependent(deps)
+  for (n in seq_along(deps)) {
+    lhs <- dts[[n]]
+    rhs <- dps[[n]]
     for (attr in lhs) {
-      y_ <- setdiff(vecs$determinant_sets[[n]], attr)
-      if (rhs %in% find_closure(y_, vecs$determinant_sets, vecs$dependents)) {
-        vecs$determinant_sets[[n]] <- y_
+      y_ <- setdiff(dts[[n]], attr)
+      if (rhs %in% find_closure(y_, dts, dps)) {
+        dts[[n]] <- y_
       }
     }
   }
-  vecs
+  detset(deps) <- dts
+  deps
 }
 
 sort_dependencies <- function(vecs) {
@@ -157,13 +165,15 @@ sort_dependencies <- function(vecs) {
   vecs
 }
 
-remove_extraneous_dependencies <- function(vecs) {
-  ord <- order(keys_rank(vecs$determinant_sets), vecs$dependents)
+remove_extraneous_dependencies <- function(fds) {
+  det_inds <- lapply(detset(fds), \(k) match(k, attrs_order(fds)))
+  dep_inds <- match(dependent(fds), attrs_order(fds))
+  ord <- order(keys_rank(det_inds), dep_inds)
   inv_ord <- order(ord)
 
-  new_det_sets <- vecs$determinant_sets[ord]
+  new_det_sets <- detset(fds)[ord]
   old_deps <- NULL
-  new_deps <- vecs$dependents[ord]
+  new_deps <- dependent(fds)[ord]
   main_rem <- rep(FALSE, length(new_deps))
   while (!identical(old_deps, new_deps)) {
     old_deps <- new_deps
@@ -188,11 +198,9 @@ remove_extraneous_dependencies <- function(vecs) {
   }
   stopifnot(identical(
     new_det_sets,
-    vecs$determinant_sets[ord][!main_rem]
+    detset(fds)[ord][!main_rem]
   ))
-  vecs$determinant_sets <- vecs$determinant_sets[!main_rem[inv_ord]]
-  vecs$dependents <- vecs$dependents[!main_rem[inv_ord]]
-  vecs
+  fds[!main_rem[inv_ord]]
 }
 
 partition_dependencies <- function(vecs) {

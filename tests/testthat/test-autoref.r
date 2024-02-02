@@ -50,13 +50,13 @@ describe("autoref", {
         determinant_sets = vapply(table_references, `[[`, character(1), 1),
         dependents = vapply(table_references, `[[`, character(1), 2)
       )
-      table_references_indices <- lapply(
-        table_references,
-        \(nms) match(nms, names(linked))
+      table_references_as_fds <- functional_dependency(
+        Map(list, table_references$determinant_sets, table_references$dependents),
+        names(rs)
       )
       expect_identical(
-        remove_extraneous_dependencies(table_references_indices),
-        table_references_indices
+        remove_extraneous(table_references_as_fds),
+        table_references_as_fds
       )
     }
     forall(

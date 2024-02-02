@@ -14,6 +14,15 @@ detset <- function(x, ...) {
   UseMethod("detset")
 }
 
+#' @rdname detset
+#'
+#' @param value A character vector of the same length as \code{detset(x, ...)}.
+#'
+#' @export
+`detset<-` <- function(x, ..., value) {
+  UseMethod("detset<-")
+}
+
 #' Dependents
 #'
 #' Generic function, with the only given method fetching dependents for
@@ -27,6 +36,15 @@ detset <- function(x, ...) {
 #' @export
 dependent <- function(x, ...) {
   UseMethod("dependent")
+}
+
+#' @rdname dependent
+#'
+#' @param value A character vector of the same length as \code{dependent(x, ...)}.
+#'
+#' @export
+`dependent<-` <- function(x, ..., value) {
+  UseMethod("dependent<-")
 }
 
 #' Relational data attributes

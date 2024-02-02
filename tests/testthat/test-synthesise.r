@@ -390,12 +390,12 @@ describe("synthesise", {
   it("includes all attributes in non-extraneous FDs in tables if not ensuring lossless", {
     includes_all_fd_attrs_if_lossless <- function(fds) {
       nonextr_fds <- fds |>
+        remove_extraneous_attributes() |>
+        remove_extraneous_dependencies() |>
         convert_to_vectors() |>
         convert_to_integer_attributes() |>
         sort_key_contents() |>
-        remove_extraneous_attributes() |>
-        sort_dependencies() |>
-        remove_extraneous_dependencies()
+        sort_dependencies()
       nonextr_fds$determinant_sets <- lapply(
         nonextr_fds$determinant_sets,
         \(inds) attrs_order(fds)[inds]

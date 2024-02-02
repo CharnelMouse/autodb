@@ -2,15 +2,20 @@
 % Please edit documentation in R/shared_class_functions.r
 \name{detset}
 \alias{detset}
+\alias{detset<-}
 \title{Determinant sets}
 \usage{
 detset(x, ...)
+
+detset(x, ...) <- value
 }
 \arguments{
 \item{x}{an R object. For the given method, a
 \code{\link{functional_dependency}}.}
 
 \item{...}{further arguments passed on to methods.}
+
+\item{value}{A character vector of the same length as \code{detset(x, ...)}.}
 }
 \value{
 A list containing determinant sets, each consisting of a character
