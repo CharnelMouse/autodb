@@ -761,3 +761,42 @@ describe("keys_rank", {
     )
   })
 })
+
+describe("synthesised_fds", {
+  it("is a closure-equivalent inverse of synthesise", {
+    expect_closure_equiv <- function(fds1, fds2) {
+      expect_true(all(c(
+        mapply(
+          \(dets, dep) {
+            dep %in% find_closure(dets, detset(fds2), dependent(fds2))
+          },
+          detset(fds1),
+          dependent(fds1)
+        ),
+        mapply(
+          \(dets, dep) {
+            dep %in% find_closure(dets, detset(fds1), dependent(fds1))
+          },
+          detset(fds2),
+          dependent(fds2)
+        )
+      )))
+    }
+    forall(
+      gen_flat_deps(7, 20, to = 20),
+      \(fds) {
+        rels <- synthesise(fds)
+        expect_closure_equiv(
+          functional_dependency(
+            unname(unlist(
+              synthesised_fds(attrs(rels), keys(rels)),
+              recursive = FALSE
+            )),
+            attrs_order(fds)
+          ),
+          fds
+        )
+      }
+    )
+  })
+})
