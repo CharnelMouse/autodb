@@ -78,7 +78,7 @@ synthesise <- function(
     ) |>
     report$op(
       construct_relation_schemas,
-      "construction relation schemas"
+      "constructing relation schemas"
     )
   ord <- keys_order(lapply(inter$keys, \(ks) ks[[1]]))
   inter$attrs <- inter$attrs[ord]
