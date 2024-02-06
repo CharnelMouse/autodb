@@ -651,3 +651,49 @@ DiagrammeR::grViz(gv(db_options_device_splitall$value))
 ```{r example_data_frame_with_interval_option_device_dbintall}
 DiagrammeR::grViz(gv(db_options_device_splitall$interval))
 ```
+
+# Limitations
+
+## Synthesis doesn't minimise relation key count
+
+Bernstein's synthesis is guaranteed to minimise the number of relations created for a given set of functional dependencies, and removing avoidable attributes can reduce the number of attributes in those relations. However, there can still be redundant keys. For example, we can take the following set of functional dependencies:
+
+```{r redundant_keys_example}
+fds_redkey <- functional_dependency(
+  list(
+    list("a", "b"),
+    list(c("b", "d"), "a"),
+    list("a", "c"),
+    list("d", "c"),
+    list(c("b", "c"), "d")
+  ),
+  letters[1:4]
+)
+fds_redkey
+```
+
+Normalising gives the following relations:
+
+```{r redundant_keys_schema}
+schema_redkey <- normalise(fds_redkey, remove_avoidable = TRUE)
+DiagrammeR::grViz(gv(schema_redkey))
+```
+
+These relations have some redundancy: relation `a` implies `{b, d} -> c`, but relation `d` implies that `{d} -> c`. This isn't resolved by removing avoidable attributes, because `d` still needs to be in relation `a`: we just need to remove `{a, d}` as a key. However, this is resolved if we instead use this set of functional dependencies, which is equivalent to the previous set:
+
+```{r redundant_keys_fix}
+fds_redkey_fix <- functional_dependency(
+  list(
+    list("a", "b"),
+    list(c("b", "c"), "a"),
+    list("a", "d"),
+    list("d", "c")
+  ),
+  letters[1:4]
+)
+fds_redkey_fix
+schema_redkey_fix <- normalise(fds_redkey_fix, remove_avoidable = TRUE)
+DiagrammeR::grViz(gv(schema_redkey_fix))
+```
+
+Unfortunately, there's no way in the package to find better sets like this.
