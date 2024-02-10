@@ -70,6 +70,11 @@
 #' txt_dschema <- gv(dschema)
 #' cat(txt_dschema)
 #' DiagrammeR::grViz(txt_dschema)
+#' # simple relations
+#' rel <- create(synthesise(discover(ChickWeight, 1)))
+#' txt_rel <- gv(rel)
+#' cat(txt_rel)
+#' DiagrammeR::grViz(txt_rel)
 #' @export
 gv <- function(x, ...) {
   UseMethod("gv", x)
@@ -119,6 +124,45 @@ gv.database <- function(x, ...) {
   )
 }
 
+#' Generate Graphviz input text to plot relations
+#'
+#' Produces text input for Graphviz to make an HTML diagram of a given relation.
+#'
+#' Each relation is presented as a set of rows, one for each
+#' attribute in the relation. These rows include information about the
+#' attribute classes.
+#'
+#' @param x a \code{\link{relation}}.
+#' @param name a character scalar, giving the name of the schema, if any.
+#' @inheritParams gv
+#'
+#' @return A scalar character, containing text input for Graphviz or the
+#'   \code{DiagrammeR} package.
+#' @seealso The generic \code{\link{gv}}.
+#' @exportS3Method
+gv.relation <- function(x, name = NA_character_, ...) {
+  empty_names <- which(names(x) == "" | names(x) == "empty")
+  names(x)[empty_names] <- make.names(
+    rep("empty", length(empty_names)),
+    unique = TRUE
+  )
+  setup_string <- gv_setup_string(name)
+  df_strings <- mapply(
+    relation_string,
+    records(x),
+    keys(x),
+    names(x)
+  ) |>
+    paste(collapse = "\n")
+  teardown_string <- "}\n"
+  paste(
+    setup_string,
+    "",
+    df_strings,
+    teardown_string,
+    sep = "\n"
+  )
+}
 
 #' Generate Graphviz input text to plot database schemas
 #'

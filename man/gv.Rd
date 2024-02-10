@@ -80,6 +80,11 @@ dschema <- normalise(discover(ChickWeight, 1))
 txt_dschema <- gv(dschema)
 cat(txt_dschema)
 DiagrammeR::grViz(txt_dschema)
+# simple relations
+rel <- create(synthesise(discover(ChickWeight, 1)))
+txt_rel <- gv(rel)
+cat(txt_rel)
+DiagrammeR::grViz(txt_rel)
 }
 \seealso{
 \code{\link{gv.data.frame}}, \code{\link{gv.relation_schema}},

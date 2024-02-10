@@ -522,6 +522,28 @@ describe("gv", {
       )
     })
   })
+  describe("relation", {
+    it("works for synthesise >> create outputs", {
+      forall(
+        gen_flat_deps(7, 20, to = 20L),
+        synthesise %>>% create %>>% gv %>>% expect_no_error
+      )
+    })
+    it("works for generated cases", {
+      forall(
+        gen.relation(letters[1:6], from = 0, to = 8),
+        gv %>>% expect_no_error
+      )
+    })
+    it("works for degenerate cases", {
+      table_dum <- data.frame()
+      table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
+      rel_dum <- create(synthesise(discover(table_dum, 1)))
+      rel_dee <- create(synthesise(discover(table_dee, 1)))
+      expect_no_error(gv(rel_dum))
+      expect_no_error(gv(rel_dee))
+    })
+  })
   describe("database_schema", {
     it("works for normalise/autoref outputs", {
       forall(
