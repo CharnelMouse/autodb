@@ -19,7 +19,9 @@
 #'
 #' Subsetting removes any references that involve removed relations.
 #' Removing duplicates with \code{\link{unique}} changes references involving
-#' duplicates to involve the kept equivalent relations instead.
+#' duplicates to involve the kept equivalent relations instead. Renaming
+#' relations with \code{\link{`names<-`}} also changes their names in the
+#' references.
 #'
 #' @inheritParams database_schema
 #' @inheritParams autodb
@@ -86,6 +88,20 @@ database <- function(relations, references, name = NA_character_) {
     references = references(x),
     name = name(x)
   )
+}
+
+#' @export
+`names<-.database` <- function(x, value) {
+  new_refs <- lapply(
+    references(x),
+    \(ref) {
+      ref[[1]] <- value[[match(ref[[1]], names(x))]]
+      ref[[3]] <- value[[match(ref[[3]], names(x))]]
+      ref
+    }
+  )
+  attr(x, "names") <- value
+  database(x, new_refs, name(x))
 }
 
 #' @exportS3Method

@@ -46,5 +46,7 @@ output for \code{\link{autoref}} and \code{\link{normalise}}.
 
 Subsetting removes any references that involve removed relation schemas.
 Removing duplicates with \code{\link{unique}} changes references involving
-duplicates to involve the kept equivalent schemas instead.
+duplicates to involve the kept equivalent schemas instead. Renaming relation
+schemas with \code{\link{`names<-`}} also changes their names in the
+references.
 }

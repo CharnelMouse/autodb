@@ -508,6 +508,35 @@ describe("database_schema", {
     )
   })
 
+  it("renames relations in its references when they're renamed", {
+    forall(
+      gen.element(c(FALSE, TRUE)) |>
+        gen.list(of = 3) |>
+        gen.and_then(uncurry(\(sek, san, skp) {
+          gen.database_schema(letters[1:6], 0, 8, sek, san, skp)
+        })),
+      \(ds) {
+        nms <- names(ds)
+        new_nms <- letters[seq_along(ds)]
+        new_ds <- ds
+        names(new_ds) <- new_nms
+        ref_nms <- vapply(
+          references(ds),
+          \(ref) c(ref[[1]], ref[[3]]),
+          character(2)
+        )
+        new_ref_nms <- vapply(
+          references(new_ds),
+          \(ref) c(ref[[1]], ref[[3]]),
+          character(2)
+        )
+        expected_new_ref_nms <- ref_nms
+        expected_new_ref_nms[] <- new_nms[match(ref_nms, nms)]
+        expect_identical(new_ref_nms, expected_new_ref_nms)
+      }
+    )
+  })
+
   it("prints", {
     expect_output(
       print(database_schema(

@@ -20,7 +20,9 @@
 #'
 #' Subsetting removes any references that involve removed relation schemas.
 #' Removing duplicates with \code{\link{unique}} changes references involving
-#' duplicates to involve the kept equivalent schemas instead.
+#' duplicates to involve the kept equivalent schemas instead. Renaming relation
+#' schemas with \code{\link{`names<-`}} also changes their names in the
+#' references.
 #'
 #' @param relation_schemas a \code{\link{relation_schema}} object, as returned
 #'   by \code{\link{synthesise}} or \code{\link{relation_schema}}.
@@ -65,6 +67,20 @@ references.database_schema <- function(x, ...) {
   rels <- subschemas(x)
   attrs_order(rels) <- value
   database_schema(rels, references(x))
+}
+
+#' @export
+`names<-.database_schema` <- function(x, value) {
+  new_refs <- lapply(
+    references(x),
+    \(ref) {
+      ref[[1]] <- value[[match(ref[[1]], names(x))]]
+      ref[[3]] <- value[[match(ref[[3]], names(x))]]
+      ref
+    }
+  )
+  attr(x, "names") <- value
+  database_schema(x, new_refs)
 }
 
 #' @exportS3Method
