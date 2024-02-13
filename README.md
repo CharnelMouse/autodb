@@ -51,8 +51,8 @@ DiagrammeR::grViz(graphviz_text)
 
 <img src="man/figures/README-example-1.png" width="100%" />
 
-Using the `exclude_class` argument to forbid numeric variables from
-appearing in keys:
+Using the `exclude` argument to forbid certain variables from appearing
+in keys:
 
 ``` r
 summary(CO2)
@@ -78,21 +78,28 @@ db2_noexclude
 #> references:
 #> Plant_conc.{Plant} -> Plant.{Plant}
 #> Plant_conc.{conc, uptake} -> conc_uptake.{conc, uptake}
-db2 <- autodb(CO2, name = "CO2", exclude_class = "numeric")
+graphviz_text2_noexclude <- gv(db2_noexclude)
+DiagrammeR::grViz(graphviz_text2_noexclude)
+```
+
+<img src="man/figures/README-exclude_example-1.png" width="100%" />
+
+``` r
+db2 <- autodb(CO2, name = "CO2", exclude = "uptake")
 db2
 #> database CO2 with 2 relations
 #> 5 attributes: Plant, Type, Treatment, conc, uptake
 #> relation Plant: Plant, Type, Treatment; 12 records
 #>   key 1: Plant
-#> relation Plant_conc_uptake: Plant, conc, uptake; 84 records
-#>   key 1: Plant, conc, uptake
+#> relation Plant_conc: Plant, conc, uptake; 84 records
+#>   key 1: Plant, conc
 #> references:
-#> Plant_conc_uptake.{Plant} -> Plant.{Plant}
+#> Plant_conc.{Plant} -> Plant.{Plant}
 graphviz_text2 <- gv(db2)
 DiagrammeR::grViz(graphviz_text2)
 ```
 
-<img src="man/figures/README-exclude_example-1.png" width="100%" />
+<img src="man/figures/README-exclude_example-2.png" width="100%" />
 
 There are also functions for doing each step of the database creation
 separately, including functional dependency detection and normalisation.
