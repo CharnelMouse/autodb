@@ -92,6 +92,8 @@ database <- function(relations, references, name = NA_character_) {
 
 #' @export
 `names<-.database` <- function(x, value) {
+  if (anyDuplicated(value))
+    stop("relation names must be unique")
   new_refs <- lapply(
     references(x),
     \(ref) {

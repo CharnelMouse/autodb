@@ -143,6 +143,14 @@ attrs_order.relation_schema <- function(x, ...) {
   )
 }
 
+#' @export
+`names<-.relation_schema` <- function(x, value) {
+  if (anyDuplicated(value))
+    stop("relation schema names must be unique")
+  attr(x, "names") <- value
+  x
+}
+
 #' @exportS3Method
 create.relation_schema <- function(x, ...) {
   relation(

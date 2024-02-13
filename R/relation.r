@@ -99,6 +99,14 @@ attrs_order.relation <- function(x, ...) {
   relation(unclass(x), value)
 }
 
+#' @export
+`names<-.relation` <- function(x, value) {
+  if (anyDuplicated(value))
+    stop("relation names must be unique")
+  attr(x, "names") <- value
+  x
+}
+
 #' @exportS3Method
 keys.relation <- function(x, ...) {
   lapply(unclass(x), \(rel) rel$keys)
