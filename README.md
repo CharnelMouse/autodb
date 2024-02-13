@@ -38,12 +38,13 @@ summary(ChickWeight)
 db <- autodb(ChickWeight, name = "ChickWeight")
 db
 #> database ChickWeight with 2 relations
-#> relation Time_Chick: Time, Chick, weight; 578 records
-#>   key 1: Time, Chick
+#> 4 attributes: weight, Time, Chick, Diet
 #> relation Chick: Chick, Diet; 50 records
 #>   key 1: Chick
-#> relationships:
-#> Time_Chick.Chick -> Chick.Chick
+#> relation Time_Chick: Time, Chick, weight; 578 records
+#>   key 1: Time, Chick
+#> references:
+#> Time_Chick.{Chick} -> Chick.{Chick}
 graphviz_text <- gv(db)
 DiagrammeR::grViz(graphviz_text)
 ```
@@ -66,26 +67,27 @@ summary(CO2)
 db2_noexclude <- autodb(CO2, name = "CO2")
 db2_noexclude
 #> database CO2 with 3 relations
+#> 5 attributes: Plant, Type, Treatment, conc, uptake
+#> relation Plant: Plant, Type, Treatment; 12 records
+#>   key 1: Plant
 #> relation Plant_conc: Plant, conc, Treatment, uptake; 84 records
 #>   key 1: Plant, conc
 #>   key 2: Treatment, conc, uptake
-#> relation Plant: Plant, Type, Treatment; 12 records
-#>   key 1: Plant
 #> relation conc_uptake: conc, uptake, Type; 82 records
 #>   key 1: conc, uptake
-#> relationships:
-#> Plant_conc.Plant -> Plant.Plant
-#> Plant_conc.conc -> conc_uptake.conc
-#> Plant_conc.uptake -> conc_uptake.uptake
+#> references:
+#> Plant_conc.{Plant} -> Plant.{Plant}
+#> Plant_conc.{conc, uptake} -> conc_uptake.{conc, uptake}
 db2 <- autodb(CO2, name = "CO2", exclude_class = "numeric")
 db2
 #> database CO2 with 2 relations
+#> 5 attributes: Plant, Type, Treatment, conc, uptake
 #> relation Plant: Plant, Type, Treatment; 12 records
 #>   key 1: Plant
 #> relation Plant_conc_uptake: Plant, conc, uptake; 84 records
 #>   key 1: Plant, conc, uptake
-#> relationships:
-#> Plant_conc_uptake.Plant -> Plant.Plant
+#> references:
+#> Plant_conc_uptake.{Plant} -> Plant.{Plant}
 graphviz_text2 <- gv(db2)
 DiagrammeR::grViz(graphviz_text2)
 ```
