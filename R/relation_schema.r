@@ -211,19 +211,21 @@ merge_schemas.relation_schema <- function(x, to_remove, merge_into, ...) {
 #' @export
 `[.relation_schema` <- function(x, i) {
   attrs <- attributes(x)
-  res <- unclass(x)[i]
-  attrs$names <- unname(stats::setNames(nm = attrs$names)[i])
+  indices <- stats::setNames(seq_along(x), names(x))
+  taken <- indices[i]
+  res <- unclass(x)[taken]
+  attrs$names <- unname(stats::setNames(nm = attrs$names)[taken])
   attributes(res) <- attrs
   res
 }
 
 #' @export
 `[[.relation_schema` <- function(x, i) {
-  if (length(i) == 0L)
-    stop("attempt to select less than one element")
-  if (length(i) > 1L)
-    stop("attempt to select more than one element")
-  x[i]
+  indices <- stats::setNames(seq_along(x), names(x))
+  taken <- try(indices[[i]], silent = TRUE)
+  if (class(taken)[[1]] == "try-error")
+    stop(attr(taken, "condition")$message)
+  x[taken]
 }
 
 #' @export

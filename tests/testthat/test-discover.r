@@ -349,8 +349,8 @@ describe("discover", {
   it("correctly simplifies date attributes with varying standard/daylight savings", {
     # example from nycflights13::weather
     df <- data.frame(
-      month = c(11L, 11L, 12L),
-      day = 3L,
+      month = c(11L, 11L, 11L),
+      day = c(3L, 3L, 4L),
       hour = 1L,
       time = as.POSIXct(
         # 2013-11-03 01:00:00 EDT,
@@ -363,7 +363,7 @@ describe("discover", {
     )
     stopifnot(df[1, "time"] != df[2, "time"])
     deps <- discover(df, 1)
-    expect_length(Filter(\(fd) fd[[2]] == "time", deps), 0L)
+    expect_length(deps[dependent(deps) == "time"], 0L)
   })
   it("doesn't have an excluded attribute in any determinant sets", {
     gen_df_and_exclude <- function(nrow, ncol, remove_dup_rows = FALSE) {

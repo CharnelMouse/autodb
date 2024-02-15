@@ -78,7 +78,7 @@ describe("functional_dependency", {
       perl = TRUE
     )
   })
-  it("is subsetted to a valid functional dependency object", {
+  it("is subsetted to a valid functional dependency object, follows usual subsetting rules", {
     forall(
       gen.fd(letters[1:6], 0, 8) |>
         gen.and_then(\(fd) list(
@@ -87,11 +87,59 @@ describe("functional_dependency", {
         )),
       \(fd, i) {
         is_valid_functional_dependency(fd[i])
-        is_valid_functional_dependency(fd[which(i)])
-        expect_identical(fd[i], fd[which(i)])
+
+        inum <- which(i)
+        is_valid_functional_dependency(fd[inum])
+        expect_identical(fd[i], fd[inum])
+
+        ineg <- -setdiff(seq_along(fd), inum)
+        if (!all(i)) {
+          is_valid_functional_dependency(fd[ineg])
+          expect_identical(fd[i], fd[ineg])
+        }
+
         expect_length(fd[i], sum(i))
+
+        ints <- seq_along(fd)
+        expect_identical(fd[i], fd[ints[i]])
+        expect_identical(fd[ineg], fd[ints[ineg]])
       },
       curry = TRUE
+    )
+    forall(
+      gen.fd(letters[1:6], 1, 8) |>
+        gen.and_then(\(fd) list(
+          gen.pure(fd),
+          gen.element(seq_along(fd))
+        )),
+      \(fd, inum) {
+        is_valid_functional_dependency(fd[[inum]])
+        expect_identical(fd[inum], fd[[inum]])
+
+        ineg <- -setdiff(seq_along(fd), inum)
+        if (length(ineg) == 1) {
+          is_valid_functional_dependency(fd[[ineg]])
+          expect_identical(fd[inum], fd[[ineg]])
+        }
+
+        ints <- seq_along(fd)
+        expect_identical(fd[[inum]], fd[[ints[[inum]]]])
+        expect_identical(
+          tryCatch(fd[[ineg]], error = function(e) e$message),
+          tryCatch(fd[[ints[[ineg]]]], error = function(e) e$message)
+        )
+      },
+      curry = TRUE
+    )
+    forall(
+      gen.fd(letters[1:6], 1, 8) |>
+        gen.and_then(\(fd) list(
+          gen.pure(fd),
+          gen.sample_resampleable(c(FALSE, TRUE), of = length(fd))
+        )),
+      \(fd) {
+        expect_identical(fd[[TRUE]], fd[[1]])
+      }
     )
   })
   it("can be subsetted while preserving attributes", {

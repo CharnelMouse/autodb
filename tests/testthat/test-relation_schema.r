@@ -130,7 +130,7 @@ describe("relation_schema", {
     forall(gen.relation_schema(letters[1:6], 1, 8), attributes_ordered)
   })
 
-  it("is subsetted to a valid relation schema", {
+  it("is subsetted to a valid relation schema, follows usual subsetting rules", {
     forall(
       gen.relation_schema(letters[1:6], 0, 8) |>
         gen.and_then(\(rs) list(
@@ -139,11 +139,26 @@ describe("relation_schema", {
         )),
       \(rs, i) {
         is_valid_relation_schema(rs[i])
-        is_valid_relation_schema(rs[which(i)])
+
+        inum <- which(i)
+        is_valid_relation_schema(rs[inum])
+        expect_identical(rs[i], rs[inum])
+
+        ineg <- -setdiff(seq_along(rs), inum)
+        if (!all(i)) {
+          is_valid_relation_schema(rs[ineg])
+          expect_identical(rs[i], rs[ineg])
+        }
+
         is_valid_relation_schema(rs[names(rs)[i]])
-        expect_identical(rs[i], rs[which(i)])
         expect_identical(rs[i], rs[names(rs)[i]])
+
         expect_length(rs[i], sum(i))
+
+        ints <- stats::setNames(seq_along(rs), names(rs))
+        expect_identical(rs[i], rs[ints[i]])
+        expect_identical(rs[ineg], rs[ints[ineg]])
+        expect_identical(rs[names(rs)[i]], rs[names(rs)[ints[i]]])
       },
       curry = TRUE
     )
@@ -153,15 +168,37 @@ describe("relation_schema", {
           gen.pure(rs),
           gen.element(seq_along(rs))
         )),
-      \(rs, i) {
-        is_valid_relation_schema(rs[[i]])
-        is_valid_relation_schema(rs[[names(rs)[[i]]]])
-        is_valid_relation_schema(eval(rlang::expr(`$`(rs, !!names(rs)[[i]]))))
-        expect_identical(rs[i], rs[[i]])
-        expect_identical(rs[i], rs[[names(rs)[[i]]]])
-        expect_identical(rs[i], eval(rlang::expr(`$`(rs, !!names(rs)[[i]]))))
+      \(rs, inum) {
+        is_valid_relation_schema(rs[[inum]])
+        expect_identical(rs[inum], rs[[inum]])
+
+        ineg <- -setdiff(seq_along(rs), inum)
+        if (length(ineg) == 1) {
+          is_valid_relation_schema(rs[[ineg]])
+          expect_identical(rs[inum], rs[[ineg]])
+        }
+
+        is_valid_relation_schema(rs[[names(rs)[[inum]]]])
+        expect_identical(rs[inum], rs[[names(rs)[[inum]]]])
+
+        is_valid_relation_schema(eval(rlang::expr(`$`(rs, !!names(rs)[[inum]]))))
+        expect_identical(rs[inum], eval(rlang::expr(`$`(rs, !!names(rs)[[inum]]))))
+
+        ints <- stats::setNames(seq_along(rs), names(rs))
+        expect_identical(rs[[inum]], rs[[ints[[inum]]]])
+        expect_identical(
+          tryCatch(rs[[ineg]], error = function(e) e$message),
+          tryCatch(rs[[ints[[ineg]]]], error = function(e) e$message)
+        )
+        expect_identical(rs[[names(rs)[[inum]]]], rs[[names(rs)[[ints[[inum]]]]]])
       },
       curry = TRUE
+    )
+    forall(
+      gen.relation_schema(letters[1:6], 1, 8),
+      \(rs) {
+        expect_identical(rs[[TRUE]], rs[[1]])
+      }
     )
   })
   it("can be subsetted while preserving attributes", {

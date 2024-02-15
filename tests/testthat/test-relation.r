@@ -73,20 +73,35 @@ describe("relation", {
     )
   })
 
-  it("is subsetted to a valid relation schema", {
+  it("is subsetted to a valid relation schema, obeys usual subsetting rules", {
     forall(
       gen.relation(letters[1:6], 0, 8) |>
-        gen.and_then(\(rs) list(
-          gen.pure(rs),
-          gen.sample_resampleable(c(FALSE, TRUE), of = length(rs))
+        gen.and_then(\(rel) list(
+          gen.pure(rel),
+          gen.sample_resampleable(c(FALSE, TRUE), of = length(rel))
         )),
-      \(rs, i) {
-        is_valid_relation(rs[i])
-        is_valid_relation(rs[which(i)])
-        is_valid_relation(rs[names(rs)[i]])
-        expect_identical(rs[i], rs[which(i)])
-        expect_identical(rs[i], rs[names(rs)[i]])
-        expect_length(rs[i], sum(i))
+      \(rel, i) {
+        is_valid_relation(rel[i])
+
+        inum <- which(i)
+        is_valid_relation(rel[inum])
+        expect_identical(rel[i], rel[inum])
+
+        ineg <- -setdiff(seq_along(rel), inum)
+        if (!all(i)) {
+          is_valid_relation(rel[ineg])
+          expect_identical(rel[i], rel[ineg])
+        }
+
+        is_valid_relation(rel[names(rel)[i]])
+        expect_identical(rel[i], rel[names(rel)[i]])
+
+        expect_length(rel[i], sum(i))
+
+        ints <- stats::setNames(seq_along(rel), names(rel))
+        expect_identical(rel[i], rel[ints[i]])
+        expect_identical(rel[ineg], rel[ints[ineg]])
+        expect_identical(rel[names(rel)[i]], rel[names(rel)[ints[i]]])
       },
       curry = TRUE
     )
@@ -96,15 +111,37 @@ describe("relation", {
           gen.pure(rel),
           gen.element(seq_along(rel))
         )),
-      \(rel, i) {
-        is_valid_relation(rel[[i]])
-        is_valid_relation(rel[[names(rel)[[i]]]])
-        is_valid_relation(eval(rlang::expr(`$`(rel, !!names(rel)[[i]]))))
-        expect_identical(rel[i], rel[[i]])
-        expect_identical(rel[i], rel[[names(rel)[[i]]]])
-        expect_identical(rel[i], eval(rlang::expr(`$`(rel, !!names(rel)[[i]]))))
+      \(rel, inum) {
+        is_valid_relation(rel[[inum]])
+        expect_identical(rel[inum], rel[[inum]])
+
+        ineg <- -setdiff(seq_along(rel), inum)
+        if (length(ineg) == 1) {
+          is_valid_relation(rel[[ineg]])
+          expect_identical(rel[inum], rel[[ineg]])
+        }
+
+        is_valid_relation(rel[[names(rel)[[inum]]]])
+        expect_identical(rel[inum], rel[[names(rel)[[inum]]]])
+
+        is_valid_relation(eval(rlang::expr(`$`(rel, !!names(rel)[[inum]]))))
+        expect_identical(rel[inum], eval(rlang::expr(`$`(rel, !!names(rel)[[inum]]))))
+
+        ints <- stats::setNames(seq_along(rel), names(rel))
+        expect_identical(rel[[inum]], rel[[ints[[inum]]]])
+        expect_identical(
+          tryCatch(rel[[ineg]], error = function(e) e$message),
+          tryCatch(rel[[ints[[ineg]]]], error = function(e) e$message)
+        )
+        expect_identical(rel[[names(rel)[[inum]]]], rel[[names(rel)[[ints[[inum]]]]]])
       },
       curry = TRUE
+    )
+    forall(
+      gen.relation(letters[1:6], 1, 8),
+      \(rel) {
+        expect_identical(rel[[TRUE]], rel[[1]])
+      }
     )
   })
   it("can be subsetted while preserving attributes", {
@@ -134,8 +171,8 @@ describe("relation", {
   it("is made unique with no duplicate schemas", {
     forall(
       gen.relation(letters[1:6], 1, 8),
-      \(rs) {
-        rs2 <- c(rs, rs)
+      \(rel) {
+        rs2 <- c(rel, rel)
         expect_false(Negate(anyDuplicated)(rs2))
         expect_true(Negate(anyDuplicated)(unique(rs2)))
       }
@@ -163,7 +200,7 @@ describe("relation", {
   it("concatenates with duplicates preserved", {
     forall(
       gen.relation(letters[1:6], 1, 8) |>
-        gen.with(\(rs) list(rs, rs)),
+        gen.with(\(rel) list(rel, rel)),
       \(lst) {
         expect_length(do.call(c, lst), sum(lengths(lst)))
       }

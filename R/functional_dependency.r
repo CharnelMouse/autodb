@@ -136,11 +136,11 @@ c.functional_dependency <- function(..., unique = TRUE) {
 
 #' @export
 `[[.functional_dependency` <- function(x, i) {
-  if (length(i) == 0L)
-    stop("attempt to select less than one element")
-  if (length(i) > 1L)
-    stop("attempt to select more than one element")
-  x[i]
+  indices <- stats::setNames(seq_along(x), names(x))
+  taken <- try(indices[[i]], silent = TRUE)
+  if (class(taken)[[1]] == "try-error")
+    stop(attr(taken, "condition")$message)
+  x[taken]
 }
 
 #' @exportS3Method

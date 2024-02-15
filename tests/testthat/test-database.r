@@ -138,7 +138,7 @@ describe("database", {
     )
   })
 
-  it("is subsetted to a valid database schema", {
+  it("is subsetted to a valid database schema, obeys usual subsetting rules", {
     forall(
       gen.element(c(FALSE, TRUE)) |>
         gen.list(of = 2) |>
@@ -163,11 +163,26 @@ describe("database", {
         )),
       \(san, skp, db, i) {
         is_valid_database(db[i], same_attr_name = san, single_key_pairs = skp)
-        is_valid_database(db[which(i)], same_attr_name = san, single_key_pairs = skp)
+
+        inum <- which(i)
+        is_valid_database(db[inum], same_attr_name = san, single_key_pairs = skp)
+        expect_identical(db[i], db[inum])
+
+        ineg <- -setdiff(seq_along(db), inum)
+        if (!all(i)) {
+          is_valid_database(db[ineg], same_attr_name = san, single_key_pairs = skp)
+          expect_identical(db[i], db[ineg])
+        }
+
         is_valid_database(db[names(db)[i]], same_attr_name = san, single_key_pairs = skp)
-        expect_identical(db[i], db[which(i)])
         expect_identical(db[i], db[names(db)[i]])
+
         expect_length(db[i], sum(i))
+
+        ints <- stats::setNames(seq_along(db), names(db))
+        expect_identical(db[i], db[ints[i]])
+        expect_identical(db[ineg], db[ints[ineg]])
+        expect_identical(db[names(db)[i]], db[names(db)[ints[i]]])
       },
       curry = TRUE
     )
@@ -177,15 +192,37 @@ describe("database", {
           gen.pure(db),
           gen.element(seq_along(db))
         )),
-      \(db, i) {
-        is_valid_relation(db[[i]])
-        is_valid_relation(db[[names(db)[[i]]]])
-        is_valid_relation(eval(rlang::expr(`$`(db, !!names(db)[[i]]))))
-        expect_identical(db[i], db[[i]])
-        expect_identical(db[i], db[[names(db)[[i]]]])
-        expect_identical(db[i], eval(rlang::expr(`$`(db, !!names(db)[[i]]))))
+      \(db, inum) {
+        is_valid_database(db[[inum]])
+        expect_identical(db[inum], db[[inum]])
+
+        ineg <- -setdiff(seq_along(db), inum)
+        if (length(ineg) == 1) {
+          is_valid_database(db[[ineg]])
+          expect_identical(db[inum], db[[ineg]])
+        }
+
+        is_valid_database(db[[names(db)[[inum]]]])
+        expect_identical(db[inum], db[[names(db)[[inum]]]])
+
+        is_valid_database(eval(rlang::expr(`$`(db, !!names(db)[[inum]]))))
+        expect_identical(db[inum], eval(rlang::expr(`$`(db, !!names(db)[[inum]]))))
+
+        ints <- stats::setNames(seq_along(db), names(db))
+        expect_identical(db[[inum]], db[[ints[[inum]]]])
+        expect_identical(
+          tryCatch(db[[ineg]], error = function(e) e$message),
+          tryCatch(db[[ints[[ineg]]]], error = function(e) e$message)
+        )
+        expect_identical(db[[names(db)[[inum]]]], db[[names(db)[[ints[[inum]]]]]])
       },
       curry = TRUE
+    )
+    forall(
+      gen.database(letters[1:6], 1, 8),
+      \(db) {
+        expect_identical(db[[TRUE]], db[[1]])
+      }
     )
   })
   it("can be subsetted while preserving attributes order", {
@@ -255,8 +292,8 @@ describe("database", {
             gen.database(letters[1:6], 0, 8, same_attr_name = san)
           )
         }),
-      \(san, ds) {
-        unique(ds) |> is_valid_database(unique = TRUE, same_attr_name = san)
+      \(san, db) {
+        unique(db) |> is_valid_database(unique = TRUE, same_attr_name = san)
       },
       curry = TRUE
     )
