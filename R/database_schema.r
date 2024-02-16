@@ -21,8 +21,8 @@
 #' Subsetting removes any references that involve removed relation schemas.
 #' Removing duplicates with \code{\link{unique}} changes references involving
 #' duplicates to involve the kept equivalent schemas instead. Renaming relation
-#' schemas with \code{\link{`names<-`}} also changes their names in the
-#' references.
+#' schemas with \code{\link[base:names]{`names<-`}} also changes their names in
+#' the references.
 #'
 #' @param relation_schemas a \code{\link{relation_schema}} object, as returned
 #'   by \code{\link{synthesise}} or \code{\link{relation_schema}}.

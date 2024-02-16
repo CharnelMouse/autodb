@@ -14,7 +14,7 @@
 #' \code{\link{database_schema}} or \code{\link{database}}.
 #'
 #' Duplicate schemas, after ordering by attribute, are allowed, and can be
-#' removed with `\code{\link{unique}}`.
+#' removed with \code{\link{unique}}.
 #'
 #' When several sets of relation schemas are concatenated, their
 #' \code{attrs_order} attributes are merged, so as to preserve all of the original

@@ -49,6 +49,6 @@ output for \code{\link{autoref}} and \code{\link{normalise}}.
 Subsetting removes any references that involve removed relations.
 Removing duplicates with \code{\link{unique}} changes references involving
 duplicates to involve the kept equivalent relations instead. Renaming
-relations with \code{\link{`names<-`}} also changes their names in the
-references.
+relations with \code{\link[base:names]{`names<-`}} also changes their names
+in the references.
 }
