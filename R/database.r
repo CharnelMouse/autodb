@@ -242,11 +242,13 @@ insert.database <- function(x, vals, ...) {
 
 #' @export
 `[.database` <- function(x, i) {
-  rels <- references(x)
-  kept_relation_names <- names(stats::setNames(seq_along(x), names(x))[i])
-  kept_rels <- rels[reference_names_element(rels, kept_relation_names)]
-
   new_relations <- subrelations(x)[i]
+  kept_rels <- subset_refs(
+    references(x),
+    stats::setNames(seq_along(x), names(x))[i],
+    names(x),
+    names(new_relations)
+  )
   database(new_relations, kept_rels)
 }
 

@@ -232,7 +232,7 @@ describe("database_schema", {
       gen.database_schema(letters[1:6], 0, 8, same_attr_name = FALSE) |>
         gen.and_then(\(ds) list(
           ds = gen.pure(ds),
-          indices = gen.sample_resampleable(seq_along(ds), from = 0, to = length(ds))
+          indices = gen.sample(seq_along(ds), replace = FALSE)
         )) |>
         gen.with(\(lst) c(lst, list(op = `[`))),
       keeps_relevant_references,
@@ -246,6 +246,24 @@ describe("database_schema", {
         )) |>
         gen.with(\(lst) c(lst, list(op = `[[`))),
       keeps_relevant_references,
+      curry = TRUE
+    )
+  })
+  it("duplicates references when taking duplicate relation schemas", {
+    forall(
+      gen.database_schema(letters[1:6], 1, 8, same_attr_name = FALSE) |>
+        gen.and_then(\(ds) list(
+          ds = gen.pure(ds),
+          indices = gen.sample_resampleable(seq_along(ds), from = 2, to = 2*length(ds))
+        )),
+      \(ds, indices) {
+        if (!anyDuplicated(indices) || length(references(ds)) == 0)
+          discard()
+        orig <- references(ds)
+        ds_new <- ds[indices]
+        expected <- subset_refs(orig, indices, names(ds), names(ds_new))
+        expect_setequal(references(ds_new), expected)
+      },
       curry = TRUE
     )
   })

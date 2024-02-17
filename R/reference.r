@@ -98,3 +98,28 @@ print_references <- function(x, max) {
       cat("... and", n_references - max, "other references\n")
   }
 }
+
+subset_refs <- function(refs, number_indices, names, new_names) {
+  res <- unlist(
+    lapply(
+      refs,
+      \(ref) {
+        child_inds <- which(match(ref[[1]], names) == number_indices)
+        parent_inds <- which(match(ref[[3]], names) == number_indices)
+        if (length(child_inds) == 0 || length(parent_inds) == 0)
+          return(list())
+        child <- new_names[child_inds]
+        parent <- new_names[parent_inds]
+        unlist(
+          lapply(
+            child,
+            \(c) lapply(parent, \(p) list(c, ref[[2]], p, ref[[4]]))
+          ),
+          recursive = FALSE
+        )
+      }
+    ),
+    recursive = FALSE
+  )
+  if (is.null(res)) list() else res
+}

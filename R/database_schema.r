@@ -161,11 +161,13 @@ merge_schemas.database_schema <- function(x, to_remove, merge_into, ...) {
 
 #' @export
 `[.database_schema` <- function(x, i) {
-  rels <- references(x)
-  kept_relation_names <- names(stats::setNames(seq_along(x), names(x))[i])
-  kept_rels <- rels[reference_names_element(rels, kept_relation_names)]
-
   new_schemas <- subschemas(x)[i]
+  kept_rels <- subset_refs(
+    references(x),
+    stats::setNames(seq_along(x), names(x))[i],
+    names(x),
+    names(new_schemas)
+  )
   database_schema(new_schemas, kept_rels)
 }
 

@@ -224,6 +224,21 @@ describe("database", {
         expect_identical(db[[TRUE]], db[[1]])
       }
     )
+    forall(
+      gen.database(letters[1:6], 1, 8) |>
+        gen.and_then(\(db) list(
+          db = gen.pure(db),
+          indices = gen.sample_resampleable(
+            seq_along(db),
+            from = 2,
+            to = 2*length(db)
+          )
+        )),
+      \(db, indices) {
+        is_valid_database(db[indices])
+      },
+      curry = TRUE
+    )
   })
   it("can be subsetted while preserving attributes order", {
     preserves_attributes_when_subsetting <- function(db, indices, op) {
@@ -265,7 +280,7 @@ describe("database", {
       gen.database(letters[1:6], 0, 8, same_attr_name = FALSE) |>
         gen.and_then(\(db) list(
           db = gen.pure(db),
-          indices = gen.sample_resampleable(seq_along(db), from = 0, to = length(db))
+          indices = gen.sample(seq_along(db), replace = FALSE)
         )) |>
         gen.with(\(lst) c(lst, list(op = `[`))),
       keeps_relevant_references,
@@ -281,18 +296,21 @@ describe("database", {
       keeps_relevant_references,
       curry = TRUE
     )
+  })
+  it("duplicates references when taking duplicate relation schemas", {
     forall(
-      gen.database(letters[1:6], 1, 8) |>
+      gen.database(letters[1:6], 1, 8, same_attr_name = FALSE) |>
         gen.and_then(\(db) list(
           db = gen.pure(db),
-          indices = gen.sample_resampleable(
-            seq_along(db),
-            from = 2,
-            to = 2*length(db)
-          )
+          indices = gen.sample_resampleable(seq_along(db), from = 2, to = 2*length(db))
         )),
       \(db, indices) {
-        is_valid_database(db[indices])
+        if (!anyDuplicated(indices) || length(references(db)) == 0)
+          discard()
+        orig <- references(db)
+        db_new <- db[indices]
+        expected <- subset_refs(orig, indices, names(db), names(db_new))
+        expect_setequal(references(db_new), expected)
       },
       curry = TRUE
     )
