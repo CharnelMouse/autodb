@@ -281,6 +281,21 @@ describe("database", {
       keeps_relevant_references,
       curry = TRUE
     )
+    forall(
+      gen.database(letters[1:6], 1, 8) |>
+        gen.and_then(\(db) list(
+          db = gen.pure(db),
+          indices = gen.sample_resampleable(
+            seq_along(db),
+            from = 2,
+            to = 2*length(db)
+          )
+        )),
+      \(db, indices) {
+        is_valid_database(db[indices])
+      },
+      curry = TRUE
+    )
   })
 
   it("is made unique to a valid database", {

@@ -257,7 +257,7 @@ insert.relation <- function(x, vals, ...) {
   indices <- stats::setNames(seq_along(x), names(x))
   taken <- indices[i]
   res <- unclass(x)[taken]
-  attrs$names <- unname(stats::setNames(nm = attrs$names)[taken])
+  attrs$names <- make.unique(unname(stats::setNames(nm = attrs$names)[taken]))
   attributes(res) <- attrs
   res
 

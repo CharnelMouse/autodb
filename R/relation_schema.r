@@ -214,7 +214,7 @@ merge_schemas.relation_schema <- function(x, to_remove, merge_into, ...) {
   indices <- stats::setNames(seq_along(x), names(x))
   taken <- indices[i]
   res <- unclass(x)[taken]
-  attrs$names <- unname(stats::setNames(nm = attrs$names)[taken])
+  attrs$names <- make.unique(unname(stats::setNames(nm = attrs$names)[taken]))
   attributes(res) <- attrs
   res
 }

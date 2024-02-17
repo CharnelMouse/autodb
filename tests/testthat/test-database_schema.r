@@ -176,6 +176,21 @@ describe("database_schema", {
         expect_identical(ds[[TRUE]], ds[[1]])
       }
     )
+    forall(
+      gen.database_schema(letters[1:6], 1, 8) |>
+        gen.and_then(\(ds) list(
+          ds = gen.pure(ds),
+          indices = gen.sample_resampleable(
+            seq_along(ds),
+            from = 2,
+            to = 2*length(ds)
+          )
+        )),
+      \(ds, indices) {
+        is_valid_database_schema(ds[indices])
+      },
+      curry = TRUE
+    )
   })
   it("can be subsetted while preserving attributes order", {
     preserves_attributes_when_subsetting <- function(ds, indices, op) {

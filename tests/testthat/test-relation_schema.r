@@ -200,6 +200,21 @@ describe("relation_schema", {
         expect_identical(rs[[TRUE]], rs[[1]])
       }
     )
+    forall(
+      gen.relation_schema(letters[1:6], 1, 8) |>
+        gen.and_then(\(rs) list(
+          rs = gen.pure(rs),
+          indices = gen.sample_resampleable(
+            seq_along(rs),
+            from = 2,
+            to = 2*length(rs)
+          )
+        )),
+      \(rs, indices) {
+        is_valid_relation_schema(rs[indices])
+      },
+      curry = TRUE
+    )
   })
   it("can be subsetted while preserving attributes", {
     x <- relation_schema(list(a = list(c("a", "b"), list("a"))), letters[1:5])

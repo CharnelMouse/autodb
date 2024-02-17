@@ -143,6 +143,21 @@ describe("relation", {
         expect_identical(rel[[TRUE]], rel[[1]])
       }
     )
+    forall(
+      gen.relation(letters[1:6], 1, 8) |>
+        gen.and_then(\(rel) list(
+          rel = gen.pure(rel),
+          indices = gen.sample_resampleable(
+            seq_along(rel),
+            from = 2,
+            to = 2*length(rel)
+          )
+        )),
+      \(rel, indices) {
+        is_valid_relation(rel[indices])
+      },
+      curry = TRUE
+    )
   })
   it("can be subsetted while preserving attributes", {
     x <- relation(
