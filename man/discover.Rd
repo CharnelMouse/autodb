@@ -39,7 +39,7 @@ to use when finding dependencies for other dependents. This allows the
 algorithm to run more quickly by not having to re-calculate information,
 but takes up more memory.}
 
-\item{skip_bijections}{a logical, indicating whether to skip some dependecy
+\item{skip_bijections}{a logical, indicating whether to skip some dependency
 searches that are made redundant by discovered bijections between
 attributes. This can significantly speed up the search if \code{df}
 contains equivalent attributes early in column order, but results in

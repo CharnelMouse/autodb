@@ -6,7 +6,7 @@
 #' AutoNormalize Python library (https://github.com/alteryx/autonormalize), with
 #' various changes and improvements. Automatic discovery of functional or
 #' approximate dependencies, normalisation based on those, and plotting of the
-#' resulting "database" via Graphviz, with options to exlude some attributes at
+#' resulting "database" via Graphviz, with options to exclude some attributes at
 #' discovery time, or remove discovered dependencies at normalisation time.
 #'
 #' @docType package
