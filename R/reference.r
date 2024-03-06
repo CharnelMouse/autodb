@@ -86,7 +86,7 @@ print_references <- function(x, max) {
   }else{
     cat(paste("references:\n"))
     n_references <- length(x)
-    for (r in seq_len(n_references)) {
+    for (r in seq_len(min(n_references, max))) {
       rel <- x[[r]]
       cat(paste0(
         rel[[1]], ".{", toString(rel[[2]]),
