@@ -402,7 +402,7 @@ gen_detset_lists <- function(n_attrs, max_dets) {
 gen_named_flat_deps_fixed_size <- function(attrs, n, max_detset_size, unique = TRUE) {
   list(
     gen.sample(attrs, n, replace = TRUE),
-    gen.sample(attrs, gen.sample(0:max_detset_size)) |>
+    gen.sample(attrs, gen.element(0:max_detset_size)) |>
       gen.list(of = n)
   ) |>
     gen.with(\(lst) functional_dependency(
@@ -422,7 +422,7 @@ gen_named_flat_deps <- function(
   max_detset_size <- min(max_detset_size, length(attrs) - 1L)
   (
     if (missing(of) || is.null(of))
-      gen.sample(seq.int(from, to), 1)
+      gen.element(seq.int(from, to))
     else
       gen.pure(of)
   ) |>

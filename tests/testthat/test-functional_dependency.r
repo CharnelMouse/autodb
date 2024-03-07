@@ -202,7 +202,7 @@ describe("functional_dependency", {
     }
 
     forall(
-      gen.sample(letters[1:8], gen.sample(1:3)) |>
+      gen.sample(letters[1:8], gen.element(1:3)) |>
         gen.with(sort %>>% with_args(functional_dependency, FDs = list())) |>
         gen.list(from = 2, to = 5),
       concatenate_keeps_attribute_order,

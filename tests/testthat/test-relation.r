@@ -249,7 +249,7 @@ describe("relation", {
     }
 
     forall(
-      gen.sample(letters[1:8], gen.sample(1:3)) |>
+      gen.sample(letters[1:8], gen.element(1:3)) |>
         gen.with(
           sort %>>%
             with_args(relation, relations = setNames(list(), character()))
