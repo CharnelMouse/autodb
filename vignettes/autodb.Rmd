@@ -1,6 +1,8 @@
 ---
 title: "Using autodb"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    toc: true
 vignette: >
   %\VignetteIndexEntry{Using autodb}
   %\VignetteEngine{knitr::rmarkdown}
@@ -205,7 +207,7 @@ We can remove the unwanted dependencies, where `Age` is the dependent:
 titanic_deps[dependent(titanic_deps) == "Freq"]
 ```
 
-## Adding cross-references
+## Adding foreign key references
 
 Getting back to our `ChickWeight` example, we now have a database schema, consisting of a list of `relation` schemas. However, we have no information about how these relation schemas are linked to each other. In particular, we have no information about foreign keys. We can add this information using `autoref`:
 
@@ -239,7 +241,7 @@ DiagrammeR::grViz(gv(db2, name = "Chick Weights"))
 
 We now have the record counts added.
 
-## Rejoin a database to a data frame
+## Rejoining a database back into a data frame
 
 We can reverse the process of turning a data frame into a database with the `rejoin` function. This may not be identical to `ChickWeight`, since the rows may have been rearranged. However, we can use the convenience function `df_equiv` to check for equivalence under row reordering:
 
@@ -262,6 +264,8 @@ DiagrammeR::grViz(gv(nudge, name = "nudge"))
 
 This is the data set for a meta-analysis, looking at the effectiveness of "nudge" interventions. Measurements are taken within a three-layer hierarchy: publications contain studies, which contain effect size measurements. We expect this hierarchy to be apparent in the normalisation.
 
+## Initial decomposition
+
 Getting full dependency information for this relation can take a long time, so here we search for a reduced set, not considering numeric or sample size attributes as determinants:
 
 ```{r nudge_database}
@@ -277,7 +281,9 @@ DiagrammeR::grViz(gv(nudge_schema))
 
 We can see a relation, with many attributes, determined by the effect size ID number, `es_id`. This contains all of the numeric measurements, as expected in the relation for the lowest level in the hierarchy. As also expected, this has a foreign key reference to a relation for study-level information, determined by the study ID number, `study_id`.
 
-However, the publication-level relation this refers to is not determined by the publication ID, `publication_id`, as we would expect; neither is it determined by the publication reference. Instead, it is solely determined by the publication's title: to use the ID, we would need to supplement it with the publication year. This suggests that some publication ID numbers have been erroneously assigned to several publications, which we can easily test:
+However, the publication-level relation this refers to is not determined by the publication ID, `publication_id`, as we would expect; neither is it determined by the publication reference. Instead, it is solely determined by the publication's title: to use the ID, we would need to supplement it with other information, like the publication year, or other choices that come from the middle column of relations, which look likely to be spurious.
+
+This suggests that some publication ID numbers have been erroneously assigned to several publications, which we can easily test:
 
 ```{r nudge_publication_check}
 nudge_database <- decompose(nudge, nudge_schema, "nudge")
@@ -288,14 +294,101 @@ nudge_pid_duplicates <- unique(nudge_title_relation$publication_id[
 knitr::kable(subset(nudge_title_relation, publication_id %in% nudge_pid_duplicates))
 ```
 
-This would also explain why the publication ID appears in several other relations, that look likely to be spurious.
+We'd also expect `reference` to determine the publication, but this is also not the case: it needs additional information, such as `binary_outcome`.
 
-Since the publication ID can't be trusted, we could consider removing the attribute, and re-running `discover`. While fine in this case, this is best avoided if running `discover` on a given data frame is expensive.
+This means that there are publications that share a reference:
 
-Another option is to simply remove the offending relations in the current schemas:
+```{r nudge_reference_check}
+nudge_reference_duplicates <- unique(nudge_title_relation$reference[
+  duplicated(nudge_title_relation$reference)
+])
+knitr::kable(subset(nudge_title_relation, reference %in% nudge_reference_duplicates))
+```
+
+BETA is the Behavioural Economics Team of the Australian Government, so it's not surprising that they'd have multiple publications/reports per year. Duplicate references is not necessarily an error, but would be awkward if the references were to be used.
+
+There are other, clearly spurious, relations involving `reference`. One of these combines it with `type_experiment` to determine `location`. Since `reference` is a publication-level attribute, and `location` is a study-level attribute, this can't be right.
+
+(As far as I'm aware, the publication ID and reference errors mentioned above would not have affected the meta-analysis results.)
+
+## Removing spurious structure
+
+The publication ID and the reference clearly have issues, so we need to decide what to do about them. Here, I'll show what is usually the correct approach, which is to remove the spurious functional dependencies. We'll look at the other options later.
+
+The better option is to remove all functional dependencies that we'd consider to be spurious: those where publication ID or reference are part of a multiple-attribute determinant set, and the determinant set isn't just those two:
+
+```{r nudge_filter}
+nudge_deps_filtered <- nudge_deps[
+  lengths(detset(nudge_deps)) == 1 |
+    vapply(
+      detset(nudge_deps),
+      \(ds) length(setdiff(ds, c("publication_id", "reference"))) != 1,
+      logical(1)
+    )
+]
+nudge_schema_filtered <- normalise(nudge_deps_filtered, remove_avoidable = TRUE)
+DiagrammeR::grViz(gv(nudge_schema_filtered))
+```
+
+We now, finally, have the study location in a non-spurious relation. If we want to, we could also add the dependencies we fail to find, due to excluding the sample size attributes from determinant sets:
+
+```{r nudge_sizes}
+nudge_deps_size <- discover(nudge[, startsWith(names(nudge), "n_")], 1)
+nudge_deps_size
+nudge_deps_final <- c(nudge_deps_filtered, nudge_deps_size)
+nudge_schema_final <- normalise(nudge_deps_final, remove_avoidable = TRUE)
+nudge_database_final <- decompose(nudge, nudge_schema_final, "nudge")
+DiagrammeR::grViz(gv(nudge_schema_final))
+```
+
+The new schema confirms what we might expect, that the total sample size, and the sizes of control and treatment arms, only have two degrees of freedom: knowing two of them determines the other.
+
+We'd expect this to be because the total sample size is the sum of the other two. However, the functional dependency can't determine this. Indeed, if we check for this more specific condition, we find that it doesn't hold:
+
+```{r nudge_size_check}
+knitr::kable(subset(
+  nudge,
+  n_comparison != n_control + n_intervention,
+  c(
+    reference,
+    title,
+    wansink,
+    n_study,
+    n_comparison,
+    n_control,
+    n_intervention
+  )
+))
+```
+
+Automatic search for functional dependencies cannot check domain-specific constraints like this, but it can give schemas that suggest constraints to check for. (Looking through the paper, I have no idea where the arm sample sizes were taken from.)
+
+Going back to the final database schema, removing dependencies has revealed extra information about study locations, via the new `title_type_experiment` relation: studies of the same experiment type in a publication always have the same location. Looking at the resulting database shows that this removes many entries of what would be redundant location information if kept in the study relation:
+
+```{r nudge_clean_database}
+DiagrammeR::grViz(gv(nudge_database_final))
+```
+
+While this is not a dependency we could expect to hold if more data was collected, it's a reasonable dependency for the given data set, which won't be added to.
+
+## How not to remove spurious structure
+
+The additional relation mentioned at the end of the previous section is also notable for what we'll now discuss: alternative ways to get rid of spurious structure. How can we do this?
+
+- Remove the offending functional dependencies, and re-do the schema creation (the proper method);
+- Remove offending attributes from the table -- e.g. `publication_id` above, since it doesn't do its intended job of unique publication identification -- and re-do the entire process (re-running `discover` can be expensive; we don't always want to throw out everything to do with an attribute, e.g. `reference -> year`, or `title -> reference`);
+- Add offending attributes to `exclude`, to disallow them in dependent sets, and re-do the entire process (same issues as above, except that we keep `title -> reference`, since an excluded `reference` can still be a dependent);
+- Remove offending schemas from the database schema / database (see below).
+
+What happens if we remove the offending schemas?
 
 ```{r nudge_publication_badfilter}
-nudge_schema_relfiltered <- nudge_schema[!grepl("publication_id", names(nudge_schema), fixed = TRUE)]
+nudge_schema_relfiltered <- nudge_schema[
+  !grepl("publication_id_", names(nudge_schema), fixed = TRUE) &
+    !grepl("_publication_id", names(nudge_schema), fixed = TRUE) &
+    !grepl("reference_", names(nudge_schema), fixed = TRUE) &
+    !grepl("_reference", names(nudge_schema), fixed = TRUE)
+]
 ```
 
 Subsetting a database schema also removes any foreign key references involving removed schemas, so the resulting schema is still valid. However, any foreign key reference chains with removed schemas in the middle are broken. Amongst others, in this case we lose the reference between the three relations for the three hierarchical data levels:
@@ -304,54 +397,45 @@ Subsetting a database schema also removes any foreign key references involving r
 DiagrammeR::grViz(gv(nudge_schema_relfiltered))
 ```
 
-We also lose any functional dependencies partially implied by the removed schemas (i.e. transitive dependencies, where removing these schemas' dependencies means that they're no longer transitive). This is an issue if those partially-implied dependencies aren't spurious, because we throw away non-spurious information about the data's structure.
+Re-running `autoref`, has no effect, because the `es_id` section doesn't contain any key for the `title` section:
 
-The better option is to remove all functional dependencies where the publication ID is in the determinant set, to get the same effect without re-running `discover`:
-
-```{r nudge_filter}
-nudge_deps_filtered <- nudge_deps[!vapply(detset(nudge_deps), is.element, logical(1), el = "publication_id")]
-nudge_schema_filtered <- normalise(nudge_deps_filtered, remove_avoidable = TRUE)
-DiagrammeR::grViz(gv(nudge_schema_filtered))
+```{r nudge_publication_badfilter_autoref}
+identical(autoref(nudge_schema_relfiltered), nudge_schema_relfiltered)
 ```
 
-The resulting database schema looks to be an improvement. However, we can still see some spurious relations involving `reference`. One of these combines it with `type_experiment` to determine `location`, a study-level attribute. The others combine it with another attribute to determine `title`.
+Because the database subschema including the `es_id` relation only has `publication_id` for distinguishing publications, effect sizes for the two publications with the same ID cannot be uniquely associated with their publication: removing schemas irreversibly separates two parts of the database schema.
 
-As mentioned, we'd expect the reference to uniquely identify the publication: however, in the publication-level relation, the title determines the reference, but not vice versa. This means that there are publications that share a reference:
+Furthermore, compared to `nudge_schema_filtered`, there is a relation schema missing: directly removing schemas loses the structure information that results in the `title_type_experiment` relation. How does this happen?
 
-```{r nudge_reference_check}
-nudge_database_filtered <- decompose(nudge, nudge_schema_filtered, "nudge")
-nudge_title_relation_filtered <- records(nudge_database_filtered)$title
-nudge_reference_duplicates <- unique(nudge_title_relation_filtered$reference[
-  duplicated(nudge_title_relation_filtered$reference)
-])
-knitr::kable(subset(nudge_title_relation_filtered, reference %in% nudge_reference_duplicates))
+The relation isn't present in the original schema, `nudge_schema_filtered`, because the full set of functional dependencies make its implied dependency transitive. Specifically, `nudge_fds` contains the following functional dependencies:
+
+```{r nudge_badfilter_example_fds}
+example_fds <- functional_dependency(
+  list(
+    list("title", "reference"),
+    list(c("reference", "type_experiment"), "location"),
+    list(c("title", "type_experiment"), "location")
+  ),
+  c("title", "reference", "type_experiment", "location")
+)
+example_fds
 ```
 
-BETA is the Behavioural Economics Team of the Australian Government, so it's not surprising that they'd have multiple publications/reports per year. Duplicate references is not necessarily an error, but would be awkward if the references were to be used.
+The first two dependencies make the third transitive, so it's ignored when constructing the relation schemas: it's implied, and enforced, by the `title` and `reference_type_experiment` relation schemas.
 
-While the reference is useful, the relations mentioned above are not, so we'll also remove functional dependencies with the reference determining something apart from the year:
-
-```{r nudge_filter2}
-nudge_deps_filtered2 <- nudge_deps_filtered[
-  !vapply(detset(nudge_deps_filtered), is.element, logical(1), el = "reference") |
-    dependent(nudge_deps_filtered) == "year"
-]
-nudge_schema_filtered2 <- normalise(nudge_deps_filtered2, remove_avoidable = TRUE)
-DiagrammeR::grViz(gv(nudge_schema_filtered2))
+```{r nudge_badfilter_example_transitive}
+DiagrammeR::grViz(gv(normalise(example_fds, ensure_lossless = FALSE)))
 ```
 
-We now, finally, have the study location in a non-spurious relation. Interestingly, removing dependencies has revealed extra information about study locations, via the new `title_type_experiment` relation: studies of the same experiment type in a publication always have the same location. Looking at the resulting database shows that this removes many entries of what would be redundant location information if kept in the study relation:
+However, when `reference, type_experiment -> location` is removed as spurious, `title, type_experiment -> location` is no longer transitive, so it now appears as its own relation schema.
 
-```{r nudge_clean_database}
-nudge_database_filtered2 <- decompose(nudge, nudge_schema_filtered2, "nudge")
-DiagrammeR::grViz(gv(nudge_database_filtered2))
+```{r nudge_badfilter_example_nontransitive}
+DiagrammeR::grViz(gv(normalise(example_fds[-2], ensure_lossless = FALSE)))
 ```
 
-While this is not a dependency we could expect to hold if more data was collected, it's a reasonable dependency for the given data set, which won't be added to.
+When we instead remove the `reference_type_experiment` schema, this implicitly also throws away the `title, type_experiment -> location` dependency that it co-implies. We throw away non-spurious information that we don't intend to.
 
-It's also notable for the previous discussion about information lost if we subset the database schema: the relation isn't present in the original schema because the full set of functional dependencies make its implied dependency transitive, but removing spurious dependencies made it no longer transitive, so it's directly represented in a new relation. Specifically, the previous schema, `nudge_schema_filtered`, has relations showing that `title -> reference` and `reference, type_experiment -> location`, and removing the latter makes `title, type_experiment -> location` no longer transitive. Subsetting the schema, instead of removing the spurious dependencies, would also lose this transitive dependency, so we would not see the new relation.
-
-(As far as I'm aware, the publication ID error mentioned above would not have affected the meta-analysis results.)
+Between the risk of irreversibly breaking the database schema's structure, and the risk of unintentionally removing additional structure information, I hope it's clear why directly removing relations should be avoided.
 
 # Other features
 
@@ -499,25 +583,30 @@ DiagrammeR::grViz(gv(ideal_db))
 
 This makes more of the data's structure apparent, and enforceable, in the database structure, since it makes it clear that the death date is optional.
 
-Removing missing values in this way requires additional steps in dependency detection, as well as normalisation, since dependency detection is the only part of the process where the original table is searched for structure.
+Removing missing values in this way requires additional steps in dependency detection, as well as normalisation, than `autodb` currently has: it requires keeping additional information about when attributes are missing, compared to the others.
 
 # Handling some special cases
 
-## Disjunctive existence unions / option types
+## Structure conditional on value missingness
 
-As a more general case of the missing values section, we sometimes have sets $Y_1, Y_2, \ldots$ that are mutually exclusive for being non-missing, where the choice is determined by some set $X$.
+Sometimes, the structure for some attributes depends on whether other attributes are missing. Here are two possible reasons:
 
-For example. I commonly get data sets where certain values can be given as either single values, or endpoints of an interval. Sometimes this is done within a single column, sometimes it's done across several:
+- Some piece of information in a record takes one of several possible formats, which may have different data classes. This leaves the single piece of information spread across multiple sets of attributes, not necessarily disjoint, of which only one set is non-missing per record. In more general programming, this would be referred to as a union type. In relational theory, this is called a disjunctive existence union.
+- A set of attributes are missing or non-missing together. In more general programming, these attribute together represent an option type, or a nullable class.
+
+For example, I commonly get data sets where certain values can be given as either single values, or endpoints of an interval, and this "union type" data is spread across several attributes:
 
 ```{r example_data_frame_with_interval_option}
 df_options <- data.frame(
-  id = 1:10,
-  single_col = c("2.3", "2.3", "5.7", "2.4-7.1", "0-10", "2.4-10", "5.3-13.1", "2.4-25.8", "2.4-25.8", "5.6-25.8"),
-  value = c(2.3, 2.3, 5.7, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_),
-  lower_bound = c(NA_real_, NA_real_, NA_real_, 2.4, 0, 2.4, 5.3, 2.4, 2.4, 5.6),
-  upper_bound = c(NA_real_, NA_real_, NA_real_, 7.1, 10, 10, 13.1, 25.8, 25.8, 25.8),
-  type = c("value", "value", "value", "interval", "interval", "interval", "interval", "interval", "interval", "interval")
+  id = 1:20,
+  value = c(2.3, 2.3, 5.7, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_),
+  lower_bound = c(NA_real_, NA_real_, NA_real_, 2.4, 0, 1, 0, 5.6, 2.4, 5.3, 5.3, 2.4, 2.4, 2.4, 2.4, 2.4, 2.4, 2.4, 5.6, 2.4),
+  upper_bound = c(NA_real_, NA_real_, NA_real_, 7.1, 10, 10, 13.1, 25.8, 10, 13.1, 10, 25.8, 25.8, 25.8, 25.8,13.1, 13.1, 25.8, 25.8, 25.8),
+  interval_distribution = c(NA, NA, NA, "uniform", "uniform", "uniform", "uniform", "uniform", "Beta", "Beta", "Beta", "Beta", "Kumaraswamy", "Kumaraswamy", "Kumaraswamy", "Kumaraswamy", "PERT", "PERT", "PERT", "PERT"),
+  param1 = c(NA, NA, NA, NA, NA, NA, NA, NA, 1, 1, 1, 2, 2, 2.1, 2, 2, 2, 1, 2, 2),
+  param2 = c(NA, NA, NA, NA, NA, NA, NA, NA, 1, 2, 2, 2, 2, 1, 1, 1, NA, NA, NA, NA)
 )
+df_options$interval_distribution <- factor(df_options$interval_distribution)
 knitr::kable(df_options)
 ```
 
@@ -528,129 +617,109 @@ db_options <- autodb(df_options)
 DiagrammeR::grViz(gv(db_options))
 ```
 
-However, looking at the three parent tables shows that something is going on, since whether the individual values are missing determines the type:
+However, from looking at the data ourselves, we can see a clearly-implied structure:
 
-```{r example_data_frame_with_interval_option_db_parents}
-knitr::kable(records(db_options)$value)
-knitr::kable(records(db_options)$lower_bound)
-knitr::kable(records(db_options)$upper_bound)
-```
+- A record either has a perfectly-known value, or a distribution of what the value could be. These two options have separate attributes.
+- Distribution information contains a lower and upper bound, and a distribution type. Different distributions have different numbers of distribution parameters, which are given in shared parameter attributes.
+- Parameter attributes are ordered: their value can only be non-missing if all of the previous parameter values are non-missing.
 
-As a general solution for finding these sorts of relationships, without manually checking relations myself, I like taking each attribute with missing values, and adding a companion attribute that states whether the value is present or missing:
+As a general hack for finding these sorts of relationships, I like taking each attribute with missing values, and adding a companion attribute that states whether the value is present or missing:
 
 ```{r example_data_frame_with_interval_option_nulls}
 df_options_with_presence <- data.frame(
   id = df_options$id,
-  single_col = df_options$single_col,
   value = df_options$value,
   value_present = !is.na(df_options$value),
   lower_bound = df_options$lower_bound,
   lower_bound_present = !is.na(df_options$lower_bound),
   upper_bound = df_options$upper_bound,
   upper_bound_present = !is.na(df_options$upper_bound),
-  type = df_options$type
+  interval_distribution = df_options$interval_distribution,
+  interval_distribution_present = !is.na(df_options$interval_distribution),
+  param1 = df_options$param1,
+  param1_present = !is.na(df_options$param1),
+  param2 = df_options$param2,
+  param2_present = !is.na(df_options$param2)
 )
-knitr::kable(df_options_with_presence)
 ```
 
-This helps to make the structure more apparent in the database schema:
+This is not always practical, because adding columns rapidly increases the running time for the dependency search. However, when it's practical, it helps to make the structure more apparent in the database schema:
 
 ```{r example_data_frame_with_interval_option_nulls_db}
 db_options_with_presence <- autodb(df_options_with_presence)
 DiagrammeR::grViz(gv(db_options_with_presence))
 ```
 
+This shows that the values, bounds, and interval distributions inform the presence of each other: they drive the main union type.
+
 ```{r example_data_frame_with_interval_option_nulls_rel}
 knitr::kable(records(db_options_with_presence)$value_present)
 ```
 
-This is still reasonable when we exclude the nullable attributes as determinants:
+We can also see how the interval distribution determines how many parameters are required:
 
-```{r example_data_frame_with_interval_option_nulls_db_exnumeric}
-DiagrammeR::grViz(gv(autodb(df_options_with_presence, exclude_class = "numeric")))
+```{r example_data_frame_with_interval_option_nulls_distribution_rel}
+knitr::kable(records(db_options_with_presence)$interval_distribution)
 ```
 
-Dealing with the single-column version takes more work: even with an attribute like the `type` attribute above, to indicate `single_col` contains several different types of values, it's not clear how to proceed with the normalisation. I've found an easier place to start is to split the data by the `type` value, and normalise each group separately first, to look for differences:
+However, this doesn't show all of the expected structure. Since the only parameter presence combination not allowed is an absent `param1` and a present `param2`, there is no functional dependency from the latter to the former:
 
-```{r example_data_frame_with_interval_option_nulls_dbsplit}
-db_options_split <- lapply(split(df_options[, c("id", "single_col", "type")], df_options$type), autodb)
+```{r example_interval_option_params}
+knitr::kable(unique(df_options_with_presence[, c("param1_present", "param2_present")]))
 ```
 
-```{r example_data_frame_with_interval_option_nulls_dbval}
-DiagrammeR::grViz(gv(db_options_split$value))
-```
+However, there is an existence constraint: if `param2` is present, then `param1` must be present too. `autodb` can't detect existence constraints like this one.
 
-```{r example_data_frame_with_interval_option_nulls_dbint}
-DiagrammeR::grViz(gv(db_options_split$interval))
-```
+We could try to solve this by storing all attributes in a single vector:
 
-In this case, it's not especially informative, but it's more helpful when the option type affects functional dependencies for other sets of attributes.
-
-As a rather abstract example, we could suppose that these measurements are done with two different types of machine (`device`): both can return an interval, but only one can return a value instead.
-
-```{r example_data_frame_with_interval_option_device}
-df_options_device <- cbind(
-  df_options,
-  device = c(1L, 1L, 1L, 2L, 1L, 2L, 1L, 1L, 2L, 2L)
+```{r example_interval_vector}
+df_options_vector <- df_options
+df_options_vector$params <- Map(
+  \(p1, p2) na.omit(c(p1, p2)),
+  df_options_vector$param1,
+  df_options_vector$param2
 )
-knitr::kable(df_options_device)
+df_options_vector[, c("param1", "param2")] <- NULL
+knitr::kable(df_options_vector)
 ```
 
-The usual normalisation doesn't show anything:
+However, the ideal solution would be to have each interval distribution have its own table, so it can have attributes for its given number of parameters:
 
-```{r example_data_frame_with_interval_option_device_db}
-DiagrammeR::grViz(gv(autodb(df_options_device)))
-```
-
-However, splitting does show something:
-
-```{r example_data_frame_with_interval_option_device_dbsplit}
-db_options_device_split <- lapply(
-  split(
-    df_options_device[, c("id", "single_col", "type", "device")],
-    df_options_device$type
+```{r example_interval_option_presence_reformat_split_db}
+ds_options_nonnull <- database_schema(
+  relation_schema(
+    list(
+      id = list("id", list("id")),
+      id_value = list(c("id", "value"), list("id")),
+      id_interval = list(c("id", "lower_bound", "upper_bound"), list("id")),
+      `id_distribution:uniform` = list("id", list("id")),
+      `id_distribution:beta` = list(c("id", "param1", "param2"), list("id")),
+      `id_distribution:kumaraswamy` = list(c("id", "param1", "param2"), list("id")),
+      `id_distribution:pert` = list(c("id", "param1"), list("id"))
+    ),
+    names(df_options)
   ),
-  autodb
+  list(
+    list("id_value", "id", "id", "id"),
+    list("id_interval", "id", "id", "id"),
+    list("id_distribution:uniform", "id", "id_interval", "id"),
+    list("id_distribution:beta", "id", "id_interval", "id"),
+    list("id_distribution:kumaraswamy", "id", "id_interval", "id"),
+    list("id_distribution:pert", "id", "id_interval", "id")
+  )
 )
+db_options_nonnull <- create(ds_options_nonnull)
+records(db_options_nonnull)$id <- unique(subset(df_options, TRUE, "id"))
+records(db_options_nonnull)$id_value <- unique(subset(df_options, !is.na(value), c("id", "value")))
+records(db_options_nonnull)$id_interval <- unique(subset(df_options, is.na(value), c("id", "lower_bound", "upper_bound")))
+records(db_options_nonnull)$`id_distribution:uniform` <- unique(subset(df_options, interval_distribution == "uniform", c("id")))
+records(db_options_nonnull)$`id_distribution:beta` <- unique(subset(df_options, interval_distribution == "Beta", c("id", "param1", "param2")))
+records(db_options_nonnull)$`id_distribution:kumaraswamy` <- unique(subset(df_options, interval_distribution == "Kumaraswamy", c("id", "param1", "param2")))
+records(db_options_nonnull)$`id_distribution:pert` <- unique(subset(df_options, interval_distribution == "PERT", c("id", "param1")))
+DiagrammeR::grViz(gv(db_options_nonnull))
 ```
 
-```{r example_data_frame_with_interval_option_device_dbval}
-DiagrammeR::grViz(gv(db_options_device_split$value))
-```
-
-```{r example_data_frame_with_interval_option_device_dbint}
-DiagrammeR::grViz(gv(db_options_device_split$interval))
-```
-
-Seeing that all measurements with value type used the same device is something that then might raise our attention. Of course, this wouldn't happen if there were more than two types of device, with some able to give values and some not.
-
-This is much easier when the measurement is split across multiple columns, and we add presence companion attributes:
-
-```{r example_data_frame_with_interval_option_device_dball}
-df_options_deviceall <- cbind(
-  df_options_with_presence,
-  device = df_options_device$device
-)
-DiagrammeR::grViz(gv(autodb(df_options_deviceall)))
-```
-
-```{r example_data_frame_with_interval_option_device_dbsplitall}
-db_options_device_splitall <- lapply(
-  split(
-    df_options_deviceall,
-    df_options_deviceall$type
-  ),
-  autodb
-)
-```
-
-```{r example_data_frame_with_interval_option_device_dbvalall}
-DiagrammeR::grViz(gv(db_options_device_splitall$value))
-```
-
-```{r example_data_frame_with_interval_option_device_dbintall}
-DiagrammeR::grViz(gv(db_options_device_splitall$interval))
-```
+Currently, `autodb` is far away from being able to accomplish this.
 
 # Limitations
 
@@ -662,9 +731,9 @@ Bernstein's synthesis is guaranteed to minimise the number of relations created 
 fds_redkey <- functional_dependency(
   list(
     list("a", "b"),
+    list("d", "c"),
     list(c("b", "d"), "a"),
     list("a", "c"),
-    list("d", "c"),
     list(c("b", "c"), "d")
   ),
   letters[1:4]
@@ -685,9 +754,9 @@ These relations have some redundancy: relation `a` implies `{b, d} -> c`, but re
 fds_redkey_fix <- functional_dependency(
   list(
     list("a", "b"),
+    list("d", "c"),
     list(c("b", "c"), "a"),
-    list("a", "d"),
-    list("d", "c")
+    list("a", "d")
   ),
   letters[1:4]
 )
@@ -697,3 +766,22 @@ DiagrammeR::grViz(gv(schema_redkey_fix))
 ```
 
 Unfortunately, there's no way in the package to find better sets like this.
+
+## Normalisation isn't all there is to database design
+
+As mentioned in the section on avoidable attributes, normal forms only refer to one relation at a time: referring to a database as following a normal form just means its relations follow it. Even if we also add the foreign key references that normal forms don't require, this leaves room for database schemas that satisfy normal forms, but that we wouldn't want to use.
+
+For a simple example, take this database schema, whose relation schemas are in third normal form:
+
+```{r dup_example}
+dup_db <- autodb(ChickWeight)
+DiagrammeR::grViz(gv(dup_db))
+```
+
+If we now create copies of these relations, with the intention that copies always contain the same data, then all relations are still in third normal form, and so we'd say the database is too:
+
+```{r dup_example_dup}
+DiagrammeR::grViz(gv(dup_db[c(1, 1, 2, 2, 2)]))
+```
+
+However, no one would claim that this is a good database design, since there is clearly a large amount of data redundancy. Higher normal forms would not change this.
