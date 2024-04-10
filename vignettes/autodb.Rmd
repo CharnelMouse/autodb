@@ -397,7 +397,7 @@ Subsetting a database schema also removes any foreign key references involving r
 DiagrammeR::grViz(gv(nudge_schema_relfiltered))
 ```
 
-Re-running `autoref`, has no effect, because the `es_id` section doesn't contain any key for the `title` section:
+Re-running `autoref` has no effect, because the `es_id` section doesn't contain any key for the `title` section:
 
 ```{r nudge_publication_badfilter_autoref}
 identical(autoref(nudge_schema_relfiltered), nudge_schema_relfiltered)
@@ -542,7 +542,7 @@ The literal functional dependency `X -> Y` holds, or the functional dependency `
 
 LFDs are more generic than standard functional dependencies: since practically every class takes the identity operator, they practically make no assumptions about the attribute classes present in a data set. 
 
-There are other FD variants than handle missing values, but, unlike most of them, LFDs still satisfy Armstrong's axioms, allowing them to be used in normalisation in the same way as normal FDs. For example, they still respect transitivity: if X -> Y and Y -> Z literally, then X -> Z literally.
+There are other FD variants that handle missing values, but, unlike most of them, LFDs still satisfy Armstrong's axioms, allowing them to be used in normalisation in the same way as normal FDs. For example, they still respect transitivity: if X -> Y and Y -> Z literally, then X -> Z literally.
 
 However, ignoring the special status of missing values in this way ignores important structural information. In the relational model, and ideally in relational databases, we want to have no missing values at all, partly to avoid awkward questions about what trinary logic means with respect to filtering or joining tables. For example, take the following data frame:
 
