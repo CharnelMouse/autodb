@@ -205,8 +205,8 @@ c.database <- function(...) {
 }
 
 #' @exportS3Method
-insert.database <- function(x, vals, ...) {
-  res <- insert.relation(x, vals, ...)
+insert.database <- function(x, vals, relations = names(x), ...) {
+  res <- insert.relation(x, vals, relations, ...)
   dfs <- records(res)
   reference_checks <- references(res)[vapply(
     references(res),

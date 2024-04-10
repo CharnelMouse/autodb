@@ -353,11 +353,14 @@ create <- function(x, ...) {
 #'
 #' @param x an R object, into which to insert data.
 #' @param vals a data frame, containing data to insert.
+#' @param relations a character vector, containing names of elements of \code{x}
+#'   into which to insert data. By default, \code{insert} attempts to insert
+#'   data into every element.
 #' @param ... further arguments pass on to methods.
 #'
 #' @return an R object of the same class as \code{x}, containing the additional
 #'   new data.
 #' @export
-insert <- function(x, vals, ...) {
+insert <- function(x, vals, relations = names(x), ...) {
   UseMethod("insert")
 }

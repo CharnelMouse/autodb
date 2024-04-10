@@ -180,15 +180,22 @@ c.relation <- function(...) {
 }
 
 #' @exportS3Method
-insert.relation <- function(x, vals, ...) {
+insert.relation <- function(x, vals, relations = names(x), ...) {
+  if (any(!is.element(relations, names(x))))
+    stop("given relations must exist")
+  if (anyDuplicated(relations))
+    stop("given relations must be unique")
+  if (length(relations) == 0)
+    return(x)
   extra <- setdiff(names(vals), attrs_order(x))
   if (length(extra) > 0L)
     stop(paste(
       "inserted attributes aren't included in target:",
       toString(extra)
     ))
-  new_records <- lapply(
-    records(x),
+  new_records <- records(x)
+  new_records[relations] <- lapply(
+    new_records[relations],
     \(df) {
       if (!all(is.element(names(df), names(vals))))
         return(df)
@@ -230,8 +237,8 @@ insert.relation <- function(x, vals, ...) {
         logical(nrow(df))
       )
     },
-    new_records,
-    keys(x)
+    new_records[relations],
+    keys(x)[relations]
   )
   if (any(unlist(keydups))) {
     bad_relation_names <- names(new_records)[vapply(keydups, any, logical(1))]

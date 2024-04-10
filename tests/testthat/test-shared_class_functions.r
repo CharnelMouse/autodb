@@ -36,25 +36,47 @@ describe("create", {
 })
 
 describe("insert", {
+  it("expects relations to be unique elements", {
+    rel <- create(relation_schema(list(a = list("a", list("a"))), "a"))
+    expect_error(
+      insert(rel, data.frame(a = FALSE), "b"),
+      "^given relations must exist$"
+    )
+    expect_error(
+      insert(rel, data.frame(a = FALSE), c("a", "a")),
+      "^given relations must be unique$"
+    )
+  })
   it("does nothing when inserting nothing into nonempty relations, replaces into empty", {
     forall(
-      gen.relation(letters[1:4], 0L, 6L, rows_from = 1L),
-      expect_biidentical(
-        identity,
-        \(r) insert(
-          r,
-          data.frame(setNames(
-            lapply(attrs_order(r), \(x) logical()),
-            attrs_order(r)
-          ))
-        )
-      )
+      gen.relation(letters[1:4], 0L, 6L, rows_from = 1L) |>
+        gen.and_then(\(rel) {
+          list(
+            gen.pure(rel),
+            gen.subsequence(names(rel))
+          )
+        }),
+      \(r, relnames) {
+        expect_biidentical(
+          identity,
+          with_args(
+            insert,
+            vals = data.frame(setNames(
+              lapply(attrs_order(r), \(x) logical()),
+              attrs_order(r)
+            )),
+            relations = relnames
+          )
+        )(r)
+      },
+      curry = TRUE
     )
     forall(
       gen.relation_schema(letters[1:4], 0L, 6L) |>
         gen.and_then(\(schema) {
           list(
             gen.pure(create(schema)),
+            gen.subsequence(names(schema)),
             gen.attrs_class(attrs_order(schema)) |>
               gen.and_then(\(classes) {
                 gen.df_fixed_ranges(
@@ -66,28 +88,36 @@ describe("insert", {
               })
           )
         }),
-      \(rel, df) {
+      \(rel, relnames, df) {
         expected <- rel
-        records(expected) <- lapply(
-          records(expected),
+        records(expected)[relnames] <- lapply(
+          records(expected)[relnames],
           \(recs) df[, names(recs), drop = FALSE]
         )
-        expect_identical(insert(rel, df), expected)
+        expect_identical(insert(rel, df, relations = relnames), expected)
       },
       curry = TRUE
     )
     forall(
-      gen.database(letters[1:6], 0L, 6L, rows_from = 1L),
-      expect_biidentical(
+      gen.database(letters[1:6], 0L, 6L, rows_from = 1L) |>
+        gen.and_then(\(db) {
+          list(
+            gen.pure(db),
+            gen.subsequence(names(db))
+          )
+        }),
+      \(db, relnames) expect_biidentical(
         identity,
-        \(db) insert(
-          db,
-          data.frame(setNames(
+        with_args(
+          insert,
+          vals = data.frame(setNames(
             lapply(attrs_order(db), \(x) logical()),
             attrs_order(db)
-          ))
+          )),
+          relations = relnames
         )
-      )
+      )(db),
+      curry = TRUE
     )
     forall(
       gen.database_schema(letters[1:4], 0L, 6L) |>
@@ -95,6 +125,7 @@ describe("insert", {
           gen.attrs_class(attrs_order(schema), references(schema)) |>
             gen.and_then(\(classes) list(
               gen.pure(create(schema)),
+              gen.subsequence(names(schema)),
               gen.pure(classes),
               gen.df_fixed_ranges(
                 classes,
@@ -104,13 +135,13 @@ describe("insert", {
               )
             ))
         }),
-      \(db, classes, df) {
+      \(db, relnames, classes, df) {
         expected <- db
-        records(expected) <- lapply(
-          records(expected),
+        records(expected)[relnames] <- lapply(
+          records(expected)[relnames],
           \(recs) df[, names(recs), drop = FALSE]
         )
-        expect_identical(insert(db, df), expected)
+        expect_identical(insert(db, df, relations = relnames), expected)
       },
       curry = TRUE
     )
@@ -208,7 +239,8 @@ describe("insert", {
                 nms = attrs_order(r),
                 remove_dup_rows = TRUE
               )) |>
-              gen.with(with_args(remove_insertion_key_violations, relation = r))
+              gen.with(with_args(remove_insertion_key_violations, relation = r)),
+            gen.subsequence(names(r))
           )
         }),
       insert %>>% is_valid_relation,
@@ -229,7 +261,8 @@ describe("insert", {
                 remove_dup_rows = TRUE
               )) |>
               gen.with(with_args(remove_insertion_key_violations, relation = d)) |>
-              gen.with(with_args(remove_insertion_reference_violations, database = d))
+              gen.with(with_args(remove_insertion_reference_violations, database = d)),
+            gen.subsequence(names(d))
           )
         }),
       insert %>>% is_valid_database,
@@ -257,7 +290,42 @@ describe("insert", {
         relats <- references(db_schema)
         rel <- create(rel_schema) |> insert(df1)
         list(rel, df1, df2, relats)
-      }))
+      })) |>
+      gen.and_then(uncurry(\(rel, df1, df2, relats) list(
+        gen.pure(rel),
+        gen.pure(df1),
+        gen.pure(df2),
+        gen.pure(relats),
+        gen.subsequence(names(rel)) |>
+          gen.with(\(nms) {
+            # add relevant ancestors to ensure no reference violations
+            get_new_parents <- function(nms) {
+              as <- attrs(rel)
+              used_nms <- nms[vapply(
+                nms,
+                \(nm) all(is.element(as[[nm]], names(df2))),
+                logical(1)
+              )]
+              valid_refs <- Filter(
+                \(ref) {
+                  ref[[1]] %in% used_nms &&
+                    all(is.element(attrs(rel)[[ref[[3]]]], names(df2)))
+                },
+                relats
+              ) |>
+                vapply(\(ref) ref[[3]], character(1))
+              parents <- setdiff(valid_refs, used_nms)
+              parents
+            }
+            parents <- get_new_parents(nms)
+            while (length(parents) > 0) {
+              nms <- c(nms, parents)
+              parents <- get_new_parents(parents)
+              parents <- setdiff(parents, nms)
+            }
+            nms
+          })
+      )))
     gen.ex <- list(
       gen_df(6, 7, minrow = 2),
       gen.relation(letters[1:4], 0, 6, rows_from = 1L, rows_to = 1L),
@@ -305,14 +373,14 @@ describe("insert", {
     }
     forall(
       gen.ex_from_table,
-      \(r, old_df, df, rels) {
+      \(r, old_df, df, rels, relnames) {
         if (nrow(df) == 0L || length(rels) == 0L)
           discard()
         (
           biapply(
             with_args(database, references = rels) %>>%
-              with_args(insert, vals = df),
-            with_args(insert, vals = df) %>>%
+              with_args(insert, vals = df, relations = relnames),
+            with_args(insert, vals = df, relations = relnames) %>>%
               with_args(database, references = rels)
           ) %>>%
             (uncurry(expect_both_valid_db_then(expect_identical)))

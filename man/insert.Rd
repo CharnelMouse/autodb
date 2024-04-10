@@ -4,12 +4,16 @@
 \alias{insert}
 \title{Insert data}
 \usage{
-insert(x, vals, ...)
+insert(x, vals, relations = names(x), ...)
 }
 \arguments{
 \item{x}{an R object, into which to insert data.}
 
 \item{vals}{a data frame, containing data to insert.}
+
+\item{relations}{a character vector, containing names of elements of \code{x}
+into which to insert data. By default, \code{insert} attempts to insert
+data into every element.}
 
 \item{...}{further arguments pass on to methods.}
 }
