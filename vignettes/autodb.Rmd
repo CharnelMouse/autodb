@@ -662,64 +662,30 @@ We can also see how the interval distribution determines how many parameters are
 knitr::kable(records(db_options_with_presence)$interval_distribution)
 ```
 
-However, this doesn't show all of the expected structure. Since the only parameter presence combination not allowed is an absent `param1` and a present `param2`, there is no functional dependency from the latter to the former:
+There's clearly additional structure here, since there's an existence constraint: if `param2` is present, then `param1` must also be present. If we notice a situation like this, we can attempt further investigation by splitting the data, and passing each part into `autodb` separately:
 
-```{r example_interval_option_params}
-knitr::kable(unique(df_options_with_presence[, c("param1_present", "param2_present")]))
+```{r example_data_frame_with_interval_option_p1absent_db}
+db_options_with_presence_p1absent <- autodb(subset(
+  df_options_with_presence,
+  !param1_present
+))
+DiagrammeR::grViz(gv(db_options_with_presence_p1absent))
 ```
 
-However, there is an existence constraint: if `param2` is present, then `param1` must be present too. `autodb` can't detect existence constraints like this one.
-
-We could try to solve this by storing all attributes in a single vector:
-
-```{r example_interval_vector}
-df_options_vector <- df_options
-df_options_vector$params <- Map(
-  \(p1, p2) na.omit(c(p1, p2)),
-  df_options_vector$param1,
-  df_options_vector$param2
-)
-df_options_vector[, c("param1", "param2")] <- NULL
-knitr::kable(df_options_vector)
+```{r example_data_frame_with_interval_option_p1present_db}
+DiagrammeR::grViz(gv(autodb(subset(
+  df_options_with_presence,
+  param1_present
+))))
 ```
 
-However, the ideal solution would be to have each interval distribution have its own table, so it can have attributes for its given number of parameters:
+In this case, the constraint is reflected by the first subset, where `param1` is absent, always having `param2` absent, as indicated by both `param2_present` and `param2` being constant:
 
-```{r example_interval_option_presence_reformat_split_db}
-ds_options_nonnull <- database_schema(
-  relation_schema(
-    list(
-      id = list("id", list("id")),
-      id_value = list(c("id", "value"), list("id")),
-      id_interval = list(c("id", "lower_bound", "upper_bound"), list("id")),
-      `id_distribution:uniform` = list("id", list("id")),
-      `id_distribution:beta` = list(c("id", "param1", "param2"), list("id")),
-      `id_distribution:kumaraswamy` = list(c("id", "param1", "param2"), list("id")),
-      `id_distribution:pert` = list(c("id", "param1"), list("id"))
-    ),
-    names(df_options)
-  ),
-  list(
-    list("id_value", "id", "id", "id"),
-    list("id_interval", "id", "id", "id"),
-    list("id_distribution:uniform", "id", "id_interval", "id"),
-    list("id_distribution:beta", "id", "id_interval", "id"),
-    list("id_distribution:kumaraswamy", "id", "id_interval", "id"),
-    list("id_distribution:pert", "id", "id_interval", "id")
-  )
-)
-db_options_nonnull <- create(ds_options_nonnull)
-records(db_options_nonnull)$id <- unique(subset(df_options, TRUE, "id"))
-records(db_options_nonnull)$id_value <- unique(subset(df_options, !is.na(value), c("id", "value")))
-records(db_options_nonnull)$id_interval <- unique(subset(df_options, is.na(value), c("id", "lower_bound", "upper_bound")))
-records(db_options_nonnull)$`id_distribution:uniform` <- unique(subset(df_options, interval_distribution == "uniform", c("id")))
-records(db_options_nonnull)$`id_distribution:beta` <- unique(subset(df_options, interval_distribution == "Beta", c("id", "param1", "param2")))
-records(db_options_nonnull)$`id_distribution:kumaraswamy` <- unique(subset(df_options, interval_distribution == "Kumaraswamy", c("id", "param1", "param2")))
-records(db_options_nonnull)$`id_distribution:pert` <- unique(subset(df_options, interval_distribution == "PERT", c("id", "param1")))
-DiagrammeR::grViz(gv(db_options_nonnull))
+```{r example_data_frame_with_interval_option_p1absent_constants}
+knitr::kable(records(db_options_with_presence_p1absent)$constants)
 ```
 
-Currently, `autodb` is far away from being able to accomplish this.
+Since this data splitting is currently a manual process, there are practical limits to how far we can take this.
 
 # Limitations
 
