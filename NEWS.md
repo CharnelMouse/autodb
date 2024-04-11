@@ -1,6 +1,6 @@
 # autodb (development version)
 
-Breaking changes:
+## Breaking changes
 
 * Renamed `dfd` to `discover`, to reflect the generalisation to allow the use of other methods. At the moment, this includes DFD and Tane.
 * Removed `flatten` from exported functions, in favour of flattening the functional dependencies in `dfd`/`discover` instead. Since `flatten` was usually called anyway, and its output is more readable since adding a `print` method for it, there was little reason to keep the old `dfd`/`discover` output format, where functional dependencies were grouped by dependent.
@@ -11,7 +11,7 @@ Breaking changes:
 * The `database` class no longer assigns a `parents` attribute to each relation, since this duplicates the foreign key reference information given in `references`.
 * `relationships` in `database_schema` and `database` objects are now called `references`, to better reflect their being foreign key constraints, and they are stored in a format that better reflects this: instead of an element for each pair of attributes in a foreign key, there is one element for the whole foreign key, containing all of the involved attributes. Similarly, they are now printed in the format "child.{c1, c2, ...} -> parent.{p1, p2, ...}" instead of "child.c1 -> parent.p1; child.c2 -> parent.p2; ...".
 
-Improvements:
+## Improvements
 
 * Added classes and methods for important data structures:
     * Added a `functional_dependency` class for flattened functional dependency sets. The attributes vector is now stored as an attribute, so that the dependencies can be accessed as a simple list without list subsetting operators. There are also `detset`, `dependent`, and `attrs_order` generic functions for extracting the relevant parts. `detset` and `dependent`, in particular, should be useful for the purposes of filtering predicates.
@@ -31,7 +31,7 @@ Improvements:
 * Added a `skip_bijections` option to `dfd`/`discover`, to speed up functional dependency searches where there are pairwise-equivalent attributes present.
 * Added an option to use Tane instead of DFD for functional dependency search.
 
-Fixes:
+## Fixes
 
 * Corrected vignette re: when to remove spurious dependencies before.
 * Corrected `autodb` documentation link to page with database format information.
@@ -43,7 +43,7 @@ Fixes:
 
 * Added a `NEWS.md` file to track changes to the package.
 
-Improvements:
+## Improvements
 
 * Added examples for `autodb`, `dfd`, `gv`, and `rejoin`.
 * Added a reference for removing avoidable attributes for enhanced third normal
@@ -54,7 +54,7 @@ form.
 * Tidied up `nudge` data documentation, improved commentary on publication references in vignette.
 * Removed accuracy argument from `autodb`, due to approximate dependencies now returning an error in `decompose`.
 
-Fixes:
+## Fixes
 
 * Fixed `print.database` to refer to records instead of rows.
 * Fixed existing reference formatting.
