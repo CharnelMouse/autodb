@@ -125,7 +125,7 @@ references.database <- function(x, ...) {
 subrelations.database <- function(x, ...) {
   y <- unclass(x)
   attributes(y) <- NULL
-  relation(stats::setNames(y, names(x)), attrs_order(x))
+  relation_nocheck(stats::setNames(y, names(x)), attrs_order(x))
 }
 
 #' @exportS3Method

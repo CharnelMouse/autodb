@@ -77,6 +77,10 @@ relation_schema <- function(
   for (s in schemas)
     if (!all(is.element(unlist(s[[2]]), s[[1]])))
       stop("attributes in keys must be present in relation")
+  relation_schema_nocheck(schemas, attrs_order)
+}
+
+relation_schema_nocheck <- function(schemas, attrs_order) {
   schemas <- lapply(
     schemas,
     \(s) {

@@ -89,7 +89,7 @@ references.database_schema <- function(x, ...) {
 subschemas.database_schema <- function(x, ...) {
   y <- unclass(x)
   attributes(y) <- NULL
-  relation_schema(stats::setNames(y, names(x)), attrs_order(x))
+  relation_schema_nocheck(stats::setNames(y, names(x)), attrs_order(x))
 }
 
 #' @exportS3Method

@@ -77,6 +77,10 @@ relation <- function(relations, attrs_order) {
     logical(1)
   )))
 
+  relation_nocheck(relations, attrs_order)
+}
+
+relation_nocheck <- function(relations, attrs_order) {
   structure(
     relations,
     attrs_order = attrs_order,
