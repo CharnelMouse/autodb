@@ -12,8 +12,7 @@ gv(x, ...)
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A scalar character, containing text input for Graphviz or the
-\code{DiagrammeR} package.
+A scalar character, containing text input for Graphviz.
 }
 \description{
 Produces text input for Graphviz to make an HTML diagram of a given object.
@@ -64,17 +63,23 @@ single image, if a user wishes to do so.
 # simple data.frame example
 txt_df <- gv(ChickWeight, "chick")
 cat(txt_df)
-DiagrammeR::grViz(txt_df)
+if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+  DiagrammeR::grViz(txt_df)
+}
 # simple database example
 db <- autodb(ChickWeight, "chick")
 txt_db <- gv(db)
 cat(txt_db)
-DiagrammeR::grViz(txt_db)
+if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+  DiagrammeR::grViz(txt_db)
+}
 # simple relation schemas
 rschema <- synthesise(discover(ChickWeight, 1))
 txt_rschema <- gv(rschema)
 cat(txt_rschema)
-DiagrammeR::grViz(txt_rschema)
+if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+  DiagrammeR::grViz(txt_rschema)
+}
 # simple database schema
 dschema <- normalise(discover(ChickWeight, 1))
 txt_dschema <- gv(dschema)
@@ -84,7 +89,9 @@ DiagrammeR::grViz(txt_dschema)
 rel <- create(synthesise(discover(ChickWeight, 1)))
 txt_rel <- gv(rel)
 cat(txt_rel)
-DiagrammeR::grViz(txt_rel)
+if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+  DiagrammeR::grViz(txt_rel)
+}
 }
 \seealso{
 \code{\link{gv.data.frame}}, \code{\link{gv.relation_schema}},

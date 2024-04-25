@@ -94,10 +94,20 @@ db_text <- gv(db)
 cat(db_text)
 ```
 
-This can be saved to a file for passing to Graphviz elsewhere, or can be passed into `grViz` in the `DiagrammeR` package:
+This can be saved to a file for passing to Graphviz elsewhere, or can be passed into an R function that renders Graphviz code, such as `grViz` in the `DiagrammeR` package:
+
+```{r check_diagrammer}
+if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+  show <- function(x) DiagrammeR::grViz(gv(x))
+  maybe_plot <- function(x) DiagrammeR::grViz(gv(x))
+}else{
+  show <- print
+  maybe_plot <- function(x) invisible(NULL)
+}
+```
 
 ```{r db_plot}
-DiagrammeR::grViz(db_text)
+maybe_plot(db)
 ```
 
 Each relation is represented as a box, with the top row giving the relation name and the number of records, and the other rows detailing the attributes. In the middle is a grid of cells: each column of cells represents a (candidate) key for the relation, where attributes in that key have their cell filled in black.
@@ -144,9 +154,7 @@ schema
 Like the database before, we can also plot this database schema:
 
 ```{r}
-schema_text <- gv(schema)
-cat(schema_text)
-DiagrammeR::grViz(schema_text)
+maybe_plot(schema)
 ```
 
 This is similar to the database plot given before, but there is some information not present, that requires the data frame itself. We do have class information about the attributes, extracted from the data frame during dependency discovery, but we have no record counts for the individual relation schemas. However, we do have automatically-generated names for the individual relations.
@@ -166,7 +174,7 @@ This is a simple set of data, with a single count observation, `Freq`, for each 
 If we use `autodb` again, we get the following database:
 
 ```{r}
-DiagrammeR::grViz(gv(autodb(as.data.frame(Titanic))))
+show(autodb(as.data.frame(Titanic)))
 ```
 
 Oops! The DFD algorithm found some functional dependencies where the count could be used to determine another attribute. These are clearly spurious: frequency count can't causally determine age, for example. However, the algorithm still finds these dependencies, because the counts are unique often enough to make these dependencies hold in the given data.
@@ -189,7 +197,7 @@ identical(titanic_deps_freqonly, discover(as.data.frame(Titanic), 1, exclude_cla
 These can both be used as arguments to `autodb` too:
 
 ```{r}
-DiagrammeR::grViz(gv(autodb(as.data.frame(Titanic), exclude = "Freq")))
+show(autodb(as.data.frame(Titanic), exclude = "Freq"))
 ```
 
 Generally, excluding numeric attributes as determinants is often useful, because we expect non-integer numbers to be a measurement, not part of a primary key.
@@ -225,9 +233,7 @@ normalise(deps)
 Plotting this updated database schema shows the same relation schemas as before, linked together by foreign key references:
 
 ```{r}
-linked_text <- gv(linked_schema)
-cat(linked_text)
-DiagrammeR::grViz(linked_text)
+maybe_plot(linked_schema)
 ```
 
 ## Decomposing the original relation
@@ -236,7 +242,7 @@ Finally, once we have our normalised database schema, we can apply it to our ori
 
 ```{r chickWeight_db2_plot}
 db2 <- decompose(ChickWeight, linked_schema)
-DiagrammeR::grViz(gv(db2, name = "Chick Weights"))
+show(db2)
 ```
 
 We now have the record counts added.
@@ -259,7 +265,11 @@ When rejoined, the relation attributes will be in the original order. However, t
 Included in the package is a `r paste(dim(nudge), collapse = "-by-")` data frame called `nudge`:
 
 ```{r nudge_classes}
-DiagrammeR::grViz(gv(nudge, name = "nudge"))
+if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+  DiagrammeR::grViz(gv(nudge, name = "nudge"))
+}else{
+  summary(nudge)
+}
 ```
 
 This is the data set for a meta-analysis, looking at the effectiveness of "nudge" interventions. Measurements are taken within a three-layer hierarchy: publications contain studies, which contain effect size measurements. We expect this hierarchy to be apparent in the normalisation.
@@ -276,7 +286,7 @@ nudge_deps <- discover(
   exclude_class = "numeric"
 )
 nudge_schema <- normalise(nudge_deps, remove_avoidable = TRUE)
-DiagrammeR::grViz(gv(nudge_schema))
+show(nudge_schema)
 ```
 
 We can see a relation, with many attributes, determined by the effect size ID number, `es_id`. This contains all of the numeric measurements, as expected in the relation for the lowest level in the hierarchy. As also expected, this has a foreign key reference to a relation for study-level information, determined by the study ID number, `study_id`.
@@ -327,7 +337,7 @@ nudge_deps_filtered <- nudge_deps[
     )
 ]
 nudge_schema_filtered <- normalise(nudge_deps_filtered, remove_avoidable = TRUE)
-DiagrammeR::grViz(gv(nudge_schema_filtered))
+show(nudge_schema_filtered)
 ```
 
 We now, finally, have the study location in a non-spurious relation. If we want to, we could also add the dependencies we fail to find, due to excluding the sample size attributes from determinant sets:
@@ -338,7 +348,7 @@ nudge_deps_size
 nudge_deps_final <- c(nudge_deps_filtered, nudge_deps_size)
 nudge_schema_final <- normalise(nudge_deps_final, remove_avoidable = TRUE)
 nudge_database_final <- decompose(nudge, nudge_schema_final, "nudge")
-DiagrammeR::grViz(gv(nudge_schema_final))
+show(nudge_schema_final)
 ```
 
 The new schema confirms what we might expect, that the total sample size, and the sizes of control and treatment arms, only have two degrees of freedom: knowing two of them determines the other.
@@ -366,7 +376,7 @@ Automatic search for functional dependencies cannot check domain-specific constr
 Going back to the final database schema, removing dependencies has revealed extra information about study locations, via the new `title_type_experiment` relation: studies of the same experiment type in a publication always have the same location. Looking at the resulting database shows that this removes many entries of what would be redundant location information if kept in the study relation:
 
 ```{r nudge_clean_database}
-DiagrammeR::grViz(gv(nudge_database_final))
+show(nudge_database_final)
 ```
 
 While this is not a dependency we could expect to hold if more data was collected, it's a reasonable dependency for the given data set, which won't be added to.
@@ -394,7 +404,7 @@ nudge_schema_relfiltered <- nudge_schema[
 Subsetting a database schema also removes any foreign key references involving removed schemas, so the resulting schema is still valid. However, any foreign key reference chains with removed schemas in the middle are broken. Amongst others, in this case we lose the reference between the three relations for the three hierarchical data levels:
 
 ```{r nudge_publication_badfilter_gv}
-DiagrammeR::grViz(gv(nudge_schema_relfiltered))
+show(nudge_schema_relfiltered)
 ```
 
 Re-running `autoref` has no effect, because the `es_id` section doesn't contain any key for the `title` section:
@@ -424,13 +434,13 @@ example_fds
 The first two dependencies make the third transitive, so it's ignored when constructing the relation schemas: it's implied, and enforced, by the `title` and `reference_type_experiment` relation schemas.
 
 ```{r nudge_badfilter_example_transitive}
-DiagrammeR::grViz(gv(normalise(example_fds, ensure_lossless = FALSE)))
+show(normalise(example_fds, ensure_lossless = FALSE))
 ```
 
 However, when `reference, type_experiment -> location` is removed as spurious, `title, type_experiment -> location` is no longer transitive, so it now appears as its own relation schema.
 
 ```{r nudge_badfilter_example_nontransitive}
-DiagrammeR::grViz(gv(normalise(example_fds[-2], ensure_lossless = FALSE)))
+show(normalise(example_fds[-2], ensure_lossless = FALSE))
 ```
 
 When we instead remove the `reference_type_experiment` schema, this implicitly also throws away the `title, type_experiment -> location` dependency that it co-implies. We throw away non-spurious information that we don't intend to.
@@ -453,7 +463,7 @@ nudge_approx_cheat_database_schema <- discover(
   exclude_class = "numeric"
 ) |>
   normalise()
-DiagrammeR::grViz(gv(nudge_approx_cheat_database_schema))
+show(nudge_approx_cheat_database_schema)
 ```
 
 Currently `decompose` doesn't account for approximate dependencies, resulting in invalid databases, so here we just work with the database schema.
@@ -473,13 +483,13 @@ nudge_approx_database_schema <- discover(
   exclude_class = "numeric"
 ) |>
   normalise()
-DiagrammeR::grViz(gv(nudge_approx_database_schema))
+show(nudge_approx_database_schema)
 ```
 
 This is a little overwhelming, so we'll use a utility function called `reduce`. This returns only the named "main" relation, and any relations for which it is a descendant via foreign key references. Reducing the approximate schema, with the effect size table as the main table, gives us this set of relations:
 
 ```{r nudge_approximate_reduced}
-DiagrammeR::grViz(gv(reduce(nudge_approx_database_schema, "es_id")))
+show(reduce(nudge_approx_database_schema, "es_id"))
 ```
 
 Questionable intermediate relations aside, we can see that there is now a publication-level relation with the publication ID as a key, since it determines the publication attributes once we remove one of the duplicate records we discovered before.
@@ -509,7 +519,7 @@ avoid_deps <- functional_dependency(
 )
 avoid_deps
 avoid_schema <- normalise(avoid_deps)
-DiagrammeR::grViz(gv(avoid_schema))
+show(avoid_schema)
 ```
 
 Attributes `A` and `B` are equivalent, since relation `A` has them both as a key. In other words, relation `A` is a simple lookup relation. Because of this, we could remove `B` from relation `A_C`, and replace the key `B, D` with `A, D`, which is equivalent when accounting for relation `A`.
@@ -521,7 +531,7 @@ avoid_schema_removed <- normalise(
   avoid_deps,
   remove_avoidable = TRUE
 )
-DiagrammeR::grViz(gv(avoid_schema_removed))
+show(avoid_schema_removed)
 ```
 
 This schema is now in LTK form, with no remaining avoidable attributes. We could have also removed `A` from relation `A_C` instead of `B`, so this process may not have a unique result. The package's implementation prefers to remove attributes that appear later in the original relation.
@@ -555,7 +565,7 @@ knitr::kable(df_options)
 
 ```{r example_data_frame_with_interval_option_db}
 db_options <- autodb(df_options)
-DiagrammeR::grViz(gv(db_options))
+show(db_options)
 ```
 
 However, from looking at the data ourselves, we can see a clearly-implied structure:
@@ -588,7 +598,7 @@ This is not always practical, because adding columns rapidly increases the runni
 
 ```{r example_data_frame_with_interval_option_nulls_db}
 db_options_with_presence <- autodb(df_options_with_presence)
-DiagrammeR::grViz(gv(db_options_with_presence))
+show(db_options_with_presence)
 ```
 
 This shows that the values, bounds, and interval distributions inform the presence of each other: they drive the main union type.
@@ -610,14 +620,14 @@ db_options_with_presence_p1absent <- autodb(subset(
   df_options_with_presence,
   !param1_present
 ))
-DiagrammeR::grViz(gv(db_options_with_presence_p1absent))
+show(db_options_with_presence_p1absent)
 ```
 
 ```{r example_data_frame_with_interval_option_p1present_db}
-DiagrammeR::grViz(gv(autodb(subset(
+show(autodb(subset(
   df_options_with_presence,
   param1_present
-))))
+)))
 ```
 
 In this case, the constraint is reflected by the first subset, where `param1` is absent, always having `param2` absent, as indicated by both `param2_present` and `param2` being constant:
@@ -660,7 +670,7 @@ knitr::kable(df_nas)
 `autodb` currently treats `NA` as just another value, which results in the initial data frame not being split in the database schema:
 
 ```{r example_data_frame_with_NAs_autodb}
-DiagrammeR::grViz(gv(autodb(df_nas)))
+show(autodb(df_nas))
 ```
 
 In this case, a missing death date represents no death, and we would prefer to move death information to a separate relation, containing only patients with a death date, in this case patient 3:
@@ -680,7 +690,7 @@ ideal_db <- decompose(
   )
 )
 records(ideal_db)$patient_death <- subset(records(ideal_db)$patient_death, !is.na(death_date))
-DiagrammeR::grViz(gv(ideal_db))
+show(ideal_db)
 ```
 
 This makes more of the data's structure apparent, and enforceable, in the database structure, since it makes it clear that the death date is optional.
@@ -711,7 +721,7 @@ Normalising gives the following relations:
 
 ```{r redundant_keys_schema}
 schema_redkey <- normalise(fds_redkey, remove_avoidable = TRUE)
-DiagrammeR::grViz(gv(schema_redkey))
+show(schema_redkey)
 ```
 
 These relations have some redundancy: relation `a` implies `{b, d} -> c`, but relation `d` implies that `{d} -> c`. This isn't resolved by removing avoidable attributes, because `d` still needs to be in relation `a`: we just need to remove `{a, d}` as a key. However, this is resolved if we instead use this set of functional dependencies, which is equivalent to the previous set:
@@ -728,7 +738,7 @@ fds_redkey_fix <- functional_dependency(
 )
 fds_redkey_fix
 schema_redkey_fix <- normalise(fds_redkey_fix, remove_avoidable = TRUE)
-DiagrammeR::grViz(gv(schema_redkey_fix))
+show(schema_redkey_fix)
 ```
 
 Unfortunately, there's no way in the package to find better sets like this.
@@ -741,13 +751,13 @@ For a simple example, take this database schema, whose relation schemas are in t
 
 ```{r dup_example}
 dup_db <- autodb(ChickWeight)
-DiagrammeR::grViz(gv(dup_db))
+show(dup_db)
 ```
 
 If we now create copies of these relations, with the intention that copies always contain the same data, then all relations are still in third normal form, and so we'd say the database is too:
 
 ```{r dup_example_dup}
-DiagrammeR::grViz(gv(dup_db[c(1, 1, 2, 2, 2)]))
+show(dup_db[c(1, 1, 2, 2, 2)])
 ```
 
 However, no one would claim that this is a good database design, since there is clearly a large amount of data redundancy. Higher normal forms would not change this.

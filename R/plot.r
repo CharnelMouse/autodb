@@ -46,25 +46,30 @@
 #' @param x an object to be plotted.
 #' @param ... further arguments passed to or from other methods.
 #'
-#' @return A scalar character, containing text input for Graphviz or the
-#'   \code{DiagrammeR} package.
+#' @return A scalar character, containing text input for Graphviz.
 #' @seealso \code{\link{gv.data.frame}}, \code{\link{gv.relation_schema}},
 #'   \code{\link{gv.database_schema}}, \code{\link{gv.database}}
 #' @examples
 #' # simple data.frame example
 #' txt_df <- gv(ChickWeight, "chick")
 #' cat(txt_df)
-#' DiagrammeR::grViz(txt_df)
+#' if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+#'   DiagrammeR::grViz(txt_df)
+#' }
 #' # simple database example
 #' db <- autodb(ChickWeight, "chick")
 #' txt_db <- gv(db)
 #' cat(txt_db)
-#' DiagrammeR::grViz(txt_db)
+#' if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+#'   DiagrammeR::grViz(txt_db)
+#' }
 #' # simple relation schemas
 #' rschema <- synthesise(discover(ChickWeight, 1))
 #' txt_rschema <- gv(rschema)
 #' cat(txt_rschema)
-#' DiagrammeR::grViz(txt_rschema)
+#' if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+#'   DiagrammeR::grViz(txt_rschema)
+#' }
 #' # simple database schema
 #' dschema <- normalise(discover(ChickWeight, 1))
 #' txt_dschema <- gv(dschema)
@@ -74,7 +79,9 @@
 #' rel <- create(synthesise(discover(ChickWeight, 1)))
 #' txt_rel <- gv(rel)
 #' cat(txt_rel)
-#' DiagrammeR::grViz(txt_rel)
+#' if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+#'   DiagrammeR::grViz(txt_rel)
+#' }
 #' @export
 gv <- function(x, ...) {
   UseMethod("gv", x)
@@ -92,8 +99,7 @@ gv <- function(x, ...) {
 #'   \code{\link{autodb}}.
 #' @inheritParams gv
 #'
-#' @return A scalar character, containing text input for Graphviz or the
-#'   \code{DiagrammeR} package.
+#' @return A scalar character, containing text input for Graphviz.
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
 gv.database <- function(x, ...) {
@@ -136,8 +142,7 @@ gv.database <- function(x, ...) {
 #' @param name a character scalar, giving the name of the schema, if any.
 #' @inheritParams gv
 #'
-#' @return A scalar character, containing text input for Graphviz or the
-#'   \code{DiagrammeR} package.
+#' @return A scalar character, containing text input for Graphviz.
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
 gv.relation <- function(x, name = NA_character_, ...) {
@@ -181,8 +186,7 @@ gv.relation <- function(x, name = NA_character_, ...) {
 #' @param name a character scalar, giving the name of the schema, if any.
 #' @inheritParams gv
 #'
-#' @return A scalar character, containing text input for Graphviz or the
-#'   \code{DiagrammeR} package.
+#' @return A scalar character, containing text input for Graphviz.
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
 gv.database_schema <- function(x, name = NA_character_, ...) {
@@ -226,8 +230,7 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
 #' @param name a character scalar, giving the name of the schema, if any.
 #' @inheritParams gv
 #'
-#' @return A scalar character, containing text input for Graphviz or the
-#'   \code{DiagrammeR} package.
+#' @return A scalar character, containing text input for Graphviz.
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
 gv.relation_schema <- function(x, name = NA_character_, ...) {
@@ -267,8 +270,7 @@ gv.relation_schema <- function(x, name = NA_character_, ...) {
 #'   name must be non-empty.
 #' @inheritParams gv
 #'
-#' @return A scalar character, containing text input for Graphviz or the
-#'   \code{DiagrammeR} package.
+#' @return A scalar character, containing text input for Graphviz.
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
 gv.data.frame <- function(x, name, ...) {

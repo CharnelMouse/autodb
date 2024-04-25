@@ -14,8 +14,7 @@
 \item{...}{further arguments passed to or from other methods.}
 }
 \value{
-A scalar character, containing text input for Graphviz or the
-\code{DiagrammeR} package.
+A scalar character, containing text input for Graphviz.
 }
 \description{
 Produces text input for Graphviz to make an HTML diagram of a given relation.
