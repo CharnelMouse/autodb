@@ -926,6 +926,97 @@ remove_insertion_reference_violations <- function(df, database) {
   df
 }
 
+# naively inserting data into a database can give reference errors,
+# which sets of relations are legal to insert into?
+minimal_legal_insertion_sets <- function(db, df) {
+  refs <- references(db)
+  ref_mat <- matrix(FALSE, nrow = length(db), ncol = length(db))
+  dimnames(ref_mat) <- list(child = names(db), parent = names(db))
+  for (ref in refs) {
+    ref_mat[ref[[1]], ref[[3]]] <- TRUE
+  }
+
+  # 1. If df doesn't have all attributes for a relation, that relation can't be
+  # inserted into.
+  have_attrs <- vapply(
+    attrs(db),
+    \(x) all(x %in% names(df)),
+    logical(1)
+  )
+  # 2. Otherwise, if a relation already has the given data, it's a legal
+  # insertion set.
+  already_present <- rep(FALSE, length(db))
+  already_present[have_attrs] <- vapply(
+    records(db[have_attrs]),
+    \(r) {
+      # assumes df rows are already unique
+      nrow(merge(r, df[, names(r), drop = FALSE])) == nrow(df)
+    },
+    logical(1)
+  )
+  # take out rels with data already, since sets by themselves and can't affect
+  # legality of children
+  legal_sets <- as.list(rownames(ref_mat)[already_present])
+  ref_mat <- ref_mat[!already_present, !already_present, drop = FALSE]
+  have_attrs <- have_attrs[!already_present]
+
+  # 3. Otherwise, if inserting into that relation would cause a key violation,
+  # the relation can't be inserted into.
+  violates_key <- rep(NA, length(db))
+  violates_key[have_attrs][!already_present] <- vapply(
+    names(db)[have_attrs][!already_present],
+    \(nm) {
+      nr <- rbind(records(db)[[nm]], df[, attrs(db)[[nm]], drop = FALSE])
+      any(vapply(
+        keys(db)[[nm]],
+        \(key) {
+          if (length(key) == 0)
+            nrow(nr) > 1
+          else
+            as.logical(anyDuplicated(nr[, key, drop = FALSE]))
+        },
+        logical(1)
+      ))
+    },
+    logical(1)
+  )
+
+  # 4. Otherwise, check whether all the relation's parents have legal insertion
+  # sets. If they do, the relation has a legal insertion set that includes
+  # itself, plus the insertion sets of the parents that don't already contain
+  # the data themselves.
+
+  # First, we determine whether a relation can be inserted into when ignoring
+  # foreign keys.
+  legal <- have_attrs & (already_present | !violates_key)
+
+  # Then, we find all the relations it refers to, directly and indirectly. This
+  # includes itself.
+  family_mat <- ref_mat
+  old_val <- NA & family_mat
+  while (!identical(old_val, family_mat)) {
+    old_val <- family_mat
+    family_mat <- family_mat | (family_mat %*% ref_mat)
+  }
+  diag(family_mat) <- TRUE
+
+  # Check whether it depends on anything illegal.
+  eventually_illegal <- apply(family_mat[, !legal[!already_present], drop = FALSE], 1, any)
+
+  # Keep dependency set otherwise.
+  legal_sets <- c(
+    legal_sets,
+    apply(
+      family_mat[!eventually_illegal, , drop = FALSE],
+      1,
+      \(lgs) rownames(ref_mat)[lgs],
+      simplify = FALSE
+    )
+  )
+
+  unique(legal_sets)
+}
+
 # generating key / determinant set lists
 gen.nonempty_list <- function(generator, to)
   gen.list(generator, from = 1, to = to)

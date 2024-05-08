@@ -261,8 +261,17 @@ describe("insert", {
                 remove_dup_rows = TRUE
               )) |>
               gen.with(with_args(remove_insertion_key_violations, relation = d)) |>
-              gen.with(with_args(remove_insertion_reference_violations, database = d)),
-            gen.subsequence(names(d))
+              gen.with(with_args(remove_insertion_reference_violations, database = d))
+          )
+        }) |>
+        gen.and_then(\(lst) {
+          list(
+            gen.pure(lst[[1]]),
+            gen.pure(lst[[2]]),
+            minimal_legal_insertion_sets(lst[[1]], lst[[2]]) |>
+              gen.subsequence() |>
+              gen.with(unlist %>>% unique) |>
+              gen.with(\(x) if (length(x) == 0) character() else x)
           )
         }),
       insert %>>% is_valid_database,
