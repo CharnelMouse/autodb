@@ -936,8 +936,9 @@ minimal_legal_insertion_sets <- function(db, df) {
     ref_mat[ref[[1]], ref[[3]]] <- TRUE
   }
 
-  # 1. If df doesn't have all attributes for a relation, that relation can't be
-  # inserted into.
+  # 1. If df doesn't have all attributes for a relation, inserting does nothing:
+  # it's a legal insertion set, that relation can't be inserted into to nake
+  # insertion into a parent legal.
   have_attrs <- vapply(
     attrs(db),
     \(x) all(x %in% names(df)),
@@ -956,9 +957,11 @@ minimal_legal_insertion_sets <- function(db, df) {
   )
   # take out rels with data already, since sets by themselves and can't affect
   # legality of children
-  legal_sets <- as.list(rownames(ref_mat)[already_present])
+  legal_sets <- as.list(c(
+    rownames(ref_mat)[!have_attrs],
+    rownames(ref_mat)[already_present]
+  ))
   ref_mat <- ref_mat[!already_present, !already_present, drop = FALSE]
-  have_attrs <- have_attrs[!already_present]
 
   # 3. Otherwise, if inserting into that relation would cause a key violation,
   # the relation can't be inserted into.
@@ -988,7 +991,7 @@ minimal_legal_insertion_sets <- function(db, df) {
 
   # First, we determine whether a relation can be inserted into when ignoring
   # foreign keys.
-  legal <- have_attrs & (already_present | !violates_key)
+  legal <- (have_attrs & !violates_key)[!already_present]
 
   # Then, we find all the relations it refers to, directly and indirectly. This
   # includes itself.
@@ -1001,7 +1004,7 @@ minimal_legal_insertion_sets <- function(db, df) {
   diag(family_mat) <- TRUE
 
   # Check whether it depends on anything illegal.
-  eventually_illegal <- apply(family_mat[, !legal[!already_present], drop = FALSE], 1, any)
+  eventually_illegal <- apply(family_mat[, !legal, drop = FALSE], 1, any)
 
   # Keep dependency set otherwise.
   legal_sets <- c(
