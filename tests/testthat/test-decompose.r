@@ -201,6 +201,11 @@ describe("decompose", {
     )
   })
   it("returns a error if data.frame doesn't satisfy FKs in the schema", {
+    fac2char <- function(df) {
+      facs <- vapply(df, is.factor, logical(1))
+      df[, facs] <- lapply(df[, facs, drop = FALSE], as.character)
+      df
+    }
     gen_fk_reduction_for_df <- function(df) {
       true_dbs <- normalise(discover(df, 1))
       true_fks <- references(true_dbs)
@@ -257,6 +262,10 @@ describe("decompose", {
     }
     gen_df_and_fk_reduction <- function(nrow, ncol) {
       gen_df(nrow, ncol, minrow = 4L, mincol = 4L, remove_dup_rows = TRUE) |>
+        # change factors to characters, since they cause merge problems when
+        # merged with non-factor non-character vectors that aren't in their
+        # level set
+        gen.with(fac2char) |>
         gen.and_then(gen_fk_reduction_for_df)
     }
     expect_fk_error <- function(df, dbs) {

@@ -699,6 +699,147 @@ Removing missing values in this way requires additional steps in dependency dete
 
 # Limitations
 
+## Table merges won't fix issues with merge.data.frame
+
+Rejoining databases, and checking relations satisfy foreign key constraints, is done using `merge.data.frame`. This means that data classes that don't work properly in `merge` aren't guaranteed to work properly in `autodb`. We show two examples below.
+
+Both examples concern foreign keys where the referring and referred attributes don't have the same class. For most R primitive classes, this works as expected, because they are coerced as usual. However, for classes defined in packages, or by the users, this may return an error, or not work as expected. However, the below examples show this with classes included in base R.
+
+**Note: since these issues come from how certain data classes are handled during merges in the base language, I consider them to be issues with R, rather than with `autodb`, and so I have no plans to fix them. Making sure any used data classes behave correctly in merges is the responsibility of the user of the package.**
+
+### Merging factors with values not in the level set
+
+This example is a case of problems with a merge where two attributes being merged on have different classes. In general, this is allowed: since `autodb` is written for R, a dynamically-typed language, it follows SQLite in not constraining the user much when it comes to data classes in schemas. For primitive classes, R's class coercion usually makes things work as you'd expect.
+
+As an example, we can look at this data frame, which doesn't contain factors:
+
+```{r factor_example_character}
+df_badmerge_char <- data.frame(
+  a = c(NA, NA, "TRUE", "FALSE", "FALSE", "FALSE"),
+  b = c(1L, NA, 0L, 1L, 0L, 0L),
+  c = c(TRUE, TRUE, TRUE, NA, NA, TRUE),
+  d = 1:6,
+  check.names = FALSE
+)
+knitr::kable(df_badmerge_char)
+```
+
+We can merge it with itself, joining on `{a, c}` and `{b, c}`. Attributes `a` and `b` don't have the same class, but R coerces the integers in `b` to characters when merging:
+
+```{r factor_example_character_merge}
+knitr::kable(merge(
+  df_badmerge_char[, c("a", "c", "d")],
+  df_badmerge_char[, c("b", "c", "d")],
+  by.x = c("a", "c"),
+  by.y = c("b", "c")
+))
+```
+
+However, merging a factor attribute with a non-factor, non-character attribute should be handled with caution if the latter contains values not in the factor's level set. If `a` is a factor in the above data frame, R converts the integers into factors, but they don't match to any of the levels, so they're all converted to `NA`:
+
+```{r factor_example}
+df_badmerge <- df_badmerge_char
+df_badmerge$a <- factor(df_badmerge$a)
+knitr::kable(merge(
+  df_badmerge[, c("a", "c", "d")],
+  df_badmerge[, c("b", "c", "d")],
+  by.x = c("a", "c"),
+  by.y = c("b", "c")
+))
+```
+
+This only happens if we merge on more than one attribute:
+
+```{r factor_example_single}
+knitr::kable(merge(
+  df_badmerge[, c("a", "d")],
+  df_badmerge[, c("b", "d")],
+  by.x = "a",
+  by.y = "b"
+))
+```
+
+### Merging POSIXct values to themselves ignores timezones
+
+This example is a case of having problems even when merged attributes have the same classes.
+
+The following data is an extract from the `nycflights13` data package (specifically, the `weather` data set):
+
+```{r POSIX_example}
+df <- data.frame(
+  origin = rep(c("EWR", "JFK", "LGA"), each = 3),
+  month = 11L,
+  day = rep(c(3L, 3L, 4L), 3),
+  hour = 1L,
+  time_hour = as.POSIXct(
+    # 2013-11-03 01:00:00 EDT,
+    # 2013-11-03 01:00:00 EST,
+    # 2013-11-04 01:00:00 EST
+    rep(c(1383454800L, 1383458400L, 1383544800L), 3),
+    origin = "1970-01-01 00:00:00 UTC",
+    tz = "America/New_York"
+  ),
+  temp = c(52, 50, 35.1, 54, 52, 37, 55, 54, 36)
+)
+knitr::kable(df)
+df$time_hour
+stopifnot(df[1, "time_hour"] != df[2, "time_hour"])
+```
+
+Note that the three times given are all different: the first two times are printed as the same, but they have different time zones. They're an hour apart, during a switch from daylight savings time.
+
+The problem with this example arises because `merge` doesn't treat these two times as different. If we merge the time attribute with itself, removing duplicate values, we get five records, not three:
+
+```{r POSIX_example_merge}
+dft <- unique(df[, "time_hour", drop = FALSE])
+dftm <- merge(dft, dft)
+knitr::kable(dftm)
+dftm$time
+```
+
+This results in `discover` and `decompose`/`insert` having different opinions about which records are unique. The discovered database schema has `temp` in some keys, which would be spurious for a larger data sample. Otherwise, however, it's simple enough, and does account for the two mentioned times being different:
+
+```{r POSIX_example_schema}
+deps <- discover(df, 1)
+deps
+ds <- normalise(deps, remove_avoidable = TRUE)
+show(ds)
+```
+
+However, when we insert the data into its own schema, the incorrect merging of POSIXct values results in a foreign key failure when the foreign key includes `time_hour`:
+
+```{r POSIX_example_failure}
+try(decompose(df, ds))
+db <- create(ds)
+try(insert(db, df))
+```
+
+This is a more insidious issue than for factors, since there's no displayed warning for the merge.
+
+We see similar issues when merging a time with itself in a different time zone:
+
+```{r POSIX_example_tz}
+df_times_us <- data.frame(
+  time_hour = as.POSIXct(
+    1383454800L,
+    origin = "1970-01-01 00:00:00 UTC",
+    tz = "America/New_York"
+  )
+)
+df_times_uk <- data.frame(
+  time_hour = as.POSIXct(
+    1383454800L,
+    origin = "1970-01-01 00:00:00 UTC",
+    tz = "Europe/London"
+  )
+)
+df_times_us$time_hour
+df_times_uk$time_hour
+c(df_times_us$time_hour, df_times_uk$time_hour)
+df_times_us$time_hour == df_times_uk$time_hour
+merge(df_times_us, df_times_uk)
+```
+
 ## Synthesis doesn't minimise relation key count
 
 Bernstein's synthesis is guaranteed to minimise the number of relations created for a given set of functional dependencies, and removing avoidable attributes can reduce the number of attributes in those relations. However, there can still be redundant keys. For example, we can take the following set of functional dependencies:

@@ -666,18 +666,14 @@ remove_violated_references <- function(references, relation) {
       child <- recs[[rel[[1]]]][, rel[[2]], drop = FALSE]
       parent <- recs[[rel[[3]]]][, rel[[4]], drop = FALSE]
       identical(
-        unname(lapply(child, class)),
-        unname(lapply(parent, class))
-      ) &&
-        identical(
-          nrow(child),
-          nrow(merge(
-            child,
-            parent,
-            by.x = rel[[2]],
-            by.y = rel[[4]]
-          ))
-        )
+        nrow(child),
+        nrow(merge(
+          child,
+          parent,
+          by.x = rel[[2]],
+          by.y = rel[[4]]
+        ))
+      )
     },
     logical(1)
   )]

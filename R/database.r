@@ -39,21 +39,7 @@ database <- function(relations, references, name = NA_character_) {
     stop("name must be a scalar character")
   check_valid_reference(references, relations, "relation")
 
-  relat_errors <- Filter(
-    \(relat) {
-      referrer <- unique(records(relations)[[relat[[1]]]][, relat[[2]], drop = FALSE])
-      referee <- unique(records(relations)[[relat[[3]]]][, relat[[4]], drop = FALSE])
-      !identical(
-        unname(lapply(referrer, class)),
-        unname(lapply(referee, class))
-      ) ||
-        !identical(
-        nrow(merge(referrer, referee, by.x = relat[[2]], by.y = relat[[4]])),
-        nrow(referrer)
-      )
-    },
-    references
-  )
+  relat_errors <- reference_errors(records(relations), references)
   if (length(relat_errors) > 0)
     stop(paste0(
       "relations must satisfy references in schema:\n",
@@ -77,6 +63,21 @@ database <- function(relations, references, name = NA_character_) {
     references = references,
     class = c("database", "relation", "list")
   )
+}
+
+reference_errors <- function(records, references) {
+  references[vapply(
+    references,
+    \(relat) {
+      referrer <- unique(records[[relat[[1]]]][, relat[[2]], drop = FALSE])
+      referee <- unique(records[[relat[[3]]]][, relat[[4]], drop = FALSE])
+      !identical(
+        nrow(merge(referrer, referee, by.x = relat[[2]], by.y = relat[[4]])),
+        nrow(referrer)
+      )
+    },
+    logical(1)
+  )]
 }
 
 #' @export
@@ -208,18 +209,7 @@ c.database <- function(...) {
 insert.database <- function(x, vals, relations = names(x), ...) {
   res <- insert.relation(x, vals, relations, ...)
   dfs <- records(res)
-  reference_checks <- references(res)[vapply(
-    references(res),
-    \(relat) {
-      referrer <- unique(dfs[[relat[[1]]]][, relat[[2]], drop = FALSE])
-      referee <- unique(dfs[[relat[[3]]]][, relat[[4]], drop = FALSE])
-      !identical(
-        nrow(merge(referrer, referee, by.x = relat[[2]], by.y = relat[[4]])),
-        nrow(referrer)
-      )
-    },
-    logical(1)
-  )]
+  reference_checks <- reference_errors(dfs, references(res))
   if (length(reference_checks)) {
     error_strings <- vapply(
       reference_checks,
