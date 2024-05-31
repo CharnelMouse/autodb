@@ -224,9 +224,9 @@ insert.relation <- function(x, vals, relations = names(x), ...) {
       df
     }
   )
-  keydups <- Map(
+  keydups <- mapply(
     \(df, ks) {
-      vapply(
+      any(vapply(
         ks,
         \(key) {
           if (length(key) == 0L) {
@@ -239,13 +239,13 @@ insert.relation <- function(x, vals, relations = names(x), ...) {
           }
         },
         logical(nrow(df))
-      )
+      ))
     },
     new_records[relations],
     keys(x)[relations]
   )
-  if (any(unlist(keydups))) {
-    bad_relation_names <- names(new_records)[vapply(keydups, any, logical(1))]
+  if (any(keydups)) {
+    bad_relation_names <- names(which(keydups))
     stop(
       "insertion violates key constraints in ",
       with_number(

@@ -147,18 +147,38 @@ describe("insert", {
     )
   })
   it("returns an error when inserting key violations (i.e. same key, different record)", {
-    df <- data.frame(a = 1:3, b = c(1:2, 1L))
+    df <- data.frame(a = 1:3, b = c(1:2, 1L), c = 1L)
+    deps <- discover(df, 1)
+    ds <- normalise(deps)
+    db <- decompose(df, ds)
+    dr <- subrelations(db)
     expect_error(
       insert(
-        decompose(df, normalise(discover(df, 1))),
+        dr,
         data.frame(a = 1:2, b = 2:1)
       ),
       "^insertion violates key constraints in 1 relation: a$"
     )
     expect_error(
       insert(
-        autodb(df),
+        db,
         data.frame(a = 1:2, b = 2:1)
+      ),
+      "^insertion violates key constraints in 1 relation: a$"
+    )
+    expect_error(
+      insert(
+        dr,
+        data.frame(a = 1:2, b = 2:1),
+        relations = "a"
+      ),
+      "^insertion violates key constraints in 1 relation: a$"
+    )
+    expect_error(
+      insert(
+        db,
+        data.frame(a = 1:2, b = 2:1),
+        relations = "a"
       ),
       "^insertion violates key constraints in 1 relation: a$"
     )
