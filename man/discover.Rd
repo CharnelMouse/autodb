@@ -8,7 +8,6 @@
 discover(
   df,
   accuracy,
-  method = c("dfd", "tane"),
   full_cache = TRUE,
   store_cache = TRUE,
   skip_bijections = FALSE,
@@ -23,10 +22,6 @@ discover(
 
 \item{accuracy}{a numeric in (0, 1]: the accuracy threshold required in order
 to conclude a dependency.}
-
-\item{method}{a character, indicating which search algorithm to use. The two
-available choices are DFD and Tane, depth-first and breadth-first searches
-on the determinant powerset.}
 
 \item{full_cache}{a logical, indicating whether to store information about
 how sets of attributes group the relation records (stripped partitions).
@@ -73,12 +68,9 @@ Finds all the minimal functional dependencies represented in a data frame.
 \details{
 Column names for \code{\link{df}} must be unique.
 
-There are two supplied algorithms for finding dependencies: DFD and Tane.
-These both search for determinant sets for each dependent attribute by
-traversing the powerset of the other (non-excluded) attributes, and are
-equivalent to depth-first and breadth-first search, respectively. Tane is the
-simpler approach, but can be significantly slower if there are large
-non-determinant sets.
+The algorithm used for finding dependencies is DFD. This searches for
+determinant sets for each dependent attribute by traversing the powerset of
+the other (non-excluded) attributes, and is equivalent to depth-first.
 
 The implementation for DFD differs a little from the algorithm presented in
 the original paper:
@@ -146,8 +138,4 @@ Abedjan Z., Schulze P., Naumann F. (2014) DFD: efficient functional
 dependency discovery. \emph{Proceedings of the 23rd ACM International Conference
 on Conference on Information and Knowledge Management (CIKM '14). New York,
 U.S.A.}, 949--958.
-
-Huhtala Y., Kärkkäinen J., Porkka P., Toivonen H. (1999) Tane: An Efficient
-Algorithm for Discovering Functional and Approximate Dependencies.
-\emph{Comput. J.}, \strong{42, 2}, 100--111.
 }

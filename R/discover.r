@@ -4,12 +4,9 @@
 #'
 #' Column names for \code{\link{df}} must be unique.
 #'
-#' There are two supplied algorithms for finding dependencies: DFD and Tane.
-#' These both search for determinant sets for each dependent attribute by
-#' traversing the powerset of the other (non-excluded) attributes, and are
-#' equivalent to depth-first and breadth-first search, respectively. Tane is the
-#' simpler approach, but can be significantly slower if there are large
-#' non-determinant sets.
+#' The algorithm used for finding dependencies is DFD. This searches for
+#' determinant sets for each dependent attribute by traversing the powerset of
+#' the other (non-excluded) attributes, and is equivalent to depth-first.
 #'
 #' The implementation for DFD differs a little from the algorithm presented in
 #' the original paper:
@@ -62,9 +59,6 @@
 #' @param df a data.frame, the relation to evaluate.
 #' @param accuracy a numeric in (0, 1]: the accuracy threshold required in order
 #'   to conclude a dependency.
-#' @param method a character, indicating which search algorithm to use. The two
-#'   available choices are DFD and Tane, depth-first and breadth-first searches
-#'   on the determinant powerset.
 #' @param full_cache a logical, indicating whether to store information about
 #'   how sets of attributes group the relation records (stripped partitions).
 #'   Otherwise, only the number of groups is stored. Storing the stripped
@@ -98,10 +92,6 @@
 #' dependency discovery. *Proceedings of the 23rd ACM International Conference
 #' on Conference on Information and Knowledge Management (CIKM '14). New York,
 #' U.S.A.*, 949--958.
-#'
-#' Huhtala Y., Kärkkäinen J., Porkka P., Toivonen H. (1999) Tane: An Efficient
-#' Algorithm for Discovering Functional and Approximate Dependencies.
-#' *Comput. J.*, **42, 2**, 100--111.
 #' @examples
 #' # simple example
 #' discover(ChickWeight, 1)
@@ -117,7 +107,6 @@
 discover <- function(
   df,
   accuracy,
-  method = c("dfd", "tane"),
   full_cache = TRUE,
   store_cache = TRUE,
   skip_bijections = FALSE,
@@ -126,19 +115,8 @@ discover <- function(
   progress = FALSE,
   progress_file = ""
 ) {
-  method <- match.arg(method)
-  find_LHSs <- switch(
-    method,
-    dfd = find_LHSs_dfd,
-    tane = find_LHSs_tane,
-    stop("unrecognised method")
-  )
-  use_visited <- switch(
-    method,
-    dfd = TRUE,
-    tane = FALSE,
-    stop("unrecognised method")
-  )
+  find_LHSs <- find_LHSs_dfd
+  use_visited <- TRUE
 
   if (skip_bijections && accuracy < 1)
     warning("skipping bijections when accuracy < 1 can result in incorrect output")

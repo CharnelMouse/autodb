@@ -2,7 +2,7 @@
 
 ## Breaking changes
 
-* Renamed `dfd` to `discover`, to reflect the generalisation to allow the use of other methods. At the moment, this includes DFD and Tane.
+* Renamed `dfd` to `discover`, to reflect the generalisation to allow the use of other methods. At the moment, this just includes DFD.
 * Removed `flatten` from exported functions, in favour of flattening the functional dependencies in `dfd`/`discover` instead. Since `flatten` was usually called anyway, and its output is more readable since adding a `print` method for it, there was little reason to keep the old `dfd`/`discover` output format, where functional dependencies were grouped by dependent.
 * Renamed `cross_reference` to `autoref`, to better reflect its purpose as generating foreign key references.
 * Renamed `normalise` to `synthesise`, to reflect its only creating relation schemas, not foreign key references. `normalise` now calls a wrapper for both `synthesise` and `autoref`, since in most cases we don't need to do these steps separately. Additionally, `ensure_lossless` is now an argument for `synthesise` rather than `autoref`: this is a more nature place to put it, since `synthesise` creates relations, and `autoref` adds foreign key references.
@@ -29,7 +29,6 @@
 * Adjusted `normalise` to prefer to remove dependencies with dependents and determinant sets later in table order, and with larger dependent sets. This brings it more in line with similar decisions made in other package functions.
 * Simplified some internals of `dfd`/`discover` to improve computation time.
 * Added a `skip_bijections` option to `dfd`/`discover`, to speed up functional dependency searches where there are pairwise-equivalent attributes present.
-* Added an option to use Tane instead of DFD for functional dependency search.
 
 ## Fixes
 
