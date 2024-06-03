@@ -57,6 +57,10 @@ database <- function(relations, references, name = NA_character_) {
       )
     ))
 
+  database_nocheck(relations, references, name)
+}
+
+database_nocheck <- function(relations, references, name = NA_character_) {
   structure(
     relations,
     name = name,
@@ -104,7 +108,7 @@ reference_errors <- function(records, references) {
     }
   )
   attr(x, "names") <- value
-  database(x, new_refs, name(x))
+  database_nocheck(x, new_refs, name(x))
 }
 
 #' @exportS3Method
