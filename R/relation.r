@@ -42,6 +42,8 @@ relation <- function(relations, attrs_order) {
 
   if (!is.character(names(relations)))
     stop("relations must be named")
+  if (any(names(relations) == ""))
+    stop("relation names must be non-empty")
   if (!all(lengths(relations) == 2L))
     stop("relation elements must have length two")
   stopifnot(all(vapply(
@@ -107,6 +109,8 @@ attrs_order.relation <- function(x, ...) {
 `names<-.relation` <- function(x, value) {
   if (anyDuplicated(value))
     stop("relation names must be unique")
+  if (any(value == ""))
+    stop("relation names must be non-empty")
   attr(x, "names") <- value
   x
 }

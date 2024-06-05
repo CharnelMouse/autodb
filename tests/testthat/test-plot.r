@@ -112,6 +112,21 @@ describe("gv", {
   }
 
   describe("database", {
+    it("expects non-empty relation names", {
+      forall(
+        gen_df(6, 7),
+        \(df) {
+          db <- autodb(df)
+          if (length(db) == 0)
+            discard()
+          attr(db, "names")[[1]] <- "" # skip name guard
+          expect_error(
+            gv(db),
+            "^relation names can not be zero characters in length$"
+          )
+        }
+      )
+    })
     it("works for autodb output", {
       forall(
         gen_df(6, 7),
@@ -523,6 +538,21 @@ describe("gv", {
     })
   })
   describe("relation", {
+    it("expects non-empty relation names", {
+      forall(
+        gen_df(6, 7),
+        \(df) {
+          rl <- subrelations(autodb(df))
+          if (length(rl) == 0)
+            discard()
+          attr(rl, "names")[[1]] <- "" # skip name guard
+          expect_error(
+            gv(rl),
+            "^relation names can not be zero characters in length$"
+          )
+        }
+      )
+    })
     it("works for synthesise >> create outputs", {
       forall(
         gen_flat_deps(7, 20, to = 20L),
@@ -545,6 +575,21 @@ describe("gv", {
     })
   })
   describe("database_schema", {
+    it("expects non-empty relation schema names", {
+      forall(
+        gen_df(6, 7),
+        \(df) {
+          ds <- normalise(discover(df, 1))
+          if (length(ds) == 0)
+            discard()
+          attr(ds, "names")[[1]] <- "" # skip schema name guard
+          expect_error(
+            gv(ds),
+            "^relation schema names can not be zero characters in length$"
+          )
+        }
+      )
+    })
     it("works for normalise/autoref outputs", {
       forall(
         gen_flat_deps(7, 20, to = 20L),
@@ -649,6 +694,21 @@ describe("gv", {
     })
   })
   describe("relation_schema", {
+    it("expects non-empty relation schema names", {
+      forall(
+        gen_df(6, 7),
+        \(df) {
+          rs <- subschemas(normalise(discover(df, 1)))
+          if (length(rs) == 0)
+            discard()
+          attr(rs, "names")[[1]] <- "" # skip schema name guard
+          expect_error(
+            gv(rs),
+            "^relation schema names can not be zero characters in length$"
+          )
+        }
+      )
+    })
     it("works for synthesise outputs", {
       forall(
         gen_flat_deps(7, 20, to = 20L),

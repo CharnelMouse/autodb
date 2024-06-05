@@ -103,11 +103,8 @@ gv <- function(x, ...) {
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
 gv.database <- function(x, ...) {
-  empty_names <- which(names(x) == "" | names(x) == "empty")
-  names(x)[empty_names] <- make.names(
-    rep("empty", length(empty_names)),
-    unique = TRUE
-  )
+  if (any(names(x) == ""))
+    stop("relation names can not be zero characters in length")
   setup_string <- gv_setup_string(name(x))
   df_strings <- mapply(
     relation_string,
@@ -146,11 +143,8 @@ gv.database <- function(x, ...) {
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
 gv.relation <- function(x, name = NA_character_, ...) {
-  empty_names <- which(names(x) == "" | names(x) == "empty")
-  names(x)[empty_names] <- make.names(
-    rep("empty", length(empty_names)),
-    unique = TRUE
-  )
+  if (any(names(x) == ""))
+    stop("relation names can not be zero characters in length")
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     relation_string,
@@ -190,11 +184,8 @@ gv.relation <- function(x, name = NA_character_, ...) {
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
 gv.database_schema <- function(x, name = NA_character_, ...) {
-  empty_names <- which(names(x) == "" | names(x) == "empty")
-  names(x)[empty_names] <- make.names(
-    rep("empty", length(empty_names)),
-    unique = TRUE
-  )
+  if (any(names(x) == ""))
+    stop("relation schema names can not be zero characters in length")
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     relation_schema_string,
@@ -234,11 +225,8 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
 gv.relation_schema <- function(x, name = NA_character_, ...) {
-  empty_names <- which(names(x) == "" | names(x) == "empty")
-  names(x)[empty_names] <- make.names(
-    rep("empty", length(empty_names)),
-    unique = TRUE
-  )
+  if (any(names(x) == ""))
+    stop("relation schema names can not be zero characters in length")
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     relation_schema_string,

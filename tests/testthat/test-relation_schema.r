@@ -52,6 +52,21 @@ describe("relation_schema", {
       "^relation names must be unique$"
     )
   })
+  it("expects valid input: non-empty schema names", {
+    expect_error(
+      relation_schema(
+        setNames(
+          list(
+            a = list(character(), list(character())),
+            b = list(character(), list(character()))
+          ),
+          c("", "b")
+        ),
+        character()
+      ),
+      "^relation names must be non-empty"
+    )
+  })
   it("expects valid input: no duplicate attrs", {
     expect_error(
       relation_schema(list(a = list(c("a", "a"), list("a"))), "a"),

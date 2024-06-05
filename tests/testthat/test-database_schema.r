@@ -36,6 +36,24 @@ describe("database_schema", {
       "^reference elements must be length-four lists$"
     )
   })
+  it("expects valid input: non-empty schema names", {
+    expect_error(
+      database_schema(
+        relation_schema(
+          setNames(
+            list(
+              a = list(character(), list(character())),
+              b = list(character(), list(character()))
+            ),
+            c("", "b")
+          ),
+          character()
+        ),
+        list()
+      ),
+      "^relation names must be non-empty"
+    )
+  })
   it("expects valid input: reference relation names are within relation names", {
     rs <- relation_schema(
       list(

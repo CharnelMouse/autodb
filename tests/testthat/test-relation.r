@@ -61,6 +61,21 @@ describe("relation", {
       "a"
     ))
   })
+  it("expects valid input: non-empty relation names", {
+    expect_error(
+      relation(
+        setNames(
+          list(
+            a = list(df = data.frame(), keys = list(character())),
+            b = list(df = data.frame(), keys = list(character()))
+          ),
+          c("", "b")
+        ),
+        character()
+      ),
+      "^relation names must be non-empty"
+    )
+  })
 
   it("expects record reassignments to have same attributes and attribute order", {
     x <- relation(

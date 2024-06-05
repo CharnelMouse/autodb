@@ -99,6 +99,8 @@ reference_errors <- function(records, references) {
 `names<-.database` <- function(x, value) {
   if (anyDuplicated(value))
     stop("relation names must be unique")
+  if (any(value == ""))
+    stop("relation names must be non-empty")
   new_refs <- lapply(
     references(x),
     \(ref) {

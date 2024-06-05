@@ -113,7 +113,7 @@ describe("reduce.database_schema", {
       once_plus_small <- relation_schema(
         Map(
           list,
-          c(attrs(once), list("extra_attr")),
+          c(attrs(once), list(extra_rel = "extra_attr")),
           c(keys(once), list(list("extra_attr"))
           )
         ),
