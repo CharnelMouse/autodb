@@ -23,7 +23,7 @@ check_valid_reference <- function(
     ))
   }
   if (any(!reference_valid_attrs(references, relation_schemas)))
-    stop("reference attributes must be within referer's attributes and referee's keys")
+    stop("reference attributes must be within referrer's attributes and referee's keys")
   if (any(self_reference(references)))
     stop("reference cannot be from a relation's attribute to itself")
 }

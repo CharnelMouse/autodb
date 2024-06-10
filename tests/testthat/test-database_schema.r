@@ -87,7 +87,7 @@ describe("database_schema", {
       "^reference relation names must be within relation schema names$"
     )
   })
-  it("expects valid input: reference attribute names are within referer's attributes and referee's keys", {
+  it("expects valid input: reference attribute names are within referrer's attributes and referee's keys", {
     expect_error(
       database_schema(
         relation_schema(
@@ -99,7 +99,7 @@ describe("database_schema", {
         ),
         list(list("a", "b", "X", "b"))
       ),
-      "^reference attributes must be within referer's attributes and referee's keys$"
+      "^reference attributes must be within referrer's attributes and referee's keys$"
     )
     # need more examples here
 
