@@ -26,6 +26,9 @@ library(autodb)
 #> The following object is masked from 'package:stats':
 #> 
 #>     decompose
+```
+
+``` r
 summary(ChickWeight)
 #>      weight           Time           Chick     Diet   
 #>  Min.   : 35.0   Min.   : 0.00   13     : 12   1:220  
@@ -35,6 +38,9 @@ summary(ChickWeight)
 #>  3rd Qu.:163.8   3rd Qu.:16.00   17     : 12          
 #>  Max.   :373.0   Max.   :21.00   19     : 12          
 #>                                  (Other):506
+```
+
+``` r
 db <- autodb(ChickWeight, name = "ChickWeight")
 db
 #> database ChickWeight with 2 relations
@@ -45,6 +51,9 @@ db
 #>   key 1: Time, Chick
 #> references:
 #> Time_Chick.{Chick} -> Chick.{Chick}
+```
+
+``` r
 graphviz_text <- gv(db)
 DiagrammeR::grViz(graphviz_text)
 ```
@@ -64,6 +73,9 @@ summary(CO2)
 #>  Qc3    : 7                                    3rd Qu.: 675   3rd Qu.:37.12  
 #>  Qc2    : 7                                    Max.   :1000   Max.   :45.50  
 #>  (Other):42
+```
+
+``` r
 db2_noexclude <- autodb(CO2, name = "CO2")
 db2_noexclude
 #> database CO2 with 3 relations
@@ -78,6 +90,9 @@ db2_noexclude
 #> references:
 #> Plant_conc.{Plant} -> Plant.{Plant}
 #> Plant_conc.{conc, uptake} -> conc_uptake.{conc, uptake}
+```
+
+``` r
 graphviz_text2_noexclude <- gv(db2_noexclude)
 DiagrammeR::grViz(graphviz_text2_noexclude)
 ```
@@ -95,6 +110,9 @@ db2
 #>   key 1: Plant, conc
 #> references:
 #> Plant_conc.{Plant} -> Plant.{Plant}
+```
+
+``` r
 graphviz_text2 <- gv(db2)
 DiagrammeR::grViz(graphviz_text2)
 ```
