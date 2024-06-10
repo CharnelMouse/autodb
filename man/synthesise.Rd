@@ -71,6 +71,22 @@ attributes. As a result, neither optional step changes the order of the
 schemas, and ensuring losslessness can only add an extra schema to the end of
 the output vector.
 }
+\examples{
+# example 6.24 from The Theory of Relational Databases by David Maier
+# A <-> B, AC -> D, AC -> E, BD -> C
+deps <- functional_dependency(
+  list(
+    list("A", "B"),
+    list("B", "A"),
+    list(c("A", "C"), "D"),
+    list(c("A", "C"), "E"),
+    list(c("B", "D"), "C")
+  ),
+  attrs_order = c("A", "B", "C", "D", "E")
+)
+synthesise(deps, remove_avoidable = FALSE)
+synthesise(deps, remove_avoidable = TRUE)
+}
 \references{
 3NF synthesis algorithm: Bernstein P. A. (1976) Synthesizing third normal
 form relations from functional dependencies. \emph{ACM Trans. Database Syst.},

@@ -39,6 +39,21 @@
 #' Removal of avoidable attributes: Ling T., Tompa F. W., Kameda T. (1981) An
 #' improved third normal form for relational databases. *ACM Trans. Database
 #' Syst.*, **6, 2**, 329--346.
+#' @examples
+#' # example 6.24 from The Theory of Relational Databases by David Maier
+#' # A <-> B, AC -> D, AC -> E, BD -> C
+#' deps <- functional_dependency(
+#'   list(
+#'     list("A", "B"),
+#'     list("B", "A"),
+#'     list(c("A", "C"), "D"),
+#'     list(c("A", "C"), "E"),
+#'     list(c("B", "D"), "C")
+#'   ),
+#'   attrs_order = c("A", "B", "C", "D", "E")
+#' )
+#' synthesise(deps, remove_avoidable = FALSE)
+#' synthesise(deps, remove_avoidable = TRUE)
 #' @export
 synthesise <- function(
   dependencies,
