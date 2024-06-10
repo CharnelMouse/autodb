@@ -58,12 +58,7 @@ relation_schema <- function(
     stop("schema key sets must have character elements")
   if (!is.character(attrs_order))
     stop("expected character attrs_order")
-  if (!is.character(names(schemas)))
-    stop("schemas must be named")
-  if (anyDuplicated(names(schemas)))
-    stop("relation names must be unique")
-  if (any(names(schemas) == ""))
-    stop("relation names must be non-empty")
+  check_schema_names(names(schemas))
   if (!all(vapply(schemas, \(s) !anyDuplicated(s[[1]]), logical(1))))
     stop("relation attributes must be unique")
   if (!all(vapply(
@@ -151,12 +146,18 @@ attrs_order.relation_schema <- function(x, ...) {
 
 #' @export
 `names<-.relation_schema` <- function(x, value) {
-  if (anyDuplicated(value))
-    stop("relation schema names must be unique")
-  if (any(value == ""))
-    stop("relation schema names must be non-empty")
+  check_schema_names(value)
   attr(x, "names") <- value
   x
+}
+
+check_schema_names <- function(nms) {
+  if (!is.character(nms))
+    stop("relation schemas must be named")
+  if (anyDuplicated(nms))
+    stop("relation schema names must be unique")
+  if (any(nms == ""))
+    stop("relation schema names must be non-empty")
 }
 
 #' @exportS3Method

@@ -97,10 +97,7 @@ reference_errors <- function(records, references) {
 
 #' @export
 `names<-.database` <- function(x, value) {
-  if (anyDuplicated(value))
-    stop("relation names must be unique")
-  if (any(value == ""))
-    stop("relation names must be non-empty")
+  check_relation_names(value)
   new_refs <- lapply(
     references(x),
     \(ref) {

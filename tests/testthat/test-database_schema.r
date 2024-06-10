@@ -36,6 +36,21 @@ describe("database_schema", {
       "^reference elements must be length-four lists$"
     )
   })
+  it("expects valid input: unique schema names", {
+    expect_error(
+      database_schema(
+        relation_schema(
+          list(
+            a = list(character(), list(character())),
+            a = list(character(), list(character()))
+          ),
+          character()
+        ),
+        list()
+      ),
+      "^relation schema names must be unique$"
+    )
+  })
   it("expects valid input: non-empty schema names", {
     expect_error(
       database_schema(
@@ -51,7 +66,7 @@ describe("database_schema", {
         ),
         list()
       ),
-      "^relation names must be non-empty"
+      "^relation schema names must be non-empty"
     )
   })
   it("expects valid input: reference relation names are within relation names", {

@@ -71,8 +71,7 @@ references.database_schema <- function(x, ...) {
 
 #' @export
 `names<-.database_schema` <- function(x, value) {
-  if (anyDuplicated(value))
-    stop("relation schema names must be unique")
+  check_schema_names(value)
   new_refs <- lapply(
     references(x),
     \(ref) {

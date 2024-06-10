@@ -5,7 +5,7 @@ describe("relation_schema", {
     expect_error(relation_schema(1L, character()))
     expect_error(
       relation_schema(list(), character()),
-      "^schemas must be named$"
+      "^relation schemas must be named$"
     )
   })
   it("expects valid input: schema elements correct lengths", {
@@ -49,7 +49,7 @@ describe("relation_schema", {
         ),
         character()
       ),
-      "^relation names must be unique$"
+      "^relation schema names must be unique$"
     )
   })
   it("expects valid input: non-empty schema names", {
@@ -64,7 +64,7 @@ describe("relation_schema", {
         ),
         character()
       ),
-      "^relation names must be non-empty"
+      "^relation schema names must be non-empty"
     )
   })
   it("expects valid input: no duplicate attrs", {

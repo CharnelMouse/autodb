@@ -40,10 +40,7 @@ relation <- function(relations, attrs_order) {
   stopifnot(is.list(relations))
   stopifnot(is.character(attrs_order))
 
-  if (!is.character(names(relations)))
-    stop("relations must be named")
-  if (any(names(relations) == ""))
-    stop("relation names must be non-empty")
+  check_relation_names(names(relations))
   if (!all(lengths(relations) == 2L))
     stop("relation elements must have length two")
   stopifnot(all(vapply(
@@ -107,12 +104,18 @@ attrs_order.relation <- function(x, ...) {
 
 #' @export
 `names<-.relation` <- function(x, value) {
-  if (anyDuplicated(value))
-    stop("relation names must be unique")
-  if (any(value == ""))
-    stop("relation names must be non-empty")
+  check_relation_names(value)
   attr(x, "names") <- value
   x
+}
+
+check_relation_names <- function(nms) {
+  if (!is.character(nms))
+    stop("relations must be named")
+  if (anyDuplicated(nms))
+    stop("relation names must be unique")
+  if (any(nms == ""))
+    stop("relation names must be non-empty")
 }
 
 #' @exportS3Method

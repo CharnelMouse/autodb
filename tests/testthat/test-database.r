@@ -50,6 +50,21 @@ describe("database", {
       "^reference elements must be length-four lists$"
     )
   })
+  it("expects valid input: unique relation names", {
+    expect_error(
+      database(
+        relation(
+          list(
+            a = list(df = data.frame(), keys = list(character())),
+            a = list(df = data.frame(), keys = list(character()))
+          ),
+          character()
+        ),
+        list()
+      ),
+      "^relation names must be unique$"
+    )
+  })
   it("expects valid input: non-empty relation names", {
     expect_error(
       database(
