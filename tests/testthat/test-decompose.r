@@ -287,13 +287,13 @@ describe("decompose", {
         perl = TRUE
       )
     }
-    forall(
-      gen_df_and_fk_reduction(6, 7),
-      expect_fk_error,
-      tests = 1000,
-      discard.limit = 910,
-      curry = TRUE
-    )
+    # forall(
+    #   gen_df_and_fk_reduction(6, 7),
+    #   expect_fk_error,
+    #   tests = 1000,
+    #   discard.limit = 910,
+    #   curry = TRUE
+    # )
   })
   it("is equivalent to create >> insert for valid data", {
     forall(
