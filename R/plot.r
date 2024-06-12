@@ -280,7 +280,7 @@ gv_setup_string <- function(df_name) {
   paste0(
     "digraph ",
     if (!is.na(df_name))
-      paste0(snakecase::to_snake_case(df_name), " "),
+      paste0(to_main_name(df_name), " "),
     "{\n",
     "  rankdir = \"LR\"\n",
     "  node [shape=plaintext];"
@@ -289,7 +289,7 @@ gv_setup_string <- function(df_name) {
 
 relation_string <- function(df, df_keys, df_name, row_name = c("record", "row")) {
   row_name <- match.arg(row_name)
-  df_snake <- snakecase::to_snake_case(df_name)
+  df_snake <- to_rel_name(df_name)
   col_classes <- vapply(df, \(a) class(a)[[1]], character(1))
 
   columns_string <- columns_string(colnames(df), df_keys, col_classes)
@@ -318,7 +318,7 @@ relation_string <- function(df, df_keys, df_name, row_name = c("record", "row"))
 }
 
 relation_schema_string <- function(attrs, keys, relation_name) {
-  rel_snake <- snakecase::to_snake_case(relation_name)
+  rel_snake <- to_rel_name(relation_name)
 
   columns_string <- columns_schema_string(attrs, keys)
   label <- paste0(
@@ -343,7 +343,7 @@ relation_schema_string <- function(attrs, keys, relation_name) {
 }
 
 columns_string <- function(col_names, keys, col_classes) {
-  col_snake <- snakecase::to_snake_case(col_names)
+  col_snake <- to_attr_name(col_names)
   key_membership_strings <- vapply(
     col_names,
     \(nm) paste(
@@ -374,7 +374,7 @@ columns_string <- function(col_names, keys, col_classes) {
 }
 
 columns_schema_string <- function(col_names, keys) {
-  col_snake <- snakecase::to_snake_case(col_names)
+  col_snake <- to_attr_name(col_names)
   key_membership_strings <- vapply(
     col_names,
     \(nm) paste(
@@ -424,16 +424,20 @@ reference_string <- function(reference) {
   paste0(
     "  ",
     paste(
-      snakecase::to_snake_case(reference[[1]]),
-      paste0("FROM_", snakecase::to_snake_case(reference[[2]])),
+      to_rel_name(reference[[1]]),
+      paste0("FROM_", to_attr_name(reference[[2]])),
       sep = ":"
     ),
     " -> ",
     paste(
-      snakecase::to_snake_case(reference[[3]]),
-      paste0("TO_", snakecase::to_snake_case(reference[[4]])),
+      to_rel_name(reference[[3]]),
+      paste0("TO_", to_attr_name(reference[[4]])),
       sep = ":"
     ),
     ";"
   )
 }
+
+to_main_name <- function(nm) snakecase::to_snake_case(nm)
+to_rel_name <- function(nm) snakecase::to_snake_case(nm)
+to_attr_name <- function(nm) snakecase::to_snake_case(nm)
