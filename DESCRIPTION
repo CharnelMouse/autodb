@@ -27,7 +27,7 @@ Depends:
     R (>= 4.1.0)
 Imports:
     rlang,
-    stringr (>= 1.4.0)
+    stringi (>= 1.7.6)
 Suggests: 
     DiagrammeR (>= 1.0.7),
     testthat (>= 3.1.4),
