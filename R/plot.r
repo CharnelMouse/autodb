@@ -445,99 +445,41 @@ to_attr_name <- function(nm) to_snake_case(nm)
 to_snake_case <- function(
   string
 ) {
-  to_any_case(string)
-}
-
-to_any_case <- function(
-  string
-) {
   string <- enc2utf8(string)
   if (length(string) == 0) {
     return(character())
   }
   string_attributes <- attributes(string)
-  string <- str_replace_all(string, "[[:blank:]]", "_")
-  string <- abbreviation_internal(string)
-  string <- to_parsed_case_internal(string)
-  string <- str_split(string, "_")
-  string <- lapply(string, str_to_lower)
-  string <- vapply(
-    string,
-    function(x) str_c(x),
-    "",
-    USE.NAMES = FALSE
-  )
-  string <- str_replace_all(
-    string,
-    "_(?![[:alnum:]])|(?<![[:alnum:]])_",
-    ""
-  )
+  string <- string |>
+    gsub(pattern = "[[:blank:]]", replacement = "_") |>
+    gsub(pattern = "(_\\sl\\sl)+", replacement = "_ l l") |>
+    gsub(pattern = "(r\\sr\\s_)+", replacement = "r r _") |>
+    gsub(pattern = "[^[:alnum:]]", replacement = "_") |>
+    pat("[[:upper:]][[:lower:]]+") |>
+    pat("\\d+") |>
+    pat("[[:upper:]]{2,}") |>
+    pat("(?<![[:upper:]])[[:upper:]]{1}(?![[:alpha:]])") |>
+    pat("[^[:alnum:]]") |>
+    gsub(pattern = "_+", replacement = "_") |>
+    gsub(pattern = "^_|_$", replacement = "") |>
+    strsplit("_") |>
+    lapply(tolower) |>
+    vapply(
+      paste0,
+      "",
+      collapse = "_",
+      USE.NAMES = FALSE
+    ) |>
+    gsub(
+      pattern = "_(?![[:alnum:]])|(?<![[:alnum:]])_",
+      replacement = "",
+      perl = TRUE
+    )
   attributes(string) <- string_attributes
   string <- enc2utf8(string)
   string
 }
 
-abbreviation_internal <- function(string) {
-  string <- str_replace_all(string, "(_\\sl\\sl)+", "_ l l")
-  string <- str_replace_all(string, "(r\\sr\\s_)+", "r r _")
-  string
-}
-
-to_parsed_case_internal <- function(
-  string
-) {
-  string |>
-    preprocess_internal() |>
-    parse1_pat_cap_smalls() |>
-    parse2_pat_digits() |>
-    parse3_pat_caps() |>
-    parse4_pat_cap() |>
-    parse5_pat_non_alnums() |>
-    str_replace_all("_+", "_") |>
-    str_replace_all("^_|_$", "")
-}
-
-preprocess_internal <- function(string) {
-  str_replace_all(string, "[^[:alnum:]]", "_")
-}
-
-parse1_pat_cap_smalls <- function(string) {
-  pat_cap_smalls <- "([[:upper:]][[:lower:]]+)"
-  str_replace_all(string, pat_cap_smalls, "_\\1_")
-}
-
-parse2_pat_digits <- function(string) {
-  pat_digits <- "(\\d+)"
-  str_replace_all(string, pat_digits, "_\\1_")
-}
-
-parse3_pat_caps <- function(string) {
-  pat_caps <- "([[:upper:]]{2,})"
-  str_replace_all(string, pat_caps, "_\\1_")
-}
-
-parse4_pat_cap <- function(string) {
-  pat_cap <- "((?<![[:upper:]])[[:upper:]]{1}(?![[:alpha:]]))"
-  str_replace_all(string, pat_cap, "_\\1_")
-}
-
-parse5_pat_non_alnums <- function(string) {
-  pat_non_alnums <- "([^[:alnum:]])"
-  str_replace_all(string, pat_non_alnums, "_\\1_")
-}
-
-str_replace_all <- function(string, pattern, replacement) {
-  gsub(pattern, replacement, string, perl = TRUE)
-}
-
-str_split <- function(string, pattern) {
-  strsplit(string, pattern)
-}
-
-str_to_lower <- function(string) {
-  tolower(string)
-}
-
-str_c <- function(...) {
-  paste0(..., collapse = "_")
+pat <- function(string, pattern) {
+  gsub(paste0("(", pattern, ")"), "_\\1_", string, perl = TRUE)
 }
