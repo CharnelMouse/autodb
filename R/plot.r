@@ -451,10 +451,7 @@ to_snake_case <- function(
   }
   string_attributes <- attributes(string)
   string <- string |>
-    gsub(pattern = "[[:blank:]]", replacement = "_") |>
-    gsub(pattern = "(_\\sl\\sl)+", replacement = "_ l l") |>
-    gsub(pattern = "(r\\sr\\s_)+", replacement = "r r _") |>
-    gsub(pattern = "[^[:alnum:]]", replacement = "_") |>
+    gsub(pattern = "[^[:alnum:]]+", replacement = "_") |>
     pat("[[:upper:]][[:lower:]]+") |>
     pat("\\d+") |>
     pat("[[:upper:]]{2,}") |>
