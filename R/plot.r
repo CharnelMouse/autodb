@@ -456,7 +456,7 @@ to_any_case <- function(
     return(character())
   }
   string_attributes <- attributes(string)
-  string <- str_replace_all(string, "[:blank:]", "_")
+  string <- str_replace_all(string, "[[:blank:]]", "_")
   string <- abbreviation_internal(string)
   string <- to_parsed_case_internal(string)
   string <- str_split(string, "_")
@@ -469,7 +469,7 @@ to_any_case <- function(
   )
   string <- str_replace_all(
     string,
-    "_(?![:alnum:])|(?<![:alnum:])_",
+    "_(?![[:alnum:]])|(?<![[:alnum:]])_",
     ""
   )
   attributes(string) <- string_attributes
@@ -502,55 +502,42 @@ preprocess_internal <- function(string) {
 }
 
 parse1_pat_cap_smalls <- function(string) {
-  pat_cap_smalls <- "([:upper:][:lower:]+)"
-  str_replace_all(string, pat_cap_smalls, "_$1_")
+  pat_cap_smalls <- "([[:upper:]][[:lower:]]+)"
+  str_replace_all(string, pat_cap_smalls, "_\\1_")
 }
 
 parse2_pat_digits <- function(string) {
   pat_digits <- "(\\d+)"
-  str_replace_all(string, pat_digits, "_$1_")
+  str_replace_all(string, pat_digits, "_\\1_")
 }
 
 parse3_pat_caps <- function(string) {
-  pat_caps <- "([:upper:]{2,})"
-  str_replace_all(string, pat_caps, "_$1_")
+  pat_caps <- "([[:upper:]]{2,})"
+  str_replace_all(string, pat_caps, "_\\1_")
 }
 
 parse4_pat_cap <- function(string) {
-  pat_cap <- "((?<![:upper:])[:upper:]{1}(?![[:alpha:]]))"
-  str_replace_all(string, pat_cap, "_$1_")
+  pat_cap <- "((?<![[:upper:]])[[:upper:]]{1}(?![[:alpha:]]))"
+  str_replace_all(string, pat_cap, "_\\1_")
 }
 
 parse5_pat_non_alnums <- function(string) {
   pat_non_alnums <- "([^[:alnum:]])"
-  str_replace_all(string, pat_non_alnums, "_$1_")
+  str_replace_all(string, pat_non_alnums, "_\\1_")
 }
 
 str_replace_all <- function(string, pattern, replacement) {
-  stringi::stri_replace_all_regex(
-    string,
-    pattern,
-    replacement
-  )
+  gsub(pattern, replacement, string, perl = TRUE)
 }
 
 str_split <- function(string, pattern) {
-  if (identical(pattern, ""))
-    stringi::stri_split_boundaries(
-      string,
-      opts_brkiter = stringi::stri_opts_brkiter(type = "character")
-    )
-  else
-    stringi::stri_split_regex(
-      string,
-      pattern
-    )
+  strsplit(string, pattern)
 }
 
 str_to_lower <- function(string) {
-  stringi::stri_trans_tolower(string, locale = "en")
+  tolower(string)
 }
 
 str_c <- function(...) {
-  stringi::stri_c(..., collapse = "_", ignore_null = TRUE)
+  paste0(..., collapse = "_")
 }
