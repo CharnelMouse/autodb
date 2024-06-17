@@ -503,34 +503,34 @@ preprocess_internal <- function(string) {
 
 parse1_pat_cap_smalls <- function(string) {
   pat_cap_smalls <- "([:upper:][:lower:]+)"
-  str_replace_all(string, pat_cap_smalls, "_\\1_")
+  str_replace_all(string, pat_cap_smalls, "_$1_")
 }
 
 parse2_pat_digits <- function(string) {
   pat_digits <- "(\\d+)"
-  str_replace_all(string, pat_digits, "_\\1_")
+  str_replace_all(string, pat_digits, "_$1_")
 }
 
 parse3_pat_caps <- function(string) {
   pat_caps <- "([:upper:]{2,})"
-  str_replace_all(string, pat_caps, "_\\1_")
+  str_replace_all(string, pat_caps, "_$1_")
 }
 
 parse4_pat_cap <- function(string) {
   pat_cap <- "((?<![:upper:])[:upper:]{1}(?![[:alpha:]]))"
-  str_replace_all(string, pat_cap, "_\\1_")
+  str_replace_all(string, pat_cap, "_$1_")
 }
 
 parse5_pat_non_alnums <- function(string) {
   pat_non_alnums <- "([^[:alnum:]])"
-  str_replace_all(string, pat_non_alnums, "_\\1_")
+  str_replace_all(string, pat_non_alnums, "_$1_")
 }
 
 str_replace_all <- function(string, pattern, replacement) {
   stringi::stri_replace_all_regex(
     string,
     pattern,
-    fix_replacement(replacement)
+    replacement
   )
 }
 
@@ -553,48 +553,4 @@ str_to_lower <- function(string) {
 
 str_c <- function(...) {
   stringi::stri_c(..., collapse = "_", ignore_null = TRUE)
-}
-
-fix_replacement <- function(x) {
-  if (!is.character(x)) {
-    stop("`replacement` must be a character vector", call. = FALSE)
-  }
-  vapply(x, fix_replacement_one, character(1), USE.NAMES = FALSE)
-}
-
-fix_replacement_one <- function(x){
-  if (is.na(x))
-    return(x)
-  chars <- str_split(x, "")[[1]]
-  out <- character(length(chars))
-  escaped <- logical(length(chars))
-  in_escape <- FALSE
-  for (i in seq_along(chars)) {
-    escaped[[i]] <- in_escape
-    char <- chars[[i]]
-    if (in_escape) {
-      if (char == "$") {
-        out[[i]] <- "\\\\$"
-      }
-      else if (char >= "0" && char <= "9") {
-        out[[i]] <- paste0("$", char)
-      }
-      else {
-        out[[i]] <- paste0("\\", char)
-      }
-      in_escape <- FALSE
-    }
-    else {
-      if (char == "$") {
-        out[[i]] <- "\\$"
-      }
-      else if (char == "\\") {
-        in_escape <- TRUE
-      }
-      else {
-        out[[i]] <- char
-      }
-    }
-  }
-  paste0(out, collapse = "")
 }
