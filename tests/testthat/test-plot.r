@@ -222,7 +222,7 @@ describe("gv", {
         name = "Book"
       )
       expected_string <- paste(
-        "digraph book {",
+        "digraph Book {",
         "  rankdir = \"LR\"",
         "  node [shape=plaintext];",
 
@@ -230,11 +230,11 @@ describe("gv", {
 
         test_df_strings(
           "Book",
-          "book",
+          "Book",
           2,
           "records",
           c("Title", "Author", "Pages", "Thickness", "Genre ID", "Publisher ID"),
-          c("title", "author", "pages", "thickness", "genre_id", "publisher_id"),
+          c("Title", "Author", "Pages", "Thickness", "Genre_ID", "Publisher_ID"),
           c("character", "character", "integer", "character", "integer", "integer"),
           matrix(
             c(
@@ -252,11 +252,11 @@ describe("gv", {
 
         test_df_strings(
           "Format Price",
-          "format_price",
+          "Format_Price",
           4,
           "records",
           c("Title", "Format", "Price"),
-          c("title", "format", "price"),
+          c("Title", "Format", "Price"),
           c("character", "character", "integer"),
           matrix(
             c(
@@ -271,11 +271,11 @@ describe("gv", {
 
         test_df_strings(
           "Author",
-          "author",
+          "Author",
           2,
           "records",
           c("Author", "Author Nationality"),
-          c("author", "author_nationality"),
+          c("Author", "Author_Nationality"),
           c("character", "character"),
           matrix(
             c(
@@ -289,11 +289,11 @@ describe("gv", {
 
         test_df_strings(
           "Genre",
-          "genre",
+          "Genre",
           2,
           "records",
           c("Genre ID", "Genre Name"),
-          c("genre_id", "genre_name"),
+          c("Genre_ID", "Genre_Name"),
           c("integer", "character"),
           matrix(
             c(
@@ -307,9 +307,9 @@ describe("gv", {
 
         "",
 
-        "  book:FROM_title -> format_price:TO_title;",
-        "  book:FROM_author -> author:TO_author;",
-        "  book:FROM_genre_id -> genre:TO_genre_id;",
+        "  Book:FROM_Title -> Format_Price:TO_Title;",
+        "  Book:FROM_Author -> Author:TO_Author;",
+        "  Book:FROM_Genre_ID -> Genre:TO_Genre_ID;",
         "}",
         "",
         sep = "\n"
@@ -400,7 +400,7 @@ describe("gv", {
         name = "Book"
       )
       expected_string <- paste(
-        "digraph book {",
+        "digraph Book {",
         "  rankdir = \"LR\"",
         "  node [shape=plaintext];",
 
@@ -408,11 +408,11 @@ describe("gv", {
 
         test_df_strings(
           "Book",
-          "book",
+          "Book",
           2,
           "records",
           c("Title", "Author", "Pages", "Thickness", "Genre ID", "Publisher ID"),
-          c("title", "author", "pages", "thickness", "genre_id", "publisher_id"),
+          c("Title", "Author", "Pages", "Thickness", "Genre_ID", "Publisher_ID"),
           c("character", "character", "integer", "character", "integer", "integer"),
           matrix(
             c(
@@ -430,11 +430,11 @@ describe("gv", {
 
         test_df_strings(
           "Format Price",
-          "format_price",
+          "Format_Price",
           4,
           "records",
           c("Title", "Format", "Price"),
-          c("title", "format", "price"),
+          c("Title", "Format", "Price"),
           c("character", "character", "integer"),
           matrix(
             c(
@@ -449,11 +449,11 @@ describe("gv", {
 
         test_df_strings(
           "Author",
-          "author",
+          "Author",
           2,
           "records",
           c("Author", "Author Nationality"),
-          c("author", "author_nationality"),
+          c("Author", "Author_Nationality"),
           c("character", "character"),
           matrix(
             c(
@@ -468,11 +468,11 @@ describe("gv", {
 
         test_df_strings(
           "Genre",
-          "genre",
+          "Genre",
           2,
           "records",
           c("Genre ID", "Genre Name"),
-          c("genre_id", "genre_name"),
+          c("Genre_ID", "Genre_Name"),
           c("integer", "character"),
           matrix(
             c(
@@ -486,9 +486,9 @@ describe("gv", {
 
         "",
 
-        "  book:FROM_title -> format_price:TO_title;",
-        "  book:FROM_author -> author:TO_author;",
-        "  book:FROM_genre_id -> genre:TO_genre_id;",
+        "  Book:FROM_Title -> Format_Price:TO_Title;",
+        "  Book:FROM_Author -> Author:TO_Author;",
+        "  Book:FROM_Genre_ID -> Genre:TO_Genre_ID;",
         "}",
         "",
         sep = "\n"
@@ -623,11 +623,11 @@ describe("gv", {
         "  rankdir = \"LR\"",
         "  node [shape=plaintext];",
         "",
-        "  genre_id [label = <",
+        "  Genre_ID [label = <",
         "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
         "    <TR><TD COLSPAN=\"2\">Genre ID</TD></TR>",
-        "    <TR><TD PORT=\"TO_genre_id\">Genre ID</TD><TD PORT=\"FROM_genre_id\" BGCOLOR=\"black\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_genre_name\">Genre Name</TD><TD PORT=\"FROM_genre_name\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_Genre_ID\">Genre ID</TD><TD PORT=\"FROM_Genre_ID\" BGCOLOR=\"black\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_Genre_Name\">Genre Name</TD><TD PORT=\"FROM_Genre_Name\"></TD></TR>",
         "    </TABLE>>];",
         "",
         "",
@@ -744,11 +744,11 @@ describe("gv", {
         "  rankdir = \"LR\"",
         "  node [shape=plaintext];",
         "",
-        "  genre_id [label = <",
+        "  Genre_ID [label = <",
         "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
         "    <TR><TD COLSPAN=\"2\">Genre ID</TD></TR>",
-        "    <TR><TD PORT=\"TO_genre_id\">Genre ID</TD><TD PORT=\"FROM_genre_id\" BGCOLOR=\"black\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_genre_name\">Genre Name</TD><TD PORT=\"FROM_genre_name\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_Genre_ID\">Genre ID</TD><TD PORT=\"FROM_Genre_ID\" BGCOLOR=\"black\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_Genre_Name\">Genre Name</TD><TD PORT=\"FROM_Genre_Name\"></TD></TR>",
         "    </TABLE>>];",
         "}",
         "",
@@ -823,17 +823,17 @@ describe("gv", {
       expect_identical(
         gv(df, "Table Test"),
         paste(
-          "digraph table_test {",
+          "digraph Table_Test {",
           "  rankdir = \"LR\"",
           "  node [shape=plaintext];",
           "",
           test_df_strings(
             "Table Test",
-            "table_test",
+            "Table_Test",
             2,
             "rows",
             c("A 1", "b.2"),
-            c("a_1", "b_2"),
+            c("A_1", "b_2"),
             c("integer", "character"),
             matrix(nrow = 0, ncol = 0)
           ),

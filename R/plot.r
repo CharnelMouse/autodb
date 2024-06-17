@@ -452,8 +452,7 @@ to_snake_case <- function(
   string_attributes <- attributes(string)
   string <- string |>
     gsub(pattern = "[^[:alnum:]]+", replacement = "_") |>
-    gsub(pattern = "^_|_$", replacement = "") |>
-    tolower()
+    gsub(pattern = "^_|_$", replacement = "")
   attributes(string) <- string_attributes
   string <- enc2utf8(string)
   string
