@@ -454,14 +454,7 @@ to_snake_case <- function(
     gsub(pattern = "[^[:alnum:]]+", replacement = "_") |>
     gsub(pattern = "_+", replacement = "_") |>
     gsub(pattern = "^_|_$", replacement = "") |>
-    strsplit("_") |>
-    lapply(tolower) |>
-    vapply(
-      paste0,
-      "",
-      collapse = "_",
-      USE.NAMES = FALSE
-    ) |>
+    tolower() |>
     gsub(
       pattern = "_(?![[:alnum:]])|(?<![[:alnum:]])_",
       replacement = "",
