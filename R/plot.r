@@ -447,11 +447,11 @@ reference_string <- function(reference) {
   )
 }
 
-to_main_name <- function(nm) to_snake_case(nm)
-to_rel_name <- function(nm) to_snake_case(nm)
-to_attr_name <- function(nm) to_snake_case(nm)
+to_main_name <- function(nm) make.gv_names(nm)
+to_rel_name <- function(nm) make.gv_names(nm)
+to_attr_name <- function(nm) make.gv_names(nm)
 
-to_snake_case <- function(
+make.gv_names <- function(
   string
 ) {
   string <- enc2utf8(string)
