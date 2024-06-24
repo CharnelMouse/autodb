@@ -113,10 +113,11 @@ gv.database <- function(x, ...) {
     records(x),
     keys(x),
     names(x),
+    names(x_labelled),
     "record"
   ) |>
     paste(collapse = "\n")
-  reference_strings <- reference_strings(x)
+  reference_strings <- reference_strings(x_labelled)
   teardown_string <- "}\n"
   paste(
     setup_string,
@@ -154,7 +155,8 @@ gv.relation <- function(x, name = NA_character_, ...) {
     relation_string,
     records(x),
     keys(x),
-    names(x)
+    names(x),
+    names(x_labelled)
   ) |>
     paste(collapse = "\n")
   teardown_string <- "}\n"
@@ -197,10 +199,11 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
     relation_schema_string,
     attrs(x),
     keys(x),
-    names(x)
+    names(x),
+    names(x_labelled)
   ) |>
     paste(collapse = "\n")
-  reference_strings <- reference_strings(x)
+  reference_strings <- reference_strings(x_labelled)
   teardown_string <- "}\n"
   paste(
     setup_string,
@@ -240,7 +243,8 @@ gv.relation_schema <- function(x, name = NA_character_, ...) {
     relation_schema_string,
     attrs(x),
     keys(x),
-    names(x)
+    names(x),
+    names(x_labelled)
   ) |>
     paste(collapse = "\n")
   teardown_string <- "}\n"
@@ -274,7 +278,7 @@ gv.data.frame <- function(x, name, ...) {
     stop("name must be non-empty")
   label <- to_rel_name(name)
   setup_string <- gv_setup_string(name)
-  table_string <- relation_string(x, list(), name, "row")
+  table_string <- relation_string(x, list(), name, label, "row")
   teardown_string <- "}\n"
   paste(
     setup_string,
@@ -296,9 +300,8 @@ gv_setup_string <- function(df_name) {
   )
 }
 
-relation_string <- function(df, df_keys, df_name, row_name = c("record", "row")) {
+relation_string <- function(df, df_keys, df_name, df_snake, row_name = c("record", "row")) {
   row_name <- match.arg(row_name)
-  df_snake <- to_rel_name(df_name)
   col_classes <- vapply(df, \(a) class(a)[[1]], character(1))
 
   columns_string <- columns_string(colnames(df), df_keys, col_classes)
@@ -326,9 +329,7 @@ relation_string <- function(df, df_keys, df_name, row_name = c("record", "row"))
   )
 }
 
-relation_schema_string <- function(attrs, keys, relation_name) {
-  rel_snake <- to_rel_name(relation_name)
-
+relation_schema_string <- function(attrs, keys, relation_name, rel_snake) {
   columns_string <- columns_schema_string(attrs, keys)
   label <- paste0(
     "    <TR><TD COLSPAN=\"", length(keys) + 1, "\">",
@@ -433,13 +434,13 @@ reference_string <- function(reference) {
   paste0(
     "  ",
     paste(
-      to_rel_name(reference[[1]]),
+      reference[[1]],
       paste0("FROM_", to_attr_name(reference[[2]])),
       sep = ":"
     ),
     " -> ",
     paste(
-      to_rel_name(reference[[3]]),
+      reference[[3]],
       paste0("TO_", to_attr_name(reference[[4]])),
       sep = ":"
     ),
