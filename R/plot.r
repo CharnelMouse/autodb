@@ -105,6 +105,8 @@ gv <- function(x, ...) {
 gv.database <- function(x, ...) {
   if (any(names(x) == ""))
     stop("relation names can not be zero characters in length")
+  x_labelled <- x
+  names(x_labelled) <- to_rel_name(names(x))
   setup_string <- gv_setup_string(name(x))
   df_strings <- mapply(
     relation_string,
@@ -145,6 +147,8 @@ gv.database <- function(x, ...) {
 gv.relation <- function(x, name = NA_character_, ...) {
   if (any(names(x) == ""))
     stop("relation names can not be zero characters in length")
+  x_labelled <- x
+  names(x_labelled) <- to_rel_name(names(x))
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     relation_string,
@@ -186,6 +190,8 @@ gv.relation <- function(x, name = NA_character_, ...) {
 gv.database_schema <- function(x, name = NA_character_, ...) {
   if (any(names(x) == ""))
     stop("relation schema names can not be zero characters in length")
+  x_labelled <- x
+  names(x_labelled) <- to_rel_name(names(x))
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     relation_schema_string,
@@ -227,6 +233,8 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
 gv.relation_schema <- function(x, name = NA_character_, ...) {
   if (any(names(x) == ""))
     stop("relation schema names can not be zero characters in length")
+  x_labelled <- x
+  names(x_labelled) <- to_rel_name(names(x))
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     relation_schema_string,
@@ -264,6 +272,7 @@ gv.relation_schema <- function(x, name = NA_character_, ...) {
 gv.data.frame <- function(x, name, ...) {
   if (name == "")
     stop("name must be non-empty")
+  label <- to_rel_name(name)
   setup_string <- gv_setup_string(name)
   table_string <- relation_string(x, list(), name, "row")
   teardown_string <- "}\n"
@@ -451,8 +460,10 @@ to_snake_case <- function(
   }
   string_attributes <- attributes(string)
   string <- string |>
-    gsub(pattern = "[^[:alnum:]]+", replacement = "_") |>
-    gsub(pattern = "^_|_$", replacement = "")
+    gsub(pattern = "[^[:alnum:]]", replacement = "_") |>
+    sub(pattern = "^_(^_)", replacement = "\\1", perl = TRUE) |>
+    sub(pattern = "(^_)_$", replacement = "\\1", perl = TRUE) |>
+    make.unique(sep = "")
   attributes(string) <- string_attributes
   string <- enc2utf8(string)
   string
