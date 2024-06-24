@@ -364,7 +364,7 @@ gen.df_fixed_ranges <- function(classes, nms, n_records, remove_dup_rows) {
 }
 
 gen_attr_name <- function(len) {
-  gen.sample_resampleable(c(letters, "_", " ", "."), to = len) |>
+  gen.sample_resampleable(c(letters, LETTERS, "_", " ", "."), to = len) |>
     gen.and_then(\(chars) {
       if (all(chars == " ")) {
         gen.element(c(letters, "_", "."))
