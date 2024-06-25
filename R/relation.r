@@ -40,7 +40,17 @@ relation <- function(relations, attrs_order) {
   stopifnot(is.list(relations))
   stopifnot(is.character(attrs_order))
 
+  if (anyDuplicated(attrs_order))
+    stop("attrs_order must be unique")
   check_relation_names(names(relations))
+  if (!all(vapply(relations, \(r) !anyDuplicated(names(r$df)), logical(1))))
+    stop("relation attributes must be unique")
+  if (!all(vapply(
+    relations,
+    \(r) all(vapply(r$keys, Negate(anyDuplicated), logical(1))),
+    logical(1)
+  )))
+    stop("relation key attributes must be unique")
   if (!all(lengths(relations) == 2L))
     stop("relation elements must have length two")
   stopifnot(all(vapply(

@@ -28,6 +28,36 @@ describe("relation", {
   it("expects valid input: attrs_order is a character", {
     expect_error(relation(list(), 1L))
   })
+  it("expects valid input: no duplicate attrs", {
+    expect_error(
+      relation(
+        list(a = list(
+          df = data.frame(a = logical(), a = logical(), check.names = FALSE),
+          keys = list("a")
+        )),
+        "a"
+      ),
+      "^relation attributes must be unique$"
+    )
+  })
+  it("expects valid input: no duplicate attrs in keys", {
+    expect_error(
+      relation(
+        list(a = list(df = data.frame(a = logical()), keys = list(c("a", "a")))),
+        "a"
+      ),
+      "^relation key attributes must be unique$"
+    )
+  })
+  it("expects valid input: no duplicate attrs_order", {
+    expect_error(
+      relation(
+        list(a = list(df = data.frame(a = logical()), keys = list("a"))),
+        c("a", "a")
+      ),
+      "^attrs_order must be unique$"
+    )
+  })
   it("expects valid input: df columns are from attrs_order, in order of key mentions first", {
     expect_error(relation(
       list(a = list(df = data.frame(a = integer()), keys = list("a"))),
