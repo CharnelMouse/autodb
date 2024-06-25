@@ -376,9 +376,8 @@ describe("synthesise", {
   })
   it("includes all attributes in tables if ensuring lossless", {
     includes_all_attrs_if_lossless <- function(fds) {
-      lone_attr <- LETTERS[length(attrs_order(fds)) + 1]
       new_fds <- fds
-      attrs_order(new_fds) <- c(attrs_order(fds), lone_attr)
+      attrs_order(new_fds) <- make.unique(c(attrs_order(fds), "X"))
       rs <- synthesise(new_fds, ensure_lossless = TRUE)
       expect_true(setequal(attrs_order(rs), unlist(attrs(rs))))
     }

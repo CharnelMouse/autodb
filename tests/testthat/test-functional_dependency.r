@@ -47,6 +47,12 @@ describe("functional_dependency", {
       "^attributes in FDs must be present in attrs_order$"
     )
   })
+  it("expects valid input: no duplicates in attrs_order", {
+    expect_error(
+      functional_dependency(list(), c("a", "a")),
+      "^attrs_order must be unique$"
+    )
+  })
   it("returns a set, i.e. no duplicated FD elements", {
     forall(
       gen.fd(letters[1:2], 2, 6),

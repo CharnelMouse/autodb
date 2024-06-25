@@ -56,6 +56,8 @@ functional_dependency <- function(
     stop("FDs dependents must be length-one characters")
   if (any(!is.element(unlist(FDs), attrs_order)))
     stop("attributes in FDs must be present in attrs_order")
+  if (anyDuplicated(attrs_order))
+    stop("attrs_order must be unique")
   sorted_FDs <- lapply(
     FDs,
     \(FD) list(FD[[1]][order(match(FD[[1]], attrs_order))], FD[[2]])
