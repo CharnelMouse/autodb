@@ -640,6 +640,31 @@ describe("database_schema", {
     )
   })
 
+  it("can have its attributes renamed", {
+    forall(
+      gen.database_schema(letters[1:6], 1, 8),
+      function(ds) {
+        names <- toupper(attrs_order(ds))
+        ds2 <- rename_attrs(ds, names)
+        expect_identical(
+          ds2,
+          database_schema(
+            rename_attrs(subschemas(ds), names),
+            lapply(
+              references(ds),
+              \(ref) list(
+                ref[[1]],
+                toupper(ref[[2]]),
+                ref[[3]],
+                toupper(ref[[4]])
+              )
+            )
+          )
+        )
+      }
+    )
+  })
+
   it("prints", {
     expect_output(
       print(database_schema(

@@ -71,6 +71,26 @@ attrs <- function(x, ...) {
   UseMethod("attrs<-")
 }
 
+#' Rename relational data attributes
+#'
+#' Generic function, for renaming attributes present in a database-like
+#' structure.
+#'
+#' This function has a different intended use to re-assigning
+#' \code{\link{attrs_order}}: that is intended only for rearranging the order of
+#' the attributes, without renaming them. This is intended for renaming the
+#' attributes without re-ordering them.
+#'
+#' @param x an R object.
+#' @param names a character vector of the same length as \code{attrs_order(x)},
+#'   with no duplicated elements, to be used as the new attribute names.
+#' @param ... further arguments passed on to methods.
+#'
+#' @export
+rename_attrs <- function(x, names, ...) {
+  UseMethod("rename_attrs")
+}
+
 #' Relational data keys
 #'
 #' Generic function, with the only given method fetching candidate key lists for

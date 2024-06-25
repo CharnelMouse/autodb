@@ -667,6 +667,31 @@ describe("database", {
     )
   })
 
+  it("can have its attributes renamed", {
+    forall(
+      gen.database(letters[1:6], 1, 8),
+      function(db) {
+        names <- toupper(attrs_order(db))
+        db2 <- rename_attrs(db, names)
+        expect_identical(
+          db2,
+          database(
+            rename_attrs(subrelations(db), names),
+            lapply(
+              references(db),
+              \(ref) list(
+                ref[[1]],
+                toupper(ref[[2]]),
+                ref[[3]],
+                toupper(ref[[4]])
+              )
+            )
+          )
+        )
+      }
+    )
+  })
+
   it("prints", {
     expect_output(
       print(database(

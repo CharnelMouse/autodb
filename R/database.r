@@ -96,6 +96,25 @@ reference_errors <- function(records, references) {
 }
 
 #' @export
+rename_attrs.database <- function(x, names, ...) {
+  new_subrels <- rename_attrs(subrelations(x), names)
+  new_refs <- lapply(
+    references(x),
+    \(ref) {
+      ref[c(2, 4)] <- lapply(
+        ref[c(2, 4)],
+        \(as) names[match(as, attrs_order(x))]
+      )
+      ref
+    }
+  )
+  database(
+    new_subrels,
+    new_refs
+  )
+}
+
+#' @export
 `names<-.database` <- function(x, value) {
   check_relation_names(value)
   new_refs <- lapply(

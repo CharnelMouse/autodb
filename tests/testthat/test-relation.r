@@ -384,6 +384,29 @@ describe("relation", {
     )
   })
 
+  it("can have its attributes renamed", {
+    forall(
+      gen.relation(letters[1:6], 1, 8),
+      function(rel) {
+        rel2 <- rename_attrs(rel, toupper(attrs_order(rel)))
+        expect_identical(
+          rel2,
+          relation(
+            setNames(
+              Map(
+                \(recs, ks )list(df = recs, keys = ks),
+                lapply(records(rel), \(df) `names<-`(df, toupper(names(df)))),
+                lapply(keys(rel), lapply, toupper)
+              ),
+              names(rel)
+            ),
+            attrs_order = toupper(attrs_order(rel))
+          )
+        )
+      }
+    )
+  })
+
   it("prints", {
     expect_output(
       print(relation(setNames(list(), character()), character())),

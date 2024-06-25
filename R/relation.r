@@ -112,6 +112,23 @@ attrs_order.relation <- function(x, ...) {
   relation(unclass(x), value)
 }
 
+#' @exportS3Method
+rename_attrs.relation <- function(x, names, ...) {
+  old <- attrs_order(x)
+  new_records <- lapply(
+    records(x),
+    \(df) stats::setNames(df, names[match(names(df), old)])
+  )
+  new_keys <- lapply(keys(x), lapply, \(as) names[match(as, old)])
+  relation(
+    stats::setNames(
+      Map(\(recs, ks) list(df = recs, keys = ks), new_records, new_keys),
+      names(x)
+    ),
+    names
+  )
+}
+
 #' @export
 `names<-.relation` <- function(x, value) {
   check_relation_names(value)

@@ -402,6 +402,29 @@ describe("relation_schema", {
     )
   })
 
+  it("can have its attributes renamed", {
+    forall(
+      gen.relation_schema(letters[1:6], 1, 8),
+      function(rs) {
+        rs2 <- rename_attrs(rs, toupper(attrs_order(rs)))
+        expect_identical(
+          rs2,
+          relation_schema(
+            setNames(
+              Map(
+                list,
+                lapply(attrs(rs), toupper),
+                lapply(keys(rs), lapply, toupper)
+              ),
+              names(rs)
+            ),
+            attrs_order = toupper(attrs_order(rs))
+          )
+        )
+      }
+    )
+  })
+
   it("prints", {
     expect_output(
       print(relation_schema(setNames(list(), character()), character())),

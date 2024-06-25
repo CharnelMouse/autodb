@@ -119,6 +119,17 @@ attrs.relation_schema <- function(x, ...) {
 }
 
 #' @exportS3Method
+rename_attrs.relation_schema <- function(x, names, ...) {
+  old <- attrs_order(x)
+  new_attrs <- lapply(attrs(x), \(as) names[match(as, old)])
+  new_keys <- lapply(keys(x), lapply, \(as) names[match(as, old)])
+  relation_schema(
+    stats::setNames(Map(list, new_attrs, new_keys), names(x)),
+    names
+  )
+}
+
+#' @exportS3Method
 keys.relation_schema <- function(x, ...) {
   lapply(unclass(x), `[[`, 2L)
 }
