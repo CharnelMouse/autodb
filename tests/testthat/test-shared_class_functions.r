@@ -1,5 +1,51 @@
 library(hedgehog)
 
+describe("attrs<-", {
+  it("works for relation_schema", {
+    forall(
+      # must include prime attrs, other attrs optional, order irrelevant
+      gen.relation_schema(letters[1:6], 0, 8) |>
+        gen.and_then(\(rs) {
+          list(
+            gen.pure(rs),
+            Map(
+              \(as, ks) {
+                necessary <- unique(unlist(ks))
+                available <- setdiff(attrs_order(rs), necessary)
+                gen.subsequence(available) |>
+                  gen.with(with_args(c, necessary)) |>
+                  gen.and_then(gen.sample)
+              },
+              attrs(rs),
+              keys(rs)
+            )
+          )
+        }),
+      \(rs, value) {
+        rs2 <- rs
+        attrs(rs2) <- value
+        # it changes attrs to value, sorted for keys and attrs_order
+        sorted_value <- Map(
+          \(as, ks) {
+            necessary <- unique(unlist(ks))
+            c(
+              necessary,
+              intersect(setdiff(attrs_order(rs), necessary), as)
+            )
+          },
+          value,
+          keys(rs)
+        )
+        expect_identical(unname(attrs(rs2)), unname(sorted_value))
+        # it doesn't affect other parts of the object
+        expect_identical(keys(rs2), keys(rs))
+        expect_identical(attrs_order(rs2), attrs_order(rs))
+      },
+      curry = TRUE
+    )
+  })
+})
+
 describe("create", {
   it("creates a valid structure", {
     forall(
