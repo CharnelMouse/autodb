@@ -10,15 +10,19 @@ keys(x, ...)
 keys(x, ...) <- value
 }
 \arguments{
-\item{x}{an R object. For the given method, a \code{\link{relation_schema}}.}
+\item{x}{a relational schema object, such as a \code{\link{relation_schema}}
+or \code{\link{database_schema}} object, or a relational data object, such
+as a \code{\link{relation}} or \code{\link{database}} object.}
 
 \item{...}{further arguments passed on to methods.}
 
-\item{value}{A character vector of the same length as \code{keys(x, ...)}.}
+\item{value}{A list of lists of character vectors, of the same length as
+\code{keys(x, ...)}. The number of keys for an element of \code{x} can be
+changed.}
 }
 \value{
 A list containing lists of unique character vectors, representing
-candidate keys for each schema.
+candidate keys for each element of \code{x}.
 }
 \description{
 Generic function, with the only given method fetching candidate key lists for

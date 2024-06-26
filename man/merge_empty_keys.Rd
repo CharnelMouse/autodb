@@ -7,7 +7,8 @@
 merge_empty_keys(x)
 }
 \arguments{
-\item{x}{an R object.}
+\item{x}{a relational schema object, such as a \code{\link{relation_schema}}
+or \code{\link{database_schema}} object.}
 }
 \value{
 an R object of the same class as \code{x}, where relations with an

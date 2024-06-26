@@ -8,7 +8,7 @@ subschemas(x, ...)
 }
 \arguments{
 \item{x}{an R object, intended to be some sort of schema that contains other
-schemas.}
+schemas, such as a \code{\link{database_schema}} object.}
 
 \item{...}{further arguments passed on to methods.}
 }

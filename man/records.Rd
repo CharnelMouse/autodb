@@ -10,7 +10,8 @@ records(x, ...)
 records(x, ...) <- value
 }
 \arguments{
-\item{x}{an R object.}
+\item{x}{a relational data object, such as a \code{\link{relation}} or
+\code{\link{database}} object.}
 
 \item{...}{further arguments passed on to methods.}
 

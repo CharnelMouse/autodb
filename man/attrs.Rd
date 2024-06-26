@@ -10,17 +10,18 @@ attrs(x, ...)
 attrs(x, ...) <- value
 }
 \arguments{
-\item{x}{an R object. For the given method, a
-\code{\link{functional_dependency}}.}
+\item{x}{a relational schema object, such as a \code{\link{relation_schema}}
+or \code{\link{database_schema}} object, or a relational data object, such
+as a \code{\link{relation}} or \code{\link{database}} object.}
 
 \item{...}{further arguments passed on to methods.}
 
 \item{value}{A character vector of the same length as \code{attrs(x, ...)}.}
 }
 \value{
-A character vector containing an attribute set, with unique elements.
+A list, containing a character vector for each element of \code{x}.
 }
 \description{
-Generic function, with the only given method fetching attribute sets for
-functional dependencies.
+Generic function, for fetching attribute sets for elements of a relational
+data object.
 }

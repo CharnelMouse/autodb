@@ -10,7 +10,8 @@ references(x, ...)
 references(x) <- value
 }
 \arguments{
-\item{x}{an R object.}
+\item{x}{an R object with references, such as a \code{\link{database_schema}}
+or \code{\link{database}} object.}
 
 \item{...}{further arguments passed on to methods.}
 

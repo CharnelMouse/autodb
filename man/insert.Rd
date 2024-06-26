@@ -7,7 +7,8 @@
 insert(x, vals, relations = names(x), ...)
 }
 \arguments{
-\item{x}{an R object, into which to insert data.}
+\item{x}{a relational data object, into which to insert data, such as a
+\code{\link{relation}} or \code{\link{database}} object.}
 
 \item{vals}{a data frame, containing data to insert.}
 

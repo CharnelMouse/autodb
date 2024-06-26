@@ -10,7 +10,9 @@ attrs_order(x, ...)
 attrs_order(x, ...) <- value
 }
 \arguments{
-\item{x}{an R object. For the given method, a \code{\link{relation_schema}}.}
+\item{x}{an R object, such as a \code{\link{functional_dependency}},
+\code{\link{relation_schema}}, \code{\link{relation}},
+\code{\link{database_schema}}, or \code{\link{database}} object.}
 
 \item{...}{further arguments passed on to methods.}
 
@@ -18,9 +20,9 @@ attrs_order(x, ...) <- value
 }
 \value{
 A character vector, giving attributes in the order in which they're
-prioritised for sorting attributes and keys in the schema.
+prioritised for sorting within \code{x}.
 }
 \description{
-Generic function, with the only given method fetching attribute order for
-relation schemas.
+Generic function, fetching attribute order for objects concerning relational
+attributes.
 }

@@ -7,7 +7,8 @@
 merge_schemas(x, to_remove, merge_into, ...)
 }
 \arguments{
-\item{x}{an R object.}
+\item{x}{a relational schema object, such as a \code{\link{relation_schema}}
+or \code{\link{database_schema}} object.}
 
 \item{to_remove}{an integer vector, giving the indices for schemas to be
 merged into other schemas, then removed.}

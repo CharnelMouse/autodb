@@ -49,14 +49,15 @@ dependant <- function(x, ...) {
 
 #' Relational data attributes
 #'
-#' Generic function, with the only given method fetching attribute sets for
-#' functional dependencies.
+#' Generic function, for fetching attribute sets for elements of a relational
+#' data object.
 #'
-#' @param x an R object. For the given method, a
-#'   \code{\link{functional_dependency}}.
+#' @param x a relational schema object, such as a \code{\link{relation_schema}}
+#'   or \code{\link{database_schema}} object, or a relational data object, such
+#'   as a \code{\link{relation}} or \code{\link{database}} object.
 #' @param ... further arguments passed on to methods.
 #'
-#' @return A character vector containing an attribute set, with unique elements.
+#' @return A list, containing a character vector for each element of \code{x}.
 #' @export
 attrs <- function(x, ...) {
   UseMethod("attrs")
@@ -81,7 +82,9 @@ attrs <- function(x, ...) {
 #' the attributes, without renaming them. This is intended for renaming the
 #' attributes without re-ordering them.
 #'
-#' @param x an R object.
+#' @param x a relational schema object, such as a \code{\link{relation_schema}}
+#'   or \code{\link{database_schema}} object, or a relational data object, such
+#'   as a \code{\link{relation}} or \code{\link{database}} object.
 #' @param names a character vector of the same length as \code{attrs_order(x)},
 #'   with no duplicated elements, to be used as the new attribute names.
 #' @param ... further arguments passed on to methods.
@@ -96,11 +99,13 @@ rename_attrs <- function(x, names, ...) {
 #' Generic function, with the only given method fetching candidate key lists for
 #' relation schemas.
 #'
-#' @param x an R object. For the given method, a \code{\link{relation_schema}}.
+#' @param x a relational schema object, such as a \code{\link{relation_schema}}
+#'   or \code{\link{database_schema}} object, or a relational data object, such
+#'   as a \code{\link{relation}} or \code{\link{database}} object.
 #' @param ... further arguments passed on to methods.
 #'
 #' @return A list containing lists of unique character vectors, representing
-#'   candidate keys for each schema.
+#'   candidate keys for each element of \code{x}.
 #' @export
 keys <- function(x, ...) {
   UseMethod("keys")
@@ -108,7 +113,9 @@ keys <- function(x, ...) {
 
 #' @rdname keys
 #'
-#' @param value A character vector of the same length as \code{keys(x, ...)}.
+#' @param value A list of lists of character vectors, of the same length as
+#'   \code{keys(x, ...)}. The number of keys for an element of \code{x} can be
+#'   changed.
 #'
 #' @export
 `keys<-` <- function(x, ..., value) {
@@ -121,7 +128,8 @@ keys <- function(x, ...) {
 #' In particular, this is intended for such structures where the individual
 #' relations can't be accessed with subsetting.
 #'
-#' @param x  an R object.
+#' @param x a relational data object, such as a \code{\link{relation}} or
+#'   \code{\link{database}} object.
 #' @param ... further arguments passed on to methods.
 #'
 #' @return A list containing data frames.
@@ -143,14 +151,16 @@ records <- function(x, ...) {
 
 #' Relational data attribute order
 #'
-#' Generic function, with the only given method fetching attribute order for
-#' relation schemas.
+#' Generic function, fetching attribute order for objects concerning relational
+#' attributes.
 #'
-#' @param x an R object. For the given method, a \code{\link{relation_schema}}.
+#' @param x an R object, such as a \code{\link{functional_dependency}},
+#'   \code{\link{relation_schema}}, \code{\link{relation}},
+#'   \code{\link{database_schema}}, or \code{\link{database}} object.
 #' @param ... further arguments passed on to methods.
 #'
 #' @return A character vector, giving attributes in the order in which they're
-#'   prioritised for sorting attributes and keys in the schema.
+#'   prioritised for sorting within \code{x}.
 #' @export
 attrs_order <- function(x, ...) {
   UseMethod("attrs_order")
@@ -179,7 +189,8 @@ name <- function(x, ...) {
 #'
 #' Generic function, returning present (foreign key) references.
 #'
-#' @param x an R object.
+#' @param x an R object with references, such as a \code{\link{database_schema}}
+#'   or \code{\link{database}} object.
 #' @param ... further arguments passed on to methods.
 #'
 #' @return a list, giving references.
@@ -202,7 +213,7 @@ references <- function(x, ...) {
 #' Generic function, returning subschemas for \code{x}.
 #'
 #' @param x an R object, intended to be some sort of schema that contains other
-#'   schemas.
+#'   schemas, such as a \code{\link{database_schema}} object.
 #' @param ... further arguments passed on to methods.
 #'
 #' @return a schema-type object, or a list of schema-type objects if the
@@ -217,7 +228,7 @@ subschemas <- function(x, ...) {
 #' Generic function, returning subrelations for \code{x}.
 #'
 #' @param x an R object, intended to be some sort of database-like object that
-#'   contains relations.
+#'   contains relations, such as a \code{\link{database}} object.
 #' @param ... further arguments passed on to methods.
 #'
 #' @return a relation-type object, or a list of relation-type objects if the
@@ -289,7 +300,8 @@ merge_attribute_orderings <- function(...) {
 #' For \code{\link{database_schema}} objects, references involving the
 #' schemas with empty keys are updated to refer to the merged schema.
 #'
-#' @param x an R object.
+#' @param x a relational schema object, such as a \code{\link{relation_schema}}
+#'   or \code{\link{database_schema}} object.
 #'
 #' @return an R object of the same class as \code{x}, where relations with an
 #'   empty key have been merged into a single relation.
@@ -312,7 +324,8 @@ merge_empty_keys <- function(x) {
 
 #' Merge relation schemas in given pairs
 #'
-#' @param x an R object.
+#' @param x a relational schema object, such as a \code{\link{relation_schema}}
+#'   or \code{\link{database_schema}} object.
 #' @param to_remove an integer vector, giving the indices for schemas to be
 #'   merged into other schemas, then removed.
 #' @param merge_into an integer vector of the same length as \code{to_remove},
@@ -328,7 +341,9 @@ merge_schemas <- function(x, to_remove, merge_into, ...) {
 
 #' Create instance of a schema
 #'
-#' @param x an R object, representing the schema to create an instance of.
+#' @param x a relational schema object, representing the schema to create an
+#'   instance of, such as a \code{\link{relation_schema}} or
+#'   \code{\link{database_schema}} object.
 #' @param ... further arguments passed on to methods.
 #'
 #' @return an instance of the schema. For example, calling \code{create} on a
@@ -371,7 +386,8 @@ create <- function(x, ...) {
 #' \code{x} whose required attributes are all inserted. This is currently the
 #' only way to insert into a subset of \code{x}, rather than all of it.
 #'
-#' @param x an R object, into which to insert data.
+#' @param x a relational data object, into which to insert data, such as a
+#'   \code{\link{relation}} or \code{\link{database}} object.
 #' @param vals a data frame, containing data to insert.
 #' @param relations a character vector, containing names of elements of \code{x}
 #'   into which to insert data. By default, \code{insert} attempts to insert

@@ -7,7 +7,9 @@
 create(x, ...)
 }
 \arguments{
-\item{x}{an R object, representing the schema to create an instance of.}
+\item{x}{a relational schema object, representing the schema to create an
+instance of, such as a \code{\link{relation_schema}} or
+\code{\link{database_schema}} object.}
 
 \item{...}{further arguments passed on to methods.}
 }

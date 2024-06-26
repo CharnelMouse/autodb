@@ -8,7 +8,7 @@ subrelations(x, ...)
 }
 \arguments{
 \item{x}{an R object, intended to be some sort of database-like object that
-contains relations.}
+contains relations, such as a \code{\link{database}} object.}
 
 \item{...}{further arguments passed on to methods.}
 }
