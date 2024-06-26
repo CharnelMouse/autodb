@@ -107,10 +107,12 @@ gv.database <- function(x, ...) {
     stop("relation names can not be zero characters in length")
   x_labelled <- x
   names(x_labelled) <- to_rel_name(names(x))
+  x_labelled <- rename_attrs(x_labelled, to_attr_name(attrs_order(x_labelled)))
   setup_string <- gv_setup_string(name(x))
   df_strings <- mapply(
     relation_string,
     records(x),
+    records(x_labelled),
     keys(x),
     names(x),
     names(x_labelled),
@@ -154,6 +156,7 @@ gv.relation <- function(x, name = NA_character_, ...) {
   df_strings <- mapply(
     relation_string,
     records(x),
+    records(x_labelled),
     keys(x),
     names(x),
     names(x_labelled)
@@ -194,10 +197,12 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
     stop("relation schema names can not be zero characters in length")
   x_labelled <- x
   names(x_labelled) <- to_rel_name(names(x))
+  x_labelled <- rename_attrs(x_labelled, to_attr_name(attrs_order(x_labelled)))
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     relation_schema_string,
     attrs(x),
+    attrs(x_labelled),
     keys(x),
     names(x),
     names(x_labelled)
@@ -238,10 +243,12 @@ gv.relation_schema <- function(x, name = NA_character_, ...) {
     stop("relation schema names can not be zero characters in length")
   x_labelled <- x
   names(x_labelled) <- to_rel_name(names(x))
+  x_labelled <- rename_attrs(x_labelled, to_attr_name(attrs_order(x_labelled)))
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     relation_schema_string,
     attrs(x),
+    attrs(x_labelled),
     keys(x),
     names(x),
     names(x_labelled)
@@ -278,7 +285,9 @@ gv.data.frame <- function(x, name, ...) {
     stop("name must be non-empty")
   label <- to_rel_name(name)
   setup_string <- gv_setup_string(name)
-  table_string <- relation_string(x, list(), name, label, "row")
+  x_labelled <- x
+  names(x_labelled) <- to_attr_name(names(x))
+  table_string <- relation_string(x, x_labelled, list(), name, label, "row")
   teardown_string <- "}\n"
   paste(
     setup_string,
@@ -300,11 +309,11 @@ gv_setup_string <- function(df_name) {
   )
 }
 
-relation_string <- function(df, df_keys, df_name, df_snake, row_name = c("record", "row")) {
+relation_string <- function(df, df_labelled, df_keys, df_name, df_label, row_name = c("record", "row")) {
   row_name <- match.arg(row_name)
   col_classes <- vapply(df, \(a) class(a)[[1]], character(1))
 
-  columns_string <- columns_string(colnames(df), df_keys, col_classes)
+  columns_string <- columns_string(colnames(df), colnames(df_labelled), df_keys, col_classes)
   label <- paste0(
     "    <TR><TD COLSPAN=\"", length(df_keys) + 2, "\">",
     df_name,
@@ -317,7 +326,7 @@ relation_string <- function(df, df_keys, df_name, df_snake, row_name = c("record
   )
   paste0(
     "  ",
-    df_snake,
+    df_label,
     " ",
     "[label = <",
     "\n",
@@ -329,8 +338,8 @@ relation_string <- function(df, df_keys, df_name, df_snake, row_name = c("record
   )
 }
 
-relation_schema_string <- function(attrs, keys, relation_name, rel_snake) {
-  columns_string <- columns_schema_string(attrs, keys)
+relation_schema_string <- function(attrs, attr_labels, keys, relation_name, rel_label) {
+  columns_string <- columns_schema_string(attrs, attr_labels, keys)
   label <- paste0(
     "    <TR><TD COLSPAN=\"", length(keys) + 1, "\">",
     relation_name,
@@ -340,7 +349,7 @@ relation_schema_string <- function(attrs, keys, relation_name, rel_snake) {
   )
   paste0(
     "  ",
-    rel_snake,
+    rel_label,
     " ",
     "[label = <",
     "\n",
@@ -352,8 +361,7 @@ relation_schema_string <- function(attrs, keys, relation_name, rel_snake) {
   )
 }
 
-columns_string <- function(col_names, keys, col_classes) {
-  col_snake <- to_attr_name(col_names)
+columns_string <- function(col_names, col_labels, keys, col_classes) {
   key_membership_strings <- vapply(
     col_names,
     \(nm) paste(
@@ -371,20 +379,19 @@ columns_string <- function(col_names, keys, col_classes) {
   )
   column_typing_info <- paste0(
     "    <TR><TD PORT=\"TO_",
-    col_snake,
+    col_labels,
     "\">",
     col_names,
     "</TD>",
     key_membership_strings,
-    "<TD PORT=\"FROM_", col_snake, "\">", col_classes, "</TD>",
+    "<TD PORT=\"FROM_", col_labels, "\">", col_classes, "</TD>",
     "</TR>",
     recycle0 = TRUE
   )
   paste(column_typing_info, collapse = "\n")
 }
 
-columns_schema_string <- function(col_names, keys) {
-  col_snake <- to_attr_name(col_names)
+columns_schema_string <- function(col_names, col_labels, keys) {
   key_membership_strings <- vapply(
     col_names,
     \(nm) paste(
@@ -392,7 +399,7 @@ columns_schema_string <- function(col_names, keys) {
         seq_along(keys),
         \(n) {
           preamble <- if (n == length(keys))
-            paste0("<TD PORT=\"FROM_", col_snake[[match(nm, col_names)]], "\"")
+            paste0("<TD PORT=\"FROM_", col_labels[[match(nm, col_names)]], "\"")
           else
             "<TD"
           cell <- if (is.element(nm, keys[[n]]))
@@ -409,7 +416,7 @@ columns_schema_string <- function(col_names, keys) {
   )
   column_typing_info <- paste0(
     "    <TR><TD PORT=\"TO_",
-    col_snake,
+    col_labels,
     "\">",
     col_names,
     "</TD>",
@@ -450,7 +457,8 @@ reference_string <- function(reference) {
 
 to_main_name <- function(nm) make.gv_names(nm)
 to_rel_name <- function(nm) make.gv_names(nm)
-to_attr_name <- function(nm) make.gv_names(nm)
+# attrs to lower case, because GraphViz HTML record port connections ignore case
+to_attr_name <- function(nm) make.gv_names(tolower(nm))
 
 make.gv_names <- function(
   string

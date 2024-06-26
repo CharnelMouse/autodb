@@ -234,7 +234,7 @@ describe("gv", {
           2,
           "records",
           c("Title", "Author", "Pages", "Thickness", "Genre ID", "Publisher ID"),
-          c("Title", "Author", "Pages", "Thickness", "Genre_ID", "Publisher_ID"),
+          c("title", "author", "pages", "thickness", "genre_id", "publisher_id"),
           c("character", "character", "integer", "character", "integer", "integer"),
           matrix(
             c(
@@ -256,7 +256,7 @@ describe("gv", {
           4,
           "records",
           c("Title", "Format", "Price"),
-          c("Title", "Format", "Price"),
+          c("title", "format", "price"),
           c("character", "character", "integer"),
           matrix(
             c(
@@ -275,7 +275,7 @@ describe("gv", {
           2,
           "records",
           c("Author", "Author Nationality"),
-          c("Author", "Author_Nationality"),
+          c("author", "author_nationality"),
           c("character", "character"),
           matrix(
             c(
@@ -293,7 +293,7 @@ describe("gv", {
           2,
           "records",
           c("Genre ID", "Genre Name"),
-          c("Genre_ID", "Genre_Name"),
+          c("genre_id", "genre_name"),
           c("integer", "character"),
           matrix(
             c(
@@ -307,9 +307,9 @@ describe("gv", {
 
         "",
 
-        "  Book:FROM_Title -> Format_Price:TO_Title;",
-        "  Book:FROM_Author -> Author:TO_Author;",
-        "  Book:FROM_Genre_ID -> Genre:TO_Genre_ID;",
+        "  Book:FROM_title -> Format_Price:TO_title;",
+        "  Book:FROM_author -> Author:TO_author;",
+        "  Book:FROM_genre_id -> Genre:TO_genre_id;",
         "}",
         "",
         sep = "\n"
@@ -412,7 +412,7 @@ describe("gv", {
           2,
           "records",
           c("Title", "Author", "Pages", "Thickness", "Genre ID", "Publisher ID"),
-          c("Title", "Author", "Pages", "Thickness", "Genre_ID", "Publisher_ID"),
+          c("title", "author", "pages", "thickness", "genre_id", "publisher_id"),
           c("character", "character", "integer", "character", "integer", "integer"),
           matrix(
             c(
@@ -434,7 +434,7 @@ describe("gv", {
           4,
           "records",
           c("Title", "Format", "Price"),
-          c("Title", "Format", "Price"),
+          c("title", "format", "price"),
           c("character", "character", "integer"),
           matrix(
             c(
@@ -453,7 +453,7 @@ describe("gv", {
           2,
           "records",
           c("Author", "Author Nationality"),
-          c("Author", "Author_Nationality"),
+          c("author", "author_nationality"),
           c("character", "character"),
           matrix(
             c(
@@ -472,7 +472,7 @@ describe("gv", {
           2,
           "records",
           c("Genre ID", "Genre Name"),
-          c("Genre_ID", "Genre_Name"),
+          c("genre_id", "genre_name"),
           c("integer", "character"),
           matrix(
             c(
@@ -486,9 +486,9 @@ describe("gv", {
 
         "",
 
-        "  Book:FROM_Title -> Format_Price:TO_Title;",
-        "  Book:FROM_Author -> Author:TO_Author;",
-        "  Book:FROM_Genre_ID -> Genre:TO_Genre_ID;",
+        "  Book:FROM_title -> Format_Price:TO_title;",
+        "  Book:FROM_author -> Author:TO_author;",
+        "  Book:FROM_genre_id -> Genre:TO_genre_id;",
         "}",
         "",
         sep = "\n"
@@ -626,8 +626,8 @@ describe("gv", {
         "  Genre_ID [label = <",
         "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
         "    <TR><TD COLSPAN=\"2\">Genre ID</TD></TR>",
-        "    <TR><TD PORT=\"TO_Genre_ID\">Genre ID</TD><TD PORT=\"FROM_Genre_ID\" BGCOLOR=\"black\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_Genre_Name\">Genre Name</TD><TD PORT=\"FROM_Genre_Name\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_genre_id\">Genre ID</TD><TD PORT=\"FROM_genre_id\" BGCOLOR=\"black\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_genre_name\">Genre Name</TD><TD PORT=\"FROM_genre_name\"></TD></TR>",
         "    </TABLE>>];",
         "",
         "",
@@ -747,8 +747,8 @@ describe("gv", {
         "  Genre_ID [label = <",
         "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
         "    <TR><TD COLSPAN=\"2\">Genre ID</TD></TR>",
-        "    <TR><TD PORT=\"TO_Genre_ID\">Genre ID</TD><TD PORT=\"FROM_Genre_ID\" BGCOLOR=\"black\"></TD></TR>",
-        "    <TR><TD PORT=\"TO_Genre_Name\">Genre Name</TD><TD PORT=\"FROM_Genre_Name\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_genre_id\">Genre ID</TD><TD PORT=\"FROM_genre_id\" BGCOLOR=\"black\"></TD></TR>",
+        "    <TR><TD PORT=\"TO_genre_name\">Genre Name</TD><TD PORT=\"FROM_genre_name\"></TD></TR>",
         "    </TABLE>>];",
         "}",
         "",
@@ -833,7 +833,7 @@ describe("gv", {
             2,
             "rows",
             c("A 1", "b.2"),
-            c("A_1", "b_2"),
+            c("a_1", "b_2"),
             c("integer", "character"),
             matrix(nrow = 0, ncol = 0)
           ),
