@@ -5,8 +5,9 @@
 #' Column names for \code{\link{df}} must be unique.
 #'
 #' The algorithm used for finding dependencies is DFD. This searches for
-#' determinant sets for each dependent attribute by traversing the powerset of
-#' the other (non-excluded) attributes, and is equivalent to depth-first.
+#' determinant sets for each dependent attribute (dependant) by traversing the
+#' powerset of the other (non-excluded) attributes, and is equivalent to
+#' depth-first.
 #'
 #' The implementation for DFD differs a little from the algorithm presented in
 #' the original paper:
@@ -65,7 +66,7 @@
 #'   partition is expected to let the algorithm run more quickly, but might be
 #'   inefficient for small data frames or small amounts of memory.
 #' @param store_cache a logical, indicating whether to keep cached information
-#'   to use when finding dependencies for other dependents. This allows the
+#'   to use when finding dependencies for other dependants. This allows the
 #'   algorithm to run more quickly by not having to re-calculate information,
 #'   but takes up more memory.
 #' @param skip_bijections a logical, indicating whether to skip some dependency
@@ -168,11 +169,11 @@ discover <- function(
   }
   nonfixed <- setdiff(column_names, fixed)
 
-  # For nonfixed attributes, all can be dependents, but
+  # For nonfixed attributes, all can be dependants, but
   # might not all be valid determinants.
-  # Maximum size of determinant set for a dependent is number
+  # Maximum size of determinant set for a dependant is number
   # of other valid determinants.
-  # If there are dependents that aren't valid determinants,
+  # If there are dependants that aren't valid determinants,
   # this is number of valid determinant attributes. If there
   # aren't, subtract one.
   valid_determinant_attrs <- intersect(
@@ -188,9 +189,9 @@ discover <- function(
     )
   }
   valid_determinant_nonfixed_indices <- match(valid_determinant_attrs, nonfixed)
-  n_dependent_only <- length(nonfixed) - length(valid_determinant_attrs)
+  n_dependant_only <- length(nonfixed) - length(valid_determinant_attrs)
   max_n_lhs_attrs <- length(valid_determinant_attrs) -
-    as.integer(n_dependent_only == 0)
+    as.integer(n_dependant_only == 0)
   # using 0 would allow for one more column, but that's for a later date
   lhs_attrs_limit <- floor(log(.Machine$integer.max, 2))
   if (max_n_lhs_attrs > lhs_attrs_limit)
@@ -213,11 +214,11 @@ discover <- function(
       full_cache
     )
     for (rhs in seq_along(nonfixed)) {
-      report$stat(paste("dependent", nonfixed[rhs]))
+      report$stat(paste("dependant", nonfixed[rhs]))
       lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
       n_lhs_attrs <- length(lhs_nonfixed_indices)
       expected_n_lhs_attrs <- max_n_lhs_attrs -
-        (n_dependent_only > 0 && is.element(rhs, valid_determinant_nonfixed_indices))
+        (n_dependant_only > 0 && is.element(rhs, valid_determinant_nonfixed_indices))
       stopifnot(n_lhs_attrs == expected_n_lhs_attrs)
       bijection_candidate_nonfixed_indices <- if (skip_bijections)
         match(
@@ -306,7 +307,7 @@ find_LHSs_dfd <- function(
   # attributes, but these would be arbitrary floats rather than integers,
   # so more work would be required to match indices etc.
   # Assigning the integers per find_LHSs call allows one more column,
-  # since we don't need to include the dependent.
+  # since we don't need to include the dependant.
   # Node categories:
   # -3 = candidate maximal non-dependency
   # -2 = maximal non-dependency
@@ -1070,7 +1071,7 @@ add_deps_implied_by_bijections <- function(
       stopifnot(!anyDuplicated(dependencies[[nonfixed_index]]))
     }
     # add dependencies implied by the bijection
-    # only needed when bijection attribute is earlier than dependent, since
+    # only needed when bijection attribute is earlier than dependant, since
     # later ones were added before the bijection was known
     for (rhs in setdiff(seq_along(dependencies), match(nonfixed[b], column_names))) {
       for (nonfixed_index in b[-1]) {

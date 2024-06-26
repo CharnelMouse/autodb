@@ -282,7 +282,7 @@ describe("synthesise", {
       )
     )
   })
-  it("can handle basic bijections with dependents", {
+  it("can handle basic bijections with dependants", {
     # A -> B, B -> A, A -> C, B -> C, A -> D, B -> F, D -> E, F -> E
     # => A <-> B, A -> CDF, D -> E, F -> E
     dependencies <- functional_dependency(
@@ -399,12 +399,12 @@ describe("synthesise", {
         nonextr_fds$determinant_sets,
         \(inds) attrs_order(fds)[inds]
       )
-      nonextr_fds$dependents <- lapply(
-        nonextr_fds$dependents,
+      nonextr_fds$dependants <- lapply(
+        nonextr_fds$dependants,
         \(inds) attrs_order(fds)[inds]
       )
       nonextr_fds <- functional_dependency(
-        Map(list, nonextr_fds$determinant_sets, nonextr_fds$dependents),
+        Map(list, nonextr_fds$determinant_sets, nonextr_fds$dependants),
         attrs_order(fds)
       )
 
@@ -512,12 +512,12 @@ describe("synthesise", {
         detset(deps),
         find_closure,
         detset(implied_flat_fds),
-        dependent(implied_flat_fds)
+        dependant(implied_flat_fds)
       )
       fds_reproduced <- mapply(
         \(closure, dep) dep %in% closure,
         dep_closures,
-        dependent(deps)
+        dependant(deps)
       )
 
       act <- quasi_label(rlang::enquo(deps), arg = "object")
@@ -531,7 +531,7 @@ describe("synthesise", {
           paste(
             vapply(
               act$nonrep,
-              \(fd) paste0("{", toString(detset(fd)[[1]]), "} -> ", dependent(fd)),
+              \(fd) paste0("{", toString(detset(fd)[[1]]), "} -> ", dependant(fd)),
               character(1)
             ),
             collapse = "\n"
@@ -767,17 +767,17 @@ describe("synthesised_fds", {
       expect_true(all(c(
         mapply(
           \(dets, dep) {
-            dep %in% find_closure(dets, detset(fds2), dependent(fds2))
+            dep %in% find_closure(dets, detset(fds2), dependant(fds2))
           },
           detset(fds1),
-          dependent(fds1)
+          dependant(fds1)
         ),
         mapply(
           \(dets, dep) {
-            dep %in% find_closure(dets, detset(fds1), dependent(fds1))
+            dep %in% find_closure(dets, detset(fds1), dependant(fds1))
           },
           detset(fds2),
-          dependent(fds2)
+          dependant(fds2)
         )
       )))
     }

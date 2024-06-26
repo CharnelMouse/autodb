@@ -23,28 +23,28 @@ detset <- function(x, ...) {
   UseMethod("detset<-")
 }
 
-#' Dependents
+#' Dependants
 #'
-#' Generic function, with the only given method fetching dependents for
+#' Generic function, with the only given method fetching dependants for
 #' functional dependencies.
 #'
 #' @param x an R object. For the given method, a
 #'   \code{\link{functional_dependency}}.
 #' @param ... further arguments passed on to methods.
 #'
-#' @return A character vector containing dependents.
+#' @return A character vector containing dependants.
 #' @export
-dependent <- function(x, ...) {
-  UseMethod("dependent")
+dependant <- function(x, ...) {
+  UseMethod("dependant")
 }
 
-#' @rdname dependent
+#' @rdname dependant
 #'
-#' @param value A character vector of the same length as \code{dependent(x, ...)}.
+#' @param value A character vector of the same length as \code{dependant(x, ...)}.
 #'
 #' @export
-`dependent<-` <- function(x, ..., value) {
-  UseMethod("dependent<-")
+`dependant<-` <- function(x, ..., value) {
+  UseMethod("dependant<-")
 }
 
 #' Relational data attributes

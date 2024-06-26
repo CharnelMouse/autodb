@@ -163,7 +163,7 @@ describe("decompose", {
       if (length(nonempty_detsets) == 0)
         return(gen.pure(list(df, NULL, NULL)))
       gen.element(nonempty_detsets) |>
-        gen.with(\(index) list(detset(true_fds)[[index]], dependent(true_fds)[[index]])) |>
+        gen.with(\(index) list(detset(true_fds)[[index]], dependant(true_fds)[[index]])) |>
         gen.and_then(\(fd) list(gen.pure(fd), gen.int(length(fd[[1]])))) |>
         gen.with(\(lst) c(list(df), lst))
     }

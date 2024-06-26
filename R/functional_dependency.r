@@ -1,6 +1,6 @@
 #' Functional dependency vectors
 #'
-#' Creates a set of functional dependencies with length-one dependents.
+#' Creates a set of functional dependencies with length-one dependants.
 #'
 #' When several sets of functional dependencies are concatenated, their
 #' \code{attrs} attributes are merged, so as to preserve all of the original
@@ -11,7 +11,7 @@
 #' @param FDs a list of functional dependencies, in the form of two-elements
 #'   lists: the first element contains character vector of all attributes in the
 #'   determinant set, and the second element contains the single dependent
-#'   attribute.
+#'   attribute (dependant).
 #' @param attrs_order a character vector, giving the names of all attributes. These
 #'   need not be present in \code{FDs}, but all attributes in \code{FDs} must be
 #'   present in \code{attrs}.
@@ -23,7 +23,7 @@
 #'   Functional dependencies are returned with their determinant sets sorted
 #'   according to the attribute order in \code{attrs}. Any duplicates found
 #'   after sorting are removed.
-#' @seealso \code{\link{detset}}, \code{\link{dependent}}, and
+#' @seealso \code{\link{detset}}, \code{\link{dependant}}, and
 #'   \code{\link{attrs_order}} for extracting parts of the information in a
 #'   \code{functional_dependency}.
 #' @examples
@@ -33,7 +33,7 @@
 #' )
 #' print(fds)
 #' detset(fds)
-#' dependent(fds)
+#' dependant(fds)
 #' attrs_order(fds)
 #' @export
 functional_dependency <- function(
@@ -53,7 +53,7 @@ functional_dependency <- function(
     any(vapply(deps, Negate(is.character), logical(1))) ||
     any(lengths(deps) != 1L)
   )
-    stop("FDs dependents must be length-one characters")
+    stop("FD dependants must be length-one characters")
   if (any(!is.element(unlist(FDs), attrs_order)))
     stop("attributes in FDs must be present in attrs_order")
   if (anyDuplicated(attrs_order))
@@ -77,18 +77,18 @@ detset.functional_dependency <- function(x, ...) {
 #' @export
 `detset<-.functional_dependency` <- function(x, ..., value) {
   functional_dependency(
-    Map(list, value, dependent(x)),
+    Map(list, value, dependant(x)),
     attrs_order(x)
   )
 }
 
 #' @exportS3Method
-dependent.functional_dependency <- function(x, ...) {
+dependant.functional_dependency <- function(x, ...) {
   vapply(unclass(x), `[[`, character(1L), 2L)
 }
 
 #' @export
-`dependent<-.functional_dependency` <- function(x, ..., value) {
+`dependant<-.functional_dependency` <- function(x, ..., value) {
   functional_dependency(
     Map(list, detset(x), value),
     attrs_order(x)
@@ -103,7 +103,7 @@ attrs_order.functional_dependency <- function(x, ...) {
 #' @export
 `attrs_order<-.functional_dependency` <- function(x, ..., value) {
   functional_dependency(
-    Map(list, detset(x), dependent(x)),
+    Map(list, detset(x), dependant(x)),
     attrs_order = value
   )
 }
@@ -159,7 +159,7 @@ print.functional_dependency <- function(x, ...) {
       character(1)
     )
   }
-  dep_txt <- dependent(x)
+  dep_txt <- dependant(x)
   txt <- paste0(padding, det_txt, " -> ", dep_txt, recycle0 = TRUE)
   cat(with_number(length(x), "functional dependenc", "y", "ies"))
   cat(paste0("\n", with_number(length(attrs_order(x)), "attribute", "", "s")))

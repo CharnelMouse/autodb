@@ -134,14 +134,14 @@ synthesise <- function(
 convert_to_vectors <- function(flat_dependencies) {
   list(
     determinant_sets = detset(flat_dependencies),
-    dependents = dependent(flat_dependencies),
+    dependants = dependant(flat_dependencies),
     attrs_order = attrs_order(flat_dependencies)
   )
 }
 
 convert_to_integer_attributes <- function(vecs) {
   vecs$determinant_sets <- lapply(vecs$determinant_sets, match, vecs$attrs_order)
-  vecs$dependents <- match(vecs$dependents, vecs$attrs_order)
+  vecs$dependants <- match(vecs$dependants, vecs$attrs_order)
   vecs
 }
 
@@ -158,7 +158,7 @@ remove_extraneous <- function(deps) {
 
 remove_extraneous_attributes <- function(deps) {
   dts <- detset(deps)
-  dps <- dependent(deps)
+  dps <- dependant(deps)
   for (n in seq_along(deps)) {
     lhs <- dts[[n]]
     rhs <- dps[[n]]
@@ -174,21 +174,21 @@ remove_extraneous_attributes <- function(deps) {
 }
 
 sort_dependencies <- function(vecs) {
-  ord <- order(keys_rank(vecs$determinant_sets), vecs$dependents)
+  ord <- order(keys_rank(vecs$determinant_sets), vecs$dependants)
   vecs$determinant_sets <- vecs$determinant_sets[ord]
-  vecs$dependents <- vecs$dependents[ord]
+  vecs$dependants <- vecs$dependants[ord]
   vecs
 }
 
 remove_extraneous_dependencies <- function(fds) {
   det_inds <- lapply(detset(fds), \(k) match(k, attrs_order(fds)))
-  dep_inds <- match(dependent(fds), attrs_order(fds))
+  dep_inds <- match(dependant(fds), attrs_order(fds))
   ord <- order(keys_rank(det_inds), dep_inds)
   inv_ord <- order(ord)
 
   new_det_sets <- detset(fds)[ord]
   old_deps <- NULL
-  new_deps <- dependent(fds)[ord]
+  new_deps <- dependant(fds)[ord]
   main_rem <- rep(FALSE, length(new_deps))
   while (!identical(old_deps, new_deps)) {
     old_deps <- new_deps
@@ -226,13 +226,13 @@ partition_dependencies <- function(vecs) {
   for (det_set in unique_det_sets) {
     matches <- vapply(det_sets, identical, logical(1), det_set)
     partition_det_set <- c(partition_det_set, list(det_set))
-    partition_deps <- c(partition_deps, list(vecs$dependents[matches]))
+    partition_deps <- c(partition_deps, list(vecs$dependants[matches]))
   }
   list(
     determinant_sets = vecs$determinant_sets,
-    dependents = vecs$dependents,
+    dependants = vecs$dependants,
     partition_determinant_set = partition_det_set,
-    partition_dependents = partition_deps,
+    partition_dependants = partition_deps,
     unique_determinant_sets = unique_det_sets,
     attrs_order = vecs$attrs_order
   )
@@ -240,30 +240,30 @@ partition_dependencies <- function(vecs) {
 
 merge_equivalent_keys <- function(vecs) {
   partition_determinant_set <- vecs$partition_determinant_set
-  partition_dependents <- vecs$partition_dependents
+  partition_dependants <- vecs$partition_dependants
   unique_determinant_sets <- vecs$unique_determinant_sets
 
   partition_keys <- lapply(unique_determinant_sets, list)
   bijection_determinant_sets <- list()
-  bijection_dependent_sets <- list()
-  if (length(partition_dependents) >= 1) {
-    for (n in seq_len(length(partition_dependents) - 1)) {
-      if (length(partition_dependents[[n]]) > 0) {
+  bijection_dependant_sets <- list()
+  if (length(partition_dependants) >= 1) {
+    for (n in seq_len(length(partition_dependants) - 1)) {
+      if (length(partition_dependants[[n]]) > 0) {
         LHS <- unique_determinant_sets[[n]]
         key1 <- partition_keys[[n]][[1]]
-        for (m in (n + 1):length(partition_dependents)) {
-          if (length(partition_dependents[[m]]) > 0) {
+        for (m in (n + 1):length(partition_dependants)) {
+          if (length(partition_dependants[[m]]) > 0) {
             LHS2 <- unique_determinant_sets[[m]]
             key2 <- partition_keys[[m]][[1]]
             closure1 <- find_closure(
               LHS,
               vecs$determinant_sets,
-              vecs$dependents
+              vecs$dependants
             )
             closure2 <- find_closure(
               LHS2,
               vecs$determinant_sets,
-              vecs$dependents
+              vecs$dependants
             )
 
             if (all(key1 %in% closure2) && all(key2 %in% closure1)) {
@@ -272,25 +272,25 @@ merge_equivalent_keys <- function(vecs) {
                 bijection_determinant_sets,
                 list(key1, key2)
               )
-              bijection_dependent_sets <- c(
-                bijection_dependent_sets,
+              bijection_dependant_sets <- c(
+                bijection_dependant_sets,
                 list(setdiff(key2, key1), setdiff(key1, key2))
               )
               partition_keys[[n]] <- c(partition_keys[[n]], partition_keys[[m]])
 
               obsolete <- vapply(
-                c(partition_dependents[[n]], partition_dependents[[m]]),
+                c(partition_dependants[[n]], partition_dependants[[m]]),
                 is.element,
                 logical(1),
                 c(key1, key2)
               )
-              partition_dependents[[n]] <- unique(c(
-                partition_dependents[[n]],
-                partition_dependents[[m]]
+              partition_dependants[[n]] <- unique(c(
+                partition_dependants[[n]],
+                partition_dependants[[m]]
               )[!obsolete])
 
               partition_determinant_set[[m]] <- integer()
-              partition_dependents[[m]] <- integer()
+              partition_dependants[[m]] <- integer()
               partition_keys[[m]] <- list()
             }
           }
@@ -298,14 +298,14 @@ merge_equivalent_keys <- function(vecs) {
       }
     }
   }
-  nonempty <- lengths(partition_dependents) > 0
+  nonempty <- lengths(partition_dependants) > 0
   in_bijections <- partition_determinant_set %in% bijection_determinant_sets
   list(
     partition_determinant_set = partition_determinant_set[nonempty | in_bijections],
-    partition_dependents = partition_dependents[nonempty | in_bijections],
+    partition_dependants = partition_dependants[nonempty | in_bijections],
     partition_keys = partition_keys[nonempty | in_bijections],
     bijection_determinant_sets = bijection_determinant_sets,
-    bijection_dependent_sets = bijection_dependent_sets,
+    bijection_dependant_sets = bijection_dependant_sets,
     attrs_order = vecs$attrs_order
   )
 }
@@ -314,32 +314,32 @@ remove_transitive_dependencies <- function(vecs) {
   # DFD theorem 3: eliminate every functional dependency h in H such that the
   # right hand side is not in any of the group's keys, and is in the closure for
   # (H + J - {h}), where J is the bijections.
-  # partition format: list[list[list[key, dependent]]]
+  # partition format: list[list[list[key, dependant]]]
   # keys format: list[list[attrs]], giving key list for each partition group
   # bijections: list[list[key1, key2]]
   flat_partition_determinant_set <- rep(
     vecs$partition_determinant_set,
-    lengths(vecs$partition_dependents)
+    lengths(vecs$partition_dependants)
   )
-  flat_partition_dependents <- unlist(vecs$partition_dependents)
-  if (is.null(flat_partition_dependents))
-    flat_partition_dependents <- integer()
+  flat_partition_dependants <- unlist(vecs$partition_dependants)
+  if (is.null(flat_partition_dependants))
+    flat_partition_dependants <- integer()
   flat_groups <- rep(
-    seq_along(vecs$partition_dependents),
-    lengths(vecs$partition_dependents)
+    seq_along(vecs$partition_dependants),
+    lengths(vecs$partition_dependants)
   )
 
   flat_bijection_determinant_sets <- rep(
     vecs$bijection_determinant_sets,
-    lengths(vecs$bijection_dependent_sets)
+    lengths(vecs$bijection_dependant_sets)
   )
-  flat_bijection_dependents <- unlist(vecs$bijection_dependent_sets)
-  if (is.null(flat_bijection_dependents))
-    flat_bijection_dependents <- integer()
+  flat_bijection_dependants <- unlist(vecs$bijection_dependant_sets)
+  if (is.null(flat_bijection_dependants))
+    flat_bijection_dependants <- integer()
 
-  transitive <- rep(FALSE, length(flat_partition_dependents))
-  for (n in seq_along(flat_partition_dependents)) {
-    RHS <- flat_partition_dependents[n]
+  transitive <- rep(FALSE, length(flat_partition_dependants))
+  for (n in seq_along(flat_partition_dependants)) {
+    RHS <- flat_partition_dependants[n]
     keys <- vecs$partition_keys[[flat_groups[n]]]
     key_attrs <- unique(unlist(keys))
     if (!is.element(RHS, key_attrs)) {
@@ -350,8 +350,8 @@ remove_transitive_dependencies <- function(vecs) {
           flat_bijection_determinant_sets
         ),
         c(
-          flat_partition_dependents[-n][!transitive[-n]],
-          flat_bijection_dependents
+          flat_partition_dependants[-n][!transitive[-n]],
+          flat_bijection_dependants
         )
       )
       if (is.element(RHS, closure_without))
@@ -360,21 +360,21 @@ remove_transitive_dependencies <- function(vecs) {
   }
   list(
     flat_partition_determinant_sets = flat_partition_determinant_set[!transitive],
-    flat_partition_dependents = flat_partition_dependents[!transitive],
+    flat_partition_dependants = flat_partition_dependants[!transitive],
     flat_groups = flat_groups[!transitive],
     partition_keys = vecs$partition_keys,
     bijection_determinant_sets = flat_bijection_determinant_sets,
-    bijection_dependents = flat_bijection_dependents,
+    bijection_dependants = flat_bijection_dependants,
     attrs_order = vecs$attrs_order
   )
 }
 
 add_bijections <- function(vecs) {
   flat_partition_determinant_set <- vecs$flat_partition_determinant_set
-  flat_partition_dependents <- vecs$flat_partition_dependents
+  flat_partition_dependants <- vecs$flat_partition_dependants
   flat_groups <- vecs$flat_groups
   bijection_determinant_sets <- vecs$bijection_determinant_sets
-  bijection_dependents <- vecs$bijection_dependents
+  bijection_dependants <- vecs$bijection_dependants
   for (n in seq_along(vecs$partition_keys)) {
     keys <- vecs$partition_keys[[n]]
     matches <- vapply(
@@ -386,18 +386,18 @@ add_bijections <- function(vecs) {
       flat_partition_determinant_set,
       bijection_determinant_sets[matches]
     )
-    flat_partition_dependents <- c(
-      flat_partition_dependents,
-      bijection_dependents[matches]
+    flat_partition_dependants <- c(
+      flat_partition_dependants,
+      bijection_dependants[matches]
     )
     flat_groups <- c(flat_groups, rep(n, sum(matches)))
     bijection_determinant_sets <- bijection_determinant_sets[!matches]
-    bijection_dependents <- bijection_dependents[!matches]
+    bijection_dependants <- bijection_dependants[!matches]
   }
   stopifnot(length(bijection_determinant_sets) == 0)
   list(
     flat_partition_determinant_set = flat_partition_determinant_set,
-    flat_partition_dependents = flat_partition_dependents,
+    flat_partition_dependants = flat_partition_dependants,
     flat_groups = flat_groups,
     bijection_groups = vecs$partition_keys[lengths(vecs$partition_keys) > 1],
     attrs_order = vecs$attrs_order
@@ -429,8 +429,8 @@ construct_relation_schemas <- function(vecs) {
     for (group_ind in seq_len(max(vecs$flat_groups))) {
       partition_index <- vecs$flat_groups == group_ind
       keys <- unique(vecs$flat_partition_determinant_set[partition_index])
-      dependents <- unique(vecs$flat_partition_dependents[partition_index])
-      nonprimes <- setdiff(dependents, unlist(keys))
+      dependants <- unique(vecs$flat_partition_dependants[partition_index])
+      nonprimes <- setdiff(dependants, unlist(keys))
 
       # try simplifying keys using other bijection sets
       # this is not replicated by removing avoidable attributes
@@ -657,7 +657,7 @@ minimal_subset <- function(
   key,
   determines,
   determinant_sets,
-  dependents
+  dependants
 ) {
   keep <- rep(TRUE, length(key))
   changed <- TRUE
@@ -669,7 +669,7 @@ minimal_subset <- function(
       temp_closure <- find_closure(
         key[temp_keep],
         determinant_sets,
-        dependents
+        dependants
       )
       if (all(determines %in% temp_closure)) {
         keep <- temp_keep
@@ -690,16 +690,16 @@ name_dataframe <- function(index) {
   paste(index, collapse = "_")
 }
 
-find_closure <- function(attrs, determinant_sets, dependents) {
-  if (length(dependents) == 0)
+find_closure <- function(attrs, determinant_sets, dependants) {
+  if (length(dependants) == 0)
     return(attrs)
-  checked <- rep(FALSE, length(dependents))
+  checked <- rep(FALSE, length(dependants))
   change <- TRUE
   while (change) {
     change <- FALSE
-    for (n in seq_along(dependents)[!checked]) {
+    for (n in seq_along(dependants)[!checked]) {
       det_set <- determinant_sets[[n]]
-      dep <- dependents[n]
+      dep <- dependants[n]
       if (length(dep) != 1)
         stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(dep)))
       if (all(is.element(det_set, attrs))) {
@@ -713,17 +713,17 @@ find_closure <- function(attrs, determinant_sets, dependents) {
   attrs
 }
 
-find_closure_with_used <- function(attrs, determinant_sets, dependents) {
-  if (length(dependents) == 0)
+find_closure_with_used <- function(attrs, determinant_sets, dependants) {
+  if (length(dependants) == 0)
     return(list(attrs, integer()))
-  checked <- rep(FALSE, length(dependents))
+  checked <- rep(FALSE, length(dependants))
   change <- TRUE
   ordered_use <- integer()
   while (change) {
     change <- FALSE
-    for (n in seq_along(dependents)[!checked]) {
+    for (n in seq_along(dependants)[!checked]) {
       det_set <- determinant_sets[[n]]
-      dep <- dependents[n]
+      dep <- dependants[n]
       if (length(dep) != 1)
         stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(dep)))
       if (all(is.element(det_set, attrs))) {

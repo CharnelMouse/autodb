@@ -22,7 +22,7 @@ describe("discover", {
       Map(
         list,
         lapply(detset(deps1), \(dets) nms2[match(dets, nms1)]),
-        nms2[match(dependent(deps1), nms1)]
+        nms2[match(dependant(deps1), nms1)]
       ),
       nms2
     )
@@ -35,7 +35,7 @@ describe("discover", {
       Map(
         list,
         lapply(detset(deps1), \(dets) nms2[match(dets, nms1)]),
-        nms2[match(dependent(deps1), nms1)]
+        nms2[match(dependant(deps1), nms1)]
       ),
       nms1
     )
@@ -60,7 +60,7 @@ describe("discover", {
     expect_true(all(vapply(
       deps1,
       \(ds) any(
-        vapply(dependent(deps2), identical, logical(1), dependent(ds)) &
+        vapply(dependant(deps2), identical, logical(1), dependant(ds)) &
           vapply(
             detset(deps2),
             \(detset) all(is.element(detset, detset(ds)[[1L]])),
@@ -138,7 +138,7 @@ describe("discover", {
     }
   }
 
-  it("gives a deterministic result, except for per-dependent dependency order", {
+  it("gives a deterministic result, except for per-dependant dependency order", {
     two_copies <- function(fn) {
       function(df) {
         fn(df, df)
@@ -149,9 +149,9 @@ describe("discover", {
       two_copies(both_terminate_then(expect_equiv_deps, accuracy = 1))
     )
   })
-  it("returns dependencies where shared dependent <=> not sub/supersets for determinants", {
+  it("returns dependencies where shared dependant <=> not sub/supersets for determinants", {
     has_non_nested_determinant_sets <- function(deps) {
-      det_groups <- split(detset(deps), dependent(deps))
+      det_groups <- split(detset(deps), dependant(deps))
       for (det_sets in det_groups) {
         len <- length(det_sets)
         if (len <= 1)
@@ -363,7 +363,7 @@ describe("discover", {
     )
     stopifnot(df[1, "time"] != df[2, "time"])
     deps <- discover(df, 1)
-    expect_length(deps[dependent(deps) == "time"], 0L)
+    expect_length(deps[dependant(deps) == "time"], 0L)
   })
   it("doesn't have an excluded attribute in any determinant sets", {
     gen_df_and_exclude <- function(nrow, ncol, remove_dup_rows = FALSE) {
@@ -428,7 +428,7 @@ describe("discover", {
   it("gives dependencies for unique attributes (in case don't want them as key)", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), C = c(1, 2, 2))
     deps <- discover(df, 1)
-    A_deps <- dependent(deps) == "A"
+    A_deps <- dependant(deps) == "A"
     A_detsets <- detset(deps[A_deps])
     expect_identical(A_detsets, list(c("B", "C")))
   })
@@ -544,7 +544,7 @@ describe("discover", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
       stats::setNames(c("A 1", "B 2", "C 3"))
     deps <- discover(df, 1)
-    A_1_deps <- dependent(deps) == "A 1"
+    A_1_deps <- dependant(deps) == "A 1"
     A_1_detsets <- detset(deps[A_1_deps])
     expect_identical(A_1_detsets, list(c("B 2", "C 3")))
   })
@@ -564,7 +564,7 @@ describe("discover", {
       shrink.limit = Inf
     )
   })
-  it("is invariant to whether partition is transferred between dependents", {
+  it("is invariant to whether partition is transferred between dependants", {
     forall(
       gen_df(20, 5),
       terminates_with_and_without_store_cache_then(expect_equiv_deps, accuracy = 1),

@@ -3,10 +3,10 @@ library(hedgehog)
 describe("functional_dependency", {
   gen.fd <- function(x, from, to, unique = TRUE) {
     gen.element(x) |>
-      gen.and_then(\(dependent) {
+      gen.and_then(\(dependant) {
         list(
-          gen.subsequence(setdiff(sample(x), dependent)),
-          dependent
+          gen.subsequence(setdiff(sample(x), dependant)),
+          dependant
         )
       }) |>
       gen.list(from = from, to = to) |>
@@ -28,11 +28,11 @@ describe("functional_dependency", {
     )
     expect_error(
       functional_dependency(list(list(character(), 1L)), "1"),
-      "^FDs dependents must be length-one characters$"
+      "^FD dependants must be length-one characters$"
     )
     expect_error(
       functional_dependency(list(list(character(), character())), character()),
-      "^FDs dependents must be length-one characters$"
+      "^FD dependants must be length-one characters$"
     )
   })
   it("expects valid input: no duplicate determinants", {
@@ -251,13 +251,13 @@ describe("functional_dependency", {
       curry = TRUE
     )
   })
-  it("is composed of its detset() and dependent() outputs, with attrs_order() attribute", {
+  it("is composed of its detset() and dependant() outputs, with attrs_order() attribute", {
     forall(
       gen.fd(letters[1:6], 0, 8),
       \(fd) expect_identical(
         fd,
         functional_dependency(
-          Map(list, detset(fd), dependent(fd)),
+          Map(list, detset(fd), dependant(fd)),
           attrs_order = attrs_order(fd)
         )
       )

@@ -48,10 +48,10 @@ describe("autoref", {
       table_references <- unique(lapply(references(linked), `[`, c(1, 3)))
       table_references <- list(
         determinant_sets = vapply(table_references, `[[`, character(1), 1),
-        dependents = vapply(table_references, `[[`, character(1), 2)
+        dependants = vapply(table_references, `[[`, character(1), 2)
       )
       table_references_as_fds <- functional_dependency(
-        Map(list, table_references$determinant_sets, table_references$dependents),
+        Map(list, table_references$determinant_sets, table_references$dependants),
         names(rs)
       )
       expect_identical(

@@ -10,7 +10,7 @@ functional_dependency(FDs, attrs_order, unique = TRUE)
 \item{FDs}{a list of functional dependencies, in the form of two-elements
 lists: the first element contains character vector of all attributes in the
 determinant set, and the second element contains the single dependent
-attribute.}
+attribute (dependant).}
 
 \item{attrs_order}{a character vector, giving the names of all attributes. These
 need not be present in \code{FDs}, but all attributes in \code{FDs} must be
@@ -27,7 +27,7 @@ according to the attribute order in \code{attrs}. Any duplicates found
 after sorting are removed.
 }
 \description{
-Creates a set of functional dependencies with length-one dependents.
+Creates a set of functional dependencies with length-one dependants.
 }
 \details{
 When several sets of functional dependencies are concatenated, their
@@ -43,11 +43,11 @@ fds <- functional_dependency(
 )
 print(fds)
 detset(fds)
-dependent(fds)
+dependant(fds)
 attrs_order(fds)
 }
 \seealso{
-\code{\link{detset}}, \code{\link{dependent}}, and
+\code{\link{detset}}, \code{\link{dependant}}, and
 \code{\link{attrs_order}} for extracting parts of the information in a
 \code{functional_dependency}.
 }

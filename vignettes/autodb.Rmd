@@ -130,13 +130,13 @@ The `accuracy` argument expects a number between zero and one, determining what 
 deps
 ```
 
-After simplifying the data to something quicker to iterate over -- specifically, by converting all attributes to have integer values -- the algorithm takes each attribute in turn as a possible dependent, and finds sets of the other attributes that determine it.
+After simplifying the data to something quicker to iterate over -- specifically, by converting all attributes to have integer values -- the algorithm takes each attribute in turn as a possible dependant, and finds sets of the other attributes that determine it.
 
-The result is a list of functional dependencies, in the format `determinant set -> dependent`, with an attribute named `attrs_order` that gives all the attribute names in their original order. Each of these three parts has its own (generic) extraction function:
+The result is a list of functional dependencies, in the format `determinant set -> dependant`, with an attribute named `attrs_order` that gives all the attribute names in their original order. Each of these three parts has its own (generic) extraction function:
 
 ```{r}
 detset(deps)
-dependent(deps)
+dependant(deps)
 attrs_order(deps)
 ```
 
@@ -209,10 +209,10 @@ titanic_deps <- discover(as.data.frame(Titanic), 1)
 titanic_deps
 ```
 
-We can remove the unwanted dependencies, where `Age` is the dependent:
+We can remove the unwanted dependencies, where `Age` is the dependant:
 
 ```{r}
-titanic_deps[dependent(titanic_deps) == "Freq"]
+titanic_deps[dependant(titanic_deps) == "Freq"]
 ```
 
 ## Adding foreign key references
@@ -387,7 +387,7 @@ The additional relation mentioned at the end of the previous section is also not
 
 - Remove the offending functional dependencies, and re-do the schema creation (the proper method);
 - Remove offending attributes from the table -- e.g. `publication_id` above, since it doesn't do its intended job of unique publication identification -- and re-do the entire process (re-running `discover` can be expensive; we don't always want to throw out everything to do with an attribute, e.g. `reference -> year`, or `title -> reference`);
-- Add offending attributes to `exclude`, to disallow them in dependent sets, and re-do the entire process (same issues as above, except that we keep `title -> reference`, since an excluded `reference` can still be a dependent);
+- Add offending attributes to `exclude`, to disallow them in determinant sets, and re-do the entire process (same issues as above, except that we keep `title -> reference`, since an excluded `reference` can still be a dependant);
 - Remove offending schemas from the database schema / database (see below).
 
 What happens if we remove the offending schemas?

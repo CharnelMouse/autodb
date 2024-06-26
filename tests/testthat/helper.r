@@ -2,14 +2,14 @@ is_valid_functional_dependency <- function(x) {
   expect_s3_class(x, "functional_dependency")
   attrs <- attrs_order(x)
   expect_true(all(lengths(unclass(x)) == 2L))
-  expect_silent(dependent(x))
-  expect_true(all(lengths(dependent(x)) == 1L))
+  expect_silent(dependant(x))
+  expect_true(all(lengths(dependant(x)) == 1L))
   expect_true(all(vapply(detset(x), is.character, logical(1))))
   lhs <- detset(x)
 
   expect_true(all(is.element(unlist(x), attrs)))
   expect_true(all(
-    mapply(\(dets, dep) !is.element(dep, dets), detset(x), dependent(x))
+    mapply(\(dets, dep) !is.element(dep, dets), detset(x), dependant(x))
   ))
   expect_true(all(vapply(
     lhs,
@@ -20,7 +20,7 @@ is_valid_functional_dependency <- function(x) {
 
 is_valid_minimal_functional_dependency <- function(x) {
   is_valid_functional_dependency(x)
-  grouped <- split(detset(x), dependent(x))
+  grouped <- split(detset(x), dependant(x))
   expect_true(!any(
     vapply(
       grouped,

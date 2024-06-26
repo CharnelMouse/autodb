@@ -30,7 +30,7 @@ partition is expected to let the algorithm run more quickly, but might be
 inefficient for small data frames or small amounts of memory.}
 
 \item{store_cache}{a logical, indicating whether to keep cached information
-to use when finding dependencies for other dependents. This allows the
+to use when finding dependencies for other dependants. This allows the
 algorithm to run more quickly by not having to re-calculate information,
 but takes up more memory.}
 
@@ -69,8 +69,9 @@ Finds all the minimal functional dependencies represented in a data frame.
 Column names for \code{\link{df}} must be unique.
 
 The algorithm used for finding dependencies is DFD. This searches for
-determinant sets for each dependent attribute by traversing the powerset of
-the other (non-excluded) attributes, and is equivalent to depth-first.
+determinant sets for each dependent attribute (dependant) by traversing the
+powerset of the other (non-excluded) attributes, and is equivalent to
+depth-first.
 
 The implementation for DFD differs a little from the algorithm presented in
 the original paper:

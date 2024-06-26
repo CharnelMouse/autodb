@@ -55,7 +55,7 @@ calculate_references <- function(schema) {
   filtered_fds <- remove_extraneous_dependencies(fds)
   filtered_vecs <- list(
     determinant_sets = detset(filtered_fds),
-    dependents = dependent(filtered_fds)
+    dependants = dependant(filtered_fds)
   )
 
   relation_pairs <- fds
@@ -66,7 +66,7 @@ calculate_references <- function(schema) {
 
   list(
     child = filtered_vecs$determinant_sets,
-    parent = filtered_vecs$dependents,
+    parent = filtered_vecs$dependants,
     attr = filtered_attrs
   )
 }
