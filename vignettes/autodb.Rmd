@@ -865,7 +865,7 @@ schema_redkey <- normalise(fds_redkey, remove_avoidable = TRUE)
 show(schema_redkey)
 ```
 
-These relations have some redundancy: relation `a` implies `{b, d} -> c`, but relation `d` implies that `{d} -> c`. This isn't resolved by removing avoidable attributes, because `d` still needs to be in relation `a`: we just need to remove `{a, d}` as a key. However, this is resolved if we instead use this set of functional dependencies, which is equivalent to the previous set:
+These relations have some redundancy: relation `a` implies `{b, d} -> c`, but relation `d` implies that `{d} -> c`. This isn't resolved by removing avoidable attributes, because `d` still needs to be in relation `a`: we just need to remove `{b, d}` as a key. However, this is resolved if we instead use this set of functional dependencies, which is equivalent to the previous set:
 
 ```{r redundant_keys_fix}
 fds_redkey_fix <- functional_dependency(
