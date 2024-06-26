@@ -38,6 +38,7 @@
 * Corrected `df_equiv` to work with `data.frame` columns that are lists.
 * Fixed `normalise`'s return output to be invariant to the given order of the functional_dependency input.
 * Fixed `normalise` returning relations with attributes in the wrong order in certain cases where `remove_avoidable = TRUE`.
+* Fixed `gv` giving Graphviz code that could result in incorrect diagrams: relation and attribute names were converted to lower case, and not checked for uniqueness afterwards. This could result in incorrect foreign key references being drawn. The fix also accounts for a current bug in Graphviz, where edges between HTML-style node ports ignore case for the port labels.
 
 # autodb 1.1.0
 
