@@ -63,6 +63,13 @@ references.database_schema <- function(x, ...) {
 }
 
 #' @export
+`attrs<-.database_schema` <- function(x, ..., value) {
+  rs <- subschemas(x)
+  attrs(rs, ...) <- value
+  database_schema(rs, references(x))
+}
+
+#' @export
 `attrs_order<-.database_schema` <- function(x, ..., value) {
   rels <- subschemas(x)
   attrs_order(rels) <- value

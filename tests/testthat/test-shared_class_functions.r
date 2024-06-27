@@ -1,7 +1,7 @@
 library(hedgehog)
 
 describe("attrs<-", {
-  it("works for relation_schema", {
+  it("works for relation_schema: prime attrs must be kept", {
     forall(
       # must include prime attrs, other attrs optional, order irrelevant
       gen.relation_schema(letters[1:6], 0, 8) |>
@@ -40,6 +40,62 @@ describe("attrs<-", {
         # it doesn't affect other parts of the object
         expect_identical(keys(rs2), keys(rs))
         expect_identical(attrs_order(rs2), attrs_order(rs))
+      },
+      curry = TRUE
+    )
+  })
+  it("works for database_schema: prime/reference attrs must be kept", {
+    forall(
+      # must include prime attrs and attrs in references, other attrs optional,
+      # order irrelevant
+      gen.database_schema(letters[1:6], 0, 8) |>
+        gen.and_then(\(ds) {
+          list(
+            gen.pure(ds),
+            Map(
+              \(as, ks, nm) {
+                referring <- references(ds) |>
+                  Filter(f = \(ref) ref[[1]] == nm) |>
+                  lapply(`[[`, 2) |>
+                  unlist() |>
+                  as.character()
+                referred <- references(ds) |>
+                  Filter(f = \(ref) ref[[3]] == nm) |>
+                  lapply(`[[`, 4) |>
+                  unlist() |>
+                  as.character()
+                necessary <- unique(c(unlist(ks), referring, referred))
+                available <- setdiff(attrs_order(ds), necessary)
+                gen.subsequence(available) |>
+                  gen.with(with_args(c, necessary)) |>
+                  gen.and_then(gen.sample)
+              },
+              attrs(ds),
+              keys(ds),
+              names(ds)
+            )
+          )
+        }),
+      \(ds, value) {
+        ds2 <- ds
+        attrs(ds2) <- value
+        # it changes attrs to value, sorted for keys and attrs_order
+        sorted_value <- Map(
+          \(as, ks) {
+            necessary <- unique(unlist(ks))
+            c(
+              necessary,
+              intersect(setdiff(attrs_order(ds), necessary), as)
+            )
+          },
+          value,
+          keys(ds)
+        )
+        expect_identical(unname(attrs(ds2)), unname(sorted_value))
+        # it doesn't affect other parts of the object
+        expect_identical(keys(ds2), keys(ds))
+        expect_identical(attrs_order(ds2), attrs_order(ds))
+        expect_identical(references(ds2), references(ds))
       },
       curry = TRUE
     )
