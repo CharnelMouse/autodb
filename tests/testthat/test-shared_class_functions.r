@@ -2,25 +2,27 @@ library(hedgehog)
 
 describe("attrs<-", {
   it("works for relation_schema: prime attrs must be kept", {
+    gen.rs_single_success <- \(as, ks, attrs_order) {
+      necessary <- unique(unlist(ks))
+      available <- setdiff(attrs_order, necessary)
+      gen.subsequence(available) |>
+        gen.with(with_args(c, necessary)) |>
+        gen.and_then(gen.sample)
+    }
+    gen.rs_success <- function(rs) {
+      list(
+        gen.pure(rs),
+        Map(
+          with_args(gen.rs_single_success, attrs_order = attrs_order(rs)),
+          attrs(rs),
+          keys(rs)
+        )
+      )
+    }
     forall(
       # must include prime attrs, other attrs optional, order irrelevant
       gen.relation_schema(letters[1:6], 0, 8) |>
-        gen.and_then(\(rs) {
-          list(
-            gen.pure(rs),
-            Map(
-              \(as, ks) {
-                necessary <- unique(unlist(ks))
-                available <- setdiff(attrs_order(rs), necessary)
-                gen.subsequence(available) |>
-                  gen.with(with_args(c, necessary)) |>
-                  gen.and_then(gen.sample)
-              },
-              attrs(rs),
-              keys(rs)
-            )
-          )
-        }),
+        gen.and_then(gen.rs_success),
       \(rs, value) {
         rs2 <- rs
         attrs(rs2) <- value
