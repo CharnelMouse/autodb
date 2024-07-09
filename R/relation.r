@@ -53,11 +53,22 @@ relation <- function(relations, attrs_order) {
     stop("relation key attributes must be unique")
   if (!all(lengths(relations) == 2L))
     stop("relation elements must have length two")
-  stopifnot(all(vapply(
+  correct_element_names <- vapply(
     relations,
     \(rel) setequal(names(rel), c("df", "keys")),
     logical(1L)
-  )))
+  )
+  if (!all(correct_element_names))
+    stop(paste(
+      "relations must contain 'df' and 'keys' elements:",
+      toString(names(relations)[!correct_element_names])
+    ))
+  if (!all(vapply(relations, \(rel) is.data.frame(rel$df), logical(1)))) {
+    stop("relation 'df' elements must be data frames")
+  }
+  if (!all(vapply(relations, \(rel) inherits(rel$keys, "list"), logical(1)))) {
+    stop("relation 'keys' elements must be lists")
+  }
 
   col_indices <- lapply(
     relations,

@@ -14,12 +14,25 @@ describe("relation", {
       "^relation elements must have length two$"
     )
   })
-  it("expects valid input: list elements contain df and keys elements, and no others", {
-    expect_error(relation(list(list(df = data.frame())), character()))
-    expect_error(relation(
-      list(list(df = data.frame(), keys = list(), extra = 1L)),
-      character()
-    ))
+  it("expects valid input: list elements contain df and keys elements, and no others, correct classes", {
+    expect_error(
+      relation(list(X = list(df = data.frame(), 1)), character()),
+      "^relations must contain 'df' and 'keys' elements: X$"
+    )
+    expect_error(
+      relation(
+        list(X = list(df = data.frame(), keys = data.frame())),
+        character()
+      ),
+      "^relation 'keys' elements must be lists$"
+    )
+    expect_error(
+      relation(
+        list(X = list(df = list(), keys = list())),
+        character()
+      ),
+      "^relation 'df' elements must be data frames$"
+    )
     expect_silent(relation(
       list(X = list(keys = setNames(list(), character()), df = data.frame())),
       character()
