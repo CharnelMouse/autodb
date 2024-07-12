@@ -102,21 +102,30 @@ relation <- function(relations, attrs_order) {
     col_indices
   )
 
-  stopifnot(all(vapply(
+  if (!all(vapply(
     relations,
     \(rel) {
       all(vapply(
         rel$keys,
-        \(key) {
-          all(key %in% attrs_order) &&
-          all(key %in% names(rel$df)) &&
-            !anyDuplicated(rel$df[, key, drop = FALSE])
-        },
+        \(key) all(key %in% names(rel$df)),
         logical(1)
       ))
     },
     logical(1)
   )))
+    stop("relation keys must be within relation attributes")
+  if (!all(vapply(
+    relations,
+    \(rel) {
+      all(vapply(
+        rel$keys,
+        \(key) !anyDuplicated(rel$df[, key, drop = FALSE]),
+        logical(1)
+      ))
+    },
+    logical(1)
+  )))
+    stop("relations must satisfy their keys")
 
   relation_nocheck(relations, attrs_order)
 }

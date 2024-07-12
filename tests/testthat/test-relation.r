@@ -71,7 +71,7 @@ describe("relation", {
       "^attrs_order must be unique$"
     )
   })
-  it("expects valid input: df columns are from attrs_order, gets ordered by key mentions first", {
+  it("expects valid input: relation attributes are in attrs_order", {
     expect_error(
       relation(
         list(a = list(df = data.frame(a = integer()), keys = list("a"))),
@@ -79,29 +79,33 @@ describe("relation", {
       ),
       "^relation attributes not in attrs_order$"
     )
+  })
+  it("expects valid input: relation attributes get ordered by key mentions first", {
     expect_silent(relation(
       list(b = list(df = data.frame(b = integer(), a = integer()), keys = list("b"))),
       c("a", "b")
     ))
   })
   it("expects valid input: keys are in columns", {
-    expect_error(relation(
-      list(list(df = data.frame(a = rep(1L, 2L)), keys = list("b"))),
-      "a"
-    ))
-    expect_error(relation(
-      list(list(
-        df = data.frame(a = rep(1L, 2L), b = 1L, c = 1L),
-        keys = list("b", c("c", "d"))
-      )),
-      c("a", "b", "c", "d")
-    ))
+    expect_error(
+      relation(
+        list(a = list(
+          df = data.frame(a = rep(1L, 2L), b = 1L, c = 1L),
+          keys = list("b", c("c", "d"))
+        )),
+        c("a", "b", "c", "d")
+      ),
+      "^relation keys must be within relation attributes$"
+    )
   })
   it("expects valid input: keys are satisfied", {
-    expect_error(relation(
-      list(list(df = data.frame(a = rep(1L, 2L)), keys = list("a"))),
-      "a"
-    ))
+    expect_error(
+      relation(
+        list(a = list(df = data.frame(a = rep(1L, 2L)), keys = list("a"))),
+        "a"
+      ),
+      "^relations must satisfy their keys$"
+    )
   })
   it("expects valid input: unique relation names", {
     expect_error(
