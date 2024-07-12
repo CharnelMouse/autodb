@@ -143,6 +143,12 @@ attrs.relation <- function(x, ...) {
   lapply(records(x), names)
 }
 
+#' @export
+`attrs<-.relation` <- function(x, ..., value) {
+  records(x) <- Map(\(df, as) df[, as, drop = FALSE], records(x), value)
+  x
+}
+
 #' @exportS3Method
 attrs_order.relation <- function(x, ...) {
   attr(x, "attrs_order")
@@ -198,11 +204,37 @@ records.relation <- function(x, ...) {
 
 #' @export
 `records<-.relation` <- function(x, ..., value) {
-  if (!identical(lapply(value, names), attrs(x)))
-    stop("record reassignments must have the same attributes, in the same order")
-  new <- Map(
-    \(recs, ks) list(df = recs, keys = ks),
+  value_names <- Map(
+    \(df, ks) {
+      nms <- names(df)
+      nms[order(match(nms, c(unlist(ks), attrs_order(x))))]
+    },
     value,
+    keys(x)
+  )
+  keys_kept <- mapply(
+    \(nms, ks) {
+      all(is.element(unlist(ks), nms))
+    },
+    value_names,
+    keys(x)
+  )
+  if (!all(keys_kept))
+    stop("record reassignments must keep key attributes")
+  no_additions <- mapply(
+    \(nms, as, ks) {
+      all(is.element(setdiff(nms, unlist(ks)), as))
+    },
+    value_names,
+    attrs(x),
+    keys(x)
+  )
+  if (!all(no_additions))
+    stop("record reassignments can not add attributes")
+  new <- Map(
+    \(recs, nms, ks) list(df = recs[, nms, drop = FALSE], keys = ks),
+    value,
+    value_names,
     keys(x)
   )
   attributes(new) <- attributes(x)

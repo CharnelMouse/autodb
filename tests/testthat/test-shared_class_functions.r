@@ -170,6 +170,119 @@ describe("attrs<-", {
       curry = TRUE
     )
   })
+  it("works for relation: prime attrs must be kept", {
+    gen.rel_single_success_sub <- function(necessary) {
+      gen.pure(necessary)
+    }
+    gen.rel_single_failure_sub <- function(necessary) {
+      gen.element(necessary) |>
+        gen.and_then(\(remove) gen.subsequence(setdiff(necessary, remove)))
+    }
+    gen.rel_single <- function(ks, attrs, gen) {
+      necessary <- unique(unlist(ks))
+      available <- setdiff(attrs, necessary)
+      list(
+        gen(necessary),
+        gen.subsequence(available)
+      ) |>
+        gen.with(unlist) |>
+        gen.and_then(gen.sample)
+    }
+    gen.rel_single_success <- function(ks, attrs) {
+      gen.rel_single(ks, attrs, gen.rel_single_success_sub)
+    }
+    gen.rel_single_failure <- function(ks, attrs) {
+      gen.rel_single(ks, attrs, gen.rel_single_failure_sub)
+    }
+    gen.rel_success <- function(rel) {
+      gen.pure(rel) |>
+        gen.and_then(\(rel) list(
+          gen.pure(rel),
+          Map(
+            gen.rel_single_success,
+            keys(rel),
+            attrs(rel)
+          )
+        ))
+    }
+    gen.rel_failure_prime <- function(rel, failable) {
+      list( # ensure at least one element
+        gen.element(failable),
+        gen.subsequence(failable)
+      ) |>
+        gen.with(uncurry(c) %>>% unique %>>% sort) |>
+        gen.and_then(\(fail) {
+          x <- rep(list(NULL), length(rel))
+          x[-fail] <- Map(
+            gen.rel_single_success,
+            keys(rel)[-fail],
+            attrs(rel)[-fail]
+          )
+          x[fail] <- Map(
+            gen.rel_single_failure,
+            keys(rel)[fail],
+            attrs(rel)[fail]
+          )
+          list(
+            gen.pure(rel),
+            x
+          )
+        })
+    }
+    gen.rel_attrs_assignment <- function(rel) {
+      key_lengths <- lapply(keys(rel), lengths)
+      failable <- which(vapply(key_lengths, \(x) any(x > 0), logical(1)))
+      if (length(failable) == 0) {
+        gen.rel_success(rel) |>
+          gen.with(\(lst) c(lst, list("success")))
+      }else{
+        gen.choice(
+          gen.rel_success(rel) |>
+            gen.with(\(lst) c(lst, list("success"))),
+          gen.rel_failure_prime(rel, failable) |>
+            gen.with(\(lst) c(lst, list("failure_prime")))
+        )
+      }
+    }
+    expect_rel_attrs_success <- function(rel, value) {
+      rel2 <- rel
+      attrs(rel2) <- value
+      # it changes attrs to value, sorted for keys and attrs_order
+      sorted_value <- Map(
+        \(as, ks) {
+          necessary <- unique(unlist(ks))
+          c(
+            necessary,
+            intersect(setdiff(attrs_order(rel), necessary), as)
+          )
+        },
+        value,
+        keys(rel)
+      )
+      expect_identical(unname(attrs(rel2)), unname(sorted_value))
+      # it doesn't affect other parts of the object
+      expect_identical(keys(rel2), keys(rel))
+      expect_identical(attrs_order(rel2), attrs_order(rel))
+    }
+    expect_rel_attrs_failure <- function(rel, value) {
+      rel2 <- rel
+      expect_error(
+        attrs(rel2) <- value,
+        "^record reassignments must keep key attributes$"
+      )
+    }
+    forall(
+      # must include prime attrs, other attrs optional, order irrelevant
+      gen.relation(letters[1:6], 0, 8) |>
+        gen.and_then(gen.rel_attrs_assignment),
+      \(rel, value, case = c("success", "failure_prime")) switch(
+        match.arg(case),
+        success = expect_rel_attrs_success(rel, value),
+        failure_prime = expect_rel_attrs_failure(rel, value)
+      ),
+      curry = TRUE
+    )
+  })
 })
 
 describe("create", {

@@ -135,15 +135,30 @@ describe("relation", {
     )
   })
 
-  it("expects record reassignments to have same attributes and attribute order", {
+  it("expects record reassignments to have all prime attributes, maybe others, order-independent", {
     x <- relation(
       list(a = list(df = data.frame(a = 1:4, b = 1:2), keys = list("a"))),
       attrs_order = c("a", "b")
     )
     expect_error(
-      records(x) <- list(a = data.frame(b = 1:2, a = 1:6)),
-      "^record reassignments must have the same attributes, in the same order$"
+      records(x) <- list(a = data.frame(b = 1:2)),
+      "^record reassignments must keep key attributes$"
     )
+    expect_error(
+      records(x) <- list(a = data.frame(a = 1:4, c = 1)),
+      "^record reassignments can not add attributes$"
+    )
+    y <- x
+    expect_silent(records(y) <- list(a = data.frame(b = 1:2, a = 1:4)))
+    expect_identical(y, x)
+    expect_silent(records(y) <- list(a = data.frame(a = 1:4)))
+    x2 <- relation(
+      list(a = list(df = data.frame(b = 1:4, a = 1:2), keys = list("b"))),
+      attrs_order = c("a", "b")
+    )
+    y2 <- x2
+    expect_silent(records(y2) <- list(a = data.frame(a = 1:2, b = 1:4)))
+    expect_identical(y2, x2)
   })
 
   it("sorts relation key contents attrs_order", {
