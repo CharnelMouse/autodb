@@ -70,16 +70,37 @@ relation <- function(relations, attrs_order) {
     stop("relation 'keys' elements must be lists")
   }
 
+  # sort key contents and keys
+  relations[] <- lapply(
+    relations,
+    \(rel) {
+      sorted_keys <- lapply(rel$keys, \(k) k[order(match(k, attrs_order))])
+      key_indices <- lapply(sorted_keys, match, attrs_order)
+      ord <- keys_order(key_indices)
+      rel$keys <- sorted_keys[ord]
+      rel
+    }
+  )
+
+  # sort attributes
+  col_order_indices <- lapply(
+    relations,
+    \(rel) match(names(rel$df), attrs_order)
+  )
+  if (anyNA(unlist(col_order_indices)))
+    stop("relation attributes not in attrs_order")
   col_indices <- lapply(
     relations,
     \(rel) match(names(rel$df), union(unlist(rel$keys), attrs_order))
   )
-  stopifnot(!anyNA(unlist(col_indices)))
-  stopifnot(all(!vapply(
-    col_indices,
-    is.unsorted,
-    logical(1)
-  )))
+  relations[] <- Map(
+    \(rel, indices) {
+      rel$df <- rel$df[, order(indices), drop = FALSE]
+      rel
+    },
+    relations,
+    col_indices
+  )
 
   stopifnot(all(vapply(
     relations,

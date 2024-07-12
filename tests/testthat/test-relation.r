@@ -71,15 +71,14 @@ describe("relation", {
       "^attrs_order must be unique$"
     )
   })
-  it("expects valid input: df columns are from attrs_order, in order of key mentions first", {
-    expect_error(relation(
-      list(a = list(df = data.frame(a = integer()), keys = list("a"))),
-      "b"
-    ))
-    expect_error(relation(
-      list(a = list(df = data.frame(b = integer(), a = integer()), keys = list("a"))),
-      c("a", "b")
-    ))
+  it("expects valid input: df columns are from attrs_order, gets ordered by key mentions first", {
+    expect_error(
+      relation(
+        list(a = list(df = data.frame(a = integer()), keys = list("a"))),
+        "b"
+      ),
+      "^relation attributes not in attrs_order$"
+    )
     expect_silent(relation(
       list(b = list(df = data.frame(b = integer(), a = integer()), keys = list("b"))),
       c("a", "b")
@@ -140,6 +139,49 @@ describe("relation", {
     expect_error(
       records(x) <- list(a = data.frame(b = 1:2, a = 1:6)),
       "^record reassignments must have the same attributes, in the same order$"
+    )
+  })
+
+  it("sorts relation key contents attrs_order", {
+    expect_identical(
+      keys(relation(
+        list(
+          a = list(
+            df = data.frame(a = integer(), b = integer()),
+            keys = list(c("b", "a"))
+          )
+        ),
+        c("a", "b")
+      )),
+      list(a = list(c("a", "b")))
+    )
+  })
+  it("sorts relation keys according to length and attrs_order", {
+    expect_identical(
+      keys(relation(
+        list(
+          a = list(
+            df = data.frame(a = integer(), b = integer()),
+            keys = list("b", "a")
+          )
+        ),
+        c("a", "b")
+      )),
+      list(a = list("a", "b"))
+    )
+  })
+  it("sorts relation attributes according to sorted keys and attrs_order", {
+    expect_identical(
+      attrs(relation(
+        list(
+          a = list(
+            df = data.frame(b = integer(), a = integer()),
+            keys = list("a")
+          )
+        ),
+        c("a", "b")
+      )),
+      list(a = c("a", "b"))
     )
   })
 
