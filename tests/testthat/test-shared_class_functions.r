@@ -19,31 +19,31 @@ describe("attrs<-", {
       gen.and_then(\(remove) gen.subsequence(setdiff(necessary, remove)))
   }
 
-  gen.rs_single <- function(ks, attrs_order, gen) {
-    necessary <- unique(unlist(ks))
-    available <- setdiff(attrs_order, necessary)
+  gen.rs_single <- function(selections, gen) {
     list(
-      gen(necessary),
-      gen.subsequence(available)
+      gen(selections$necessary),
+      gen.subsequence(selections$available)
     ) |>
       gen.with(unlist) |>
       gen.and_then(gen.sample)
   }
-  gen.rel_single <- function(ks, attrs, gen) {
-    necessary <- unique(unlist(ks))
-    available <- setdiff(attrs, necessary)
+  gen.rel_single <- function(selections, gen) {
     list(
-      gen(necessary),
-      gen.subsequence(available)
+      gen(selections$necessary),
+      gen.subsequence(selections$available)
     ) |>
       gen.with(unlist) |>
       gen.and_then(gen.sample)
   }
 
-  gen.rs_single_success <- function(ks, attrs_order) {
-    gen.rs_single(ks, attrs_order, gen.rs_single_success_sub)
+  rs_selections <- function(ks, attrs_order) {
+    necessary <- unique(unlist(ks))
+    list(
+      necessary = necessary,
+      available = setdiff(attrs_order, necessary)
+    )
   }
-  gen.ds_single_success <- function(as, ks, nm, refs, attrs_order) {
+  ds_selections <- function(ks, attrs_order, nm, refs) {
     referring <- refs |>
       Filter(f = \(ref) ref[[1]] == nm) |>
       lapply(`[[`, 2) |>
@@ -55,22 +55,51 @@ describe("attrs<-", {
       unlist() |>
       as.character()
     necessary <- unique(c(unlist(ks), referring, referred))
-    available <- setdiff(attrs_order, necessary)
     list(
-      gen.ds_single_success_sub(necessary),
-      gen.subsequence(available)
+      necessary = necessary,
+      available = setdiff(attrs_order, necessary)
+    )
+  }
+  rel_selections <- function(ks, attrs) {
+    necessary <- unique(unlist(ks))
+    list(
+      necessary = necessary,
+      available = setdiff(attrs, necessary)
+    )
+  }
+
+  gen.rs_single_success <- function(ks, attrs_order) {
+    gen.rs_single(
+      rs_selections(ks, attrs_order),
+      gen.rs_single_success_sub
+    )
+  }
+  gen.ds_single_success <- function(ks, attrs_order, nm, refs) {
+    selections <- ds_selections(ks, attrs_order, nm, refs)
+    list(
+      gen.ds_single_success_sub(selections$necessary),
+      gen.subsequence(selections$available)
     ) |>
       gen.with(unlist) |>
       gen.and_then(gen.sample)
   }
   gen.rel_single_success <- function(ks, attrs) {
-    gen.rel_single(ks, attrs, gen.rel_single_success_sub)
+    gen.rel_single(
+      rel_selections(ks, attrs),
+      gen.rel_single_success_sub
+    )
   }
   gen.rs_single_failure_prime <- function(ks, attrs_order) {
-    gen.rs_single(ks, attrs_order, gen.rs_single_failure_prime_sub)
+    gen.rs_single(
+      rs_selections(ks, attrs_order),
+      gen.rs_single_failure_prime_sub
+    )
   }
   gen.rel_single_failure_prime <- function(ks, attrs) {
-    gen.rel_single(ks, attrs, gen.rel_single_failure_prime_sub)
+    gen.rel_single(
+      rel_selections(ks, attrs),
+      gen.rel_single_failure_prime_sub
+    )
   }
 
   gen.rs_success <- function(rs) {
@@ -117,7 +146,6 @@ describe("attrs<-", {
           refs = references(ds),
           attrs_order = attrs_order(ds)
         ),
-        attrs(ds),
         keys(ds),
         names(ds)
       )
