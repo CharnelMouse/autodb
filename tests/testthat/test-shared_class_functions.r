@@ -1,107 +1,272 @@
 library(hedgehog)
 
 describe("attrs<-", {
-  it("works for relation_schema: prime attrs must be kept", {
-    gen.rs_single_success_sub <- function(necessary) {
-      gen.pure(necessary)
-    }
-    gen.rs_single_failure_sub <- function(necessary) {
-      gen.element(necessary) |>
-        gen.and_then(\(remove) gen.subsequence(setdiff(necessary, remove)))
-    }
-    gen.rs_single <- function(ks, attrs_order, gen) {
-      necessary <- unique(unlist(ks))
-      available <- setdiff(attrs_order, necessary)
-      list(
-        gen(necessary),
-        gen.subsequence(available)
-      ) |>
-        gen.with(unlist) |>
-        gen.and_then(gen.sample)
-    }
-    gen.rs_single_success <- function(ks, attrs_order) {
-      gen.rs_single(ks, attrs_order, gen.rs_single_success_sub)
-    }
-    gen.rs_single_failure <- function(ks, attrs_order) {
-      gen.rs_single(ks, attrs_order, gen.rs_single_failure_sub)
-    }
-    gen.rs_success <- function(rs) {
-      gen.pure(rs) |>
-        gen.and_then(\(rs) list(
-          gen.pure(rs),
-          lapply(
-            keys(rs),
-            gen.rs_single_success,
-            attrs_order = attrs_order(rs)
-          )
-        ))
-    }
-    gen.rs_failure_prime <- function(rs, failable) {
-      list( # ensure at least one element
-        gen.element(failable),
-        gen.subsequence(failable)
-      ) |>
-        gen.with(uncurry(c) %>>% unique %>>% sort) |>
-        gen.and_then(\(fail) {
-          x <- rep(list(NULL), length(rs))
-          x[-fail] <- lapply(
-            keys(rs)[-fail],
-            gen.rs_single_success,
-            attrs_order = attrs_order(rs)
-          )
-          x[fail] <- lapply(
-            keys(rs)[fail],
-            gen.rs_single_failure,
-            attrs_order = attrs_order(rs)
-          )
-          list(
-            gen.pure(rs),
-            x
-          )
-        })
-    }
-    gen.rs_attrs_assignment <- function(rs) {
-      key_lengths <- lapply(keys(rs), lengths)
-      failable <- which(vapply(key_lengths, \(x) any(x > 0), logical(1)))
-      if (length(failable) == 0) {
-        gen.rs_success(rs) |>
-          gen.with(\(lst) c(lst, list("success")))
-      }else{
-        gen.choice(
-          gen.rs_success(rs) |>
-            gen.with(\(lst) c(lst, list("success"))),
-          gen.rs_failure_prime(rs, failable) |>
-            gen.with(\(lst) c(lst, list("failure_prime")))
+  gen.rs_single_success_sub <- function(necessary) {
+    gen.pure(necessary)
+  }
+  gen.ds_single_success_sub <- function(necessary) {
+    gen.pure(necessary)
+  }
+  gen.rel_single_success_sub <- function(necessary) {
+    gen.pure(necessary)
+  }
+  gen.rs_single_failure_sub <- function(necessary) {
+    gen.element(necessary) |>
+      gen.and_then(\(remove) gen.subsequence(setdiff(necessary, remove)))
+  }
+  gen.rel_single_failure_sub <- function(necessary) {
+    gen.element(necessary) |>
+      gen.and_then(\(remove) gen.subsequence(setdiff(necessary, remove)))
+  }
+
+  gen.rs_single <- function(ks, attrs_order, gen) {
+    necessary <- unique(unlist(ks))
+    available <- setdiff(attrs_order, necessary)
+    list(
+      gen(necessary),
+      gen.subsequence(available)
+    ) |>
+      gen.with(unlist) |>
+      gen.and_then(gen.sample)
+  }
+  gen.rel_single <- function(ks, attrs, gen) {
+    necessary <- unique(unlist(ks))
+    available <- setdiff(attrs, necessary)
+    list(
+      gen(necessary),
+      gen.subsequence(available)
+    ) |>
+      gen.with(unlist) |>
+      gen.and_then(gen.sample)
+  }
+
+  gen.rs_single_success <- function(ks, attrs_order) {
+    gen.rs_single(ks, attrs_order, gen.rs_single_success_sub)
+  }
+  gen.ds_single_success <- function(as, ks, nm, refs, attrs_order) {
+    referring <- refs |>
+      Filter(f = \(ref) ref[[1]] == nm) |>
+      lapply(`[[`, 2) |>
+      unlist() |>
+      as.character()
+    referred <- refs |>
+      Filter(f = \(ref) ref[[3]] == nm) |>
+      lapply(`[[`, 4) |>
+      unlist() |>
+      as.character()
+    necessary <- unique(c(unlist(ks), referring, referred))
+    available <- setdiff(attrs_order, necessary)
+    list(
+      gen.ds_single_success_sub(necessary),
+      gen.subsequence(available)
+    ) |>
+      gen.with(unlist) |>
+      gen.and_then(gen.sample)
+  }
+  gen.rel_single_success <- function(ks, attrs) {
+    gen.rel_single(ks, attrs, gen.rel_single_success_sub)
+  }
+  gen.rs_single_failure <- function(ks, attrs_order) {
+    gen.rs_single(ks, attrs_order, gen.rs_single_failure_sub)
+  }
+  gen.rel_single_failure <- function(ks, attrs) {
+    gen.rel_single(ks, attrs, gen.rel_single_failure_sub)
+  }
+
+  gen.rs_success <- function(rs) {
+    gen.pure(rs) |>
+      gen.and_then(\(rs) list(
+        gen.pure(rs),
+        lapply(
+          keys(rs),
+          gen.rs_single_success,
+          attrs_order = attrs_order(rs)
         )
-      }
-    }
-    expect_rs_attrs_success <- function(rs, value) {
-      rs2 <- rs
-      attrs(rs2) <- value
-      # it changes attrs to value, sorted for keys and attrs_order
-      sorted_value <- Map(
-        \(as, ks) {
-          necessary <- unique(unlist(ks))
-          c(
-            necessary,
-            intersect(setdiff(attrs_order(rs), necessary), as)
-          )
-        },
-        value,
-        keys(rs)
+      ))
+  }
+  gen.rs_failure_prime <- function(rs, failable) {
+    list( # ensure at least one element
+      gen.element(failable),
+      gen.subsequence(failable)
+    ) |>
+      gen.with(uncurry(c) %>>% unique %>>% sort) |>
+      gen.and_then(\(fail) {
+        x <- rep(list(NULL), length(rs))
+        x[-fail] <- lapply(
+          keys(rs)[-fail],
+          gen.rs_single_success,
+          attrs_order = attrs_order(rs)
+        )
+        x[fail] <- lapply(
+          keys(rs)[fail],
+          gen.rs_single_failure,
+          attrs_order = attrs_order(rs)
+        )
+        list(
+          gen.pure(rs),
+          x
+        )
+      })
+  }
+  gen.ds_attrs_assignment_success <- function(ds) {
+    list(
+      gen.pure(ds),
+      Map(
+        with_args(
+          gen.ds_single_success,
+          refs = references(ds),
+          attrs_order = attrs_order(ds)
+        ),
+        attrs(ds),
+        keys(ds),
+        names(ds)
       )
-      expect_identical(unname(attrs(rs2)), unname(sorted_value))
-      # it doesn't affect other parts of the object
-      expect_identical(keys(rs2), keys(rs))
-      expect_identical(attrs_order(rs2), attrs_order(rs))
-    }
-    expect_rs_attrs_failure <- function(rs, value) {
-      rs2 <- rs
-      expect_error(
-        attrs(rs2) <- value,
-        "^attributes in keys must be present in relation$"
+    )
+  }
+  gen.rel_success <- function(rel) {
+    gen.pure(rel) |>
+      gen.and_then(\(rel) list(
+        gen.pure(rel),
+        Map(
+          gen.rel_single_success,
+          keys(rel),
+          attrs(rel)
+        )
+      ))
+  }
+  gen.rel_failure_prime <- function(rel, failable) {
+    list( # ensure at least one element
+      gen.element(failable),
+      gen.subsequence(failable)
+    ) |>
+      gen.with(uncurry(c) %>>% unique %>>% sort) |>
+      gen.and_then(\(fail) {
+        x <- rep(list(NULL), length(rel))
+        x[-fail] <- Map(
+          gen.rel_single_success,
+          keys(rel)[-fail],
+          attrs(rel)[-fail]
+        )
+        x[fail] <- Map(
+          gen.rel_single_failure,
+          keys(rel)[fail],
+          attrs(rel)[fail]
+        )
+        list(
+          gen.pure(rel),
+          x
+        )
+      })
+  }
+
+  gen.rs_attrs_assignment <- function(rs) {
+    key_lengths <- lapply(keys(rs), lengths)
+    failable <- which(vapply(key_lengths, \(x) any(x > 0), logical(1)))
+    if (length(failable) == 0) {
+      gen.rs_success(rs) |>
+        gen.with(\(lst) c(lst, list("success")))
+    }else{
+      gen.choice(
+        gen.rs_success(rs) |>
+          gen.with(\(lst) c(lst, list("success"))),
+        gen.rs_failure_prime(rs, failable) |>
+          gen.with(\(lst) c(lst, list("failure_prime")))
       )
     }
+  }
+  gen.rel_attrs_assignment <- function(rel) {
+    key_lengths <- lapply(keys(rel), lengths)
+    failable <- which(vapply(key_lengths, \(x) any(x > 0), logical(1)))
+    if (length(failable) == 0) {
+      gen.rel_success(rel) |>
+        gen.with(\(lst) c(lst, list("success")))
+    }else{
+      gen.choice(
+        gen.rel_success(rel) |>
+          gen.with(\(lst) c(lst, list("success"))),
+        gen.rel_failure_prime(rel, failable) |>
+          gen.with(\(lst) c(lst, list("failure_prime")))
+      )
+    }
+  }
+
+  expect_rs_attrs_success <- function(rs, value) {
+    rs2 <- rs
+    attrs(rs2) <- value
+    # it changes attrs to value, sorted for keys and attrs_order
+    sorted_value <- Map(
+      \(as, ks) {
+        necessary <- unique(unlist(ks))
+        c(
+          necessary,
+          intersect(setdiff(attrs_order(rs), necessary), as)
+        )
+      },
+      value,
+      keys(rs)
+    )
+    expect_identical(unname(attrs(rs2)), unname(sorted_value))
+    # it doesn't affect other parts of the object
+    expect_identical(keys(rs2), keys(rs))
+    expect_identical(attrs_order(rs2), attrs_order(rs))
+  }
+  expect_rs_attrs_failure <- function(rs, value) {
+    rs2 <- rs
+    expect_error(
+      attrs(rs2) <- value,
+      "^attributes in keys must be present in relation$"
+    )
+  }
+  expect_ds_attrs_assignment_success <- function(ds, value) {
+    ds2 <- ds
+    attrs(ds2) <- value
+    # it changes attrs to value, sorted for keys and attrs_order
+    sorted_value <- Map(
+      \(as, ks) {
+        necessary <- unique(unlist(ks))
+        c(
+          necessary,
+          intersect(setdiff(attrs_order(ds), necessary), as)
+        )
+      },
+      value,
+      keys(ds)
+    )
+    expect_identical(unname(attrs(ds2)), unname(sorted_value))
+    # it doesn't affect other parts of the object
+    expect_identical(keys(ds2), keys(ds))
+    expect_identical(attrs_order(ds2), attrs_order(ds))
+    expect_identical(references(ds2), references(ds))
+  }
+  expect_rel_attrs_success <- function(rel, value) {
+    rel2 <- rel
+    attrs(rel2) <- value
+    # it changes attrs to value, sorted for keys and attrs_order
+    sorted_value <- Map(
+      \(as, ks) {
+        necessary <- unique(unlist(ks))
+        c(
+          necessary,
+          intersect(setdiff(attrs_order(rel), necessary), as)
+        )
+      },
+      value,
+      keys(rel)
+    )
+    expect_identical(unname(attrs(rel2)), unname(sorted_value))
+    # it doesn't affect other parts of the object
+    expect_identical(keys(rel2), keys(rel))
+    expect_identical(attrs_order(rel2), attrs_order(rel))
+  }
+  expect_rel_attrs_failure <- function(rel, value) {
+    rel2 <- rel
+    expect_error(
+      attrs(rel2) <- value,
+      "^record reassignments must keep key attributes$"
+    )
+  }
+
+  it("works for relation_schema: prime attrs must be kept", {
     forall(
       # must include prime attrs, other attrs optional, order irrelevant
       gen.relation_schema(letters[1:6], 0, 8) |>
@@ -115,65 +280,6 @@ describe("attrs<-", {
     )
   })
   it("works for database_schema: prime/reference attrs must be kept", {
-    gen.ds_single_success_sub <- function(necessary) {
-      gen.pure(necessary)
-    }
-    gen.ds_single_success <- function(as, ks, nm, refs, attrs_order) {
-      referring <- refs |>
-        Filter(f = \(ref) ref[[1]] == nm) |>
-        lapply(`[[`, 2) |>
-        unlist() |>
-        as.character()
-      referred <- refs |>
-        Filter(f = \(ref) ref[[3]] == nm) |>
-        lapply(`[[`, 4) |>
-        unlist() |>
-        as.character()
-      necessary <- unique(c(unlist(ks), referring, referred))
-      available <- setdiff(attrs_order, necessary)
-      list(
-        gen.ds_single_success_sub(necessary),
-        gen.subsequence(available)
-      ) |>
-        gen.with(unlist) |>
-        gen.and_then(gen.sample)
-    }
-    gen.ds_attrs_assignment_success <- function(ds) {
-      list(
-        gen.pure(ds),
-        Map(
-          with_args(
-            gen.ds_single_success,
-            refs = references(ds),
-            attrs_order = attrs_order(ds)
-          ),
-          attrs(ds),
-          keys(ds),
-          names(ds)
-        )
-      )
-    }
-    expect_ds_attrs_assignment_success <- function(ds, value) {
-      ds2 <- ds
-      attrs(ds2) <- value
-      # it changes attrs to value, sorted for keys and attrs_order
-      sorted_value <- Map(
-        \(as, ks) {
-          necessary <- unique(unlist(ks))
-          c(
-            necessary,
-            intersect(setdiff(attrs_order(ds), necessary), as)
-          )
-        },
-        value,
-        keys(ds)
-      )
-      expect_identical(unname(attrs(ds2)), unname(sorted_value))
-      # it doesn't affect other parts of the object
-      expect_identical(keys(ds2), keys(ds))
-      expect_identical(attrs_order(ds2), attrs_order(ds))
-      expect_identical(references(ds2), references(ds))
-    }
     forall(
       # must include prime attrs and attrs in references, other attrs optional,
       # order irrelevant
@@ -184,106 +290,6 @@ describe("attrs<-", {
     )
   })
   it("works for relation: prime attrs must be kept", {
-    gen.rel_single_success_sub <- function(necessary) {
-      gen.pure(necessary)
-    }
-    gen.rel_single_failure_sub <- function(necessary) {
-      gen.element(necessary) |>
-        gen.and_then(\(remove) gen.subsequence(setdiff(necessary, remove)))
-    }
-    gen.rel_single <- function(ks, attrs, gen) {
-      necessary <- unique(unlist(ks))
-      available <- setdiff(attrs, necessary)
-      list(
-        gen(necessary),
-        gen.subsequence(available)
-      ) |>
-        gen.with(unlist) |>
-        gen.and_then(gen.sample)
-    }
-    gen.rel_single_success <- function(ks, attrs) {
-      gen.rel_single(ks, attrs, gen.rel_single_success_sub)
-    }
-    gen.rel_single_failure <- function(ks, attrs) {
-      gen.rel_single(ks, attrs, gen.rel_single_failure_sub)
-    }
-    gen.rel_success <- function(rel) {
-      gen.pure(rel) |>
-        gen.and_then(\(rel) list(
-          gen.pure(rel),
-          Map(
-            gen.rel_single_success,
-            keys(rel),
-            attrs(rel)
-          )
-        ))
-    }
-    gen.rel_failure_prime <- function(rel, failable) {
-      list( # ensure at least one element
-        gen.element(failable),
-        gen.subsequence(failable)
-      ) |>
-        gen.with(uncurry(c) %>>% unique %>>% sort) |>
-        gen.and_then(\(fail) {
-          x <- rep(list(NULL), length(rel))
-          x[-fail] <- Map(
-            gen.rel_single_success,
-            keys(rel)[-fail],
-            attrs(rel)[-fail]
-          )
-          x[fail] <- Map(
-            gen.rel_single_failure,
-            keys(rel)[fail],
-            attrs(rel)[fail]
-          )
-          list(
-            gen.pure(rel),
-            x
-          )
-        })
-    }
-    gen.rel_attrs_assignment <- function(rel) {
-      key_lengths <- lapply(keys(rel), lengths)
-      failable <- which(vapply(key_lengths, \(x) any(x > 0), logical(1)))
-      if (length(failable) == 0) {
-        gen.rel_success(rel) |>
-          gen.with(\(lst) c(lst, list("success")))
-      }else{
-        gen.choice(
-          gen.rel_success(rel) |>
-            gen.with(\(lst) c(lst, list("success"))),
-          gen.rel_failure_prime(rel, failable) |>
-            gen.with(\(lst) c(lst, list("failure_prime")))
-        )
-      }
-    }
-    expect_rel_attrs_success <- function(rel, value) {
-      rel2 <- rel
-      attrs(rel2) <- value
-      # it changes attrs to value, sorted for keys and attrs_order
-      sorted_value <- Map(
-        \(as, ks) {
-          necessary <- unique(unlist(ks))
-          c(
-            necessary,
-            intersect(setdiff(attrs_order(rel), necessary), as)
-          )
-        },
-        value,
-        keys(rel)
-      )
-      expect_identical(unname(attrs(rel2)), unname(sorted_value))
-      # it doesn't affect other parts of the object
-      expect_identical(keys(rel2), keys(rel))
-      expect_identical(attrs_order(rel2), attrs_order(rel))
-    }
-    expect_rel_attrs_failure <- function(rel, value) {
-      rel2 <- rel
-      expect_error(
-        attrs(rel2) <- value,
-        "^record reassignments must keep key attributes$"
-      )
-    }
     forall(
       # must include prime attrs, other attrs optional, order irrelevant
       gen.relation(letters[1:6], 0, 8) |>
