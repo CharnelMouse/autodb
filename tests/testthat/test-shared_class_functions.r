@@ -115,58 +115,71 @@ describe("attrs<-", {
     )
   })
   it("works for database_schema: prime/reference attrs must be kept", {
+    gen.ds_single_success_sub <- function(necessary) {
+      gen.pure(necessary)
+    }
+    gen.ds_single_success <- function(as, ks, nm, refs, attrs_order) {
+      referring <- refs |>
+        Filter(f = \(ref) ref[[1]] == nm) |>
+        lapply(`[[`, 2) |>
+        unlist() |>
+        as.character()
+      referred <- refs |>
+        Filter(f = \(ref) ref[[3]] == nm) |>
+        lapply(`[[`, 4) |>
+        unlist() |>
+        as.character()
+      necessary <- unique(c(unlist(ks), referring, referred))
+      available <- setdiff(attrs_order, necessary)
+      list(
+        gen.ds_single_success_sub(necessary),
+        gen.subsequence(available)
+      ) |>
+        gen.with(unlist) |>
+        gen.and_then(gen.sample)
+    }
+    gen.ds_attrs_assignment_success <- function(ds) {
+      list(
+        gen.pure(ds),
+        Map(
+          with_args(
+            gen.ds_single_success,
+            refs = references(ds),
+            attrs_order = attrs_order(ds)
+          ),
+          attrs(ds),
+          keys(ds),
+          names(ds)
+        )
+      )
+    }
+    expect_ds_attrs_assignment_success <- function(ds, value) {
+      ds2 <- ds
+      attrs(ds2) <- value
+      # it changes attrs to value, sorted for keys and attrs_order
+      sorted_value <- Map(
+        \(as, ks) {
+          necessary <- unique(unlist(ks))
+          c(
+            necessary,
+            intersect(setdiff(attrs_order(ds), necessary), as)
+          )
+        },
+        value,
+        keys(ds)
+      )
+      expect_identical(unname(attrs(ds2)), unname(sorted_value))
+      # it doesn't affect other parts of the object
+      expect_identical(keys(ds2), keys(ds))
+      expect_identical(attrs_order(ds2), attrs_order(ds))
+      expect_identical(references(ds2), references(ds))
+    }
     forall(
       # must include prime attrs and attrs in references, other attrs optional,
       # order irrelevant
       gen.database_schema(letters[1:6], 0, 8) |>
-        gen.and_then(\(ds) {
-          list(
-            gen.pure(ds),
-            Map(
-              \(as, ks, nm) {
-                referring <- references(ds) |>
-                  Filter(f = \(ref) ref[[1]] == nm) |>
-                  lapply(`[[`, 2) |>
-                  unlist() |>
-                  as.character()
-                referred <- references(ds) |>
-                  Filter(f = \(ref) ref[[3]] == nm) |>
-                  lapply(`[[`, 4) |>
-                  unlist() |>
-                  as.character()
-                necessary <- unique(c(unlist(ks), referring, referred))
-                available <- setdiff(attrs_order(ds), necessary)
-                gen.subsequence(available) |>
-                  gen.with(with_args(c, necessary)) |>
-                  gen.and_then(gen.sample)
-              },
-              attrs(ds),
-              keys(ds),
-              names(ds)
-            )
-          )
-        }),
-      \(ds, value) {
-        ds2 <- ds
-        attrs(ds2) <- value
-        # it changes attrs to value, sorted for keys and attrs_order
-        sorted_value <- Map(
-          \(as, ks) {
-            necessary <- unique(unlist(ks))
-            c(
-              necessary,
-              intersect(setdiff(attrs_order(ds), necessary), as)
-            )
-          },
-          value,
-          keys(ds)
-        )
-        expect_identical(unname(attrs(ds2)), unname(sorted_value))
-        # it doesn't affect other parts of the object
-        expect_identical(keys(ds2), keys(ds))
-        expect_identical(attrs_order(ds2), attrs_order(ds))
-        expect_identical(references(ds2), references(ds))
-      },
+        gen.and_then(gen.ds_attrs_assignment_success),
+      expect_ds_attrs_assignment_success,
       curry = TRUE
     )
   })
