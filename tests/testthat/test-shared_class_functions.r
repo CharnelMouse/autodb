@@ -1,33 +1,16 @@
 library(hedgehog)
 
 describe("attrs<-", {
-  gen.rs_single_success_sub <- function(necessary) {
-    gen.pure(necessary)
-  }
-  gen.ds_single_success_sub <- function(necessary) {
-    gen.pure(necessary)
-  }
-  gen.rel_single_success_sub <- function(necessary) {
-    gen.pure(necessary)
-  }
-  gen.rs_single_failure_prime_sub <- function(necessary) {
-    gen.element(necessary) |>
-      gen.and_then(\(remove) gen.subsequence(setdiff(necessary, remove)))
-  }
-  gen.rel_single_failure_prime_sub <- function(necessary) {
-    gen.element(necessary) |>
-      gen.and_then(\(remove) gen.subsequence(setdiff(necessary, remove)))
+  gen.strict_subsequence <- function(x) {
+    if (length(x) == 0)
+      stop("empty collections have no strict subsequences")
+    inds <- seq_along(x)
+    gen.element(inds) |>
+      gen.and_then(\(remove) gen.subsequence(inds[-remove])) |>
+      gen.with(\(keep) x[keep])
   }
 
-  gen.rs_single <- function(selections, gen) {
-    list(
-      gen(selections$necessary),
-      gen.subsequence(selections$available)
-    ) |>
-      gen.with(unlist) |>
-      gen.and_then(gen.sample)
-  }
-  gen.rel_single <- function(selections, gen) {
+  gen.single <- function(selections, gen) {
     list(
       gen(selections$necessary),
       gen.subsequence(selections$available)
@@ -69,36 +52,33 @@ describe("attrs<-", {
   }
 
   gen.rs_single_success <- function(ks, attrs_order) {
-    gen.rs_single(
+    gen.single(
       rs_selections(ks, attrs_order),
-      gen.rs_single_success_sub
+      gen.pure
     )
   }
   gen.ds_single_success <- function(ks, attrs_order, nm, refs) {
-    selections <- ds_selections(ks, attrs_order, nm, refs)
-    list(
-      gen.ds_single_success_sub(selections$necessary),
-      gen.subsequence(selections$available)
-    ) |>
-      gen.with(unlist) |>
-      gen.and_then(gen.sample)
+    gen.single(
+      ds_selections(ks, attrs_order, nm, refs),
+      gen.pure
+    )
   }
   gen.rel_single_success <- function(ks, attrs) {
-    gen.rel_single(
+    gen.single(
       rel_selections(ks, attrs),
-      gen.rel_single_success_sub
+      gen.pure
     )
   }
   gen.rs_single_failure_prime <- function(ks, attrs_order) {
-    gen.rs_single(
+    gen.single(
       rs_selections(ks, attrs_order),
-      gen.rs_single_failure_prime_sub
+      gen.strict_subsequence
     )
   }
   gen.rel_single_failure_prime <- function(ks, attrs) {
-    gen.rel_single(
+    gen.single(
       rel_selections(ks, attrs),
-      gen.rel_single_failure_prime_sub
+      gen.strict_subsequence
     )
   }
 
