@@ -10,11 +10,11 @@ describe("attrs<-", {
   gen.rel_single_success_sub <- function(necessary) {
     gen.pure(necessary)
   }
-  gen.rs_single_failure_sub <- function(necessary) {
+  gen.rs_single_failure_prime_sub <- function(necessary) {
     gen.element(necessary) |>
       gen.and_then(\(remove) gen.subsequence(setdiff(necessary, remove)))
   }
-  gen.rel_single_failure_sub <- function(necessary) {
+  gen.rel_single_failure_prime_sub <- function(necessary) {
     gen.element(necessary) |>
       gen.and_then(\(remove) gen.subsequence(setdiff(necessary, remove)))
   }
@@ -66,11 +66,11 @@ describe("attrs<-", {
   gen.rel_single_success <- function(ks, attrs) {
     gen.rel_single(ks, attrs, gen.rel_single_success_sub)
   }
-  gen.rs_single_failure <- function(ks, attrs_order) {
-    gen.rs_single(ks, attrs_order, gen.rs_single_failure_sub)
+  gen.rs_single_failure_prime <- function(ks, attrs_order) {
+    gen.rs_single(ks, attrs_order, gen.rs_single_failure_prime_sub)
   }
-  gen.rel_single_failure <- function(ks, attrs) {
-    gen.rel_single(ks, attrs, gen.rel_single_failure_sub)
+  gen.rel_single_failure_prime <- function(ks, attrs) {
+    gen.rel_single(ks, attrs, gen.rel_single_failure_prime_sub)
   }
 
   gen.rs_success <- function(rs) {
@@ -99,7 +99,7 @@ describe("attrs<-", {
         )
         x[fail] <- lapply(
           keys(rs)[fail],
-          gen.rs_single_failure,
+          gen.rs_single_failure_prime,
           attrs_order = attrs_order(rs)
         )
         list(
@@ -148,7 +148,7 @@ describe("attrs<-", {
           attrs(rel)[-fail]
         )
         x[fail] <- Map(
-          gen.rel_single_failure,
+          gen.rel_single_failure_prime,
           keys(rel)[fail],
           attrs(rel)[fail]
         )
@@ -161,30 +161,30 @@ describe("attrs<-", {
 
   gen.rs_attrs_assignment <- function(rs) {
     key_lengths <- lapply(keys(rs), lengths)
-    failable <- which(vapply(key_lengths, \(x) any(x > 0), logical(1)))
-    if (length(failable) == 0) {
+    failable_prime <- which(vapply(key_lengths, \(x) any(x > 0), logical(1)))
+    if (length(failable_prime) == 0) {
       gen.rs_success(rs) |>
         gen.with(\(lst) c(lst, list("success")))
     }else{
       gen.choice(
         gen.rs_success(rs) |>
           gen.with(\(lst) c(lst, list("success"))),
-        gen.rs_failure_prime(rs, failable) |>
+        gen.rs_failure_prime(rs, failable_prime) |>
           gen.with(\(lst) c(lst, list("failure_prime")))
       )
     }
   }
   gen.rel_attrs_assignment <- function(rel) {
     key_lengths <- lapply(keys(rel), lengths)
-    failable <- which(vapply(key_lengths, \(x) any(x > 0), logical(1)))
-    if (length(failable) == 0) {
+    failable_prime <- which(vapply(key_lengths, \(x) any(x > 0), logical(1)))
+    if (length(failable_prime) == 0) {
       gen.rel_success(rel) |>
         gen.with(\(lst) c(lst, list("success")))
     }else{
       gen.choice(
         gen.rel_success(rel) |>
           gen.with(\(lst) c(lst, list("success"))),
-        gen.rel_failure_prime(rel, failable) |>
+        gen.rel_failure_prime(rel, failable_prime) |>
           gen.with(\(lst) c(lst, list("failure_prime")))
       )
     }
@@ -210,7 +210,7 @@ describe("attrs<-", {
     expect_identical(keys(rs2), keys(rs))
     expect_identical(attrs_order(rs2), attrs_order(rs))
   }
-  expect_rs_attrs_failure <- function(rs, value) {
+  expect_rs_attrs_failure_prime <- function(rs, value) {
     rs2 <- rs
     expect_error(
       attrs(rs2) <- value,
@@ -258,7 +258,7 @@ describe("attrs<-", {
     expect_identical(keys(rel2), keys(rel))
     expect_identical(attrs_order(rel2), attrs_order(rel))
   }
-  expect_rel_attrs_failure <- function(rel, value) {
+  expect_rel_attrs_failure_prime <- function(rel, value) {
     rel2 <- rel
     expect_error(
       attrs(rel2) <- value,
@@ -274,7 +274,7 @@ describe("attrs<-", {
       \(rs, value, case = c("success", "failure_prime")) switch(
         match.arg(case),
         success = expect_rs_attrs_success(rs, value),
-        failure_prime = expect_rs_attrs_failure(rs, value)
+        failure_prime = expect_rs_attrs_failure_prime(rs, value)
       ),
       curry = TRUE
     )
@@ -297,7 +297,7 @@ describe("attrs<-", {
       \(rel, value, case = c("success", "failure_prime")) switch(
         match.arg(case),
         success = expect_rel_attrs_success(rel, value),
-        failure_prime = expect_rel_attrs_failure(rel, value)
+        failure_prime = expect_rel_attrs_failure_prime(rel, value)
       ),
       curry = TRUE
     )
