@@ -51,149 +51,119 @@ describe("attrs<-", {
     )
   }
 
-  gen.rs_single_success <- function(ks, attrs_order) {
-    gen.single(
-      rs_selections(ks, attrs_order),
-      gen.pure
-    )
+  gen.single_success <- function(selections) {
+    gen.single(selections, gen.pure)
   }
-  gen.ds_single_success <- function(ks, attrs_order, nm, refs) {
-    gen.single(
-      ds_selections(ks, attrs_order, nm, refs),
-      gen.pure
-    )
-  }
-  gen.rel_single_success <- function(ks, attrs) {
-    gen.single(
-      rel_selections(ks, attrs),
-      gen.pure
-    )
-  }
-  gen.rs_single_failure_prime <- function(ks, attrs_order) {
-    gen.single(
-      rs_selections(ks, attrs_order),
-      gen.strict_subsequence
-    )
-  }
-  gen.rel_single_failure_prime <- function(ks, attrs) {
-    gen.single(
-      rel_selections(ks, attrs),
-      gen.strict_subsequence
-    )
+  gen.single_failure_prime <- function(selections) {
+    gen.single(selections, gen.strict_subsequence)
   }
 
-  gen.rs_success <- function(rs) {
-    gen.pure(rs) |>
-      gen.and_then(\(rs) list(
-        gen.pure(rs),
-        lapply(
-          keys(rs),
-          gen.rs_single_success,
-          attrs_order = attrs_order(rs)
-        )
-      ))
+  gen.success <- function(selections) {
+    lapply(selections, gen.single_success)
   }
-  gen.rs_failure_prime <- function(rs, failable) {
+  gen.failure_prime <- function(selections, failable) {
     list( # ensure at least one element
       gen.element(failable),
       gen.subsequence(failable)
     ) |>
       gen.with(uncurry(c) %>>% unique %>>% sort) |>
       gen.and_then(\(fail) {
-        x <- rep(list(NULL), length(rs))
-        x[-fail] <- lapply(
-          keys(rs)[-fail],
-          gen.rs_single_success,
-          attrs_order = attrs_order(rs)
-        )
-        x[fail] <- lapply(
-          keys(rs)[fail],
-          gen.rs_single_failure_prime,
-          attrs_order = attrs_order(rs)
-        )
-        list(
-          gen.pure(rs),
-          x
-        )
-      })
-  }
-  gen.ds_attrs_assignment_success <- function(ds) {
-    list(
-      gen.pure(ds),
-      Map(
-        with_args(
-          gen.ds_single_success,
-          refs = references(ds),
-          attrs_order = attrs_order(ds)
-        ),
-        keys(ds),
-        names(ds)
-      )
-    )
-  }
-  gen.rel_success <- function(rel) {
-    gen.pure(rel) |>
-      gen.and_then(\(rel) list(
-        gen.pure(rel),
-        Map(
-          gen.rel_single_success,
-          keys(rel),
-          attrs(rel)
-        )
-      ))
-  }
-  gen.rel_failure_prime <- function(rel, failable) {
-    list( # ensure at least one element
-      gen.element(failable),
-      gen.subsequence(failable)
-    ) |>
-      gen.with(uncurry(c) %>>% unique %>>% sort) |>
-      gen.and_then(\(fail) {
-        x <- rep(list(NULL), length(rel))
-        x[-fail] <- Map(
-          gen.rel_single_success,
-          keys(rel)[-fail],
-          attrs(rel)[-fail]
-        )
-        x[fail] <- Map(
-          gen.rel_single_failure_prime,
-          keys(rel)[fail],
-          attrs(rel)[fail]
-        )
-        list(
-          gen.pure(rel),
-          x
-        )
+        x <- rep(list(NULL), length(selections))
+        x[-fail] <- lapply(selections[-fail], gen.single_success)
+        x[fail] <- lapply(selections[fail], gen.single_failure_prime)
+        x
       })
   }
 
   gen.rs_attrs_assignment <- function(rs) {
-    key_lengths <- lapply(keys(rs), lengths)
-    failable_prime <- which(vapply(key_lengths, \(x) any(x > 0), logical(1)))
+    selections <- lapply(keys(rs), rs_selections, attrs_order(rs))
+    failable_prime <- which(vapply(
+      selections,
+      \(x) length(x$necessary) > 0,
+      logical(1)
+    ))
     if (length(failable_prime) == 0) {
-      gen.rs_success(rs) |>
-        gen.with(\(lst) c(lst, list("success")))
+      list(
+        gen.pure(rs),
+        gen.success(selections),
+        gen.pure("success")
+      )
     }else{
       gen.choice(
-        gen.rs_success(rs) |>
-          gen.with(\(lst) c(lst, list("success"))),
-        gen.rs_failure_prime(rs, failable_prime) |>
-          gen.with(\(lst) c(lst, list("failure_prime")))
+        list(
+          gen.pure(rs),
+          gen.success(selections),
+          gen.pure("success")
+        ),
+        list(
+          gen.pure(rs),
+          gen.failure_prime(selections, failable_prime),
+          gen.pure("failure_prime")
+        )
+      )
+    }
+  }
+  gen.ds_attrs_assignment <- function(ds) {
+    selections <- Map(
+      with_args(
+        ds_selections,
+        refs = references(ds),
+        attrs_order = attrs_order(ds)
+      ),
+      keys(ds),
+      names(ds)
+    )
+    failable_prime <- which(vapply(
+      selections,
+      \(x) length(x$necessary) > 0,
+      logical(1)
+    ))
+    if (length(failable_prime) == 0) {
+      list(
+        gen.pure(ds),
+        gen.success(selections),
+        gen.pure("success")
+      )
+    }else{
+      gen.choice(
+        list(
+          gen.pure(ds),
+          gen.success(selections),
+          gen.pure("success")
+        ),
+        list(
+          gen.pure(ds),
+          gen.failure_prime(selections, failable_prime),
+          gen.pure("failure_prime")
+        )
       )
     }
   }
   gen.rel_attrs_assignment <- function(rel) {
-    key_lengths <- lapply(keys(rel), lengths)
-    failable_prime <- which(vapply(key_lengths, \(x) any(x > 0), logical(1)))
+    selections <- Map(rel_selections, keys(rel), attrs(rel))
+    failable_prime <- which(vapply(
+      selections,
+      \(x) length(x$necessary) > 0,
+      logical(1)
+    ))
     if (length(failable_prime) == 0) {
-      gen.rel_success(rel) |>
-        gen.with(\(lst) c(lst, list("success")))
+      list(
+        gen.pure(rel),
+        gen.success(selections),
+        gen.pure("success")
+      )
     }else{
       gen.choice(
-        gen.rel_success(rel) |>
-          gen.with(\(lst) c(lst, list("success"))),
-        gen.rel_failure_prime(rel, failable_prime) |>
-          gen.with(\(lst) c(lst, list("failure_prime")))
+        list(
+          gen.pure(rel),
+          gen.success(selections),
+          gen.pure("success")
+        ),
+        list(
+          gen.pure(rel),
+          gen.failure_prime(selections, failable_prime),
+          gen.pure("failure_prime")
+        )
       )
     }
   }
@@ -246,6 +216,12 @@ describe("attrs<-", {
     expect_identical(attrs_order(ds2), attrs_order(ds))
     expect_identical(references(ds2), references(ds))
   }
+  expect_ds_attrs_assignment_failure <- function(ds, value) {
+    ds2 <- ds
+    expect_error(
+      attrs(ds2) <- value
+    )
+  }
   expect_rel_attrs_success <- function(rel, value) {
     rel2 <- rel
     attrs(rel2) <- value
@@ -292,8 +268,12 @@ describe("attrs<-", {
       # must include prime attrs and attrs in references, other attrs optional,
       # order irrelevant
       gen.database_schema(letters[1:6], 0, 8) |>
-        gen.and_then(gen.ds_attrs_assignment_success),
-      expect_ds_attrs_assignment_success,
+        gen.and_then(gen.ds_attrs_assignment),
+      \(ds, value, case = c("success", "failure_prime")) switch(
+        match.arg(case),
+        success = expect_ds_attrs_assignment_success(ds, value),
+        failure_prime = expect_ds_attrs_assignment_failure(ds, value)
+      ),
       curry = TRUE
     )
   })
