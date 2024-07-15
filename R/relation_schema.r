@@ -112,6 +112,8 @@ attrs.relation_schema <- function(x, ...) {
 
 #' @export
 `attrs<-.relation_schema` <- function(x, ..., value) {
+  if (any(mapply(\(ks, val) any(!is.element(unlist(ks), val)), keys(x), value)))
+    stop("attrs reassignments must keep attributes used in keys")
   relation_schema(
     stats::setNames(Map(list, value, keys(x)), names(x)),
     attrs_order(x)
