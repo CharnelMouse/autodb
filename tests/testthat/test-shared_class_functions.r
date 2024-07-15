@@ -75,33 +75,36 @@ describe("attrs<-", {
       })
   }
 
-  gen.rs_attrs_assignment <- function(rs) {
-    selections <- lapply(keys(rs), rs_selections, attrs_order(rs))
+  gen.attrs_assignment_from_selections <- function(x, selections) {
     failable_prime <- which(vapply(
       selections,
-      \(x) length(x$necessary) > 0,
+      \(sel) length(sel$necessary) > 0,
       logical(1)
     ))
     if (length(failable_prime) == 0) {
       list(
-        gen.pure(rs),
+        gen.pure(x),
         gen.success(selections),
         gen.pure("success")
       )
     }else{
       gen.choice(
         list(
-          gen.pure(rs),
+          gen.pure(x),
           gen.success(selections),
           gen.pure("success")
         ),
         list(
-          gen.pure(rs),
+          gen.pure(x),
           gen.failure_prime(selections, failable_prime),
           gen.pure("failure_prime")
         )
       )
     }
+  }
+  gen.rs_attrs_assignment <- function(rs) {
+    selections <- lapply(keys(rs), rs_selections, attrs_order(rs))
+    gen.attrs_assignment_from_selections(rs, selections)
   }
   gen.ds_attrs_assignment <- function(ds) {
     selections <- Map(
@@ -113,139 +116,56 @@ describe("attrs<-", {
       keys(ds),
       names(ds)
     )
-    failable_prime <- which(vapply(
-      selections,
-      \(x) length(x$necessary) > 0,
-      logical(1)
-    ))
-    if (length(failable_prime) == 0) {
-      list(
-        gen.pure(ds),
-        gen.success(selections),
-        gen.pure("success")
-      )
-    }else{
-      gen.choice(
-        list(
-          gen.pure(ds),
-          gen.success(selections),
-          gen.pure("success")
-        ),
-        list(
-          gen.pure(ds),
-          gen.failure_prime(selections, failable_prime),
-          gen.pure("failure_prime")
-        )
-      )
-    }
+    gen.attrs_assignment_from_selections(ds, selections)
   }
   gen.rel_attrs_assignment <- function(rel) {
     selections <- Map(rel_selections, keys(rel), attrs(rel))
-    failable_prime <- which(vapply(
-      selections,
-      \(x) length(x$necessary) > 0,
-      logical(1)
-    ))
-    if (length(failable_prime) == 0) {
-      list(
-        gen.pure(rel),
-        gen.success(selections),
-        gen.pure("success")
-      )
-    }else{
-      gen.choice(
-        list(
-          gen.pure(rel),
-          gen.success(selections),
-          gen.pure("success")
-        ),
-        list(
-          gen.pure(rel),
-          gen.failure_prime(selections, failable_prime),
-          gen.pure("failure_prime")
-        )
-      )
-    }
+    gen.attrs_assignment_from_selections(rel, selections)
   }
 
-  expect_rs_attrs_success <- function(rs, value) {
-    rs2 <- rs
-    attrs(rs2) <- value
+  expect_attrs_assignment_success <- function(x, value, other) {
+    x2 <- x
+    attrs(x2) <- value
     # it changes attrs to value, sorted for keys and attrs_order
     sorted_value <- Map(
       \(as, ks) {
         necessary <- unique(unlist(ks))
         c(
           necessary,
-          intersect(setdiff(attrs_order(rs), necessary), as)
+          intersect(setdiff(attrs_order(x), necessary), as)
         )
       },
       value,
-      keys(rs)
+      keys(x)
     )
-    expect_identical(unname(attrs(rs2)), unname(sorted_value))
+    expect_identical(unname(attrs(x2)), unname(sorted_value))
+
     # it doesn't affect other parts of the object
-    expect_identical(keys(rs2), keys(rs))
-    expect_identical(attrs_order(rs2), attrs_order(rs))
+    for (component in other) {
+      expect_identical(component(x2), component(x))
+    }
+  }
+  expect_attrs_assignment_failure <- function(x, value, regexp = NULL) {
+    x2 <- x
+    expect_error(attrs(x2) <- value, regexp)
   }
   expect_rs_attrs_failure_prime <- function(rs, value) {
-    rs2 <- rs
-    expect_error(
-      attrs(rs2) <- value,
+    expect_attrs_assignment_failure(
+      rs,
+      value,
       "^attributes in keys must be present in relation$"
     )
   }
-  expect_ds_attrs_assignment_success <- function(ds, value) {
-    ds2 <- ds
-    attrs(ds2) <- value
-    # it changes attrs to value, sorted for keys and attrs_order
-    sorted_value <- Map(
-      \(as, ks) {
-        necessary <- unique(unlist(ks))
-        c(
-          necessary,
-          intersect(setdiff(attrs_order(ds), necessary), as)
-        )
-      },
-      value,
-      keys(ds)
-    )
-    expect_identical(unname(attrs(ds2)), unname(sorted_value))
-    # it doesn't affect other parts of the object
-    expect_identical(keys(ds2), keys(ds))
-    expect_identical(attrs_order(ds2), attrs_order(ds))
-    expect_identical(references(ds2), references(ds))
-  }
   expect_ds_attrs_assignment_failure <- function(ds, value) {
-    ds2 <- ds
-    expect_error(
-      attrs(ds2) <- value
+    expect_attrs_assignment_failure(
+      ds,
+      value
     )
-  }
-  expect_rel_attrs_success <- function(rel, value) {
-    rel2 <- rel
-    attrs(rel2) <- value
-    # it changes attrs to value, sorted for keys and attrs_order
-    sorted_value <- Map(
-      \(as, ks) {
-        necessary <- unique(unlist(ks))
-        c(
-          necessary,
-          intersect(setdiff(attrs_order(rel), necessary), as)
-        )
-      },
-      value,
-      keys(rel)
-    )
-    expect_identical(unname(attrs(rel2)), unname(sorted_value))
-    # it doesn't affect other parts of the object
-    expect_identical(keys(rel2), keys(rel))
-    expect_identical(attrs_order(rel2), attrs_order(rel))
   }
   expect_rel_attrs_failure_prime <- function(rel, value) {
-    rel2 <- rel
-    expect_error(
-      attrs(rel2) <- value,
+    expect_attrs_assignment_failure(
+      rel,
+      value,
       "^record reassignments must keep key attributes$"
     )
   }
@@ -257,7 +177,11 @@ describe("attrs<-", {
         gen.and_then(gen.rs_attrs_assignment),
       \(rs, value, case = c("success", "failure_prime")) switch(
         match.arg(case),
-        success = expect_rs_attrs_success(rs, value),
+        success = expect_attrs_assignment_success(
+          rs,
+          value,
+          list(keys, attrs_order)
+        ),
         failure_prime = expect_rs_attrs_failure_prime(rs, value)
       ),
       curry = TRUE
@@ -271,7 +195,11 @@ describe("attrs<-", {
         gen.and_then(gen.ds_attrs_assignment),
       \(ds, value, case = c("success", "failure_prime")) switch(
         match.arg(case),
-        success = expect_ds_attrs_assignment_success(ds, value),
+        success = expect_attrs_assignment_success(
+          ds,
+          value,
+          list(keys, attrs_order, references)
+        ),
         failure_prime = expect_ds_attrs_assignment_failure(ds, value)
       ),
       curry = TRUE
@@ -284,7 +212,11 @@ describe("attrs<-", {
         gen.and_then(gen.rel_attrs_assignment),
       \(rel, value, case = c("success", "failure_prime")) switch(
         match.arg(case),
-        success = expect_rel_attrs_success(rel, value),
+        success = expect_attrs_assignment_success(
+          rel,
+          value,
+          list(keys, attrs_order)
+        ),
         failure_prime = expect_rel_attrs_failure_prime(rel, value)
       ),
       curry = TRUE
