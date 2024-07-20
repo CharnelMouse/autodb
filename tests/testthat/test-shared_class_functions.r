@@ -21,7 +21,6 @@ describe("attrs<-", {
       as.character()
     necessary <- unique(c(unlist(ks)))
     ref <- unique(c(referring, referred))
-    ref
     list(
       necessary = necessary,
       ref = setdiff(ref, necessary),
@@ -33,6 +32,26 @@ describe("attrs<-", {
     list(
       necessary = necessary,
       available = setdiff(attrs, necessary),
+      banned = setdiff(attrs_order, attrs)
+    )
+  }
+  db_selections <- function(ks, attrs, attrs_order, nm, refs) {
+    necessary <- unique(unlist(ks))
+    referring <- refs |>
+      Filter(f = \(ref) ref[[1]] == nm) |>
+      lapply(`[[`, 2) |>
+      unlist() |>
+      as.character()
+    referred <- refs |>
+      Filter(f = \(ref) ref[[3]] == nm) |>
+      lapply(`[[`, 4) |>
+      unlist() |>
+      as.character()
+    ref <- unique(c(referring, referred))
+    list(
+      necessary = necessary,
+      ref = setdiff(ref, necessary),
+      available = setdiff(attrs, c(necessary, ref)),
       banned = setdiff(attrs_order, attrs)
     )
   }
@@ -76,7 +95,7 @@ describe("attrs<-", {
   }
 
   gen.success <- function(selections) {
-    lapply(selections, gen.single(selections))
+    lapply(selections, gen.single)
   }
   gen.failure <- function(selections, failable, gen) {
     list( # ensure at least one element
@@ -86,7 +105,7 @@ describe("attrs<-", {
       gen.with(uncurry(c) %>>% unique %>>% sort) |>
       gen.and_then(\(fail) {
         x <- rep(list(NULL), length(selections))
-        x[-fail] <- lapply(selections[-fail], gen.single(selections))
+        x[-fail] <- lapply(selections[-fail], gen.single)
         x[fail] <- lapply(selections[fail], gen)
         x
       })
@@ -167,6 +186,19 @@ describe("attrs<-", {
     )
     gen.attrs_assignment_from_selections(rel, selections)
   }
+  gen.db_attrs_assignment <- function(db) {
+    selections <- Map(
+      with_args(
+        db_selections,
+        refs = references(db),
+        attrs_order = attrs_order(db)
+      ),
+      keys(db),
+      attrs(db),
+      names(db)
+    )
+    gen.attrs_assignment_from_selections(db, selections)
+  }
 
   expect_attrs_assignment_success <- function(x, value, unaffected) {
     x2 <- x
@@ -216,7 +248,7 @@ describe("attrs<-", {
       curry = TRUE
     )
   })
-  it("works for database_schema: prime/reference attrs must be kept", {
+  it("works for database_schema: prime/reference attrs must be kept, can't add", {
     forall(
       # must include prime attrs and attrs in references, other attrs optional,
       # order irrelevant
@@ -248,22 +280,57 @@ describe("attrs<-", {
       # must include prime attrs, other attrs optional, order irrelevant
       gen.relation(letters[1:6], 0, 8) |>
         gen.and_then(gen.rel_attrs_assignment),
-      \(rel, value, case = c("success", "failure_prime", "failure_add")) switch(
+      \(db, value, case = c("success", "failure_prime", "failure_add")) switch(
         match.arg(case),
         success = expect_attrs_assignment_success(
-          rel,
+          db,
           value,
           unaffected = list(keys, attrs_order)
         ),
         failure_prime = expect_attrs_assignment_failure(
-          rel,
+          db,
           value,
           "^record reassignments must keep key attributes$"
         ),
         failure_add = expect_attrs_assignment_failure(
-          rel,
+          db,
           value,
-          "^attrs reassignments for relations can not add attributes$"
+          "^attrs reassignments for relational data objects can not add attributes$"
+        )
+      ),
+      curry = TRUE
+    )
+  })
+  it("works for database: prime and reference attrs must be kept, can't add", {
+    forall(
+      # must include prime attrs, other attrs optional, order irrelevant
+      gen.database(letters[1:6], 0, 8) |>
+        gen.and_then(gen.db_attrs_assignment),
+      \(
+        db,
+        value,
+        case = c("success", "failure_prime", "failure_ref", "failure_add")
+      ) switch(
+        match.arg(case),
+        success = expect_attrs_assignment_success(
+          db,
+          value,
+          unaffected = list(keys, attrs_order)
+        ),
+        failure_prime = expect_attrs_assignment_failure(
+          db,
+          value,
+          "^record reassignments must keep key attributes$"
+        ),
+        failure_ref = expect_attrs_assignment_failure(
+          db,
+          value,
+          "^attrs reassignments must keep attributes used in references$"
+        ),
+        failure_add = expect_attrs_assignment_failure(
+          db,
+          value,
+          "^attrs reassignments for relational data objects can not add attributes$"
         )
       ),
       curry = TRUE

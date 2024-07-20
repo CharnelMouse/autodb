@@ -146,7 +146,7 @@ attrs.relation <- function(x, ...) {
 #' @export
 `attrs<-.relation` <- function(x, ..., value) {
   if (any(mapply(\(as, val) any(!is.element(val, as)), attrs(x), value)))
-    stop("attrs reassignments for relations can not add attributes")
+    stop("attrs reassignments for relational data objects can not add attributes")
   records(x) <- Map(\(df, as) df[, as, drop = FALSE], records(x), value)
   x
 }

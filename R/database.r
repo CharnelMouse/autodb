@@ -85,6 +85,15 @@ reference_errors <- function(records, references) {
 }
 
 #' @export
+`attrs<-.database` <- function(x, ..., value) {
+  rels <- subrelations(x)
+  attrs(rels) <- value
+  if (any(!reference_valid_attrs(references(x), rels)))
+    stop("attrs reassignments must keep attributes used in references")
+  database(rels, references(x))
+}
+
+#' @export
 `attrs_order<-.database` <- function(x, ..., value) {
   rels <- subrelations(x)
   attrs_order(rels) <- value
@@ -112,6 +121,13 @@ rename_attrs.database <- function(x, names, ...) {
     new_subrels,
     new_refs
   )
+}
+
+#' @export
+`records<-.database` <- function(x, ..., value) {
+  relations <- subrelations(x)
+  records(relations) <- value
+  database(relations, references(x))
 }
 
 #' @export
@@ -229,9 +245,9 @@ c.database <- function(...) {
 
 #' @exportS3Method
 insert.database <- function(x, vals, relations = names(x), ...) {
-  res <- insert.relation(x, vals, relations, ...)
-  dfs <- records(res)
-  reference_checks <- reference_errors(dfs, references(res))
+  new_subrelations <- insert(subrelations(x), vals, relations, ...)
+  dfs <- records(new_subrelations)
+  reference_checks <- reference_errors(dfs, references(x))
   if (length(reference_checks)) {
     error_strings <- vapply(
       reference_checks,
@@ -249,7 +265,7 @@ insert.database <- function(x, vals, relations = names(x), ...) {
       paste(error_strings, collapse = "\n")
     )
   }
-  res
+  database(new_subrelations, references(x))
 }
 
 #' @export
