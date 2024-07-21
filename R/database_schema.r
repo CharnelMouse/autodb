@@ -114,6 +114,31 @@ rename_attrs.database_schema <- function(x, names, ...) {
 }
 
 #' @export
+`keys<-.database_schema` <- function(x, ..., value) {
+  # if (any(mapply(\(ks, val) any(!is.element(unlist(ks), val)), keys(x), value)))
+  #   stop("attrs reassignments must keep attributes used in keys")
+  #
+  # referrers <- split(
+  #   lapply(references(x), `[[`, 2),
+  #   vapply(references(x), `[[`, character(1), 1)
+  # )
+  # referees <- split(
+  #   lapply(references(x), `[[`, 4),
+  #   vapply(references(x), `[[`, character(1), 3)
+  # )
+  # refs <- lapply(
+  #   names(x),
+  #   \(nm) unlist(c(referrers[nm], referees[nm]))
+  # )
+  # if (any(mapply(\(ref_attrs, val) any(!is.element(ref_attrs, val)), refs, value)))
+  #   stop("attrs reassignments must keep attributes used in references")
+  #
+  rs <- subschemas(x)
+  keys(rs, ...) <- value
+  database_schema(rs, references(x))
+}
+
+#' @export
 `names<-.database_schema` <- function(x, value) {
   check_schema_names(value)
   new_refs <- lapply(

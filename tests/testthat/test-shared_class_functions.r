@@ -345,6 +345,18 @@ describe("keys<-", {
       banned = setdiff(attrs_order, attrs)
     )
   }
+  ds_selections <- function(attrs, attrs_order, nm, refs) {
+    referred_keys <- refs |>
+      Filter(f = \(ref) ref[[3]] == nm) |>
+      lapply(`[[`, 4)
+
+    list(
+      necessary = referred_keys,
+      available = attrs,
+      banned = setdiff(attrs_order, attrs)
+    )
+  }
+
   gen.none <- function(x) gen.pure(x[FALSE])
   gen.single_success <- function(selections) {
     list(
@@ -353,18 +365,43 @@ describe("keys<-", {
     ) |>
       gen.with(unlist) |>
       gen.and_then(gen.sample) |>
-      gen.list(from = 1, to = 5) |>
+      gen.list(from = length(selections$necessary) == 0, to = 5) |>
+      gen.with(\(lst) c(selections$necessary, lst)) |>
       gen.with(unique)
   }
   gen.single_failure_add <- function(selections) {
-    list(
+    # ensure at least one key with a banned attribute
+    definitely_banned <- list(
+      gen.element(selections$banned),
+      gen.subsequence(selections$available)
+    ) |>
+      gen.with(unlist) |>
+      gen.and_then(gen.sample)
+    others <- list(
       gen.subsequence(selections$available),
       gen.element(selections$banned)
     ) |>
       gen.with(unlist) |>
       gen.and_then(gen.sample) |>
-      gen.list(from = 1, to = 5) |>
+      gen.list(from = length(selections$necessary) == 0, to = 5) |>
+      gen.with(\(lst) c(selections$necessary ,lst)) |>
       gen.with(unique)
+    list(definitely_banned, others) |>
+      gen.with(uncurry(\(def, maybe_lst) c(list(def), maybe_lst))) |>
+      gen.with(unique)
+  }
+  gen.single_failure_ref <- function(selections) {
+    gen.element(selections$necessary) |>
+      gen.and_then(\(k) {
+        gen.single_success(selections) |>
+          gen.with(\(keys) {
+            res <- Filter(\(key) !setequal(key, k), keys)
+            if (length(res) == 0)
+              list(character())
+            else
+              res
+          })
+      })
   }
   gen.success <- function(selections) {
     lapply(selections, gen.single_success)
@@ -388,6 +425,11 @@ describe("keys<-", {
       \(sel) length(sel$banned) > 0,
       logical(1)
     ))
+    failable_ref <- which(vapply(
+      selections,
+      \(sel) length(sel$necessary) > 0,
+      logical(1)
+    ))
     choices <- c(
       list(
         list(
@@ -403,6 +445,14 @@ describe("keys<-", {
             gen.failure(selections, failable_add, gen.single_failure_add),
             gen.pure("failure_add")
           )
+        ),
+      if (length(failable_ref) > 0)
+        list(
+          list(
+            gen.pure(x),
+            gen.failure(selections, failable_ref, gen.single_failure_ref),
+            gen.pure("failure_ref")
+          )
         )
     )
     do.call(gen.choice, choices)
@@ -410,6 +460,18 @@ describe("keys<-", {
   gen.rs_keys_assignment <- function(rs) {
     selections <- lapply(attrs(rs), rs_selections, attrs_order(rs))
     gen.keys_assignment_from_selections(rs, selections)
+  }
+  gen.ds_keys_assignment <- function(ds) {
+    selections <- Map(
+      with_args(
+        ds_selections,
+        attrs_order = attrs_order(ds),
+        refs = references(ds)
+      ),
+      attrs(ds),
+      names(ds)
+    )
+    gen.keys_assignment_from_selections(ds, selections)
   }
 
   expect_keys_assignment_success <- function(x, value, unaffected) {
@@ -464,6 +526,32 @@ describe("keys<-", {
           rs,
           value,
           "^attributes in keys must be present in relation$"
+        )
+      ),
+      curry = TRUE
+    )
+  })
+  it("works for database_schema: must preserve referenced keys", {
+    forall(
+      # must include prime attrs, other attrs optional, order irrelevant
+      gen.database_schema(letters[1:6], 0, 8) |>
+        gen.and_then(gen.ds_keys_assignment),
+      \(ds, value, case = c("success", "failure_add", "failure_ref")) switch(
+        match.arg(case),
+        success = expect_keys_assignment_success(
+          ds,
+          value,
+          unaffected = list(attrs_order)
+        ),
+        failure_add = expect_keys_assignment_failure(
+          ds,
+          value,
+          "^attributes in keys must be present in relation$"
+        ),
+        failure_ref = expect_keys_assignment_failure(
+          ds,
+          value,
+          "^reference attributes must be within referrer's attributes and referee's keys$"
         )
       ),
       curry = TRUE
