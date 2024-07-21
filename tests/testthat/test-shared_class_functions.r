@@ -338,6 +338,141 @@ describe("attrs<-", {
   })
 })
 
+describe("keys<-", {
+  rs_selections <- function(attrs, attrs_order) {
+    list(
+      necessary = character(),
+      available = attrs,
+      banned = setdiff(attrs_order, attrs)
+    )
+  }
+  gen.none <- function(x) gen.pure(x[FALSE])
+  gen.single <- function(
+    selections,
+    necessary = gen.pure,
+    ref = gen.pure,
+    available = gen.subsequence,
+    banned = gen.none
+  ) {
+    list(
+      necessary(selections$necessary),
+      ref(selections$ref),
+      available(selections$available),
+      banned(selections$banned)
+    ) |>
+      gen.with(unlist) |>
+      gen.and_then(gen.sample) |>
+      gen.list(from = 1, to = 5) |>
+      gen.with(unique)
+  }
+  gen.single_failure_add <- function(selections) {
+    gen.single(selections, banned = gen.element)
+  }
+  gen.success <- function(selections) {
+    lapply(selections, gen.single)
+  }
+  gen.failure <- function(selections, failable, gen) {
+    list( # ensure at least one element
+      gen.element(failable),
+      gen.subsequence(failable)
+    ) |>
+      gen.with(uncurry(c) %>>% unique %>>% sort) |>
+      gen.and_then(\(fail) {
+        x <- rep(list(NULL), length(selections))
+        x[-fail] <- lapply(selections[-fail], gen.single)
+        x[fail] <- lapply(selections[fail], gen)
+        x
+      })
+  }
+  gen.keys_assignment_from_selections <- function(x, selections) {
+    failable_add <- which(vapply(
+      selections,
+      \(sel) length(sel$banned) > 0,
+      logical(1)
+    ))
+    choices <- c(
+      list(
+        list(
+          gen.pure(x),
+          gen.success(selections),
+          gen.pure("success")
+        )
+      ),
+      if (length(failable_add) > 0)
+        list(
+          list(
+            gen.pure(x),
+            gen.failure(selections, failable_add, gen.single_failure_add),
+            gen.pure("failure_add")
+          )
+        )
+    )
+    do.call(gen.choice, choices)
+  }
+  gen.rs_keys_assignment <- function(rs) {
+    selections <- lapply(attrs(rs), rs_selections, attrs_order(rs))
+    gen.keys_assignment_from_selections(rs, selections)
+  }
+
+  expect_keys_assignment_success <- function(x, value, unaffected) {
+    x2 <- x
+    keys(x2) <- value
+    # it changes keys to value, sorted for length and attrs_order
+    sorted_value <- lapply(
+      value,
+      \(ks) {
+        sorted <- lapply(ks, \(k) k[order(match(k, attrs_order(x)))])
+        indices <- lapply(sorted, match, attrs_order(x))
+        ord <- keys_order(indices)
+        unique(sorted[ord])
+      }
+    )
+    expect_identical(unname(keys(x2)), unname(sorted_value))
+
+    # rearranges attrs with new key order
+    new_attrs <- Map(
+      \(as, ks) {
+        prime <- unique(unlist(ks))
+        c(prime, setdiff(intersect(attrs_order(x), as), prime))
+      },
+      attrs(x),
+      sorted_value
+    )
+    expect_identical(new_attrs, attrs(x2))
+
+    # it doesn't affect other parts of the object
+    for (component in unaffected) {
+      expect_identical(component(x2), component(x))
+    }
+  }
+  expect_keys_assignment_failure <- function(x, value, regexp = NULL) {
+    x2 <- x
+    expect_error(keys(x2) <- value, regexp)
+  }
+
+  it("works for relation_schema", {
+    forall(
+      # must include prime attrs, other attrs optional, order irrelevant
+      gen.relation_schema(letters[1:6], 0, 8) |>
+        gen.and_then(gen.rs_keys_assignment),
+      \(rs, value, case = c("success", "failure_add")) switch(
+        match.arg(case),
+        success = expect_keys_assignment_success(
+          rs,
+          value,
+          unaffected = list(attrs_order)
+        ),
+        failure_add = expect_keys_assignment_failure(
+          rs,
+          value,
+          "^attributes in keys must be present in relation$"
+        )
+      ),
+      curry = TRUE
+    )
+  })
+})
+
 describe("create", {
   it("creates a valid structure", {
     forall(
