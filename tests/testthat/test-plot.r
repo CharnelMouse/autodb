@@ -215,7 +215,7 @@ describe("gv", {
           )
         ),
         references = list(
-          list("Book", "Title", "Format Price", "Title"),
+          list("Format Price", "Title", "Book", "Title"),
           list("Book", "Author", "Author", "Author"),
           list("Book", "Genre ID", "Genre", "Genre ID")
         ),
@@ -307,7 +307,7 @@ describe("gv", {
 
         "",
 
-        "  Book:FROM_title -> Format_Price:TO_title;",
+        "  Format_Price:FROM_title -> Book:TO_title;",
         "  Book:FROM_author -> Author:TO_author;",
         "  Book:FROM_genre_id -> Genre:TO_genre_id;",
         "}",
@@ -393,7 +393,7 @@ describe("gv", {
           )
         ),
         references = list(
-          list("Book", "Title", "Format Price", "Title"),
+          list("Format Price", "Title", "Book", "Title"),
           list("Book", "Author", "Author", "Author"),
           list("Book", "Genre ID", "Genre", "Genre ID")
         ),
@@ -486,7 +486,7 @@ describe("gv", {
 
         "",
 
-        "  Book:FROM_title -> Format_Price:TO_title;",
+        "  Format_Price:FROM_title -> Book:TO_title;",
         "  Book:FROM_author -> Author:TO_author;",
         "  Book:FROM_genre_id -> Genre:TO_genre_id;",
         "}",

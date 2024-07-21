@@ -87,7 +87,7 @@ describe("database_schema", {
       "^reference relation names must be within relation schema names$"
     )
   })
-  it("expects valid input: reference attribute names are within referrer's attributes and referee's keys", {
+  it("expects valid input: reference attributes are within referrer's attributes, make one of referee's keys", {
     expect_error(
       database_schema(
         relation_schema(
@@ -101,10 +101,20 @@ describe("database_schema", {
       ),
       "^reference attributes must be within referrer's attributes and referee's keys$"
     )
-    # need more examples here
-
-    # should have something about collected FK being a key of the citee,
-    # waiting on FK grouping first
+    # must exactly match a key, not just be contained in one
+    expect_error(
+      database_schema(
+        relation_schema(
+          list(
+            a_b = list(c("a", "b"), list(c("a", "b"))),
+            X  = list("a", list("a"))
+          ),
+          c("a", "b")
+        ),
+        list(list("X", "a", "a_b", "a"))
+      ),
+      "^reference attributes must be within referrer's attributes and referee's keys$"
+    )
   })
   it("expects valid input: references aren't self-references", {
     expect_error(

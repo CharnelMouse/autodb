@@ -341,24 +341,15 @@ describe("attrs<-", {
 describe("keys<-", {
   rs_selections <- function(attrs, attrs_order) {
     list(
-      necessary = character(),
       available = attrs,
       banned = setdiff(attrs_order, attrs)
     )
   }
   gen.none <- function(x) gen.pure(x[FALSE])
-  gen.single <- function(
-    selections,
-    necessary = gen.pure,
-    ref = gen.pure,
-    available = gen.subsequence,
-    banned = gen.none
-  ) {
+  gen.single_success <- function(selections) {
     list(
-      necessary(selections$necessary),
-      ref(selections$ref),
-      available(selections$available),
-      banned(selections$banned)
+      gen.subsequence(selections$available),
+      gen.none(selections$banned)
     ) |>
       gen.with(unlist) |>
       gen.and_then(gen.sample) |>
@@ -366,10 +357,17 @@ describe("keys<-", {
       gen.with(unique)
   }
   gen.single_failure_add <- function(selections) {
-    gen.single(selections, banned = gen.element)
+    list(
+      gen.subsequence(selections$available),
+      gen.element(selections$banned)
+    ) |>
+      gen.with(unlist) |>
+      gen.and_then(gen.sample) |>
+      gen.list(from = 1, to = 5) |>
+      gen.with(unique)
   }
   gen.success <- function(selections) {
-    lapply(selections, gen.single)
+    lapply(selections, gen.single_success)
   }
   gen.failure <- function(selections, failable, gen) {
     list( # ensure at least one element
@@ -379,7 +377,7 @@ describe("keys<-", {
       gen.with(uncurry(c) %>>% unique %>>% sort) |>
       gen.and_then(\(fail) {
         x <- rep(list(NULL), length(selections))
-        x[-fail] <- lapply(selections[-fail], gen.single)
+        x[-fail] <- lapply(selections[-fail], gen.single_success)
         x[fail] <- lapply(selections[fail], gen)
         x
       })

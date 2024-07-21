@@ -41,7 +41,7 @@ reference_valid_attrs <- function(references, relation_schemas) {
     references,
     \(r) {
       all(r[[2]] %in% attrs(relation_schemas)[[r[[1]]]]) &&
-        all(r[[4]] %in% unlist(keys(relation_schemas)[[r[[3]]]]))
+        list(r[[4]]) %in% keys(relation_schemas)[[r[[3]]]]
     },
     logical(1)
   )
