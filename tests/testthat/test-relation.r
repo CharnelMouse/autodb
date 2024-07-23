@@ -106,6 +106,16 @@ describe("relation", {
       ),
       "^relations must satisfy their keys$"
     )
+    expect_error(
+      relation(
+        list(a = list(
+          df = data.frame(a = 1:2),
+          keys = list(character())
+        )),
+        "a"
+      ),
+      "^relations must satisfy their keys$"
+    )
   })
   it("expects valid input: unique relation names", {
     expect_error(

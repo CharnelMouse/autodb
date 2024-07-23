@@ -119,7 +119,12 @@ relation <- function(relations, attrs_order) {
     \(rel) {
       all(vapply(
         rel$keys,
-        \(key) !anyDuplicated(rel$df[, key, drop = FALSE]),
+        \(key) {
+          if (length(key) == 0)
+            nrow(rel$df) <= 1
+          else
+            !anyDuplicated(rel$df[, key, drop = FALSE])
+        },
         logical(1)
       ))
     },

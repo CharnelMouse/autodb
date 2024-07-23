@@ -443,6 +443,15 @@ describe("keys<-", {
           })
       })
   }
+  gen.single_failure_invalid <- function(selections) {
+    list(
+      gen.single_success(selections),
+      gen.element(selections$invalid) |>
+        gen.list(from = 1, to = 5) |>
+        gen.with(unique)
+    ) |>
+      gen.with(with_args(unlist, recursive = FALSE))
+  }
   gen.success <- function(selections) {
     lapply(selections, gen.single_success)
   }
@@ -459,7 +468,11 @@ describe("keys<-", {
         x
       })
   }
-  gen.keys_assignment_from_selections <- function(x, selections) {
+  gen.keys_assignment_from_selections <- function(
+    x,
+    selections,
+    include_records = FALSE
+  ) {
     failable_add <- which(vapply(
       selections,
       \(sel) length(sel$banned) > 0,
@@ -470,28 +483,53 @@ describe("keys<-", {
       \(sel) length(sel$necessary) > 0,
       logical(1)
     ))
+    failable_invalid <- which(vapply(
+      selections,
+      \(sel) length(sel$invalid) > 0,
+      logical(1)
+    ))
     choices <- c(
       list(
-        list(
-          gen.pure(x),
-          gen.success(selections),
-          gen.pure("success")
+        c(
+          list(gen.pure(x)),
+          if (include_records) list(gen.pure(records(x))),
+          list(
+            gen.success(selections),
+            gen.pure("success")
+          )
         )
       ),
       if (length(failable_add) > 0)
         list(
-          list(
-            gen.pure(x),
-            gen.failure(selections, failable_add, gen.single_failure_add),
-            gen.pure("failure_add")
+          c(
+            list(gen.pure(x)),
+            if (include_records) list(gen.pure(records(x))),
+            list(
+              gen.failure(selections, failable_add, gen.single_failure_add),
+              gen.pure("failure_add")
+            )
           )
         ),
       if (length(failable_ref) > 0)
         list(
-          list(
-            gen.pure(x),
-            gen.failure(selections, failable_ref, gen.single_failure_ref),
-            gen.pure("failure_ref")
+          c(
+            list(gen.pure(x)),
+            if (include_records) list(gen.pure(records(x))),
+            list(
+              gen.failure(selections, failable_ref, gen.single_failure_ref),
+              gen.pure("failure_ref")
+            )
+          )
+        ),
+      if (length(failable_invalid) > 0)
+        list(
+          c(
+            list(gen.pure(x)),
+            if (include_records) list(gen.pure(records(x))),
+            list(
+              gen.failure(selections, failable_invalid, gen.single_failure_invalid),
+              gen.pure("failure_invalid")
+            )
           )
         )
     )
@@ -515,7 +553,7 @@ describe("keys<-", {
   }
   gen.rel_keys_assignment <- function(rel) {
     selections <- lapply(records(rel), rel_selections, attrs_order(rel))
-    gen.keys_assignment_from_selections(rel, selections)
+    gen.keys_assignment_from_selections(rel, selections, include_records = TRUE)
   }
 
   expect_keys_assignment_success <- function(x, value, unaffected) {
@@ -605,17 +643,29 @@ describe("keys<-", {
     forall(
       gen.relation(letters[1:6], 0, 8) |>
         gen.and_then(gen.rel_keys_assignment),
-      \(rel, value, case = c("success", "failure_add")) switch(
+      \(rel, recs, value, case = c("success", "failure_add", "failure_invalid")) switch(
         match.arg(case),
         success = expect_keys_assignment_success(
           rel,
           value,
-          unaffected = list(attrs_order)
+          unaffected = list(
+            attrs_order,
+            records %>>%
+              (function(recs) lapply(
+                recs,
+                \(df) df[, sort(names(df)), drop = FALSE]
+              ))
+          )
         ),
         failure_add = expect_keys_assignment_failure(
           rel,
           value,
           "^relation keys must be within relation attributes$"
+        ),
+        failure_invalid = expect_keys_assignment_failure(
+          rel,
+          value,
+          "^relations must satisfy their keys$"
         )
       ),
       curry = TRUE
