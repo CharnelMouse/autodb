@@ -207,7 +207,10 @@ keys.relation <- function(x, ...) {
 #' @export
 `keys<-.relation` <- function(x, ..., value) {
   relation(
-    stats::setNames(Map(\(df, ks) list(df = df, keys = ks), records(x), value), names(x)),
+    stats::setNames(
+      Map(\(df, ks) list(df = df, keys = ks), records(x), value),
+      names(x)
+    ),
     attrs_order(x)
   )
 }

@@ -41,7 +41,10 @@ union instead.
 }
 \examples{
 schemas <- relation_schema(
-  list(a = list(c("a", "b"), list("a")), b = list(c("b", "c"), list("b", "c"))),
+  list(
+    a = list(c("a", "b"), list("a")),
+    b = list(c("b", "c"), list("b", "c"))
+  ),
   attrs_order = c("a", "b", "c", "d")
 )
 print(schemas)

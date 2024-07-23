@@ -32,7 +32,10 @@
 #' @export
 #' @examples
 #' schemas <- relation_schema(
-#'   list(a = list(c("a", "b"), list("a")), b = list(c("b", "c"), list("b", "c"))),
+#'   list(
+#'     a = list(c("a", "b"), list("a")),
+#'     b = list(c("b", "c"), list("b", "c"))
+#'   ),
 #'   attrs_order = c("a", "b", "c", "d")
 #' )
 #' print(schemas)
@@ -54,7 +57,11 @@ relation_schema <- function(
     stop("schema key sets must be lists")
   if (!all(vapply(schemas, \(s) length(s[[2]]) > 0L, logical(1))))
     stop("schema key sets must have at least one element")
-  if (!all(vapply(schemas, \(s) all(vapply(s[[2]], is.character, logical(1))), logical(1))))
+  if (!all(vapply(
+    schemas,
+    \(s) all(vapply(s[[2]], is.character, logical(1))),
+    logical(1)
+  )))
     stop("schema key sets must have character elements")
   if (!is.character(attrs_order))
     stop("expected character attrs_order")
@@ -81,7 +88,10 @@ relation_schema_nocheck <- function(schemas, attrs_order) {
   schemas <- lapply(
     schemas,
     \(s) {
-      within_sorted_keys <- unique(lapply(s[[2]], \(as) as[order(match(as, attrs_order))]))
+      within_sorted_keys <- unique(lapply(
+        s[[2]],
+        \(as) as[order(match(as, attrs_order))]
+      ))
       sorted_keys <- within_sorted_keys[keys_order(lapply(
         within_sorted_keys,
         match,
