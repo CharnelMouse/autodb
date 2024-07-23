@@ -339,9 +339,47 @@ describe("attrs<-", {
 })
 
 describe("keys<-", {
+  attrs_sets <- function(attrs) {
+    do.call(
+      expand.grid,
+      setNames(rep(list(c(FALSE, TRUE)), length(attrs)), attrs)
+    )
+  }
+  to_sets <- function(arr, allow_empty) {
+    if (nrow(arr) == 0) {
+      if (allow_empty)
+        list(character())
+      else
+        list()
+    }
+    else
+      unname(apply(
+        arr,
+        1,
+        \(as) colnames(arr)[as],
+        simplify = FALSE
+      ))
+  }
+  assess_keys <- function(df) {
+    sets <- attrs_sets(names(df))
+    is_superkey <- apply(
+      sets,
+      1,
+      \(set) {
+        if (all(!set))
+          nrow(df) <= 1
+        else
+          !anyDuplicated(df[, set, drop = FALSE])
+      }
+    )
+    list(
+      valid = to_sets(sets[is_superkey, , drop = FALSE], allow_empty = TRUE),
+      invalid = to_sets(sets[!is_superkey, , drop = FALSE], allow_empty = FALSE)
+    )
+  }
   rs_selections <- function(attrs, attrs_order) {
     list(
-      available = attrs,
+      valid = to_sets(attrs_sets(attrs), allow_empty = TRUE),
       banned = setdiff(attrs_order, attrs)
     )
   }
@@ -351,19 +389,28 @@ describe("keys<-", {
       lapply(`[[`, 4)
 
     list(
+      valid = to_sets(attrs_sets(attrs), allow_empty = TRUE),
       necessary = referred_keys,
-      available = attrs,
       banned = setdiff(attrs_order, attrs)
+    )
+  }
+  rel_selections <- function(df, attrs_order) {
+    validity <- assess_keys(df)
+    list(
+      valid = validity$valid,
+      invalid = validity$invalid,
+      banned = setdiff(attrs_order, names(df))
     )
   }
 
   gen.none <- function(x) gen.pure(x[FALSE])
   gen.single_success <- function(selections) {
     list(
-      gen.subsequence(selections$available),
-      gen.none(selections$banned)
+      gen.pure(selections$valid),
+      gen.none(selections$invalid)
     ) |>
-      gen.with(unlist) |>
+      gen.with(with_args(unlist, recursive = FALSE)) |>
+      gen.and_then(gen.element) |>
       gen.and_then(gen.sample) |>
       gen.list(from = length(selections$necessary) == 0, to = 5) |>
       gen.with(\(lst) c(selections$necessary, lst)) |>
@@ -372,22 +419,15 @@ describe("keys<-", {
   gen.single_failure_add <- function(selections) {
     # ensure at least one key with a banned attribute
     definitely_banned <- list(
-      gen.element(selections$banned),
-      gen.subsequence(selections$available)
-    ) |>
-      gen.with(unlist) |>
-      gen.and_then(gen.sample)
-    others <- list(
-      gen.subsequence(selections$available),
+      gen.element(selections$valid),
       gen.element(selections$banned)
     ) |>
       gen.with(unlist) |>
       gen.and_then(gen.sample) |>
-      gen.list(from = length(selections$necessary) == 0, to = 5) |>
-      gen.with(\(lst) c(selections$necessary ,lst)) |>
-      gen.with(unique)
+      gen.list(from = 1, to = 5)
+    others <- gen.single_success(selections)
     list(definitely_banned, others) |>
-      gen.with(uncurry(\(def, maybe_lst) c(list(def), maybe_lst))) |>
+      gen.with(with_args(unlist, recursive = FALSE)) |>
       gen.with(unique)
   }
   gen.single_failure_ref <- function(selections) {
@@ -473,6 +513,10 @@ describe("keys<-", {
     )
     gen.keys_assignment_from_selections(ds, selections)
   }
+  gen.rel_keys_assignment <- function(rel) {
+    selections <- lapply(records(rel), rel_selections, attrs_order(rel))
+    gen.keys_assignment_from_selections(rel, selections)
+  }
 
   expect_keys_assignment_success <- function(x, value, unaffected) {
     x2 <- x
@@ -552,6 +596,26 @@ describe("keys<-", {
           ds,
           value,
           "^reference attributes must be within referrer's attributes and referee's keys$"
+        )
+      ),
+      curry = TRUE
+    )
+  })
+  it("works for relation: keys must hold", {
+    forall(
+      gen.relation(letters[1:6], 0, 8) |>
+        gen.and_then(gen.rel_keys_assignment),
+      \(rel, value, case = c("success", "failure_add")) switch(
+        match.arg(case),
+        success = expect_keys_assignment_success(
+          rel,
+          value,
+          unaffected = list(attrs_order)
+        ),
+        failure_add = expect_keys_assignment_failure(
+          rel,
+          value,
+          "^relation keys must be within relation attributes$"
         )
       ),
       curry = TRUE

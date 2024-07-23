@@ -189,6 +189,18 @@ describe("relation", {
       list(a = list("a", "b"))
     )
   })
+  it("removes duplicate keys", {
+    expect_no_dup_keys <- function(rel) {
+      expect_true(all(vapply(keys(rel), Negate(anyDuplicated), logical(1))))
+    }
+    expect_no_dup_keys(relation(
+      list(ab = list(
+        df = data.frame(a = integer(), b = integer()),
+        keys = list(c("a", "b"), c("a", "b"))
+      )),
+      c("a", "b")
+    ))
+  })
   it("sorts relation attributes according to sorted keys and attrs_order", {
     expect_identical(
       attrs(relation(

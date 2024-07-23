@@ -74,7 +74,7 @@ relation <- function(relations, attrs_order) {
   relations[] <- lapply(
     relations,
     \(rel) {
-      sorted_keys <- lapply(rel$keys, \(k) k[order(match(k, attrs_order))])
+      sorted_keys <- unique(lapply(rel$keys, \(k) k[order(match(k, attrs_order))]))
       key_indices <- lapply(sorted_keys, match, attrs_order)
       ord <- keys_order(key_indices)
       rel$keys <- sorted_keys[ord]
@@ -197,6 +197,14 @@ check_relation_names <- function(nms) {
 #' @exportS3Method
 keys.relation <- function(x, ...) {
   lapply(unclass(x), \(rel) rel$keys)
+}
+
+#' @export
+`keys<-.relation` <- function(x, ..., value) {
+  relation(
+    stats::setNames(Map(\(df, ks) list(df = df, keys = ks), records(x), value), names(x)),
+    attrs_order(x)
+  )
 }
 
 #' @exportS3Method
