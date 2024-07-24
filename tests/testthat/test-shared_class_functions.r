@@ -339,7 +339,7 @@ describe("attrs<-", {
 })
 
 describe("keys<-", {
-  attrs_sets <- function(attrs) {
+  candidates <- function(attrs) {
     do.call(
       expand.grid,
       setNames(rep(list(c(FALSE, TRUE)), length(attrs)), attrs)
@@ -361,7 +361,7 @@ describe("keys<-", {
       ))
   }
   assess_keys <- function(df) {
-    sets <- attrs_sets(names(df))
+    sets <- candidates(names(df))
     is_superkey <- apply(
       sets,
       1,
@@ -379,7 +379,7 @@ describe("keys<-", {
   }
   rs_selections <- function(attrs, attrs_order) {
     list(
-      valid = to_sets(attrs_sets(attrs), allow_empty = TRUE),
+      valid = to_sets(candidates(attrs), allow_empty = TRUE),
       banned = setdiff(attrs_order, attrs)
     )
   }
@@ -389,7 +389,7 @@ describe("keys<-", {
       lapply(`[[`, 4)
 
     list(
-      valid = to_sets(attrs_sets(attrs), allow_empty = TRUE),
+      valid = to_sets(candidates(attrs), allow_empty = TRUE),
       necessary = unique(referred_keys),
       banned = setdiff(attrs_order, attrs)
     )
