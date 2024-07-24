@@ -390,7 +390,7 @@ describe("keys<-", {
 
     list(
       valid = to_sets(attrs_sets(attrs), allow_empty = TRUE),
-      necessary = referred_keys,
+      necessary = unique(referred_keys),
       banned = setdiff(attrs_order, attrs)
     )
   }
@@ -398,6 +398,18 @@ describe("keys<-", {
     validity <- assess_keys(df)
     list(
       valid = validity$valid,
+      invalid = validity$invalid,
+      banned = setdiff(attrs_order, names(df))
+    )
+  }
+  db_selections <- function(df, attrs_order, nm, refs) {
+    validity <- assess_keys(df)
+    referred_keys <- refs |>
+      Filter(f = \(ref) ref[[3]] == nm) |>
+      lapply(`[[`, 4)
+    list(
+      valid = validity$valid,
+      necessary = unique(referred_keys),
       invalid = validity$invalid,
       banned = setdiff(attrs_order, names(df))
     )
@@ -412,7 +424,10 @@ describe("keys<-", {
       gen.with(with_args(unlist, recursive = FALSE)) |>
       gen.and_then(gen.element) |>
       gen.and_then(gen.sample) |>
-      gen.list(from = length(selections$necessary) == 0, to = 5) |>
+      gen.list(
+        from = length(selections$necessary) == 0,
+        to = 5
+      ) |>
       gen.with(\(lst) c(selections$necessary, lst)) |>
       gen.with(unique)
   }
@@ -433,14 +448,19 @@ describe("keys<-", {
   gen.single_failure_ref <- function(selections) {
     gen.element(selections$necessary) |>
       gen.and_then(\(k) {
-        gen.single_success(selections) |>
-          gen.with(\(keys) {
-            res <- Filter(\(key) !setequal(key, k), keys)
-            if (length(res) == 0)
-              list(character())
-            else
-              res
-          })
+        selections_less <- selections
+        selections_less$necessary <- setdiff(
+          selections_less$necessary,
+          list(k)
+        )
+        selections_less$valid <- setdiff(
+          selections_less$valid,
+          list(k)
+        )
+        if (length(selections_less$valid) == 0) {
+          stop("generation impossible: no keys available")
+        }
+        gen.single_success(selections_less)
       })
   }
   gen.single_failure_invalid <- function(selections) {
@@ -480,7 +500,7 @@ describe("keys<-", {
     ))
     failable_ref <- which(vapply(
       selections,
-      \(sel) length(sel$necessary) > 0,
+      \(sel) length(sel$necessary) > length(sel$valid),
       logical(1)
     ))
     failable_invalid <- which(vapply(
@@ -554,6 +574,18 @@ describe("keys<-", {
   gen.rel_keys_assignment <- function(rel) {
     selections <- lapply(records(rel), rel_selections, attrs_order(rel))
     gen.keys_assignment_from_selections(rel, selections, include_records = TRUE)
+  }
+  gen.db_keys_assignment <- function(db) {
+    selections <- Map(
+      with_args(
+        db_selections,
+        attrs_order = attrs_order(db),
+        refs = references(db)
+      ),
+      records(db),
+      names(db)
+    )
+    gen.keys_assignment_from_selections(db, selections, include_records = TRUE)
   }
 
   expect_keys_assignment_success <- function(x, value, unaffected) {
@@ -664,6 +696,44 @@ describe("keys<-", {
         ),
         failure_invalid = expect_keys_assignment_failure(
           rel,
+          value,
+          "^relations must satisfy their keys$"
+        )
+      ),
+      curry = TRUE
+    )
+  })
+  it("works for database: keys must hold, must preserve referenced keys", {
+    forall(
+      # must include prime attrs, other attrs optional, order irrelevant
+      gen.database(letters[1:6], 0, 8) |>
+        gen.and_then(gen.db_keys_assignment),
+      \(db, recs, value, case = c("success", "failure_add", "failure_ref", "failure_invalid")) switch(
+        match.arg(case),
+        success = expect_keys_assignment_success(
+          db,
+          value,
+          unaffected = list(
+            attrs_order,
+            records %>>%
+              (function(recs) lapply(
+                recs,
+                \(df) df[, sort(names(df)), drop = FALSE]
+              ))
+          )
+        ),
+        failure_add = expect_keys_assignment_failure(
+          db,
+          value,
+          "^relation keys must be within relation attributes$"
+        ),
+        failure_ref = expect_keys_assignment_failure(
+          db,
+          value,
+          "^reference attributes must be within referrer's attributes and referee's keys$"
+        ),
+        failure_invalid = expect_keys_assignment_failure(
+          db,
           value,
           "^relations must satisfy their keys$"
         )

@@ -124,6 +124,13 @@ rename_attrs.database <- function(x, names, ...) {
 }
 
 #' @export
+`keys<-.database` <- function(x, ..., value) {
+  rs <- subrelations(x)
+  keys(rs, ...) <- value
+  database(rs, references(x))
+}
+
+#' @export
 `records<-.database` <- function(x, ..., value) {
   relations <- subrelations(x)
   records(relations) <- value
