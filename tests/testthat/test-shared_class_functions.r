@@ -620,6 +620,9 @@ describe("keys<-", {
     expect_error(keys(x2) <- value, regexp)
   }
 
+  sort_cols <- function(df) df[, sort(names(df)), drop = FALSE]
+  sorted_record_cols <- records %>>% with_args(lapply, FUN = sort_cols)
+
   it("works for relation_schema", {
     forall(
       # must include prime attrs, other attrs optional, order irrelevant
@@ -678,11 +681,7 @@ describe("keys<-", {
           value,
           unaffected = list(
             attrs_order,
-            records %>>%
-              (function(recs) lapply(
-                recs,
-                \(df) df[, sort(names(df)), drop = FALSE]
-              ))
+            sorted_record_cols
           )
         ),
         failure_add = expect_keys_assignment_failure(
@@ -711,11 +710,7 @@ describe("keys<-", {
           value,
           unaffected = list(
             attrs_order,
-            records %>>%
-              (function(recs) lapply(
-                recs,
-                \(df) df[, sort(names(df)), drop = FALSE]
-              ))
+            sorted_record_cols
           )
         ),
         failure_add = expect_keys_assignment_failure(
