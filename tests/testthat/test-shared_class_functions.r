@@ -340,17 +340,16 @@ describe("attrs<-", {
 
 describe("keys<-", {
   candidates <- function(attrs) {
+    if (length(attrs) == 0)
+      return(data.frame(a = 1)[, FALSE, drop = FALSE])
     do.call(
       expand.grid,
       setNames(rep(list(c(FALSE, TRUE)), length(attrs)), attrs)
     )
   }
-  to_sets <- function(arr, allow_empty) {
+  to_sets <- function(arr) {
     if (nrow(arr) == 0) {
-      if (allow_empty)
-        list(character())
-      else
-        list()
+      list()
     }
     else
       unname(apply(
@@ -373,13 +372,13 @@ describe("keys<-", {
       }
     )
     list(
-      valid = to_sets(sets[is_superkey, , drop = FALSE], allow_empty = TRUE),
-      invalid = to_sets(sets[!is_superkey, , drop = FALSE], allow_empty = FALSE)
+      valid = to_sets(sets[is_superkey, , drop = FALSE]),
+      invalid = to_sets(sets[!is_superkey, , drop = FALSE])
     )
   }
   rs_selections <- function(attrs, attrs_order) {
     list(
-      valid = to_sets(candidates(attrs), allow_empty = TRUE),
+      valid = to_sets(candidates(attrs)),
       banned = setdiff(attrs_order, attrs)
     )
   }
@@ -389,7 +388,7 @@ describe("keys<-", {
       lapply(`[[`, 4)
 
     list(
-      valid = to_sets(candidates(attrs), allow_empty = TRUE),
+      valid = to_sets(candidates(attrs)),
       necessary = unique(referred_keys),
       banned = setdiff(attrs_order, attrs)
     )
@@ -457,9 +456,6 @@ describe("keys<-", {
           selections_less$valid,
           list(k)
         )
-        if (length(selections_less$valid) == 0) {
-          stop("generation impossible: no keys available")
-        }
         gen.single_success(selections_less)
       })
   }
