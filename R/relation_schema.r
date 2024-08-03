@@ -261,6 +261,12 @@ merge_schemas.relation_schema <- function(x, to_remove, merge_into, ...) {
 }
 
 #' @export
+`[[<-.relation_schema` <- function(x, i, value) {
+  x[i] <- value
+  x
+}
+
+#' @export
 `$.relation_schema` <- function(x, name) {
   x[[name]]
 }

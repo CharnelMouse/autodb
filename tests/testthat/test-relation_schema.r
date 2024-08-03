@@ -243,6 +243,60 @@ describe("relation_schema", {
     expect_error(x[[c(1, 1)]])
   })
 
+  it("can have subsets re-assigned, without changing relation names", {
+    gen.rs_reassignment <- function(rs) {
+      gen.subsequence(seq_along(rs)) |>
+        gen.and_then(\(inds) {
+          gen.relation_schema(letters[1:6], length(inds), length(inds)) |>
+            gen.with(\(rs2) {
+              list(
+                rs,
+                inds,
+                rs2
+              )
+            })
+        })
+    }
+    forall(
+      gen.relation_schema(letters[1:6], 0, 8) |>
+        gen.and_then(gen.rs_reassignment),
+      \(rs, indices, value) {
+        res <- rs
+        res[indices] <- value
+        is_valid_relation_schema(res)
+        expect_identical(res[-indices], rs[-indices])
+        expect_identical(res[indices], setNames(value, names(rs)[indices]))
+      },
+      curry = TRUE
+    )
+
+    gen.rs_single_reassignment <- function(rs) {
+      gen.element(seq_along(rs)) |>
+        gen.and_then(\(ind) {
+          gen.relation_schema(letters[1:6], 1, 1) |>
+            gen.with(\(rs2) {
+              list(
+                rs,
+                ind,
+                rs2
+              )
+            })
+        })
+    }
+    forall(
+      gen.relation_schema(letters[1:6], 1, 8) |>
+        gen.and_then(gen.rs_single_reassignment),
+      \(rs, ind, value) {
+        res <- rs
+        res[[ind]] <- value
+        is_valid_relation_schema(res)
+        expect_identical(res[-ind], rs[-ind])
+        expect_identical(res[[ind]], setNames(value, names(rs)[[ind]]))
+      },
+      curry = TRUE
+    )
+  })
+
   it("is made unique to a valid relation schema", {
     forall(
       gen.relation_schema(letters[1:6], 0, 8),
