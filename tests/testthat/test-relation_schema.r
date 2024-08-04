@@ -244,16 +244,24 @@ describe("relation_schema", {
   })
 
   it("can have subsets re-assigned, without changing relation names", {
+    gen.rs_reassignment_indices_format <- function(rs, subseq) {
+      gen.choice(
+        gen.pure(subseq),
+        gen.pure(-setdiff(seq_along(rs), subseq)),
+        gen.pure(names(rs)[subseq]),
+        seq_along(rs) %in% subseq,
+        prob = c(1, length(subseq) < length(rs), 1, 1)
+      )
+    }
     gen.rs_reassignment <- function(rs) {
       gen.subsequence(seq_along(rs)) |>
-        gen.and_then(\(inds) {
-          gen.relation_schema(letters[1:6], length(inds), length(inds)) |>
-            gen.with(\(rs2) {
-              list(
-                rs,
-                inds,
-                rs2
-              )
+        gen.and_then(\(subseq) {
+          gen.rs_reassignment_indices_format(rs, subseq) |>
+            gen.and_then(\(inds) {
+              gen.relation_schema(letters[1:6], length(subseq), length(subseq)) |>
+                gen.with(\(rs2) {
+                  list(rs, inds, rs2)
+                })
             })
         })
     }
@@ -264,8 +272,22 @@ describe("relation_schema", {
         res <- rs
         res[indices] <- value
         is_valid_relation_schema(res)
-        expect_identical(res[-indices], rs[-indices])
-        expect_identical(res[indices], setNames(value, names(rs)[indices]))
+        switch(
+          class(indices),
+          character = {
+            negind <- setdiff(names(res), indices)
+            expect_identical(res[negind], rs[negind])
+            expect_identical(res[indices], setNames(value, indices))
+          },
+          integer = {
+            expect_identical(res[-indices], rs[-indices])
+            expect_identical(res[indices], setNames(value, names(rs)[indices]))
+          },
+          logical = {
+            expect_identical(res[!indices], rs[!indices])
+            expect_identical(res[indices], setNames(value, names(rs)[indices]))
+          }
+        )
       },
       curry = TRUE
     )
