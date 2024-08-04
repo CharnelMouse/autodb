@@ -267,7 +267,10 @@ describe("relation_schema", {
             })
         })
     }
-    expect_rs_subset_reassignment_success <- function(rs, indices, value, res) {
+    expect_rs_subset_reassignment_success <- function(rs, indices, value) {
+      res <- rs
+      res[indices] <- value
+      is_valid_relation_schema(res)
       switch(
         class(indices),
         character = {
@@ -288,12 +291,7 @@ describe("relation_schema", {
     forall(
       gen.relation_schema(letters[1:6], 0, 8) |>
         gen.and_then(gen.rs_reassignment),
-      \(rs, indices, value) {
-        res <- rs
-        res[indices] <- value
-        is_valid_relation_schema(res)
-        expect_rs_subset_reassignment_success(rs, indices, value, res)
-      },
+      expect_rs_subset_reassignment_success,
       curry = TRUE
     )
 
@@ -320,7 +318,7 @@ describe("relation_schema", {
             gen.rs_single_reassignment_indices_format(rs, subseq)
           }),
         gen.relation_schema(letters[1:6], 1, 1),
-        gen.pure("single")
+        gen.pure(NA_character_)
       )
     }
     gen.rs_single_reassignment_failure_emptyint <- function(rs) {
@@ -332,20 +330,7 @@ describe("relation_schema", {
         gen.with(\(lst) {
           c(
             lst,
-            list(
-              if (length(lst[[2]]) > 1)
-                "multi_vec"
-              else {
-                if (
-                  length(lst[[2]]) == 1 &&
-                  all(lst[[2]] < 0) &&
-                  length(lst[[2]]) + 1 < length(rs)
-                )
-                  "multi_index"
-                else
-                  "none"
-              }
-            )
+            list(single_subset_failure_type(rs, lst[[2]]))
           )
         })
     }
@@ -364,18 +349,7 @@ describe("relation_schema", {
                     rs,
                     indices,
                     rs2,
-                    if (length(indices) > 1)
-                      "multi_vec"
-                    else {
-                      if (
-                        length(indices) == 1 &&
-                          all(indices < 0) &&
-                          length(indices) + 1 < length(rs)
-                      )
-                        "multi_index"
-                      else
-                        "none"
-                    }
+                    single_subset_failure_type(rs, indices)
                   )
                 })
             })
@@ -393,7 +367,10 @@ describe("relation_schema", {
         c(choices, list(prob = weights))
       )
     }
-    expect_rs_subset_single_reassignment_success <- function(rs, ind, value, res) {
+    expect_rs_subset_single_reassignment_success <- function(rs, ind, value) {
+      res <- rs
+      res[[ind]] <- value
+      is_valid_relation_schema(res)
       switch(
         class(ind),
         character = {
@@ -414,34 +391,15 @@ describe("relation_schema", {
     forall(
       gen.relation_schema(letters[1:6], 1, 8) |>
         gen.and_then(gen.rs_single_reassignment),
-      \(rs, ind, value, case = c("single", "none", "multi_index", "multi_vec")) {
-        switch(
-          case,
-          single = {
-            res <- rs
-            res[[ind]] <- value
-            is_valid_relation_schema(res)
-            expect_rs_subset_single_reassignment_success(rs, ind, value, res)
-          },
-          none = {
-            expect_error(
-              rs[[ind]] <- value,
-              "^attempt to select less than one element in get1index$"
-            )
-          },
-          multi_index = {
-            expect_error(
-              rs[[ind]] <- value,
-              "^attempt to select more than one element in integerOneIndex$"
-            )
-          },
-          multi_vec = {
-            expect_error(
-              rs[[ind]] <- value,
-              "^attempt to select more than one element in vectorIndex$"
-            )
-          }
-        )
+      \(rs, ind, value, error) {
+        if (is.na(error)) {
+          expect_rs_subset_single_reassignment_success(rs, ind, value)
+        }else{
+          expect_error(
+            rs[[ind]] <- value,
+            paste0("^", error, "$")
+          )
+        }
       },
       curry = TRUE
     )

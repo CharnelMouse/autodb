@@ -1016,6 +1016,29 @@ minimal_legal_insertion_sets <- function(db, df) {
   unique(legal_sets)
 }
 
+# error arising from x[[indices]], assuming there is one
+single_subset_failure_type <- function(x, indices) {
+  if (length(indices) > 1)
+    "attempt to select more than one element in vectorIndex"
+  else {
+    if (
+      length(indices) == 1 &&
+      all(indices < 0) &&
+      length(indices) + 1 < length(x)
+    ) {
+      if (is.logical(indices))
+        "attempt to select more than one element in get1Index"
+      else
+        "attempt to select more than one element in integerOneIndex"
+    }else{
+      if (length(indices) == 1)
+        "attempt to select less than one element in integerOneIndex"
+      else
+        "attempt to select less than one element in get1index"
+    }
+  }
+}
+
 # generating key / determinant set lists
 gen.nonempty_list <- function(generator, to)
   gen.list(generator, from = 1, to = to)
