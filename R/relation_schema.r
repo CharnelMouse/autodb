@@ -275,6 +275,19 @@ merge_schemas.relation_schema <- function(x, to_remove, merge_into, ...) {
   x[[name]]
 }
 
+#' @export
+`$<-.relation_schema` <- function(x, name, value) {
+  pos <- match(name, names(x))
+  if (is.na(pos))
+    c(x, stats::setNames(value, name))
+  else
+    c(
+      head(x, pos - 1),
+      stats::setNames(value, name),
+      tail(x, -pos)
+    )
+}
+
 #' @exportS3Method
 print.relation_schema <- function(x, max = 10, ...) {
   n_relations <- length(x)

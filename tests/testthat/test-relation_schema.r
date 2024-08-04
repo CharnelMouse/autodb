@@ -243,166 +243,245 @@ describe("relation_schema", {
     expect_error(x[[c(1, 1)]])
   })
 
-  it("can have subsets re-assigned, without changing relation names", {
-    gen.rs_reassignment_indices_format <- function(rs, subseq) {
-      choices <- c(
-        list(gen.pure(subseq)),
-        if (length(subseq) < length(rs))
-          list(gen.pure(-setdiff(seq_along(rs), subseq))),
-        list(gen.pure(names(rs)[subseq])),
-        list(seq_along(rs) %in% subseq)
-      )
-      weights <- rep(1L, 3L + (length(subseq) < length(rs)))
-      do.call(gen.choice, c(choices, list(prob = weights)))
-    }
-    gen.rs_reassignment <- function(rs) {
-      gen.subsequence(seq_along(rs)) |>
-        gen.and_then(\(subseq) {
-          gen.rs_reassignment_indices_format(rs, subseq) |>
-            gen.and_then(\(inds) {
-              gen.relation_schema(letters[1:6], length(subseq), length(subseq)) |>
-                gen.with(\(rs2) {
-                  list(rs, inds, rs2)
-                })
-            })
-        })
-    }
-    expect_rs_subset_reassignment_success <- function(rs, indices, value) {
-      res <- rs
-      res[indices] <- value
-      is_valid_relation_schema(res)
-      switch(
-        class(indices),
-        character = {
-          negind <- setdiff(names(res), indices)
-          expect_identical(res[negind], rs[negind])
-          expect_identical(res[indices], setNames(value, indices))
-        },
-        integer = {
-          expect_identical(res[-indices], rs[-indices])
-          expect_identical(res[indices], setNames(value, names(rs)[indices]))
-        },
-        logical = {
-          expect_identical(res[!indices], rs[!indices])
-          expect_identical(res[indices], setNames(value, names(rs)[indices]))
-        }
-      )
-    }
-    forall(
-      gen.relation_schema(letters[1:6], 0, 8) |>
-        gen.and_then(gen.rs_reassignment),
-      expect_rs_subset_reassignment_success,
-      curry = TRUE
-    )
-
-    gen.rs_single_reassignment_indices_format <- function(rs, subseq) {
-      choices <- c(
-        list(gen.pure(subseq)),
-        if (length(rs) == 2)
-          list(gen.pure(-setdiff(seq_along(rs), subseq))),
-        list(gen.pure(names(rs)[subseq])),
-        if (length(rs) == 1)
-          list(gen.pure(seq_along(rs) %in% subseq))
-      )
-      weights <- rep(
-        1L,
-        2L + (length(rs) == 2) + (length(rs) == 1)
-      )
-      do.call(gen.choice, c(choices, list(prob = weights)))
-    }
-    gen.rs_single_reassignment_success <- function(rs) {
-      list(
-        gen.pure(rs),
-        gen.element(seq_along(rs)) |>
+  describe("can have subsets re-assigned, without changing relation names", {
+    it("[<-", {
+      gen.rs_reassignment_indices_format <- function(rs, subseq) {
+        choices <- c(
+          list(gen.pure(subseq)),
+          if (length(subseq) < length(rs))
+            list(gen.pure(-setdiff(seq_along(rs), subseq))),
+          list(gen.pure(names(rs)[subseq])),
+          list(seq_along(rs) %in% subseq)
+        )
+        weights <- rep(1L, 3L + (length(subseq) < length(rs)))
+        do.call(gen.choice, c(choices, list(prob = weights)))
+      }
+      gen.rs_reassignment <- function(rs) {
+        gen.subsequence(seq_along(rs)) |>
           gen.and_then(\(subseq) {
-            gen.rs_single_reassignment_indices_format(rs, subseq)
-          }),
-        gen.relation_schema(letters[1:6], 1, 1),
-        gen.pure(NA_character_)
+            gen.rs_reassignment_indices_format(rs, subseq) |>
+              gen.and_then(\(inds) {
+                gen.relation_schema(letters[1:6], length(subseq), length(subseq)) |>
+                  gen.with(\(rs2) {
+                    list(rs, inds, rs2)
+                  })
+              })
+          })
+      }
+      expect_rs_subset_reassignment_success <- function(rs, indices, value) {
+        res <- rs
+        res[indices] <- value
+        is_valid_relation_schema(res)
+        switch(
+          class(indices),
+          character = {
+            negind <- setdiff(names(res), indices)
+            expect_identical(res[negind], rs[negind])
+            expect_identical(res[indices], setNames(value, indices))
+          },
+          integer = {
+            expect_identical(res[-indices], rs[-indices])
+            expect_identical(res[indices], setNames(value, names(rs)[indices]))
+          },
+          logical = {
+            expect_identical(res[!indices], rs[!indices])
+            expect_identical(res[indices], setNames(value, names(rs)[indices]))
+          }
+        )
+      }
+      forall(
+        gen.relation_schema(letters[1:6], 0, 8) |>
+          gen.and_then(gen.rs_reassignment),
+        expect_rs_subset_reassignment_success,
+        curry = TRUE
       )
-    }
-    gen.rs_single_reassignment_failure_emptyint <- function(rs) {
-      list(
-        gen.pure(rs),
-        gen.rs_reassignment_indices_format(rs, integer()),
-        gen.relation_schema(letters[1:6], 0, 0)
-      ) |>
-        gen.with(\(lst) {
-          c(
-            lst,
-            list(single_subset_failure_type(rs, lst[[2]]))
-          )
-        })
-    }
-    gen.rs_single_reassignment_failure_multiint <- function(rs) {
-      list(
-        gen.sample(seq_along(rs), 2, replace = FALSE),
-        gen.subsequence(seq_along(rs))
-      ) |>
-        gen.with(unlist %>>% unique %>>% sort) |>
-        gen.and_then(\(subseq) {
-          gen.rs_reassignment_indices_format(rs, subseq) |>
-            gen.and_then(\(indices) {
-              gen.relation_schema(letters[1:6], length(subseq), length(subseq)) |>
-                gen.with(\(rs2) {
-                  list(
-                    rs,
-                    indices,
-                    rs2,
-                    single_subset_failure_type(rs, indices)
-                  )
-                })
-            })
-        })
-    }
-    gen.rs_single_reassignment <- function(rs) {
-      choices <- c(
-        list(gen.rs_single_reassignment_success(rs)),
-        list(gen.rs_single_reassignment_failure_emptyint(rs)),
-        if (length(rs) > 1) list(gen.rs_single_reassignment_failure_multiint(rs))
+    })
+    it("[[<-", {
+      gen.rs_single_reassignment_indices_format <- function(rs, subseq) {
+        choices <- c(
+          list(gen.pure(subseq)),
+          if (length(rs) == 2)
+            list(gen.pure(-setdiff(seq_along(rs), subseq))),
+          list(gen.pure(names(rs)[subseq])),
+          if (length(rs) == 1)
+            list(gen.pure(seq_along(rs) %in% subseq))
+        )
+        weights <- rep(
+          1L,
+          2L + (length(rs) == 2) + (length(rs) == 1)
+        )
+        do.call(gen.choice, c(choices, list(prob = weights)))
+      }
+      gen.rs_single_reassignment_success <- function(rs) {
+        list(
+          gen.pure(rs),
+          gen.element(seq_along(rs)) |>
+            gen.and_then(\(subseq) {
+              gen.rs_single_reassignment_indices_format(rs, subseq)
+            }),
+          gen.relation_schema(letters[1:6], 1, 1),
+          gen.pure(NA_character_)
+        )
+      }
+      gen.rs_single_reassignment_failure_emptyint <- function(rs) {
+        list(
+          gen.pure(rs),
+          gen.rs_reassignment_indices_format(rs, integer()),
+          gen.relation_schema(letters[1:6], 0, 0)
+        ) |>
+          gen.with(\(lst) {
+            c(
+              lst,
+              list(single_subset_failure_type(rs, lst[[2]]))
+            )
+          })
+      }
+      gen.rs_single_reassignment_failure_multiint <- function(rs) {
+        list(
+          gen.sample(seq_along(rs), 2, replace = FALSE),
+          gen.subsequence(seq_along(rs))
+        ) |>
+          gen.with(unlist %>>% unique %>>% sort) |>
+          gen.and_then(\(subseq) {
+            gen.rs_reassignment_indices_format(rs, subseq) |>
+              gen.and_then(\(indices) {
+                gen.relation_schema(letters[1:6], length(subseq), length(subseq)) |>
+                  gen.with(\(rs2) {
+                    list(
+                      rs,
+                      indices,
+                      rs2,
+                      single_subset_failure_type(rs, indices)
+                    )
+                  })
+              })
+          })
+      }
+      gen.rs_single_reassignment <- function(rs) {
+        choices <- c(
+          list(gen.rs_single_reassignment_success(rs)),
+          list(gen.rs_single_reassignment_failure_emptyint(rs)),
+          if (length(rs) > 1) list(gen.rs_single_reassignment_failure_multiint(rs))
+        )
+        weights <- c(70, 15, if (length(rs) > 1) 15)
+        do.call(
+          gen.choice,
+          c(choices, list(prob = weights))
+        )
+      }
+      expect_rs_subset_single_reassignment_success <- function(rs, ind, value) {
+        res <- rs
+        res[[ind]] <- value
+        is_valid_relation_schema(res)
+        switch(
+          class(ind),
+          character = {
+            negind <- setdiff(names(res), ind)
+            expect_identical(res[negind], rs[negind])
+            expect_identical(res[[ind]], setNames(value, ind))
+          },
+          integer = {
+            expect_identical(res[-ind], rs[-ind])
+            expect_identical(res[[ind]], setNames(value, names(rs)[[ind]]))
+          },
+          logical = {
+            expect_identical(res[!ind], rs[!ind])
+            expect_identical(res[[ind]], setNames(value, names(rs)[[ind]]))
+          }
+        )
+      }
+      forall(
+        gen.relation_schema(letters[1:6], 1, 8) |>
+          gen.and_then(gen.rs_single_reassignment),
+        \(rs, ind, value, error) {
+          if (is.na(error)) {
+            expect_rs_subset_single_reassignment_success(rs, ind, value)
+          }else{
+            expect_error(
+              rs[[ind]] <- value,
+              paste0("^", error, "$")
+            )
+          }
+        },
+        curry = TRUE
       )
-      weights <- c(70, 15, if (length(rs) > 1) 15)
-      do.call(
-        gen.choice,
-        c(choices, list(prob = weights))
-      )
-    }
-    expect_rs_subset_single_reassignment_success <- function(rs, ind, value) {
-      res <- rs
-      res[[ind]] <- value
-      is_valid_relation_schema(res)
-      switch(
-        class(ind),
-        character = {
+    })
+    it("$<-", {
+      gen.rs_single_exact_reassignment_success_change <- function(rs) {
+        list(
+          gen.pure(rs),
+          gen.element(seq_along(rs)) |>
+            gen.with(\(subseq) names(rs)[[subseq]]),
+          gen.relation_schema(letters[1:6], 1, 1),
+          gen.pure(NA_character_)
+        )
+      }
+      gen.rs_single_exact_reassignment_success_add <- function(rs) {
+        list(
+          gen.pure(rs),
+          gen.element(setdiff(letters, names(rs))),
+          gen.relation_schema(letters[1:6], 1, 1),
+          gen.pure(NA_character_)
+        )
+      }
+      gen.rs_single_exact_reassignment_failure <- function(rs) {
+        gen.int(1) |>
+          gen.and_then(\(n) {
+            list(
+              gen.pure(rs),
+              gen.pure(n),
+              gen.relation_schema(letters[1:6], 1, 1),
+              gen.pure(paste0(
+                "<text>:1:4: unexpected numeric constant",
+                "\n",
+                "1: rs\\$", n,
+                "\n",
+                "       \\^"
+              ))
+            )
+          })
+      }
+      gen.rs_single_exact_reassignment <- function(rs) {
+        choices <- c(
+          list(gen.rs_single_exact_reassignment_success_change(rs)),
+          list(gen.rs_single_exact_reassignment_success_add(rs)),
+          list(gen.rs_single_exact_reassignment_failure(rs))
+        )
+        weights <- c(40, 40, 20)
+        do.call(
+          gen.choice,
+          c(choices, list(prob = weights))
+        )
+      }
+      expect_rs_subset_single_exact_reassignment_success <- function(rs, ind, value) {
+        res <- rs
+        eval(parse(text = paste0("res$", ind, " <- value")))
+        is_valid_relation_schema(res)
+        if (ind %in% names(rs)) {
           negind <- setdiff(names(res), ind)
           expect_identical(res[negind], rs[negind])
           expect_identical(res[[ind]], setNames(value, ind))
-        },
-        integer = {
-          expect_identical(res[-ind], rs[-ind])
-          expect_identical(res[[ind]], setNames(value, names(rs)[[ind]]))
-        },
-        logical = {
-          expect_identical(res[!ind], rs[!ind])
-          expect_identical(res[[ind]], setNames(value, names(rs)[[ind]]))
-        }
-      )
-    }
-    forall(
-      gen.relation_schema(letters[1:6], 1, 8) |>
-        gen.and_then(gen.rs_single_reassignment),
-      \(rs, ind, value, error) {
-        if (is.na(error)) {
-          expect_rs_subset_single_reassignment_success(rs, ind, value)
         }else{
-          expect_error(
-            rs[[ind]] <- value,
-            paste0("^", error, "$")
-          )
+          expect_identical(res[names(rs)], rs)
+          expect_identical(res[[ind]], setNames(value, ind))
         }
-      },
-      curry = TRUE
-    )
+      }
+      forall(
+        gen.relation_schema(letters[1:6], 1, 8) |>
+          gen.and_then(gen.rs_single_exact_reassignment),
+        \(rs, ind, value, error) {
+          if (is.na(error)) {
+            expect_rs_subset_single_exact_reassignment_success(rs, ind, value)
+          }else{
+            expect_error(
+              eval(parse(text = paste0("rs$", ind, " <- value"))),
+              paste0("^", error, "$")
+            )
+          }
+        },
+        curry = TRUE
+      )
+    })
   })
 
   it("is made unique to a valid relation schema", {
