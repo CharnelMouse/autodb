@@ -262,7 +262,11 @@ merge_schemas.relation_schema <- function(x, to_remove, merge_into, ...) {
 
 #' @export
 `[[<-.relation_schema` <- function(x, i, value) {
-  x[i] <- value
+  indices <- stats::setNames(seq_along(x), names(x))
+  taken <- try(indices[[i]], silent = TRUE)
+  if (class(taken)[[1]] == "try-error")
+    stop(attr(taken, "condition")$message)
+  x[taken] <- value
   x
 }
 
