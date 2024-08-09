@@ -326,7 +326,7 @@ describe("relation_schema", {
       gen.rs_single_reassignment_failure_emptyint <- function(rs) {
         list(
           gen.pure(rs),
-          gen.rs_reassignment_indices_format(rs, integer()),
+          gen.rs_single_reassignment_indices_format(rs, integer()),
           gen.relation_schema(letters[1:6], 0, 0)
         ) |>
           gen.with(\(lst) {
@@ -343,7 +343,7 @@ describe("relation_schema", {
         ) |>
           gen.with(unlist %>>% unique %>>% sort) |>
           gen.and_then(\(subseq) {
-            gen.rs_reassignment_indices_format(rs, subseq) |>
+            gen.rs_single_reassignment_indices_format(rs, subseq) |>
               gen.and_then(\(indices) {
                 gen.relation_schema(letters[1:6], length(subseq), length(subseq)) |>
                   gen.with(\(rs2) {
