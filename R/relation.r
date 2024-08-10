@@ -409,8 +409,31 @@ insert.relation <- function(x, vals, relations = names(x), ...) {
 }
 
 #' @export
+`[[<-.relation` <- function(x, i, value) {
+  indices <- stats::setNames(seq_along(x), names(x))
+  taken <- try(indices[[i]], silent = TRUE)
+  if (class(taken)[[1]] == "try-error")
+    stop(attr(taken, "condition")$message)
+  x[taken] <- value
+  x
+}
+
+#' @export
 `$.relation` <- function(x, name) {
   x[[name]]
+}
+
+#' @export
+`$<-.relation` <- function(x, name, value) {
+  pos <- match(name, names(x))
+  if (is.na(pos))
+    c(x, stats::setNames(value, name))
+  else
+    c(
+      head(x, pos - 1),
+      stats::setNames(value, name),
+      tail(x, -pos)
+    )
 }
 
 #' @exportS3Method

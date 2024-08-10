@@ -330,6 +330,247 @@ describe("relation", {
     expect_error(x[[c(1, 1)]])
   })
 
+  describe("can have subsets re-assigned, without changing relation names", {
+    it("[<-", {
+      gen.rel_reassignment_indices_format <- function(rel, subseq) {
+        choices <- c(
+          list(gen.pure(subseq)),
+          if (length(subseq) < length(rel))
+            list(gen.pure(-setdiff(seq_along(rel), subseq))),
+          list(gen.pure(names(rel)[subseq])),
+          list(seq_along(rel) %in% subseq)
+        )
+        weights <- rep(1L, 3L + (length(subseq) < length(rel)))
+        do.call(gen.choice, c(choices, list(prob = weights)))
+      }
+      gen.rel_reassignment <- function(rel) {
+        gen.subsequence(seq_along(rel)) |>
+          gen.and_then(\(subseq) {
+            gen.rel_reassignment_indices_format(rel, subseq) |>
+              gen.and_then(\(inds) {
+                gen.relation(letters[1:6], length(subseq), length(subseq)) |>
+                  gen.with(\(rs2) {
+                    list(rel, inds, rs2)
+                  })
+              })
+          })
+      }
+      expect_rel_subset_reassignment_success <- function(rel, indices, value) {
+        res <- rel
+        res[indices] <- value
+        is_valid_relation(res)
+        switch(
+          class(indices),
+          character = {
+            negind <- setdiff(names(res), indices)
+            expect_identical(res[negind], rel[negind])
+            expect_identical(res[indices], setNames(value, indices))
+          },
+          integer = {
+            expect_identical(res[-indices], rel[-indices])
+            expect_identical(res[indices], setNames(value, names(rel)[indices]))
+          },
+          logical = {
+            expect_identical(res[!indices], rel[!indices])
+            expect_identical(res[indices], setNames(value, names(rel)[indices]))
+          }
+        )
+      }
+      forall(
+        gen.relation(letters[1:6], 0, 8) |>
+          gen.and_then(gen.rel_reassignment),
+        expect_rel_subset_reassignment_success,
+        curry = TRUE
+      )
+    })
+    it("[[<-", {
+      gen.rel_single_reassignment_indices_format <- function(rel, subseq) {
+        choices <- c(
+          list(gen.pure(subseq)),
+          if (length(rel) == 2)
+            list(gen.pure(-setdiff(seq_along(rel), subseq))),
+          list(gen.pure(names(rel)[subseq])),
+          if (length(rel) == 1)
+            list(gen.pure(seq_along(rel) %in% subseq))
+        )
+        weights <- rep(
+          1L,
+          2L + (length(rel) == 2) + (length(rel) == 1)
+        )
+        do.call(gen.choice, c(choices, list(prob = weights)))
+      }
+      gen.rel_single_reassignment_success <- function(rel) {
+        list(
+          gen.pure(rel),
+          gen.element(seq_along(rel)) |>
+            gen.and_then(\(subseq) {
+              gen.rel_single_reassignment_indices_format(rel, subseq)
+            }),
+          gen.relation(letters[1:6], 1, 1),
+          gen.pure(NA_character_)
+        )
+      }
+      gen.rel_single_reassignment_failure_emptyint <- function(rel) {
+        list(
+          gen.pure(rel),
+          gen.rel_single_reassignment_indices_format(rel, integer()),
+          gen.relation(letters[1:6], 0, 0)
+        ) |>
+          gen.with(\(lst) {
+            c(
+              lst,
+              list(single_subset_failure_type(rel, lst[[2]]))
+            )
+          })
+      }
+      gen.rel_single_reassignment_failure_multiint <- function(rel) {
+        list(
+          gen.sample(seq_along(rel), 2, replace = FALSE),
+          gen.subsequence(seq_along(rel))
+        ) |>
+          gen.with(unlist %>>% unique %>>% sort) |>
+          gen.and_then(\(subseq) {
+            gen.rel_single_reassignment_indices_format(rel, subseq) |>
+              gen.and_then(\(indices) {
+                gen.relation(letters[1:6], length(subseq), length(subseq)) |>
+                  gen.with(\(rs2) {
+                    list(
+                      rel,
+                      indices,
+                      rs2,
+                      single_subset_failure_type(rel, indices)
+                    )
+                  })
+              })
+          })
+      }
+      gen.rel_single_reassignment <- function(rel) {
+        choices <- c(
+          list(gen.rel_single_reassignment_success(rel)),
+          list(gen.rel_single_reassignment_failure_emptyint(rel)),
+          if (length(rel) > 1) list(gen.rel_single_reassignment_failure_multiint(rel))
+        )
+        weights <- c(70, 15, if (length(rel) > 1) 15)
+        do.call(
+          gen.choice,
+          c(choices, list(prob = weights))
+        )
+      }
+      expect_rel_subset_single_reassignment_success <- function(rel, ind, value) {
+        res <- rel
+        res[[ind]] <- value
+        is_valid_relation(res)
+        switch(
+          class(ind),
+          character = {
+            negind <- setdiff(names(res), ind)
+            expect_identical(res[negind], rel[negind])
+            expect_identical(res[[ind]], setNames(value, ind))
+          },
+          integer = {
+            expect_identical(res[-ind], rel[-ind])
+            expect_identical(res[[ind]], setNames(value, names(rel)[[ind]]))
+          },
+          logical = {
+            expect_identical(res[!ind], rel[!ind])
+            expect_identical(res[[ind]], setNames(value, names(rel)[[ind]]))
+          }
+        )
+      }
+      forall(
+        gen.relation(letters[1:6], 1, 8) |>
+          gen.and_then(gen.rel_single_reassignment),
+        \(rel, ind, value, error) {
+          if (is.na(error)) {
+            expect_rel_subset_single_reassignment_success(rel, ind, value)
+          }else{
+            expect_error(
+              rel[[ind]] <- value,
+              paste0("^", error, "$")
+            )
+          }
+        },
+        curry = TRUE
+      )
+    })
+    it("$<-", {
+      gen.rel_single_exact_reassignment_success_change <- function(rel) {
+        list(
+          gen.pure(rel),
+          gen.element(seq_along(rel)) |>
+            gen.with(\(subseq) names(rel)[[subseq]]),
+          gen.relation(letters[1:6], 1, 1),
+          gen.pure(NA_character_)
+        )
+      }
+      gen.rel_single_exact_reassignment_success_add <- function(rel) {
+        list(
+          gen.pure(rel),
+          gen.element(setdiff(letters, names(rel))),
+          gen.relation(letters[1:6], 1, 1),
+          gen.pure(NA_character_)
+        )
+      }
+      gen.rel_single_exact_reassignment_failure <- function(rel) {
+        gen.int(1) |>
+          gen.and_then(\(n) {
+            list(
+              gen.pure(rel),
+              gen.pure(n),
+              gen.relation(letters[1:6], 1, 1),
+              gen.pure(paste0(
+                "<text>:1:5: unexpected numeric constant",
+                "\n",
+                "1: rel\\$", n,
+                "\n",
+                "        \\^"
+              ))
+            )
+          })
+      }
+      gen.rel_single_exact_reassignment <- function(rel) {
+        choices <- c(
+          list(gen.rel_single_exact_reassignment_success_change(rel)),
+          list(gen.rel_single_exact_reassignment_success_add(rel)),
+          list(gen.rel_single_exact_reassignment_failure(rel))
+        )
+        weights <- c(40, 40, 20)
+        do.call(
+          gen.choice,
+          c(choices, list(prob = weights))
+        )
+      }
+      expect_rel_subset_single_exact_reassignment_success <- function(rel, ind, value) {
+        res <- rel
+        eval(parse(text = paste0("res$", ind, " <- value")))
+        is_valid_relation(res)
+        if (ind %in% names(rel)) {
+          negind <- setdiff(names(res), ind)
+          expect_identical(res[negind], rel[negind])
+          expect_identical(res[[ind]], setNames(value, ind))
+        }else{
+          expect_identical(res[names(rel)], rel)
+          expect_identical(res[[ind]], setNames(value, ind))
+        }
+      }
+      forall(
+        gen.relation(letters[1:6], 1, 8) |>
+          gen.and_then(gen.rel_single_exact_reassignment),
+        \(rel, ind, value, error) {
+          if (is.na(error)) {
+            expect_rel_subset_single_exact_reassignment_success(rel, ind, value)
+          }else{
+            expect_error(
+              eval(parse(text = paste0("rel$", ind, " <- value"))),
+              paste0("^", error, "$")
+            )
+          }
+        },
+        curry = TRUE
+      )
+    })
+  })
+
   it("is made unique to a valid relation", {
     forall(
       gen.relation(letters[1:6], 0, 8),
