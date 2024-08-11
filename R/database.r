@@ -287,6 +287,42 @@ insert.database <- function(x, vals, relations = names(x), ...) {
   database(new_relations, kept_rels)
 }
 
+#' @export
+`[<-.database` <- function(x, i, value) {
+  full_ind <- stats::setNames(seq_along(x), names(x))[i]
+  uniq <- !duplicated(full_ind, fromLast = TRUE)
+
+  uniq_ind <- full_ind[uniq]
+  uniq_value <- stats::setNames(value[uniq], names(x)[uniq_ind])
+  rel <- subrelations(x)
+  rel[uniq_ind] <- subrelations(uniq_value)
+  refs <- references(x[setdiff(seq_along(x), uniq_ind)])
+  refs <- c(refs, references(uniq_value))
+  database(rel, refs)
+}
+
+#' @export
+`$<-.database` <- function(x, name, value) {
+  pos <- match(name, names(x))
+  if (is.na(pos))
+    c(x, stats::setNames(value, name))
+  else {
+    renamed_value <- stats::setNames(value, name)
+    subs <- subrelations(x)
+    database(
+      c(
+        head(subs, pos - 1),
+        subrelations(renamed_value),
+        tail(subs, -pos)
+      ),
+      c(
+        references(x[-pos]),
+        references(renamed_value)
+      )
+    )
+  }
+}
+
 #' @exportS3Method
 print.database <- function(x, max = 10, ...) {
   cat(paste0("database ", name(x), " with "))
