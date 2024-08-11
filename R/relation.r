@@ -400,6 +400,27 @@ insert.relation <- function(x, vals, relations = names(x), ...) {
 }
 
 #' @export
+`[<-.relation` <- function(x, i, value) {
+  if (!identical(class(value), "relation"))
+    stop("value must also be a relation object")
+  rcs <- records(x)
+  ks <- keys(x)
+  rcs[i] <- records(value)
+  ks[i] <- keys(value)
+  relation(
+    setNames(
+      Map(
+        \(recs, ks) list(df = recs, keys = ks),
+        rcs,
+        ks
+      ),
+      names(x)
+    ),
+    attrs_order = merge_attribute_orderings(attrs_order(x), attrs_order(value))
+  )
+}
+
+#' @export
 `[[.relation` <- function(x, i) {
   indices <- stats::setNames(seq_along(x), names(x))
   taken <- try(indices[[i]], silent = TRUE)
@@ -425,6 +446,8 @@ insert.relation <- function(x, vals, relations = names(x), ...) {
 
 #' @export
 `$<-.relation` <- function(x, name, value) {
+  if (!identical(class(value), "relation"))
+    stop("value must also be a relation object")
   pos <- match(name, names(x))
   if (is.na(pos))
     c(x, stats::setNames(value, name))
