@@ -252,6 +252,18 @@ merge_schemas.relation_schema <- function(x, to_remove, merge_into, ...) {
 }
 
 #' @export
+`[<-.relation_schema` <- function(x, i, value) {
+  if (!identical(class(value), "relation_schema"))
+    stop("value must also be a relation_schema object")
+  as <- attrs(x)
+  ks <- keys(x)
+  as[i] <- attrs(value)
+  ks[i] <- keys(value)
+  ao <- merge_attribute_orderings(attrs_order(x), attrs_order(value))
+  relation_schema(Map(list, as, ks), ao)
+}
+
+#' @export
 `[[.relation_schema` <- function(x, i) {
   indices <- stats::setNames(seq_along(x), names(x))
   taken <- try(indices[[i]], silent = TRUE)
@@ -277,6 +289,8 @@ merge_schemas.relation_schema <- function(x, to_remove, merge_into, ...) {
 
 #' @export
 `$<-.relation_schema` <- function(x, name, value) {
+  if (!identical(class(value), "relation_schema"))
+    stop("value must also be a relation_schema object")
   pos <- match(name, names(x))
   if (is.na(pos))
     c(x, stats::setNames(value, name))

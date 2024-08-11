@@ -243,6 +243,15 @@ describe("relation_schema", {
     expect_error(x[[c(1, 1)]])
   })
 
+  it("expects a relation_schema value for subset re-assignment", {
+    rs <- relation_schema(
+      list(X = list(character(), list(character()))),
+      letters[1:6]
+    )
+    expect_error(rs[1] <- 1L, "^value must also be a relation_schema object$")
+    expect_error(rs[[1]] <- 1L, "^value must also be a relation_schema object$")
+    expect_error(rs$X <- 1L, "^value must also be a relation_schema object$")
+  })
   describe("can have subsets re-assigned, without changing relation names", {
     it("[<-", {
       gen.rs_reassignment_indices_format <- function(rs, subseq) {
