@@ -540,7 +540,11 @@ describe("relation", {
           c(choices, list(prob = weights))
         )
       }
-      expect_rel_subset_single_exact_reassignment_success <- function(rel, ind, value) {
+      expect_rel_subset_single_exact_reassignment_success <- function(
+        rel,
+        ind,
+        value
+      ) {
         res <- rel
         eval(parse(text = paste0("res$", ind, " <- value")))
         is_valid_relation(res)

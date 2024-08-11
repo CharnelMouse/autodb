@@ -221,6 +221,41 @@ merge_schemas.database_schema <- function(x, to_remove, merge_into, ...) {
   database_schema(new_schemas, kept_rels)
 }
 
+#' @export
+`[<-.database_schema` <- function(x, i, value) {
+  full_ind <- stats::setNames(seq_along(x), names(x))[i]
+  uniq <- !duplicated(full_ind, fromLast = TRUE)
+  uniq_ind <- full_ind[uniq]
+  uniq_value <- stats::setNames(value[uniq], names(x)[uniq_ind])
+  rs <- subschemas(x)
+  rs[uniq_ind] <- subschemas(uniq_value)
+  refs <- references(x[setdiff(seq_along(x), uniq_ind)])
+  refs <- c(refs, references(uniq_value))
+  database_schema(rs, refs)
+}
+
+#' @export
+`$<-.database_schema` <- function(x, name, value) {
+  pos <- match(name, names(x))
+  if (is.na(pos))
+    c(x, stats::setNames(value, name))
+  else {
+    renamed_value <- stats::setNames(value, name)
+    subs <- subschemas(x)
+    database_schema(
+      c(
+        head(subs, pos - 1),
+        subschemas(renamed_value),
+        tail(subs, -pos)
+      ),
+      c(
+        references(x[-pos]),
+        references(renamed_value)
+      )
+    )
+  }
+}
+
 #' @exportS3Method
 print.database_schema <- function(x, max = 10, ...) {
   cat("database schema with ")

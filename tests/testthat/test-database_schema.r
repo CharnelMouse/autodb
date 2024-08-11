@@ -311,6 +311,251 @@ describe("database_schema", {
     )
   })
 
+  describe("can have subsets re-assigned, without changing relation names", {
+    it("[<-", {
+      gen.ds_reassignment_indices_format <- function(ds, subseq) {
+        choices <- c(
+          list(gen.pure(subseq)),
+          if (length(subseq) < length(ds))
+            list(gen.pure(-setdiff(seq_along(ds), subseq))),
+          list(gen.pure(names(ds)[subseq])),
+          list(seq_along(ds) %in% subseq)
+        )
+        weights <- rep(1L, 3L + (length(subseq) < length(ds)))
+        do.call(gen.choice, c(choices, list(prob = weights)))
+      }
+      gen.ds_reassignment <- function(ds) {
+        gen.subsequence(seq_along(ds)) |>
+          gen.and_then(\(subseq) {
+            gen.ds_reassignment_indices_format(ds, subseq) |>
+              gen.and_then(\(inds) {
+                gen.database_schema(letters[1:6], length(subseq), length(subseq)) |>
+                  gen.with(\(rs2) {
+                    list(ds, inds, rs2)
+                  })
+              })
+          })
+      }
+      expect_ds_subset_reassignment_success <- function(ds, indices, value) {
+        res <- ds
+        res[indices] <- value
+        is_valid_database_schema(res)
+        switch(
+          class(indices),
+          character = {
+            negind <- setdiff(names(res), indices)
+            expect_identical(res[negind], ds[negind])
+            expect_identical(res[indices], setNames(value, indices))
+          },
+          integer = {
+            negind <- if (length(indices) == 0)
+              seq_along(ds)
+            else
+              -indices
+            expect_identical(res[negind], ds[negind])
+            expect_identical(res[indices], setNames(value, names(ds)[indices]))
+          },
+          logical = {
+            expect_identical(res[!indices], ds[!indices])
+            expect_identical(res[indices], setNames(value, names(ds)[indices]))
+          }
+        )
+      }
+      forall(
+        gen.database_schema(letters[1:6], 0, 8) |>
+          gen.and_then(gen.ds_reassignment),
+        expect_ds_subset_reassignment_success,
+        curry = TRUE
+      )
+    })
+    it("[[<-", {
+      gen.ds_single_reassignment_indices_format <- function(ds, subseq) {
+        choices <- c(
+          list(gen.pure(subseq)),
+          if (length(ds) == 2)
+            list(gen.pure(-setdiff(seq_along(ds), subseq))),
+          list(gen.pure(names(ds)[subseq])),
+          if (length(ds) == 1)
+            list(gen.pure(seq_along(ds) %in% subseq))
+        )
+        weights <- rep(
+          1L,
+          2L + (length(ds) == 2) + (length(ds) == 1)
+        )
+        do.call(gen.choice, c(choices, list(prob = weights)))
+      }
+      gen.ds_single_reassignment_success <- function(ds) {
+        list(
+          gen.pure(ds),
+          gen.element(seq_along(ds)) |>
+            gen.and_then(\(subseq) {
+              gen.ds_single_reassignment_indices_format(ds, subseq)
+            }),
+          gen.database_schema(letters[1:6], 1, 1),
+          gen.pure(NA_character_)
+        )
+      }
+      gen.ds_single_reassignment_failure_emptyint <- function(ds) {
+        list(
+          gen.pure(ds),
+          gen.ds_single_reassignment_indices_format(ds, integer()),
+          gen.database_schema(letters[1:6], 0, 0)
+        ) |>
+          gen.with(\(lst) {
+            c(
+              lst,
+              list(single_subset_failure_type(ds, lst[[2]]))
+            )
+          })
+      }
+      gen.ds_single_reassignment_failure_multiint <- function(ds) {
+        list(
+          gen.sample(seq_along(ds), 2, replace = FALSE),
+          gen.subsequence(seq_along(ds))
+        ) |>
+          gen.with(unlist %>>% unique %>>% sort) |>
+          gen.and_then(\(subseq) {
+            gen.ds_single_reassignment_indices_format(ds, subseq) |>
+              gen.and_then(\(indices) {
+                gen.database_schema(letters[1:6], length(subseq), length(subseq)) |>
+                  gen.with(\(rs2) {
+                    list(
+                      ds,
+                      indices,
+                      rs2,
+                      single_subset_failure_type(ds, indices)
+                    )
+                  })
+              })
+          })
+      }
+      gen.ds_single_reassignment <- function(ds) {
+        choices <- c(
+          list(gen.ds_single_reassignment_success(ds)),
+          list(gen.ds_single_reassignment_failure_emptyint(ds)),
+          if (length(ds) > 1) list(gen.ds_single_reassignment_failure_multiint(ds))
+        )
+        weights <- c(70, 15, if (length(ds) > 1) 15)
+        do.call(
+          gen.choice,
+          c(choices, list(prob = weights))
+        )
+      }
+      expect_ds_subset_single_reassignment_success <- function(ds, ind, value) {
+        res <- ds
+        res[[ind]] <- value
+        is_valid_database_schema(res)
+        switch(
+          class(ind),
+          character = {
+            negind <- setdiff(names(res), ind)
+            expect_identical(res[negind], ds[negind])
+            expect_identical(res[[ind]], setNames(value, ind))
+          },
+          integer = {
+            expect_identical(res[-ind], ds[-ind])
+            expect_identical(res[[ind]], setNames(value, names(ds)[[ind]]))
+          },
+          logical = {
+            expect_identical(res[!ind], ds[!ind])
+            expect_identical(res[[ind]], setNames(value, names(ds)[[ind]]))
+          }
+        )
+      }
+      forall(
+        gen.database_schema(letters[1:6], 1, 8) |>
+          gen.and_then(gen.ds_single_reassignment),
+        \(ds, ind, value, error) {
+          if (is.na(error)) {
+            expect_ds_subset_single_reassignment_success(ds, ind, value)
+          }else{
+            expect_error(
+              ds[[ind]] <- value,
+              paste0("^", error, "$")
+            )
+          }
+        },
+        curry = TRUE
+      )
+    })
+    it("$<-", {
+      gen.ds_single_exact_reassignment_success_change <- function(ds) {
+        list(
+          gen.pure(ds),
+          gen.element(seq_along(ds)) |>
+            gen.with(\(subseq) names(ds)[[subseq]]),
+          gen.database_schema(letters[1:6], 1, 1),
+          gen.pure(NA_character_)
+        )
+      }
+      gen.ds_single_exact_reassignment_success_add <- function(ds) {
+        list(
+          gen.pure(ds),
+          gen.element(setdiff(letters, names(ds))),
+          gen.database_schema(letters[1:6], 1, 1),
+          gen.pure(NA_character_)
+        )
+      }
+      gen.ds_single_exact_reassignment_failure <- function(ds) {
+        gen.int(1) |>
+          gen.and_then(\(n) {
+            list(
+              gen.pure(ds),
+              gen.pure(n),
+              gen.database_schema(letters[1:6], 1, 1),
+              gen.pure(paste0(
+                "<text>:1:4: unexpected numeric constant",
+                "\n",
+                "1: ds\\$", n,
+                "\n",
+                "       \\^"
+              ))
+            )
+          })
+      }
+      gen.ds_single_exact_reassignment <- function(ds) {
+        choices <- c(
+          list(gen.ds_single_exact_reassignment_success_change(ds)),
+          list(gen.ds_single_exact_reassignment_success_add(ds)),
+          list(gen.ds_single_exact_reassignment_failure(ds))
+        )
+        weights <- c(40, 40, 20)
+        do.call(
+          gen.choice,
+          c(choices, list(prob = weights))
+        )
+      }
+      expect_ds_subset_single_exact_reassignment_success <- function(ds, ind, value) {
+        res <- ds
+        eval(parse(text = paste0("res$", ind, " <- value")))
+        is_valid_database_schema(res)
+        if (ind %in% names(ds)) {
+          negind <- setdiff(names(res), ind)
+          expect_identical(res[negind], ds[negind])
+          expect_identical(res[[ind]], setNames(value, ind))
+        }else{
+          expect_identical(res[names(ds)], ds)
+          expect_identical(res[[ind]], setNames(value, ind))
+        }
+      }
+      forall(
+        gen.database_schema(letters[1:6], 1, 8) |>
+          gen.and_then(gen.ds_single_exact_reassignment),
+        \(ds, ind, value, error) {
+          if (is.na(error)) {
+            expect_ds_subset_single_exact_reassignment_success(ds, ind, value)
+          }else{
+            expect_error(
+              eval(parse(text = paste0("ds$", ind, " <- value"))),
+              paste0("^", error, "$")
+            )
+          }
+        },
+        curry = TRUE
+      )
+    })
+  })
+
   it("is made unique to a valid database schema", {
     forall(
       gen.element(c(FALSE, TRUE)) |>
