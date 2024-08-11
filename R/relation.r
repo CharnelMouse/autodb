@@ -401,8 +401,7 @@ insert.relation <- function(x, vals, relations = names(x), ...) {
 
 #' @export
 `[<-.relation` <- function(x, i, value) {
-  if (!identical(class(value), "relation"))
-    stop("value must also be a relation object")
+  check_reassignment_same_class(value, x)
   rcs <- records(x)
   ks <- keys(x)
   rcs[i] <- records(value)
@@ -446,8 +445,7 @@ insert.relation <- function(x, vals, relations = names(x), ...) {
 
 #' @export
 `$<-.relation` <- function(x, name, value) {
-  if (!identical(class(value), "relation"))
-    stop("value must also be a relation object")
+  check_reassignment_same_class(value, x)
   pos <- match(name, names(x))
   if (is.na(pos))
     c(x, stats::setNames(value, name))

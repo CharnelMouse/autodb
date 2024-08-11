@@ -223,8 +223,7 @@ merge_schemas.database_schema <- function(x, to_remove, merge_into, ...) {
 
 #' @export
 `[<-.database_schema` <- function(x, i, value) {
-  if (!identical(class(value), class(x)))
-    stop("value must also be a database_schema object")
+  check_reassignment_same_class(value, x)
   full_ind <- stats::setNames(seq_along(x), names(x))[i]
   uniq <- !duplicated(full_ind, fromLast = TRUE)
   uniq_ind <- full_ind[uniq]
@@ -238,8 +237,7 @@ merge_schemas.database_schema <- function(x, to_remove, merge_into, ...) {
 
 #' @export
 `$<-.database_schema` <- function(x, name, value) {
-  if (!identical(class(value), class(x)))
-    stop("value must also be a database_schema object")
+  check_reassignment_same_class(value, x)
   pos <- match(name, names(x))
   if (is.na(pos))
     c(x, stats::setNames(value, name))

@@ -253,8 +253,7 @@ merge_schemas.relation_schema <- function(x, to_remove, merge_into, ...) {
 
 #' @export
 `[<-.relation_schema` <- function(x, i, value) {
-  if (!identical(class(value), "relation_schema"))
-    stop("value must also be a relation_schema object")
+  check_reassignment_same_class(value, x)
   as <- attrs(x)
   ks <- keys(x)
   as[i] <- attrs(value)
@@ -289,8 +288,7 @@ merge_schemas.relation_schema <- function(x, to_remove, merge_into, ...) {
 
 #' @export
 `$<-.relation_schema` <- function(x, name, value) {
-  if (!identical(class(value), "relation_schema"))
-    stop("value must also be a relation_schema object")
+  check_reassignment_same_class(value, x)
   pos <- match(name, names(x))
   if (is.na(pos))
     c(x, stats::setNames(value, name))

@@ -400,3 +400,9 @@ create <- function(x, ...) {
 insert <- function(x, vals, relations = names(x), ...) {
   UseMethod("insert")
 }
+
+# for checking subset assignment (`[<-` etc.) takes an object of the same class
+check_reassignment_same_class <- function(value, x) {
+  if (!identical(class(value), class(x)))
+    stop("value must also be a ", class(x)[[1]], " object")
+}
