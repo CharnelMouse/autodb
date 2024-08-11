@@ -289,6 +289,8 @@ insert.database <- function(x, vals, relations = names(x), ...) {
 
 #' @export
 `[<-.database` <- function(x, i, value) {
+  if (!identical(class(value), class(x)))
+    stop("value must also be a database object")
   full_ind <- stats::setNames(seq_along(x), names(x))[i]
   uniq <- !duplicated(full_ind, fromLast = TRUE)
 
@@ -303,6 +305,8 @@ insert.database <- function(x, vals, relations = names(x), ...) {
 
 #' @export
 `$<-.database` <- function(x, name, value) {
+  if (!identical(class(value), class(x)))
+    stop("value must also be a database object")
   pos <- match(name, names(x))
   if (is.na(pos))
     c(x, stats::setNames(value, name))

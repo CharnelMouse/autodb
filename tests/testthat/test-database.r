@@ -349,6 +349,18 @@ describe("database", {
     )
   })
 
+  it("expects a database value for subset re-assignment", {
+    db <- create(database_schema(
+      relation_schema(
+        list(X = list(character(), list(character()))),
+        letters[1:6]
+      ),
+      list()
+    ))
+    expect_error(db[1] <- 1L, "^value must also be a database object$")
+    expect_error(db[[1]] <- 1L, "^value must also be a database object$")
+    expect_error(db$X <- 1L, "^value must also be a database object$")
+  })
   describe("can have subsets re-assigned, without changing relation names", {
     it("[<-", {
       gen.db_reassignment_indices_format <- function(db, subseq) {
