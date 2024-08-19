@@ -293,11 +293,7 @@ merge_schemas.relation_schema <- function(x, to_remove, merge_into, ...) {
   if (is.na(pos))
     c(x, stats::setNames(value, name))
   else
-    c(
-      head(x, pos - 1),
-      stats::setNames(value, name),
-      tail(x, -pos)
-    )
+    append(x[-pos], stats::setNames(value, name), pos)
 }
 
 #' @exportS3Method

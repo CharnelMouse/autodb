@@ -312,11 +312,7 @@ insert.database <- function(x, vals, relations = names(x), ...) {
     renamed_value <- stats::setNames(value, name)
     subs <- subrelations(x)
     database(
-      c(
-        head(subs, pos - 1),
-        subrelations(renamed_value),
-        tail(subs, -pos)
-      ),
+      append(subs[-pos], subrelations(renamed_value), pos),
       c(
         references(x[-pos]),
         references(renamed_value)

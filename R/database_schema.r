@@ -245,11 +245,7 @@ merge_schemas.database_schema <- function(x, to_remove, merge_into, ...) {
     renamed_value <- stats::setNames(value, name)
     subs <- subschemas(x)
     database_schema(
-      c(
-        head(subs, pos - 1),
-        subschemas(renamed_value),
-        tail(subs, -pos)
-      ),
+      append(subs[-pos], subschemas(renamed_value), pos),
       c(
         references(x[-pos]),
         references(renamed_value)

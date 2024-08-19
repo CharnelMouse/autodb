@@ -407,7 +407,7 @@ insert.relation <- function(x, vals, relations = names(x), ...) {
   rcs[i] <- records(value)
   ks[i] <- keys(value)
   relation(
-    setNames(
+    stats::setNames(
       Map(
         \(recs, ks) list(df = recs, keys = ks),
         rcs,
@@ -450,11 +450,7 @@ insert.relation <- function(x, vals, relations = names(x), ...) {
   if (is.na(pos))
     c(x, stats::setNames(value, name))
   else
-    c(
-      head(x, pos - 1),
-      stats::setNames(value, name),
-      tail(x, -pos)
-    )
+    append(x[-pos], stats::setNames(value, name), pos)
 }
 
 #' @exportS3Method
