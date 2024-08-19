@@ -155,6 +155,60 @@ describe("functional_dependency", {
     expect_error(x[[integer()]])
     expect_error(x[[c(1, 1)]])
   })
+  describe("can have subsets re-assigned, without changing relation names", {
+    it("[<-", {
+      x <- functional_dependency(
+        list(
+          list("a", "b"),
+          list(c("b", "c"), "d")
+        ),
+        letters[1:4]
+      )
+      x[c(1, 2, 1)] <- functional_dependency(
+        list(
+          list(c("a", "b"), "c"),
+          list(c("b", "c"), "d"),
+          list("b", "a")
+        ),
+        letters[1:4]
+      )
+      expect_identical(
+        x,
+        functional_dependency(
+          list(
+            list("b", "a"),
+            list(c("b", "c"), "d")
+          ),
+          letters[1:4]
+        )
+      )
+    })
+    it("[[<-", {
+      x <- functional_dependency(
+        list(
+          list("a", "b"),
+          list(c("b", "c"), "d")
+        ),
+        letters[1:4]
+      )
+      x[[1]] <- functional_dependency(
+        list(
+          list("b", "a")
+        ),
+        letters[1:4]
+      )
+      expect_identical(
+        x,
+        functional_dependency(
+          list(
+            list("b", "a"),
+            list(c("b", "c"), "d")
+          ),
+          letters[1:4]
+        )
+      )
+    })
+  })
   it("can be made unique within class", {
     forall(
       gen.fd(letters[1:6], 0, 8, unique = FALSE),

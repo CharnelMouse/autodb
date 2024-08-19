@@ -137,12 +137,33 @@ c.functional_dependency <- function(..., unique = TRUE) {
 }
 
 #' @export
+`[<-.functional_dependency` <- function(x, i, value) {
+  check_reassignment_same_class(value, x)
+  dets <- detset(x)
+  deps <- dependant(x)
+  dets[i] <- detset(value)
+  deps[i] <- dependant(value)
+  ao <- merge_attribute_orderings(attrs_order(x), attrs_order(value))
+  functional_dependency(Map(list, dets, deps), ao)
+}
+
+#' @export
 `[[.functional_dependency` <- function(x, i) {
   indices <- stats::setNames(seq_along(x), names(x))
   taken <- try(indices[[i]], silent = TRUE)
   if (class(taken)[[1]] == "try-error")
     stop(attr(taken, "condition")$message)
   x[taken]
+}
+
+#' @export
+`[[<-.functional_dependency` <- function(x, i, value) {
+  indices <- stats::setNames(seq_along(x), names(x))
+  taken <- try(indices[[i]], silent = TRUE)
+  if (class(taken)[[1]] == "try-error")
+    stop(attr(taken, "condition")$message)
+  x[taken] <- value
+  x
 }
 
 #' @exportS3Method
