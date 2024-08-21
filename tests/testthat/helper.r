@@ -1078,6 +1078,9 @@ gen.sample_resampleable <- function(x, from = 1, to = NULL, of = NULL) {
 # functional utility functions for tests
 `%>>%` <- function(fn1, fn2) function(...) fn2(fn1(...))
 biapply <- function(fn1, fn2) function(x) list(fn1(x), fn2(x))
+expect_bi <- function(logical_fn, fn1, fn2) {
+  function(x) expect_true(logical_fn(fn1(x), fn2(x)))
+}
 expect_biequal <- function(fn1, fn2) function(x) expect_equal(fn1(x), fn2(x))
 expect_biidentical <- function(fn1, fn2)
   function(x) expect_identical(fn1(x), fn2(x))

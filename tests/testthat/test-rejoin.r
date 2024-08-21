@@ -2,11 +2,12 @@ library(hedgehog)
 
 describe("rejoin", {
   it("is left-inverse for lossless full-dep database creation, outside of row permutations, for tables with unique rows", {
-    autodb_inverted_by_rejoin <- function(df) {
-      database <- autodb(df, ensure_lossless = TRUE)
-      df2 <- rejoin(database)
-      expect_identical_unordered_table(df2, df)
-    }
+    autodb_inverted_by_rejoin <- expect_bi(
+      df_equiv,
+      with_args(autodb, ensure_lossless = TRUE) %>>%
+        rejoin,
+      identity
+    )
     table_dum <- data.frame()
     table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
     autodb_inverted_by_rejoin(table_dum)
