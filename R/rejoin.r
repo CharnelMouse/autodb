@@ -29,12 +29,12 @@
 #' mapply(identical, rj, as.data.frame(ChickWeight))
 #' @export
 rejoin <- function(database) {
+  attrs_order <- attrs_order(database)
   if (length(database) == 0)
     return(data.frame())
   if (length(database) == 1)
-    return(records(database)[[1]][, attrs_order(database), drop = FALSE])
+    return(records(database)[[1]][, attrs_order, drop = FALSE])
   attrs <- attrs(database)
-  attrs_order <- unique(unlist(attrs))
   keys <- keys(database)
   G <- synthesised_fds(attrs, keys)
   G_det_sets <- lapply(unlist(G, recursive = FALSE), `[[`, 1)
@@ -55,12 +55,11 @@ rejoin <- function(database) {
   stopifnot(!is.null(names(is_main)))
   main_relation <- records(database)[[which(is_main)[[1]]]]
   r_dfs <- records(database)
-  r_keys <- keys(database)
   while (length(to_merge) > 0) {
     mergee <- to_merge[1]
     to_merge <- to_merge[-1]
     mergee_df <- r_dfs[[mergee]]
-    mergee_keys <- r_keys[[mergee]]
+    mergee_keys <- keys[[mergee]]
     current_attrs <- names(main_relation)
     mergee_attrs <- names(mergee_df)
     key <- Find(\(k) all(is.element(k, current_attrs)), mergee_keys)
@@ -74,5 +73,5 @@ rejoin <- function(database) {
     )
     stopifnot(identical(nrow(main_relation), old_nrow))
   }
-  main_relation[, attrs_order(database), drop = FALSE]
+  main_relation[, attrs_order, drop = FALSE]
 }
