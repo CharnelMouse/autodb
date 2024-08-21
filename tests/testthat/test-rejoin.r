@@ -19,6 +19,28 @@ describe("rejoin", {
       autodb_inverted_by_rejoin,
       tests = 1000
     )
+    forall(
+      gen_df(6, 7, remove_dup_rows = FALSE),
+      expect_bi(
+        df_equiv,
+        with_args(autodb, ensure_lossless = TRUE) %>>%
+          rejoin,
+        function(df) {
+          if (ncol(df) == 0)
+            df[
+              rep(
+                c(TRUE, FALSE),
+                (nrow(df) > 0) * c(1, nrow(df) - 1)
+              ),
+              ,
+              drop = FALSE
+            ]
+          else
+            unique(df)
+        }
+      ),
+      tests = 1000
+    )
   })
   it("is possible for any database constructed from a data frame", {
     forall(
