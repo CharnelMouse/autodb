@@ -210,10 +210,10 @@ test_that("remove_insertion_key_violations removes violations", {
         seq_along(r),
         \(n) {
           r_df <- recs[[n]]
-          new_rel <- unique(rbind(r_df, df_trimmed[, names(r_df), drop = FALSE]))
+          new_rel <- df_unique(rbind(r_df, df_trimmed[, names(r_df), drop = FALSE]))
           all(vapply(
             ks[[n]],
-            \(key) {!anyDuplicated(new_rel[, key, drop = FALSE])},
+            \(key) {!df_anyDuplicated(new_rel[, key, drop = FALSE])},
             logical(1)
           ))
         },

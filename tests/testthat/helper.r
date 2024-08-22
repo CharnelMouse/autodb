@@ -249,7 +249,7 @@ is_valid_relation <- function(x, unique = FALSE, single_empty_key = FALSE) {
   expect_true(all(mapply(
     \(recs, ks) all(vapply(
       ks,
-      \(k) !anyDuplicated(recs[, k, drop = FALSE]),
+      \(k) !df_anyDuplicated(recs[, k, drop = FALSE]),
       logical(1)
     )),
     records(x),
@@ -580,7 +580,7 @@ gen.relation_from_schema <- function(rs, rows_from = 0L, rows_to = 10L) {
 
 remove_key_violations <- function(df, keys) {
   Reduce(
-    \(df, key) df[!duplicated(df[, key, drop = FALSE]), , drop  = FALSE],
+    \(df, key) df[!df_duplicated(df[, key, drop = FALSE]), , drop  = FALSE],
     keys,
     init = df
   )
@@ -604,7 +604,7 @@ remove_insertion_key_violations <- function(df, relation) {
             else{
               single_adds <- lapply(
                 seq_len(nrow(df)),
-                \(n) rbind(r_df, df[n, r_attrs, drop = FALSE])
+                \(n) df_rbind(r_df, df[n, r_attrs, drop = FALSE])
               )
               record_new <- vapply(
                 single_adds,
@@ -626,11 +626,11 @@ remove_insertion_key_violations <- function(df, relation) {
               TRUE
             else
               -seq_len(nrow(r_df))
-            comb <- rbind(r_df, df[, r_attrs, drop = FALSE])
-            key_dups <- duplicated(comb[, key, drop = FALSE])[negind]
+            comb <- df_rbind(r_df, df[, r_attrs, drop = FALSE])
+            key_dups <- df_duplicated(comb[, key, drop = FALSE])[negind]
             single_adds <- lapply(
               seq_len(nrow(df)),
-              \(n) rbind(r_df, df[n, r_attrs, drop = FALSE])
+              \(n) df_rbind(r_df, df[n, r_attrs, drop = FALSE])
             )
             record_new <- vapply(
               single_adds,
@@ -893,13 +893,13 @@ remove_insertion_reference_violations <- function(df, database) {
     change <- FALSE
     for (ref in references(database)) {
       child_name <- ref[[1]]
-      child <- rbind(
+      child <- df_rbind(
         recs[[child_name]][, ref[[2]], drop = FALSE],
         df[, ref[[2]], drop = FALSE]
       )
       if (nrow(child) > 0L) {
         parent_name <- ref[[3]]
-        parent <- rbind(
+        parent <- df_rbind(
           recs[[parent_name]][, ref[[4]], drop = FALSE],
           df[, ref[[4]], drop = FALSE]
         )
@@ -965,15 +965,10 @@ minimal_legal_insertion_sets <- function(db, df) {
   violates_key[have_attrs][!already_present] <- vapply(
     names(db)[have_attrs][!already_present],
     \(nm) {
-      nr <- rbind(records(db)[[nm]], df[, attrs(db)[[nm]], drop = FALSE])
+      nr <- df_rbind(records(db)[[nm]], df[, attrs(db)[[nm]], drop = FALSE])
       any(vapply(
         keys(db)[[nm]],
-        \(key) {
-          if (length(key) == 0)
-            nrow(nr) > 1
-          else
-            as.logical(anyDuplicated(nr[, key, drop = FALSE]))
-        },
+        \(key) as.logical(df_anyDuplicated(nr[, key, drop = FALSE])),
         logical(1)
       ))
     },

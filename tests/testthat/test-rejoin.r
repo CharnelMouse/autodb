@@ -25,19 +25,7 @@ describe("rejoin", {
         df_equiv,
         with_args(autodb, ensure_lossless = TRUE) %>>%
           rejoin,
-        function(df) {
-          if (ncol(df) == 0)
-            df[
-              rep(
-                c(TRUE, FALSE),
-                (nrow(df) > 0) * c(1, nrow(df) - 1)
-              ),
-              ,
-              drop = FALSE
-            ]
-          else
-            unique(df)
-        }
+        df_unique
       ),
       tests = 1000
     )

@@ -364,12 +364,7 @@ describe("keys<-", {
     is_superkey <- apply(
       sets,
       1,
-      \(set) {
-        if (all(!set))
-          nrow(df) <= 1
-        else
-          !anyDuplicated(df[, set, drop = FALSE])
-      }
+      \(set) !df_anyDuplicated(df[, set, drop = FALSE])
     )
     list(
       valid = to_sets(sets[is_superkey, , drop = FALSE]),

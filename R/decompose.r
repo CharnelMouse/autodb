@@ -50,14 +50,9 @@ decompose <- function(df, schema, name = NA_character_) {
   if (length(inferred_fds) > 0L)
     inferred_fds <- unlist(inferred_fds, recursive = FALSE)
   check_fd <- function(df, fd) {
-    if (length(fd[[1]]) == 0L) {
-      dep_vals <- df[[fd[[2]]]]
-      all(vapply(dep_vals, identical, logical(1), dep_vals[1]))
-    }else{
-      both_proj <- unique(df[, unlist(fd), drop = FALSE])
-      key_proj <- unique(both_proj[, fd[[1]], drop = FALSE])
-      nrow(key_proj) == nrow(both_proj)
-    }
+    both_proj <- df_unique(df[, unlist(fd), drop = FALSE])
+    key_proj <- df_unique(both_proj[, fd[[1]], drop = FALSE])
+    nrow(key_proj) == nrow(both_proj)
   }
   fds_satisfied <- vapply(
     inferred_fds,
@@ -91,10 +86,7 @@ create_insert <- function(df, schema) {
         list(
           # conditional needed to handle 0-attrs case,
           # i.e. decomposing to table_dum and table_dee
-          df = if (length(attrs) == 0L)
-            df[seq_len(nrow(df) >= 1L), attrs, drop = FALSE]
-          else
-            unique(df[, attrs, drop = FALSE]),
+          df = df_unique(df[, attrs, drop = FALSE]),
           keys = keys
         )
       },
@@ -113,7 +105,7 @@ drop_primary_dups <- function(df, prim_key) {
   # for each primary key value is used.
   df_lst <- list()
 
-  if (nrow(unique(df[, prim_key, drop = FALSE])) == nrow(df))
+  if (nrow(df_unique(df[, prim_key, drop = FALSE])) == nrow(df))
     return(df)
 
   groups <- split(

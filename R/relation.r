@@ -119,12 +119,7 @@ relation <- function(relations, attrs_order) {
     \(rel) {
       all(vapply(
         rel$keys,
-        \(key) {
-          if (length(key) == 0)
-            nrow(rel$df) <= 1
-          else
-            !anyDuplicated(rel$df[, key, drop = FALSE])
-        },
+        \(key) !df_anyDuplicated(rel$df[, key, drop = FALSE]),
         logical(1)
       ))
     },
@@ -328,24 +323,13 @@ insert.relation <- function(x, vals, relations = names(x), ...) {
     \(df) {
       if (!all(is.element(names(df), names(vals))))
         return(df)
-      df <- if (nrow(df) == 0L) {
-        if (ncol(df) == 0L)
-          vals[seq_len(nrow(vals) > 0L), character(), drop = FALSE]
-        else
-          unique(vals[, names(df), drop = FALSE])
-      }else{
-        if (ncol(df) == 0L)
-          vals[
-            seq_len((nrow(df) + nrow(vals)) >= 1L),
-            names(df),
-            drop = FALSE
-          ]
-        else
-          unique(rbind(
-            df,
-            vals[, names(df), drop = FALSE]
-          ))
-      }
+      df <- if (nrow(df) == 0L)
+        df_unique(vals[, names(df), drop = FALSE])
+      else
+        df_unique(df_rbind(
+          df,
+          vals[, names(df), drop = FALSE]
+        ))
       df
     }
   )
@@ -353,16 +337,7 @@ insert.relation <- function(x, vals, relations = names(x), ...) {
     \(df, ks) {
       any(vapply(
         ks,
-        \(key) {
-          if (length(key) == 0L) {
-            if (nrow(df) == 0L)
-              logical()
-            else
-              c(FALSE, rep(TRUE, nrow(df) - 1L))
-          }else{
-            duplicated(df[, key, drop = FALSE])
-          }
-        },
+        \(key) df_duplicated(df[, key, drop = FALSE]),
         logical(nrow(df))
       ))
     },

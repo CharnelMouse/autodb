@@ -73,8 +73,8 @@ reference_errors <- function(records, references) {
   references[vapply(
     references,
     \(relat) {
-      referrer <- unique(records[[relat[[1]]]][, relat[[2]], drop = FALSE])
-      referee <- unique(records[[relat[[3]]]][, relat[[4]], drop = FALSE])
+      referrer <- df_unique(records[[relat[[1]]]][, relat[[2]], drop = FALSE])
+      referee <- df_unique(records[[relat[[3]]]][, relat[[4]], drop = FALSE])
       !identical(
         nrow(merge(referrer, referee, by.x = relat[[2]], by.y = relat[[4]])),
         nrow(referrer)
