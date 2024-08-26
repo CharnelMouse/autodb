@@ -8,13 +8,13 @@ functional_dependency(FDs, attrs_order, unique = TRUE)
 }
 \arguments{
 \item{FDs}{a list of functional dependencies, in the form of two-elements
-lists: the first element contains character vector of all attributes in the
-determinant set, and the second element contains the single dependent
+lists: the first element contains a character vector of all attributes in
+the determinant set, and the second element contains the single dependent
 attribute (dependant).}
 
-\item{attrs_order}{a character vector, giving the names of all attributes. These
-need not be present in \code{FDs}, but all attributes in \code{FDs} must be
-present in \code{attrs}.}
+\item{attrs_order}{a character vector, giving the names of all attributes.
+These need not be present in \code{FDs}, but all attributes in \code{FDs}
+must be present in \code{attrs}.}
 
 \item{unique}{a logical, TRUE by default, for whether to remove duplicate
 dependencies.}
