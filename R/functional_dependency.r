@@ -35,6 +35,28 @@
 #' detset(fds)
 #' dependant(fds)
 #' attrs_order(fds)
+#'
+#' # vector operations
+#' fds2 <- functional_dependency(list(list("e", "a")), c("a", "e"))
+#' c(fds, fds2) # attrs_order attributes are merged
+#' unique(c(fds, fds))
+#'
+#' # subsetting
+#' fds[1]
+#' fds[c(1, 2, 1)]
+#' fds[[2]] # same result as fds[2]
+#'
+#' # reassignment
+#' fds3 <- fds
+#' fds3[2] <- functional_dependency(list(list("a", "c")), attrs_order(fds3))
+#' print(fds3)
+#' detset(fds3)[[2]] <- character()
+#' dependant(fds3)[[2]] <- "d"
+#' identical(fds3, fds)
+
+#' # changing appearance priority for attributes
+#' attrs_order(fds3) <- rev(attrs_order(fds3))
+#' fds3
 #' @export
 functional_dependency <- function(
   FDs,
