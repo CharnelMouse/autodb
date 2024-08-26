@@ -37,5 +37,13 @@ the results of \code{\link{reduce}}.
 db <- autodb(ChickWeight, "chick")
 rj <- rejoin(db)
 rj <- rj[order(as.integer(rownames(rj))), ]
-mapply(identical, rj, as.data.frame(ChickWeight))
+all(rj == ChickWeight)
+
+# showing rejoin() doesn't check for inconsistency:
+# add another Chick table with the diets swapped
+db2 <- db[c(1, 2, 1)]
+records(db2)[[3]]$Diet <- rev(records(db2)[[3]]$Diet)
+rj2 <- rejoin(db2)
+rj2 <- rj2[order(as.integer(rownames(rj2))), ]
+all(rj2 == ChickWeight)
 }

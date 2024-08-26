@@ -26,19 +26,35 @@
 #' db <- autodb(ChickWeight, "chick")
 #' rj <- rejoin(db)
 #' rj <- rj[order(as.integer(rownames(rj))), ]
-#' mapply(identical, rj, as.data.frame(ChickWeight))
+#' all(rj == ChickWeight)
+#'
+#' # showing rejoin() doesn't check for inconsistency:
+#' # add another Chick table with the diets swapped
+#' db2 <- db[c(1, 2, 1)]
+#' records(db2)[[3]]$Diet <- rev(records(db2)[[3]]$Diet)
+#' rj2 <- rejoin(db2)
+#' rj2 <- rj2[order(as.integer(rownames(rj2))), ]
+#' all(rj2 == ChickWeight)
 #' @export
 rejoin <- function(database) {
   attrs_order <- attrs_order(database)
+  attrs <- attrs(database)
+  missing <- setdiff(attrs_order, unlist(attrs))
+  if (length(missing) > 0)
+    stop(
+      "database is not lossless: ",
+      "attributes in attrs_order not present in relations\n",
+      toString(missing)
+    )
   if (length(database) == 0)
     return(data.frame())
   if (length(database) == 1)
     return(records(database)[[1]][, attrs_order, drop = FALSE])
-  attrs <- attrs(database)
   keys <- keys(database)
   G <- synthesised_fds(attrs, keys)
-  G_det_sets <- lapply(unlist(G, recursive = FALSE), `[[`, 1)
-  G_deps <- vapply(unlist(G, recursive = FALSE), `[[`, character(1), 2)
+  G_flattened <- unlist(G, recursive = FALSE, use.names = FALSE)
+  G_det_sets <- lapply(G_flattened, `[[`, 1)
+  G_deps <- vapply(G_flattened, `[[`, character(1), 2)
   G_relations <- rep(seq_along(attrs), lengths(G))
   closures <- lapply(
     attrs,
@@ -49,8 +65,22 @@ rejoin <- function(database) {
   closure_attrs <- lapply(closures, `[[`, 1)
   closure_usedlists <- lapply(closures, `[[`, 2)
   is_main <- vapply(closure_attrs, setequal, logical(1), attrs_order)
-  if (!any(is_main))
-    stop("database is not lossless")
+  if (!any(is_main)) {
+    sorted_closure_attrs <- unique(lapply(
+      closure_attrs,
+      \(x) x[order(match(x, attrs_order))]
+    ))
+    subsets <- outer(
+      sorted_closure_attrs,
+      sorted_closure_attrs,
+      Vectorize(\(x, y) !setequal(x, y) && setequal(union(x, y), y))
+    )
+    best_merges <- sorted_closure_attrs[apply(subsets, 1, Negate(any))]
+    stop(
+      "database can not be fully rejoined\nbest joined sets:\n",
+      paste(vapply(best_merges, toString, character(1)), collapse = "\n")
+    )
+  }
   to_merge <- unique(G_relations[closure_usedlists[[which(is_main)[[1]]]]])
   stopifnot(!is.null(names(is_main)))
   main_relation <- records(database)[[which(is_main)[[1]]]]

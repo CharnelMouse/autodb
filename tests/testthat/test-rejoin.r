@@ -59,4 +59,87 @@ describe("rejoin", {
     )
     expect_identical(rejoin(db), data.frame(a = 1L))
   })
+  it("returns an error if any attributes aren't present in relations", {
+    expect_error(
+      rejoin(database(
+        relation(setNames(list(), character()), "a"),
+        list()
+      )),
+      "^database is not lossless: attributes in attrs_order not present in relations\\na$"
+    )
+    expect_error(
+      rejoin(database(
+        relation(setNames(list(), character()), c("a", "b")),
+        list()
+      )),
+      "^database is not lossless: attributes in attrs_order not present in relations\\na, b$"
+    )
+  })
+  it("returns an error if rejoining fails, with best joined attribute sets", {
+    expect_error(
+      rejoin(database(
+        relation(
+          list(
+            a = list(df = data.frame(a = c(FALSE, TRUE)), keys = list("a")),
+            b = list(df = data.frame(b = c(FALSE, TRUE)), keys = list("b"))
+          ),
+          c("a", "b")
+        ),
+        list()
+      )),
+      "^database can not be fully rejoined\\nbest joined sets:\\na\\nb$"
+    )
+    # below doesn't return {c} as a set, since we have {b, c}.
+    expect_error(
+      rejoin(database(
+        relation(
+          list(
+            a = list(
+              df = data.frame(a = c(FALSE, TRUE), b = c(FALSE, TRUE)),
+              keys = list("a")
+            ),
+            c = list(
+              df = data.frame(c = 1:4),
+              keys = list("c")
+            ),
+            b_c = list(
+              df = data.frame(b = c(FALSE, TRUE), c = 1:4),
+              keys = list(c("b", "c"))
+            ),
+            b_c.1 = list(
+              df = data.frame(b = c(FALSE, TRUE), c = 1:4),
+              keys = list(c("b", "c"))
+            )
+          ),
+          c("a", "b", "c")
+        ),
+        list()
+      )),
+      "^database can not be fully rejoined\\nbest joined sets:\\na, b\\nb, c$"
+    )
+    # sorts set contents, removes repeat sets
+    expect_error(
+      rejoin(database(
+        relation(
+          list(
+            a = list(
+              df = data.frame(a = logical()),
+              keys = list("a")
+            ),
+            d = list(
+              df = data.frame(d = logical(), c = logical()),
+              keys = list("d")
+            ),
+            b_d = list(
+              df = data.frame(b = logical(), d = logical()),
+              keys = list(c("d"))
+            )
+          ),
+          c("a", "b", "c", "d")
+        ),
+        list()
+      )),
+      "^database can not be fully rejoined\\nbest joined sets:\\na\\nb, c, d$"
+    )
+  })
 })
