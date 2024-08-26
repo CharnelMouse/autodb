@@ -3,10 +3,10 @@
 #' Creates a set of functional dependencies with length-one dependants.
 #'
 #' When several sets of functional dependencies are concatenated, their
-#' \code{attrs} attributes are merged, so as to preserve all of the original
-#' attribute orders, if possible. If this is not possible, because the orderings
-#' disagree, then the returned value of the \code{attrs} attribute is their
-#' union instead.
+#' \code{attrs_order} attributes are merged, so as to preserve all of the
+#' original attribute orders, if possible. If this is not possible, because the
+#' orderings disagree, then the returned value of the \code{attrs_order}
+#' attribute is their union instead.
 #'
 #' @param FDs a list of functional dependencies, in the form of two-elements
 #'   lists: the first element contains a character vector of all attributes in
