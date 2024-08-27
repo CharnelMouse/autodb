@@ -27,8 +27,12 @@
 #'   sorted by priority order. Attributes in the schema are also sorted, first
 #'   by order of appearance in the sorted keys, then by order in
 #'   \code{attrs_order} for non-prime attributes.
-#' @seealso \code{\link{attrs}}, \code{\link{keys}}, and \code{\link{attrs_order}}
-#'   for extracting parts of the information in a \code{relation_schema}.
+#' @seealso \code{\link{attrs}}, \code{\link{keys}}, and
+#'   \code{\link{attrs_order}} for extracting parts of the information in a
+#'   \code{relation_schema}; \code{\link{create}} for creating a
+#'   \code{\link{relation}} object that uses the given schema; \code{\link{gv}}
+#'   for converting the schema into Graphviz code; \code{\link{rename_attrs}}
+#'   for renaming the attributes in \code{attrs_order}.
 #' @export
 #' @examples
 #' schemas <- relation_schema(
@@ -43,8 +47,45 @@
 #' keys(schemas)
 #' attrs_order(schemas)
 #' names(schemas)
-#' attrs_order(schemas) <- c("d", "c", "b", "a")
-#' print(schemas)
+#'
+#' # vector operations
+#' schemas2 <- relation_schema(
+#'   list(
+#'     e = list(c("a", "e"), list("e"))
+#'   ),
+#'   attrs_order = c("a", "e")
+#' )
+#' c(schemas, schemas2) # attrs_order attributes are merged
+#' unique(c(schemas, schemas))
+#'
+#' # subsetting
+#' schemas[1]
+#' schemas[c(1, 2, 1)]
+#' schemas[[1]] # same result as schemas[1]
+#'
+#' # reassignment
+#' schemas3 <- schemas
+#' schemas3[2] <- relation_schema(
+#'   list(d = list(c("d", "c"), list("d"))),
+#'   attrs_order(schemas3)
+#' )
+#' print(schemas3) # note the schema's name doesn't change
+#' # names(schemas3)[2] <- "d" # this would change the name
+#' keys(schemas3)[[2]] <- list(character()) # removing keys first...
+#' attrs(schemas3)[[2]] <- c("b", "c") # so we can change the attrs legally
+#' keys(schemas3)[[2]] <- list("b", "c") # add the new keys
+#' identical(schemas3, schemas)
+#'
+#' # changing appearance priority for attributes
+#' attrs_order(schemas3) <- c("d", "c", "b", "a")
+#' print(schemas3)
+#'
+#' # reconstructing from components
+#' schemas_recon <- relation_schema(
+#'   Map(list, attrs(schemas), keys(schemas)),
+#'   attrs_order(schemas)
+#' )
+#' identical(schemas_recon, schemas)
 relation_schema <- function(
   schemas,
   attrs_order
