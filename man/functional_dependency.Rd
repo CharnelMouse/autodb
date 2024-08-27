@@ -66,6 +66,13 @@ identical(fds3, fds)
 # changing appearance priority for attributes
 attrs_order(fds3) <- rev(attrs_order(fds3))
 fds3
+
+# reconstructing from components
+fds_recon <- functional_dependency(
+ Map(list, detset(fds), dependant(fds)),
+ attrs_order(fds)
+)
+identical(fds_recon, fds)
 }
 \seealso{
 \code{\link{detset}}, \code{\link{dependant}}, and
