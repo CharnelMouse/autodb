@@ -243,28 +243,6 @@ merge_attribute_orderings <- function(...) {
   # Combining attributes pairwise can't ensure preservation of consistency, so
   # we only add an attribute to the joined list when it's the next one in all
   # lists containing it.
-  n_sets <- length(ordered_sets)
-
-  if (n_sets >= 2L) {
-    pairs <- utils::combn(seq_len(n_sets), 2)
-    if (Position(
-      \(n) {
-        as1 <- pairs[[1, n]]
-        as2 <- pairs[[2, n]]
-        is.unsorted(match(as1, as2), na.rm = TRUE) ||
-          is.unsorted(match(as2, as1), na.rm = TRUE)
-      },
-      seq_len(ncol(pairs)),
-      nomatch = 0L
-    )) {
-      warning(paste(
-        "pairwise-inconsistent attribute orderings,",
-        "returning attributes in order of listing"
-      ))
-      return(Reduce(union, ordered_sets))
-    }
-  }
-
   attrs_order <- unique(unlist(ordered_sets))
   indices <- outer(attrs_order, ordered_sets, Vectorize(match))
   merged <- character()
