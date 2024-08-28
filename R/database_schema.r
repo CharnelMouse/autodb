@@ -189,7 +189,6 @@
 #' )
 #' identical(ds_recon2, ds)
 database_schema <- function(relation_schemas, references) {
-  # should FKs be made unique?
   if (!inherits(relation_schemas, "relation_schema"))
     stop("relations must be a relation_schema")
   check_valid_reference(references, relation_schemas, "relation schema")
