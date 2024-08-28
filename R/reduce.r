@@ -17,6 +17,7 @@
 #'
 #' @return An object of the same class as \code{x}, with the auxiliary relations
 #'   and foreign key references removed.
+#' @seealso \code{\link{reduce.database_schema}}, \code{\link{reduce.database}}.
 #' @export
 reduce <- function(x, ...) {
   UseMethod("reduce", x)

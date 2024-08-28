@@ -29,3 +29,6 @@ While the filtering might remove important auxiliary relations, it's also
 likely to remove any based on spurious dependencies, of which some databases
 can contain many.
 }
+\seealso{
+\code{\link{reduce.database_schema}}, \code{\link{reduce.database}}.
+}
