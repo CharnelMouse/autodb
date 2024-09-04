@@ -28,6 +28,11 @@
 #'   attributes in the associated schema, and the second element contains a list
 #'   of character vectors, each representing a candidate key.
 #'
+#' @seealso \code{\link{records}}, \code{\link{attrs}}, \code{\link{keys}}, and
+#'   \code{\link{attrs_order}} for extracting parts of the information in a
+#'   \code{relation_schema}; \code{\link{gv}} for converting the schema into
+#'   Graphviz code; \code{\link{rename_attrs}} for renaming the attributes in
+#'   \code{attrs_order}.
 #' @return A \code{relation} object, containing the list given in
 #'   \code{relations}, with \code{attrs_order} stored in an attribute of the
 #'   same name. Relation schemas are returned with their keys' attributes sorted
@@ -36,6 +41,79 @@
 #'   first by order of appearance in the sorted keys, then by order in
 #'   \code{attrs_order} for non-prime attributes.
 #' @export
+#' @examples
+#' rels <- relation(
+#'   list(
+#'     a = list(
+#'       df = data.frame(a = logical(), b = logical()),
+#'       keys = list("a")
+#'     ),
+#'     b = list(
+#'       df = data.frame(b = logical(), c = logical()),
+#'       keys = list("b", "c")
+#'     )
+#'   ),
+#'   attrs_order = c("a", "b", "c", "d")
+#' )
+#' print(rels)
+#' records(rels)
+#' attrs(rels)
+#' identical(attrs(rels), lapply(records(rels), names))
+#' keys(rels)
+#' attrs_order(rels)
+#' names(rels)
+#'
+#' # vector operations
+#' rels2 <- relation(
+#'   list(
+#'     e = list(
+#'       df = data.frame(a = logical(), e = logical()),
+#'       keys = list("e")
+#'     )
+#'   ),
+#'   attrs_order = c("a", "e")
+#' )
+#' c(rels, rels2) # attrs_order attributes are merged
+#' unique(c(rels, rels))
+#'
+#' # subsetting
+#' rels[1]
+#' rels[c(1, 2, 1)]
+#' rels[[1]] # same result as rels[1]
+#'
+#' # reassignment
+#' rels3 <- rels
+#' rels3[2] <- relation(
+#'   list(
+#'     d = list(
+#'       df = data.frame(d = logical(), c = logical()),
+#'       keys = list("d")
+#'     )
+#'   ),
+#'   attrs_order(rels3)
+#' )
+#' print(rels3) # note the relation's name doesn't change
+#' # names(rels3)[2] <- "d" # this would change the name
+#' keys(rels3)[[2]] <- list(character()) # removing keys first...
+#' # for a relation_schema, we could then change the attrs for
+#' # the second relation. For a created relation, this is not
+#' # allowed.
+#' \dontrun{
+#'   attrs(rels3)[[2]] <- c("b", "c")
+#'   names(records(rels3)[[2]]) <- c("b", "c")
+#' }
+#'
+#' # changing appearance priority for attributes
+#' rels4 <- rels
+#' attrs_order(rels4) <- c("d", "c", "b", "a")
+#' print(rels4)
+#'
+#' # reconstructing from components
+#' rels_recon <- relation(
+#'   Map(list, df = records(rels), keys = keys(rels)),
+#'   attrs_order(rels)
+#' )
+#' identical(rels_recon, rels)
 relation <- function(relations, attrs_order) {
   stopifnot(is.list(relations))
   stopifnot(is.character(attrs_order))
