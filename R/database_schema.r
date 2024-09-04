@@ -164,7 +164,7 @@
 #' keys(ds3)[[2]] <- list("b", "c") # add the new keys
 #' # add the reference lost during subset replacement
 #' references(ds3) <- c(references(ds3), list(list("a", "b", "b", "b")))
-#' identical(ds3, ds)
+#' stopifnot(identical(ds3, ds))
 #'
 #' # changing appearance priority for attributes
 #' attrs_order(ds3) <- c("d", "c", "b", "a")
@@ -182,12 +182,12 @@
 #'   ),
 #'   references(ds)
 #' )
-#' identical(ds_recon, ds)
+#' stopifnot(identical(ds_recon, ds))
 #' ds_recon2 <- database_schema(
 #'   subschemas(ds),
 #'   references(ds)
 #' )
-#' identical(ds_recon2, ds)
+#' stopifnot(identical(ds_recon2, ds))
 database_schema <- function(relation_schemas, references) {
   if (!inherits(relation_schemas, "relation_schema"))
     stop("relations must be a relation_schema")

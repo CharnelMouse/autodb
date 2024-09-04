@@ -79,7 +79,7 @@ print(schemas3) # note the schema's name doesn't change
 keys(schemas3)[[2]] <- list(character()) # removing keys first...
 attrs(schemas3)[[2]] <- c("b", "c") # so we can change the attrs legally
 keys(schemas3)[[2]] <- list("b", "c") # add the new keys
-identical(schemas3, schemas)
+stopifnot(identical(schemas3, schemas))
 
 # changing appearance priority for attributes
 attrs_order(schemas3) <- c("d", "c", "b", "a")
@@ -90,7 +90,7 @@ schemas_recon <- relation_schema(
   Map(list, attrs(schemas), keys(schemas)),
   attrs_order(schemas)
 )
-identical(schemas_recon, schemas)
+stopifnot(identical(schemas_recon, schemas))
 }
 \seealso{
 \code{\link{attrs}}, \code{\link{keys}}, and

@@ -54,7 +54,7 @@ unique(c(fds, fds))
 # subsetting
 fds[1]
 fds[c(1, 2, 1)]
-fds[[2]] # same result as fds[2]
+stopifnot(identical(fds[[2]], fds[2])) # same result as fds[2]
 
 # reassignment
 fds3 <- fds
@@ -62,7 +62,7 @@ fds3[2] <- functional_dependency(list(list("a", "c")), attrs_order(fds3))
 print(fds3)
 detset(fds3)[[2]] <- character()
 dependant(fds3)[[2]] <- "d"
-identical(fds3, fds)
+stopifnot(identical(fds3, fds))
 # changing appearance priority for attributes
 attrs_order(fds3) <- rev(attrs_order(fds3))
 fds3
@@ -72,7 +72,7 @@ fds_recon <- functional_dependency(
  Map(list, detset(fds), dependant(fds)),
  attrs_order(fds)
 )
-identical(fds_recon, fds)
+stopifnot(identical(fds_recon, fds))
 }
 \seealso{
 \code{\link{detset}}, \code{\link{dependant}}, and

@@ -66,7 +66,10 @@ rels <- relation(
 print(rels)
 records(rels)
 attrs(rels)
-identical(attrs(rels), lapply(records(rels), names))
+stopifnot(identical(
+  attrs(rels),
+  lapply(records(rels), names)
+))
 keys(rels)
 attrs_order(rels)
 names(rels)
@@ -121,7 +124,7 @@ rels_recon <- relation(
   Map(list, df = records(rels), keys = keys(rels)),
   attrs_order(rels)
 )
-identical(rels_recon, rels)
+stopifnot(identical(rels_recon, rels))
 }
 \seealso{
 \code{\link{records}}, \code{\link{attrs}}, \code{\link{keys}}, and
