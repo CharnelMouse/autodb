@@ -356,7 +356,7 @@ The new schema confirms what we might expect, that the total sample size, and th
 We'd expect this to be because the total sample size is the sum of the other two. However, the functional dependency can't determine this. Indeed, if we check for this more specific condition, we find that it doesn't hold:
 
 ```{r nudge_size_check}
-knitr::kable(subset(
+knitr::kable(unique(subset(
   nudge,
   n_comparison != n_control + n_intervention,
   c(
@@ -368,10 +368,12 @@ knitr::kable(subset(
     n_control,
     n_intervention
   )
-))
+)))
 ```
 
-Automatic search for functional dependencies cannot check domain-specific constraints like this, but it can give schemas that suggest constraints to check for. (Looking through the paper, I have no idea where the arm sample sizes were taken from.)
+Looking through the paper, the arm sample sizes aren't given explicitly, but the numbers here are consistent with the parts of the study that have two treatments.
+
+Automatic search for functional dependencies cannot check domain-specific constraints like the summation constraint above, but it can give schemas that suggest constraints to check for, such as the two-degrees relation above.
 
 Going back to the final database schema, removing dependencies has revealed extra information about study locations, via the new `title_type_experiment` relation: studies of the same experiment type in a publication always have the same location. Looking at the resulting database shows that this removes many entries of what would be redundant location information if kept in the study relation:
 
