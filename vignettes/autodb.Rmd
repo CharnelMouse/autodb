@@ -699,7 +699,7 @@ Removing missing values in this way requires additional steps in dependency dete
 
 # Limitations
 
-## Table merges doesn't fix issues with merge.data.frame
+## Table merges don't fix issues with merge.data.frame
 
 Rejoining databases, and checking relations satisfy foreign key constraints, is done using `merge.data.frame`. This means that data classes that don't work properly in `merge` aren't guaranteed to work properly in `autodb`.
 
