@@ -360,9 +360,9 @@ knitr::kable(unique(subset(
   nudge,
   n_comparison != n_control + n_intervention,
   c(
+    es_id,
     reference,
     title,
-    wansink,
     n_study,
     n_comparison,
     n_control,
@@ -545,7 +545,7 @@ This schema is now in LTK form, with no remaining avoidable attributes. We could
 Sometimes, the structure for some attributes depends on whether other attributes are missing. Here are two possible reasons:
 
 - Some piece of information in a record takes one of several possible formats, which may have different data classes. This leaves the single piece of information spread across multiple sets of attributes, not necessarily disjoint, of which only one set is non-missing per record. In more general programming, this would be referred to as a union type. In relational theory, this is called a disjunctive existence union.
-- A set of attributes are missing or non-missing together. In more general programming, these attribute together represent an option type, or a nullable class.
+- A set of attributes are missing or non-missing together. In more general programming, these attributes together represent an option type, or a nullable class.
 
 For example, I commonly get data sets where certain values can be given as either single values, or endpoints of an interval, and this "union type" data is spread across several attributes:
 
