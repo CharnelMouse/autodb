@@ -74,6 +74,17 @@ keys(rels)
 attrs_order(rels)
 names(rels)
 
+# inserting data
+insert(rels, data.frame(a = 1L, b = 2L, c = 3L, d = 4L))
+# data is only inserted into relations where all columns are given...
+insert(rels, data.frame(a = 1L, b = 2L, c = 3L))
+# and that are listed in relations argument
+insert(
+  rels,
+  data.frame(a = 1L, b = 2L, c = 3L, d = 4L),
+  relations = "a"
+)
+
 # vector operations
 rels2 <- relation(
   list(
