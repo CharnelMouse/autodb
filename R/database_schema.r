@@ -115,7 +115,7 @@
 #'
 #' # subsetting
 #' ds[1]
-#' ds[[1]] # same result as ds[1]
+#' stopifnot(identical(ds[[1]], ds[1]))
 #' ds[c(1, 2, 1, 2)] # replicates the foreign key references
 #' c(ds[c(1, 2)], ds[c(1, 2)]) # doesn't reference between separate copies of ds
 #' unique(ds[c(1, 2, 1, 2)]) # unique() also merges references

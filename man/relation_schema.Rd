@@ -66,7 +66,7 @@ unique(c(schemas, schemas))
 # subsetting
 schemas[1]
 schemas[c(1, 2, 1)]
-schemas[[1]] # same result as schemas[1]
+stopifnot(identical(schemas[[1]], schemas[1]))
 
 # reassignment
 schemas3 <- schemas

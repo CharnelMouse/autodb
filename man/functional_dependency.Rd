@@ -54,7 +54,7 @@ unique(c(fds, fds))
 # subsetting
 fds[1]
 fds[c(1, 2, 1)]
-stopifnot(identical(fds[[2]], fds[2])) # same result as fds[2]
+stopifnot(identical(fds[[2]], fds[2]))
 
 # reassignment
 fds3 <- fds

@@ -93,7 +93,7 @@
 #' # subsetting
 #' rels[1]
 #' rels[c(1, 2, 1)]
-#' rels[[1]] # same result as rels[1]
+#' stopifnot(identical(rels[[1]], rels[1]))
 #'
 #' # reassignment
 #' rels3 <- rels
