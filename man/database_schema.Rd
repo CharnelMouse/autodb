@@ -200,5 +200,8 @@ for converting the schema into Graphviz code; \code{\link{rename_attrs}}
 for renaming the attributes in \code{attrs_order}; \code{\link{reduce}} for
 filtering a schema's relations to those connected to a given relation by
 foreign key references; \code{\link{subschemas}} to return the
-\code{\link{relation_schema}} that the given schema contains.
+\code{\link{relation_schema}} that the given schema contains;
+\code{\link{merge_empty_keys}} for combining relations with an empty key;
+\code{\link{merge_schemas}} for combining relations with matching sets of
+keys.
 }

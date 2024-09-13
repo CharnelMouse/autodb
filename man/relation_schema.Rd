@@ -98,5 +98,8 @@ stopifnot(identical(schemas_recon, schemas))
 \code{relation_schema}; \code{\link{create}} for creating a
 \code{\link{relation}} object that uses the given schema; \code{\link{gv}}
 for converting the schema into Graphviz code; \code{\link{rename_attrs}}
-for renaming the attributes in \code{attrs_order}.
+for renaming the attributes in \code{attrs_order};
+\code{\link{merge_empty_keys}} for combining relations with an empty key;
+\code{\link{merge_schemas}} for combining relations with matching sets of
+keys.
 }

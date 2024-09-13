@@ -23,5 +23,27 @@ an R object of the same class as \code{x}, where the relations have
 been merged as indicated.
 }
 \description{
-Merge relation schemas in given pairs
+Generic function that merges pairs of an object's schemas with matching sets
+of keys. The remaining schemas contain all the attributes from the schemas
+merged into them.
+}
+\examples{
+rs <- relation_schema(
+  list(
+    a = list(c("a", "b"), list("a")),
+    b = list(c("b", "c"), list("b")),
+    b.1 = list(c("b", "d"), list("b")),
+    d = list(c("d", "e"), list("d", "e"))
+  ),
+  letters[1:5]
+)
+ds <- database_schema(
+  rs,
+  list(
+    list("a", "b", "b", "b"),
+    list("b.1", "d", "d", "d")
+   )
+)
+merge_schemas(rs, 3, 2) # merging b and b.1
+merge_schemas(ds, 3, 2) # also merging their references
 }
