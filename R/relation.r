@@ -342,8 +342,7 @@ records.relation <- function(x, ...) {
     value_names,
     keys(x)
   )
-  attributes(new) <- attributes(x)
-  new
+  relation(new, attrs_order(x))
 }
 
 #' @exportS3Method

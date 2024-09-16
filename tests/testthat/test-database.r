@@ -171,6 +171,83 @@ describe("database", {
     )
   })
 
+  it("expects record reassignments to have all prime attributes, maybe others, order-independent", {
+    x <- database(
+      relation(
+        list(a = list(df = data.frame(a = 1:4, b = 1:2), keys = list("a"))),
+        attrs_order = c("a", "b")
+      ),
+      list()
+    )
+    expect_error(
+      records(x) <- list(a = data.frame(b = 1:2)),
+      "^record reassignments must keep key attributes$"
+    )
+    expect_error(
+      records(x) <- list(a = data.frame(a = 1:4, c = 1)),
+      "^record reassignments can not add attributes$"
+    )
+    y <- x
+    expect_silent(records(y) <- list(a = data.frame(b = 1:2, a = 1:4)))
+    expect_identical(y, x)
+    expect_silent(records(y) <- list(a = data.frame(a = 1:4)))
+    x2 <- database(
+      relation(
+        list(a = list(df = data.frame(b = 1:4, a = 1:2), keys = list("b"))),
+        attrs_order = c("a", "b")
+      ),
+      list()
+    )
+    y2 <- x2
+    expect_silent(records(y2) <- list(a = data.frame(a = 1:2, b = 1:4)))
+    expect_identical(y2, x2)
+  })
+  it("expects records reassignments to have unique attribute names", {
+    x <- database(
+      relation(
+        list(a = list(df = data.frame(a = 1:4, b = 1:2), keys = list("a"))),
+        attrs_order = c("a", "b")
+      ),
+      list()
+    )
+    expect_error(
+      records(x)[[1]] <- data.frame(a = 1:4, a = 1:2, check.names = FALSE)
+    )
+  })
+  it("expect records name reassignments to result in an error or a valid database", {
+    forall(
+      gen.database(letters[1:6], 1, 8) |>
+        gen.and_then(\(db) {
+          nonempty <- which(lengths(attrs(db)) > 0)
+          if (length(nonempty) == 0)
+            return(list(
+              gen.pure(db),
+              gen.pure(1L),
+              gen.pure(attrs(db)[[1]])
+            ))
+          gen.element(nonempty) |>
+            gen.and_then(\(n) {
+              list(
+                gen.pure(db),
+                gen.pure(n),
+                gen.sample_resampleable(
+                  attrs(db)[[n]],
+                  to = length(attrs(db)[[n]])
+                )
+              )
+            })
+        }),
+      \(db, n, nm) {
+        res <- try(names(records(db)[[n]]) <- nm, silent = TRUE)
+        expect_true(
+          class(res)[[1]] == "try-error" ||
+            class(try(is_valid_database(db), silent = TRUE))[[1]] != "try-error"
+        )
+      },
+      curry = TRUE
+    )
+  })
+
   it("is subsetted to a valid database schema, obeys usual subsetting rules", {
     forall(
       gen.element(c(FALSE, TRUE)) |>

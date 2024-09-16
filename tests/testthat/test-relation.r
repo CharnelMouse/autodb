@@ -170,6 +170,48 @@ describe("relation", {
     expect_silent(records(y2) <- list(a = data.frame(a = 1:2, b = 1:4)))
     expect_identical(y2, x2)
   })
+  it("expects records reassignments to have unique attribute names", {
+    x <- relation(
+      list(a = list(df = data.frame(a = 1:4, b = 1:2), keys = list("a"))),
+      attrs_order = c("a", "b")
+    )
+    expect_error(
+      records(x)[[1]] <- data.frame(a = 1:4, a = 1:2, check.names = FALSE)
+    )
+  })
+  it("expect records name reassignments to result in an error or a valid relation", {
+    forall(
+      gen.relation(letters[1:6], 1, 8) |>
+        gen.and_then(\(rel) {
+          nonempty <- which(lengths(attrs(rel)) > 0)
+          if (length(nonempty) == 0)
+            return(list(
+              gen.pure(rel),
+              gen.pure(1L),
+              gen.pure(attrs(rel)[[1]])
+            ))
+          gen.element(nonempty) |>
+            gen.and_then(\(n) {
+              list(
+                gen.pure(rel),
+                gen.pure(n),
+                gen.sample_resampleable(
+                  attrs(rel)[[n]],
+                  to = length(attrs(rel)[[n]])
+                )
+              )
+            })
+        }),
+      \(rel, n, nm) {
+        res <- try(names(records(rel)[[n]]) <- nm, silent = TRUE)
+        expect_true(
+          class(res)[[1]] == "try-error" ||
+            is.null(try(is_valid_relation(rel), silent = TRUE))
+        )
+      },
+      curry = TRUE
+    )
+  })
 
   it("sorts relation key contents attrs_order", {
     expect_identical(
