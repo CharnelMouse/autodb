@@ -365,6 +365,25 @@ describe("discover", {
     deps <- discover(df, 1)
     expect_length(deps[dependant(deps) == "time"], 0L)
   })
+  it("correctly simplifies floating-point numbers to high accuracy", {
+    df <- data.frame(
+      x = c(
+        47.37661580000000327573,
+        47.37661580000000327573
+      ),
+      y = c(
+        8.54917750000000076227,
+        8.54917749999999898591
+      )
+    )
+    expect_identical(
+      discover(df, 1),
+      functional_dependency(
+        list(list(character(), "x")),
+        c("x", "y")
+      )
+    )
+  })
   it("doesn't have an excluded attribute in any determinant sets", {
     gen_df_and_exclude <- function(nrow, ncol, remove_dup_rows = FALSE) {
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
