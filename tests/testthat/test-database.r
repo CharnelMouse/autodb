@@ -214,7 +214,7 @@ describe("database", {
       records(x)[[1]] <- data.frame(a = 1:4, a = 1:2, check.names = FALSE)
     )
   })
-  it("expect records name reassignments to result in an error or a valid database", {
+  it("expects records name reassignments to result in an error or a valid database", {
     forall(
       gen.database(letters[1:6], 1, 8) |>
         gen.and_then(\(db) {
