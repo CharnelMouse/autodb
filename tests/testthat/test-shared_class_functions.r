@@ -1190,3 +1190,120 @@ describe("names<-", {
     expect_error(`names<-`(d, rep("a", 4)), "^relation names must be unique$")
   })
 })
+
+describe("merge_schemas", {
+  it("removes schemas in to_remove, even if mentioned in merge_into", {
+    rs <- relation_schema(
+     list(
+       a = list(c("a", "b"), list("a")),
+       b = list(c("b", "c"), list("b")),
+       b.1 = list(c("b", "d"), list("b")),
+       d = list(c("d", "e"), list("d", "e"))
+     ),
+     letters[1:5]
+    )
+    ds <- database_schema(
+     rs,
+     list(
+       list("a", "b", "b", "b"),
+       list("b.1", "d", "d", "d")
+      )
+    )
+    expect_identical(
+      merge_schemas(rs, 3, 2),
+      relation_schema(
+        list(
+          a = list(c("a", "b"), list("a")),
+          b = list(c("b", "c", "d"), list("b")),
+          d = list(c("d", "e"), list("d", "e"))
+        ),
+        letters[1:5]
+      )
+    )
+    expect_identical(
+      merge_schemas(ds, 3, 2),
+      relation_schema(
+        list(
+          a = list(c("a", "b"), list("a")),
+          b = list(c("b", "c", "d"), list("b")),
+          d = list(c("d", "e"), list("d", "e"))
+        ),
+        letters[1:5]
+      ) |>
+        database_schema(
+          list(
+            list("a", "b", "b", "b"),
+            list("b", "d", "d", "d")
+          )
+        )
+    )
+    expect_identical(
+      merge_schemas(rs, 3, 3),
+      rs[-3]
+    )
+    expect_identical(
+      merge_schemas(ds, 3, 3),
+      ds[-3]
+    )
+  })
+})
+
+describe("merge_relations", {
+  it("removes relations in to_remove, even if mentioned in merge_into", {
+    rel <- relation_schema(
+      list(
+        a = list(c("a", "b"), list("a")),
+        b = list(c("b", "c"), list("b")),
+        b.1 = list(c("b", "c"), list("b")),
+        c = list(c("c", "d"), list("c", "d"))
+      ),
+      letters[1:4]
+    ) |>
+      create()
+    db <- database(
+      rel,
+      list(
+        list("a", "b", "b", "b"),
+        list("b.1", "c", "c", "c")
+      )
+    )
+    expect_identical(
+      merge_relations(rel, 3, 2),
+      relation_schema(
+        list(
+          a = list(c("a", "b"), list("a")),
+          b = list(c("b", "c"), list("b")),
+          c = list(c("c", "d"), list("c", "d"))
+        ),
+        letters[1:4]
+      ) |>
+        create()
+    )
+    expect_identical(
+      merge_database_relations(db, 3, 2),
+      relation_schema(
+        list(
+          a = list(c("a", "b"), list("a")),
+          b = list(c("b", "c"), list("b")),
+          c = list(c("c", "d"), list("c", "d"))
+        ),
+        letters[1:4]
+      ) |>
+        database_schema(
+          list(
+            list("a", "b", "b", "b"),
+            list("b", "c", "c", "c")
+          )
+        ) |>
+        create()
+    )
+    expect_identical(
+      merge_relations(rel, 3, 3),
+      rel[-3]
+    )
+    expect_identical(
+      merge_database_relations(db, 3, 3),
+      db[-3]
+    )
+  })
+})

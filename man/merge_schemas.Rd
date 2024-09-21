@@ -46,4 +46,8 @@ ds <- database_schema(
 )
 merge_schemas(rs, 3, 2) # merging b and b.1
 merge_schemas(ds, 3, 2) # also merging their references
+
+# merging a schema into itself just removes it
+merge_schemas(rs, 3, 3)
+merge_schemas(ds, 3, 3)
 }

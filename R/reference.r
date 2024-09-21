@@ -77,7 +77,10 @@ merge_reference_referands <- function(
     old_names,
     new_names[ind_map]
   ))
-  new_rels[!self_reference(new_rels)]
+  new_rels[
+    !self_reference(new_rels) &
+      !is.na(vapply(new_rels, `[[`, character(1), 1))
+  ]
 }
 
 print_references <- function(x, max) {
