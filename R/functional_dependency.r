@@ -70,23 +70,37 @@ functional_dependency <- function(
   attrs_order,
   unique = TRUE
 ) {
-  if (any(lengths(FDs) != 2))
-    stop("FDs elements must have length two")
-  det_sets <- lapply(FDs, `[[`, 1L)
-  if (any(vapply(det_sets, Negate(is.character), logical(1))))
-    stop("FD determinant sets must be characters")
-  if (any(!vapply(det_sets, Negate(anyDuplicated), logical(1))))
-    stop("attributes in determinant sets must be unique")
-  deps <- lapply(FDs, `[[`, 2L)
-  if (
-    any(vapply(deps, Negate(is.character), logical(1))) ||
-    any(lengths(deps) != 1L)
+  stop_with_elements_if(
+    lengths(FDs) != 2,
+    "FDs elements must have length two"
   )
-    stop("FD dependants must be length-one characters")
-  if (any(!is.element(unlist(FDs), attrs_order)))
-    stop("attributes in FDs must be present in attrs_order")
-  if (anyDuplicated(attrs_order))
-    stop("attrs_order must be unique")
+  det_sets <- lapply(FDs, `[[`, 1L)
+  stop_with_elements_if(
+    vapply(det_sets, Negate(is.character), logical(1)),
+    "FD determinant sets must be characters"
+  )
+  stop_with_elements_if(
+    !vapply(det_sets, Negate(anyDuplicated), logical(1)),
+    "attributes in determinant sets must be unique"
+  )
+  deps <- lapply(FDs, `[[`, 2L)
+  stop_with_elements_if(
+    vapply(deps, Negate(is.character), logical(1)) |
+      lengths(deps) != 1L,
+    "FD dependants must be length-one characters"
+  )
+  stop_with_elements_if(
+    !is.element(unlist(FDs), attrs_order),
+    "attributes in FDs must be present in attrs_order"
+  )
+  stop_with_values_if(
+    attrs_order,
+    duplicated(attrs_order),
+    "attrs_order must be unique",
+    prefix = "duplicated",
+    suffix_else = "",
+    unique = TRUE
+  )
   sorted_FDs <- lapply(
     FDs,
     \(FD) list(FD[[1]][order(match(FD[[1]], attrs_order))], FD[[2]])

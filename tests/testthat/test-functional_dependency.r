@@ -20,37 +20,37 @@ describe("functional_dependency", {
   it("expects valid input: FD elements correct lengths, contain characters of valid lengths", {
     expect_error(
       functional_dependency(list(NULL), character()),
-      "^FDs elements must have length two$"
+      "^FDs elements must have length two: element 1$"
     )
     expect_error(
       functional_dependency(list(list(integer(), "a")), "a"),
-      "^FD determinant sets must be characters$"
+      "^FD determinant sets must be characters: element 1$"
     )
     expect_error(
       functional_dependency(list(list(character(), 1L)), "1"),
-      "^FD dependants must be length-one characters$"
+      "^FD dependants must be length-one characters: element 1$"
     )
     expect_error(
       functional_dependency(list(list(character(), character())), character()),
-      "^FD dependants must be length-one characters$"
+      "^FD dependants must be length-one characters: element 1$"
     )
   })
   it("expects valid input: no duplicate determinants", {
     expect_error(
       functional_dependency(list(list(c("a", "a"), "b")), c("a", "b")),
-      "^attributes in determinant sets must be unique$"
+      "^attributes in determinant sets must be unique: element 1$"
     )
   })
   it("expects valid input: all attributes given in attrs_order", {
     expect_error(
       functional_dependency(list(list(character(), "a")), "b"),
-      "^attributes in FDs must be present in attrs_order$"
+      "^attributes in FDs must be present in attrs_order: element 1$"
     )
   })
   it("expects valid input: no duplicates in attrs_order", {
     expect_error(
       functional_dependency(list(), c("a", "a")),
-      "^attrs_order must be unique$"
+      "^attrs_order must be unique: duplicated a$"
     )
   })
   it("returns a set, i.e. no duplicated FD elements", {
