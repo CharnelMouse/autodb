@@ -500,7 +500,7 @@ Questionable intermediate relations aside, we can see that there is now a public
 
 ## Avoidable attributes
 
-The next normal form after third normal form (3NF) is Boyes-Codd normal form (BCNF). Ensuring BCNF is enforced by the database is trickier, as in some cases it can't be enforced with just relations and foreign key constrains.
+The next normal form after third normal form (3NF) is Boyes-Codd normal form (BCNF). Ensuring BCNF is enforced by the database is trickier, as in some cases it can't be enforced with just relations and foreign key constraints.
 
 However, the package includes an option to convert to enhanced third normal form, also known as LTK form, which can be so enforced. This enhancement is tangential to BCNF, and could also be used to enhance schemas in BCNF.
 
