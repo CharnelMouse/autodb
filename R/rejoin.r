@@ -95,12 +95,14 @@ rejoin <- function(database) {
     key <- Find(\(k) all(is.element(k, current_attrs)), mergee_keys)
     new_attrs <- setdiff(mergee_attrs, current_attrs)
     old_nrow <- nrow(main_relation)
-    main_relation <- merge(
+    # unique() needed here in case floating-point values cause duplicates in
+    # merge
+    main_relation <- unique(merge(
       main_relation,
       mergee_df[, c(key, new_attrs), drop = FALSE],
       by = key,
       sort = FALSE
-    )
+    ))
     stopifnot(identical(nrow(main_relation), old_nrow))
   }
   main_relation[, attrs_order, drop = FALSE]
