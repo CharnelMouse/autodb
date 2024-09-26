@@ -247,7 +247,9 @@ reference_errors <- function(records, references) {
       referrer <- df_unique(records[[relat[[1]]]][, relat[[2]], drop = FALSE])
       referee <- df_unique(records[[relat[[3]]]][, relat[[4]], drop = FALSE])
       !identical(
-        nrow(merge(referrer, referee, by.x = relat[[2]], by.y = relat[[4]])),
+        # unique() needed here in case floating-point values cause duplicates in
+        # merge
+        nrow(unique(merge(referrer, referee, by.x = relat[[2]], by.y = relat[[4]]))),
         nrow(referrer)
       )
     },

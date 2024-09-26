@@ -36,7 +36,9 @@
 * Corrected vignette re: when to remove spurious dependencies before.
 * Corrected `autodb` documentation link to page with database format information.
 * Corrected `df_equiv` to work with `data.frame` columns that are lists.
-* Fixed `dfd`/`discover` treating similar numeric values as equal, resulting in data frames not being insertable into their own schema.
+* Fixed several issues related to doubles / floating-point:
+  * Fixed `dfd`/`discover` treating similar numeric values as equal, resulting in data frames not being insertable into their own schema.
+  * Fixed `database` checks not handling doubles correctly. Specifically, foreign key reference checks involve merging tables together, and merge operates on doubles with a tolerance that's set within an internal method, so merges can create duplicates that need to be removed afterwards.
 * Fixed `normalise`'s return output to be invariant to the given order of the functional_dependency input.
 * Fixed `normalise` returning relations with attributes in the wrong order in certain cases where `remove_avoidable = TRUE`.
 * Fixed `gv` giving Graphviz code that could result in incorrect diagrams: relation and attribute names were converted to lower case, and not checked for uniqueness afterwards. This could result in incorrect foreign key references being drawn. The fix also accounts for a current bug in Graphviz, where edges between HTML-style node ports ignore case for the port labels.

@@ -171,6 +171,59 @@ describe("database", {
     )
   })
 
+  it("handles merge duplicates due to floating-point when checking references", {
+    x <- data.frame(
+      a = c(F, F, F, F, F, T, T),
+      b = c(
+        2.69353840461766669279,
+        2.69353840461766713688,
+        2.69353840461766713688,
+        3.74416921885076714460,
+        5.50801230419353693435,
+        3.72990161259524111159,
+        5.50801230419353693435
+      ),
+      c = c(
+        -3.19131542233864262670,
+        -2.87397721325655908231,
+        -1.98786466514381765514,
+        -3.33190719804050772268,
+        -3.33190719804050772268,
+        -3.33190719804050772268,
+        -3.33190719804050772268
+      ),
+      d = c(
+        2.56310969849146363941,
+        2.56310969849146363941,
+        2.56310969849146363941,
+        2.94505568569789533129,
+        4.88640238864414033770,
+        2.94505568569789533129,
+        4.88640238864414211406
+      )
+    )
+    # FDs: acd -> b, ab -> d, bd -> a
+    # 3NF schema: abcd[acd].{ab} -> abd[ab,bd].{ab}
+    ds <- discover(x, 1) |>
+      normalise(remove_avoidable = TRUE)
+    rel <- subschemas(ds) |> create() |> insert(x)
+    refs <- references(ds)
+    stopifnot(identical(
+      refs,
+      list(list("a_c_d", c("a", "b"), "a_b", c("a", "b")))
+    ))
+    referrer <- records(rel)$a_c_d
+    referee <- records(rel)$a_b
+    check <- merge(referrer, referee, by = c("a", "b"))
+    expect_identical(nrow(referrer), 7L)
+    expect_identical(nrow(referee), 6L)
+    expect_identical(nrow(check), 10L)
+    expect_identical(nrow(unique(check)), 7L)
+    expect_silent(db <- database(rel, refs))
+    y <- rejoin(db)
+    expect_true(df_equiv(y, x))
+  })
+
   it("expects record reassignments to have all prime attributes, maybe others, order-independent", {
     x <- database(
       relation(
