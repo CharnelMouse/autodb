@@ -4,11 +4,16 @@
 \alias{autoref}
 \title{Add foreign key references to a normalised database}
 \usage{
-autoref(schema)
+autoref(schema, single_ref = FALSE)
 }
 \arguments{
 \item{schema}{a \code{\link{relation_schema}} object, as given by
 \code{\link{synthesise}}.}
+
+\item{single_ref}{a logical, FALSE by default. If TRUE, then only one
+reference between each relation pair is kept when generating foreign key
+references. If a pair has multiple references, the kept reference refers to
+the earliest key for the child relation, as sorted by priority order.}
 }
 \value{
 A \code{\link{database_schema}} object, containing the given relation
@@ -16,4 +21,15 @@ schemas and the created foreign key references.
 }
 \description{
 Add foreign key references to a normalised database
+}
+\examples{
+rs <- relation_schema(
+  list(
+    a_b_c = list(c("a", "b", "c", "d"), list(c("a", "b", "c"))),
+    a_b = list(c("a", "b", "d"), list(c("a", "b"), c("b", "d")))
+  ),
+  letters[1:4]
+)
+autoref(rs, single_ref = FALSE)
+autoref(rs, single_ref = TRUE)
 }

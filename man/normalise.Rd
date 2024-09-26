@@ -6,6 +6,7 @@
 \usage{
 normalise(
   dependencies,
+  single_ref = FALSE,
   ensure_lossless = TRUE,
   remove_avoidable = FALSE,
   constants_name = "constants",
@@ -16,6 +17,11 @@ normalise(
 \arguments{
 \item{dependencies}{a \code{\link{functional_dependency}} object, as given by
 \code{\link{discover}}.}
+
+\item{single_ref}{a logical, FALSE by default. If TRUE, then only one
+reference between each relation pair is kept when generating foreign key
+references. If a pair has multiple references, the kept reference refers to
+the earliest key for the child relation, as sorted by priority order.}
 
 \item{ensure_lossless}{a logical, TRUE by default. If TRUE, and the
 decomposition isn't lossless, an extra relation is added to make the

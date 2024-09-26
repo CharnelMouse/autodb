@@ -10,6 +10,10 @@
 #' @param name a scalar character, giving the name of the database. This name
 #'   is used for the resulting graph when using \code{\link{gv.database}}, to
 #'   allow for easier combining of graphs into a single diagram if required.
+#' @param single_ref a logical, FALSE by default. If TRUE, then only one
+#'   reference between each relation pair is kept when generating foreign key
+#'   references. If a pair has multiple references, the kept reference refers to
+#'   the earliest key for the child relation, as sorted by priority order.
 #' @param ensure_lossless a logical, indicating whether to check whether the
 #'   normalisation is lossless. If it is not, then an additional relation is
 #'   added to the final "database", containing a key for \code{df}. This is
@@ -38,6 +42,7 @@
 autodb <- function(
   df,
   name = NA_character_,
+  single_ref = FALSE,
   ensure_lossless = TRUE,
   remove_avoidable = FALSE,
   constants_name = "constants",
@@ -51,6 +56,7 @@ autodb <- function(
     report$op(
       normalise,
       "normalising",
+      single_ref,
       ensure_lossless,
       remove_avoidable,
       constants_name

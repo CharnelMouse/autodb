@@ -21,6 +21,7 @@
 #' @export
 normalise <- function(
   dependencies,
+  single_ref = FALSE,
   ensure_lossless = TRUE,
   remove_avoidable = FALSE,
   constants_name = "constants",
@@ -35,6 +36,7 @@ normalise <- function(
       constants_name = constants_name,
       progress = progress,
       progress_file = progress_file
-    )
+    ),
+    single_ref = single_ref
   )
 }

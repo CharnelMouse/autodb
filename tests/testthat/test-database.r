@@ -203,14 +203,17 @@ describe("database", {
       )
     )
     # FDs: acd -> b, ab -> d, bd -> a
-    # 3NF schema: abcd[acd].{ab} -> abd[ab,bd].{ab}
+    # 3NF schema: abcd[acd].{ab} -> ab[ab,bd].{ab}
     ds <- discover(x, 1) |>
       normalise(remove_avoidable = TRUE)
     rel <- subschemas(ds) |> create() |> insert(x)
     refs <- references(ds)
     stopifnot(identical(
       refs,
-      list(list("a_c_d", c("a", "b"), "a_b", c("a", "b")))
+      list(
+        list("a_c_d", c("a", "b"), "a_b", c("a", "b")),
+        list("a_c_d", c("b", "d"), "a_b", c("b", "d"))
+      )
     ))
     referrer <- records(rel)$a_c_d
     referee <- records(rel)$a_b

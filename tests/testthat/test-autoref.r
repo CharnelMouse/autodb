@@ -10,6 +10,17 @@ describe("autoref", {
           unique = FALSE,
           single_empty_key = FALSE,
           same_attr_name = TRUE,
+          single_key_pairs = FALSE
+        )
+    )
+    forall(
+      gen.relation_schema(letters[1:6], 0, 6),
+      with_args(autoref, single_ref = TRUE) %>>%
+        with_args(
+          is_valid_database_schema,
+          unique = FALSE,
+          single_empty_key = FALSE,
+          same_attr_name = TRUE,
           single_key_pairs = TRUE
         )
     )
@@ -62,6 +73,30 @@ describe("autoref", {
     forall(
       gen.relation_schema(letters[1:6], 0, 6),
       only_returns_non_extraneous_references
+    )
+  })
+  it("can return multiple references between tables", {
+    rs <- relation_schema(
+      list(
+        a_b_c = list(c("a", "b", "c", "d"), list(c("a", "b", "c"))),
+        a_b = list(c("a", "b", "d"), list(c("a", "b"), c("b", "d")))
+      ),
+      letters[1:4]
+    )
+    ds <- autoref(rs)
+    expect_setequal(
+      references(ds),
+      list(
+        list("a_b_c", c("a", "b"), "a_b", c("a", "b")),
+        list("a_b_c", c("b", "d"), "a_b", c("b", "d"))
+      )
+    )
+    ds2 <- autoref(rs, single_ref = TRUE)
+    expect_setequal(
+      references(ds2),
+      list(
+        list("a_b_c", c("a", "b"), "a_b", c("a", "b"))
+      )
     )
   })
 })
