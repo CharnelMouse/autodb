@@ -11,29 +11,57 @@ describe("relation_schema", {
   it("expects valid input: schema elements correct lengths", {
     expect_error(
       relation_schema(list(a = NULL), character()),
-      "^schema elements must have length two$"
+      "^schema elements must have length two: element 1$"
+    )
+    expect_error(
+      relation_schema(list(a = NULL, b = 1:3), character()),
+      "^schema elements must have length two: elements 1, 2$"
     )
   })
   it("expects valid input: schema elements contain characters of valid lengths", {
     expect_error(
-      relation_schema(list(NULL), character()),
-      "^schema elements must have length two$"
+      relation_schema(list(a = list(integer(), "a")), "a"),
+      "^schema attribute sets must be characters: element 1$"
     )
     expect_error(
-      relation_schema(list(list(integer(), "a")), "a"),
-      "^schema attribute sets must be characters$"
+      relation_schema(
+        list(a = list(integer(), "a"), a.1 = list(logical(), "a")),
+        "a"
+      ),
+      "^schema attribute sets must be characters: elements 1, 2$"
     )
     expect_error(
       relation_schema(list(list(character(), 1L)), "1"),
-      "^schema key sets must be lists$"
+      "^schema key sets must be lists: element 1$"
     )
     expect_error(
-      relation_schema(list(list(character(), list())), "1"),
-      "^schema key sets must have at least one element$"
+      relation_schema(
+        list(a = list(character(), 1L), b = list(character(), FALSE)),
+        "1"
+      ),
+      "^schema key sets must be lists: elements 1, 2$"
     )
     expect_error(
-      relation_schema(list(list(character(), list(1L))), "1"),
-      "^schema key sets must have character elements$"
+      relation_schema(list(a = list(character(), list())), "1"),
+      "^schema key sets must have at least one element: element 1$"
+    )
+    expect_error(
+      relation_schema(
+        list(a = list(character(), list()), b = list(character(), list())),
+        "1"
+      ),
+      "^schema key sets must have at least one element: elements 1, 2$"
+    )
+    expect_error(
+      relation_schema(list(a = list(character(), list(1L))), "1"),
+      "^schema key sets must have character elements: element 1\\.1$"
+    )
+    expect_error(
+      relation_schema(
+        list(a = list(character(), list(1L)), b = list("1", list("1", 1L))),
+        "1"
+      ),
+      "^schema key sets must have character elements: elements 1\\.1, 2\\.2$"
     )
     expect_error(
       relation_schema(list(list(character(), list(character()))), 1L),
@@ -49,7 +77,7 @@ describe("relation_schema", {
         ),
         character()
       ),
-      "^relation schema names must be unique$"
+      "^relation schema names must be unique: duplicated a$"
     )
   })
   it("expects valid input: non-empty schema names", {
@@ -64,37 +92,47 @@ describe("relation_schema", {
         ),
         character()
       ),
-      "^relation schema names must be non-empty"
+      "^relation schema names must be non-empty: element 1"
     )
   })
   it("expects valid input: no duplicate attrs", {
     expect_error(
       relation_schema(list(a = list(c("a", "a"), list("a"))), "a"),
-      "^relation attributes must be unique$"
+      "^relation attributes must be unique: element 1$"
     )
   })
   it("expects valid input: no duplicate attrs in keys", {
     expect_error(
       relation_schema(list(a = list("a", list(c("a", "a")))), "a"),
-      "^relation key attributes must be unique$"
+      "^relation key attributes must be unique: element 1\\.1\\.\\{a\\}$"
+    )
+    expect_error(
+      relation_schema(
+        list(
+          a = list(c("a", "b"), list(c("a", "a", "b"))),
+          b = list("b", list("b", c("b", "b", "b")))
+        ),
+        c("a", "b")
+      ),
+      "^relation key attributes must be unique: elements 1\\.1\\.\\{a\\}, 2\\.2\\.\\{b\\}$"
     )
   })
   it("expects valid input: no duplicate attrs_order", {
     expect_error(
       relation_schema(list(a = list("a", list("a"))), c("a", "a")),
-      "^attrs_order must be unique$"
+      "^attrs_order must be unique: duplicated a$"
     )
   })
   it("expects valid input: all attributes given in attrs_order", {
     expect_error(
       relation_schema(list(a = list("a", list("a"))), "b"),
-      "^attributes in schema must be present in attrs_order$"
+      "^attributes in schema must be present in attrs_order: absent a$"
     )
   })
   it("expects valid input: key attributes are in relation", {
     expect_error(
       relation_schema(list(a = list("a", list("b"))), c("a", "b")),
-      "^attributes in keys must be present in relation$"
+      "^attributes in keys must be present in relation: element 1\\.\\{b\\}$"
     )
   })
 

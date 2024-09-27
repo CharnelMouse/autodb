@@ -633,7 +633,7 @@ describe("keys<-", {
         failure_add = expect_keys_assignment_failure(
           rs,
           value,
-          "^attributes in keys must be present in relation$"
+          "^attributes in keys must be present in relation"
         )
       ),
       curry = TRUE
@@ -654,7 +654,7 @@ describe("keys<-", {
         failure_add = expect_keys_assignment_failure(
           ds,
           value,
-          "^attributes in keys must be present in relation$"
+          "^attributes in keys must be present in relation"
         ),
         failure_ref = expect_keys_assignment_failure(
           ds,
@@ -1184,9 +1184,9 @@ describe("names<-", {
     ds <- autoref(rs)
     r <- create(rs)
     d <- create(ds)
-    expect_error(`names<-`(rs, rep("a", 4)), "^relation schema names must be unique$")
+    expect_error(`names<-`(rs, rep("a", 4)), "^relation schema names must be unique: duplicated a$")
     expect_error(`names<-`(r, rep("a", 4)), "^relation names must be unique$")
-    expect_error(`names<-`(ds, rep("a", 4)), "^relation schema names must be unique$")
+    expect_error(`names<-`(ds, rep("a", 4)), "^relation schema names must be unique: duplicated a$")
     expect_error(`names<-`(d, rep("a", 4)), "^relation names must be unique$")
   })
 })

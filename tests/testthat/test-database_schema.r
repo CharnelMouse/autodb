@@ -48,7 +48,7 @@ describe("database_schema", {
         ),
         list()
       ),
-      "^relation schema names must be unique$"
+      "^relation schema names must be unique: duplicated a$"
     )
   })
   it("expects valid input: non-empty schema names", {

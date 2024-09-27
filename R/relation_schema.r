@@ -93,38 +93,100 @@ relation_schema <- function(
   schemas,
   attrs_order
 ) {
-  if (!all(lengths(schemas) == 2L))
-    stop("schema elements must have length two")
-  if (!all(vapply(schemas, \(s) is.character(s[[1]]), logical(1))))
-    stop("schema attribute sets must be characters")
-  if (!all(vapply(schemas, \(s) is.list(s[[2]]), logical(1))))
-    stop("schema key sets must be lists")
-  if (!all(vapply(schemas, \(s) length(s[[2]]) > 0L, logical(1))))
-    stop("schema key sets must have at least one element")
-  if (!all(vapply(
-    schemas,
-    \(s) all(vapply(s[[2]], is.character, logical(1))),
-    logical(1)
-  )))
-    stop("schema key sets must have character elements")
+  stop_with_elements_if(
+    lengths(schemas) != 2L,
+    "schema elements must have length two"
+  )
+  stop_with_elements_if(
+    !vapply(schemas, \(s) is.character(s[[1]]), logical(1)),
+    "schema attribute sets must be characters"
+  )
+  stop_with_elements_if(
+    !vapply(schemas, \(s) is.list(s[[2]]), logical(1)),
+    "schema key sets must be lists"
+  )
+  stop_with_elements_if(
+    !vapply(schemas, \(s) length(s[[2]]) > 0L, logical(1)),
+    "schema key sets must have at least one element"
+  )
+  stop_with_values_if(
+    unlist(lapply(
+      seq_along(schemas),
+      \(n) paste(n, seq_along(schemas[[n]][[2]]), sep = ".")
+    )),
+    unlist(lapply(
+      schemas,
+      \(s) vapply(s[[2]], Negate(is.character), logical(1))
+    )),
+    "schema key sets must have character elements"
+  )
   if (!is.character(attrs_order))
     stop("expected character attrs_order")
   check_schema_names(names(schemas))
-  if (!all(vapply(schemas, \(s) !anyDuplicated(s[[1]]), logical(1))))
-    stop("relation attributes must be unique")
-  if (!all(vapply(
-    schemas,
-    \(s) all(vapply(s[[2]], Negate(anyDuplicated), logical(1))),
-    logical(1)
+  stop_with_elements_if(
+    !vapply(schemas, \(s) !anyDuplicated(s[[1]]), logical(1)),
+    "relation attributes must be unique"
+  )
+  stop_with_values_if(
+    unlist(lapply(
+      seq_along(schemas),
+      \(n) lapply(
+        seq_along(schemas[[n]][[2]]),
+        \(m) paste0(
+          n,
+          ".",
+          m,
+          ".{",
+          toString(unique(
+            schemas[[n]][[2]][[m]][duplicated(schemas[[n]][[2]][[m]])]
+          )),
+          "}"
+        )
+      )
+    )),
+    unlist(lapply(
+      seq_along(schemas),
+      \(n) vapply(
+        seq_along(schemas[[n]][[2]]),
+        \(m) as.logical(anyDuplicated(schemas[[n]][[2]][[m]])),
+        logical(1)
+      )
+    )),
+    "relation key attributes must be unique"
+  )
+  stop_with_values_if(
+    attrs_order,
+    duplicated(attrs_order),
+    "attrs_order must be unique",
+    "duplicated",
+    suffix_else = "",
+    unique = TRUE
+  )
+  not_ordered <- setdiff(unlist(lapply(schemas, `[[`, 1)), attrs_order)
+  stop_with_values_if(
+    not_ordered,
+    rep(TRUE, length(not_ordered)),
+    "attributes in schema must be present in attrs_order",
+    "absent",
+    suffix_else = "",
+    unique = TRUE
+  )
+  keys_minus_attrs <- as.character(unlist(lapply(
+    seq_along(schemas),
+    \(n) {
+      paste0(
+        n,
+        ".{",
+        toString(setdiff(unlist(schemas[[n]][[2]]), schemas[[n]][[1]])),
+        "}"
+      )
+    }
   )))
-    stop("relation key attributes must be unique")
-  if (anyDuplicated(attrs_order))
-    stop("attrs_order must be unique")
-  if (!all(is.element(unlist(schemas, recursive = TRUE), attrs_order)))
-    stop("attributes in schema must be present in attrs_order")
-  for (s in schemas)
-    if (!all(is.element(unlist(s[[2]]), s[[1]])))
-      stop("attributes in keys must be present in relation")
+  stop_with_values_if(
+    keys_minus_attrs,
+    grepl("\\{.+\\}", keys_minus_attrs),
+    "attributes in keys must be present in relation"
+  )
   relation_schema_nocheck(schemas, attrs_order)
 }
 
@@ -221,10 +283,17 @@ attrs_order.relation_schema <- function(x, ...) {
 check_schema_names <- function(nms) {
   if (!is.character(nms))
     stop("relation schemas must be named")
-  if (anyDuplicated(nms))
-    stop("relation schema names must be unique")
-  if (any(nms == ""))
-    stop("relation schema names must be non-empty")
+  stop_with_values_if(
+    nms,
+    duplicated(nms),
+    "relation schema names must be unique",
+    "duplicated",
+    suffix_else = ""
+  )
+  stop_with_elements_if(
+    nms == "",
+    "relation schema names must be non-empty"
+  )
 }
 
 #' @exportS3Method
