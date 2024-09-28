@@ -31,7 +31,7 @@ describe("database", {
   it("expects valid input: reference elements are length-four lists", {
     expect_error(
       database(create(empty_rs), list("a")),
-      "^reference elements must be length-four lists$"
+      "^reference elements must be length-four lists: element 1$"
     )
     rs <- create(relation_schema(
       list(
@@ -43,11 +43,11 @@ describe("database", {
     ))
     expect_error(
       database(rs, list(1:4)),
-      "^reference elements must be length-four lists$"
+      "^reference elements must be length-four lists: element 1$"
     )
     expect_error(
       database(rs, list(as.list(paste0("r", 1:3)))),
-      "^reference elements must be length-four lists$"
+      "^reference elements must be length-four lists: element 1$"
     )
   })
   it("expects valid input: unique relation names", {
@@ -94,11 +94,11 @@ describe("database", {
     ))
     expect_error(
       database(rs, list(list("r3", "b", "r4", "b"))),
-      "^reference relation names must be within relation names$"
+      "^reference relation names must be within relation names: absent r4$"
     )
     expect_error(
       database(rs, list(list("r4", "b", "r3", "b"))),
-      "^reference relation names must be within relation names$"
+      "^reference relation names must be within relation names: absent r4$"
     )
   })
   it("expects valid input: reference attribute names are within referrer's attributes and referee's keys", {
@@ -113,7 +113,7 @@ describe("database", {
         )),
         list(list("a", "b", "X", "b"))
       ),
-      "^reference attributes must be within referrer's attributes and referee's keys$"
+      "^reference attributes must be within referrer's attributes and referee's keys: reference 1$"
     )
     # need more examples here
 

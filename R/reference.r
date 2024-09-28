@@ -10,30 +10,37 @@ check_valid_reference <- function(
   type <- match.arg(type)
   if (!is.list(references))
     stop("references must be a list")
-  if (any(
+  stop_with_elements_if(
     lengths(references) != 4L |
-    !vapply(references, is.list, logical(1))
-  ))
-    stop("reference elements must be length-four lists")
-  if (any(!reference_names_element(references, names(relation_schemas)))) {
-    stop(paste(
+      !vapply(references, is.list, logical(1)),
+    "reference elements must be length-four lists"
+  )
+  ref_names_not_in_names <- setdiff(
+    unlist(lapply(references, \(x) x[c(1, 3)])),
+    names(relation_schemas)
+  )
+  stop_with_values_if(
+    ref_names_not_in_names,
+    rep(TRUE, length(ref_names_not_in_names)),
+    paste(
       "reference relation names must be within",
       type,
       "names"
-    ))
-  }
-  if (any(!reference_valid_attrs(references, relation_schemas)))
-    stop("reference attributes must be within referrer's attributes and referee's keys")
+    ),
+    prefix = "absent",
+    suffix_else = ""
+  )
+  stop_with_elements_if(
+    !reference_valid_attrs(references, relation_schemas),
+    "reference attributes must be within referrer's attributes and referee's keys",
+    prefix = "reference"
+  )
   if (any(self_reference(references)))
     stop("reference cannot be from a relation's attribute to itself")
 }
 
 self_reference <- function(references) {
   vapply(references, \(r) r[[1]] == r[[3]], logical(1))
-}
-
-reference_names_element <- function(references, relation_names) {
-  vapply(references, \(r) all(c(r[[1]], r[[3]]) %in% relation_names), logical(1))
 }
 
 reference_valid_attrs <- function(references, relation_schemas) {

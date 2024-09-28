@@ -17,7 +17,7 @@ describe("database_schema", {
   it("expects valid input: reference elements are length-four lists", {
     expect_error(
       database_schema(empty_rs, list("a")),
-      "^reference elements must be length-four lists$"
+      "^reference elements must be length-four lists: element 1$"
     )
     rs <- relation_schema(
       list(
@@ -29,11 +29,11 @@ describe("database_schema", {
     )
     expect_error(
       database_schema(rs, list(1:4)),
-      "^reference elements must be length-four lists$"
+      "^reference elements must be length-four lists: element 1$"
     )
     expect_error(
       database_schema(rs, list(as.list(paste0("r", 1:3)))),
-      "^reference elements must be length-four lists$"
+      "^reference elements must be length-four lists: element 1$"
     )
   })
   it("expects valid input: unique schema names", {
@@ -80,11 +80,11 @@ describe("database_schema", {
     )
     expect_error(
       database_schema(rs, list(list("r3", "b", "r4", "b"))),
-      "^reference relation names must be within relation schema names$"
+      "^reference relation names must be within relation schema names: absent r4$"
     )
     expect_error(
       database_schema(rs, list(list("r4", "b", "r3", "b"))),
-      "^reference relation names must be within relation schema names$"
+      "^reference relation names must be within relation schema names: absent r4$"
     )
   })
   it("expects valid input: reference attributes are within referrer's attributes, make one of referee's keys", {
@@ -99,7 +99,7 @@ describe("database_schema", {
         ),
         list(list("a", "b", "X", "b"))
       ),
-      "^reference attributes must be within referrer's attributes and referee's keys$"
+      "^reference attributes must be within referrer's attributes and referee's keys: reference 1$"
     )
     # must exactly match a key, not just be contained in one
     expect_error(
@@ -113,7 +113,7 @@ describe("database_schema", {
         ),
         list(list("X", "a", "a_b", "a"))
       ),
-      "^reference attributes must be within referrer's attributes and referee's keys$"
+      "^reference attributes must be within referrer's attributes and referee's keys: reference 1$"
     )
   })
   it("expects valid input: references aren't self-references", {
