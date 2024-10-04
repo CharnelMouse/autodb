@@ -62,7 +62,7 @@ describe("database", {
         ),
         list()
       ),
-      "^relation names must be unique$"
+      "^relation names must be unique: duplicated a$"
     )
   })
   it("expects valid input: non-empty relation names", {

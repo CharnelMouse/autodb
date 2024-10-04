@@ -11,27 +11,27 @@ describe("relation", {
   it("expects valid input: relation elements correct lengths", {
     expect_error(
       relation(list(a = NULL), character()),
-      "^relation elements must have length two$"
+      "^relation elements must have length two: element 1$"
     )
   })
   it("expects valid input: list elements contain df and keys elements, and no others, correct classes", {
     expect_error(
       relation(list(X = list(df = data.frame(), 1)), character()),
-      "^relations must contain 'df' and 'keys' elements: X$"
+      "^relations must contain 'df' and 'keys' elements: element 1$"
     )
     expect_error(
       relation(
         list(X = list(df = data.frame(), keys = data.frame())),
         character()
       ),
-      "^relation 'keys' elements must be lists$"
+      "^relation 'keys' elements must be lists: element 1$"
     )
     expect_error(
       relation(
         list(X = list(df = list(), keys = list())),
         character()
       ),
-      "^relation 'df' elements must be data frames$"
+      "^relation 'df' elements must be data frames: element 1$"
     )
     expect_silent(relation(
       list(X = list(keys = setNames(list(), character()), df = data.frame())),
@@ -50,7 +50,7 @@ describe("relation", {
         )),
         "a"
       ),
-      "^relation attributes must be unique$"
+      "^relation attributes must be unique: element 1$"
     )
   })
   it("expects valid input: no duplicate attrs in keys", {
@@ -59,7 +59,7 @@ describe("relation", {
         list(a = list(df = data.frame(a = logical()), keys = list(c("a", "a")))),
         "a"
       ),
-      "^relation key attributes must be unique$"
+      "^relation key attributes must be unique: element 1\\.1\\.\\{a\\}$"
     )
   })
   it("expects valid input: no duplicate attrs_order", {
@@ -68,7 +68,7 @@ describe("relation", {
         list(a = list(df = data.frame(a = logical()), keys = list("a"))),
         c("a", "a")
       ),
-      "^attrs_order must be unique$"
+      "^attrs_order must be unique: duplicated a$"
     )
   })
   it("expects valid input: relation attributes are in attrs_order", {
@@ -77,7 +77,7 @@ describe("relation", {
         list(a = list(df = data.frame(a = integer()), keys = list("a"))),
         "b"
       ),
-      "^relation attributes not in attrs_order$"
+      "^relation attributes not in attrs_order: missing a$"
     )
   })
   it("expects valid input: relation attributes get ordered by key mentions first", {
@@ -95,7 +95,7 @@ describe("relation", {
         )),
         c("a", "b", "c", "d")
       ),
-      "^relation keys must be within relation attributes$"
+      "^relation keys must be within relation attributes: element 1\\.2\\.\\{d\\}$"
     )
   })
   it("expects valid input: keys are satisfied", {
@@ -104,7 +104,7 @@ describe("relation", {
         list(a = list(df = data.frame(a = rep(1L, 2L)), keys = list("a"))),
         "a"
       ),
-      "^relations must satisfy their keys$"
+      "^relations must satisfy their keys: element 1\\.\\{a\\}$"
     )
     expect_error(
       relation(
@@ -114,7 +114,7 @@ describe("relation", {
         )),
         "a"
       ),
-      "^relations must satisfy their keys$"
+      "^relations must satisfy their keys: element 1\\.\\{\\}$"
     )
   })
   it("expects valid input: unique relation names", {
@@ -126,7 +126,7 @@ describe("relation", {
         ),
         character()
       ),
-      "^relation names must be unique$"
+      "^relation names must be unique: duplicated a$"
     )
   })
   it("expects valid input: non-empty relation names", {
@@ -141,7 +141,7 @@ describe("relation", {
         ),
         character()
       ),
-      "^relation names must be non-empty"
+      "^relation names must be non-empty: element 1"
     )
   })
 

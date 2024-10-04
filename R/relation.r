@@ -132,35 +132,65 @@ relation <- function(relations, attrs_order) {
   stopifnot(is.list(relations))
   stopifnot(is.character(attrs_order))
 
-  if (anyDuplicated(attrs_order))
-    stop("attrs_order must be unique")
+  stop_with_values_if(
+    attrs_order,
+    duplicated(attrs_order),
+    "attrs_order must be unique",
+    "duplicated",
+    suffix_else = "",
+    unique = TRUE
+  )
   check_relation_names(names(relations))
-  if (!all(vapply(relations, \(r) !anyDuplicated(names(r$df)), logical(1))))
-    stop("relation attributes must be unique")
-  if (!all(vapply(
-    relations,
-    \(r) all(vapply(r$keys, Negate(anyDuplicated), logical(1))),
-    logical(1)
-  )))
-    stop("relation key attributes must be unique")
-  if (!all(lengths(relations) == 2L))
-    stop("relation elements must have length two")
+  stop_with_elements_if(
+    !vapply(relations, \(r) !anyDuplicated(names(r$df)), logical(1)),
+    "relation attributes must be unique"
+  )
+  duplicate_relation_key_attributes <- lapply(
+    seq_along(relations),
+    \(n) {
+      r <- relations[[n]]
+      lapply(
+        seq_along(r$keys),
+        \(m) {
+          k <- r$keys[[m]]
+          dups <- sort(unique(k[duplicated(k)]))
+          if (length(dups) == 0)
+            NULL
+          else
+            paste0(n, ".", m, ".{", toString(dups), "}")
+        }
+      ) |>
+        Reduce(f = c, init = character())
+    }
+  ) |>
+    Reduce(f = c, init = character())
+  stop_with_values_if(
+    duplicate_relation_key_attributes,
+    rep(TRUE, length(duplicate_relation_key_attributes)),
+    "relation key attributes must be unique",
+    prefix = "element"
+  )
+  stop_with_elements_if(
+    lengths(relations) != 2,
+    "relation elements must have length two"
+  )
   correct_element_names <- vapply(
     relations,
     \(rel) setequal(names(rel), c("df", "keys")),
     logical(1L)
   )
-  if (!all(correct_element_names))
-    stop(paste(
-      "relations must contain 'df' and 'keys' elements:",
-      toString(names(relations)[!correct_element_names])
-    ))
-  if (!all(vapply(relations, \(rel) is.data.frame(rel$df), logical(1)))) {
-    stop("relation 'df' elements must be data frames")
-  }
-  if (!all(vapply(relations, \(rel) inherits(rel$keys, "list"), logical(1)))) {
-    stop("relation 'keys' elements must be lists")
-  }
+  stop_with_elements_if(
+    !correct_element_names,
+    "relations must contain 'df' and 'keys' elements"
+  )
+  stop_with_elements_if(
+    !vapply(relations, \(rel) is.data.frame(rel$df), logical(1)),
+    "relation 'df' elements must be data frames"
+  )
+  stop_with_elements_if(
+    !vapply(relations, \(rel) inherits(rel$keys, "list"), logical(1)),
+    "relation 'keys' elements must be lists"
+  )
 
   # sort key contents and keys
   relations[] <- lapply(
@@ -175,12 +205,19 @@ relation <- function(relations, attrs_order) {
   )
 
   # sort attributes
-  col_order_indices <- lapply(
-    relations,
-    \(rel) match(names(rel$df), attrs_order)
+  attrs_missing <- Reduce(
+    c,
+    lapply(relations, \(rel) names(rel$df)),
+    init = character()
+  ) |>
+    setdiff(attrs_order)
+  stop_with_values_if(
+    attrs_missing,
+    rep(TRUE, length(attrs_missing)),
+    "relation attributes not in attrs_order",
+    prefix = "missing",
+    suffix_else = ""
   )
-  if (anyNA(unlist(col_order_indices)))
-    stop("relation attributes not in attrs_order")
   col_indices <- lapply(
     relations,
     \(rel) match(names(rel$df), union(unlist(rel$keys), attrs_order))
@@ -194,30 +231,63 @@ relation <- function(relations, attrs_order) {
     col_indices
   )
 
-  if (!all(vapply(
-    relations,
-    \(rel) {
-      all(vapply(
-        rel$keys,
-        \(key) all(key %in% names(rel$df)),
+  missing_key_attributes <- lapply(
+    seq_along(relations),
+    \(n) {
+      r <- relations[[n]]
+      lapply(
+        seq_along(r$keys),
+        \(m) {
+          k <- r$keys[[m]]
+          missed <- setdiff(k, names(r$df))
+          if (length(missed) == 0)
+            NULL
+          else
+            paste0(
+              n,
+              ".",
+              m,
+              ".{",
+              toString(missed),
+              "}"
+            )
+        }
+      ) |>
+        Reduce(f = c, init = character())
+    }
+  ) |>
+    Reduce(f = c, init = character())
+  stop_with_values_if(
+    missing_key_attributes,
+    rep(TRUE, length(missing_key_attributes)),
+    "relation keys must be within relation attributes",
+    prefix = "element"
+  )
+  unsatisfied_keys <- lapply(
+    seq_along(relations),
+    \(n) {
+      r <- relations[[n]]
+      failed <- which(vapply(
+        r$keys,
+        \(key) df_anyDuplicated(r$df[, key, drop = FALSE]) > 0,
         logical(1)
       ))
-    },
-    logical(1)
-  )))
-    stop("relation keys must be within relation attributes")
-  if (!all(vapply(
-    relations,
-    \(rel) {
-      all(vapply(
-        rel$keys,
-        \(key) !df_anyDuplicated(rel$df[, key, drop = FALSE]),
-        logical(1)
-      ))
-    },
-    logical(1)
-  )))
-    stop("relations must satisfy their keys")
+      paste0(
+        n,
+        ".{",
+        vapply(r$keys[failed], toString, character(1)),
+        "}",
+        recycle0 = TRUE
+      )
+    }
+  ) |>
+    Reduce(f = c, init = character())
+  stop_with_values_if(
+    unsatisfied_keys,
+    rep(TRUE, length(unsatisfied_keys)),
+    "relations must satisfy their keys",
+    prefix = "element"
+  )
 
   relation_nocheck(relations, attrs_order)
 }
@@ -280,10 +350,18 @@ rename_attrs.relation <- function(x, names, ...) {
 check_relation_names <- function(nms) {
   if (!is.character(nms))
     stop("relations must be named")
-  if (anyDuplicated(nms))
-    stop("relation names must be unique")
-  if (any(nms == ""))
-    stop("relation names must be non-empty")
+  stop_with_values_if(
+    nms,
+    duplicated(nms),
+    "relation names must be unique",
+    prefix = "duplicated",
+    suffix_else = "",
+    unique = TRUE
+  )
+  stop_with_elements_if(
+    nms == "",
+    "relation names must be non-empty"
+  )
 }
 
 #' @exportS3Method

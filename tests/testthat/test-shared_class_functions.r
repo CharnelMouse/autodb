@@ -682,12 +682,12 @@ describe("keys<-", {
         failure_add = expect_keys_assignment_failure(
           rel,
           value,
-          "^relation keys must be within relation attributes$"
+          "^relation keys must be within relation attributes"
         ),
         failure_invalid = expect_keys_assignment_failure(
           rel,
           value,
-          "^relations must satisfy their keys$"
+          "^relations must satisfy their keys"
         )
       ),
       curry = TRUE
@@ -711,17 +711,17 @@ describe("keys<-", {
         failure_add = expect_keys_assignment_failure(
           db,
           value,
-          "^relation keys must be within relation attributes$"
+          "^relation keys must be within relation attributes"
         ),
         failure_ref = expect_keys_assignment_failure(
           db,
           value,
-          "^reference attributes must be within referrer's attributes and referee's keys$"
+          "^reference attributes must be within referrer's attributes and referee's keys"
         ),
         failure_invalid = expect_keys_assignment_failure(
           db,
           value,
-          "^relations must satisfy their keys$"
+          "^relations must satisfy their keys"
         )
       ),
       curry = TRUE
@@ -1185,9 +1185,9 @@ describe("names<-", {
     r <- create(rs)
     d <- create(ds)
     expect_error(`names<-`(rs, rep("a", 4)), "^relation schema names must be unique: duplicated a$")
-    expect_error(`names<-`(r, rep("a", 4)), "^relation names must be unique$")
+    expect_error(`names<-`(r, rep("a", 4)), "^relation names must be unique: duplicated a$")
     expect_error(`names<-`(ds, rep("a", 4)), "^relation schema names must be unique: duplicated a$")
-    expect_error(`names<-`(d, rep("a", 4)), "^relation names must be unique$")
+    expect_error(`names<-`(d, rep("a", 4)), "^relation names must be unique: duplicated a$")
   })
 })
 
