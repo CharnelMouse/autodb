@@ -50,12 +50,13 @@ continuous.
 \item approximation, logical for whether effect size extraction involved
 approximation.
 \item wansink, logical for whether the study was (co-)authored by Brian
-Wansink. This was done because, a few years before publication, Wansink
-had many papers retracted or corrected, due to various questionable
-practices, resulting in Wansink being determined to have committed
-scientific misconduct. This column was added to check whether the
-findings were robust to the exclusion of non-retracted studies by the
-Cornell Food and Brand Laboratory, of which Wansink was the director.
+Wansink. This was added on revision, because, a few years before
+publication, Wansink had many papers retracted or corrected, due to
+various questionable practices, resulting in Wansink being determined to
+have committed scientific misconduct. This column was added to check
+whether the findings were robust to the exclusion of non-retracted
+studies by the Cornell Food and Brand Laboratory, of which Wansink was
+the director.
 }
 }
 \source{

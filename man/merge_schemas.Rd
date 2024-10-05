@@ -19,7 +19,7 @@ giving the indices for the schemas into which to merge.}
 \item{...}{further arguments passed on to methods.}
 }
 \value{
-an R object of the same class as \code{x}, where the relations have
+An R object of the same class as \code{x}, where the relations have
 been merged as indicated.
 }
 \description{
@@ -50,4 +50,7 @@ merge_schemas(ds, 3, 2) # also merging their references
 # merging a schema into itself just removes it
 merge_schemas(rs, 3, 3)
 merge_schemas(ds, 3, 3)
+}
+\seealso{
+\code{\link{merge_empty_keys}}, which is based on this function.
 }

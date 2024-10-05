@@ -23,5 +23,5 @@ A list, containing a character vector for each element of \code{x}.
 }
 \description{
 Generic function, for fetching attribute sets for elements of a relational
-data object.
+object.
 }

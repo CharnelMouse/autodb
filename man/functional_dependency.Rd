@@ -20,7 +20,7 @@ must be present in \code{attrs}.}
 dependencies.}
 }
 \value{
-a \code{functional_dependency} object, containing the list given in
+A \code{functional_dependency} object, containing the list given in
 \code{FDs}, with \code{attrs_order} an attribute of the same name.
 Functional dependencies are returned with their determinant sets sorted
 according to the attribute order in \code{attrs}. Any duplicates found

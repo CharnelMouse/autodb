@@ -13,8 +13,9 @@ contains relations, such as a \code{\link{database}} object.}
 \item{...}{further arguments passed on to methods.}
 }
 \value{
-a relation-type object, or a list of relation-type objects if the
-subrelation isn't vectorised.
+A relation-type object, or a list of relation-type objects if the
+subrelation isn't vectorised. For example, if \code{x} is a
+\code{\link{database}}, the result is the contained \code{\link{relation}}.
 }
 \description{
 Generic function, returning subrelations for \code{x}.

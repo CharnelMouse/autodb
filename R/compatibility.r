@@ -3,13 +3,13 @@
 
 #' Determine Duplicate Elements
 #'
-#' \code{\link{duplicated}} " determines which elements of a vector or data
-#' frame are duplicates of elements with smaller subscripts, and returns a
-#' logical vector indicating which elements (rows) are duplicates". However, as
-#' of R 4.1, calling this on a data frame with zero columns always returns an
-#' empty logical vector. This has repercussions on other functions that use
-#' `duplicated`, such as `unique` and `anyDuplicated`. These functions add
-#' zero-column data frames as a special case.
+#' \code{\link{duplicated}} "determines which elements of a vector or data frame
+#' are duplicates of elements with smaller subscripts, and returns a logical
+#' vector indicating which elements (rows) are duplicates". However, as of R
+#' 4.1, calling this on a data frame with zero columns always returns an empty
+#' logical vector. This has repercussions on other functions that use
+#' `duplicated`, such as \code{\link{unique}} and \code{\link{anyDuplicated}}.
+#' These functions add zero-column data frames as a special case.
 #'
 #' @param x a data frame.
 #' @inheritParams base::duplicated.data.frame

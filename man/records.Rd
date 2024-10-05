@@ -20,10 +20,35 @@ records(x, ...) <- value
 will replace, in the same order.}
 }
 \value{
-A list containing data frames.
+A list containing data frames, with elements named for their
+respective relations.
 }
 \description{
 Generic function, for retrieving data contained in a database-like structure.
 In particular, this is intended for such structures where the individual
 relations can't be accessed with subsetting.
+}
+\details{
+Since the relational data objects in \code{autodb}, \code{\link{relation}}
+and \code{\link{database}}, have subsetting methods that return relational
+data objects, the data contained within them can't be accessed by subsetting.
+This function is intended for accessing it instead.
+
+It's recommended to call \code{records} before doing any subsetting, since
+subsetting on a relation data object does more work that will be thrown away,
+such as subsetting on a \code{\link{database}} checking whether foreign key
+references should be removed.
+}
+\examples{
+db <- autodb(ChickWeight)
+records(db) # data for Chick and Time_Chick relations
+
+# ways to get data for subsets
+records(db)[c(1, 2)]
+records(db)[[1]]
+records(db)$Chick
+
+# subsetting first isn't recommended: removes foreign key
+# reference as mentions, and you need to subset again anyway
+records(db[[1]])[[1]]
 }

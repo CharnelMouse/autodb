@@ -18,7 +18,7 @@ or \code{\link{database}} object.}
 \item{value}{A list, of the same length as \code{references}(x, ...).}
 }
 \value{
-a list, giving references.
+A list, giving references.
 }
 \description{
 Generic function, returning present (foreign key) references.

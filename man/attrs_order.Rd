@@ -23,6 +23,11 @@ A character vector, giving attributes in the order in which they're
 prioritised for sorting within \code{x}.
 }
 \description{
-Generic function, fetching attribute order for objects concerning relational
-attributes.
+Generic function, fetching attribute order for relational objects.
+}
+\details{
+All classes in \code{autodb} contain an \code{attrs_order} attribute. It
+gives an easy way to find a list of all attributes/variables involved in an
+object, but its main purpose is to also assign those attributes a consistent
+order when printing or plotting the object.
 }

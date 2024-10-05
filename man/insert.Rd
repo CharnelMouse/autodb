@@ -19,7 +19,7 @@ data into every element.}
 \item{...}{further arguments pass on to methods.}
 }
 \value{
-an R object of the same class as \code{x}, containing the additional
+An R object of the same class as \code{x}, containing the additional
 new data.
 }
 \description{

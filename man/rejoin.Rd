@@ -15,8 +15,8 @@ A data frame, containing all information contained \code{database} if
 it is lossless and self-consistent.
 }
 \description{
-Rejoins the relations in a database. This is the inverse of calling
-\code{\link{autodb}} with \code{accuracy} set to 1, except that the rows
+Rejoins the relations in a database into a single data frame, if possible.
+This is the inverse of calling \code{\link{autodb}}, except that the rows
 might be returned in a different order.
 }
 \details{
@@ -27,10 +27,17 @@ relations that the starting relation is linked to by foreign keys, and is not
 limited to them either, since in some cases this constraint would make it
 impossible to rejoin with all of the present attributes.
 
-If the database is inconsistent, where the unused relations contain
-additional information, then the rejoining will be lossy. The algorithm does
-not check for this consistency violation. This is also the case for rejoining
-the results of \code{\link{reduce}}.
+Since the algorithm may not use all of the given relations, the algorithm may
+ignore some types of database inconsistency, where different relations hold
+data inconsistent with each other. In this case, the rejoining will be lossy.
+Rejoining the results of \code{\link{reduce}} can also be lossy.
+
+Due to the above issues, the algorithm will be changed to use all of the
+relations in the future.
+
+Not all databases can be represented as a single data frame. A simple example
+is any database where the same attribute name is used for several difference
+sources of data, since rejoining results in inappropriate merges.
 }
 \examples{
 # simple example

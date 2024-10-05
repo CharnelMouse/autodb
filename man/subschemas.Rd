@@ -13,8 +13,10 @@ schemas, such as a \code{\link{database_schema}} object.}
 \item{...}{further arguments passed on to methods.}
 }
 \value{
-a schema-type object, or a list of schema-type objects if the
-subschema isn't vectorised.
+A schema-type object, or a list of schema-type objects if the
+subschema isn't vectorised. For example, if \code{x} is a
+\code{\link{database_schema}}, the result is the contained
+\code{\link{relation_schema}}.
 }
 \description{
 Generic function, returning subschemas for \code{x}.

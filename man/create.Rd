@@ -14,10 +14,12 @@ instance of, such as a \code{\link{relation_schema}} or
 \item{...}{further arguments passed on to methods.}
 }
 \value{
-an instance of the schema. For example, calling \code{create} on a
+An instance of the schema. For example, calling \code{create} on a
 \code{\link{database_schema}} creates a \code{\link{database}}, where all
 the relations contain zero records.
 }
 \description{
-Create instance of a schema
+Create a relation data object, using the given relational schema object, with
+the resulting relations empty and ready for data insertion using
+\code{\link{insert}}.
 }

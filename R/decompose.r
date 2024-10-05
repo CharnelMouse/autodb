@@ -13,34 +13,12 @@
 #' and database schemas.
 #'
 #' @param df a data.frame, containing the data to be normalised.
-#' @param schema a database schema with foreign key references, as given by
+#' @param schema a database schema with foreign key references, such as given by
 #'   \code{\link{autoref}}.
 #' @inheritParams autodb
 #'
-#' @return A database, represented by a named list, with three elements:
-#'   \itemize{
-#'     \item \code{name} contains the assigned name of the relation set, if any;
-#'     \item \code{relations} contains a list of relations in third normal form,
-#'     that can reproduce the original data.frame;
-#'     \item \code{references} contains foreign key references between the
-#'     relations, represented as a list of length-four character vectors. In
-#'     order, the elements are the name of the child relation, the name of the
-#'     linked attribute in the child relation, the name of the parent relation,
-#'     and the name of the linked attribute in the parent relation. Currently,
-#'     the attribute is expected to have the same name in both relations.
-#'     \item \code{attributes} contains the attribute names in priority order.
-#'     This order can be taken from their order in \code{df}, or from the
-#'     \code{attrs_order} element in \code{schema}; these orderings must be the
-#'     same.
-#'   }
-#'
-#'   Relations are lists with the following elements:
-#'   \itemize{
-#'     \item \code{df}, the data.frame containing the data.
-#'     \item \code{keys}, a list of character vectors representing
-#'     (candidate) keys for the relation. The first key in the list is the
-#'     primary key.
-#'   }
+#' @return A \code{\link{database}} object, containing the data in \code{df}
+#'   within the database schema given in \code{schema}.
 #' @export
 decompose <- function(df, schema, name = NA_character_) {
   stopifnot(!anyDuplicated(names(schema)))

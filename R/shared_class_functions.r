@@ -50,7 +50,7 @@ dependant <- function(x, ...) {
 #' Relational data attributes
 #'
 #' Generic function, for fetching attribute sets for elements of a relational
-#' data object.
+#' object.
 #'
 #' @param x a relational schema object, such as a \code{\link{relation_schema}}
 #'   or \code{\link{database_schema}} object, or a relational data object, such
@@ -89,6 +89,8 @@ attrs <- function(x, ...) {
 #'   with no duplicated elements, to be used as the new attribute names.
 #' @param ... further arguments passed on to methods.
 #'
+#' @return A relational object of the same type as \code{x}, with attributes
+#'   renamed consistently across the whole object.
 #' @export
 rename_attrs <- function(x, names, ...) {
   UseMethod("rename_attrs")
@@ -128,12 +130,35 @@ keys <- function(x, ...) {
 #' In particular, this is intended for such structures where the individual
 #' relations can't be accessed with subsetting.
 #'
+#' Since the relational data objects in \code{autodb}, \code{\link{relation}}
+#' and \code{\link{database}}, have subsetting methods that return relational
+#' data objects, the data contained within them can't be accessed by subsetting.
+#' This function is intended for accessing it instead.
+#'
+#' It's recommended to call \code{records} before doing any subsetting, since
+#' subsetting on a relation data object does more work that will be thrown away,
+#' such as subsetting on a \code{\link{database}} checking whether foreign key
+#' references should be removed.
+#'
 #' @param x a relational data object, such as a \code{\link{relation}} or
 #'   \code{\link{database}} object.
 #' @param ... further arguments passed on to methods.
 #'
-#' @return A list containing data frames.
+#' @return A list containing data frames, with elements named for their
+#'   respective relations.
 #' @export
+#' @examples
+#' db <- autodb(ChickWeight)
+#' records(db) # data for Chick and Time_Chick relations
+#'
+#' # ways to get data for subsets
+#' records(db)[c(1, 2)]
+#' records(db)[[1]]
+#' records(db)$Chick
+#'
+#' # subsetting first isn't recommended: removes foreign key
+#' # reference as mentions, and you need to subset again anyway
+#' records(db[[1]])[[1]]
 records <- function(x, ...) {
   UseMethod("records")
 }
@@ -151,8 +176,12 @@ records <- function(x, ...) {
 
 #' Relational data attribute order
 #'
-#' Generic function, fetching attribute order for objects concerning relational
-#' attributes.
+#' Generic function, fetching attribute order for relational objects.
+#'
+#' All classes in \code{autodb} contain an \code{attrs_order} attribute. It
+#' gives an easy way to find a list of all attributes/variables involved in an
+#' object, but its main purpose is to also assign those attributes a consistent
+#' order when printing or plotting the object.
 #'
 #' @param x an R object, such as a \code{\link{functional_dependency}},
 #'   \code{\link{relation_schema}}, \code{\link{relation}},
@@ -193,7 +222,7 @@ name <- function(x, ...) {
 #'   or \code{\link{database}} object.
 #' @param ... further arguments passed on to methods.
 #'
-#' @return a list, giving references.
+#' @return A list, giving references.
 #' @export
 references <- function(x, ...) {
   UseMethod("references")
@@ -216,8 +245,10 @@ references <- function(x, ...) {
 #'   schemas, such as a \code{\link{database_schema}} object.
 #' @param ... further arguments passed on to methods.
 #'
-#' @return a schema-type object, or a list of schema-type objects if the
-#'   subschema isn't vectorised.
+#' @return A schema-type object, or a list of schema-type objects if the
+#'   subschema isn't vectorised. For example, if \code{x} is a
+#'   \code{\link{database_schema}}, the result is the contained
+#'   \code{\link{relation_schema}}.
 #' @export
 subschemas <- function(x, ...) {
   UseMethod("subschemas")
@@ -231,8 +262,9 @@ subschemas <- function(x, ...) {
 #'   contains relations, such as a \code{\link{database}} object.
 #' @param ... further arguments passed on to methods.
 #'
-#' @return a relation-type object, or a list of relation-type objects if the
-#'   subrelation isn't vectorised.
+#' @return A relation-type object, or a list of relation-type objects if the
+#'   subrelation isn't vectorised. For example, if \code{x} is a
+#'   \code{\link{database}}, the result is the contained \code{\link{relation}}.
 #' @export
 subrelations <- function(x, ...) {
   UseMethod("subrelations")
@@ -281,9 +313,10 @@ merge_attribute_orderings <- function(...) {
 #' @param x a relational schema object, such as a \code{\link{relation_schema}}
 #'   or \code{\link{database_schema}} object.
 #'
-#' @return an R object of the same class as \code{x}, where relations with an
+#' @return An R object of the same class as \code{x}, where relations with an
 #'   empty key have been merged into a single relation.
 #' @export
+#' @seealso \code{\link{merge_schemas}}, on which this function is based.
 merge_empty_keys <- function(x) {
   empty_keys <- which(vapply(
     keys(x),
@@ -314,9 +347,10 @@ merge_empty_keys <- function(x) {
 #'   giving the indices for the schemas into which to merge.
 #' @param ... further arguments passed on to methods.
 #'
-#' @return an R object of the same class as \code{x}, where the relations have
+#' @return An R object of the same class as \code{x}, where the relations have
 #'   been merged as indicated.
 #' @export
+#' @seealso \code{\link{merge_empty_keys}}, which is based on this function.
 #' @examples
 #' rs <- relation_schema(
 #'   list(
@@ -346,12 +380,16 @@ merge_schemas <- function(x, to_remove, merge_into, ...) {
 
 #' Create instance of a schema
 #'
+#' Create a relation data object, using the given relational schema object, with
+#' the resulting relations empty and ready for data insertion using
+#' \code{\link{insert}}.
+#'
 #' @param x a relational schema object, representing the schema to create an
 #'   instance of, such as a \code{\link{relation_schema}} or
 #'   \code{\link{database_schema}} object.
 #' @param ... further arguments passed on to methods.
 #'
-#' @return an instance of the schema. For example, calling \code{create} on a
+#' @return An instance of the schema. For example, calling \code{create} on a
 #'   \code{\link{database_schema}} creates a \code{\link{database}}, where all
 #'   the relations contain zero records.
 #' @export
@@ -399,7 +437,7 @@ create <- function(x, ...) {
 #'   data into every element.
 #' @param ... further arguments pass on to methods.
 #'
-#' @return an R object of the same class as \code{x}, containing the additional
+#' @return An R object of the same class as \code{x}, containing the additional
 #'   new data.
 #' @export
 insert <- function(x, vals, relations = names(x), ...) {

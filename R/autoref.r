@@ -1,5 +1,20 @@
 #' Add foreign key references to a normalised database
 #'
+#' Adds foreign key references to a \code{\link{relation_schema}} object
+#' automatically, replacing any existing references.
+#'
+#' The method for generating references is simple. First, it finds every link
+#' between two relation schemas, where the parent contains all the attributes in
+#' one of the child's keys. This can be done separately for all of the child's
+#' keys, so there can be multiple links with the same parent and child if
+#' \code{single_ref} is \code{TRUE}.
+#'
+#' Second, any transitive references are removed: if there are link relation
+#' pairs a -> b, b -> c, and a -> c, then the latter is transitive, and so is
+#' removed. If there is a cyclic reference, e.g. where c -> a, then the choice
+#' of which link to remove is arbitrary. Cycles cannot occur in sets of relation
+#' schemas resulting from decomposing a single table.
+#'
 #' @param schema a \code{\link{relation_schema}} object, as given by
 #'   \code{\link{synthesise}}.
 #' @inheritParams autodb

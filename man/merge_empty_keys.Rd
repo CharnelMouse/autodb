@@ -11,7 +11,7 @@ merge_empty_keys(x)
 or \code{\link{database_schema}} object.}
 }
 \value{
-an R object of the same class as \code{x}, where relations with an
+An R object of the same class as \code{x}, where relations with an
 empty key have been merged into a single relation.
 }
 \description{
@@ -25,4 +25,7 @@ valid methods for these generic functions can be passed into this function.
 
 For \code{\link{database_schema}} objects, references involving the
 schemas with empty keys are updated to refer to the merged schema.
+}
+\seealso{
+\code{\link{merge_schemas}}, on which this function is based.
 }

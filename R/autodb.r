@@ -1,7 +1,9 @@
 #' Create a normalised database from a data frame
 #'
 #' This is a wrapper function for applying \code{\link{normalise}},
-#' \code{\link{autoref}}, and \code{\link{decompose}}, in order.
+#' \code{\link{autoref}}, and \code{\link{decompose}}. This takes a data frame
+#' and converts it straight into a database, which is the main intended use case
+#' for the package.
 #'
 #' Since `decompose` only works with functional dependencies, not approximate
 #' dependencies, the accuracy in `discover` is fixed as 1.

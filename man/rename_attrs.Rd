@@ -16,6 +16,10 @@ with no duplicated elements, to be used as the new attribute names.}
 
 \item{...}{further arguments passed on to methods.}
 }
+\value{
+A relational object of the same type as \code{x}, with attributes
+renamed consistently across the whole object.
+}
 \description{
 Generic function, for renaming attributes present in a database-like
 structure.
