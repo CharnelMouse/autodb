@@ -1,5 +1,7 @@
 # autodb (development version)
 
+The general theme for this version is classes for intermediate results: functional dependencies, schemas, and databases now have fleshed-out classes, with methods to keep them self-consistent. They all have their own constructors, for users to create their own, instead of having to generate them from a given data frame.
+
 ## Breaking changes
 
 * Renamed `dfd` to `discover`, to reflect the generalisation to allow the use of other methods. At the moment, this just includes DFD.
