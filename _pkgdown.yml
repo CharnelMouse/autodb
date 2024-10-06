@@ -1,0 +1,5 @@
+url: https://charnelmouse.github.io/autodb/
+template:
+  bootstrap: 5
+  light-switch: true
+
