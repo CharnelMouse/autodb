@@ -41,7 +41,7 @@ sources of data, since rejoining results in inappropriate merges.
 }
 \examples{
 # simple example
-db <- autodb(ChickWeight, "chick")
+db <- autodb(ChickWeight)
 rj <- rejoin(db)
 rj <- rj[order(as.integer(rownames(rj))), ]
 all(rj == ChickWeight) # TRUE

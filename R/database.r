@@ -203,11 +203,9 @@
 #'   references(db)
 #' )
 #' stopifnot(identical(db_recon2, db))
-database <- function(relations, references, name = NA_character_) {
+database <- function(relations, references) {
   if (!inherits(relations, "relation"))
     stop("relations must be a relation")
-  if (!is.character(name) || length(name) != 1L)
-    stop("name must be a scalar character")
   check_valid_reference(references, relations, "relation")
 
   relat_errors <- reference_errors(records(relations), references)
@@ -228,13 +226,12 @@ database <- function(relations, references, name = NA_character_) {
       )
     ))
 
-  database_nocheck(relations, references, name)
+  database_nocheck(relations, references)
 }
 
-database_nocheck <- function(relations, references, name = NA_character_) {
+database_nocheck <- function(relations, references) {
   structure(
     relations,
-    name = name,
     references = references,
     class = c("database", "relation", "list")
   )
@@ -272,8 +269,7 @@ reference_errors <- function(records, references) {
   attrs_order(rels) <- value
   database(
     rels,
-    references = references(x),
-    name = name(x)
+    references = references(x)
   )
 }
 
@@ -322,12 +318,7 @@ rename_attrs.database <- function(x, names, ...) {
     }
   )
   attr(x, "names") <- value
-  database_nocheck(x, new_refs, name(x))
-}
-
-#' @exportS3Method
-name.database <- function(x, ...) {
-  attr(x, "name")
+  database_nocheck(x, new_refs)
 }
 
 #' @exportS3Method
@@ -496,7 +487,7 @@ insert.database <- function(x, vals, relations = names(x), ...) {
 
 #' @exportS3Method
 print.database <- function(x, max = 10, ...) {
-  cat(paste0("database ", name(x), " with "))
+  cat("database with ")
   print(subrelations(x), max = max, ...)
   print_references(references(x), max)
 }

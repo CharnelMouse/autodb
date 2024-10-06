@@ -4,17 +4,13 @@
 \alias{decompose}
 \title{Decompose a data frame based on given normalised dependencies}
 \usage{
-decompose(df, schema, name = NA_character_)
+decompose(df, schema)
 }
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
 
 \item{schema}{a database schema with foreign key references, such as given by
 \code{\link{autoref}}.}
-
-\item{name}{a scalar character, giving the name of the database. This name
-is used for the resulting graph when using \code{\link{gv.database}}, to
-allow for easier combining of graphs into a single diagram if required.}
 }
 \value{
 A \code{\link{database}} object, containing the data in \code{df}

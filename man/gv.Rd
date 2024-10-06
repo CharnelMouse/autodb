@@ -4,10 +4,14 @@
 \alias{gv}
 \title{Generate Graphviz input text to plot objects}
 \usage{
-gv(x, ...)
+gv(x, name = NA_character_, ...)
 }
 \arguments{
 \item{x}{an object to be plotted.}
+
+\item{name}{a scalar character, giving the name of the object, if any. This
+name is used for the resulting graph, to allow for easier combining of
+graphs into a single diagram if required.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
@@ -67,7 +71,7 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) {
   DiagrammeR::grViz(txt_df)
 }
 # simple database example
-db <- autodb(ChickWeight, "chick")
+db <- autodb(ChickWeight)
 txt_db <- gv(db)
 cat(txt_db)
 if (requireNamespace("DiagrammeR", quietly = TRUE)) {

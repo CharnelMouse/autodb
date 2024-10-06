@@ -18,16 +18,6 @@ describe("database", {
       "^references must be a list$"
     )
   })
-  it("expects valid input: name is a scalar character", {
-    expect_error(
-      database(relation(setNames(list(), character()), character()), list(), 1L),
-      "^name must be a scalar character$"
-    )
-    expect_error(
-      database(relation(setNames(list(), character()), character()), list(), c("a", "b")),
-      "^name must be a scalar character$"
-    )
-  })
   it("expects valid input: reference elements are length-four lists", {
     expect_error(
       database(create(empty_rs), list("a")),
@@ -1090,7 +1080,7 @@ describe("database", {
       )),
       paste0(
         "\\A",
-        "database NA with 0 relations",
+        "database with 0 relations",
         "\\n",
         "0 attributes",
         "\\n",
@@ -1108,12 +1098,11 @@ describe("database", {
           ),
           c("a", "b", "c")
         ),
-        list(list("a", "b", "b", "b")),
-        "nm"
+        list(list("a", "b", "b", "b"))
       )),
       paste0(
         "\\A",
-        "database nm with 2 relations",
+        "database with 2 relations",
         "\\n",
         "3 attributes: a, b, c",
         "\\n",
@@ -1135,12 +1124,11 @@ describe("database", {
           ),
           c("a", "b", "c")
         ),
-        list(list("a", c("b", "c"), "b", c("b", "c"))),
-        "nm"
+        list(list("a", c("b", "c"), "b", c("b", "c")))
       )),
       paste0(
         "\\A",
-        "database nm with 2 relations",
+        "database with 2 relations",
         "\\n",
         "3 attributes: a, b, c",
         "\\n",

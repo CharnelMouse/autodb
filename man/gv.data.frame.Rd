@@ -4,13 +4,14 @@
 \alias{gv.data.frame}
 \title{Generate Graphviz input text to plot a data frame}
 \usage{
-\method{gv}{data.frame}(x, name, ...)
+\method{gv}{data.frame}(x, name = NA_character_, ...)
 }
 \arguments{
 \item{x}{a data.frame.}
 
 \item{name}{a character scalar, giving the name of the record, if any. The
-name must be non-empty.}
+name must be non-empty, since it is also used to name the single table in
+the plot.}
 
 \item{...}{further arguments passed to or from other methods.}
 }

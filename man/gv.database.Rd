@@ -4,11 +4,15 @@
 \alias{gv.database}
 \title{Generate Graphviz input text to plot databases}
 \usage{
-\method{gv}{database}(x, ...)
+\method{gv}{database}(x, name = NA_character_, ...)
 }
 \arguments{
 \item{x}{a database, as returned by \code{\link{autoref}} or
 \code{\link{autodb}}.}
+
+\item{name}{a scalar character, giving the name of the database, if any. This
+name is used for the resulting graph, to allow for easier combining of
+graphs into a single diagram if required.}
 
 \item{...}{further arguments passed to or from other methods.}
 }

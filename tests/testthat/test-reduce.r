@@ -43,7 +43,6 @@ describe("reduce.database", {
     reduced_to_subset <- function(df) {
       database <- autodb(df, ensure_lossless = FALSE)
       reduced <- reduce(database)
-      expect_identical(name(reduced), name(database))
       expect_true(all(reduced %in% database))
       expect_true(all(references(reduced) %in% references(database)))
     }

@@ -44,6 +44,9 @@
 #' single image, if a user wishes to do so.
 #'
 #' @param x an object to be plotted.
+#' @param name a scalar character, giving the name of the object, if any. This
+#'   name is used for the resulting graph, to allow for easier combining of
+#'   graphs into a single diagram if required.
 #' @param ... further arguments passed to or from other methods.
 #'
 #' @return A scalar character, containing text input for Graphviz.
@@ -57,7 +60,7 @@
 #'   DiagrammeR::grViz(txt_df)
 #' }
 #' # simple database example
-#' db <- autodb(ChickWeight, "chick")
+#' db <- autodb(ChickWeight)
 #' txt_db <- gv(db)
 #' cat(txt_db)
 #' if (requireNamespace("DiagrammeR", quietly = TRUE)) {
@@ -83,7 +86,7 @@
 #'   DiagrammeR::grViz(txt_rel)
 #' }
 #' @export
-gv <- function(x, ...) {
+gv <- function(x, name = NA_character_, ...) {
   UseMethod("gv", x)
 }
 
@@ -97,18 +100,23 @@ gv <- function(x, ...) {
 #'
 #' @param x a database, as returned by \code{\link{autoref}} or
 #'   \code{\link{autodb}}.
+#' @param name a scalar character, giving the name of the database, if any. This
+#'   name is used for the resulting graph, to allow for easier combining of
+#'   graphs into a single diagram if required.
 #' @inheritParams gv
 #'
 #' @return A scalar character, containing text input for Graphviz.
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
-gv.database <- function(x, ...) {
+gv.database <- function(x, name = NA_character_, ...) {
   if (any(names(x) == ""))
     stop("relation names can not be zero characters in length")
+  if (!is.character(name) || length(name) != 1)
+    stop("name must be a length-one character")
   x_labelled <- x
   names(x_labelled) <- to_rel_name(names(x))
   x_labelled <- rename_attrs(x_labelled, to_attr_name(attrs_order(x_labelled)))
-  setup_string <- gv_setup_string(name(x))
+  setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     relation_string,
     records(x),
@@ -150,6 +158,8 @@ gv.database <- function(x, ...) {
 gv.relation <- function(x, name = NA_character_, ...) {
   if (any(names(x) == ""))
     stop("relation names can not be zero characters in length")
+  if (!is.character(name) || length(name) != 1)
+    stop("name must be a length-one character")
   x_labelled <- x
   names(x_labelled) <- to_rel_name(names(x))
   setup_string <- gv_setup_string(name)
@@ -195,6 +205,8 @@ gv.relation <- function(x, name = NA_character_, ...) {
 gv.database_schema <- function(x, name = NA_character_, ...) {
   if (any(names(x) == ""))
     stop("relation schema names can not be zero characters in length")
+  if (!is.character(name) || length(name) != 1)
+    stop("name must be a length-one character")
   x_labelled <- x
   names(x_labelled) <- to_rel_name(names(x))
   x_labelled <- rename_attrs(x_labelled, to_attr_name(attrs_order(x_labelled)))
@@ -241,6 +253,8 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
 gv.relation_schema <- function(x, name = NA_character_, ...) {
   if (any(names(x) == ""))
     stop("relation schema names can not be zero characters in length")
+  if (!is.character(name) || length(name) != 1)
+    stop("name must be a length-one character")
   x_labelled <- x
   names(x_labelled) <- to_rel_name(names(x))
   x_labelled <- rename_attrs(x_labelled, to_attr_name(attrs_order(x_labelled)))
@@ -274,15 +288,20 @@ gv.relation_schema <- function(x, name = NA_character_, ...) {
 #'
 #' @param x a data.frame.
 #' @param name a character scalar, giving the name of the record, if any. The
-#'   name must be non-empty.
+#'   name must be non-empty, since it is also used to name the single table in
+#'   the plot.
 #' @inheritParams gv
 #'
 #' @return A scalar character, containing text input for Graphviz.
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
-gv.data.frame <- function(x, name, ...) {
+gv.data.frame <- function(x, name = NA_character_, ...) {
+  if (is.na(name))
+    name <- "data"
   if (name == "")
     stop("name must be non-empty")
+  if (!is.character(name) || length(name) != 1)
+    stop("name must be a length-one character")
   label <- to_rel_name(name)
   setup_string <- gv_setup_string(name)
   x_labelled <- x

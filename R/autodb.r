@@ -9,9 +9,6 @@
 #' dependencies, the accuracy in `discover` is fixed as 1.
 #'
 #' @param df a data.frame, containing the data to be normalised.
-#' @param name a scalar character, giving the name of the database. This name
-#'   is used for the resulting graph when using \code{\link{gv.database}}, to
-#'   allow for easier combining of graphs into a single diagram if required.
 #' @param single_ref a logical, FALSE by default. If TRUE, then only one
 #'   reference between each relation pair is kept when generating foreign key
 #'   references. If a pair has multiple references, the kept reference refers to
@@ -43,7 +40,6 @@
 #' @export
 autodb <- function(
   df,
-  name = NA_character_,
   single_ref = FALSE,
   ensure_lossless = TRUE,
   remove_avoidable = FALSE,
@@ -63,5 +59,5 @@ autodb <- function(
       remove_avoidable,
       constants_name
     ) |>
-    report$op(decompose, "decomposing", df = df, name)
+    report$op(decompose, "decomposing", df = df)
 }

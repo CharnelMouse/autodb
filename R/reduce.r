@@ -63,8 +63,7 @@ reduce.database <- function(x, ...) {
     Filter(
       \(r) all(is.element(r[c(1, 3)], sorted_kept)),
       references(x)
-    ),
-    name(x)
+    )
   )
 }
 

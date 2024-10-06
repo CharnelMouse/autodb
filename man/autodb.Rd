@@ -6,7 +6,6 @@
 \usage{
 autodb(
   df,
-  name = NA_character_,
   single_ref = FALSE,
   ensure_lossless = TRUE,
   remove_avoidable = FALSE,
@@ -18,10 +17,6 @@ autodb(
 }
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
-
-\item{name}{a scalar character, giving the name of the database. This name
-is used for the resulting graph when using \code{\link{gv.database}}, to
-allow for easier combining of graphs into a single diagram if required.}
 
 \item{single_ref}{a logical, FALSE by default. If TRUE, then only one
 reference between each relation pair is kept when generating foreign key

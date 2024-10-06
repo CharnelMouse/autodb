@@ -31,7 +31,6 @@ describe("decompose", {
           )),
           attrs_order = c("a", "b", "c")
         ),
-        name = NA_character_,
         references = list()
       )
     )
@@ -117,7 +116,6 @@ describe("decompose", {
         ),
         attrs_order = c("id", "month", "hemisphere", "is_winter")
       ),
-      name = NA_character_,
       references = list(list(
         "id",
         c("month", "hemisphere"),
@@ -384,7 +382,6 @@ describe("decompose", {
           ),
           attrs_order = c("player_name", "jersey_num", "team", "city", "state")
         ),
-        name = NA_character_,
         references = list(
           list("player_name_jersey_num", "team", "team", "team"),
           list("team", "city", "city", "city")

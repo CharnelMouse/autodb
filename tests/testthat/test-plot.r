@@ -127,6 +127,12 @@ describe("gv", {
         }
       )
     })
+    it("expects a length-one character name", {
+      forall(
+        gen.database(letters[1:6], 0, 4),
+        \(db) expect_error(gv(db, c("a", "b")))
+      )
+    })
     it("works for autodb output", {
       forall(
         gen_df(6, 7),
@@ -217,8 +223,7 @@ describe("gv", {
           list("Format Price", "Title", "Book", "Title"),
           list("Book", "Author", "Author", "Author"),
           list("Book", "Genre ID", "Genre", "Genre ID")
-        ),
-        name = "Book"
+        )
       )
       expected_string <- paste(
         "digraph Book {",
@@ -314,7 +319,7 @@ describe("gv", {
         sep = "\n"
       )
       expect_identical(
-        gv(db),
+        gv(db, name = "Book"),
         expected_string
       )
     })
@@ -394,8 +399,7 @@ describe("gv", {
           list("Format Price", "Title", "Book", "Title"),
           list("Book", "Author", "Author", "Author"),
           list("Book", "Genre ID", "Genre", "Genre ID")
-        ),
-        name = "Book"
+        )
       )
       expected_string <- paste(
         "digraph Book {",
@@ -492,7 +496,7 @@ describe("gv", {
         sep = "\n"
       )
       expect_identical(
-        gv(db),
+        gv(db, name = "Book"),
         expected_string
       )
     })
@@ -507,8 +511,7 @@ describe("gv", {
           ),
           attrs_order = c("a", "b")
         ),
-        references = list(),
-        name = NA_character_
+        references = list()
       )
       plot_string <- gv(db)
       expect_identical(substr(plot_string, 1, 9), "digraph {")
@@ -551,6 +554,12 @@ describe("gv", {
         }
       )
     })
+    it("expects a length-one character name", {
+      forall(
+        gen.relation(letters[1:6], 0, 4),
+        \(rel) expect_error(gv(rel, c("a", "b")))
+      )
+    })
     it("works for synthesise >> create outputs", {
       forall(
         gen_flat_deps(7, 20, to = 20L),
@@ -586,6 +595,12 @@ describe("gv", {
             "^relation schema names can not be zero characters in length$"
           )
         }
+      )
+    })
+    it("expects a length-one character name", {
+      forall(
+        gen.database_schema(letters[1:6], 0, 4),
+        \(ds) expect_error(gv(ds, c("a", "b")))
       )
     })
     it("works for normalise/autoref outputs", {
@@ -707,6 +722,12 @@ describe("gv", {
         }
       )
     })
+    it("expects a length-one character name", {
+      forall(
+        gen.relation_schema(letters[1:6], 0, 4),
+        \(rs) expect_error(gv(rs, c("a", "b")))
+      )
+    })
     it("works for synthesise outputs", {
       forall(
         gen_flat_deps(7, 20, to = 20L),
@@ -773,6 +794,12 @@ describe("gv", {
       df <- data.frame(a = 1:3)
       expect_error(gv(df, ""), "^name must be non-empty$")
     })
+    it("expects a length-one character name", {
+      forall(
+        gen_df(4, 6),
+        \(df) expect_error(gv(df, c("a", "b")))
+      )
+    })
     it("works for degenerate cases", {
       table_dum <- data.frame()
       table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
@@ -784,6 +811,19 @@ describe("gv", {
         list(gen_df(6, 7), gen_attr_name(5)),
         gv %>>% expect_no_error,
         curry = TRUE
+      )
+      forall(
+        gen_df(6, 7),
+        gv %>>% expect_no_error
+      )
+    })
+    it("generates a name if not given one", {
+      df <- data.frame(a = 1:3)
+      g <- strsplit(gv(df), "\n", fixed = TRUE)[[1]]
+      expect_identical(g[[1]], "digraph data {")
+      expect_identical(
+        g[[7]],
+        "    <TR><TD COLSPAN=\"2\">data (3 rows)</TD></TR>"
       )
     })
     it("creates a Graphviz HTML-like expression for the data.frame", {

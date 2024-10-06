@@ -4,7 +4,7 @@
 \alias{database}
 \title{Databases}
 \usage{
-database(relations, references, name = NA_character_)
+database(relations, references)
 }
 \arguments{
 \item{relations}{a \code{\link{relation}} object.}
@@ -16,10 +16,6 @@ the child attribute names, a scalar giving the name of the parent schema,
 and a vector giving the parent attribute names. The vectors must be of the
 same length and contain names for attributes present in their respective
 schemas, and the parent attributes must form a key, in order.}
-
-\item{name}{a scalar character, giving the name of the database. This name
-is used for the resulting graph when using \code{\link{gv.database}}, to
-allow for easier combining of graphs into a single diagram if required.}
 }
 \value{
 A \code{database} object, containing \code{relations} with

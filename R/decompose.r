@@ -15,12 +15,11 @@
 #' @param df a data.frame, containing the data to be normalised.
 #' @param schema a database schema with foreign key references, such as given by
 #'   \code{\link{autoref}}.
-#' @inheritParams autodb
 #'
 #' @return A \code{\link{database}} object, containing the data in \code{df}
 #'   within the database schema given in \code{schema}.
 #' @export
-decompose <- function(df, schema, name = NA_character_) {
+decompose <- function(df, schema) {
   stopifnot(!anyDuplicated(names(schema)))
   stopifnot(identical(names(df), attrs_order(schema)))
 
@@ -54,7 +53,7 @@ decompose <- function(df, schema, name = NA_character_) {
   }
 
   create_insert(df, schema) |>
-    database(references(schema), name)
+    database(references(schema))
 }
 
 create_insert <- function(df, schema) {

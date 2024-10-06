@@ -79,7 +79,7 @@ summary(ChickWeight)
 The simplest way to do normalisation is with the `autodb` function:
 
 ```{r}
-db <- autodb(ChickWeight, name = "Chick Weights")
+db <- autodb(ChickWeight)
 db
 ```
 
@@ -296,7 +296,7 @@ However, the publication-level relation this refers to is not determined by the 
 This suggests that some publication ID numbers have been erroneously assigned to several publications, which we can easily test:
 
 ```{r nudge_publication_check}
-nudge_database <- decompose(nudge, nudge_schema, "nudge")
+nudge_database <- decompose(nudge, nudge_schema)
 nudge_title_relation <- records(nudge_database)$title
 nudge_pid_duplicates <- unique(nudge_title_relation$publication_id[
   duplicated(nudge_title_relation$publication_id)
@@ -347,7 +347,7 @@ nudge_deps_size <- discover(nudge[, startsWith(names(nudge), "n_")], 1)
 nudge_deps_size
 nudge_deps_final <- c(nudge_deps_filtered, nudge_deps_size)
 nudge_schema_final <- normalise(nudge_deps_final, remove_avoidable = TRUE)
-nudge_database_final <- decompose(nudge, nudge_schema_final, "nudge")
+nudge_database_final <- decompose(nudge, nudge_schema_final)
 show(nudge_schema_final)
 ```
 

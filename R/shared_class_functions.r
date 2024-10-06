@@ -204,16 +204,6 @@ attrs_order <- function(x, ...) {
   UseMethod("attrs_order<-")
 }
 
-#' Name
-#'
-#' @param x an R object.
-#' @param ... further arguments passed on to methods.
-#'
-#' @export
-name <- function(x, ...) {
-  UseMethod("name")
-}
-
 #' Schema references
 #'
 #' Generic function, returning present (foreign key) references.
