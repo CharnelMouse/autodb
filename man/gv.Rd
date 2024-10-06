@@ -99,5 +99,6 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) {
 }
 \seealso{
 \code{\link{gv.data.frame}}, \code{\link{gv.relation_schema}},
-\code{\link{gv.database_schema}}, \code{\link{gv.database}}
+\code{\link{gv.database_schema}}, \code{\link{gv.relation}}, and
+\code{\link{gv.database}} for individual methods.
 }

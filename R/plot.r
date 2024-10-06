@@ -51,7 +51,8 @@
 #'
 #' @return A scalar character, containing text input for Graphviz.
 #' @seealso \code{\link{gv.data.frame}}, \code{\link{gv.relation_schema}},
-#'   \code{\link{gv.database_schema}}, \code{\link{gv.database}}
+#'   \code{\link{gv.database_schema}}, \code{\link{gv.relation}}, and
+#'   \code{\link{gv.database}} for individual methods.
 #' @examples
 #' # simple data.frame example
 #' txt_df <- gv(ChickWeight, "chick")
