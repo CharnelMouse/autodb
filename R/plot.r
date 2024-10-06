@@ -290,7 +290,7 @@ gv.relation_schema <- function(x, name = NA_character_, ...) {
 #' @param x a data.frame.
 #' @param name a character scalar, giving the name of the record, if any. The
 #'   name must be non-empty, since it is also used to name the single table in
-#'   the plot.
+#'   the plot. Defaults to `NA`: if left missing, it is set to "data".
 #' @inheritParams gv
 #'
 #' @return A scalar character, containing text input for Graphviz.

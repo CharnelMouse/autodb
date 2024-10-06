@@ -11,7 +11,7 @@
 
 \item{name}{a character scalar, giving the name of the record, if any. The
 name must be non-empty, since it is also used to name the single table in
-the plot.}
+the plot. Defaults to \code{NA}: if left missing, it is set to "data".}
 
 \item{...}{further arguments passed to or from other methods.}
 }
