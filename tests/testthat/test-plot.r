@@ -537,6 +537,46 @@ describe("gv", {
         1L
       )
     })
+    it("uses HTML escape sequences for &<>\" in main name and relation/attribute names", {
+      rs <- relation_schema(
+        list(
+          `<rel&1>` = list(c("a<1 & \"b\">2", "d"), list("a<1 & \"b\">2")),
+          `<rel&2>` = list(c("a<1 & \"b\">2", "e"), list(c("a<1 & \"b\">2", "e")))
+        ),
+        c("a<1 & \"b\">2", "d", "e")
+      )
+      ds <- database_schema(
+        rs,
+        list(list("<rel&2>", "a<1 & \"b\">2", "<rel&1>", "a<1 & \"b\">2"))
+      )
+      db <- create(ds)
+      expect_identical(
+        gv(db, "<Database & Test>"),
+        paste(
+          "digraph _Database___Test_ {",
+          "  rankdir = \"LR\"",
+          "  node [shape=plaintext];",
+          "",
+          '  _rel_1_ [label = <',
+          '    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">',
+          '    <TR><TD COLSPAN="3">&lt;rel&amp;1&gt; (0 records)</TD></TR>',
+          '    <TR><TD PORT="TO_a_1____b__2">a&lt;1 &amp; &quot;b&quot;&gt;2</TD><TD BGCOLOR="black"></TD><TD PORT="FROM_a_1____b__2">logical</TD></TR>',
+          '    <TR><TD PORT="TO_d">d</TD><TD></TD><TD PORT="FROM_d">logical</TD></TR>',
+          '    </TABLE>>];',
+          '  _rel_2_ [label = <',
+          '    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">',
+          '    <TR><TD COLSPAN="3">&lt;rel&amp;2&gt; (0 records)</TD></TR>',
+          '    <TR><TD PORT="TO_a_1____b__2">a&lt;1 &amp; &quot;b&quot;&gt;2</TD><TD BGCOLOR="black"></TD><TD PORT="FROM_a_1____b__2">logical</TD></TR>',
+          '    <TR><TD PORT="TO_e">e</TD><TD BGCOLOR="black"></TD><TD PORT="FROM_e">logical</TD></TR>',
+          '    </TABLE>>];',
+          "",
+          "  _rel_2_:FROM_a_1____b__2 -> _rel_1_:TO_a_1____b__2;",
+          "}",
+          "",
+          sep = "\n"
+        )
+      )
+    })
   })
   describe("relation", {
     it("expects non-empty relation names", {
@@ -579,6 +619,31 @@ describe("gv", {
       rel_dee <- create(synthesise(discover(table_dee, 1)))
       expect_no_error(gv(rel_dum))
       expect_no_error(gv(rel_dee))
+    })
+    it("uses HTML escape sequences for &<>\" in main name and relation/attribute names", {
+      rs <- relation_schema(
+        list(`<rel&1>` = list(c("a<1 & b>2", "d"), list("a<1 & b>2"))),
+        c("a<1 & b>2", "d")
+      )
+      rel <- create(rs)
+      expect_identical(
+        gv(rel, "<Relation & Schema | Test>"),
+        paste(
+          "digraph _Relation___Schema___Test_ {",
+          "  rankdir = \"LR\"",
+          "  node [shape=plaintext];",
+          "",
+          '  _rel_1_ [label = <',
+          '    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">',
+          '    <TR><TD COLSPAN="3">&lt;rel&amp;1&gt; (0 records)</TD></TR>',
+          '    <TR><TD PORT="TO_a_1___b_2">a&lt;1 &amp; b&gt;2</TD><TD BGCOLOR="black"></TD><TD PORT="FROM_a_1___b_2">logical</TD></TR>',
+          '    <TR><TD PORT="TO_d">d</TD><TD></TD><TD PORT="FROM_d">logical</TD></TR>',
+          '    </TABLE>>];',
+          "}",
+          "",
+          sep = "\n"
+        )
+      )
     })
   })
   describe("database_schema", {
@@ -705,6 +770,45 @@ describe("gv", {
         1L
       )
     })
+    it("uses HTML escape sequences for &<>\" in main name and relation/attribute names", {
+      rs <- relation_schema(
+        list(
+          `<rel&1>` = list(c("a<1 & b>2", "d"), list("a<1 & b>2")),
+          `<rel&2>` = list(c("a<1 & b>2", "e"), list(c("a<1 & b>2", "e")))
+        ),
+        c("a<1 & b>2", "d", "e")
+      )
+      ds <- database_schema(
+        rs,
+        list(list("<rel&2>", "a<1 & b>2", "<rel&1>", "a<1 & b>2"))
+      )
+      expect_identical(
+        gv(ds, "<Database & Schema | Test>"),
+        paste(
+          "digraph _Database___Schema___Test_ {",
+          "  rankdir = \"LR\"",
+          "  node [shape=plaintext];",
+          "",
+          '  _rel_1_ [label = <',
+          '    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">',
+          '    <TR><TD COLSPAN="2">&lt;rel&amp;1&gt;</TD></TR>',
+          '    <TR><TD PORT="TO_a_1___b_2">a&lt;1 &amp; b&gt;2</TD><TD PORT="FROM_a_1___b_2" BGCOLOR="black"></TD></TR>',
+          '    <TR><TD PORT="TO_d">d</TD><TD PORT="FROM_d"></TD></TR>',
+          '    </TABLE>>];',
+          '  _rel_2_ [label = <',
+          '    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">',
+          '    <TR><TD COLSPAN="2">&lt;rel&amp;2&gt;</TD></TR>',
+          '    <TR><TD PORT="TO_a_1___b_2">a&lt;1 &amp; b&gt;2</TD><TD PORT="FROM_a_1___b_2" BGCOLOR="black"></TD></TR>',
+          '    <TR><TD PORT="TO_e">e</TD><TD PORT="FROM_e" BGCOLOR="black"></TD></TR>',
+          '    </TABLE>>];',
+          "",
+          "  _rel_2_:FROM_a_1___b_2 -> _rel_1_:TO_a_1___b_2;",
+          "}",
+          "",
+          sep = "\n"
+        )
+      )
+    })
   })
   describe("relation_schema", {
     it("expects non-empty relation schema names", {
@@ -787,6 +891,30 @@ describe("gv", {
       )
       plot_string <- gv(schema)
       expect_identical(substr(plot_string, 1, 9), "digraph {")
+    })
+    it("uses HTML escape sequences for &<>\" in main name and relation/attribute names", {
+      rs <- relation_schema(
+        list(`<rel&1>` = list(c("a<1 & b>2", "d"), list("a<1 & b>2"))),
+        c("a<1 & b>2", "d")
+      )
+      expect_identical(
+        gv(rs, "<Relation & Schema | Test>"),
+        paste(
+          "digraph _Relation___Schema___Test_ {",
+          "  rankdir = \"LR\"",
+          "  node [shape=plaintext];",
+          "",
+          '  _rel_1_ [label = <',
+          '    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">',
+          '    <TR><TD COLSPAN="2">&lt;rel&amp;1&gt;</TD></TR>',
+          '    <TR><TD PORT="TO_a_1___b_2">a&lt;1 &amp; b&gt;2</TD><TD PORT="FROM_a_1___b_2" BGCOLOR="black"></TD></TR>',
+          '    <TR><TD PORT="TO_d">d</TD><TD PORT="FROM_d"></TD></TR>',
+          '    </TABLE>>];',
+          "}",
+          "",
+          sep = "\n"
+        )
+      )
     })
   })
   describe("data.frame", {
@@ -872,6 +1000,34 @@ describe("gv", {
             "rows",
             c("A 1", "b.2"),
             c("a_1", "b_2"),
+            c("integer", "character"),
+            matrix(nrow = 0, ncol = 0)
+          ),
+          "}",
+          "",
+          sep = "\n"
+        )
+      )
+    })
+    it("uses HTML escape sequences for &<>\" in main name and attribute names", {
+      df <- data.frame(
+        a = 1:2, b = letters[1:2]
+      ) |>
+        stats::setNames(c("a", "b<2 & c>3"))
+      expect_identical(
+        gv(df, "<Table & Test>"),
+        paste(
+          "digraph _Table___Test_ {",
+          "  rankdir = \"LR\"",
+          "  node [shape=plaintext];",
+          "",
+          test_df_strings(
+            "&lt;Table &amp; Test&gt;",
+            "_Table___Test_",
+            2,
+            "rows",
+            c("a", "b&lt;2 &amp; c&gt;3"),
+            c("a", "b_2___c_3"),
             c("integer", "character"),
             matrix(nrow = 0, ncol = 0)
           ),

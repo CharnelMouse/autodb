@@ -114,18 +114,17 @@ gv.database <- function(x, name = NA_character_, ...) {
     stop("relation names can not be zero characters in length")
   if (!is.character(name) || length(name) != 1)
     stop("name must be a length-one character")
-  x_labelled <- x
-  names(x_labelled) <- to_rel_name(names(x))
-  x_labelled <- rename_attrs(x_labelled, to_attr_name(attrs_order(x_labelled)))
+  x_labelled <- to_labelled(x)
+  x_elemented <- to_elemented(x)
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     relation_string,
-    records(x),
-    records(x_labelled),
-    keys(x),
-    names(x),
-    names(x_labelled),
-    "record"
+    df = records(x_elemented),
+    df_labelled = records(x_labelled),
+    df_keys = keys(x_elemented),
+    df_name = names(x_elemented),
+    df_label = names(x_labelled),
+    row_name = "record"
   ) |>
     paste(collapse = "\n")
   reference_strings <- reference_strings(x_labelled)
@@ -161,16 +160,16 @@ gv.relation <- function(x, name = NA_character_, ...) {
     stop("relation names can not be zero characters in length")
   if (!is.character(name) || length(name) != 1)
     stop("name must be a length-one character")
-  x_labelled <- x
-  names(x_labelled) <- to_rel_name(names(x))
+  x_labelled <- to_labelled(x)
+  x_elemented <- to_elemented(x)
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     relation_string,
-    records(x),
-    records(x_labelled),
-    keys(x),
-    names(x),
-    names(x_labelled)
+    df = records(x_elemented),
+    df_labelled = records(x_labelled),
+    df_keys = keys(x_elemented),
+    df_name = names(x_elemented),
+    df_label = names(x_labelled)
   ) |>
     paste(collapse = "\n")
   teardown_string <- "}\n"
@@ -208,17 +207,16 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
     stop("relation schema names can not be zero characters in length")
   if (!is.character(name) || length(name) != 1)
     stop("name must be a length-one character")
-  x_labelled <- x
-  names(x_labelled) <- to_rel_name(names(x))
-  x_labelled <- rename_attrs(x_labelled, to_attr_name(attrs_order(x_labelled)))
+  x_labelled <- to_labelled(x)
+  x_elemented <- to_elemented(x)
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     relation_schema_string,
-    attrs(x),
-    attrs(x_labelled),
-    keys(x),
-    names(x),
-    names(x_labelled)
+    attrs = attrs(x_elemented),
+    attr_labels = attrs(x_labelled),
+    keys = keys(x_elemented),
+    relation_name = names(x_elemented),
+    rel_label = names(x_labelled)
   ) |>
     paste(collapse = "\n")
   reference_strings <- reference_strings(x_labelled)
@@ -256,17 +254,16 @@ gv.relation_schema <- function(x, name = NA_character_, ...) {
     stop("relation schema names can not be zero characters in length")
   if (!is.character(name) || length(name) != 1)
     stop("name must be a length-one character")
-  x_labelled <- x
-  names(x_labelled) <- to_rel_name(names(x))
-  x_labelled <- rename_attrs(x_labelled, to_attr_name(attrs_order(x_labelled)))
+  x_labelled <- to_labelled(x)
+  x_elemented <- to_elemented(x)
   setup_string <- gv_setup_string(name)
   df_strings <- mapply(
     relation_schema_string,
-    attrs(x),
-    attrs(x_labelled),
-    keys(x),
-    names(x),
-    names(x_labelled)
+    attrs = attrs(x_elemented),
+    attr_labels = attrs(x_labelled),
+    keys = keys(x_elemented),
+    relation_name = names(x_elemented),
+    rel_label = names(x_labelled)
   ) |>
     paste(collapse = "\n")
   teardown_string <- "}\n"
@@ -303,11 +300,17 @@ gv.data.frame <- function(x, name = NA_character_, ...) {
     stop("name must be non-empty")
   if (!is.character(name) || length(name) != 1)
     stop("name must be a length-one character")
-  label <- to_rel_name(name)
   setup_string <- gv_setup_string(name)
   x_labelled <- x
   names(x_labelled) <- to_attr_name(names(x))
-  table_string <- relation_string(x, x_labelled, list(), name, label, "row")
+  table_string <- relation_string(
+    df = stats::setNames(x, to_element_name(names(x))),
+    df_labelled = x_labelled,
+    df_keys = list(),
+    df_name = to_element_name(name),
+    df_label = to_node_name(name),
+    row_name = "row"
+  )
   teardown_string <- "}\n"
   paste(
     setup_string,
@@ -462,26 +465,40 @@ reference_string <- function(reference) {
     "  ",
     paste(
       reference[[1]],
-      paste0("FROM_", to_attr_name(reference[[2]])),
+      paste0("FROM_", reference[[2]]),
       sep = ":"
     ),
     " -> ",
     paste(
       reference[[3]],
-      paste0("TO_", to_attr_name(reference[[4]])),
+      paste0("TO_", reference[[4]]),
       sep = ":"
     ),
     ";"
   )
 }
 
+to_labelled <- function(x) {
+  x_labelled <- rename_attrs(x, to_attr_name(attrs_order(x)))
+  names(x_labelled) <- to_node_name(names(x_labelled))
+  x_labelled
+}
+
+to_elemented <- function(x) {
+  x_elemented <- rename_attrs(x, to_element_name(attrs_order(x)))
+  names(x_elemented) <- to_element_name(names(x_elemented))
+  x_elemented
+}
+
 to_main_name <- function(nm) make.gv_names(nm)
-to_rel_name <- function(nm) make.gv_names(nm)
+to_element_name <- function(nm) make.html_names(nm)
+to_node_name <- function(nm) make.gv_names(nm)
 # attrs to lower case, because GraphViz HTML record port connections ignore case
 to_attr_name <- function(nm) make.gv_names(tolower(nm))
 
-make.gv_names <- function(
-  string
+make.gv_names_base <- function(
+    string,
+    transform_gv_names
 ) {
   string <- enc2utf8(string)
   if (length(string) == 0) {
@@ -489,11 +506,45 @@ make.gv_names <- function(
   }
   string_attributes <- attributes(string)
   string <- string |>
-    gsub(pattern = "[^[:alnum:]]", replacement = "_") |>
-    sub(pattern = "^_(^_)", replacement = "\\1", perl = TRUE) |>
-    sub(pattern = "(^_)_$", replacement = "\\1", perl = TRUE) |>
+    transform_gv_names() |>
     make.unique(sep = "")
   attributes(string) <- string_attributes
   string <- enc2utf8(string)
   string
+}
+make.html_names <- function(
+    string
+) {
+  make.gv_names_base(
+    string,
+    \(s) s |>
+      gsub(pattern = "&", replacement = "&amp;") |>
+      gsub(pattern = "<", replacement = "&lt;") |>
+      gsub(pattern = ">", replacement = "&gt;") |>
+      gsub(pattern = "\"", replacement = "&quot;")
+  )
+}
+make.html_attribute_names <- function(
+    string
+) {
+  make.gv_names_base(
+    string,
+    \(s) gsub(pattern = "[^[:alnum:]&<>\"]", replacement = "_", s) |>
+      gsub(pattern = "&", replacement = "&amp;") |>
+      gsub(pattern = "<", replacement = "&lt;") |>
+      gsub(pattern = ">", replacement = "&gt;") |>
+      gsub(pattern = "\"", replacement = "&quot;") |>
+      sub(pattern = "^_(^_)", replacement = "\\1", perl = TRUE) |>
+      sub(pattern = "(^_)_$", replacement = "\\1", perl = TRUE)
+  )
+}
+make.gv_names <- function(
+    string
+) {
+  make.gv_names_base(
+    string,
+    \(s) gsub(pattern = "[^[:alnum:]]", replacement = "_", s) |>
+      sub(pattern = "^_(^_)", replacement = "\\1", perl = TRUE) |>
+      sub(pattern = "(^_)_$", replacement = "\\1", perl = TRUE)
+  )
 }

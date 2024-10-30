@@ -1,5 +1,9 @@
 # autodb (development version)
 
+## Fixes
+
+* Fixed `gv` to account for Graphviz HTML-like labels requiring certain characters, namely the set "<>&, to be escaped in Graphviz HTML-like labels, and removed completely in attribute values.
+
 # autodb 2.0.0
 
 The general theme for this version is classes for intermediate results: functional dependencies, schemas, and databases now have fleshed-out classes, with methods to keep them self-consistent. They all have their own constructors, for users to create their own, instead of having to generate them from a given data frame.
