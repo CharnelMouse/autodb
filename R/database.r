@@ -3,7 +3,7 @@
 #' Enhances a \code{\link{relation}} object with foreign key reference
 #' information.
 #'
-#' Unlike \code{\link{relation_schema}} and \code{link{relation}}, and like
+#' Unlike \code{\link{relation_schema}} and \code{\link{relation}}, and like
 #' \code{\link{database_schema}}, \code{database} is not designed to be
 #' vector-like: it only holds a single database. This adheres to the usual
 #' package use case, where a single data frame is being analysed at a time.
@@ -104,12 +104,19 @@
 #'   data.frame(a = 1L, b = 2L, c = 3L, d = 4L),
 #'   relations = "b"
 #' )
+#' # inserted data can't violate keys
+#' \dontrun{
+#'   insert(
+#'     db,
+#'     data.frame(a = 1L, b = 1:2)
+#'   )
+#' }
 #' # inserted data can't violate foreign key references
 #' \dontrun{
 #'   insert(
 #'     db,
 #'     data.frame(a = 1L, b = 2L, c = 3L, d = 4L),
-#'     relations = "b"
+#'     relations = "a"
 #'   )
 #' }
 #'
