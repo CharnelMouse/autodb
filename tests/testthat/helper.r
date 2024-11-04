@@ -293,7 +293,7 @@ is_valid_database <- function(
   for (fk in fks) {
     expect_true(identical(
       nrow(records(x)[[fk[[1]]]]),
-      nrow(merge(
+      nrow(df_join(
         recs[[fk[[1]]]][, fk[[2]], drop = FALSE],
         recs[[fk[[3]]]][, fk[[4]], drop = FALSE],
         by.x = fk[[2]],
@@ -667,7 +667,7 @@ remove_violated_references <- function(references, relation) {
       parent <- recs[[rel[[3]]]][, rel[[4]], drop = FALSE]
       identical(
         nrow(child),
-        nrow(merge(
+        nrow(df_join(
           child,
           parent,
           by.x = rel[[2]],
@@ -867,7 +867,7 @@ remove_reference_violations <- function(relation, references) {
         stopifnot(is.element(list(ref[[4]]), parent_keys))
         valid <- vapply(
           seq_len(nrow(child)),
-          \(n) nrow(merge(
+          \(n) nrow(df_join(
             child[n, , drop = FALSE],
             parent,
             by.x = ref[[2]],
@@ -905,7 +905,7 @@ remove_insertion_reference_violations <- function(df, database) {
         )
         valid <- vapply(
           seq_len(nrow(child)),
-          \(n) nrow(merge(
+          \(n) nrow(df_join(
             child[n, , drop = FALSE],
             parent,
             by.x = ref[[2]],
@@ -947,7 +947,7 @@ minimal_legal_insertion_sets <- function(db, df) {
     records(db[have_attrs]),
     \(r) {
       # assumes df rows are already unique
-      nrow(merge(r, df[, names(r), drop = FALSE])) == nrow(df)
+      nrow(df_join(r, df[, names(r), drop = FALSE])) == nrow(df)
     },
     logical(1)
   )

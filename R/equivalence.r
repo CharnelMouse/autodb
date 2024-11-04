@@ -14,7 +14,7 @@ df_equiv <- function(df1, df2) {
   identical(dim(df1), dim(df2)) &&
     identical(table(names(df1)), table(names(df2))) &&
     identical(
-      nrow(merge(
+      nrow(df_join(
         stats::setNames(df1, make.unique(names(df1))),
         stats::setNames(df2, make.unique(names(df2))),
         sort = FALSE

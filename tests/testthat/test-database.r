@@ -207,7 +207,7 @@ describe("database", {
     ))
     referrer <- records(rel)$a_c_d
     referee <- records(rel)$a_b
-    check <- merge(referrer, referee, by = c("a", "b"))
+    check <- df_join(referrer, referee, by = c("a", "b"))
     expect_identical(nrow(referrer), 7L)
     expect_identical(nrow(referee), 6L)
     expect_identical(nrow(check), 10L)
