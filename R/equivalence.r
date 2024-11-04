@@ -12,13 +12,16 @@
 #' @export
 df_equiv <- function(df1, df2) {
   identical(dim(df1), dim(df2)) &&
-    identical(table(names(df1)), table(names(df2))) &&
-    identical(
-      nrow(df_join(
-        stats::setNames(df1, make.unique(names(df1))),
-        stats::setNames(df2, make.unique(names(df2))),
-        sort = FALSE
-      )),
-      nrow(df1)
+    identical(table(names(df1)), table(names(df2))) && (
+      if (ncol(df1) == 0)
+        TRUE
+      else {
+        dfs1 <- stats::setNames(df1, make.unique(names(df1)))
+        dfs2 <- stats::setNames(df2, make.unique(names(df2)))
+        dfs2 <- dfs2[, names(dfs1), drop = FALSE]
+        recs1 <- do.call(Map, `names<-`(c(list, dfs1), NULL))
+        recs2 <- do.call(Map, `names<-`(c(list, dfs2), NULL))
+        identical(table(match(recs2, recs1)), table(match(recs1, recs1)))
+      }
     )
 }
