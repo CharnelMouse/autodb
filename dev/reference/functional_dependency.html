@@ -169,6 +169,12 @@ attribute is their union instead.</p>
 <span class="r-in"><span> <span class="fu"><a href="attrs_order.html">attrs_order</a></span><span class="op">(</span><span class="va">fds</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">fds_recon</span>, <span class="va">fds</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># can be a data frame column</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, fds <span class="op">=</span> <span class="va">fds</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   id       fds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 a, b -&gt; c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2      -&gt; d</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
