@@ -42,6 +42,11 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="autodb-development-version">autodb (development version)<a class="anchor" aria-label="anchor" href="#autodb-development-version"></a></h2>
 <div class="section level3">
+<h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
+<ul><li>Added <code>format</code> and <code>as.data.frame</code> methods for <code>functional_dependency</code>, <code>relation_schema</code>, <code>database_schema</code>, <code>relation</code>, and <code>database</code>. This allows them to be columns in a data frame at initial construction. I’m not sure <em>why</em> you’d want to put them a a data frame column, but it’s consistent with the idea that the objects from these classes should mostly be treatable as vectors. Be warned: they don’t currently work in tibbles.</li>
+<li>Added an <code>as.character</code> method for <code>functional_dependency</code>. The optional <code>align_arrows</code> argument can add padding to one side, in order to make the arrows align when they’re printed to different lines. These options are used to align arrows in its <code>print</code> method, and its <code>format</code> method for when printed as a data frame column.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="fixes-development-version">Fixes<a class="anchor" aria-label="anchor" href="#fixes-development-version"></a></h3>
 <ul><li>Fixed <code>gv</code> to account for Graphviz HTML-like labels requiring certain characters, namely the set “&lt;&gt;&amp;, to be escaped in Graphviz HTML-like labels, and removed completely in attribute values.</li>
 <li>Fixed <code>df_equiv</code> to properly handle data frames with zero columns or duplicate rows.</li>
