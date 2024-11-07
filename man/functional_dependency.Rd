@@ -73,6 +73,9 @@ fds_recon <- functional_dependency(
  attrs_order(fds)
 )
 stopifnot(identical(fds_recon, fds))
+
+# can be a data frame column
+data.frame(id = 1:2, fds = fds)
 }
 \seealso{
 \code{\link{detset}}, \code{\link{dependant}}, and

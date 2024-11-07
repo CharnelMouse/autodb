@@ -317,4 +317,12 @@ describe("functional_dependency", {
       )
     )
   })
+  it("can be added to a data frame as a column", {
+    fds <- functional_dependency(
+      list(list(c("a", "b"), "c"), list("a", "d")),
+      letters[1:4]
+    )
+    expect_no_error(tb <- data.frame(id = 1:2, fd = fds))
+    expect_identical(tb$fd, fds)
+  })
 })

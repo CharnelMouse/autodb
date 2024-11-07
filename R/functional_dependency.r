@@ -64,6 +64,9 @@
 #'  attrs_order(fds)
 #' )
 #' stopifnot(identical(fds_recon, fds))
+#'
+#' # can be a data frame column
+#' data.frame(id = 1:2, fds = fds)
 #' @export
 functional_dependency <- function(
   FDs,
@@ -210,21 +213,46 @@ c.functional_dependency <- function(..., unique = TRUE) {
 }
 
 #' @exportS3Method
-print.functional_dependency <- function(x, ...) {
+as.character.functional_dependency <- function(
+  x,
+  align_arrows = c("no", "left", "right"),
+  ...
+) {
+  align_arrows <- match.arg(align_arrows)
   det_txt <- vapply(detset(x), toString, character(1))
-  if (length(x) == 0L)
-    padding <- character()
-  else{
-    det_nchar <- nchar(det_txt)
-    det_len <- max(det_nchar)
-    padding <- vapply(
-      det_len - det_nchar,
-      \(n) paste(rep(" ", n), collapse = ""),
-      character(1)
-    )
-  }
   dep_txt <- dependant(x)
-  txt <- paste0(padding, det_txt, " -> ", dep_txt, recycle0 = TRUE)
+  switch(
+    align_arrows,
+    no = lpadding <- rpadding <- rep("", length(x)),
+    left = if (length(x) == 0) {
+      lpadding <- rpadding <- rep("", length(x))
+    }else{
+      det_nchar <- nchar(det_txt)
+      lpadding <- vapply(
+        max(det_nchar) - det_nchar,
+        \(n) paste(rep(" ", n), collapse = ""),
+        character(1)
+      )
+      rpadding <- rep("", length(x))
+    },
+    right = if (length(x) == 0) {
+      lpadding <- rpadding <- rep("", length(x))
+    }else{
+      dep_nchar <- nchar(dep_txt)
+      rpadding <- vapply(
+        max(dep_nchar) - dep_nchar,
+        \(n) paste(rep(" ", n), collapse = ""),
+        character(1)
+      )
+      lpadding <- rep("", length(x))
+    }
+  )
+  paste0(lpadding, det_txt, " -> ", dep_txt, rpadding, recycle0 = TRUE)
+}
+
+#' @exportS3Method
+print.functional_dependency <- function(x, ...) {
+  txt <- as.character(x, align_arrows = "left")
   cat(with_number(length(x), "functional dependenc", "y", "ies"))
   cat(paste0("\n", with_number(length(attrs_order(x)), "attribute", "", "s")))
   if (length(attrs_order(x)) > 0)
@@ -233,4 +261,25 @@ print.functional_dependency <- function(x, ...) {
   if (length(txt) > 0L) {
     cat(txt, sep = "\n")
   }
+}
+
+#' @exportS3Method
+format.functional_dependency <- function(x, ...) {
+  as.character(x, align_arrows = "right")
+}
+
+#' @exportS3Method
+as.data.frame.functional_dependency <- function(
+  x,
+  row.names = NULL,
+  optional = FALSE,
+  ...,
+  nm = deparse1(substitute(x))[[1L]]
+) {
+  res <- data.frame(a = seq_along(x))[, FALSE, drop = FALSE]
+  res$x <- x
+  names(res) <- NULL
+  if (!optional)
+    names(res) <- nm
+  res
 }
