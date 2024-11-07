@@ -191,6 +191,9 @@
 #'   references(ds)
 #' )
 #' stopifnot(identical(ds_recon2, ds))
+#'
+#' # can be a data frame column
+#' data.frame(id = 1:2, schema = ds)
 database_schema <- function(relation_schemas, references) {
   if (!inherits(relation_schemas, "relation_schema"))
     stop("relations must be a relation_schema")

@@ -66,7 +66,7 @@
 #' stopifnot(identical(fds_recon, fds))
 #'
 #' # can be a data frame column
-#' data.frame(id = 1:2, fds = fds)
+#' data.frame(id = 1:2, fd = fds)
 #' @export
 functional_dependency <- function(
   FDs,

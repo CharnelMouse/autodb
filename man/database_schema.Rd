@@ -190,6 +190,9 @@ ds_recon2 <- database_schema(
   references(ds)
 )
 stopifnot(identical(ds_recon2, ds))
+
+# can be a data frame column
+data.frame(id = 1:2, schema = ds)
 }
 \seealso{
 \code{\link{attrs}}, \code{\link{keys}}, \code{\link{attrs_order}},

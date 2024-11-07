@@ -91,6 +91,9 @@ schemas_recon <- relation_schema(
   attrs_order(schemas)
 )
 stopifnot(identical(schemas_recon, schemas))
+
+# can be a data frame column
+data.frame(id = 1:2, schema = schemas)
 }
 \seealso{
 \code{\link{attrs}}, \code{\link{keys}}, and

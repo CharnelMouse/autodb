@@ -89,6 +89,9 @@
 #'   attrs_order(schemas)
 #' )
 #' stopifnot(identical(schemas_recon, schemas))
+#'
+#' # can be a data frame column
+#' data.frame(id = 1:2, schema = schemas)
 relation_schema <- function(
   schemas,
   attrs_order
@@ -435,4 +438,25 @@ print.relation_schema <- function(x, max = 10, ...) {
   if (max < n_relations) {
     cat("... and", with_number(n_relations - max, "other schema", "", "s"), "\n")
   }
+}
+
+#' @exportS3Method
+format.relation_schema <- function(x, ...) {
+  paste("schema", names(x))
+}
+
+#' @exportS3Method
+as.data.frame.relation_schema <- function(
+  x,
+  row.names = NULL,
+  optional = FALSE,
+  ...,
+  nm = deparse1(substitute(x))[[1L]]
+) {
+  res <- data.frame(a = seq_along(x))[, FALSE, drop = FALSE]
+  res$x <- x
+  names(res) <- NULL
+  if (!optional)
+    names(res) <- nm
+  res
 }
