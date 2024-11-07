@@ -160,11 +160,26 @@ unique(db[c(1, 2, 1, 2)]) # unique() also merges references
 db_merge <- database(
   relation(
     list(
-      a = list(df = data.frame(a = logical(), b = logical()), keys = list("a")),
-      b = list(df = data.frame(b = logical(), c = logical(), d = logical()), keys = list("b")),
-      c_d = list(df = data.frame(c = logical(), d = logical(), e = logical()), keys = list(c("c", "d"))),
-      a.1 = list(df = data.frame(a = logical(), b = logical()), keys = list("a")),
-      b.1 = list(df = data.frame(b = logical(), c = logical(), d = logical()), keys = list("b"))
+      a = list(
+        df = data.frame(a = logical(), b = logical()),
+        keys = list("a")
+      ),
+      b = list(
+        df = data.frame(b = logical(), c = logical(), d = logical()),
+        keys = list("b")
+      ),
+      c_d = list(
+        df = data.frame(c = logical(), d = logical(), e = logical()),
+        keys = list(c("c", "d"))
+      ),
+      a.1 = list(
+        df = data.frame(a = logical(), b = logical()),
+        keys = list("a")
+      ),
+      b.1 = list(
+        df = data.frame(b = logical(), c = logical(), d = logical()),
+        keys = list("b")
+      )
     ),
     c("a", "b", "c", "d", "e")
   ),
