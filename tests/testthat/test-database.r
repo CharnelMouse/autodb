@@ -1142,4 +1142,17 @@ describe("database", {
       perl = TRUE
     )
   })
+  it("can be added to a data frame as a column", {
+    db <- relation_schema(
+      list(
+        a_b = list(c("a", "b", "c"), list(c("a", "b"))),
+        a = list(c("a", "d"), list("a"))
+      ),
+      letters[1:4]
+    ) |>
+      database_schema(list()) |>
+      create()
+    expect_no_error(tb <- data.frame(id = 1:2, relation = db))
+    expect_identical(tb$relation, db)
+  })
 })

@@ -225,6 +225,9 @@
 #'   references(db)
 #' )
 #' stopifnot(identical(db_recon2, db))
+#'
+#' # can be a data frame column
+#' data.frame(id = 1:2, relation = db)
 database <- function(relations, references) {
   if (!inherits(relations, "relation"))
     stop("relations must be a relation")

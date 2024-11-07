@@ -128,6 +128,9 @@
 #'   attrs_order(rels)
 #' )
 #' stopifnot(identical(rels_recon, rels))
+#'
+#' # can be a data frame column
+#' data.frame(id = 1:2, relation = rels)
 relation <- function(relations, attrs_order) {
   stopifnot(is.list(relations))
   stopifnot(is.character(attrs_order))
@@ -634,4 +637,35 @@ print.relation <- function(x, max = 10, ...) {
   if (max < n_relations) {
     cat("... and", with_number(n_relations - max, "other schema", "", "s"), "\n")
   }
+}
+
+#' @exportS3Method
+format.relation <- function(x, ...) {
+  paste0(
+    "schema ",
+    names(x),
+    " (",
+    vapply(
+      records(x),
+      \(df) with_number(nrow(df), "record", "", "s"),
+      character(1)
+    ),
+    ")"
+  )
+}
+
+#' @exportS3Method
+as.data.frame.relation <- function(
+  x,
+  row.names = NULL,
+  optional = FALSE,
+  ...,
+  nm = deparse1(substitute(x))[[1L]]
+) {
+  res <- data.frame(a = seq_along(x))[, FALSE, drop = FALSE]
+  res$x <- x
+  names(res) <- NULL
+  if (!optional)
+    names(res) <- nm
+  res
 }

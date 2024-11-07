@@ -136,6 +136,9 @@ rels_recon <- relation(
   attrs_order(rels)
 )
 stopifnot(identical(rels_recon, rels))
+
+# can be a data frame column
+data.frame(id = 1:2, relation = rels)
 }
 \seealso{
 \code{\link{records}}, \code{\link{attrs}}, \code{\link{keys}}, and

@@ -838,4 +838,16 @@ describe("relation", {
       perl = TRUE
     )
   })
+  it("can be added to a data frame as a column", {
+    rel <- relation_schema(
+      list(
+        a_b = list(c("a", "b", "c"), list(c("a", "b"))),
+        a = list(c("a", "d"), list("a"))
+      ),
+      letters[1:4]
+    ) |>
+      create()
+    expect_no_error(tb <- data.frame(id = 1:2, relation = rel))
+    expect_identical(tb$relation, rel)
+  })
 })
