@@ -316,7 +316,8 @@ gen_df <- function(
   ncol,
   minrow = 0L,
   mincol = 0L,
-  remove_dup_rows = FALSE
+  remove_dup_rows = FALSE,
+  variant = c("data.frame", "tibble")
 ) {
   asable_classes <- c("logical", "integer", "numeric", "character", "factor")
   list(
@@ -325,13 +326,26 @@ gen_df <- function(
         classes = gen.element(asable_classes) |> gen.c(of = n),
         nms = gen_attr_names(n, 9)
       )),
-    n_records = gen.element(seq.int(min(minrow, nrow), nrow))
+    n_records = gen.element(seq.int(min(minrow, nrow), nrow)),
+    variant = gen.element(variant)
   ) |>
-    gen.with(\(lst) c(lst[[1]], lst[2], list(remove_dup_rows = remove_dup_rows))) |>
+    gen.with(\(lst) c(lst[[1]], lst[2], list(remove_dup_rows = remove_dup_rows), lst[3])) |>
     gen.and_then(uncurry(gen.df_fixed_ranges))
 }
 
-gen.df_fixed_ranges <- function(classes, nms, n_records, remove_dup_rows) {
+gen.df_fixed_ranges <- function(
+  classes,
+  nms,
+  n_records,
+  remove_dup_rows,
+  variant = c("data.frame", "tibble")
+) {
+  variant <- match.arg(variant)
+  variant <- switch(
+    variant,
+    data.frame = identity,
+    tibble = with_args(tibble::as_tibble, .name_repair = "minimal")
+  )
   as_fns <- list(
     logical = as.logical,
     integer = as.integer,
@@ -360,7 +374,8 @@ gen.df_fixed_ranges <- function(classes, nms, n_records, remove_dup_rows) {
       with_args(setNames, nm = nms) %>>%
         with_args(as.data.frame, check.names = FALSE) %>>%
         (if (remove_dup_rows) unique else identity)
-    )
+    ) |>
+    gen.with(variant)
 }
 
 gen_attr_name <- function(len) {
@@ -545,13 +560,25 @@ gen.relation <- function(
   to,
   rows_from = 0L,
   rows_to = 10L,
-  single_empty_key = FALSE
+  single_empty_key = FALSE,
+  variant = c("data.frame", "tibble")
 ) {
-  gen.relation_schema(x, from, to, single_empty_key = single_empty_key) |>
-    gen.and_then(\(rs) gen.relation_from_schema(rs, rows_from, rows_to))
+  list(
+    gen.relation_schema(x, from, to, single_empty_key = single_empty_key),
+    gen.element(variant)
+  ) |>
+    gen.and_then(uncurry(
+      \(rs, var) gen.relation_from_schema(rs, rows_from, rows_to, var)
+    ))
 }
 
-gen.relation_from_schema <- function(rs, rows_from = 0L, rows_to = 10L) {
+gen.relation_from_schema <- function(
+  rs,
+  rows_from = 0L,
+  rows_to = 10L,
+  variant = c("data.frame", "tibble")
+) {
+  variant <- match.arg(variant)
   gen.pure(create(rs)) |>
     gen.and_then(\(empty_rel) {
       r_attrs <- attrs(empty_rel)
@@ -566,7 +593,8 @@ gen.relation_from_schema <- function(rs, rows_from = 0L, rows_to = 10L) {
               gen.df_fixed_ranges,
               classes = rep("logical", r_ncols[[n]]),
               nms = r_attrs[[n]],
-              remove_dup_rows = TRUE
+              remove_dup_rows = TRUE,
+              variant = variant
             )) |>
             gen.with(\(df) list(
               df = remove_key_violations(df, ks),
@@ -828,18 +856,22 @@ gen.database <- function(
   same_attr_name = TRUE,
   single_key_pairs = TRUE,
   rows_from = 0L,
-  rows_to = 10L
+  rows_to = 10L,
+  variant = c("data.frame", "tibble")
 ) {
-  gen.database_schema(
-    x,
-    from,
-    to,
-    single_empty_key = single_empty_key,
-    same_attr_name = same_attr_name,
-    single_key_pairs = single_key_pairs
+  list(
+    gen.database_schema(
+      x,
+      from,
+      to,
+      single_empty_key = single_empty_key,
+      same_attr_name = same_attr_name,
+      single_key_pairs = single_key_pairs
+    ),
+    gen.element(variant)
   ) |>
-    gen.and_then(\(ds) {
-      gen.relation_from_schema(ds, rows_from, rows_to) |>
+    gen.and_then(uncurry(\(ds, var) {
+      gen.relation_from_schema(ds, rows_from, rows_to, var) |>
         gen.with(
           with_args(
             remove_reference_violations,
@@ -847,7 +879,7 @@ gen.database <- function(
           ) %>>%
             with_args(database, references = references(ds))
         )
-    })
+    }))
 }
 
 remove_reference_violations <- function(relation, references) {
@@ -1068,6 +1100,11 @@ gen.sample_resampleable <- function(x, from = 1, to = NULL, of = NULL) {
         }
       })
   }
+}
+
+df_records <- function(rel, relations) {
+  records(rel)[relations] <- lapply(records(rel)[relations], as.data.frame)
+  rel
 }
 
 # functional utility functions for tests

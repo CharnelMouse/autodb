@@ -161,8 +161,8 @@ describe("decompose", {
       if (length(nonempty_detsets) == 0)
         return(gen.pure(list(df, NULL, NULL)))
       gen.element(nonempty_detsets) |>
-        gen.with(\(index) list(detset(true_fds)[[index]], dependant(true_fds)[[index]])) |>
-        gen.and_then(\(fd) list(gen.pure(fd), gen.int(length(fd[[1]])))) |>
+        gen.with(\(index) true_fds[[index]]) |>
+        gen.and_then(\(fd) list(gen.pure(fd), gen.int(length(detset(fd))))) |>
         gen.with(\(lst) c(list(df), lst))
     }
     gen_df_and_fd_reduction <- function(nrow, ncol) {
@@ -174,7 +174,9 @@ describe("decompose", {
       if (nrow(df) <= 1)
         discard()
       flat_deps <- discover(df, 1)
-      reduced_index <- match(list(reduced_fd), flat_deps)
+      reduced_index <- match(reduced_fd, flat_deps)
+      if (is.na(reduced_index))
+        stop("reduced_fd doesn't exist")
       reduced_deps <- unclass(flat_deps)
       reduced_deps[[reduced_index]][[1]] <-
         reduced_deps[[reduced_index]][[1]][-removed_det]

@@ -22,6 +22,13 @@ test_that("gen_df can give a table of exact width", {
   )
 })
 
+test_that("gen_df can generate a tibble without name failure", {
+  forall(
+    gen.df_fixed_ranges("logical", "..1", 2, TRUE, "tibble"),
+    expect_silent
+  )
+})
+
 test_that("gen_flat_deps_fixed_names generates valid", {
   forall(gen_flat_deps_fixed_names(7, 20, to = 20L), is_valid_functional_dependency)
 })

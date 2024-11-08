@@ -787,7 +787,7 @@ describe("insert", {
         }),
       \(r, relnames) {
         expect_biidentical(
-          identity,
+          with_args(df_records, relations = relnames),
           with_args(
             insert,
             vals = data.frame(setNames(
@@ -821,7 +821,7 @@ describe("insert", {
         expected <- rel
         records(expected)[relnames] <- lapply(
           records(expected)[relnames],
-          \(recs) df[, names(recs), drop = FALSE]
+          \(recs) as.data.frame(df)[, names(recs), drop = FALSE]
         )
         expect_identical(insert(rel, df, relations = relnames), expected)
       },
@@ -836,7 +836,7 @@ describe("insert", {
           )
         }),
       \(db, relnames) expect_biidentical(
-        identity,
+        with_args(df_records, relations = relnames),
         with_args(
           insert,
           vals = data.frame(setNames(

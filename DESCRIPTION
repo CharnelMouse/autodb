@@ -32,6 +32,7 @@ Suggests:
     testthat (>= 3.1.4),
     R.utils (>= 2.11.0),
     hedgehog (>= 0.1),
+    tibble(>= 3.2.1),
     knitr,
     rmarkdown
 VignetteBuilder: knitr

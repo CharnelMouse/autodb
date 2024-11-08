@@ -56,7 +56,7 @@ describe("df_rbind", {
       data.frame(a = 1:8)[, -1, drop = FALSE]
     )
   })
-  it("is the same as rbind for data frames with at least one column", {
+  it("is the same as rbind >> as.data.frame for data frames with at least one column", {
     forall(
       gen.int(7) |>
         gen.and_then(with_args(gen_attr_names, len = 9)) |>
@@ -67,7 +67,7 @@ describe("df_rbind", {
         }),
       expect_biidentical(
         uncurry(df_rbind),
-        uncurry(rbind)
+        uncurry(rbind %>>% as.data.frame)
       )
     )
   })
