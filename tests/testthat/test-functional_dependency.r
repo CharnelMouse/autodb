@@ -325,4 +325,35 @@ describe("functional_dependency", {
     expect_no_error(tb <- data.frame(id = 1:2, fd = fds))
     expect_identical(tb$fd, fds)
   })
+
+  it("can be compared for equality", {
+    fds <- functional_dependency(
+      list(list(c("a", "b"), "c"), list("a", "d")),
+      letters[1:4]
+    )
+    expect_true(all(fds == fds))
+    expect_false(any(fds == rev(fds)))
+    expect_true(all(fds != rev(fds)))
+    expect_false(any(fds != fds))
+  })
+  it("ignores attrs_order/header when comparing for equality", {
+    fds <- functional_dependency(
+      list(list(c("a", "b"), "c"), list("a", "d")),
+      letters[1:4]
+    )
+    fds2 <- fds
+    attrs_order(fds2) <- letters[4:1]
+    expect_true(all(fds == fds2))
+    expect_false(any(fds == rev(fds2)))
+    expect_true(all(fds != rev(fds2)))
+    expect_false(any(fds != fds2))
+  })
+  it("recycles when comparing for equality", {
+    fds <- functional_dependency(
+      list(list(c("a", "b"), "c"), list("a", "d")),
+      letters[1:4]
+    )
+    expect_identical(fds == fds[1], c(TRUE, FALSE))
+    expect_true(all(c(fds, fds, unique = FALSE) == fds))
+  })
 })

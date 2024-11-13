@@ -76,6 +76,10 @@ stopifnot(identical(fds_recon, fds))
 
 # can be a data frame column
 data.frame(id = 1:2, fd = fds)
+
+# (in)equality ignores header
+stopifnot(all(fds3 == fds))
+stopifnot(!any(fds != fds))
 }
 \seealso{
 \code{\link{detset}}, \code{\link{dependant}}, and

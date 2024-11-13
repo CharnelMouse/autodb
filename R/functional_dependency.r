@@ -67,6 +67,10 @@
 #'
 #' # can be a data frame column
 #' data.frame(id = 1:2, fd = fds)
+#'
+#' # (in)equality ignores header
+#' stopifnot(all(fds3 == fds))
+#' stopifnot(!any(fds != fds))
 #' @export
 functional_dependency <- function(
   FDs,
@@ -282,4 +286,22 @@ as.data.frame.functional_dependency <- function(
   if (!optional)
     names(res) <- nm
   res
+}
+
+#' @exportS3Method
+Ops.functional_dependency <- function(e1, e2) {
+  ok <- switch(.Generic, `==` = , `!=` = TRUE, FALSE)
+  if (!ok) {
+    stop(gettextf(
+      "%s not meaningful for functional_dependency objects",
+      sQuote(.Generic)
+    ))
+  }
+  switch(
+    .Generic,
+    `==` = mapply(setequal, detset(e1), detset(e2)) &
+      dependant(e1) == dependant(e2),
+    `!=` = !mapply(setequal, detset(e1), detset(e2)) |
+      dependant(e1) != dependant(e2)
+  )
 }
