@@ -444,6 +444,23 @@ describe("discover", {
       )
     )
   })
+  it("gives same result from filtering to dependants and using dependants argument", {
+    forall(
+      gen_df(4, 6) |>
+        gen.and_then(\(x) {
+          list(
+            gen.pure(x),
+            gen.sample_resampleable(names(x), from = 0, to = ncol(x))
+          )
+        }),
+      expect_bi(
+        setequal,
+        onLeft(with_args(discover, accuracy = 1)) %>>%
+          uncurry(\(x, y) x[dependant(x) %in% y]),
+        uncurry(\(x, y) discover(x, accuracy = 1, dependant = y))
+      )
+    )
+  })
   it("gives dependencies for unique attributes (in case don't want them as key)", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), C = c(1, 2, 2))
     deps <- discover(df, 1)

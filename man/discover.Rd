@@ -13,6 +13,7 @@ discover(
   skip_bijections = FALSE,
   exclude = character(),
   exclude_class = character(),
+  dependants = names(df),
   progress = FALSE,
   progress_file = ""
 )
@@ -48,6 +49,12 @@ present in \code{df}, the user is given a warning.}
 \item{exclude_class}{a character vector, indicating classes of attributes to
 not consider as members of determinant_sets. Attributes are excluded if
 they inherit from any given class.}
+
+\item{dependants}{a character vector, containing names of all attributes for
+which to find minimal functional dependencies for which they are the
+dependant. By default, this is all of the attribute names. A smaller set of
+attribute names reduces the amount of searching required, so can reduce the
+computation time if only some potential dependencies are of interest.}
 
 \item{progress}{a logical, for whether to display progress to the user during
 dependency search in \code{\link{discover}}.}
@@ -133,6 +140,8 @@ discover(CO2, 1)
 # not determined by anything, because of repeat measurements
 # with no variable to mark them as such.
 discover(CO2, 1, exclude_class = "numeric")
+# include only dependencies with dependants of interest.
+discover(CO2, 1, dependants = c("Treatment", "uptake"))
 }
 \references{
 Abedjan Z., Schulze P., Naumann F. (2014) DFD: efficient functional

@@ -81,6 +81,11 @@
 #' @param exclude_class a character vector, indicating classes of attributes to
 #'   not consider as members of determinant_sets. Attributes are excluded if
 #'   they inherit from any given class.
+#' @param dependants a character vector, containing names of all attributes for
+#'   which to find minimal functional dependencies for which they are the
+#'   dependant. By default, this is all of the attribute names. A smaller set of
+#'   attribute names reduces the amount of searching required, so can reduce the
+#'   computation time if only some potential dependencies are of interest.
 #' @inheritParams autodb
 #'
 #' @return A \code{\link{functional_dependency}} object, containing the discovered
@@ -104,6 +109,8 @@
 #' # not determined by anything, because of repeat measurements
 #' # with no variable to mark them as such.
 #' discover(CO2, 1, exclude_class = "numeric")
+#' # include only dependencies with dependants of interest.
+#' discover(CO2, 1, dependants = c("Treatment", "uptake"))
 #' @export
 discover <- function(
   df,
@@ -113,6 +120,7 @@ discover <- function(
   skip_bijections = FALSE,
   exclude = character(),
   exclude_class = character(),
+  dependants = names(df),
   progress = FALSE,
   progress_file = ""
 ) {
@@ -164,10 +172,14 @@ discover <- function(
     attr <- column_names[i]
     if (all(is.na(df[[attr]])) || all(df[[attr]] == df[[attr]][1])) {
       fixed <- report$op(fixed, c, paste(attr, "is fixed"), attr)
-      dependencies[[attr]] <- list(character())
+      if (attr %in% dependants)
+        dependencies[[attr]] <- list(character())
     }
   }
   nonfixed <- setdiff(column_names, fixed)
+  valid_dependant_attrs <- intersect(dependants, nonfixed)
+  if (length(valid_dependant_attrs) == 0)
+    return(flatten(dependencies, column_names))
 
   # For nonfixed attributes, all can be dependants, but
   # might not all be valid determinants.
@@ -213,7 +225,7 @@ discover <- function(
       accuracy,
       full_cache
     )
-    for (rhs in seq_along(nonfixed)) {
+    for (rhs in seq_along(nonfixed)[nonfixed %in% valid_dependant_attrs]) {
       report$stat(paste("dependant", nonfixed[rhs]))
       lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
       n_lhs_attrs <- length(lhs_nonfixed_indices)
