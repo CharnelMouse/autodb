@@ -529,11 +529,12 @@ find_LHSs_tane <- function(
     )
 }
 
-powerset_nodes <- function(n, use_visited) {
-  if (n == 0)
+powerset_nodes <- function(n, use_visited, max_size = n) {
+  max_size <- min(max_size, n)
+  if (max_size == 0)
     return(c(
       list(
-        bits = logical(),
+        bits = list(),
         children = list(),
         parents = list(),
         category = integer()
@@ -554,41 +555,51 @@ powerset_nodes <- function(n, use_visited) {
         list(visited = FALSE)
     ))
   n_nonempty_subsets <- 2^n - 1
+  n_limited_nonempty_subsets <- sum(choose(n, seq_len(max_size)))
   node_bits <- lapply(seq_len(n_nonempty_subsets), \(i) as.logical(intToBits(i))[1:n])
-  children <- rep(list(integer()), n_nonempty_subsets)
-  parents <- rep(list(integer()), n_nonempty_subsets)
-  for (x in seq_len(n_nonempty_subsets - 1)) {
-    zeroes <- which(!node_bits[[x]][1:n])
-    ys <- as.integer(x + 2^(zeroes - 1))
-    parents[[x]] <- c(parents[[x]], ys)
-    children[ys] <- lapply(children[ys], c, x)
+  within_limit <- vapply(node_bits, sum, integer(1)) <= max_size
+  limited_node_bits <- node_bits[within_limit]
+  limited_to_unlimited_map <- which(within_limit)
+  children <- rep(list(integer()), n_limited_nonempty_subsets)
+  parents <- rep(list(integer()), n_limited_nonempty_subsets)
+  for (x in seq_len(n_limited_nonempty_subsets - 1)) {
+    zeroes <- which(!limited_node_bits[[x]][1:n])
+    ys <- as.integer(limited_to_unlimited_map[[x]] + 2^(zeroes - 1))
+    limited_ys <- na.omit(match(ys, limited_to_unlimited_map))
+    parents[[x]] <- c(parents[[x]], limited_ys)
+    children[limited_ys] <- lapply(children[limited_ys], c, x)
   }
   c(
     list(
-      bits = node_bits,
+      bits = limited_node_bits,
       children = children,
       parents = parents,
-      category = rep(0L, n_nonempty_subsets)
+      category = rep(0L, n_limited_nonempty_subsets)
     ),
     if (use_visited)
-      list(visited = rep(FALSE, n_nonempty_subsets))
+      list(visited = rep(FALSE, n_limited_nonempty_subsets))
   )
 }
 
 reduce_powerset <- function(powerset, n) {
   n_nodes <- length(powerset$category)
-  boundary <- 2^n - 1
-  if (n_nodes == boundary)
+  old_n <- if (n_nodes) length(powerset$bits[[1]]) else 0L
+  if (n == old_n || old_n == 0)
     return(powerset)
-  if (n_nodes < boundary)
+  if (n > old_n)
     stop("n is larger than size of set")
+  keep <- which(vapply(
+    powerset$bits,
+    \(x) !any(x[setdiff(seq_len(old_n), seq_len(n))]),
+    logical(1)
+  ))
   trimmed <- lapply(
     powerset,
     `[`,
-    seq_len(boundary)
+    keep
   )
-  trimmed$parents <- lapply(trimmed$parents, \(x) x[x <= boundary])
-  trimmed$bits <- lapply(trimmed$bits, \(x) x[1:n])
+  trimmed$parents <- lapply(trimmed$parents, \(x) match(x[x %in% keep], keep))
+  trimmed$bits <- lapply(trimmed$bits, head, n)
   trimmed
 }
 
