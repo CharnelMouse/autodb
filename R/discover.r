@@ -604,7 +604,7 @@ generate_next_seeds <- function(max_non_deps, min_deps, lhs_attr_nodes, nodes) {
       if (length(seeds) == 0)
         seeds <- max_non_dep_c
       else {
-        seeds <- cross_intersection(seeds, max_non_dep_c, nodes$bits)
+        seeds <- cross_intersection(seeds, max_non_dep_c, nodes)
       }
     }
   }
@@ -629,17 +629,23 @@ generate_next_seeds_tane <- function(seeds, nodes, min_deps) {
   )
 }
 
-cross_intersection <- function(seeds, max_non_dep, bitsets) {
+cross_intersection <- function(seeds, max_non_dep, powerset) {
   new_seeds <- integer()
   for (dep in seeds) {
-    seed_bitset <- intToBits(dep)
+    seed_bitset <- powerset$bits[[dep]]
     for (set in max_non_dep) {
-      set_bit_index <- intToBits(set)
-      new_seed <- int_from_bits(seed_bitset | set_bit_index)
-      new_seeds <- c(new_seeds, new_seed)
+      set_bitset <- powerset$bits[[set]]
+      new_seed_bitset_index <- to_bitset_index(which(
+        seed_bitset | set_bitset
+      ))
+      new_seeds <- c(new_seeds, new_seed_bitset_index)
     }
   }
-  minimise_seeds(new_seeds, bitsets)
+  minimise_seeds(new_seeds, powerset$bits)
+}
+
+to_bitset_index <- function(bits) {
+  sum(2^(bits - 1))
 }
 
 minimise_seeds <- function(seeds, bitsets) {
@@ -946,12 +952,6 @@ fsplit <- function(splitted, splitter) {
 
 fsplit_rows <- function(df, attr_indices) {
   fsplit(seq_len(nrow(df)), df[, attr_indices, drop = FALSE])
-}
-
-pack_vals <- as.integer(2^(0:30))
-int_from_bits <- function(bits) {
-  l <- as.logical(bits)[1:31]
-  sum(l*pack_vals)
 }
 
 add_deps_implied_by_bijections <- function(
