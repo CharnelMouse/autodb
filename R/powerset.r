@@ -77,8 +77,11 @@ reduce_powerset <- function(powerset, cardinality) {
   trim <- setdiff(names(trimmed), "bitset_index")
   trimmed[trim] <- lapply(trimmed[trim], `[`, keep)
   trimmed$parents <- lapply(trimmed$parents, \(x) match(x[x %in% keep], keep))
+  trimmed$bitset_index <- match(
+    powerset$bits[powerset$bitset_index],
+    trimmed$bits
+  )
   trimmed$bits <- lapply(trimmed$bits, head, cardinality)
-  trimmed$bitset_index <- match(trimmed$bitset_index, trimmed$bits)
   trimmed
 }
 

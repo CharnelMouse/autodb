@@ -75,4 +75,24 @@ describe("reduce_powerset", {
       curry = TRUE
     )
   })
+  it("changes bitset mappings so remaining nodes point to their new index, rest are NA", {
+    forall(
+      gen.element(0:10) |>
+        gen.and_then(\(n) list(
+          gen.pure(n),
+          gen.element(0:n),
+          gen.element(0:n)
+        )),
+      \(n, size, m) {
+        p <- nonempty_powerset(n, F, size)
+        q <- reduce_powerset(p, m)
+        long_q_bits <- lapply(q$bits, \(x) c(x, rep(FALSE, n - m)))
+        expect_identical(
+          q$bitset_index,
+          match(p$bits[p$bitset_index], long_q_bits)
+        )
+      },
+      curry = TRUE
+    )
+  })
 })
