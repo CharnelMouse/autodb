@@ -48,7 +48,7 @@ describe("nonempty_powerset", {
       expect_biidentical(
         with_args(nonempty_powerset, use_visited = TRUE) %>>%
           with_args(getElement, name = "visited"),
-        with_args(rep_len, x = FALSE)
+        (\(n) 2^n - 1) %>>% with_args(rep_len, x = FALSE)
       )
     )
   })
