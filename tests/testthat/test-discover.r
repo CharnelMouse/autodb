@@ -127,13 +127,15 @@ describe("discover", {
         timeout = 5,
         onTimeout = "silent"
       )
-      expect_true(!is.null(res_skip))
+      if (is.null(res_skip))
+        return(fail("discover() with bijection skip timed out"))
       res_noskip <- withTimeout(
         discover(df, accuracy, full_cache = TRUE, store_cache = TRUE, skip_bijections = FALSE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
-      expect_true(!is.null(res_noskip))
+      if (is.null(res_noskip))
+        return(fail("discover() without bijection skip timed out"))
       fn(res_skip, res_noskip)
     }
   }
@@ -389,30 +391,23 @@ describe("discover", {
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.element(names(df))))
     }
-    terminates_with_exclusion_then <- function(fn, accuracy, ...) {
+    terminates_with_exclusion_then_no_trival <- function(accuracy, ...) {
       function(df, attr) {
         deps <- withTimeout(
           discover(df, accuracy, exclude = attr, ...),
           timeout = 5,
           onTimeout = "silent"
         )
-        expect_true(!is.null(deps))
-        fn(deps, attr)
-      }
-    }
-    exclusion_not_in_determinant_sets <- function(deps, attr) {
-      for (det_sets in detset(deps)) {
-        for (det_set in det_sets) {
-          expect_false(is.element(attr, det_set))
+        if (is.null(deps)) {
+          return(fail("discover() with exclude timed out"))
         }
+        # test exclusion_not_in_determinant_sets
+        expect_false(attr %in% unlist(detset(deps)))
       }
     }
     forall(
       gen_df_and_exclude(4, 6),
-      terminates_with_exclusion_then(
-        exclusion_not_in_determinant_sets,
-        accuracy = 1
-      ),
+      terminates_with_exclusion_then_no_trival(1),
       curry = TRUE
     )
   })
@@ -425,13 +420,15 @@ describe("discover", {
           timeout = 5,
           onTimeout = "silent"
         )
-        expect_true(!is.null(deps1))
+        if (is.null(deps1))
+          return(fail("discover() with exclude timed out"))
         deps2 <- withTimeout(
           discover(df, accuracy, exclude_class = class, ...),
           timeout = 5,
           onTimeout = "silent"
         )
-        expect_true(!is.null(deps2))
+        if (is.null(deps2))
+          return(fail("discover() with exclude_class timed out"))
         fn(deps1, deps2)
       }
     }
