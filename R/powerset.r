@@ -6,6 +6,7 @@ nonempty_powerset <- function(cardinality, use_visited, max_size = cardinality) 
     return(c(
       list(
         bits = list(),
+        bitset_index = rep(NA_integer_, 2^cardinality - 1),
         children = list(),
         parents = list(),
         category = integer()
@@ -18,6 +19,7 @@ nonempty_powerset <- function(cardinality, use_visited, max_size = cardinality) 
     return(c(
       list(
         bits = list(TRUE),
+        bitset_index = 1L,
         children = list(integer()),
         parents = list(integer()),
         category = 0L
@@ -43,6 +45,7 @@ nonempty_powerset <- function(cardinality, use_visited, max_size = cardinality) 
   c(
     list(
       bits = limited_node_bits,
+      bitset_index = match(node_bits, limited_node_bits),
       children = children,
       parents = parents,
       category = rep(0L, n_limited_nonempty_subsets)
@@ -70,9 +73,12 @@ reduce_powerset <- function(powerset, cardinality) {
     \(x) !any(x[setdiff(seq_len(old_cardinality), seq_len(cardinality))]),
     logical(1)
   ))
-  trimmed <- lapply(powerset, `[`, keep)
+  trimmed <- powerset
+  trim <- setdiff(names(trimmed), "bitset_index")
+  trimmed[trim] <- lapply(trimmed[trim], `[`, keep)
   trimmed$parents <- lapply(trimmed$parents, \(x) match(x[x %in% keep], keep))
   trimmed$bits <- lapply(trimmed$bits, head, cardinality)
+  trimmed$bitset_index <- match(trimmed$bitset_index, trimmed$bits)
   trimmed
 }
 
