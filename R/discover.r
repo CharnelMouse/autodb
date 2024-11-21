@@ -762,7 +762,12 @@ approximate_dependencies <- function(
   check_AD(df, rhs, lhs_set, partitions, threshold, limit)
 }
 
-check_FD_partition_nclass <- function(attr_indices, df, partitions, partitions_ui) {
+check_FD_partition_nclass <- function(
+  attr_indices,
+  df,
+  partitions,
+  partitions_ui
+) {
   # This only returns the number |p| of equivalence classes in the partition p,
   # not its contents. This is less demanding on memory than storing stripped
   # partitions, but we cannot efficiently calculate the partition for supersets.
@@ -777,7 +782,12 @@ check_FD_partition_nclass <- function(attr_indices, df, partitions, partitions_u
   list(n_remove, partitions)
 }
 
-check_FD_partition_stripped <- function(attr_indices, df, partitions, partitions_ui) {
+check_FD_partition_stripped <- function(
+  attr_indices,
+  df,
+  partitions,
+  partitions_ui
+) {
   attr_nodes <- to_node(attr_indices)
   node <- sum(attr_nodes)
   partkey <- partitions_ui$lookup_node(node, partitions)
@@ -833,7 +843,15 @@ check_FD_partition_stripped <- function(attr_indices, df, partitions, partitions
   list(sum(lengths(sp)) - length(sp), partitions)
 }
 
-check_AD_cache <- function(df, rhs, lhs_set, partitions, threshold, limit, partitions_ui) {
+check_AD_cache <- function(
+  df,
+  rhs,
+  lhs_set,
+  partitions,
+  threshold,
+  limit,
+  partitions_ui
+) {
   # e(lhs_set -> rhs)
   lhs_set_node <- to_node(lhs_set)
   rhs_node <- to_nodes(rhs)
@@ -859,7 +877,15 @@ check_AD_cache <- function(df, rhs, lhs_set, partitions, threshold, limit, parti
   list(e <= limit, partitions)
 }
 
-check_AD_nocache <- function(df, rhs, lhs_set, partitions, threshold, limit, partitions_ui) {
+check_AD_nocache <- function(
+  df,
+  rhs,
+  lhs_set,
+  partitions,
+  threshold,
+  limit,
+  partitions_ui
+) {
   # This is a quick working version I put together to replace the non-working
   # original. The quicker version from Tane requires cache = TRUE for stripped
   # partition information.
