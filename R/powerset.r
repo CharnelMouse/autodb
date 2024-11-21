@@ -1,4 +1,6 @@
-powerset_nodes <- function(cardinality, use_visited, max_size = cardinality) {
+# non-empty in the sense of being the set of non-empty subsets, so {} has no
+# node
+nonempty_powerset <- function(cardinality, use_visited, max_size = cardinality) {
   max_size <- min(max_size, cardinality)
   if (max_size == 0)
     return(c(
@@ -139,13 +141,13 @@ has_nondependency_superset <- function(node, powerset) {
   ))
 }
 
-unchecked_subsets <- function(node, powerset) {
+nonvisited_children <- function(node, powerset) {
   visited <- which(powerset$visited)
   children <- powerset$children[[node]]
   setdiff(children, visited)
 }
 
-unchecked_supersets <- function(node, powerset) {
+nonvisited_parents <- function(node, powerset) {
   visited <- which(powerset$visited)
   parents <- powerset$parents[[node]]
   setdiff(parents, visited)

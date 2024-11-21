@@ -9,8 +9,8 @@ describe("powerset", {
         )),
       \(n, size, m) {
         expect_identical(
-          powerset_nodes(n, F, size) |> reduce_powerset(m),
-          powerset_nodes(m, F, size)
+          nonempty_powerset(n, F, size) |> reduce_powerset(m),
+          nonempty_powerset(m, F, size)
         )
       },
       curry = TRUE

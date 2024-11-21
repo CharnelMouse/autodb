@@ -216,7 +216,7 @@ discover <- function(
   if (max_n_lhs_attrs > 0) {
     powerset <- report$op(
       max_n_lhs_attrs,
-      powerset_nodes,
+      nonempty_powerset,
       "constructing powerset",
       use_visited
     )
@@ -531,7 +531,7 @@ find_LHSs_tane <- function(
 
 pick_next_node <- function(node, nodes, trace, min_deps, max_non_deps) {
   if (nodes$category[node] == 3) { # candidate dependency
-    s <- unchecked_subsets(node, nodes)
+    s <- nonvisited_children(node, nodes)
     s <- remove_pruned_subsets(s, min_deps, nodes$bits)
     if (length(s) == 0) {
       min_deps <- c(min_deps, node)
@@ -541,7 +541,7 @@ pick_next_node <- function(node, nodes, trace, min_deps, max_non_deps) {
       return(list(min(s), trace, nodes, min_deps, max_non_deps))
     }
   }else if (nodes$category[node] == -3) { # candidate non-dependency
-    s <- unchecked_supersets(node, nodes)
+    s <- nonvisited_parents(node, nodes)
     s <- remove_pruned_supersets(s, max_non_deps, nodes$bits)
     if (length(s) == 0) {
       max_non_deps <- c(max_non_deps, node)
