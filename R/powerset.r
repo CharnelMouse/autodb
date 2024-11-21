@@ -165,10 +165,10 @@ nonvisited_parents <- function(node, powerset) {
 is_subset <- function(bits1, bits2) all(bits2[bits1])
 is_superset <- function(bits1, bits2) all(bits1[bits2])
 
-to_node <- function(element_indices) {
-  as.integer(sum(2^(element_indices - 1L)))
+to_node <- function(element_indices, powerset) {
+  powerset$bitset_index[[sum(2^(element_indices - 1L))]]
 }
 
-to_nodes <- function(element_indices) {
-  as.integer(2^(element_indices - 1L))
+to_nodes <- function(element_indices, powerset) {
+  powerset$bitset_index[2^(element_indices - 1L)]
 }

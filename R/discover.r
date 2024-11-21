@@ -248,7 +248,7 @@ discover <- function(
         integer()
       if (n_lhs_attrs > 0) {
         nodes <- reduce_powerset(powerset, n_lhs_attrs)
-        simple_nodes <- to_nodes(seq_len(n_lhs_attrs))
+        simple_nodes <- to_nodes(seq_len(n_lhs_attrs), nodes)
         lhss <- report$op(
           rhs,
           find_LHSs,
@@ -333,10 +333,13 @@ find_LHSs_dfd <- function(
   min_deps <- integer()
   max_non_deps <- integer()
   trace <- integer()
-  bijection_nodes <- to_nodes(match(
-    bijection_candidate_nonfixed_indices,
-    lhs_nonfixed_indices
-  ))
+  bijection_nodes <- to_nodes(
+    match(
+      bijection_candidate_nonfixed_indices,
+      lhs_nonfixed_indices
+    ),
+    nodes
+  )
 
   while (length(seeds) != 0) {
     node <- sample(seeds, 1)
@@ -481,10 +484,13 @@ find_LHSs_tane <- function(
   nodes$bits <- lapply(nodes$bits, as.logical)
   seeds <- simple_nodes
   min_deps <- integer()
-  bijection_nodes <- to_nodes(match(
-    bijection_candidate_nonfixed_indices,
-    lhs_nonfixed_indices
-  ))
+  bijection_nodes <- to_nodes(
+    match(
+      bijection_candidate_nonfixed_indices,
+      lhs_nonfixed_indices
+    ),
+    nodes
+  )
 
   while (length(seeds) != 0) {
     for (node in seeds) {
@@ -611,7 +617,7 @@ generate_next_seeds_tane <- function(seeds, nodes, min_deps) {
     return(integer())
   old_level <- sum(nodes$bits[[nondep_seeds[[1L]]]])
   all_bits <- which(Reduce(`|`, nodes$bits[nondep_seeds]))
-  unions <- apply(utils::combn(all_bits, old_level + 1L), 2, to_node)
+  unions <- apply(utils::combn(all_bits, old_level + 1L), 2, to_node, nodes)
   uniq <- unique(unions)
   Filter(
     \(u) !any(vapply(
