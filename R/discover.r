@@ -656,11 +656,16 @@ minimise_seeds <- function(seeds, bitsets) {
   for (n in seq_len(n_seeds - 1)) {
     if (include[n]) {
       for (m in seq.int(n + 1L, n_seeds)) {
-        if (
-          include[m] &&
-          is_subset(bitsets[[unique_seeds[n]]], bitsets[[unique_seeds[m]]])
-        )
-          include[m] <- FALSE
+        if (include[[m]]) {
+          if (is_subset(bitsets[[unique_seeds[n]]], bitsets[[unique_seeds[m]]]))
+            include[m] <- FALSE
+          else{
+            if (is_superset(bitsets[[unique_seeds[n]]], bitsets[[unique_seeds[m]]])) {
+              include[n] <- FALSE
+              break
+            }
+          }
+        }
       }
     }
   }
