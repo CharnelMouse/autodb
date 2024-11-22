@@ -38,7 +38,7 @@ nonempty_powerset <- function(cardinality, use_visited, max_size = cardinality) 
   for (x in seq_len(n_limited_nonempty_subsets - 1)) {
     zeroes <- which(!limited_node_bits[[x]][1:cardinality])
     ys <- as.integer(limited_to_unlimited_map[[x]] + 2^(zeroes - 1))
-    limited_ys <- na.omit(match(ys, limited_to_unlimited_map))
+    limited_ys <- stats::na.omit(match(ys, limited_to_unlimited_map))
     parents[[x]] <- c(parents[[x]], limited_ys)
     children[limited_ys] <- lapply(children[limited_ys], c, x)
   }
@@ -81,7 +81,7 @@ reduce_powerset <- function(powerset, cardinality) {
     powerset$bits[powerset$bitset_index],
     trimmed$bits
   )
-  trimmed$bits <- lapply(trimmed$bits, head, cardinality)
+  trimmed$bits <- lapply(trimmed$bits, utils::head, cardinality)
   trimmed
 }
 
