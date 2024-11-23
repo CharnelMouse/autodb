@@ -341,7 +341,6 @@ find_LHSs_dfd <- function(
   #  1 = non-minimal dependency
   #  2 = minimal dependency
   #  3 = candidate minimal dependency
-  nodes$bits <- lapply(nodes$bits, as.logical)
   seeds <- simple_nodes
   min_deps <- integer()
   max_non_deps <- integer()
@@ -494,7 +493,6 @@ find_LHSs_tane <- function(
   #   picking nodes for depth-first traversal from there;
   # this forbids a node from being revisited, and from being inferrable
   # everything after this is cleanup
-  nodes$bits <- lapply(nodes$bits, as.logical)
   seeds <- simple_nodes
   min_deps <- integer()
   bijection_nodes <- to_nodes(
