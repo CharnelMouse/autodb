@@ -83,7 +83,9 @@ reduce_powerset <- function(powerset, cardinality) {
     trimmed$bits
   )
   trimmed$bits <- lapply(trimmed$bits, utils::head, cardinality)
-  trimmed$parents <- lapply(trimmed$parents, \(x) match(x[x %in% keep], keep))
+  # updating parents is slow, and the main reason why caching powerset
+  # reductions in discover() saves a lot of time
+  trimmed$parents <- lapply(trimmed$parents, \(x) which(keep %in% x))
   trimmed
 }
 

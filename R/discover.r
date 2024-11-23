@@ -220,6 +220,9 @@ discover <- function(
       "constructing powerset",
       use_visited
     )
+    # cache generated powerset and reductions, otherwise we spend a lot
+    # of time duplicating reduction work
+    all_powersets <- stats::setNames(list(powerset), max_n_lhs_attrs)
     compute_partitions <- partition_computer(
       unname(df[, nonfixed, drop = FALSE]),
       accuracy,
@@ -247,7 +250,12 @@ discover <- function(
       else
         integer()
       if (n_lhs_attrs > 0) {
-        nodes <- reduce_powerset(powerset, n_lhs_attrs)
+        if (n_lhs_attrs %in% names(all_powersets))
+          nodes <- all_powersets[[as.character(n_lhs_attrs)]]
+        else{
+          nodes <- reduce_powerset(powerset, n_lhs_attrs)
+          all_powersets[[as.character(n_lhs_attrs)]] <- nodes
+        }
         simple_nodes <- to_nodes(seq_len(n_lhs_attrs), nodes)
         lhss <- report$op(
           rhs,
@@ -277,7 +285,12 @@ discover <- function(
           }
           valid_determinant_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
           max_n_lhs_attrs <- max_n_lhs_attrs - 1L
-          powerset <- reduce_powerset(powerset, max_n_lhs_attrs)
+          if (max_n_lhs_attrs %in% names(all_powersets))
+            powerset <- all_powersets[[as.character(max_n_lhs_attrs)]]
+          else{
+            powerset <- reduce_powerset(powerset, max_n_lhs_attrs)
+            all_powersets[[as.character(max_n_lhs_attrs)]] <- powerset
+          }
         }else
           dependencies[[nonfixed[rhs]]] <- c(
             dependencies[[nonfixed[rhs]]],
