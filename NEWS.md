@@ -6,6 +6,7 @@
 * Added an `as.character` method for `functional_dependency`. The optional `align_arrows` argument can add padding to one side, in order to make the arrows align when they're printed to different lines. These options are used to align arrows in its `print` method, and its `format` method for when printed as a data frame column.
 * Added `==` and `!=` implementations for `functional_dependency`. These ignore differences in `attrs_order`: differently-ordered determinant sets are considered equal.
 * Added a `dependants` argument to `discover`, which limit the functional dependency search to those with a dependant in the given set of column names, defaulting to all of them. This should significantly speed up searches where only some dependants are of interest.
+* Added a `detset_limit` argument for `discover`/`autodb`, which limits the FD search to only look for dependencies with the determinant set size under a given limit. For DFD, this usually makes the run time dramatically larger, rather than smaller, but it will be useful when other search algorithms are implemented.
 
 ## Fixes
 

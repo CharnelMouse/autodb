@@ -80,7 +80,8 @@ reduce_powerset <- function(powerset, cardinality) {
     )
   trimmed <- powerset
   trimmed$bitset_index <- trimmed$bitset_index[seq_len(2^cardinality - 1)]
-  keep <- na.omit(trimmed$bitset_index)
+  keep <- trimmed$bitset_index
+  keep <- keep[!is.na(keep)]
   trim <- setdiff(names(trimmed), "bitset_index")
   trimmed[trim] <- lapply(trimmed[trim], `[`, keep)
   trimmed$bits <- lapply(trimmed$bits, utils::head, cardinality)
@@ -171,13 +172,16 @@ is_subset <- function(bits1, bits2) all(bits2[bits1])
 is_superset <- function(bits1, bits2) all(bits1[bits2])
 
 to_node <- function(element_indices, powerset) {
-  powerset$bitset_index[[sum(2^(element_indices - 1L))]]
+  res <- powerset$bitset_index[[sum(2^(element_indices - 1L))]]
+  stopifnot(!is.na(res))
+  res
 }
 
-# Takes indices of elements (in practice all present elements),
+# Takes indices of elements (i.e. leaf nodes),
 # converts into node indices for if powerset was constructed
 # with size == cardinality, and returns their indices given
-# the actual size
+# the actual size, removing any missing ones
 to_nodes <- function(element_indices, powerset) {
-  powerset$bitset_index[2^(element_indices - 1L)]
+  res <- powerset$bitset_index[2^(element_indices - 1L)]
+  res[!is.na(res)]
 }

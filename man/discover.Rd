@@ -14,6 +14,7 @@ discover(
   exclude = character(),
   exclude_class = character(),
   dependants = names(df),
+  detset_limit = ncol(df) - 1L,
   progress = FALSE,
   progress_file = ""
 )
@@ -55,6 +56,11 @@ which to find minimal functional dependencies for which they are the
 dependant. By default, this is all of the attribute names. A smaller set of
 attribute names reduces the amount of searching required, so can reduce the
 computation time if only some potential dependencies are of interest.}
+
+\item{detset_limit}{an integer, indicating the largest determinant set size
+that should be searched for. By default, this is large enough to allow all
+possible determinant sets. See Details for comments about the effect on the
+result, and on the computation time.}
 
 \item{progress}{a logical, for whether to display progress to the user during
 dependency search in \code{\link{discover}}.}
@@ -114,6 +120,7 @@ functional dependencies when there are pairwise-equivalent attributes.
 \item Missing values (NA) are treated as a normal value, with NA = NA being
 true, and x = NA being false for any non-NA value of x.
 }
+\subsection{Skipping bijections}{
 
 Skipping bijections allows skipping redundant searches. For example, if the
 search discovers that \code{A -> B} and \code{B -> A}, then only one of those
@@ -128,6 +135,37 @@ affect their order.
 Skipping bijections for approximate dependencies, i.e. when \code{accuracy < 1},
 should be avoided: it can result in incorrect output, since an approximate
 bijection doesn't imply equivalent approximate dependencies.
+}
+
+\subsection{Limiting the determinant set size}{
+
+Setting \code{detset_limit} smaller than the largest-possible value reduces
+the size of the search tree for possible functional dependencies. The result
+is that \code{discover(x, 1, detset_limit = n)} is equivalent to doing a full
+search, \code{fds <- discover(x, 1)}, then filtering by determinant set size
+post-hoc, \code{fds[lengths(detset(fds)) <= n]}.
+
+However, setting a lower value for \code{detset_limit} should be done with
+caution: since it reduces the search tree, you might think that it should
+also decrease the computation time, but this depends on the search algorithm
+used. For DFD, the only algorithm currently implemented, the computation
+often greatly increases!
+
+For example, suppose we search for determinant sets for a dependant that has
+none (the dependant is the only key for \code{df}, for example). Using DFD,
+we begin with a single attribute, then add other attributes one-by-one, since
+every set gives a non-dependency. When we reach a maximum-size set, we can
+mark all subsets as also being non-dependencies.
+
+With the default limit, there is only one maximum-size set, containing all of
+the available attributes. If there are \eqn{n} candidate attributes for
+determinants, the search finishes after visiting \eqn{n} sets.
+
+With a smaller limit \eqn{k}, there are \eqn{\binom{n}{k}} maximum-size sets
+to explore. Since a DFD search adds or removes one attribute at each step,
+this means the search must take at least \eqn{k - 2 + 2\binom{n}{k}} steps,
+which is usually much larger than \eqn{n}.
+}
 }
 \examples{
 # simple example

@@ -73,7 +73,10 @@ describe("discover", {
   terminates_then <- function(fn, accuracy, ...) {
     function(df) {
       res <- withTimeout(discover(df, accuracy, ...), timeout = 5, onTimeout = "silent")
-      expect_true(!is.null(res))
+      if (is.null(res)) {
+        return(fail("discover() timed out"))
+      }
+      succeed() # dummy success, otherwise tests complain about no expectations
       fn(res)
     }
   }
@@ -456,6 +459,33 @@ describe("discover", {
           uncurry(\(x, y) x[dependant(x) %in% y]),
         uncurry(\(x, y) discover(x, accuracy = 1, dependant = y))
       )
+    )
+  })
+  it("gives same result from filtering to detset size and using detset size argument", {
+    forall(
+      gen_df(4, 6) |>
+        gen.and_then(\(x) {
+          list(
+            gen.pure(x),
+            gen.element(0:(ncol(x) - 1L))
+          )
+        }),
+      \(x, y) {
+        terminates_then(
+          with_args(
+            expect_setequal,
+            expected = (
+              with_args(discover, accuracy = 1) %>>%
+                dup %>>%
+                onRight(detset %>>% lengths %>>% with_args(`<=`, y)) %>>%
+                uncurry(`[`)
+            )(x)
+          ),
+          1,
+          detset_limit = y
+        )(x)
+      },
+      curry = TRUE
     )
   })
   it("gives dependencies for unique attributes (in case don't want them as key)", {
