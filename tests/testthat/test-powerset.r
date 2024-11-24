@@ -55,7 +55,7 @@ describe("nonempty_powerset", {
 })
 
 describe("reduce_powerset", {
-  it("is like constructing with new cardinality, except for bitset mappings", {
+  it("is like constructing with new cardinality", {
     forall(
       gen.element(0:10) |>
         gen.and_then(\(n) list(
@@ -66,30 +66,8 @@ describe("reduce_powerset", {
       \(n, size, m) {
         expect_identical(
           nonempty_powerset(n, F, size) |>
-            reduce_powerset(m) |>
-            (\(x) x[setdiff(names(x), "bitset_index")])(),
-          nonempty_powerset(m, F, size) |>
-            (\(x) x[setdiff(names(x), "bitset_index")])()
-        )
-      },
-      curry = TRUE
-    )
-  })
-  it("changes bitset mappings so remaining nodes point to their new index, rest are NA", {
-    forall(
-      gen.element(0:10) |>
-        gen.and_then(\(n) list(
-          gen.pure(n),
-          gen.element(0:n),
-          gen.element(0:n)
-        )),
-      \(n, size, m) {
-        p <- nonempty_powerset(n, F, size)
-        q <- reduce_powerset(p, m)
-        long_q_bits <- lapply(q$bits, \(x) c(x, rep(FALSE, n - m)))
-        expect_identical(
-          q$bitset_index,
-          match(p$bits[p$bitset_index], long_q_bits)
+            reduce_powerset(m),
+          nonempty_powerset(m, F, size)
         )
       },
       curry = TRUE

@@ -58,10 +58,18 @@ nonempty_powerset <- function(cardinality, use_visited, max_size = cardinality) 
 }
 
 reduce_powerset <- function(powerset, cardinality) {
-  n_nodes <- length(powerset$category)
-  old_cardinality <- if (n_nodes) length(powerset$bits[[1]]) else 0L
-  if (cardinality == old_cardinality || old_cardinality == 0)
+  bi_len <- length(powerset$bitset_index)
+  old_cardinality <- if (bi_len)
+    as.integer(log(length(powerset$bitset_index), 2) + 1)
+  else
+    0L
+  if (cardinality == old_cardinality) {
     return(powerset)
+  }
+  if (old_cardinality == 0) {
+    powerset$bitset_index <- integer()
+    return(powerset)
+  }
   if (cardinality > old_cardinality)
     stop(
       "new cardinality (",
@@ -70,18 +78,11 @@ reduce_powerset <- function(powerset, cardinality) {
       old_cardinality,
       ")"
     )
-  keep <- which(vapply(
-    powerset$bits,
-    \(x) !any(x[setdiff(seq_len(old_cardinality), seq_len(cardinality))]),
-    logical(1)
-  ))
   trimmed <- powerset
+  trimmed$bitset_index <- trimmed$bitset_index[seq_len(2^cardinality - 1)]
+  keep <- na.omit(trimmed$bitset_index)
   trim <- setdiff(names(trimmed), "bitset_index")
   trimmed[trim] <- lapply(trimmed[trim], `[`, keep)
-  trimmed$bitset_index <- match(
-    powerset$bits[powerset$bitset_index],
-    trimmed$bits
-  )
   trimmed$bits <- lapply(trimmed$bits, utils::head, cardinality)
   # updating parents is slow, and the main reason why caching powerset
   # reductions in discover() saves a lot of time
@@ -173,6 +174,10 @@ to_node <- function(element_indices, powerset) {
   powerset$bitset_index[[sum(2^(element_indices - 1L))]]
 }
 
+# Takes indices of elements (in practice all present elements),
+# converts into node indices for if powerset was constructed
+# with size == cardinality, and returns their indices given
+# the actual size
 to_nodes <- function(element_indices, powerset) {
   powerset$bitset_index[2^(element_indices - 1L)]
 }
