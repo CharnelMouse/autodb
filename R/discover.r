@@ -363,7 +363,7 @@ find_LHSs_dfd <- function(
             nodes$category[node] <- 2L
             min_deps <- c(min_deps, node)
             if (is.element(node, bijection_nodes)) {
-              lhs_index <- lhs_nonfixed_indices[as.logical(intToBits(node))]
+              lhs_index <- lhs_nonfixed_indices[nodes$bits[[node]]]
               stopifnot(is.element(
                 lhs_index,
                 bijection_candidate_nonfixed_indices
@@ -399,7 +399,7 @@ find_LHSs_dfd <- function(
           nodes$category[node] <- inferred_type
         }
         if (nodes$category[node] == 0L) {
-          lhs_set <- lhs_nonfixed_indices[as.logical(intToBits(node))]
+          lhs_set <- lhs_nonfixed_indices[nodes$bits[[node]]]
           cp <- compute_partitions(
             rhs,
             lhs_set,
@@ -415,7 +415,7 @@ find_LHSs_dfd <- function(
               min_deps <- c(min_deps, node)
               nodes$category[node] <- 2L
               if (is.element(node, bijection_nodes)) {
-                lhs_index <- lhs_nonfixed_indices[as.logical(intToBits(node))]
+                lhs_index <- lhs_nonfixed_indices[nodes$bits[[node]]]
                 stopifnot(is.element(
                   lhs_index,
                   bijection_candidate_nonfixed_indices
@@ -505,7 +505,7 @@ find_LHSs_tane <- function(
 
   while (length(seeds) != 0) {
     for (node in seeds) {
-      lhs_set <- lhs_nonfixed_indices[as.logical(intToBits(node))]
+      lhs_set <- lhs_nonfixed_indices[nodes$bits[[node]]]
       cp <- compute_partitions(
         rhs,
         lhs_set,
@@ -517,7 +517,7 @@ find_LHSs_tane <- function(
         min_deps <- c(min_deps, node)
         nodes$category[node] <- 2L
         if (is.element(node, bijection_nodes)) {
-          lhs_index <- lhs_nonfixed_indices[as.logical(intToBits(node))]
+          lhs_index <- lhs_nonfixed_indices[nodes$bits[[node]]]
           stopifnot(is.element(
             lhs_index,
             bijection_candidate_nonfixed_indices
