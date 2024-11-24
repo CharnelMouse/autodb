@@ -460,13 +460,13 @@ find_LHSs_dfd <- function(
   }
   if (store_cache)
     list(
-      lapply(min_deps, \(md) lhs_nonfixed_indices[as.logical(intToBits(md))]),
+      lapply(min_deps, \(md) lhs_nonfixed_indices[nodes$bits[[md]]]),
       partitions,
       FALSE
     )
   else
     list(
-      lapply(min_deps, \(md) lhs_nonfixed_indices[as.logical(intToBits(md))]),
+      lapply(min_deps, \(md) lhs_nonfixed_indices[nodes$bits[[md]]]),
       FALSE
     )
 }
@@ -535,13 +535,13 @@ find_LHSs_tane <- function(
   }
   if (store_cache)
     list(
-      lapply(min_deps, \(md) lhs_nonfixed_indices[as.logical(intToBits(md))]),
+      lapply(min_deps, \(md) lhs_nonfixed_indices[nodes$bits[[md]]]),
       partitions,
       FALSE
     )
   else
     list(
-      lapply(min_deps, \(md) lhs_nonfixed_indices[as.logical(intToBits(md))]),
+      lapply(min_deps, \(md) lhs_nonfixed_indices[nodes$bits[[md]]]),
       FALSE
     )
 }
