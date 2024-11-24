@@ -47,6 +47,7 @@
 <li>Added an <code>as.character</code> method for <code>functional_dependency</code>. The optional <code>align_arrows</code> argument can add padding to one side, in order to make the arrows align when they’re printed to different lines. These options are used to align arrows in its <code>print</code> method, and its <code>format</code> method for when printed as a data frame column.</li>
 <li>Added <code>==</code> and <code>!=</code> implementations for <code>functional_dependency</code>. These ignore differences in <code>attrs_order</code>: differently-ordered determinant sets are considered equal.</li>
 <li>Added a <code>dependants</code> argument to <code>discover</code>, which limit the functional dependency search to those with a dependant in the given set of column names, defaulting to all of them. This should significantly speed up searches where only some dependants are of interest.</li>
+<li>Added a <code>detset_limit</code> argument for <code>discover</code>/<code>autodb</code>, which limits the FD search to only look for dependencies with the determinant set size under a given limit. For DFD, this usually makes the run time dramatically larger, rather than smaller, but it will be useful when other search algorithms are implemented.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="fixes-development-version">Fixes<a class="anchor" aria-label="anchor" href="#fixes-development-version"></a></h3>
