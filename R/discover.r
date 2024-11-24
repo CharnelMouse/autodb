@@ -641,7 +641,7 @@ generate_next_seeds_tane <- function(seeds, nodes, min_deps) {
 }
 
 cross_intersection <- function(seeds, max_non_dep, powerset) {
-  new_seeds <- integer()
+  new_seed_full_indices <- integer()
   for (dep in seeds) {
     seed_bitset <- powerset$bits[[dep]]
     for (set in max_non_dep) {
@@ -649,10 +649,12 @@ cross_intersection <- function(seeds, max_non_dep, powerset) {
       new_seed_bitset_index <- to_bitset_index(which(
         seed_bitset | set_bitset
       ))
-      new_seeds <- c(new_seeds, new_seed_bitset_index)
+      new_seed_full_indices <- c(new_seed_full_indices, new_seed_bitset_index)
     }
   }
-  minimise_seeds(new_seeds, powerset$bits)
+  seeds <- powerset$bitset_index[new_seed_full_indices]
+  seeds <- seeds[!is.na(seeds)]
+  minimise_seeds(seeds, powerset$bits)
 }
 
 to_bitset_index <- function(bits) {
@@ -660,6 +662,8 @@ to_bitset_index <- function(bits) {
 }
 
 minimise_seeds <- function(seeds, bitsets) {
+  if (length(seeds) == 0)
+    return(seeds)
   # remove duplicates first instead of comparing identical bitsets
   unique_seeds <- unique(seeds)
   n_seeds <- length(unique_seeds)
