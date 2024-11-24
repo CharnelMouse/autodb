@@ -33,7 +33,8 @@ nonempty_powerset <- function(cardinality, use_visited, max_size = cardinality) 
   within_limit <- vapply(node_bits, sum, integer(1)) <= max_size
   limited_node_bits <- node_bits[within_limit]
   limited_to_unlimited_map <- which(within_limit)
-  bitset_index <- match(node_bits, limited_node_bits)
+  bitset_index <- rep(NA_integer_, n_nonempty_subsets)
+  bitset_index[within_limit] <- seq_len(n_limited_nonempty_subsets)
   children <- rep(list(integer()), n_limited_nonempty_subsets)
   parents <- rep(list(integer()), n_limited_nonempty_subsets)
   for (x in seq_len(n_limited_nonempty_subsets - 1)) {
