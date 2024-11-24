@@ -32,8 +32,8 @@
 #'   as the \code{file} argument for \code{\link[base]{cat}}.
 #' @param ... further arguments passed on to \code{\link{discover}}.
 #'
-#' @return A database, represented by a list of three elements. See
-#'   \code{\link{decompose}} for details.
+#' @return A \code{\link{database}}, containing the data in \code{df} within the
+#'   inferred database schema.
 #' @examples
 #' # simple example
 #' autodb(ChickWeight)

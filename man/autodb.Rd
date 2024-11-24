@@ -48,8 +48,8 @@ as the \code{file} argument for \code{\link[base]{cat}}.}
 \item{...}{further arguments passed on to \code{\link{discover}}.}
 }
 \value{
-A database, represented by a list of three elements. See
-\code{\link{decompose}} for details.
+A \code{\link{database}}, containing the data in \code{df} within the
+inferred database schema.
 }
 \description{
 This is a wrapper function for applying \code{\link{normalise}},
