@@ -1,6 +1,10 @@
 # non-empty in the sense of being the set of non-empty subsets, so {} has no
 # node
-nonempty_powerset <- function(cardinality, use_visited, max_size = cardinality) {
+nonempty_powerset <- function(
+  cardinality,
+  use_visited,
+  max_size = cardinality
+) {
   max_size <- min(max_size, cardinality)
   if (max_size == 0)
     return(c(
