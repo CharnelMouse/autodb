@@ -139,17 +139,17 @@ bijection doesn't imply equivalent approximate dependencies.
 
 \subsection{Limiting the determinant set size}{
 
-Setting \code{detset_limit} smaller than the largest-possible value reduces
-the size of the search tree for possible functional dependencies. The result
-is that \code{discover(x, 1, detset_limit = n)} is equivalent to doing a full
-search, \code{fds <- discover(x, 1)}, then filtering by determinant set size
-post-hoc, \code{fds[lengths(detset(fds)) <= n]}.
+Setting \code{detset_limit} smaller than the largest-possible value has
+different behaviour for different search algorithms, the result is always
+that \code{discover(x, 1, detset_limit = n)} is equivalent to doing a full
+search, \code{fds <- discover(x, 1)}, then
+filtering by determinant set size post-hoc, \code{fds[lengths(detset(fds)) <=
+n]}.
 
-However, setting a lower value for \code{detset_limit} should be done with
-caution: since it reduces the search tree, you might think that it should
-also decrease the computation time, but this depends on the search algorithm
-used. For DFD, the only algorithm currently implemented, the computation
-often greatly increases!
+For DFD, the naive way to implement it is by removing determinant sets larger
+than the limit from the search tree for possible functional dependencies for
+each dependant. However, this usually results in the search taking much more
+time than without a limit.
 
 For example, suppose we search for determinant sets for a dependant that has
 none (the dependant is the only key for \code{df}, for example). Using DFD,
@@ -164,7 +164,17 @@ determinants, the search finishes after visiting \eqn{n} sets.
 With a smaller limit \eqn{k}, there are \eqn{\binom{n}{k}} maximum-size sets
 to explore. Since a DFD search adds or removes one attribute at each step,
 this means the search must take at least \eqn{k - 2 + 2\binom{n}{k}} steps,
-which is usually much larger than \eqn{n}.
+which is larger than \eqn{n} for all non-trivial cases \eqn{0 < k \leq n}.
+
+We therefore use a different approach, where any determinant sets above the
+size limit are not allowed to be candidate seeds for new search paths, and
+any discovered dependencies with a size above the limit are discard at the
+end of the entire DFD search. This means that nodes for determinant sets
+above the size limit are only visited in order to determine maximality of
+non-dependencies within the size limit. It turns out to be rare that this
+results in a significant speed-up, but it never results in the search having
+to visit more nodes than it would without a size limit, so the average search
+time is never made worse.
 }
 }
 \examples{

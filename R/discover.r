@@ -62,17 +62,17 @@
 #'
 #' ## Limiting the determinant set size
 #'
-#' Setting \code{detset_limit} smaller than the largest-possible value reduces
-#' the size of the search tree for possible functional dependencies. The result
-#' is that \code{discover(x, 1, detset_limit = n)} is equivalent to doing a full
-#' search, \code{fds <- discover(x, 1)}, then filtering by determinant set size
-#' post-hoc, \code{fds[lengths(detset(fds)) <= n]}.
+#' Setting \code{detset_limit} smaller than the largest-possible value has
+#' different behaviour for different search algorithms, the result is always
+#' that \code{discover(x, 1, detset_limit = n)} is equivalent to doing a full
+#' search, \code{fds <- discover(x, 1)}, then
+#' filtering by determinant set size post-hoc, \code{fds[lengths(detset(fds)) <=
+#' n]}.
 #'
-#' However, setting a lower value for \code{detset_limit} should be done with
-#' caution: since it reduces the search tree, you might think that it should
-#' also decrease the computation time, but this depends on the search algorithm
-#' used. For DFD, the only algorithm currently implemented, the computation
-#' often greatly increases!
+#' For DFD, the naive way to implement it is by removing determinant sets larger
+#' than the limit from the search tree for possible functional dependencies for
+#' each dependant. However, this usually results in the search taking much more
+#' time than without a limit.
 #'
 #' For example, suppose we search for determinant sets for a dependant that has
 #' none (the dependant is the only key for \code{df}, for example). Using DFD,
@@ -87,7 +87,17 @@
 #' With a smaller limit \eqn{k}, there are \eqn{\binom{n}{k}} maximum-size sets
 #' to explore. Since a DFD search adds or removes one attribute at each step,
 #' this means the search must take at least \eqn{k - 2 + 2\binom{n}{k}} steps,
-#' which is usually much larger than \eqn{n}.
+#' which is larger than \eqn{n} for all non-trivial cases \eqn{0 < k \leq n}.
+#'
+#' We therefore use a different approach, where any determinant sets above the
+#' size limit are not allowed to be candidate seeds for new search paths, and
+#' any discovered dependencies with a size above the limit are discard at the
+#' end of the entire DFD search. This means that nodes for determinant sets
+#' above the size limit are only visited in order to determine maximality of
+#' non-dependencies within the size limit. It turns out to be rare that this
+#' results in a significant speed-up, but it never results in the search having
+#' to visit more nodes than it would without a size limit, so the average search
+#' time is never made worse.
 #' @param df a data.frame, the relation to evaluate.
 #' @param accuracy a numeric in (0, 1]: the accuracy threshold required in order
 #'   to conclude a dependency.
@@ -214,7 +224,7 @@ discover <- function(
   }
   nonfixed <- setdiff(column_names, fixed)
   valid_dependant_attrs <- intersect(dependants, nonfixed)
-  if (length(valid_dependant_attrs) == 0)
+  if (length(valid_dependant_attrs) == 0 || detset_limit < 1)
     return(flatten(dependencies, column_names))
 
   # For nonfixed attributes, all can be dependants, but
@@ -254,8 +264,7 @@ discover <- function(
       max_n_lhs_attrs,
       nonempty_powerset,
       "constructing powerset",
-      use_visited,
-      max_size = min(detset_limit, max_n_lhs_attrs)
+      use_visited
     )
     # cache generated powerset and reductions, otherwise we spend a lot
     # of time duplicating reduction work
@@ -304,6 +313,7 @@ discover <- function(
           partitions,
           compute_partitions,
           bijection_candidate_nonfixed_indices,
+          detset_limit,
           store_cache
         )
         if (lhss[[2 + store_cache]]) {
@@ -346,6 +356,7 @@ discover <- function(
       nonfixed,
       column_names
     )
+  dependencies <- lapply(dependencies, \(x) x[lengths(x) <= detset_limit])
   flatten(dependencies, column_names)
 }
 
@@ -357,6 +368,7 @@ find_LHSs_dfd <- function(
   partitions,
   compute_partitions,
   bijection_candidate_nonfixed_indices,
+  detset_limit,
   store_cache = FALSE
 ) {
   # The original library "names" nodes with their attribute set,
@@ -493,7 +505,7 @@ find_LHSs_dfd <- function(
       max_non_deps <- res[[5]]
       node <- res[[1]]
     }
-    seeds <- generate_next_seeds(max_non_deps, min_deps, simple_nodes, nodes)
+    seeds <- generate_next_seeds(max_non_deps, min_deps, simple_nodes, nodes, detset_limit)
   }
   if (store_cache)
     list(
@@ -516,6 +528,7 @@ find_LHSs_tane <- function(
   partitions,
   compute_partitions,
   bijection_candidate_nonfixed_indices,
+  detset_limit,
   store_cache = FALSE
 ) {
   # See find_LHSs_dfd for node categories, etc.
@@ -634,7 +647,7 @@ remove_pruned_supersets <- function(supersets, subsets, bitsets) {
   supersets[!prune]
 }
 
-generate_next_seeds <- function(max_non_deps, min_deps, lhs_attr_nodes, nodes) {
+generate_next_seeds <- function(max_non_deps, min_deps, lhs_attr_nodes, nodes, detset_limit) {
   if (length(max_non_deps) == 0) {
     # original DFD paper doesn't mention case where no maximal non-dependencies
     # found yet, so this approach could be inefficient
@@ -652,7 +665,7 @@ generate_next_seeds <- function(max_non_deps, min_deps, lhs_attr_nodes, nodes) {
       if (length(seeds) == 0)
         seeds <- max_non_dep_c
       else {
-        seeds <- cross_intersection(seeds, max_non_dep_c, nodes)
+        seeds <- cross_intersection(seeds, max_non_dep_c, nodes, detset_limit)
       }
     }
   }
@@ -677,15 +690,16 @@ generate_next_seeds_tane <- function(seeds, nodes, min_deps) {
   )
 }
 
-cross_intersection <- function(seeds, max_non_dep, powerset) {
+cross_intersection <- function(seeds, max_non_dep, powerset, detset_limit) {
   new_seed_full_indices <- integer()
   for (dep in seeds) {
     seed_bitset <- powerset$bits[[dep]]
     for (set in max_non_dep) {
       set_bitset <- powerset$bits[[set]]
-      new_seed_bitset_index <- to_bitset_index(which(
-        seed_bitset | set_bitset
-      ))
+      new_seed_bitset <- seed_bitset | set_bitset
+      if (sum(new_seed_bitset) > detset_limit)
+        next
+      new_seed_bitset_index <- to_bitset_index(which(new_seed_bitset))
       new_seed_full_indices <- c(new_seed_full_indices, new_seed_bitset_index)
     }
   }
