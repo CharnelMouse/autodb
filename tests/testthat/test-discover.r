@@ -693,3 +693,24 @@ describe("discover", {
   #   )
   # })
 })
+
+describe("generate_next_seeds", {
+  it("generates correctly under a detset limit", {
+    # example: three attributes, min. dep is whole set {1, 2, 3},
+    # max. non-deps are the two-element subsets
+    # generated seed set is empty, regardless of limit
+    nodes <- nonempty_powerset(3, use_visited = TRUE)
+    nodes$category <- as.integer(c(0, -1, -2, 0, -2, -2, 2))
+    nodes$visited <- c(FALSE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE)
+    expect_identical(
+      generate_next_seeds(
+        max_non_deps = c(3L, 5L, 6L),
+        min_deps = 7L,
+        lhs_attr_nodes = c(1L, 2L, 4L),
+        nodes = nodes,
+        detset_limit = 1
+      ),
+      integer()
+    )
+  })
+})

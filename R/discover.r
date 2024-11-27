@@ -403,7 +403,7 @@ find_LHSs_dfd <- function(
   )
 
   while (length(seeds) != 0) {
-    node <- sample(seeds, 1)
+    node <- seeds[sample.int(length(seeds), 1)]
     while (!is.na(node)) {
       if (nodes$visited[node]) {
         if (nodes$category[node] == 3) { # dependency
@@ -660,11 +660,17 @@ generate_next_seeds <- function(max_non_deps, min_deps, lhs_attr_nodes, nodes, d
     seeds <- attrs_not_in_min_deps[candidate_categories >= 0]
   }else{
     seeds <- integer()
-    for (nfd in max_non_deps) {
+    for (n in seq_along(max_non_deps)) {
+      nfd <- max_non_deps[[n]]
       max_non_dep_c <- remove_pruned_subsets(lhs_attr_nodes, nfd, nodes$bits)
-      if (length(seeds) == 0)
+      # paper condition is "seeds is empty", trimming cross-intersections
+      # by detset_limit means seeds can be empty before the end,
+      # which would cause the remaining nfds to start from scratch.
+      # we therefore just initiate the seeds on the first nfd, as
+      # intended anyway.
+      if (n == 1) {
         seeds <- max_non_dep_c
-      else {
+      }else{
         seeds <- cross_intersection(seeds, max_non_dep_c, nodes, detset_limit)
       }
     }
