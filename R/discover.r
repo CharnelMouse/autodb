@@ -563,82 +563,6 @@ find_LHSs_dfd <- function(
     )
 }
 
-find_LHSs_tane <- function(
-  rhs,
-  lhs_nonfixed_indices,
-  nodes,
-  simple_nodes,
-  partitions,
-  compute_partitions,
-  bijection_candidate_nonfixed_indices,
-  detset_limit,
-  store_cache = FALSE
-) {
-  # See find_LHSs_dfd for node categories, etc.
-  # Tane is a breadth-first search, going one powerset layer at a time. This
-  # greatly simplifies generating seeds, picking which node to check next, etc.,
-  # compared to DFD.
-
-  # change requires two steps to change at once:
-  # - change seed generation to move up one layer only, checking for no
-  #   supersets of min_deps;
-  # - iterate through all seeds instead of randomly picking just one, and
-  #   picking nodes for depth-first traversal from there;
-  # this forbids a node from being revisited, and from being inferrable
-  # everything after this is cleanup
-  seeds <- simple_nodes
-  min_deps <- integer()
-  bijection_nodes <- to_nodes(
-    match(
-      bijection_candidate_nonfixed_indices,
-      lhs_nonfixed_indices
-    ),
-    nodes
-  )
-
-  while (length(seeds) != 0) {
-    for (node in seeds) {
-      lhs_set <- lhs_nonfixed_indices[nodes$bits[[node]]]
-      cp <- compute_partitions(
-        rhs,
-        lhs_set,
-        partitions
-      )
-      result <- cp[[1]]
-      partitions <- cp[[2]]
-      if (result) {
-        min_deps <- c(min_deps, node)
-        nodes$category[node] <- 2L
-        if (is.element(node, bijection_nodes)) {
-          lhs_index <- lhs_nonfixed_indices[nodes$bits[[node]]]
-          stopifnot(is.element(
-            lhs_index,
-            bijection_candidate_nonfixed_indices
-          ))
-          if (store_cache)
-            return(list(lhs_index, partitions, TRUE))
-          else
-            return(list(lhs_index, TRUE))
-        }
-      }else{
-        nodes$category[[node]] <- -3L
-      }
-    }
-    seeds <- generate_next_seeds_tane(seeds, nodes, min_deps)
-  }
-  if (store_cache)
-    list(
-      lapply(min_deps, \(md) lhs_nonfixed_indices[nodes$bits[[md]]]),
-      partitions,
-      FALSE
-    )
-  else
-    list(
-      lapply(min_deps, \(md) lhs_nonfixed_indices[nodes$bits[[md]]]),
-      FALSE
-    )
-}
-
 pick_next_node <- function(node, nodes, trace, min_deps, max_non_deps) {
   if (nodes$category[node] == 3) { # candidate dependency
     s <- nonvisited_children(node, nodes)
@@ -719,24 +643,6 @@ generate_next_seeds <- function(max_non_deps, min_deps, lhs_attr_nodes, nodes, d
     }
   }
   remove_pruned_supersets(seeds, min_deps, nodes$bits)
-}
-
-generate_next_seeds_tane <- function(seeds, nodes, min_deps) {
-  nondep_seeds <- seeds[nodes$category[seeds] < 0L]
-  if (length(nondep_seeds) <= 1L)
-    return(integer())
-  old_level <- sum(nodes$bits[[nondep_seeds[[1L]]]])
-  all_bits <- which(Reduce(`|`, nodes$bits[nondep_seeds]))
-  unions <- apply(utils::combn(all_bits, old_level + 1L), 2, to_node, nodes)
-  uniq <- unique(unions)
-  Filter(
-    \(u) !any(vapply(
-      nodes$bits[min_deps],
-      \(sub) is_superset(nodes$bits[[u]], sub),
-      logical(1)
-    )),
-    uniq
-  )
 }
 
 cross_intersection <- function(seeds, max_non_dep, powerset, detset_limit) {

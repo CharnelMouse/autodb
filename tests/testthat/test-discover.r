@@ -736,18 +736,6 @@ describe("discover", {
       terminates_then(is_valid_minimal_functional_dependency, 1)
     )
   })
-  # it("gives the same results with each method under full accuracy", {
-  #   forall(
-  #     gen_df(4, 6),
-  #     \(df) {
-  #       res1 <- withTimeout(discover(df, 1, method = "dfd"), timeout = 5, onTimeout = "silent")
-  #       expect_true(!is.null(res1))
-  #       res2 <- withTimeout(discover(df, 1, method = "tane"), timeout = 5, onTimeout = "silent")
-  #       expect_true(!is.null(res2))
-  #       expect_equiv_deps(res1, res2)
-  #     }
-  #   )
-  # })
 })
 
 describe("generate_next_seeds", {
