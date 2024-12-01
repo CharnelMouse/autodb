@@ -131,6 +131,11 @@
 #'   that should be searched for. By default, this is large enough to allow all
 #'   possible determinant sets. See Details for comments about the effect on the
 #'   result, and on the computation time.
+#' @param detset_oneof a list, containing character vectors whose elements are
+#'   column names of \code{df}. Any returned minimal functional dependencies
+#'   must have at least one of these sets of attribute names within its
+#'   determinant set. By default, this only contains an empty vector; since all
+#'   determinant sets contain this, this has no effect.
 #' @inheritParams autodb
 #'
 #' @return A \code{\link{functional_dependency}} object, containing the discovered
@@ -167,6 +172,7 @@ discover <- function(
   exclude_class = character(),
   dependants = names(df),
   detset_limit = ncol(df) - 1L,
+  detset_oneof = list(character()),
   progress = FALSE,
   progress_file = ""
 ) {
@@ -224,8 +230,16 @@ discover <- function(
   }
   nonfixed <- setdiff(column_names, fixed)
   valid_dependant_attrs <- intersect(dependants, nonfixed)
-  if (length(valid_dependant_attrs) == 0 || detset_limit < 1)
-    return(flatten(dependencies, column_names))
+  if (
+    length(valid_dependant_attrs) == 0 ||
+    detset_limit < 1
+  ) {
+    report$stat("no valid dependants, or detset_limit < 1, skipping search")
+    return(flatten(
+      filter_nonflat_dependencies(dependencies, detset_limit, detset_oneof),
+      column_names
+    ))
+  }
 
   # For nonfixed attributes, all can be dependants, but
   # might not all be valid determinants.
@@ -246,6 +260,18 @@ discover <- function(
       )
     )
   }
+  detset_oneof_nonfixed <- detset_oneof[vapply(
+    detset_oneof,
+    \(x) all(is.element(x, valid_dependant_attrs)),
+    logical(1)
+  )]
+  if (length(detset_oneof_nonfixed) == 0) {
+    report$stat(
+      "valid determinants cannot satisfy detset_oneof, skipping search"
+    )
+    return(flatten(dependencies[any(lengths(detset_oneof) == 0)], column_names))
+  }
+  detset_oneof_nonfixed <- unique(detset_oneof_nonfixed)
   valid_determinant_nonfixed_indices <- match(valid_determinant_attrs, nonfixed)
   n_dependant_only <- length(nonfixed) - length(valid_determinant_attrs)
   max_n_lhs_attrs <- length(valid_determinant_attrs) -
@@ -274,9 +300,24 @@ discover <- function(
       accuracy,
       full_cache
     )
+    detset_oneof_nonfixed_indices <- lapply(
+      detset_oneof_nonfixed,
+      match,
+      nonfixed
+    )
+    stopifnot(!any(vapply(detset_oneof_nonfixed_indices, anyNA, logical(1))))
     for (rhs in seq_along(nonfixed)[nonfixed %in% valid_dependant_attrs]) {
       report$stat(paste("dependant", nonfixed[rhs]))
       lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
+      detset_oneof_lhs <- detset_oneof_nonfixed_indices[vapply(
+        detset_oneof_nonfixed_indices,
+        \(x) all(is.element(x, lhs_nonfixed_indices)),
+        logical(1)
+      )]
+      if (length(detset_oneof_lhs) == 0) {
+        report$stat("determinants cannot satisfy detset_oneof")
+        next
+      }
       n_lhs_attrs <- length(lhs_nonfixed_indices)
       expected_n_lhs_attrs <- max_n_lhs_attrs -
         (n_dependant_only > 0 && is.element(rhs, valid_determinant_nonfixed_indices))
@@ -356,8 +397,10 @@ discover <- function(
       nonfixed,
       column_names
     )
-  dependencies <- lapply(dependencies, \(x) x[lengths(x) <= detset_limit])
-  flatten(dependencies, column_names)
+  flatten(
+    filter_nonflat_dependencies(dependencies, detset_limit, detset_oneof),
+    column_names
+  )
 }
 
 find_LHSs_dfd <- function(
@@ -1068,6 +1111,28 @@ add_deps_implied_by_bijections <- function(
     }
   }
   dependencies
+}
+
+filter_nonflat_dependencies <- function(
+  dependencies,
+  detset_limit,
+  detset_oneof
+) {
+  lapply(
+    dependencies,
+    \(x) {
+      if (length(x) == 0)
+        return(logical())
+      superset <- outer(
+        x,
+        detset_oneof,
+        Vectorize(\(sup, sub) all(is.element(sub, sup)))
+      )
+      wanted <- lengths(x) <= detset_limit &
+        apply(superset, 1, any)
+      x[wanted]
+    }
+  )
 }
 
 flatten <- function(dependencies, attributes) {

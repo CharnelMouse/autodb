@@ -142,6 +142,25 @@ describe("discover", {
       fn(res_skip, res_noskip)
     }
   }
+  terminates_with_and_without_detset_oneof_then <- function(fn, accuracy, ...) {
+    function(df, detset_oneof) {
+      res_with <- withTimeout(
+        discover(df, accuracy, detset_oneof = detset_oneof, ...),
+        timeout = 5,
+        onTimeout = "silent"
+      )
+      if (is.null(res_with))
+        return(fail("discover with detset_oneof timed out"))
+      res_without <- withTimeout(
+        discover(df, accuracy, ...),
+        timeout = 5,
+        onTimeout = "silent"
+      )
+      if (is.null(res_without))
+        return(fail("discover without detset_oneof timed out"))
+      fn(res_with, res_without, detset_oneof)
+    }
+  }
 
   it("gives a deterministic result, except for per-dependant dependency order", {
     two_copies <- function(fn) {
@@ -485,6 +504,43 @@ describe("discover", {
           detset_limit = y
         )(x)
       },
+      curry = TRUE
+    )
+  })
+  it("gives same result from filtering to attrs, and using detset_oneof argument", {
+    gen.detset_oneof <- function(attrs) {
+      gen.subsequence(attrs) |>
+        gen.and_then(gen.sample) |>
+        gen.list(from = 0, to = length(attrs))
+    }
+    superset <- function(x, y) {
+      if (length(x) == 0)
+        return(logical(1))
+      mat <- outer(x, y, Vectorize(\(u, v) setequal(intersect(u, v), v)))
+      apply(mat, 1, any)
+    }
+    expect_oneof_deps_limited_to_subsets <- function(
+      res_with,
+      res_without,
+      detset_oneof
+    ) {
+      expect_setequal(
+        res_with,
+        res_without[superset(detset(res_without), detset_oneof)]
+      )
+    }
+    forall(
+      gen_df(4, 6) |>
+        gen.and_then(\(x) {
+          list(
+            gen.pure(x),
+            gen.detset_oneof(colnames(x))
+          )
+        }),
+      terminates_with_and_without_detset_oneof_then(
+        expect_oneof_deps_limited_to_subsets,
+        accuracy = 1
+      ),
       curry = TRUE
     )
   })
