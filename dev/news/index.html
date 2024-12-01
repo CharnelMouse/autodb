@@ -48,6 +48,7 @@
 <li>Added <code>==</code> and <code>!=</code> implementations for <code>functional_dependency</code>. These ignore differences in <code>attrs_order</code>: differently-ordered determinant sets are considered equal.</li>
 <li>Added a <code>dependants</code> argument to <code>discover</code>, which limit the functional dependency search to those with a dependant in the given set of column names, defaulting to all of them. This should significantly speed up searches where only some dependants are of interest.</li>
 <li>Added a <code>detset_limit</code> argument for <code>discover</code>/<code>autodb</code>, which limits the FD search to only look for dependencies with the determinant set size under a given limit. For DFD, this usually doesn’t significantly reduce the search time, but it won’t make it worse. It will be useful once other search algorithms are implemented.</li>
+<li>Added a <code>detset_oneof</code> argument for <code>discover</code>/<code>autodb</code>, which requires the FD search to only return dependencies where the determinant set contains any of the given vectors of attribute names. Currently, this is only used to check additional conditions under which to skip a dependant, or the entire search, not to prune the search itself.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="fixes-development-version">Fixes<a class="anchor" aria-label="anchor" href="#fixes-development-version"></a></h3>
