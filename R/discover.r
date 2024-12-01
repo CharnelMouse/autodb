@@ -435,13 +435,14 @@ find_LHSs_dfd <- function(
   # initial seeds are the single-attribute nodes, possibly pruned by detset
   # constraints
   lhs_attr_nodes <- to_nodes(seq_len(n_lhs_attrs), nodes)
-  seeds <- generate_next_seeds(
+  initial_seeds <- generate_next_seeds(
     max_non_deps = list(),
     min_deps = list(),
-    lhs_attr_nodes = lhs_attr_nodes,
+    initial_seeds = lhs_attr_nodes,
     nodes = nodes,
     detset_limit = detset_limit
   )
+  seeds <- initial_seeds
   min_deps <- integer()
   max_non_deps <- integer()
   trace <- integer()
@@ -556,7 +557,7 @@ find_LHSs_dfd <- function(
       max_non_deps <- res[[5]]
       node <- res[[1]]
     }
-    seeds <- generate_next_seeds(max_non_deps, min_deps, lhs_attr_nodes, nodes, detset_limit)
+    seeds <- generate_next_seeds(max_non_deps, min_deps, initial_seeds, nodes, detset_limit)
   }
   if (store_cache)
     list(
@@ -622,7 +623,7 @@ remove_pruned_supersets <- function(supersets, subsets, bitsets) {
   supersets[!prune]
 }
 
-generate_next_seeds <- function(max_non_deps, min_deps, lhs_attr_nodes, nodes, detset_limit) {
+generate_next_seeds <- function(max_non_deps, min_deps, initial_seeds, nodes, detset_limit) {
   # Seed generation assumes that the empty set is known to be a non-determinant.
   # The below is equivalent to beginning with a single empty seed, and having
   # the empty set as an additional non-determinant. Being able to refer to the
@@ -632,7 +633,7 @@ generate_next_seeds <- function(max_non_deps, min_deps, lhs_attr_nodes, nodes, d
     # original DFD paper doesn't mention case where no maximal non-dependencies
     # found yet, so this approach could be inefficient
     attrs_not_in_min_deps <- remove_pruned_subsets(
-      lhs_attr_nodes,
+      initial_seeds,
       min_deps,
       nodes$bits
     )
@@ -642,7 +643,7 @@ generate_next_seeds <- function(max_non_deps, min_deps, lhs_attr_nodes, nodes, d
     seeds <- integer()
     for (n in seq_along(max_non_deps)) {
       nfd <- max_non_deps[[n]]
-      max_non_dep_c <- remove_pruned_subsets(lhs_attr_nodes, nfd, nodes$bits)
+      max_non_dep_c <- remove_pruned_subsets(initial_seeds, nfd, nodes$bits)
       # paper condition is "seeds is empty", trimming cross-intersections
       # by detset_limit means seeds can be empty before the end,
       # which would cause the remaining nfds to start from scratch.

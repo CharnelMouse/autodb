@@ -763,7 +763,7 @@ describe("generate_next_seeds", {
       generate_next_seeds(
         max_non_deps = c(3L, 5L, 6L),
         min_deps = 7L,
-        lhs_attr_nodes = c(1L, 2L, 4L),
+        initial_seeds = c(1L, 2L, 4L),
         nodes = nodes,
         detset_limit = 1
       ),
