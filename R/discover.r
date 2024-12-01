@@ -614,6 +614,11 @@ remove_pruned_supersets <- function(supersets, subsets, bitsets) {
 }
 
 generate_next_seeds <- function(max_non_deps, min_deps, lhs_attr_nodes, nodes, detset_limit) {
+  # Seed generation assumes that the empty set is known to be a non-determinant.
+  # The below is equivalent to beginning with a single empty seed, and having
+  # the empty set as an additional non-determinant. Being able to refer to the
+  # empty set directly would remove the special cases we have below for
+  # max_non_deps being empty, and for applying the first one.
   if (length(max_non_deps) == 0) {
     # original DFD paper doesn't mention case where no maximal non-dependencies
     # found yet, so this approach could be inefficient

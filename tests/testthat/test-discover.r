@@ -739,6 +739,19 @@ describe("discover", {
 })
 
 describe("generate_next_seeds", {
+  it("generates all single attributes if min_deps and max_non_deps are empty", {
+    forall(
+      gen.int(10),
+      \(n) {
+        powerset <- nonempty_powerset(n, use_visited = FALSE)
+        lhs_attr_nodes <- to_nodes(seq_len(n), powerset)
+        expect_identical(
+          generate_next_seeds(list(), list(), lhs_attr_nodes, powerset, detset_limit = n),
+          lhs_attr_nodes
+        )
+      }
+    )
+  })
   it("generates correctly under a detset limit", {
     # example: three attributes, min. dep is whole set {1, 2, 3},
     # max. non-deps are the two-element subsets
