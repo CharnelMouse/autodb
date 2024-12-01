@@ -342,20 +342,13 @@ discover <- function(
           nodes <- reduce_powerset(powerset, n_lhs_attrs)
           all_powersets[[as.character(n_lhs_attrs)]] <- nodes
         }
-        simple_nodes <- generate_next_seeds(
-          max_non_deps = list(),
-          min_deps = list(),
-          lhs_attr_nodes = to_nodes(seq_len(n_lhs_attrs), nodes),
-          nodes = nodes,
-          detset_limit = detset_limit
-        )
         lhss <- report$op(
           rhs,
           find_LHSs_dfd,
           "determinants available, starting search",
           lhs_nonfixed_indices,
           nodes,
-          simple_nodes,
+          n_lhs_attrs,
           partitions,
           compute_partitions,
           bijection_candidate_nonfixed_indices,
@@ -412,7 +405,7 @@ find_LHSs_dfd <- function(
   rhs,
   lhs_nonfixed_indices,
   nodes,
-  simple_nodes,
+  n_lhs_attrs,
   partitions,
   compute_partitions,
   bijection_candidate_nonfixed_indices,
@@ -438,7 +431,17 @@ find_LHSs_dfd <- function(
   #  1 = non-minimal dependency
   #  2 = minimal dependency
   #  3 = candidate minimal dependency
-  seeds <- simple_nodes
+
+  # initial seeds are the single-attribute nodes, possibly pruned by detset
+  # constraints
+  lhs_attr_nodes <- to_nodes(seq_len(n_lhs_attrs), nodes)
+  seeds <- generate_next_seeds(
+    max_non_deps = list(),
+    min_deps = list(),
+    lhs_attr_nodes = lhs_attr_nodes,
+    nodes = nodes,
+    detset_limit = detset_limit
+  )
   min_deps <- integer()
   max_non_deps <- integer()
   trace <- integer()
@@ -553,7 +556,7 @@ find_LHSs_dfd <- function(
       max_non_deps <- res[[5]]
       node <- res[[1]]
     }
-    seeds <- generate_next_seeds(max_non_deps, min_deps, simple_nodes, nodes, detset_limit)
+    seeds <- generate_next_seeds(max_non_deps, min_deps, lhs_attr_nodes, nodes, detset_limit)
   }
   if (store_cache)
     list(
