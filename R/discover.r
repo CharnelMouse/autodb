@@ -342,7 +342,13 @@ discover <- function(
           nodes <- reduce_powerset(powerset, n_lhs_attrs)
           all_powersets[[as.character(n_lhs_attrs)]] <- nodes
         }
-        simple_nodes <- to_nodes(seq_len(n_lhs_attrs), nodes)
+        simple_nodes <- generate_next_seeds(
+          max_non_deps = list(),
+          min_deps = list(),
+          lhs_attr_nodes = to_nodes(seq_len(n_lhs_attrs), nodes),
+          nodes = nodes,
+          detset_limit = detset_limit
+        )
         lhss <- report$op(
           rhs,
           find_LHSs_dfd,
