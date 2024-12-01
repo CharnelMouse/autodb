@@ -176,7 +176,6 @@ discover <- function(
   progress = FALSE,
   progress_file = ""
 ) {
-  find_LHSs <- find_LHSs_dfd
   use_visited <- TRUE
 
   if (skip_bijections && accuracy < 1)
@@ -346,7 +345,7 @@ discover <- function(
         simple_nodes <- to_nodes(seq_len(n_lhs_attrs), nodes)
         lhss <- report$op(
           rhs,
-          find_LHSs,
+          find_LHSs_dfd,
           "determinants available, starting search",
           lhs_nonfixed_indices,
           nodes,
