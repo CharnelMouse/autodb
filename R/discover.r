@@ -629,16 +629,23 @@ generate_next_seeds <- function(max_non_deps, min_deps, initial_seeds, nodes, de
   # the empty set as an additional non-determinant. Being able to refer to the
   # empty set directly would remove the special cases we have below for
   # max_non_deps being empty, and for applying the first one.
+  # Nodes are completely unknown iff they're non-visited
+  stopifnot(
+    all(nodes$visited == (nodes$category != 0)),
+    !any(abs(nodes$category) == 3)
+  )
   if (length(max_non_deps) == 0) {
     # original DFD paper doesn't mention case where no maximal non-dependencies
     # found yet, so this approach could be inefficient
-    attrs_not_in_min_deps <- remove_pruned_subsets(
+    seeds <- remove_pruned_subsets(
       initial_seeds,
       min_deps,
       nodes$bits
     )
-    candidate_categories <- nodes$category[attrs_not_in_min_deps]
-    seeds <- attrs_not_in_min_deps[candidate_categories >= 0]
+    stopifnot(
+      all(nodes$category[seeds] == 0),
+      all(nodes$category %in% c(0L, 2L))
+    )
   }else{
     seeds <- integer()
     for (n in seq_along(max_non_deps)) {
