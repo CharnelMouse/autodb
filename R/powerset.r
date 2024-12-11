@@ -190,3 +190,13 @@ to_nodes <- function(element_indices, powerset) {
   res <- powerset$bitset_index[2^(element_indices - 1L)]
   res[!is.na(res)]
 }
+
+node_union <- function(node1, node2, nodes) {
+  vapply(
+    mapply(`|`, nodes$bits[node1], nodes$bits[node2], SIMPLIFY = FALSE) |>
+      lapply(which),
+    to_node,
+    integer(1),
+    nodes
+  )
+}

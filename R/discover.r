@@ -353,6 +353,7 @@ discover <- function(
           compute_partitions,
           bijection_candidate_nonfixed_indices,
           detset_limit,
+          detset_oneof_lhs,
           store_cache
         )
         if (lhss[[2 + store_cache]]) {
@@ -410,6 +411,7 @@ find_LHSs_dfd <- function(
   compute_partitions,
   bijection_candidate_nonfixed_indices,
   detset_limit,
+  detset_oneof_lhs,
   store_cache = FALSE
 ) {
   # The original library "names" nodes with their attribute set,
@@ -435,12 +437,24 @@ find_LHSs_dfd <- function(
   # initial seeds are the single-attribute nodes, possibly pruned by detset
   # constraints
   lhs_attr_nodes <- to_nodes(seq_len(n_lhs_attrs), nodes)
+  detset_oneof_lhs <- lapply(detset_oneof_lhs, match, lhs_nonfixed_indices)
+  detset_oneof_nodes <- vapply(
+    detset_oneof_lhs,
+    \(x) {
+      if (length(x) == 0)
+        0L
+      else
+        to_node(x, nodes)
+    },
+    integer(1)
+  )
   initial_seeds <- generate_next_seeds(
     max_non_deps = list(),
     min_deps = list(),
     initial_seeds = lhs_attr_nodes,
     nodes = nodes,
-    detset_limit = detset_limit
+    detset_limit = detset_limit,
+    detset_oneof_nodes = detset_oneof_nodes
   )
   seeds <- initial_seeds
   min_deps <- integer()
@@ -557,7 +571,7 @@ find_LHSs_dfd <- function(
       max_non_deps <- res[[5]]
       node <- res[[1]]
     }
-    seeds <- generate_next_seeds(max_non_deps, min_deps, initial_seeds, nodes, detset_limit)
+    seeds <- generate_next_seeds(max_non_deps, min_deps, initial_seeds, nodes, detset_limit, detset_oneof_nodes)
   }
   if (store_cache)
     list(
@@ -623,7 +637,7 @@ remove_pruned_supersets <- function(supersets, subsets, bitsets) {
   supersets[!prune]
 }
 
-generate_next_seeds <- function(max_non_deps, min_deps, initial_seeds, nodes, detset_limit) {
+generate_next_seeds <- function(max_non_deps, min_deps, initial_seeds, nodes, detset_limit, detset_oneof_nodes) {
   # Seed generation assumes that the empty set is known to be a non-determinant.
   # The below is equivalent to beginning with a single empty seed, and having
   # the empty set as an additional non-determinant. Being able to refer to the
@@ -634,6 +648,17 @@ generate_next_seeds <- function(max_non_deps, min_deps, initial_seeds, nodes, de
     all(nodes$visited == (nodes$category != 0)),
     !any(abs(nodes$category) == 3)
   )
+  initial_seeds <- lapply(
+    detset_oneof_nodes,
+    \(detset) {
+      if (detset == 0)
+        initial_seeds
+      else
+        node_union(initial_seeds, detset, nodes)
+    }
+  ) |>
+    Reduce(f = c, init = integer()) |>
+    minimise_seeds(nodes$bits)
   if (length(max_non_deps) == 0) {
     # original DFD paper doesn't mention case where no maximal non-dependencies
     # found yet, so this approach could be inefficient
@@ -642,10 +667,20 @@ generate_next_seeds <- function(max_non_deps, min_deps, initial_seeds, nodes, de
       min_deps,
       nodes$bits
     )
-    stopifnot(
-      all(nodes$category[seeds] == 0),
-      all(nodes$category %in% c(0L, 2L))
-    )
+    # If detset_oneof is default, i.e. does nothing, then all seed nodes
+    # are non-categorised, and nodes in general are non-categorised or
+    # minimal dependencies, because to be in this case the only explored
+    # nodes must be single-attribute nodes found to be minimal.
+    # This is not the case if detset_oneof is non-empty. Example: oneof has a
+    # two-attribute pair, which is the only seed, which we find as dep, then we
+    # find one of the attributes as dep, so that is minimal and seed is
+    # non-minimal, then seed generation returns the seed again, which is now
+    # categorised.
+    if (identical(detset_oneof_nodes, 0L))
+      stopifnot(
+        all(nodes$category[seeds] == 0),
+        all(nodes$category %in% c(0L, 2L))
+      )
   }else{
     seeds <- integer()
     for (n in seq_along(max_non_deps)) {
