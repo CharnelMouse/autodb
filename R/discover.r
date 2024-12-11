@@ -357,7 +357,10 @@ discover <- function(
           store_cache
         )
         if (lhss[[2 + store_cache]]) {
-          stopifnot(is.element(lhss[[1]], bijection_candidate_nonfixed_indices), lhss[[1]] < rhs)
+          stopifnot(
+            is.element(lhss[[1]], bijection_candidate_nonfixed_indices),
+            lhss[[1]] < rhs
+          )
           bij_ind <- match(lhss[[1]], names(bijections))
           if (is.na(bij_ind))
             bijections <- c(
@@ -370,7 +373,10 @@ discover <- function(
               rhs
             )
           }
-          valid_determinant_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
+          valid_determinant_nonfixed_indices <- setdiff(
+            valid_determinant_nonfixed_indices,
+            rhs
+          )
           max_n_lhs_attrs <- max_n_lhs_attrs - 1L
           if (max_n_lhs_attrs %in% names(all_powersets))
             powerset <- all_powersets[[as.character(max_n_lhs_attrs)]]
@@ -571,7 +577,13 @@ find_LHSs_dfd <- function(
       max_non_deps <- res[[5]]
       node <- res[[1]]
     }
-    seeds <- generate_next_seeds(max_non_deps, min_deps, initial_seeds, nodes, detset_limit)
+    seeds <- generate_next_seeds(
+      max_non_deps,
+      min_deps,
+      initial_seeds,
+      nodes,
+      detset_limit
+    )
   }
   if (store_cache)
     list(
@@ -651,7 +663,13 @@ specialise_initial_seeds <- function(initial_seeds, nodes, detset_oneof_nodes) {
     minimise_seeds(nodes$bits)
 }
 
-generate_next_seeds <- function(max_non_deps, min_deps, initial_seeds, nodes, detset_limit) {
+generate_next_seeds <- function(
+  max_non_deps,
+  min_deps,
+  initial_seeds,
+  nodes,
+  detset_limit
+) {
   # Seed generation assumes that the empty set is known to be a non-determinant.
   # The below is equivalent to beginning with a single empty seed, and having
   # the empty set as an additional non-determinant. Being able to refer to the
