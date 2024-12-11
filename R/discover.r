@@ -448,12 +448,12 @@ find_LHSs_dfd <- function(
     },
     integer(1)
   )
-  initial_seeds <- generate_next_seeds(
-    max_non_deps = list(),
-    min_deps = list(),
+  # detset_oneof is only used to specialise the initial seeds: for later sets of
+  # seeds, they're specialised from the initial seeds, so we don't need to
+  # re-use detset_oneof.
+  initial_seeds <- specialise_initial_seeds(
     initial_seeds = lhs_attr_nodes,
     nodes = nodes,
-    detset_limit = detset_limit,
     detset_oneof_nodes = detset_oneof_nodes
   )
   seeds <- initial_seeds
@@ -571,7 +571,7 @@ find_LHSs_dfd <- function(
       max_non_deps <- res[[5]]
       node <- res[[1]]
     }
-    seeds <- generate_next_seeds(max_non_deps, min_deps, initial_seeds, nodes, detset_limit, detset_oneof_nodes)
+    seeds <- generate_next_seeds(max_non_deps, min_deps, initial_seeds, nodes, detset_limit)
   }
   if (store_cache)
     list(
@@ -637,18 +637,8 @@ remove_pruned_supersets <- function(supersets, subsets, bitsets) {
   supersets[!prune]
 }
 
-generate_next_seeds <- function(max_non_deps, min_deps, initial_seeds, nodes, detset_limit, detset_oneof_nodes) {
-  # Seed generation assumes that the empty set is known to be a non-determinant.
-  # The below is equivalent to beginning with a single empty seed, and having
-  # the empty set as an additional non-determinant. Being able to refer to the
-  # empty set directly would remove the special cases we have below for
-  # max_non_deps being empty, and for applying the first one.
-  # Nodes are completely unknown iff they're non-visited
-  stopifnot(
-    all(nodes$visited == (nodes$category != 0)),
-    !any(abs(nodes$category) == 3)
-  )
-  initial_seeds <- lapply(
+specialise_initial_seeds <- function(initial_seeds, nodes, detset_oneof_nodes) {
+  lapply(
     detset_oneof_nodes,
     \(detset) {
       if (detset == 0)
@@ -659,6 +649,19 @@ generate_next_seeds <- function(max_non_deps, min_deps, initial_seeds, nodes, de
   ) |>
     Reduce(f = c, init = integer()) |>
     minimise_seeds(nodes$bits)
+}
+
+generate_next_seeds <- function(max_non_deps, min_deps, initial_seeds, nodes, detset_limit) {
+  # Seed generation assumes that the empty set is known to be a non-determinant.
+  # The below is equivalent to beginning with a single empty seed, and having
+  # the empty set as an additional non-determinant. Being able to refer to the
+  # empty set directly would remove the special cases we have below for
+  # max_non_deps being empty, and for applying the first one.
+  # Nodes are completely unknown iff they're non-visited
+  stopifnot(
+    all(nodes$visited == (nodes$category != 0)),
+    !any(abs(nodes$category) == 3)
+  )
   if (length(max_non_deps) == 0) {
     # original DFD paper doesn't mention case where no maximal non-dependencies
     # found yet, so this approach could be inefficient
@@ -670,17 +673,16 @@ generate_next_seeds <- function(max_non_deps, min_deps, initial_seeds, nodes, de
     # If detset_oneof is default, i.e. does nothing, then all seed nodes
     # are non-categorised, and nodes in general are non-categorised or
     # minimal dependencies, because to be in this case the only explored
-    # nodes must be single-attribute nodes found to be minimal.
+    # nodes must be single-attribute nodes found to be minimal. i.e.
+    # stopifnot(
+    #   all(nodes$category[seeds] == 0),
+    #   all(nodes$category %in% c(0L, 2L))
+    # )
     # This is not the case if detset_oneof is non-empty. Example: oneof has a
     # two-attribute pair, which is the only seed, which we find as dep, then we
     # find one of the attributes as dep, so that is minimal and seed is
     # non-minimal, then seed generation returns the seed again, which is now
     # categorised.
-    if (identical(detset_oneof_nodes, 0L))
-      stopifnot(
-        all(nodes$category[seeds] == 0),
-        all(nodes$category %in% c(0L, 2L))
-      )
   }else{
     seeds <- integer()
     for (n in seq_along(max_non_deps)) {

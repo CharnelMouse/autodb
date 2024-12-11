@@ -718,7 +718,7 @@ describe("generate_next_seeds", {
         powerset <- nonempty_powerset(n, use_visited = FALSE)
         lhs_attr_nodes <- to_nodes(seq_len(n), powerset)
         expect_identical(
-          generate_next_seeds(list(), list(), lhs_attr_nodes, powerset, detset_limit = n, detset_oneof_nodes = 0L),
+          generate_next_seeds(list(), list(), lhs_attr_nodes, powerset, detset_limit = n),
           lhs_attr_nodes
         )
       }
@@ -737,24 +737,9 @@ describe("generate_next_seeds", {
         min_deps = 7L,
         initial_seeds = c(1L, 2L, 4L),
         nodes = nodes,
-        detset_limit = 1,
-        detset_oneof_nodes = 0L
+        detset_limit = 1
       ),
       integer()
-    )
-  })
-  it("generates correctly with detset_oneof_lhs", {
-    nodes <- nonempty_powerset(3, use_visited = TRUE)
-    expect_identical(
-      generate_next_seeds(
-        max_non_deps = integer(),
-        min_deps = integer(),
-        initial_seeds = c(1L, 2L, 4L),
-        nodes = nodes,
-        detset_limit = 3L,
-        detset_oneof_nodes = vapply(list(1:2, 3L), to_node, integer(1), nodes)
-      ),
-      c(3L, 4L)
     )
   })
 })
