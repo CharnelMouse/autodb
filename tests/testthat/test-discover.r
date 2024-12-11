@@ -463,51 +463,7 @@ describe("discover", {
       )
     )
   })
-  it("gives same result from filtering to dependants and using dependants argument", {
-    forall(
-      gen_df(4, 6) |>
-        gen.and_then(\(x) {
-          list(
-            gen.pure(x),
-            gen.sample_resampleable(names(x), from = 0, to = ncol(x))
-          )
-        }),
-      expect_bi(
-        setequal,
-        onLeft(with_args(discover, accuracy = 1)) %>>%
-          uncurry(\(x, y) x[dependant(x) %in% y]),
-        uncurry(\(x, y) discover(x, accuracy = 1, dependant = y))
-      )
-    )
-  })
-  it("gives same result from filtering to detset size and using detset size argument", {
-    forall(
-      gen_df(4, 6) |>
-        gen.and_then(\(x) {
-          list(
-            gen.pure(x),
-            gen.element(0:(ncol(x) - 1L))
-          )
-        }),
-      \(x, y) {
-        terminates_then(
-          with_args(
-            expect_setequal,
-            expected = (
-              with_args(discover, accuracy = 1) %>>%
-                dup %>>%
-                onRight(detset %>>% lengths %>>% with_args(`<=`, y)) %>>%
-                uncurry(`[`)
-            )(x)
-          ),
-          1,
-          detset_limit = y
-        )(x)
-      },
-      curry = TRUE
-    )
-  })
-  it("gives same result from filtering to attrs, and using detset_oneof argument", {
+  it("gives same result from using filter arguments and from post-filtering", {
     gen.detset_oneof <- function(attrs) {
       gen.subsequence(attrs) |>
         gen.and_then(gen.sample) |>
@@ -519,28 +475,44 @@ describe("discover", {
       mat <- outer(x, y, Vectorize(\(u, v) setequal(intersect(u, v), v)))
       apply(mat, 1, any)
     }
-    expect_oneof_deps_limited_to_subsets <- function(
-      res_with,
-      res_without,
-      detset_oneof
-    ) {
-      expect_setequal(
-        res_with,
-        res_without[superset(detset(res_without), detset_oneof)]
-      )
-    }
     forall(
       gen_df(4, 6) |>
         gen.and_then(\(x) {
           list(
             gen.pure(x),
+            gen.sample_resampleable(names(x), from = 0, to = ncol(x)),
+            gen.element(0:(ncol(x) - 1L)),
             gen.detset_oneof(colnames(x))
           )
         }),
-      terminates_with_and_without_detset_oneof_then(
-        expect_oneof_deps_limited_to_subsets,
-        accuracy = 1
-      ),
+      \(x, dependants, detset_limit, detset_oneof) {
+        by_arguments <- withTimeout(
+          discover(
+            x,
+            1,
+            dependants = dependants,
+            detset_limit = detset_limit,
+            detset_oneof = detset_oneof
+          ),
+          timeout = 5,
+          onTimeout = "silent"
+        )
+        if (is.null(by_arguments))
+          return(fail("discover() with filtering arguments timed out"))
+        by_filtering <- withTimeout(
+          discover(x, 1),
+          timeout = 5,
+          onTimeout = "silent"
+        )
+        if (is.null(by_filtering))
+          return(fail("discover() without filtering arguments timed out"))
+        by_filtering <- by_filtering[
+          dependant(by_filtering) %in% dependants &
+            lengths(detset(by_filtering)) <= detset_limit &
+            superset(detset(by_filtering), detset_oneof)
+        ]
+        expect_setequal(by_arguments, by_filtering)
+      },
       curry = TRUE
     )
   })

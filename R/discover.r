@@ -261,7 +261,7 @@ discover <- function(
   }
   detset_oneof_nonfixed <- detset_oneof[vapply(
     detset_oneof,
-    \(x) all(is.element(x, valid_dependant_attrs)),
+    \(x) all(is.element(x, valid_determinant_attrs)),
     logical(1)
   )]
   if (length(detset_oneof_nonfixed) == 0) {
@@ -1048,8 +1048,8 @@ filter_nonflat_dependencies <- function(
   lapply(
     dependencies,
     \(x) {
-      if (length(x) == 0)
-        return(logical())
+      if (length(x) == 0 || length(detset_oneof) == 0)
+        return(x[FALSE])
       superset <- outer(
         x,
         detset_oneof,
