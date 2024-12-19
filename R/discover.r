@@ -218,6 +218,9 @@ discover <- function(
   )
   partitions <- list()
   dependencies <- stats::setNames(rep(list(list()), n_cols), column_names)
+
+  # check for constant-value columns, because if columns are fixed we can
+  # ignore them for the rest of the search
   fixed <- character()
   for (i in seq_along(column_names)) {
     attr <- column_names[i]
@@ -272,10 +275,11 @@ discover <- function(
   }
   detset_oneof_nonfixed <- unique(detset_oneof_nonfixed)
   valid_determinant_nonfixed_indices <- match(valid_determinant_attrs, nonfixed)
+
   n_dependant_only <- length(nonfixed) - length(valid_determinant_attrs)
   max_n_lhs_attrs <- length(valid_determinant_attrs) -
     as.integer(n_dependant_only == 0)
-  # using 0 would allow for one more column, but that's for a later date
+  # using 0 would allow for one more column, but makes indexing a pain
   lhs_attrs_limit <- floor(log(.Machine$integer.max, 2))
   if (max_n_lhs_attrs > lhs_attrs_limit)
     stop(paste(
@@ -284,6 +288,8 @@ discover <- function(
       "columns possible in a determinant set currently supported"
     ))
   bijections <- list()
+
+  # main search
   if (max_n_lhs_attrs > 0) {
     powerset <- report$op(
       max_n_lhs_attrs,
@@ -394,6 +400,7 @@ discover <- function(
       }
     }
   }
+
   report$stat("DFD complete")
   if (skip_bijections)
     dependencies <- add_deps_implied_by_bijections(
