@@ -131,11 +131,6 @@
 #'   that should be searched for. By default, this is large enough to allow all
 #'   possible determinant sets. See Details for comments about the effect on the
 #'   result, and on the computation time.
-#' @param detset_oneof a list, containing character vectors whose elements are
-#'   column names of \code{df}. Any returned minimal functional dependencies
-#'   must have at least one of these sets of attribute names within its
-#'   determinant set. By default, this only contains an empty vector; since all
-#'   determinant sets contain this, this has no effect.
 #' @inheritParams autodb
 #'
 #' @return A \code{\link{functional_dependency}} object, containing the discovered
@@ -172,7 +167,6 @@ discover <- function(
   exclude_class = character(),
   dependants = names(df),
   detset_limit = ncol(df) - 1L,
-  detset_oneof = list(character()),
   progress = FALSE,
   progress_file = ""
 ) {
@@ -238,7 +232,7 @@ discover <- function(
   ) {
     report$stat("no valid dependants, or detset_limit < 1, skipping search")
     return(flatten(
-      filter_nonflat_dependencies(dependencies, detset_limit, detset_oneof),
+      filter_nonflat_dependencies(dependencies, detset_limit),
       column_names
     ))
   }
@@ -262,18 +256,6 @@ discover <- function(
       )
     )
   }
-  detset_oneof_nonfixed <- detset_oneof[vapply(
-    detset_oneof,
-    \(x) all(is.element(x, valid_determinant_attrs)),
-    logical(1)
-  )]
-  if (length(detset_oneof_nonfixed) == 0) {
-    report$stat(
-      "valid determinants cannot satisfy detset_oneof, skipping search"
-    )
-    return(flatten(dependencies[any(lengths(detset_oneof) == 0)], column_names))
-  }
-  detset_oneof_nonfixed <- unique(detset_oneof_nonfixed)
   valid_determinant_nonfixed_indices <- match(valid_determinant_attrs, nonfixed)
 
   n_dependant_only <- length(nonfixed) - length(valid_determinant_attrs)
@@ -305,24 +287,9 @@ discover <- function(
       accuracy,
       full_cache
     )
-    detset_oneof_nonfixed_indices <- lapply(
-      detset_oneof_nonfixed,
-      match,
-      nonfixed
-    )
-    stopifnot(!any(vapply(detset_oneof_nonfixed_indices, anyNA, logical(1))))
     for (rhs in seq_along(nonfixed)[nonfixed %in% valid_dependant_attrs]) {
       report$stat(paste("dependant", nonfixed[rhs]))
       lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
-      detset_oneof_lhs <- detset_oneof_nonfixed_indices[vapply(
-        detset_oneof_nonfixed_indices,
-        \(x) all(is.element(x, lhs_nonfixed_indices)),
-        logical(1)
-      )]
-      if (length(detset_oneof_lhs) == 0) {
-        report$stat("determinants cannot satisfy detset_oneof")
-        next
-      }
       n_lhs_attrs <- length(lhs_nonfixed_indices)
       expected_n_lhs_attrs <- max_n_lhs_attrs -
         (n_dependant_only > 0 && is.element(rhs, valid_determinant_nonfixed_indices))
@@ -359,7 +326,6 @@ discover <- function(
           compute_partitions,
           bijection_candidate_nonfixed_indices,
           detset_limit,
-          detset_oneof_lhs,
           store_cache
         )
         if (lhss[[2 + store_cache]]) {
@@ -410,7 +376,7 @@ discover <- function(
       column_names
     )
   flatten(
-    filter_nonflat_dependencies(dependencies, detset_limit, detset_oneof),
+    filter_nonflat_dependencies(dependencies, detset_limit),
     column_names
   )
 }
@@ -424,7 +390,6 @@ find_LHSs_dfd <- function(
   compute_partitions,
   bijection_candidate_nonfixed_indices,
   detset_limit,
-  detset_oneof_lhs,
   store_cache = FALSE
 ) {
   # The original library "names" nodes with their attribute set,
@@ -450,26 +415,14 @@ find_LHSs_dfd <- function(
   # initial seeds are the single-attribute nodes, possibly pruned by detset
   # constraints
   lhs_attr_nodes <- to_nodes(seq_len(n_lhs_attrs), nodes)
-  detset_oneof_lhs <- lapply(detset_oneof_lhs, match, lhs_nonfixed_indices)
-  detset_oneof_nodes <- vapply(
-    detset_oneof_lhs,
-    \(x) {
-      if (length(x) == 0)
-        0L
-      else
-        to_node(x, nodes)
-    },
-    integer(1)
-  )
-  # detset_oneof is only used to specialise the initial seeds: for later sets of
-  # seeds, they're specialised from the initial seeds, so we don't need to
-  # re-use detset_oneof.
-  initial_seeds <- specialise_initial_seeds(
+  initial_seeds <- lhs_attr_nodes
+  seeds <- generate_next_seeds(
+    max_non_deps = integer(),
+    min_deps = integer(),
     initial_seeds = lhs_attr_nodes,
     nodes = nodes,
-    detset_oneof_nodes = detset_oneof_nodes
+    detset_limit = detset_limit
   )
-  seeds <- initial_seeds
   min_deps <- integer()
   max_non_deps <- integer()
   trace <- integer()
@@ -656,20 +609,6 @@ remove_pruned_supersets <- function(supersets, subsets, bitsets) {
   supersets[!prune]
 }
 
-specialise_initial_seeds <- function(initial_seeds, nodes, detset_oneof_nodes) {
-  lapply(
-    detset_oneof_nodes,
-    \(detset) {
-      if (detset == 0)
-        initial_seeds
-      else
-        node_union(initial_seeds, detset, nodes)
-    }
-  ) |>
-    Reduce(f = c, init = integer()) |>
-    minimise_seeds(nodes$bits)
-}
-
 generate_next_seeds <- function(
   max_non_deps,
   min_deps,
@@ -695,19 +634,14 @@ generate_next_seeds <- function(
       min_deps,
       nodes$bits
     )
-    # If detset_oneof is default, i.e. does nothing, then all seed nodes
-    # are non-categorised, and nodes in general are non-categorised or
-    # minimal dependencies, because to be in this case the only explored
-    # nodes must be single-attribute nodes found to be minimal. i.e.
-    # stopifnot(
-    #   all(nodes$category[seeds] == 0),
-    #   all(nodes$category %in% c(0L, 2L))
-    # )
-    # This is not the case if detset_oneof is non-empty. Example: oneof has a
-    # two-attribute pair, which is the only seed, which we find as dep, then we
-    # find one of the attributes as dep, so that is minimal and seed is
-    # non-minimal, then seed generation returns the seed again, which is now
-    # categorised.
+    # At generation time, all seed nodes are non-categorised, and nodes in
+    # general are non-categorised or minimal dependencies, because to be in this
+    # case the only explored nodes must be single-attribute nodes found to be
+    # minimal. i.e.:
+    stopifnot(
+      all(nodes$category[seeds] == 0),
+      all(nodes$category %in% c(0L, 2L))
+    )
   }else{
     seeds <- integer()
     for (n in seq_along(max_non_deps)) {
@@ -1104,21 +1038,14 @@ add_deps_implied_by_bijections <- function(
 
 filter_nonflat_dependencies <- function(
   dependencies,
-  detset_limit,
-  detset_oneof
+  detset_limit
 ) {
   lapply(
     dependencies,
     \(x) {
-      if (length(x) == 0 || length(detset_oneof) == 0)
+      if (length(x) == 0)
         return(x[FALSE])
-      superset <- outer(
-        x,
-        detset_oneof,
-        Vectorize(\(sup, sub) all(is.element(sub, sup)))
-      )
-      wanted <- lengths(x) <= detset_limit &
-        apply(superset, 1, any)
+      wanted <- lengths(x) <= detset_limit
       x[wanted]
     }
   )

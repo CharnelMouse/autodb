@@ -15,7 +15,6 @@ discover(
   exclude_class = character(),
   dependants = names(df),
   detset_limit = ncol(df) - 1L,
-  detset_oneof = list(character()),
   progress = FALSE,
   progress_file = ""
 )
@@ -62,12 +61,6 @@ computation time if only some potential dependencies are of interest.}
 that should be searched for. By default, this is large enough to allow all
 possible determinant sets. See Details for comments about the effect on the
 result, and on the computation time.}
-
-\item{detset_oneof}{a list, containing character vectors whose elements are
-column names of \code{df}. Any returned minimal functional dependencies
-must have at least one of these sets of attribute names within its
-determinant set. By default, this only contains an empty vector; since all
-determinant sets contain this, this has no effect.}
 
 \item{progress}{a logical, for whether to display progress to the user during
 dependency search in \code{\link{discover}}.}

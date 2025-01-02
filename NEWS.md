@@ -7,7 +7,6 @@
 * Added `==` and `!=` implementations for `functional_dependency`. These ignore differences in `attrs_order`: differently-ordered determinant sets are considered equal.
 * Added a `dependants` argument to `discover`, which limit the functional dependency search to those with a dependant in the given set of column names, defaulting to all of them. This should significantly speed up searches where only some dependants are of interest.
 * Added a `detset_limit` argument for `discover`/`autodb`, which limits the FD search to only look for dependencies with the determinant set size under a given limit. For DFD, this usually doesn't significantly reduce the search time, but it won't make it worse. It will be useful once other search algorithms are implemented.
-* Added a `detset_oneof` argument for `discover`/`autodb`, which requires the FD search to only return dependencies where the determinant set contains any of the given vectors of attribute names. For DFD, this makes search paths begin from determinant sets that are supersets of a member of `detset_oneof`, rather than from the single-attribute sets.
 * Running discover() or autodb() with `progress = TRUE` now keeps the output display up to date when using a console-based version of R.
 
 ## Fixes

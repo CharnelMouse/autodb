@@ -175,6 +175,10 @@ nonvisited_parents <- function(node, powerset) {
 
 is_subset <- function(bits1, bits2) all(bits2[bits1])
 is_superset <- function(bits1, bits2) all(bits1[bits2])
+is_strict_subset <- function(bits1, bits2) is_subset(bits1, bits2) &&
+  !identical(bits1, bits2)
+is_strict_superset <- function(bits1, bits2) is_superset(bits1, bits2) &&
+  !identical(bits1, bits2)
 
 to_node <- function(element_indices, powerset) {
   res <- powerset$bitset_index[[sum(2^(element_indices - 1L))]]
@@ -193,7 +197,12 @@ to_nodes <- function(element_indices, powerset) {
 
 node_union <- function(node1, node2, nodes) {
   vapply(
-    mapply(`|`, nodes$bits[node1], nodes$bits[node2], SIMPLIFY = FALSE) |>
+    mapply(
+      `|`,
+      ifelse(node1 == 0L, rep(list(FALSE), length(node1)), nodes$bits[node1]),
+      ifelse(node2 == 0L, rep(list(FALSE), length(node2)), nodes$bits[node2]),
+      SIMPLIFY = FALSE
+    ) |>
       lapply(which),
     to_node,
     integer(1),

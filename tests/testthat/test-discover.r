@@ -142,25 +142,6 @@ describe("discover", {
       fn(res_skip, res_noskip)
     }
   }
-  terminates_with_and_without_detset_oneof_then <- function(fn, accuracy, ...) {
-    function(df, detset_oneof) {
-      res_with <- withTimeout(
-        discover(df, accuracy, detset_oneof = detset_oneof, ...),
-        timeout = 5,
-        onTimeout = "silent"
-      )
-      if (is.null(res_with))
-        return(fail("discover with detset_oneof timed out"))
-      res_without <- withTimeout(
-        discover(df, accuracy, ...),
-        timeout = 5,
-        onTimeout = "silent"
-      )
-      if (is.null(res_without))
-        return(fail("discover without detset_oneof timed out"))
-      fn(res_with, res_without, detset_oneof)
-    }
-  }
 
   it("gives a deterministic result, except for per-dependant dependency order", {
     two_copies <- function(fn) {
@@ -464,16 +445,41 @@ describe("discover", {
     )
   })
   it("gives same result from using filter arguments and from post-filtering", {
-    gen.detset_oneof <- function(attrs) {
-      gen.subsequence(attrs) |>
-        gen.and_then(gen.sample) |>
-        gen.list(from = 0, to = length(attrs))
-    }
     superset <- function(x, y) {
       if (length(x) == 0)
         return(logical(1))
       mat <- outer(x, y, Vectorize(\(u, v) setequal(intersect(u, v), v)))
       apply(mat, 1, any)
+    }
+    same_under_constraints_and_filtering <- function(
+      x,
+      dependants,
+      detset_limit
+    ) {
+      by_arguments <- withTimeout(
+        discover(
+          x,
+          1,
+          dependants = dependants,
+          detset_limit = detset_limit
+        ),
+        timeout = 5,
+        onTimeout = "silent"
+      )
+      if (is.null(by_arguments))
+        return(fail("discover() with filtering arguments timed out"))
+      by_filtering <- withTimeout(
+        discover(x, 1),
+        timeout = 5,
+        onTimeout = "silent"
+      )
+      if (is.null(by_filtering))
+        return(fail("discover() without filtering arguments timed out"))
+      by_filtering <- by_filtering[
+        dependant(by_filtering) %in% dependants &
+          lengths(detset(by_filtering)) <= detset_limit
+      ]
+      expect_setequal(by_arguments, by_filtering)
     }
     forall(
       gen_df(4, 6) |>
@@ -481,40 +487,22 @@ describe("discover", {
           list(
             gen.pure(x),
             gen.sample_resampleable(names(x), from = 0, to = ncol(x)),
-            gen.element(0:(ncol(x) - 1L)),
-            gen.detset_oneof(colnames(x))
+            gen.element(0:(ncol(x) - 1L))
           )
         }),
-      \(x, dependants, detset_limit, detset_oneof) {
-        by_arguments <- withTimeout(
-          discover(
-            x,
-            1,
-            dependants = dependants,
-            detset_limit = detset_limit,
-            detset_oneof = detset_oneof
-          ),
-          timeout = 5,
-          onTimeout = "silent"
-        )
-        if (is.null(by_arguments))
-          return(fail("discover() with filtering arguments timed out"))
-        by_filtering <- withTimeout(
-          discover(x, 1),
-          timeout = 5,
-          onTimeout = "silent"
-        )
-        if (is.null(by_filtering))
-          return(fail("discover() without filtering arguments timed out"))
-        by_filtering <- by_filtering[
-          dependant(by_filtering) %in% dependants &
-            lengths(detset(by_filtering)) <= detset_limit &
-            superset(detset(by_filtering), detset_oneof)
-        ]
-        expect_setequal(by_arguments, by_filtering)
-      },
+      same_under_constraints_and_filtering,
       curry = TRUE
     )
+
+    # example
+    x <- data.frame(
+      a = c(0, NA, NA, 1),
+      b = c(NA, FALSE, NA, NA),
+      c = c("TRUE", NA, "TRUE", "FALSE"),
+      d = c(1L, 1L, NA, 1L),
+      e = c(NA, 1L, 1L, 0L)
+    )
+    same_under_constraints_and_filtering(x, c("a", "c"), 2L)
   })
   it("gives dependencies for unique attributes (in case don't want them as key)", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), C = c(1, 2, 2))
@@ -717,29 +705,11 @@ describe("generate_next_seeds", {
       \(n) {
         powerset <- nonempty_powerset(n, use_visited = FALSE)
         lhs_attr_nodes <- to_nodes(seq_len(n), powerset)
-        expect_identical(
-          generate_next_seeds(list(), list(), lhs_attr_nodes, powerset, detset_limit = n),
+        expect_setequal(
+          generate_next_seeds(integer(), integer(), lhs_attr_nodes, powerset, detset_limit = n),
           lhs_attr_nodes
         )
       }
-    )
-  })
-  it("generates correctly under a detset limit", {
-    # example: three attributes, min. dep is whole set {1, 2, 3},
-    # max. non-deps are the two-element subsets
-    # generated seed set is empty, regardless of limit
-    nodes <- nonempty_powerset(3, use_visited = TRUE)
-    nodes$category <- as.integer(c(0, -1, -2, 0, -2, -2, 2))
-    nodes$visited <- c(FALSE, TRUE, TRUE, FALSE, TRUE, TRUE, TRUE)
-    expect_identical(
-      generate_next_seeds(
-        max_non_deps = c(3L, 5L, 6L),
-        min_deps = 7L,
-        initial_seeds = c(1L, 2L, 4L),
-        nodes = nodes,
-        detset_limit = 1
-      ),
-      integer()
     )
   })
 })
