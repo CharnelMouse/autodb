@@ -136,7 +136,7 @@ describe("gv", {
     it("works for autodb output", {
       forall(
         gen_df(6, 7),
-        autodb %>>% gv %>>% expect_no_error
+        autodb %>>% gv %>>% expect_errorless
       )
     })
     it("works for degenerate cases", {
@@ -144,8 +144,8 @@ describe("gv", {
       table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
       db_dum <- autodb(table_dum)
       db_dee <- autodb(table_dee)
-      expect_no_error(gv(db_dum))
-      expect_no_error(gv(db_dee))
+      expect_errorless(gv(db_dum))
+      expect_errorless(gv(db_dee))
     })
     it("creates a Graphviz HTML-like expression for the data.frame", {
       db <- database(
@@ -603,13 +603,13 @@ describe("gv", {
     it("works for synthesise >> create outputs", {
       forall(
         gen_flat_deps(7, 20, to = 20L),
-        synthesise %>>% create %>>% gv %>>% expect_no_error
+        synthesise %>>% create %>>% gv %>>% expect_errorless
       )
     })
     it("works for generated cases", {
       forall(
         gen.relation(letters[1:6], from = 0, to = 8),
-        gv %>>% expect_no_error
+        gv %>>% expect_errorless
       )
     })
     it("works for degenerate cases", {
@@ -617,8 +617,8 @@ describe("gv", {
       table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
       rel_dum <- create(synthesise(discover(table_dum, 1)))
       rel_dee <- create(synthesise(discover(table_dee, 1)))
-      expect_no_error(gv(rel_dum))
-      expect_no_error(gv(rel_dee))
+      expect_errorless(gv(rel_dum))
+      expect_errorless(gv(rel_dee))
     })
     it("uses HTML escape sequences for &<>\" in main name and relation/attribute names", {
       rs <- relation_schema(
@@ -671,13 +671,13 @@ describe("gv", {
     it("works for normalise/autoref outputs", {
       forall(
         gen_flat_deps(7, 20, to = 20L),
-        normalise %>>% gv %>>% expect_no_error
+        normalise %>>% gv %>>% expect_errorless
       )
     })
     it("works for generated cases", {
       forall(
         gen.database_schema(letters[1:8], 0, 10, same_attr_name = FALSE),
-        gv %>>% expect_no_error
+        gv %>>% expect_errorless
       )
     })
     it("works for degenerate cases", {
@@ -685,8 +685,8 @@ describe("gv", {
       table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
       schema_dum <- normalise(discover(table_dum, 1))
       schema_dee <- normalise(discover(table_dee, 1))
-      expect_no_error(gv(schema_dum))
-      expect_no_error(gv(schema_dee))
+      expect_errorless(gv(schema_dum))
+      expect_errorless(gv(schema_dee))
     })
     it("converts attribute/df names to snake case for labels (inc. spaces, periods)", {
       schema <- relation_schema(
@@ -835,13 +835,13 @@ describe("gv", {
     it("works for synthesise outputs", {
       forall(
         gen_flat_deps(7, 20, to = 20L),
-        synthesise %>>% gv %>>% expect_no_error
+        synthesise %>>% gv %>>% expect_errorless
       )
     })
     it("works for generated cases", {
       forall(
         gen.relation_schema(letters[1:8], 0, 10),
-        gv %>>% expect_no_error
+        gv %>>% expect_errorless
       )
     })
     it("works for degenerate cases", {
@@ -849,8 +849,8 @@ describe("gv", {
       table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
       schema_dum <- synthesise(discover(table_dum, 1))
       schema_dee <- synthesise(discover(table_dee, 1))
-      expect_no_error(gv(schema_dum))
-      expect_no_error(gv(schema_dee))
+      expect_errorless(gv(schema_dum))
+      expect_errorless(gv(schema_dee))
     })
     it("converts attribute/df names to snake case for labels (inc. spaces, periods)", {
       schema <- relation_schema(
@@ -931,18 +931,18 @@ describe("gv", {
     it("works for degenerate cases", {
       table_dum <- data.frame()
       table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
-      expect_no_error(gv(table_dum, "table_dum"))
-      expect_no_error(gv(table_dee, "table_dee"))
+      expect_errorless(gv(table_dum, "table_dum"))
+      expect_errorless(gv(table_dee, "table_dee"))
     })
     it("works for generated cases", {
       forall(
         list(gen_df(6, 7), gen_attr_name(5)),
-        gv %>>% expect_no_error,
+        gv %>>% expect_errorless,
         curry = TRUE
       )
       forall(
         gen_df(6, 7),
-        gv %>>% expect_no_error
+        gv %>>% expect_errorless
       )
     })
     it("generates a name if not given one", {

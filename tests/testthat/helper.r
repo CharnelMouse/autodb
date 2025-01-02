@@ -1,3 +1,12 @@
+# re-implementation of expect_no_error that hedgehog doesn't complain about
+# (it doesn't register usage of expect_no_ as an expectation)
+expect_errorless <- function(object) {
+  expect(
+    class(try(object))[1] != "try-error",
+    failure_message = "object returned an error"
+  )
+}
+
 is_valid_functional_dependency <- function(x) {
   expect_s3_class(x, "functional_dependency")
   attrs <- attrs_order(x)
