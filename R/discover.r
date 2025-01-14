@@ -192,6 +192,9 @@ discover <- function(
   }
   if (any(!is.element(exclude, column_names)))
     warning("there are attribute names in exclude not present in df")
+  if (any(!is.element(dependants, column_names)))
+    warning("there are attribute names in dependants not present in df")
+  dependants <- intersect(column_names, dependants)
 
   valid_determinant_name <- !is.element(column_names, exclude)
   valid_determinant_class <- !vapply(
@@ -241,35 +244,34 @@ discover <- function(
     ))
   }
 
+  nonkey_nonfixed <- nonfixed
+
+  # For non-fixed non-key attributes, all can be dependants,
+  # but might not all be valid determinants.
+  valid_determinant_attrs_prekeys <- intersect(
+    nonkey_nonfixed,
+    valid_determinant_attrs_prefixing
+  )
+
   # Non-fixed attributes might be single-attribute keys: we can list them as
   # determining all other non-fixed attributes, use them in the main search only
   # as dependants. If there are several single-attribute keys, and we're
   # skipping bijections, then we can also remove all but one of them as
   # dependants.
+  valid_determinant_attrs <- valid_determinant_attrs_prekeys
   simple_keys <- nonfixed[vapply(
     nonfixed,
     \(attr) all(df[[attr]] == seq_len(nrow(df))),
     logical(1)
   )]
-  nonkey_nonfixed <- nonfixed
   if (length(simple_keys) > 0) {
     report$stat(paste("single-attribute keys:", toString(simple_keys)))
+    valid_determinant_attrs <- setdiff(valid_determinant_attrs, simple_keys)
     if (skip_bijections) {
-      nonkey_nonfixed <- setdiff(nonkey_nonfixed, simple_keys[-1])
+      valid_dependant_attrs <- setdiff(valid_dependant_attrs, simple_keys[-1])
     }
   }
 
-  # For nonfixed attributes, all can be dependants, but
-  # might not all be valid determinants.
-  # Maximum size of determinant set for a dependant is number
-  # of other valid determinants.
-  # If there are dependants that aren't valid determinants,
-  # this is number of valid determinant attributes. If there
-  # aren't, subtract one.
-  valid_determinant_attrs <- intersect(
-    nonkey_nonfixed,
-    valid_determinant_attrs_prefixing
-  )
   if (length(valid_determinant_attrs) < n_cols) {
     report$stat(
       paste(
@@ -280,6 +282,11 @@ discover <- function(
   }
   valid_determinant_nonfixed_indices <- match(valid_determinant_attrs, nonkey_nonfixed)
 
+  # Maximum size of determinant set for a dependant is number
+  # of other valid determinants.
+  # If there are dependants that aren't valid determinants,
+  # this is number of valid determinant attributes. If there
+  # aren't, subtract one.
   n_dependant_only <- length(nonkey_nonfixed) - length(valid_determinant_attrs)
   max_n_lhs_attrs <- length(valid_determinant_attrs) -
     as.integer(n_dependant_only == 0)
@@ -390,6 +397,12 @@ discover <- function(
   }
 
   report$stat("DFD complete")
+  dependencies <- add_simple_key_deps(
+    dependencies,
+    simple_keys,
+    valid_determinant_attrs_prekeys,
+    valid_dependant_attrs
+  )
   if (skip_bijections) {
     dependencies <- add_deps_implied_by_bijections(
       dependencies,
@@ -1027,6 +1040,26 @@ fsplit_rows <- function(df, attr_indices) {
   fsplit(seq_len(nrow(df)), df[, attr_indices, drop = FALSE])
 }
 
+add_simple_key_deps <- function(
+  dependencies,
+  simple_keys,
+  valid_determinant_attrs,
+  valid_dependant_attrs
+) {
+  used_keys <- intersect(simple_keys, valid_determinant_attrs)
+  nonkey_dependants <- setdiff(valid_dependant_attrs, used_keys)
+  key_dependants <- intersect(simple_keys, valid_dependant_attrs)
+  dependencies[nonkey_dependants] <- lapply(
+    dependencies[nonkey_dependants],
+    \(dets) c(as.list(used_keys), dets)
+  )
+  dependencies[key_dependants] <- lapply(
+    key_dependants,
+    \(key) c(as.list(setdiff(used_keys, key)), dependencies[[key]])
+  )
+  dependencies
+}
+
 add_deps_implied_by_bijections <- function(
   dependencies,
   bijections,
@@ -1087,7 +1120,7 @@ add_deps_implied_by_simple_keys <- function(
       dependencies[[rhs]] <- c(
         dependencies[[rhs]],
         lapply(
-          Filter(\(d) is.element(first_index, d), dependencies[[rhs]]),
+          Filter(\(d) is.element(first_index, d) && length(d) > 1, dependencies[[rhs]]),
           \(d) c(setdiff(d, first_index), replacement)
         )
       )
