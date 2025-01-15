@@ -25,7 +25,8 @@
 #'   after sorting are removed.
 #' @seealso \code{\link{detset}}, \code{\link{dependant}}, and
 #'   \code{\link{attrs_order}} for extracting parts of the information in a
-#'   \code{functional_dependency}.
+#'   \code{functional_dependency}; \code{\link{rename_attrs}}
+#'   for renaming the attributes in \code{attrs_order}.
 #' @examples
 #' fds <- functional_dependency(
 #'   list(list(c("a", "b"), "c"), list(character(), "d")),
@@ -155,6 +156,17 @@ attrs_order.functional_dependency <- function(x, ...) {
   functional_dependency(
     Map(list, detset(x), dependant(x)),
     attrs_order = value
+  )
+}
+
+#' @exportS3Method
+rename_attrs.functional_dependency <- function(x, names, ...) {
+  old <- attrs_order(x)
+  new_detsets <- lapply(detset(x), \(as) names[match(as, old)])
+  new_dependants <- names[match(dependant(x), old)]
+  functional_dependency(
+    Map(list, new_detsets, new_dependants),
+    names
   )
 }
 

@@ -326,6 +326,26 @@ describe("functional_dependency", {
     expect_identical(tb$fd, fds)
   })
 
+  it("can have its attributes renamed", {
+    forall(
+      gen.fd(letters[1:6], 0, 8),
+      function(fds) {
+        fds2 <- rename_attrs(fds, toupper(attrs_order(fds)))
+        expect_identical(
+          fds2,
+          functional_dependency(
+            Map(
+              list,
+              lapply(detset(fds), toupper),
+              toupper(dependant(fds))
+            ),
+            attrs_order = toupper(attrs_order(fds))
+          )
+        )
+      }
+    )
+  })
+
   it("can be compared for equality", {
     fds <- functional_dependency(
       list(list(c("a", "b"), "c"), list("a", "d")),

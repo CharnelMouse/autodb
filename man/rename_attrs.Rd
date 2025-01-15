@@ -7,9 +7,11 @@
 rename_attrs(x, names, ...)
 }
 \arguments{
-\item{x}{a relational schema object, such as a \code{\link{relation_schema}}
-or \code{\link{database_schema}} object, or a relational data object, such
-as a \code{\link{relation}} or \code{\link{database}} object.}
+\item{x}{an object with an \code{attrs_order} attribute. This includes
+relational schema objects, such as a \code{\link{relation_schema}} or
+\code{\link{database_schema}} object, relational data objects, such as a
+\code{\link{relation}} or \code{\link{database}} object, and
+\code{\link{functional_dependency}} objects.}
 
 \item{names}{a character vector of the same length as \code{attrs_order(x)},
 with no duplicated elements, to be used as the new attribute names.}

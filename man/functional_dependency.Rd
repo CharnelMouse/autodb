@@ -84,5 +84,6 @@ stopifnot(!any(fds != fds))
 \seealso{
 \code{\link{detset}}, \code{\link{dependant}}, and
 \code{\link{attrs_order}} for extracting parts of the information in a
-\code{functional_dependency}.
+\code{functional_dependency}; \code{\link{rename_attrs}}
+for renaming the attributes in \code{attrs_order}.
 }
