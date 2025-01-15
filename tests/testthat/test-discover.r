@@ -690,6 +690,94 @@ describe("discover", {
       shrink.limit = Inf
     )
   })
+  it(
+    paste(
+      "is invariant to:",
+      "- excluding a class vs. excluding attributes in that class",
+      "- filtering by arguments (dependants/detset_limit) or by subsetting results",
+      "- whether partition is transferred between dependants",
+      "- whether bijections are skipped (accuracy = 1)",
+      sep = "\n"
+    ),
+    {
+      forall(
+        gen_df(4, 6) |>
+          gen.and_then(\(x) {
+            list(
+              gen.pure(x),
+              gen.sample_resampleable(names(x), from = 0, to = ncol(x)),
+              gen.element(0:(ncol(x) - 1L))
+            )
+          }),
+        function(df, dependants, detset_limit) {
+          arglists <- list(list(df = df, accuracy = 1))
+          exclusion <- lapply(
+            arglists,
+            \(lst) {
+              list(
+                c(lst, list(exclude_class = "logical")),
+                c(lst, list(exclude = names(df)[vapply(df, is.logical, logical(1))]))
+              )
+            }
+          ) |>
+            unlist(recursive = FALSE)
+          filter <- lapply(
+            exclusion,
+            \(lst) {
+              list(
+                lst,
+                c(lst, list(dependants = dependants)),
+                c(lst, list(detset_limit = detset_limit)),
+                c(lst, list(dependants = dependants, detset_limit = detset_limit))
+              )
+            }
+          ) |>
+            unlist(recursive = FALSE)
+          partition <- lapply(
+            filter,
+            \(lst) {
+              list(
+                c(lst, store_cache = FALSE),
+                c(lst, store_cache = TRUE)
+              )
+            }
+          ) |>
+            unlist(recursive = FALSE)
+          skip <- lapply(
+            partition,
+            \(lst) {
+              list(
+                c(lst, skip_bijections = FALSE),
+                c(lst, skip_bijections = TRUE)
+              )
+            }
+          ) |>
+            unlist(recursive = FALSE)
+          results <- lapply(
+            skip,
+            \(lst) {
+              base <- withTimeout(
+                do.call(discover, lst),
+                timeout = 5,
+                onTimeout = "silent"
+              )
+              if (is.null(base))
+                return(base)
+              if (is.null(lst$dependants))
+                base <- base[dependant(base) %in% dependants]
+              if (is.null(lst$detset_limit))
+                base <- base[lengths(detset(base)) <= detset_limit]
+              base
+            }
+          )
+          if (any(vapply(results, is.null, logical(1))))
+            return(fail("some argument lists fail"))
+          expect_true(all(vapply(results, setequal, logical(1), results[[1]])))
+        },
+        curry = TRUE
+      )
+    }
+  )
   it("returns a minimal functional dependency set", {
     forall(
       gen_df(6, 7),
