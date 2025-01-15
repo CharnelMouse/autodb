@@ -418,8 +418,7 @@ create <- function(x, ...) {
 #' If \code{vals} contains attributes not included in
 #' \code{\link{attrs_order}(x)}, \code{insert} throws an error. If a partial set
 #' of attributes are inserted, then data is only inserted into components of
-#' \code{x} whose required attributes are all inserted. This is currently the
-#' only way to insert into a subset of \code{x}, rather than all of it.
+#' \code{x} whose required attributes are all inserted.
 #'
 #' @param x a relational data object, into which to insert data, such as a
 #'   \code{\link{relation}} or \code{\link{database}} object.
