@@ -244,12 +244,10 @@ discover <- function(
     ))
   }
 
-  nonkey_nonfixed <- nonfixed
-
   # For non-fixed non-key attributes, all can be dependants,
   # but might not all be valid determinants.
   valid_determinant_attrs_prekeys <- intersect(
-    nonkey_nonfixed,
+    nonfixed,
     valid_determinant_attrs_prefixing
   )
 
@@ -282,14 +280,14 @@ discover <- function(
       )
     )
   }
-  valid_determinant_nonfixed_indices <- match(valid_determinant_attrs, nonkey_nonfixed)
+  valid_determinant_nonfixed_indices <- match(valid_determinant_attrs, nonfixed)
 
   # Maximum size of determinant set for a dependant is number
   # of other valid determinants.
   # If there are dependants that aren't valid determinants,
   # this is number of valid determinant attributes. If there
   # aren't, subtract one.
-  n_dependant_only <- length(nonkey_nonfixed) - length(valid_determinant_attrs)
+  n_dependant_only <- length(setdiff(valid_dependant_attrs, valid_determinant_attrs))
   max_n_lhs_attrs <- length(valid_determinant_attrs) -
     as.integer(n_dependant_only == 0)
   # using 0 would allow for one more column, but makes indexing a pain
@@ -314,12 +312,12 @@ discover <- function(
     # of time duplicating reduction work
     all_powersets <- stats::setNames(list(powerset), max_n_lhs_attrs)
     compute_partitions <- partition_computer(
-      unname(df[, nonkey_nonfixed, drop = FALSE]),
+      unname(df[, nonfixed, drop = FALSE]),
       accuracy,
       full_cache
     )
-    for (rhs in seq_along(nonkey_nonfixed)[nonkey_nonfixed %in% valid_dependant_attrs]) {
-      report$stat(paste("dependant", nonkey_nonfixed[rhs]))
+    for (rhs in seq_along(nonfixed)[nonfixed %in% valid_dependant_attrs]) {
+      report$stat(paste("dependant", nonfixed[rhs]))
       lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
       n_lhs_attrs <- length(lhs_nonfixed_indices)
       expected_n_lhs_attrs <- max_n_lhs_attrs -
@@ -330,11 +328,11 @@ discover <- function(
           names(dependencies)[
             vapply(
               dependencies,
-              \(x) any(vapply(x, identical, logical(1), nonkey_nonfixed[[rhs]])),
+              \(x) any(vapply(x, identical, logical(1), nonfixed[[rhs]])),
               logical(1)
             )
           ],
-          nonkey_nonfixed
+          nonfixed
         ) |>
         intersect(lhs_nonfixed_indices)
       else
@@ -388,9 +386,9 @@ discover <- function(
             all_powersets[[as.character(max_n_lhs_attrs)]] <- powerset
           }
         }else
-          dependencies[[nonkey_nonfixed[rhs]]] <- c(
-            dependencies[[nonkey_nonfixed[rhs]]],
-            lapply(lhss[[1]], \(x) nonkey_nonfixed[x])
+          dependencies[[nonfixed[rhs]]] <- c(
+            dependencies[[nonfixed[rhs]]],
+            lapply(lhss[[1]], \(x) nonfixed[x])
           )
         if (store_cache)
           partitions <- lhss[[2]]
@@ -409,7 +407,7 @@ discover <- function(
     dependencies <- add_deps_implied_by_bijections(
       dependencies,
       bijections,
-      nonkey_nonfixed,
+      nonfixed,
       column_names
     )
     dependencies <- add_deps_implied_by_simple_keys(
@@ -1062,26 +1060,26 @@ add_simple_key_deps <- function(
 add_deps_implied_by_bijections <- function(
   dependencies,
   bijections,
-  nonkey_nonfixed,
+  nonfixed,
   column_names
 ) {
   for (b in bijections) {
-    first_index <- nonkey_nonfixed[[b[[1]]]]
+    first_index <- nonfixed[[b[[1]]]]
     # add the bijection
-    for (nonkey_nonfixed_index in b[-1]) {
-      replacement <- nonkey_nonfixed[[nonkey_nonfixed_index]]
+    for (nonfixed_index in b[-1]) {
+      replacement <- nonfixed[[nonfixed_index]]
       dependencies[[replacement]] <- c(
         first_index,
         setdiff(dependencies[[first_index]], replacement)
       )
-      stopifnot(!anyDuplicated(dependencies[[nonkey_nonfixed_index]]))
+      stopifnot(!anyDuplicated(dependencies[[nonfixed_index]]))
     }
     # add dependencies implied by the bijection
     # only needed when bijection attribute is earlier than dependant, since
     # later ones were added before the bijection was known
-    for (rhs in setdiff(seq_along(dependencies), match(nonkey_nonfixed[b], column_names))) {
-      for (nonkey_nonfixed_index in b[-1]) {
-        replacement <- nonkey_nonfixed[[nonkey_nonfixed_index]]
+    for (rhs in setdiff(seq_along(dependencies), match(nonfixed[b], column_names))) {
+      for (nonfixed_index in b[-1]) {
+        replacement <- nonfixed[[nonfixed_index]]
         if (match(replacement, column_names) < rhs) {
           dependencies[[rhs]] <- c(
             dependencies[[rhs]],
