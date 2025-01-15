@@ -257,9 +257,14 @@ discover <- function(
   # skipping bijections, then we can also remove all but one of them as
   # dependants.
   valid_determinant_attrs <- valid_determinant_attrs_prekeys
+  # Can't just check column values are seq_len(nrow(df)),
+  # because df can have duplicate rows, and we can't remove
+  # the duplicate rows in df, because it changes the behaviour
+  # for accuracy < 1.
+  df_uniq <- df_unique(df)
   simple_keys <- nonfixed[vapply(
-    nonfixed,
-    \(attr) all(df[[attr]] == seq_len(nrow(df))),
+    df_uniq[nonfixed],
+    Negate(anyDuplicated),
     logical(1)
   )]
   determinant_keys <- intersect(simple_keys, valid_determinant_attrs_prekeys)
