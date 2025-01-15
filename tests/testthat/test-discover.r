@@ -710,51 +710,31 @@ describe("discover", {
             )
           }),
         function(df, dependants, detset_limit) {
-          arglists <- list(list(df = df, accuracy = 1))
-          exclusion <- lapply(
-            arglists,
-            \(lst) {
-              list(
-                c(lst, list(exclude_class = "logical")),
-                c(lst, list(exclude = names(df)[vapply(df, is.logical, logical(1))]))
-              )
-            }
+          arglists <- expand.grid(
+            list(list(df = df, accuracy = 1)),
+            list(
+              list(exclude_class = "logical"),
+              list(exclude = names(df)[vapply(df, is.logical, logical(1))])
+            ),
+            list(
+              list(),
+              list(dependants = dependants),
+              list(detset_limit = detset_limit),
+              list(dependants = dependants, detset_limit = detset_limit)
+            ),
+            list(
+              list(store_cache = FALSE),
+              list(store_cache = TRUE)
+            ),
+            list(
+              list(skip_bijections = FALSE),
+              list(skip_bijections = TRUE)
+            )
           ) |>
-            unlist(recursive = FALSE)
-          filter <- lapply(
-            exclusion,
-            \(lst) {
-              list(
-                lst,
-                c(lst, list(dependants = dependants)),
-                c(lst, list(detset_limit = detset_limit)),
-                c(lst, list(dependants = dependants, detset_limit = detset_limit))
-              )
-            }
-          ) |>
-            unlist(recursive = FALSE)
-          partition <- lapply(
-            filter,
-            \(lst) {
-              list(
-                c(lst, store_cache = FALSE),
-                c(lst, store_cache = TRUE)
-              )
-            }
-          ) |>
-            unlist(recursive = FALSE)
-          skip <- lapply(
-            partition,
-            \(lst) {
-              list(
-                c(lst, skip_bijections = FALSE),
-                c(lst, skip_bijections = TRUE)
-              )
-            }
-          ) |>
-            unlist(recursive = FALSE)
+            unname() |>
+            apply(1, \(x) do.call(c, x), simplify = FALSE)
           results <- lapply(
-            skip,
+            arglists,
             \(lst) {
               base <- withTimeout(
                 do.call(discover, lst),
