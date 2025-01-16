@@ -8,6 +8,7 @@
 * Added a `rename_attrs` method for `functional_dependency`.
 * Added a `dependants` argument to `discover`, which limit the functional dependency search to those with a dependant in the given set of column names, defaulting to all of them. This should significantly speed up searches where only some dependants are of interest.
 * Added a `detset_limit` argument for `discover`/`autodb`, which limits the FD search to only look for dependencies with the determinant set size under a given limit. For DFD, this usually doesn't significantly reduce the search time, but it won't make it worse. It will be useful once other search algorithms are implemented.
+* Added an `all` argument to `insert`, `FALSE` by default. If `TRUE`, then `insert` returns an error if the data to insert doesn't include all attribute for the elements being inserted into, rather than skipping those elements. This helps to prevent accidental no-ops.
 * Running discover() or autodb() with `progress = TRUE` now keeps the output display up to date when using a console-based version of R.
 * DFD now checks for single-attribute keys, and excludes them as determinants in the main search, potentially reducing the search time.
 

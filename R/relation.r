@@ -476,7 +476,7 @@ c.relation <- function(...) {
 }
 
 #' @exportS3Method
-insert.relation <- function(x, vals, relations = names(x), ...) {
+insert.relation <- function(x, vals, relations = names(x), all = FALSE, ...) {
   if (any(!is.element(relations, names(x))))
     stop("given relations must exist")
   if (anyDuplicated(relations))
@@ -490,8 +490,24 @@ insert.relation <- function(x, vals, relations = names(x), ...) {
       toString(extra)
     ))
   new_records <- records(x)
-  new_records[relations] <- lapply(
-    new_records[relations],
+  insertable <- vapply(
+    attrs(x)[relations],
+    \(as) all(is.element(as, names(vals))),
+    logical(1)
+  )
+  if (all && any(!insertable)) {
+    missed <- intersect(
+      attrs_order(x),
+      Reduce(
+        c,
+        lapply(attrs(x)[relations[!insertable]], setdiff, names(vals)),
+        init = character()
+      )
+    )
+    stop(paste("vals missing required attributes:", toString(missed)))
+  }
+  new_records[relations[insertable]] <- lapply(
+    new_records[relations[insertable]],
     \(df) {
       if (!all(is.element(names(df), names(vals))))
         return(df)

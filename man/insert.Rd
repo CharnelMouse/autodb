@@ -4,7 +4,7 @@
 \alias{insert}
 \title{Insert data}
 \usage{
-insert(x, vals, relations = names(x), ...)
+insert(x, vals, relations = names(x), all = FALSE, ...)
 }
 \arguments{
 \item{x}{a relational data object, into which to insert data, such as a
@@ -15,6 +15,11 @@ insert(x, vals, relations = names(x), ...)
 \item{relations}{a character vector, containing names of elements of \code{x}
 into which to insert data. By default, \code{insert} attempts to insert
 data into every element.}
+
+\item{all}{a logical, indicating whether \code{vals} is required to contain
+all attributes of all elements of \code{x[relations]}. By default, it is
+not, and data is only inserted into elements of \code{x[relations]} whose
+attributes are all present in \code{vals}.}
 
 \item{...}{further arguments pass on to methods.}
 }
@@ -44,11 +49,23 @@ same way as using \code{\link{rbind}}, followed by \code{\link{unique}}.
 }
 
 While key violations prevent insertion, re-insertion of existing records in
-an object element do not. This makes insertion equivalent to an \verb{INSERT OR IGNORE} expression in SQL. In particular, it is somewhat like using this
+an object element does not. This makes insertion equivalent to an \code{INSERT OR
+IGNORE} expression in SQL. In particular, it is somewhat like using this
 expression in SQLite, since that implementation uses dynamic typing.
 
 If \code{vals} contains attributes not included in
-\code{\link{attrs_order}(x)}, \code{insert} throws an error. If a partial set
-of attributes are inserted, then data is only inserted into components of
-\code{x} whose required attributes are all inserted.
+\code{\link{attrs_order}(x)}, \code{insert} throws an error, since those
+attributes can't be inserted.
+
+If a partial set of attributes is inserted, and \code{all} is \code{FALSE},
+then data is only inserted into components of \code{x[relations]} whose
+required attributes are all present in \code{vals}. If \code{all} is
+\code{TRUE}, \code{insert} returns an error instead. This is useful when
+specifying \code{relations}: in that case, you often intend to insert
+into all of the specified elements, so not including all the required
+attributes is a mistake, and \code{all = TRUE} prevents it.
+
+If \code{all} is \code{TRUE}, \code{insert}
+throws an error in this case: This ensures you insert into all members of a
+specified value of \code{relations}.
 }

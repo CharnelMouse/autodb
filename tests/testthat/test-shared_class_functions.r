@@ -965,6 +965,37 @@ describe("insert", {
       )
     )
   })
+  it("returns an error if missing attributes when all = TRUE", {
+    rel <- relation(
+      list(
+        a = list(df = data.frame(a = logical(), b = logical()), keys = list("a")),
+        b = list(df = data.frame(b = logical(), c = logical()), keys = list("b"))
+      ),
+      c("a", "b", "c")
+    )
+    expect_no_error(insert(rel, data.frame(a = logical(), b = logical(), c = logical()), all = TRUE))
+    expect_error(
+      insert(rel, data.frame(a = logical(), b = logical()), all = TRUE),
+      "vals missing required attributes: c"
+    )
+    expect_no_error(insert(rel, data.frame(a = logical(), b = logical()), relations = "a", all = TRUE))
+    expect_error(
+      insert(rel, data.frame(a = logical()), all = TRUE),
+      "vals missing required attributes: b"
+    )
+
+    db <- database(rel, list(list("a", "b", "b", "b")))
+    expect_no_error(insert(db, data.frame(a = logical(), b = logical(), c = logical()), all = TRUE))
+    expect_error(
+      insert(db, data.frame(a = logical(), b = logical()), all = TRUE),
+      "vals missing required attributes: c"
+    )
+    expect_no_error(insert(db, data.frame(a = logical(), b = logical()), relations = "a", all = TRUE))
+    expect_error(
+      insert(db, data.frame(a = logical()), all = TRUE),
+      "vals missing required attributes: b"
+    )
+  })
   it("returns an error when inserting foreign key violations", {
     df <- data.frame(a = 1:4, b = c(1:3, 1L), c = c(1L, 1L, 2L, 1L))
     expect_error(
