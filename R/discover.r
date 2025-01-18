@@ -1086,7 +1086,7 @@ add_deps_implied_by_bijections <- function(
       for (nonfixed_index in b[-1]) {
         replacement <- nonfixed[[nonfixed_index]]
         if (match(replacement, column_names) < rhs) {
-          dependencies[[rhs]] <- c(
+          dependencies[[rhs]] <- union(
             dependencies[[rhs]],
             lapply(
               Filter(\(d) is.element(first_index, d), dependencies[[rhs]]),
