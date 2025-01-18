@@ -890,7 +890,7 @@ check_FD_partition_stripped <- function(
   partitions,
   partitions_ui
 ) {
-  attr_nodes <- to_partition_node(attr_indices)
+  attr_nodes <- to_partition_nodes(attr_indices)
   partition_node <- sum(attr_nodes)
   partkey <- partitions_ui$lookup_node(partition_node, partitions)
   if (!is.na(partkey)) {
