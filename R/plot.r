@@ -497,8 +497,8 @@ to_node_name <- function(nm) paste0("\"", make.gv_names(nm), "\"", recycle0 = TR
 to_attr_name <- function(nm) make.gv_names(tolower(nm))
 
 make.gv_names_base <- function(
-    string,
-    transform_gv_names
+  string,
+  transform_gv_names
 ) {
   string <- enc2utf8(string)
   if (length(string) == 0) {
@@ -513,7 +513,7 @@ make.gv_names_base <- function(
   string
 }
 make.html_names <- function(
-    string
+  string
 ) {
   make.gv_names_base(
     string,
@@ -525,7 +525,7 @@ make.html_names <- function(
   )
 }
 make.html_attribute_names <- function(
-    string
+  string
 ) {
   make.gv_names_base(
     string,
@@ -539,7 +539,7 @@ make.html_attribute_names <- function(
   )
 }
 make.gv_names <- function(
-    string
+  string
 ) {
   make.gv_names_base(
     string,
