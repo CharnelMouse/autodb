@@ -9,19 +9,19 @@ reporter <- function(report, con, new = FALSE) {
       op = function(x, f, text, ...) {
         x <- eval(substitute(x, rlang::caller_env()))
         cat(paste0(text, "\n"), file = con, append = !new)
-        flush.console()
+        utils::flush.console()
         new <<- FALSE
         f(x, ...)
       },
       exp = function(expression, text) {
         cat(paste0(text, "\n"), file = con, append = !new)
-        flush.console()
+        utils::flush.console()
         new <<- FALSE
         eval(substitute(expression, rlang::caller_env()))
       },
       stat = function(text){
         cat(paste0(text, "\n"), file = con, append = !new)
-        flush.console()
+        utils::flush.console()
         new <<- FALSE
         invisible(NULL)
       }
