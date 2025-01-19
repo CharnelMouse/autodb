@@ -16,6 +16,7 @@
 
 * Fixed `gv` to account for Graphviz HTML-like labels requiring certain characters, namely the set "<>&, to be escaped in Graphviz HTML-like labels, and removed completely in attribute values.
 * Fixed `df_equiv` to properly handle data frames with zero columns or duplicate rows.
+* Fixed `database_schema` and `database`, and reference re-assignments, to allow references to be given with the referee's key not in attribute order.
 
 # autodb 2.0.0
 

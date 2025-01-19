@@ -231,7 +231,7 @@
 database <- function(relations, references) {
   if (!inherits(relations, "relation"))
     stop("relations must be a relation")
-  check_valid_reference(references, relations, "relation")
+  references <- check_valid_reference(references, relations, "relation")
 
   relat_errors <- reference_errors(records(relations), references)
   if (length(relat_errors) > 0)

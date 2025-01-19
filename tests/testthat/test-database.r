@@ -110,6 +110,78 @@ describe("database", {
     # should have something about collected FK being a key of the citee,
     # waiting on FK grouping first
   })
+  it("can take referree keys out of order", {
+    expect_no_error(
+      database(
+        relation(
+          list(
+            a = list(
+              df = data.frame(a = logical(), b = logical(), c = logical()),
+              keys = list(c("a"))
+            ),
+            b_c  = list(
+              df = data.frame(b = logical(), c = logical()),
+              keys = list(c("b", "c"))
+            )
+          ),
+          c("a", "b", "c")
+        ),
+        list(list("a", c("b", "c"), "b_c", c("b", "c")))
+      )
+    )
+    expect_no_error(
+      database(
+        relation(
+          list(
+            a = list(
+              df = data.frame(a = logical(), b = logical(), c = logical()),
+              keys = list(c("a"))
+            ),
+            b_c  = list(
+              df = data.frame(b = logical(), c = logical()),
+              keys = list(c("b", "c"))
+            )
+          ),
+          c("a", "b", "c")
+        ),
+        list(list("a", c("c", "b"), "b_c", c("c", "b")))
+      )
+    )
+    expect_identical(
+      database(
+        relation(
+          list(
+            a = list(
+              df = data.frame(a = logical(), b = logical(), c = logical()),
+              keys = list(c("a"))
+            ),
+            d_e  = list(
+              df = data.frame(d = logical(), e = logical()),
+              keys = list(c("d", "e"))
+            )
+          ),
+          c("a", "b", "c", "d", "e")
+        ),
+        list(list("a", c("c", "b"), "d_e", c("d", "e")))
+      ),
+      database(
+        relation(
+          list(
+            a = list(
+              df = data.frame(a = logical(), b = logical(), c = logical()),
+              keys = list(c("a"))
+            ),
+            d_e  = list(
+              df = data.frame(d = logical(), e = logical()),
+              keys = list(c("d", "e"))
+            )
+          ),
+          c("a", "b", "c", "d", "e")
+        ),
+        list(list("a", c("b", "c"), "d_e", c("e", "d")))
+      )
+    )
+  })
   it("expects valid input: references aren't self-references", {
     expect_error(
       database(

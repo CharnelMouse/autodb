@@ -116,6 +116,32 @@ describe("database_schema", {
       "^reference attributes must be within referrer's attributes and referee's keys: reference 1$"
     )
   })
+  it("can take referree keys out of order", {
+    expect_no_error(
+      database_schema(
+        relation_schema(
+          list(
+            a = list(c("a", "b", "c"), list(c("a"))),
+            b_c  = list(c("b", "c"), list(c("b", "c")))
+          ),
+          c("a", "b", "c")
+        ),
+        list(list("a", c("b", "c"), "b_c", c("b", "c")))
+      )
+    )
+    expect_no_error(
+      database_schema(
+        relation_schema(
+          list(
+            a = list(c("a", "b", "c"), list(c("a"))),
+            b_c  = list(c("b", "c"), list(c("b", "c")))
+          ),
+          c("a", "b", "c")
+        ),
+        list(list("a", c("c", "b"), "b_c", c("c", "b")))
+      )
+    )
+  })
   it("expects valid input: references aren't self-references", {
     expect_error(
       database_schema(

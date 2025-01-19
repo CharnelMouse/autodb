@@ -11,11 +11,11 @@ database(relations, references)
 
 \item{references}{a list of references, each
 represented by a list containing four character elements. In order, the
-elements are a scalar giving the name of the child schema, a vector giving
-the child attribute names, a scalar giving the name of the parent schema,
-and a vector giving the parent attribute names. The vectors must be of the
-same length and contain names for attributes present in their respective
-schemas, and the parent attributes must form a key, in order.}
+elements are a scalar giving the name of the child (referrer) schema, a
+vector giving the child attribute names, a scalar giving the name of the
+parent (referee) schema, and a vector giving the parent attribute names. The
+vectors must be of the same length and contain names for attributes present
+in their respective schemas, and the parent attributes must form a key.}
 }
 \value{
 A \code{database} object, containing \code{relations} with

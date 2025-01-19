@@ -30,6 +30,16 @@ check_valid_reference <- function(
     prefix = "absent",
     suffix_else = ""
   )
+  # sort so that keys are matched properly, and refs are assigned properly
+  references <- lapply(
+    references,
+    \(ref) {
+      ord <- order(match(ref[[4]], attrs_order(relation_schemas)))
+      ref[[2]] <- ref[[2]][ord]
+      ref[[4]] <- ref[[4]][ord]
+      ref
+    }
+  )
   stop_with_elements_if(
     !reference_valid_attrs(references, relation_schemas),
     "reference attributes must be within referrer's attributes and referee's keys",
@@ -37,6 +47,7 @@ check_valid_reference <- function(
   )
   if (any(self_reference(references)))
     stop("reference cannot be from a relation's attribute to itself")
+  references
 }
 
 self_reference <- function(references) {
