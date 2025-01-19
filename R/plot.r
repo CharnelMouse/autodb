@@ -490,9 +490,9 @@ to_elemented <- function(x) {
   x_elemented
 }
 
-to_main_name <- function(nm) make.gv_names(nm)
+to_main_name <- function(nm) paste0("\"", make.gv_names(nm), "\"")
 to_element_name <- function(nm) make.html_names(nm)
-to_node_name <- function(nm) make.gv_names(nm)
+to_node_name <- function(nm) paste0("\"", make.gv_names(nm), "\"", recycle0 = TRUE)
 # attrs to lower case, because GraphViz HTML record port connections ignore case
 to_attr_name <- function(nm) make.gv_names(tolower(nm))
 

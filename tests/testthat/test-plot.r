@@ -13,7 +13,7 @@ describe("gv", {
   ) {
     ncols <- ncol(key_memberships) + 2L
     paste(
-      paste0("  ", df_label, " [label = <"),
+      paste0("  \"", df_label, "\" [label = <"),
       "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
       paste0(
         "    <TR><TD COLSPAN=\"",
@@ -226,7 +226,7 @@ describe("gv", {
         )
       )
       expected_string <- paste(
-        "digraph Book {",
+        "digraph \"Book\" {",
         "  rankdir = \"LR\"",
         "  node [shape=plaintext];",
 
@@ -311,9 +311,9 @@ describe("gv", {
 
         "",
 
-        "  Format_Price:FROM_title -> Book:TO_title;",
-        "  Book:FROM_author -> Author:TO_author;",
-        "  Book:FROM_genre_id -> Genre:TO_genre_id;",
+        "  \"Format_Price\":FROM_title -> \"Book\":TO_title;",
+        "  \"Book\":FROM_author -> \"Author\":TO_author;",
+        "  \"Book\":FROM_genre_id -> \"Genre\":TO_genre_id;",
         "}",
         "",
         sep = "\n"
@@ -402,7 +402,7 @@ describe("gv", {
         )
       )
       expected_string <- paste(
-        "digraph Book {",
+        "digraph \"Book\" {",
         "  rankdir = \"LR\"",
         "  node [shape=plaintext];",
 
@@ -488,9 +488,9 @@ describe("gv", {
 
         "",
 
-        "  Format_Price:FROM_title -> Book:TO_title;",
-        "  Book:FROM_author -> Author:TO_author;",
-        "  Book:FROM_genre_id -> Genre:TO_genre_id;",
+        "  \"Format_Price\":FROM_title -> \"Book\":TO_title;",
+        "  \"Book\":FROM_author -> \"Author\":TO_author;",
+        "  \"Book\":FROM_genre_id -> \"Genre\":TO_genre_id;",
         "}",
         "",
         sep = "\n"
@@ -553,24 +553,24 @@ describe("gv", {
       expect_identical(
         gv(db, "<Database & Test>"),
         paste(
-          "digraph _Database___Test_ {",
+          "digraph \"_Database___Test_\" {",
           "  rankdir = \"LR\"",
           "  node [shape=plaintext];",
           "",
-          '  _rel_1_ [label = <',
+          '  \"_rel_1_\" [label = <',
           '    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">',
           '    <TR><TD COLSPAN="3">&lt;rel&amp;1&gt; (0 records)</TD></TR>',
           '    <TR><TD PORT="TO_a_1____b__2">a&lt;1 &amp; &quot;b&quot;&gt;2</TD><TD BGCOLOR="black"></TD><TD PORT="FROM_a_1____b__2">logical</TD></TR>',
           '    <TR><TD PORT="TO_d">d</TD><TD></TD><TD PORT="FROM_d">logical</TD></TR>',
           '    </TABLE>>];',
-          '  _rel_2_ [label = <',
+          '  \"_rel_2_\" [label = <',
           '    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">',
           '    <TR><TD COLSPAN="3">&lt;rel&amp;2&gt; (0 records)</TD></TR>',
           '    <TR><TD PORT="TO_a_1____b__2">a&lt;1 &amp; &quot;b&quot;&gt;2</TD><TD BGCOLOR="black"></TD><TD PORT="FROM_a_1____b__2">logical</TD></TR>',
           '    <TR><TD PORT="TO_e">e</TD><TD BGCOLOR="black"></TD><TD PORT="FROM_e">logical</TD></TR>',
           '    </TABLE>>];',
           "",
-          "  _rel_2_:FROM_a_1____b__2 -> _rel_1_:TO_a_1____b__2;",
+          "  \"_rel_2_\":FROM_a_1____b__2 -> \"_rel_1_\":TO_a_1____b__2;",
           "}",
           "",
           sep = "\n"
@@ -629,11 +629,11 @@ describe("gv", {
       expect_identical(
         gv(rel, "<Relation & Schema | Test>"),
         paste(
-          "digraph _Relation___Schema___Test_ {",
+          "digraph \"_Relation___Schema___Test_\" {",
           "  rankdir = \"LR\"",
           "  node [shape=plaintext];",
           "",
-          '  _rel_1_ [label = <',
+          '  \"_rel_1_\" [label = <',
           '    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">',
           '    <TR><TD COLSPAN="3">&lt;rel&amp;1&gt; (0 records)</TD></TR>',
           '    <TR><TD PORT="TO_a_1___b_2">a&lt;1 &amp; b&gt;2</TD><TD BGCOLOR="black"></TD><TD PORT="FROM_a_1___b_2">logical</TD></TR>',
@@ -697,11 +697,11 @@ describe("gv", {
       ) |>
         database_schema(references = list())
       expected_string <- paste(
-        "digraph book {",
+        "digraph \"book\" {",
         "  rankdir = \"LR\"",
         "  node [shape=plaintext];",
         "",
-        "  Genre_ID [label = <",
+        "  \"Genre_ID\" [label = <",
         "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
         "    <TR><TD COLSPAN=\"2\">Genre ID</TD></TR>",
         "    <TR><TD PORT=\"TO_genre_id\">Genre ID</TD><TD PORT=\"FROM_genre_id\" BGCOLOR=\"black\"></TD></TR>",
@@ -737,7 +737,7 @@ describe("gv", {
       ) |>
         database_schema(references = list(list("a", "b", "b", "b")))
       plot_string <- gv(schema)
-      expect_true(grepl("\\n  a.FROM_b -> b.TO_b", plot_string))
+      expect_true(grepl("\n  \"a\":FROM_b -> \"b\":TO_b", plot_string, fixed = TRUE))
 
       schema <- relation_schema(
         list(
@@ -748,7 +748,7 @@ describe("gv", {
       ) |>
         database_schema(references = list(list("a", "a", "b", "b")))
       plot_string <- gv(schema)
-      expect_true(grepl("\\n  a.FROM_a -> b.TO_b", plot_string))
+      expect_true(grepl("\n  \"a\":FROM_a -> \"b\":TO_b", plot_string, fixed = TRUE))
     })
     it("only gives each attribute pair in foreign key references once", {
       schema <- database_schema(
@@ -785,24 +785,24 @@ describe("gv", {
       expect_identical(
         gv(ds, "<Database & Schema | Test>"),
         paste(
-          "digraph _Database___Schema___Test_ {",
+          "digraph \"_Database___Schema___Test_\" {",
           "  rankdir = \"LR\"",
           "  node [shape=plaintext];",
           "",
-          '  _rel_1_ [label = <',
+          '  \"_rel_1_\" [label = <',
           '    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">',
           '    <TR><TD COLSPAN="2">&lt;rel&amp;1&gt;</TD></TR>',
           '    <TR><TD PORT="TO_a_1___b_2">a&lt;1 &amp; b&gt;2</TD><TD PORT="FROM_a_1___b_2" BGCOLOR="black"></TD></TR>',
           '    <TR><TD PORT="TO_d">d</TD><TD PORT="FROM_d"></TD></TR>',
           '    </TABLE>>];',
-          '  _rel_2_ [label = <',
+          '  \"_rel_2_\" [label = <',
           '    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">',
           '    <TR><TD COLSPAN="2">&lt;rel&amp;2&gt;</TD></TR>',
           '    <TR><TD PORT="TO_a_1___b_2">a&lt;1 &amp; b&gt;2</TD><TD PORT="FROM_a_1___b_2" BGCOLOR="black"></TD></TR>',
           '    <TR><TD PORT="TO_e">e</TD><TD PORT="FROM_e" BGCOLOR="black"></TD></TR>',
           '    </TABLE>>];',
           "",
-          "  _rel_2_:FROM_a_1___b_2 -> _rel_1_:TO_a_1___b_2;",
+          "  \"_rel_2_\":FROM_a_1___b_2 -> \"_rel_1_\":TO_a_1___b_2;",
           "}",
           "",
           sep = "\n"
@@ -863,11 +863,11 @@ describe("gv", {
         c("Genre ID", "Genre Name")
       )
       expected_string <- paste(
-        "digraph book {",
+        "digraph \"book\" {",
         "  rankdir = \"LR\"",
         "  node [shape=plaintext];",
         "",
-        "  Genre_ID [label = <",
+        "  \"Genre_ID\" [label = <",
         "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
         "    <TR><TD COLSPAN=\"2\">Genre ID</TD></TR>",
         "    <TR><TD PORT=\"TO_genre_id\">Genre ID</TD><TD PORT=\"FROM_genre_id\" BGCOLOR=\"black\"></TD></TR>",
@@ -900,11 +900,11 @@ describe("gv", {
       expect_identical(
         gv(rs, "<Relation & Schema | Test>"),
         paste(
-          "digraph _Relation___Schema___Test_ {",
+          "digraph \"_Relation___Schema___Test_\" {",
           "  rankdir = \"LR\"",
           "  node [shape=plaintext];",
           "",
-          '  _rel_1_ [label = <',
+          '  \"_rel_1_\" [label = <',
           '    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">',
           '    <TR><TD COLSPAN="2">&lt;rel&amp;1&gt;</TD></TR>',
           '    <TR><TD PORT="TO_a_1___b_2">a&lt;1 &amp; b&gt;2</TD><TD PORT="FROM_a_1___b_2" BGCOLOR="black"></TD></TR>',
@@ -948,7 +948,7 @@ describe("gv", {
     it("generates a name if not given one", {
       df <- data.frame(a = 1:3)
       g <- strsplit(gv(df), "\n", fixed = TRUE)[[1]]
-      expect_identical(g[[1]], "digraph data {")
+      expect_identical(g[[1]], "digraph \"data\" {")
       expect_identical(
         g[[7]],
         "    <TR><TD COLSPAN=\"2\">data (3 rows)</TD></TR>"
@@ -961,7 +961,7 @@ describe("gv", {
       expect_identical(
         gv(df, "table"),
         paste(
-          "digraph table {",
+          "digraph \"table\" {",
           "  rankdir = \"LR\"",
           "  node [shape=plaintext];",
           "",
@@ -989,7 +989,7 @@ describe("gv", {
       expect_identical(
         gv(df, "Table Test"),
         paste(
-          "digraph Table_Test {",
+          "digraph \"Table_Test\" {",
           "  rankdir = \"LR\"",
           "  node [shape=plaintext];",
           "",
@@ -1017,7 +1017,7 @@ describe("gv", {
       expect_identical(
         gv(df, "<Table & Test>"),
         paste(
-          "digraph _Table___Test_ {",
+          "digraph \"_Table___Test_\" {",
           "  rankdir = \"LR\"",
           "  node [shape=plaintext];",
           "",
