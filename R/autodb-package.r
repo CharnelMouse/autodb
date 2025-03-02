@@ -9,6 +9,6 @@
 #' resulting "database" via Graphviz, with options to exclude some attributes at
 #' discovery time, or remove discovered dependencies at normalisation time.
 #'
-#' @docType package
+#' @keywords internal
 #' @name autodb-package
-NULL
+"_PACKAGE"

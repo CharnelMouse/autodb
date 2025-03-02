@@ -14,3 +14,17 @@ approximate dependencies, normalisation based on those, and plotting of the
 resulting "database" via Graphviz, with options to exclude some attributes at
 discovery time, or remove discovered dependencies at normalisation time.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://charnelmouse.github.io/autodb/}
+  \item \url{https://github.com/CharnelMouse/autodb}
+  \item Report bugs at \url{https://github.com/CharnelMouse/autodb/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Mark Webster \email{markwebster204@yahoo.co.uk} (\href{https://orcid.org/0000-0002-3351-0686}{ORCID})
+
+}
+\keyword{internal}
