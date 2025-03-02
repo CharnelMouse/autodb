@@ -1,5 +1,3 @@
-library(hedgehog)
-
 gen.nonempty_key <- gen.sample.int(2, gen.int(5), replace = TRUE)
 gen.key <- gen.sample.int(2, gen.element(0:5), replace = TRUE)
 

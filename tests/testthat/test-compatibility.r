@@ -1,5 +1,3 @@
-library(hedgehog)
-
 describe("df_duplicated", {
   it("works for zero-column data frames", {
     df <- data.frame(a = 1:5)[, -1, drop = FALSE]

@@ -1,5 +1,3 @@
-library(hedgehog)
-
 describe("relation", {
   it("expects valid input: relations is a named list", {
     expect_error(relation(1L, character()))

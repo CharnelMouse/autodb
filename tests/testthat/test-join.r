@@ -1,5 +1,3 @@
-library(hedgehog)
-
 describe("df_join", {
   it("returns a table with unique rows if it joins it with itself (maybe re-ordered)", {
     forall(

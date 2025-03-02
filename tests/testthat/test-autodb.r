@@ -1,5 +1,3 @@
-library(hedgehog)
-
 describe("autodb", {
   it("returns valid databases", {
     forall(

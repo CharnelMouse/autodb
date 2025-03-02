@@ -1,5 +1,3 @@
-library(hedgehog)
-
 describe("gv", {
   test_df_strings <- function(
     df_name,

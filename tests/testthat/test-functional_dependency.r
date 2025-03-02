@@ -1,5 +1,3 @@
-library(hedgehog)
-
 describe("functional_dependency", {
   gen.fd <- function(x, from, to, unique = TRUE) {
     gen.element(x) |>

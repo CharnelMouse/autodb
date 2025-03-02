@@ -2,7 +2,6 @@
 # weight on 1
 
 library(R.utils)
-library(hedgehog)
 
 describe("discover", {
   expect_equiv_deps <- function(deps1, deps2) {

@@ -1,5 +1,3 @@
-library(hedgehog)
-
 describe("attrs<-", {
   rs_selections <- function(ks, attrs_order) {
     necessary <- unique(unlist(ks))

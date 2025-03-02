@@ -1,5 +1,3 @@
-library(hedgehog)
-
 describe("normalise", {
   it("gives valid schemas with same-attributes reference pairs", {
     # table_dum and table_dee

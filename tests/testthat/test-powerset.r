@@ -1,5 +1,3 @@
-library(hedgehog)
-
 describe("nonempty_powerset", {
   it("maps bitsets to their integer representation if max_size = cardinality", {
     forall(

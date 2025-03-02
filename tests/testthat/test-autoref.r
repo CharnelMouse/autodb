@@ -1,5 +1,3 @@
-library(hedgehog)
-
 describe("autoref", {
   it("returns a valid database_schema", {
     forall(

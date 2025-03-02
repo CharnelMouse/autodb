@@ -1,5 +1,3 @@
-library(hedgehog)
-
 describe("df_equiv", {
   it("considers data frames equivalent to themselves", {
     forall(

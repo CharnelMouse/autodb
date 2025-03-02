@@ -1,5 +1,3 @@
-library(hedgehog)
-
 describe("database", {
   empty_rs <- relation_schema(setNames(list(), character()), character())
   it("expects valid input: relations is a relation", {

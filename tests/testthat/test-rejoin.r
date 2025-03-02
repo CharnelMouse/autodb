@@ -1,5 +1,3 @@
-library(hedgehog)
-
 describe("rejoin", {
   it("is left-inverse for lossless full-dep database creation, outside of row permutations, for tables with unique rows", {
     autodb_inverted_by_rejoin <- expect_bi(

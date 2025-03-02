@@ -1,5 +1,3 @@
-library(hedgehog)
-
 test_that("gen_df can give a table of exact height", {
   forall(
     gen.element(0:6) |>

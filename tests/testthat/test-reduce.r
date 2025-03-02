@@ -1,5 +1,3 @@
-library(hedgehog)
-
 describe("reduce.database", {
   it("is idempotent", {
     has_idempotent_reduction <- function(df) {

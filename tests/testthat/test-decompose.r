@@ -1,5 +1,3 @@
-library(hedgehog)
-
 describe("decompose", {
   it("returns valid databases", {
     forall(
