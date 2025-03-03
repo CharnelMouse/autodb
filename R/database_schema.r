@@ -199,6 +199,10 @@ database_schema <- function(relation_schemas, references) {
     stop("relations must be a relation_schema")
   references <- check_valid_reference(references, relation_schemas, "relation schema")
 
+  database_schema_nocheck(relation_schemas, references)
+}
+
+database_schema_nocheck <- function(relation_schemas, references) {
   structure(
     relation_schemas,
     references = references,

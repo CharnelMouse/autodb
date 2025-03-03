@@ -517,7 +517,7 @@ gen.relation_schema <- function(x, from, to, single_empty_key = FALSE) {
       list(setNames(schemas, nms), x)
     }) |>
     gen.with(\(lst) {
-      do.call(relation_schema, lst)
+      do.call(relation_schema_nocheck, lst)
     })
 }
 gen.relation_schema_empty_keys <- function(x, from, to, min_empty) {
@@ -611,7 +611,7 @@ gen.relation_from_schema <- function(
             ))
         }
       ) |>
-        gen.with(with_args(relation, attrs_order = attrs_order(empty_rel)))
+        gen.with(with_args(relation_nocheck, attrs_order = attrs_order(empty_rel)))
     })
 }
 
@@ -835,7 +835,7 @@ gen.database_schema <- function(
         else
           gen.references(rs, single_key_pairs))
     }) |>
-    gen.with(\(lst) do.call(database_schema, lst))
+    gen.with(\(lst) do.call(database_schema_nocheck, lst))
 }
 gen.database_schema_empty_keys <- function(
   x,
@@ -854,19 +854,19 @@ gen.database_schema_empty_keys <- function(
         else
           gen.references(rs, single_key_pairs))
     }) |>
-    gen.with(\(lst) do.call(database_schema, lst))
+    gen.with(\(lst) do.call(database_schema_nocheck, lst))
 }
 
 gen.database <- function(
-  x,
-  from,
-  to,
-  single_empty_key = FALSE,
-  same_attr_name = TRUE,
-  single_key_pairs = TRUE,
-  rows_from = 0L,
-  rows_to = 10L,
-  variant = c("data.frame", "tibble")
+    x,
+    from,
+    to,
+    single_empty_key = FALSE,
+    same_attr_name = TRUE,
+    single_key_pairs = TRUE,
+    rows_from = 0L,
+    rows_to = 10L,
+    variant = c("data.frame", "tibble")
 ) {
   list(
     gen.database_schema(
@@ -886,7 +886,7 @@ gen.database <- function(
             remove_reference_violations,
             references = references(ds)
           ) %>>%
-            with_args(database, references = references(ds))
+            with_args(database_nocheck, references = references(ds))
         )
     }))
 }
