@@ -1,5 +1,7 @@
 # autodb (development version)
 
+Some minor changes to documentation and tests, to allow for package updates and submission to CRAN.
+
 # autodb 2.1.0
 
 ## Improvements
