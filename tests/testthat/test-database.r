@@ -262,19 +262,37 @@ describe("database", {
         4.88640238864414211406
       )
     )
+    # Checking values are considered different,
+    # since R-hub tests indicate this might differ between OSes
+    expect_false(identical(
+      2.69353840461766669279,
+      2.69353840461766713688
+    ))
+    expect_false(`==`(
+      2.69353840461766669279,
+      2.69353840461766713688
+    ))
+    expect_false(identical(
+      4.88640238864414033770,
+      4.88640238864414211406
+    ))
+    expect_false(`==`(
+      4.88640238864414033770,
+      4.88640238864414211406
+    ))
     # FDs: acd -> b, ab -> d, bd -> a
     # 3NF schema: abcd[acd].{ab} -> ab[ab,bd].{ab}
     ds <- discover(x, 1) |>
       normalise(remove_avoidable = TRUE)
     rel <- subschemas(ds) |> create() |> insert(x)
     refs <- references(ds)
-    stopifnot(identical(
+    expect_identical(
       refs,
       list(
         list("a_c_d", c("a", "b"), "a_b", c("a", "b")),
         list("a_c_d", c("b", "d"), "a_b", c("b", "d"))
       )
-    ))
+    )
     referrer <- records(rel)$a_c_d
     referee <- records(rel)$a_b
     check <- df_join(referrer, referee, by = c("a", "b"))
