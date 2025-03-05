@@ -380,6 +380,16 @@ describe("discover", {
         8.54917749999999898591
       )
     )
+    # Checking values are considered different,
+    # since R-hub tests indicate this might differ between OSes
+    expect_false(identical(
+      8.54917750000000076227,
+      8.54917749999999898591
+    ))
+    expect_false(`==`(
+      8.54917750000000076227,
+      8.54917749999999898591
+    ))
     expect_identical(
       discover(df, 1),
       functional_dependency(
