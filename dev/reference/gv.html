@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">autodb</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.0.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.1.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -114,11 +114,11 @@ single image, if a user wishes to do so.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># simple data.frame example</span></span></span>
 <span class="r-in"><span><span class="va">txt_df</span> <span class="op">&lt;-</span> <span class="fu">gv</span><span class="op">(</span><span class="va">ChickWeight</span>, <span class="st">"chick"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">txt_df</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> digraph chick {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> digraph "chick" {</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   rankdir = "LR"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   node [shape=plaintext];</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   chick [label = &lt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "chick" [label = &lt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD COLSPAN="2"&gt;chick (578 rows)&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD PORT="TO_weight"&gt;weight&lt;/TD&gt;&lt;TD PORT="FROM_weight"&gt;numeric&lt;/TD&gt;&lt;/TR&gt;</span>
@@ -131,7 +131,7 @@ single image, if a user wishes to do so.</p>
 <span class="r-in"><span>  <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="va">txt_df</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <div id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:700px;height:432.632880098888px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"diagram":"digraph chick {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  chick [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">chick (578 rows)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD PORT=\"FROM_weight\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD PORT=\"FROM_time\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\">ordered<\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD PORT=\"FROM_diet\">factor<\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><span class="r-in"><span><span class="co"># simple database example</span></span></span>
+<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"diagram":"digraph \"chick\" {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">chick (578 rows)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD PORT=\"FROM_weight\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD PORT=\"FROM_time\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\">ordered<\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD PORT=\"FROM_diet\">factor<\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><span class="r-in"><span><span class="co"># simple database example</span></span></span>
 <span class="r-in"><span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="autodb.html">autodb</a></span><span class="op">(</span><span class="va">ChickWeight</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">txt_db</span> <span class="op">&lt;-</span> <span class="fu">gv</span><span class="op">(</span><span class="va">db</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">txt_db</span><span class="op">)</span></span></span>
@@ -139,13 +139,13 @@ single image, if a user wishes to do so.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   rankdir = "LR"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   node [shape=plaintext];</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Chick [label = &lt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Chick" [label = &lt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD COLSPAN="3"&gt;Chick (50 records)&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD PORT="TO_chick"&gt;Chick&lt;/TD&gt;&lt;TD BGCOLOR="black"&gt;&lt;/TD&gt;&lt;TD PORT="FROM_chick"&gt;ordered&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD PORT="TO_diet"&gt;Diet&lt;/TD&gt;&lt;TD&gt;&lt;/TD&gt;&lt;TD PORT="FROM_diet"&gt;factor&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;/TABLE&gt;&gt;];</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Time_Chick [label = &lt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Time_Chick" [label = &lt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD COLSPAN="3"&gt;Time_Chick (578 records)&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD PORT="TO_time"&gt;Time&lt;/TD&gt;&lt;TD BGCOLOR="black"&gt;&lt;/TD&gt;&lt;TD PORT="FROM_time"&gt;numeric&lt;/TD&gt;&lt;/TR&gt;</span>
@@ -153,13 +153,13 @@ single image, if a user wishes to do so.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD PORT="TO_weight"&gt;weight&lt;/TD&gt;&lt;TD&gt;&lt;/TD&gt;&lt;TD PORT="FROM_weight"&gt;numeric&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;/TABLE&gt;&gt;];</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Time_Chick:FROM_chick -&gt; Chick:TO_chick;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Time_Chick":FROM_chick -&gt; "Chick":TO_chick;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="va">txt_db</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <div id="htmlwidget-e5c8c404fe174e4c81bd" style="width:700px;height:432.632880098888px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-e5c8c404fe174e4c81bd">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  Chick [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Chick (50 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">ordered<\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD><\/TD><TD PORT=\"FROM_diet\">factor<\/TD><\/TR>\n    <\/TABLE>>];\n  Time_Chick [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Time_Chick (578 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_time\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">ordered<\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD><\/TD><TD PORT=\"FROM_weight\">numeric<\/TD><\/TR>\n    <\/TABLE>>];\n\n  Time_Chick:FROM_chick -> Chick:TO_chick;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><span class="r-in"><span><span class="co"># simple relation schemas</span></span></span>
+<script type="application/json" data-for="htmlwidget-e5c8c404fe174e4c81bd">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Chick (50 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">ordered<\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD><\/TD><TD PORT=\"FROM_diet\">factor<\/TD><\/TR>\n    <\/TABLE>>];\n  \"Time_Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Time_Chick (578 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_time\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">ordered<\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD><\/TD><TD PORT=\"FROM_weight\">numeric<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"Time_Chick\":FROM_chick -> \"Chick\":TO_chick;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><span class="r-in"><span><span class="co"># simple relation schemas</span></span></span>
 <span class="r-in"><span><span class="va">rschema</span> <span class="op">&lt;-</span> <span class="fu"><a href="synthesise.html">synthesise</a></span><span class="op">(</span><span class="fu"><a href="discover.html">discover</a></span><span class="op">(</span><span class="va">ChickWeight</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">txt_rschema</span> <span class="op">&lt;-</span> <span class="fu">gv</span><span class="op">(</span><span class="va">rschema</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">txt_rschema</span><span class="op">)</span></span></span>
@@ -167,13 +167,13 @@ single image, if a user wishes to do so.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   rankdir = "LR"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   node [shape=plaintext];</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Chick [label = &lt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Chick" [label = &lt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD COLSPAN="2"&gt;Chick&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD PORT="TO_chick"&gt;Chick&lt;/TD&gt;&lt;TD PORT="FROM_chick" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD PORT="TO_diet"&gt;Diet&lt;/TD&gt;&lt;TD PORT="FROM_diet"&gt;&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;/TABLE&gt;&gt;];</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Time_Chick [label = &lt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Time_Chick" [label = &lt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD COLSPAN="2"&gt;Time_Chick&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD PORT="TO_time"&gt;Time&lt;/TD&gt;&lt;TD PORT="FROM_time" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span>
@@ -185,7 +185,7 @@ single image, if a user wishes to do so.</p>
 <span class="r-in"><span>  <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="va">txt_rschema</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <div id="htmlwidget-36aa3d2a04d42bbc2145" style="width:700px;height:432.632880098888px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-36aa3d2a04d42bbc2145">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  Chick [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">Chick<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD PORT=\"FROM_diet\"><\/TD><\/TR>\n    <\/TABLE>>];\n  Time_Chick [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">Time_Chick<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD PORT=\"FROM_time\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD PORT=\"FROM_weight\"><\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><span class="r-in"><span><span class="co"># simple database schema</span></span></span>
+<script type="application/json" data-for="htmlwidget-36aa3d2a04d42bbc2145">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">Chick<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD PORT=\"FROM_diet\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"Time_Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">Time_Chick<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD PORT=\"FROM_time\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD PORT=\"FROM_weight\"><\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><span class="r-in"><span><span class="co"># simple database schema</span></span></span>
 <span class="r-in"><span><span class="va">dschema</span> <span class="op">&lt;-</span> <span class="fu"><a href="normalise.html">normalise</a></span><span class="op">(</span><span class="fu"><a href="discover.html">discover</a></span><span class="op">(</span><span class="va">ChickWeight</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">txt_dschema</span> <span class="op">&lt;-</span> <span class="fu">gv</span><span class="op">(</span><span class="va">dschema</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">txt_dschema</span><span class="op">)</span></span></span>
@@ -193,13 +193,13 @@ single image, if a user wishes to do so.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   rankdir = "LR"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   node [shape=plaintext];</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Chick [label = &lt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Chick" [label = &lt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD COLSPAN="2"&gt;Chick&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD PORT="TO_chick"&gt;Chick&lt;/TD&gt;&lt;TD PORT="FROM_chick" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD PORT="TO_diet"&gt;Diet&lt;/TD&gt;&lt;TD PORT="FROM_diet"&gt;&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;/TABLE&gt;&gt;];</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Time_Chick [label = &lt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Time_Chick" [label = &lt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD COLSPAN="2"&gt;Time_Chick&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD PORT="TO_time"&gt;Time&lt;/TD&gt;&lt;TD PORT="FROM_time" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span>
@@ -207,11 +207,11 @@ single image, if a user wishes to do so.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD PORT="TO_weight"&gt;weight&lt;/TD&gt;&lt;TD PORT="FROM_weight"&gt;&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;/TABLE&gt;&gt;];</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Time_Chick:FROM_chick -&gt; Chick:TO_chick;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Time_Chick":FROM_chick -&gt; "Chick":TO_chick;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
 <span class="r-in"><span><span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="va">txt_dschema</span><span class="op">)</span></span></span>
 <div id="htmlwidget-febe03efa1a2d8d52a86" style="width:700px;height:432.632880098888px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-febe03efa1a2d8d52a86">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  Chick [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">Chick<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD PORT=\"FROM_diet\"><\/TD><\/TR>\n    <\/TABLE>>];\n  Time_Chick [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">Time_Chick<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD PORT=\"FROM_time\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD PORT=\"FROM_weight\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  Time_Chick:FROM_chick -> Chick:TO_chick;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><span class="r-in"><span><span class="co"># simple relations</span></span></span>
+<script type="application/json" data-for="htmlwidget-febe03efa1a2d8d52a86">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">Chick<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD PORT=\"FROM_diet\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"Time_Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">Time_Chick<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD PORT=\"FROM_time\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD PORT=\"FROM_weight\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"Time_Chick\":FROM_chick -> \"Chick\":TO_chick;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><span class="r-in"><span><span class="co"># simple relations</span></span></span>
 <span class="r-in"><span><span class="va">rel</span> <span class="op">&lt;-</span> <span class="fu"><a href="create.html">create</a></span><span class="op">(</span><span class="fu"><a href="synthesise.html">synthesise</a></span><span class="op">(</span><span class="fu"><a href="discover.html">discover</a></span><span class="op">(</span><span class="va">ChickWeight</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">txt_rel</span> <span class="op">&lt;-</span> <span class="fu">gv</span><span class="op">(</span><span class="va">rel</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">txt_rel</span><span class="op">)</span></span></span>
@@ -219,13 +219,13 @@ single image, if a user wishes to do so.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   rankdir = "LR"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   node [shape=plaintext];</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Chick [label = &lt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Chick" [label = &lt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD COLSPAN="3"&gt;Chick (0 records)&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD PORT="TO_chick"&gt;Chick&lt;/TD&gt;&lt;TD BGCOLOR="black"&gt;&lt;/TD&gt;&lt;TD PORT="FROM_chick"&gt;logical&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD PORT="TO_diet"&gt;Diet&lt;/TD&gt;&lt;TD&gt;&lt;/TD&gt;&lt;TD PORT="FROM_diet"&gt;logical&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;/TABLE&gt;&gt;];</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Time_Chick [label = &lt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Time_Chick" [label = &lt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD COLSPAN="3"&gt;Time_Chick (0 records)&lt;/TD&gt;&lt;/TR&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;TR&gt;&lt;TD PORT="TO_time"&gt;Time&lt;/TD&gt;&lt;TD BGCOLOR="black"&gt;&lt;/TD&gt;&lt;TD PORT="FROM_time"&gt;logical&lt;/TD&gt;&lt;/TR&gt;</span>
@@ -237,7 +237,7 @@ single image, if a user wishes to do so.</p>
 <span class="r-in"><span>  <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="va">txt_rel</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <div id="htmlwidget-1fb4450895fe099f74a1" style="width:700px;height:432.632880098888px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-1fb4450895fe099f74a1">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  Chick [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Chick (0 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD><\/TD><TD PORT=\"FROM_diet\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n  Time_Chick [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Time_Chick (0 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_time\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD><\/TD><TD PORT=\"FROM_weight\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script></code></pre></div>
+<script type="application/json" data-for="htmlwidget-1fb4450895fe099f74a1">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Chick (0 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD><\/TD><TD PORT=\"FROM_diet\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n  \"Time_Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Time_Chick (0 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_time\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD><\/TD><TD PORT=\"FROM_weight\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script></code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

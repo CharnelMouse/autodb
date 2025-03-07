@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">autodb</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.0.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.1.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,8 +41,20 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="autodb-development-version">autodb (development version)<a class="anchor" aria-label="anchor" href="#autodb-development-version"></a></h2>
+<p>Continuing efforts to prepare for submission to CRAN.</p>
 <div class="section level3">
 <h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
+<ul><li>Changed handling for numerical/complex variables in <code>autodb</code> and <code>discover</code>, to round to a number of significant digits. Due to the nature of floating-point, and the definition of a functional dependency, floating-point values can’t be compared using either equality (<code>==</code>) or <code>all.equal</code> for the purposes of functional dependency discover / validation, and have the result be consistent between different machines. Because of this, floating-point variables are now rounded to a small level of precision by default before processing. If the data frame is being loaded from a file, we recommend reading any numerical/complex variables as character values (strings), if it’s appropriate, to avoid loss of precision.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.1.1" id="autodb-211">autodb 2.1.1<a class="anchor" aria-label="anchor" href="#autodb-211"></a></h2>
+<p>Some minor changes to documentation and tests, to allow for package updates and submission to CRAN.</p>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.1.0" id="autodb-210">autodb 2.1.0<a class="anchor" aria-label="anchor" href="#autodb-210"></a></h2>
+<div class="section level3">
+<h3 id="improvements-2-1-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-2-1-0"></a></h3>
 <ul><li>Added <code>format</code> and <code>as.data.frame</code> methods for <code>functional_dependency</code>, <code>relation_schema</code>, <code>database_schema</code>, <code>relation</code>, and <code>database</code>. This allows them to be columns in a data frame at initial construction. I’m not sure <em>why</em> you’d want to put them a a data frame column, but it’s consistent with the idea that the objects from these classes should mostly be treatable as vectors. Be warned: they don’t currently work in tibbles.</li>
 <li>Added an <code>as.character</code> method for <code>functional_dependency</code>. The optional <code>align_arrows</code> argument can add padding to one side, in order to make the arrows align when they’re printed to different lines. These options are used to align arrows in its <code>print</code> method, and its <code>format</code> method for when printed as a data frame column.</li>
 <li>Added <code>==</code> and <code>!=</code> implementations for <code>functional_dependency</code>. These ignore differences in <code>attrs_order</code>: differently-ordered determinant sets are considered equal.</li>
@@ -54,9 +66,10 @@
 <li>DFD now checks for single-attribute keys, and excludes them as determinants in the main search, potentially reducing the search time.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="fixes-development-version">Fixes<a class="anchor" aria-label="anchor" href="#fixes-development-version"></a></h3>
+<h3 id="fixes-2-1-0">Fixes<a class="anchor" aria-label="anchor" href="#fixes-2-1-0"></a></h3>
 <ul><li>Fixed <code>gv</code> to account for Graphviz HTML-like labels requiring certain characters, namely the set “&lt;&gt;&amp;, to be escaped in Graphviz HTML-like labels, and removed completely in attribute values.</li>
 <li>Fixed <code>df_equiv</code> to properly handle data frames with zero columns or duplicate rows.</li>
+<li>Fixed <code>database_schema</code> and <code>database</code>, and reference re-assignments, to allow references to be given with the referee’s key not in attribute order.</li>
 </ul></div>
 </div>
     <div class="section level2">
