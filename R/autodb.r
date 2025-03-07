@@ -9,6 +9,16 @@
 #' dependencies, the accuracy in `discover` is fixed as 1.
 #'
 #' @param df a data.frame, containing the data to be normalised.
+#' @param digits a positive integer, indicating how many significant digits are
+#'   to be used for numeric and complex variables. This is used for both
+#'   pre-formatting in \code{\link{discover}}, and for rounding the data before
+#'   use in \code{\link{decompose}}, so that the data satisfies the resulting
+#'   schema. A value of \code{NA} results in no rounding. By default, this uses
+#'   \code{getOption("digits")}, similarly to \code{\link{format}}. See the
+#'   "Floating-point variables" section for \code{\link{discover}} for why this
+#'   rounding is necessary for consistent results across different machines. See
+#'   the note in \code{\link{print.default}} about \code{digits >=
+#'   16}.
 #' @param single_ref a logical, FALSE by default. If TRUE, then only one
 #'   reference between each relation pair is kept when generating foreign key
 #'   references. If a pair has multiple references, the kept reference refers to
@@ -40,6 +50,7 @@
 #' @export
 autodb <- function(
   df,
+  digits = getOption("digits"),
   single_ref = FALSE,
   ensure_lossless = TRUE,
   remove_avoidable = FALSE,
@@ -49,8 +60,12 @@ autodb <- function(
   ...
 ) {
   report <- reporter(progress, progress_file)
-
-  discover(df, 1, progress = progress, progress_file = "", ...) |>
+  if (!is.na(digits))
+    report$exp(
+      df[] <- lapply(df, coarsen_if_float, digits = digits),
+      paste("coarsening numerical/complex variables to", digits, "significant digits")
+    )
+  discover(df, 1, digits = digits, progress = progress, progress_file = "", ...) |>
     report$op(
       normalise,
       "normalising",
@@ -60,4 +75,19 @@ autodb <- function(
       constants_name
     ) |>
     report$op(decompose, "decomposing", df = df)
+}
+
+# like format_if_float for discover(), but keeping the original class
+coarsen_if_float <- function(x, digits) {
+  if (inherits(x, "numeric")) {
+    y <- as.numeric(format(x, digits = digits, scientific = FALSE))
+    class(y) <- class(x)
+    return(y)
+  }
+  if (inherits(x, "complex")) {
+    y <- as.complex(format(x, digits = digits, scientific = FALSE))
+    class(y) <- class(x)
+    return(y)
+  }
+  x
 }

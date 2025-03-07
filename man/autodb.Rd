@@ -6,6 +6,7 @@
 \usage{
 autodb(
   df,
+  digits = getOption("digits"),
   single_ref = FALSE,
   ensure_lossless = TRUE,
   remove_avoidable = FALSE,
@@ -17,6 +18,17 @@ autodb(
 }
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
+
+\item{digits}{a positive integer, indicating how many significant digits are
+to be used for numeric and complex variables. This is used for both
+pre-formatting in \code{\link{discover}}, and for rounding the data before
+use in \code{\link{decompose}}, so that the data satisfies the resulting
+schema. A value of \code{NA} results in no rounding. By default, this uses
+\code{getOption("digits")}, similarly to \code{\link{format}}. See the
+"Floating-point variables" section for \code{\link{discover}} for why this
+rounding is necessary for consistent results across different machines. See
+the note in \code{\link{print.default}} about \code{digits >=
+  16}.}
 
 \item{single_ref}{a logical, FALSE by default. If TRUE, then only one
 reference between each relation pair is kept when generating foreign key

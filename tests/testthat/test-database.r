@@ -262,28 +262,33 @@ describe("database", {
         4.88640238864414211406
       )
     )
-    # Checking values are considered different,
-    # since R-hub tests indicate this might differ between OSes
-    expect_false(identical(
-      2.69353840461766669279,
-      2.69353840461766713688
-    ))
-    expect_false(`==`(
-      2.69353840461766669279,
-      2.69353840461766713688
-    ))
-    expect_false(identical(
-      4.88640238864414033770,
-      4.88640238864414211406
-    ))
-    expect_false(`==`(
-      4.88640238864414033770,
-      4.88640238864414211406
-    ))
     # FDs: acd -> b, ab -> d, bd -> a
+    fds <- discover(x, 1, digits = 22)
+    expect_setequal(
+      fds,
+      functional_dependency(
+        list(
+          list(c("a", "c", "d"), "b"),
+          list(c("a", "b"), "d"),
+          list(c("b", "d"), "a")
+        ),
+        names(x)
+      )
+    )
+    fds_simple <- discover(x, 1, digits = 8)
+    expect_setequal(
+      fds_simple,
+      functional_dependency(
+        list(
+          list(c("a", "d"), "b"),
+          list("b", "d")
+        ),
+        names(x)
+      )
+    )
+
     # 3NF schema: abcd[acd].{ab} -> ab[ab,bd].{ab}
-    ds <- discover(x, 1) |>
-      normalise(remove_avoidable = TRUE)
+    ds <- normalise(fds, remove_avoidable = TRUE)
     rel <- subschemas(ds) |> create() |> insert(x)
     refs <- references(ds)
     expect_identical(

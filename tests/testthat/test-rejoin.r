@@ -175,7 +175,7 @@ describe("rejoin", {
       ),
       e = 1:8
     )
-    db <- autodb(x)
+    db <- autodb(x, digits = 22)
     expect_silent(y <- rejoin(db))
     expect_true(df_equiv(y, x))
   })

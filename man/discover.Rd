@@ -8,6 +8,7 @@
 discover(
   df,
   accuracy,
+  digits = getOption("digits"),
   full_cache = TRUE,
   store_cache = TRUE,
   skip_bijections = FALSE,
@@ -24,6 +25,14 @@ discover(
 
 \item{accuracy}{a numeric in (0, 1]: the accuracy threshold required in order
 to conclude a dependency.}
+
+\item{digits}{a positive integer, indicating how many significant digits are
+to be used for numeric and complex variables. A value of \code{NA} results
+in no rounding. By default, this uses \code{getOption("digits")}, similarly
+to \code{\link{format}}. See the "Floating-point variables" section below
+for why this rounding is necessary for consistent results across different
+machines. See the note in \code{\link{print.default}} about \code{digits >=
+  16}.}
 
 \item{full_cache}{a logical, indicating whether to store information about
 how sets of attributes group the relation records (stripped partitions).
@@ -120,6 +129,57 @@ functional dependencies when there are pairwise-equivalent attributes.
 \item Missing values (NA) are treated as a normal value, with NA = NA being
 true, and x = NA being false for any non-NA value of x.
 }
+\subsection{Floating-point variables}{
+
+Numerical/complex values, i.e. floating-point values, represent difficulties
+for stating functional dependencies. A fundamental condition for stating
+functional dependencies is that we can compare two values for the same
+variable, and they are equivalent or not equivalent.
+
+Usually, this is done by checking they're equal -- this is the approach used
+in \code{discover} -- but we can use any comparison that is an equivalence
+relation.
+
+However, checking floating-point values for equality is not simple. \code{==}
+is not appropriate, even when comparing non-calculated values we've read from
+a file, because how a given number is converted into a float can vary by
+computer architecture, meaning that two values can be considered equal on one
+computer, and not equal on another. This can happen even if they're both
+using 64-bit R, and even though all R platforms work with values conforming
+to the same standard (see \code{\link{double}}). For example,
+\eqn{8.54917750000000076227} and \eqn{8.54917749999999898591} are converted into
+different floating-point representations on x86, but the same representation
+on ARM, resulting in inequality and equality respectively.
+
+For this and other reasons, checking numerical/complex values for
+(near-)equality in R is usually done with \code{\link{all.equal}}. This
+determines values \eqn{x} and \eqn{y} to be equal if their absolute/relative
+absolute difference is within some tolerance value. However, we can not use
+this. Equivalence relations must be transitive: if we have values \eqn{x},
+\eqn{y}, and \eqn{z}, and \eqn{x} is equivalent to both \eqn{y} and \eqn{z},
+then \eqn{y} and \eqn{z} must also be equivalent. This tolerance-based
+equivalence is not transitive: it is reasonably straightforward to set up
+three values so that the outer values are far enough apart to be considered
+non-equivalent, but the middle value is close enough to be considered
+equivalent to both of them. Using this to determine functional dependencies,
+therefore, could easily result in a large number of inconsistencies.
+
+This means we have no good option for comparing numerical/complex values
+as-is for equivalence, with consistent results across different machines, so
+we must treat them differently. We have three options:
+\itemize{
+\item Round/truncate the values, before comparison, to some low degree of precision;
+\item Coerce the values to another class before passing them into \code{discover};
+\item Read values as characters if reading data from a file.
+}
+
+\code{discover} takes the first option, with a default number of significant
+digits low enough to ensure consistency across different machines. However,
+the user can also use any of these options when processing the data before
+passing it to \code{discover}. The third option, in particular, is
+recommended if reading data from a file.
+}
+
 \subsection{Skipping bijections}{
 
 Skipping bijections allows skipping redundant searches. For example, if the
