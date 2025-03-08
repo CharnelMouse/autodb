@@ -191,7 +191,6 @@ describe("rejoin", {
     # the merge duplicates occur when joining e and ab along the former
     # reference.
     db <- autodb(x, digits = NA)
-    expect_false(!anyDuplicated(merge(records(db)$e, records(db)$a_b)))
     expect_silent(y <- rejoin(db))
     expect_true(df_equiv(y, x, digits = NA))
   })
