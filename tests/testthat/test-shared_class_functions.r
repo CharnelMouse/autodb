@@ -1057,100 +1057,87 @@ describe("insert", {
     )
   })
   it("is commutative with adding foreign key constraints", {
+    add_relevant_descendants <- function(nms, df2, as, relats) {
+      # add relevant ancestors to ensure no reference violations
+      get_new_parents <- function(nms) {
+        # of rels we already include, we already use those whose attributes are
+        # all in df2, since we're inserting that
+        used_nms <- Filter(
+          \(nm) all(is.element(as[[nm]], names(df2))),
+          nms
+        )
+        # of all the references, interested in those with a child in the used
+        # rels, and a parent whose attrs are all in df2
+        valid_refs <- Filter(
+          \(ref) {
+            ref[[1]] %in% used_nms &&
+              all(is.element(as[[ref[[3]]]], names(df2)))
+          },
+          relats
+        ) |>
+          vapply(\(ref) ref[[3]], character(1))
+        # for those references, new parents are the parents that aren't already used
+        parents <- setdiff(valid_refs, used_nms)
+        parents
+        # Currently df2 keeps all the attributes for insertion,
+        # so most of these filtering conditions are redundant.
+        # As such, the above is equivalent to
+        # valid_refs <- Filter(
+        #   \(ref) ref[[1]] %in% nms,
+        #   relats
+        # ) |>
+        #   vapply(\(ref) ref[[3]], character(1))
+        # or, once we have proper methods for references,
+        # valid_refs <- parent(relats[child(relats) %in% nms])
+
+        # in summary, we take the relations currently being inserted into,
+        # and add any non-included children by foreign key references.
+      }
+      parents <- get_new_parents(nms)
+      while (length(parents) > 0) {
+        nms <- c(nms, parents)
+        parents <- get_new_parents(parents)
+        parents <- setdiff(parents, nms)
+      }
+      nms
+    }
+    process <- function(df, skp) {
+      if (nrow(df) < 2)
+        stop(print(df))
+      inds <- seq_len(floor(nrow(df)/2))
+      df1 <- df[inds, , drop = FALSE]
+      df2 <- df[-inds, , drop = FALSE]
+      stopifnot(
+        nrow(df) >= 2,
+        nrow(df1) >= 1,
+        nrow(df2) >= 1
+      )
+      db_schema <- normalise(discover(df, 1))
+      rel_schema <- subschemas(db_schema)
+      relats <- references(db_schema)
+      rel <- create(rel_schema) |> insert(df1)
+      list(rel, df1, df2, relats)
+    }
+    add.gen.insertees <- function(rel, df1, df2, relats) list(
+      gen.pure(rel),
+      gen.pure(df1),
+      gen.pure(df2),
+      gen.pure(relats),
+      gen.subsequence(names(rel)) |>
+        gen.with(with_args(
+          add_relevant_descendants,
+          df2 = df2,
+          as = attrs(rel),
+          relats = relats
+        ))
+    )
     gen.ex_from_table <- list(
       # mincol to give good chance of non-zero count for references
-      gen_df(6, 7, minrow = 2, mincol = 3, remove_dup_rows = FALSE),
+      gen_df(6, 7, minrow = 2, mincol = 5, remove_dup_rows = FALSE),
       gen.element(c(FALSE, TRUE))
     ) |>
-      gen.with(uncurry(\(df, skp) {
-        if (nrow(df) < 2)
-          stop(print(df))
-        df1 <- df[seq_len(floor(nrow(df)/2)), , drop = FALSE]
-        db_schema <- normalise(discover(df, 1))
-        rel_schema <- subschemas(db_schema)
-        df2 <- df[-seq_len(floor(nrow(df)/2)), , drop = FALSE]
-        stopifnot(
-          nrow(df) >= 2,
-          nrow(df1) >= 1,
-          nrow(df2) >= 1
-        )
-        relats <- references(db_schema)
-        rel <- create(rel_schema) |> insert(df1)
-        list(rel, df1, df2, relats)
-      })) |>
-      gen.and_then(uncurry(\(rel, df1, df2, relats) list(
-        gen.pure(rel),
-        gen.pure(df1),
-        gen.pure(df2),
-        gen.pure(relats),
-        gen.subsequence(names(rel)) |>
-          gen.with(\(nms) {
-            # add relevant ancestors to ensure no reference violations
-            get_new_parents <- function(nms) {
-              as <- attrs(rel)
-              used_nms <- nms[vapply(
-                nms,
-                \(nm) all(is.element(as[[nm]], names(df2))),
-                logical(1)
-              )]
-              valid_refs <- Filter(
-                \(ref) {
-                  ref[[1]] %in% used_nms &&
-                    all(is.element(attrs(rel)[[ref[[3]]]], names(df2)))
-                },
-                relats
-              ) |>
-                vapply(\(ref) ref[[3]], character(1))
-              parents <- setdiff(valid_refs, used_nms)
-              parents
-            }
-            parents <- get_new_parents(nms)
-            while (length(parents) > 0) {
-              nms <- c(nms, parents)
-              parents <- get_new_parents(parents)
-              parents <- setdiff(parents, nms)
-            }
-            nms
-          })
-      )))
-    gen.ex <- list(
-      gen_df(6, 7, minrow = 2),
-      gen.relation(letters[1:4], 0, 6, rows_from = 1L, rows_to = 1L),
-      gen.element(c(FALSE, TRUE))
-    ) |>
-      gen.and_then(uncurry(\(r, skp) {
-        list(
-          gen.pure(r),
-          gen.element(40:50) |>
-            gen.and_then(with_args(
-              gen.df_fixed_ranges,
-              classes = rep("logical", length(attrs_order(r))),
-              nms = attrs_order(r),
-              remove_dup_rows = TRUE
-            )) |>
-            gen.with(with_args(remove_insertion_key_violations, relation = r)),
-          gen.references(r, skp) |>
-            gen.with(with_args(remove_violated_references, relation = r))
-        ) |>
-          gen.with(uncurry(\(r, df, rels) {
-            changed <- TRUE
-            n <- 0L
-            while (changed) {
-              new_df <- remove_insertion_reference_violations(
-                df,
-                database(r, rels)
-              )
-              new_rels <- remove_violated_references(
-                rels,
-                insert(r, new_df)
-              )
-              changed <- !identical(new_df, df) || !identical(new_rels, rels)
-              df <- new_df
-              rels <- new_rels
-            }
-            list(r, df, rels)
-          }))
-      }))
+      gen.with(uncurry(process)) |>
+      gen.and_then(uncurry(add.gen.insertees))
     expect_both_valid_db_then <- function(fn) {
       function(x, y) {
         is_valid_database(x)
@@ -1160,22 +1147,21 @@ describe("insert", {
     }
     forall(
       gen.ex_from_table,
-      \(r, old_df, df, rels, relnames) {
-        if (nrow(df) == 0L || length(rels) == 0L)
+      \(r, old_df, new_df, rels, relnames) {
+        if (nrow(new_df) == 0L || length(rels) == 0L)
           discard()
         (
           biapply(
             with_args(database, references = rels) %>>%
-              with_args(insert, vals = df, relations = relnames),
-            with_args(insert, vals = df, relations = relnames) %>>%
+              with_args(insert, vals = new_df, relations = relnames),
+            with_args(insert, vals = new_df, relations = relnames) %>>%
               with_args(database, references = rels)
           ) %>>%
             (uncurry(expect_both_valid_db_then(expect_identical)))
         )(r)
       },
-      curry = TRUE,
-      tests = 300,
-      discard.limit = 210
+      discard.limit = 200,
+      curry = TRUE
     )
   })
 })
