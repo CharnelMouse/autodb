@@ -262,15 +262,15 @@ describe("database", {
         4.88640238864414211406
       )
     )
-    # FDs: acd -> b, ab -> d, bd -> a
-    fds <- discover(x, 1, digits = 22)
+    # FDs: acd -> b, ab -> d, bd -> a if numbers were represented exactly,
+    # ad -> b, b -> d when using 15 significant digits
+    fds <- discover(x, 1, digits = 15)
     expect_setequal(
       fds,
       functional_dependency(
         list(
-          list(c("a", "c", "d"), "b"),
-          list(c("a", "b"), "d"),
-          list(c("b", "d"), "a")
+          list(c("a", "d"), "b"),
+          list("b", "d")
         ),
         names(x)
       )
@@ -287,27 +287,30 @@ describe("database", {
       )
     )
 
-    # 3NF schema: abcd[acd].{ab} -> ab[ab,bd].{ab}
+    # 3NF schema: abcd[acd].{ab} -> ab[ab,bd].{ab} if exact,
+    # abd[ad].{b} -> bd[b].{b}, abc[abc].{b} -> b.{b} for 15 sig. digits
+    x_sig <- x
+    x_sig[2:4] <- lapply(x_sig[2:4], format, digit = 15) |> lapply(as.numeric)
     ds <- normalise(fds, remove_avoidable = TRUE)
-    rel <- subschemas(ds) |> create() |> insert(x)
+    rel <- subschemas(ds) |> create() |> insert(x_sig)
     refs <- references(ds)
-    expect_identical(
+    expect_setequal(
       refs,
       list(
-        list("a_c_d", c("a", "b"), "a_b", c("a", "b")),
-        list("a_c_d", c("b", "d"), "a_b", c("b", "d"))
+        list("a_d", "b", "b", "b"),
+        list("a_b_c", "b", "b", "b")
       )
     )
-    referrer <- records(rel)$a_c_d
-    referee <- records(rel)$a_b
-    check <- df_join(referrer, referee, by = c("a", "b"))
-    expect_identical(nrow(referrer), 7L)
-    expect_identical(nrow(referee), 6L)
-    expect_identical(nrow(check), 10L)
-    expect_identical(nrow(unique(check)), 7L)
+    referrer <- records(rel)$a_d
+    referee <- records(rel)$b
+    check <- df_join(referrer, referee, by = "b")
+    expect_identical(nrow(referrer), 5L)
+    expect_identical(nrow(referee), 4L)
+    expect_identical(nrow(check), 5L)
+    expect_identical(nrow(unique(check)), 5L)
     expect_silent(db <- database(rel, refs))
     y <- rejoin(db)
-    expect_true(df_equiv(y, x))
+    expect_true(df_equiv(y, x, digits = 15))
   })
 
   it("expects record reassignments to have all prime attributes, maybe others, order-independent", {

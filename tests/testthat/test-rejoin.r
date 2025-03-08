@@ -1,7 +1,7 @@
 describe("rejoin", {
   it("is left-inverse for lossless full-dep database creation, outside of row permutations, for tables with unique rows", {
     autodb_inverted_by_rejoin <- expect_bi(
-      df_equiv,
+      with_args(df_equiv, digits = NA),
       with_args(autodb, ensure_lossless = TRUE) %>>%
         rejoin,
       identity
@@ -20,7 +20,7 @@ describe("rejoin", {
     forall(
       gen_df(6, 7, remove_dup_rows = FALSE),
       expect_bi(
-        df_equiv,
+        with_args(df_equiv, digits = NA),
         with_args(autodb, ensure_lossless = TRUE) %>>%
           rejoin,
         df_unique
@@ -140,7 +140,15 @@ describe("rejoin", {
       "^database can not be fully rejoined\\nbest joined sets:\\na\\nb, c, d$"
     )
   })
-  it("properly merges tables with close floating-point values", {
+  it("properly merges tables with close floating-point values (no duplicates)", {
+    # The motivating cause of spurious duplicates on re-merges is that
+    # merge.data.frame works differently if there is more than one "by" column:
+    # in this case, it creates a grouping vector by pasting all the values in a
+    # row together, with "\r" as a separator. This implicitly turns floats into
+    # characters, i.e. represents them using only 15 sig. fig.s. Since going
+    # above 15 sig. figs. results in behaviour that varies across machines (see
+    # print.default), we have to test this behaviour without
+    # rounding, so digits = NA.
     x <- data.frame(
       a = c(F, F, F, F, F, F, T, T),
       b = c(
@@ -175,8 +183,16 @@ describe("rejoin", {
       ),
       e = 1:8
     )
-    db <- autodb(x, digits = 22)
+    # rows are unique, even when using only 1 sig. fig., so no rows can be
+    # considered duplicate on any machine.
+    # abce[e].{a,b} -> abd[ab,bd].{a,b},
+    # abcd[acd].{a,b} -> abd[ab,bd].{a,b}
+    # abcd[acd].{b,d} -> abd[ab,bd].{b,d}
+    # the merge duplicates occur when joining e and ab along the former
+    # reference.
+    db <- autodb(x, digits = NA)
+    expect_false(!anyDuplicated(merge(records(db)$e, records(db)$a_b)))
     expect_silent(y <- rejoin(db))
-    expect_true(df_equiv(y, x))
+    expect_true(df_equiv(y, x, digits = NA))
   })
 })

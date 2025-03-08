@@ -4,10 +4,16 @@
 \alias{df_equiv}
 \title{Test data frames for equivalence under row reordering}
 \usage{
-df_equiv(df1, df2)
+df_equiv(df1, df2, digits = getOption("digits"))
 }
 \arguments{
 \item{df1, df2}{Data frames.}
+
+\item{digits}{a positive integer, indicating how many significant digits are
+to be used for numeric and complex variables. A value of NA results in no
+rounding. By default, this uses \code{getOption("digits")}, similarly to
+\code{\link{format}}. See the note in \code{\link{print.default}} about
+digits >= 16.}
 }
 \value{
 A logical.

@@ -317,7 +317,7 @@ is_valid_database <- function(
 }
 
 expect_identical_unordered_table <- function(new, original) {
-  expect_true(df_equiv(new, original))
+  expect_true(df_equiv(new, original, digits = NA))
 }
 
 gen_df <- function(

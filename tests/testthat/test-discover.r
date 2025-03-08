@@ -376,8 +376,8 @@ describe("discover", {
         47.37661580000000327573
       ),
       y = c(
-        8.54917750000000076227,
-        8.54917749999999898591
+        8.549177500000007,
+        8.549177499999999
       )
     )
     expect_identical(
@@ -388,7 +388,7 @@ describe("discover", {
       )
     )
     expect_identical(
-      discover(df, 1, digits = 20),
+      discover(df, 1, digits = 15),
       functional_dependency(
         list(list(character(), "x")),
         c("x", "y")
