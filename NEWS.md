@@ -6,6 +6,7 @@ Continuing efforts to prepare for submission to CRAN.
 
 * Changed handling for numerical/complex variables in `autodb`, `discover`, and `df_equiv`, to round to a number of significant digits. Due to the nature of floating-point, and the definition of a functional dependency, floating-point values can't be compared using equality (`==`), or by `all.equal` for the purposes of functional dependency discovery / validation, and have the result be consistent between different machines. Because of this, floating-point variables are now rounded to a small level of precision by default before processing. If the data frame is being loaded from a file, we recommend reading any numerical/complex variables as character values (strings), if it's appropriate, to avoid loss of precision.
 * `df_equiv` now checks rows for exact matches, outside of the rounding mentioned above. Previously, it compared rows using `match`, which gave no control over float precision.
+* `relation_schema`, `relation`, `database_schema`, and `database` now only return a name-based subset successfully if all of the given names exist in the object.
 
 # autodb 2.1.1
 
