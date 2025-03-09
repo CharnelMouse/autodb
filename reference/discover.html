@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">autodb</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,6 +49,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">discover</span><span class="op">(</span></span>
 <span>  <span class="va">df</span>,</span>
 <span>  <span class="va">accuracy</span>,</span>
+<span>  digits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"digits"</span><span class="op">)</span>,</span>
 <span>  full_cache <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  store_cache <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  skip_bijections <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -72,6 +73,16 @@
 <dt id="arg-accuracy">accuracy<a class="anchor" aria-label="anchor" href="#arg-accuracy"></a></dt>
 <dd><p>a numeric in (0, 1]: the accuracy threshold required in order
 to conclude a dependency.</p></dd>
+
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>a positive integer, indicating how many significant digits are
+to be used for numeric and complex variables. A value of <code>NA</code> results
+in no rounding. By default, this uses <code>getOption("digits")</code>, similarly
+to <code><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></code>. See the "Floating-point variables" section below
+for why this rounding is necessary for consistent results across different
+machines. See the note in <code><a href="https://rdrr.io/r/base/print.default.html" class="external-link">print.default</a></code> about <code>digits &gt;=
+  16</code>.</p></dd>
 
 
 <dt id="arg-full-cache">full_cache<a class="anchor" aria-label="anchor" href="#arg-full-cache"></a></dt>
@@ -182,6 +193,51 @@ functional dependencies when there are pairwise-equivalent attributes.</p></li>
 <li><p>Missing values (NA) are treated as a normal value, with NA = NA being
 true, and x = NA being false for any non-NA value of x.</p></li>
 </ul><div class="section">
+<h3 id="floating-point-variables">Floating-point variables<a class="anchor" aria-label="anchor" href="#floating-point-variables"></a></h3>
+
+
+<p>Numerical/complex values, i.e. floating-point values, represent difficulties
+for stating functional dependencies. A fundamental condition for stating
+functional dependencies is that we can compare two values for the same
+variable, and they are equivalent or not equivalent.</p>
+<p>Usually, this is done by checking they're equal – this is the approach used
+in <code>discover</code> – but we can use any comparison that is an equivalence
+relation.</p>
+<p>However, checking floating-point values for equality is not simple. <code>==</code>
+is not appropriate, even when comparing non-calculated values we've read from
+a file, because how a given number is converted into a float can vary by
+computer architecture, meaning that two values can be considered equal on one
+computer, and not equal on another. This can happen even if they're both
+using 64-bit R, and even though all R platforms work with values conforming
+to the same standard (see <code><a href="https://rdrr.io/r/base/double.html" class="external-link">double</a></code>). For example,
+\(8.54917750000000076227\) and \(8.54917749999999898591\) are converted into
+different floating-point representations on x86, but the same representation
+on ARM, resulting in inequality and equality respectively.</p>
+<p>For this and other reasons, checking numerical/complex values for
+(near-)equality in R is usually done with <code><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></code>. This
+determines values \(x\) and \(y\) to be equal if their absolute/relative
+absolute difference is within some tolerance value. However, we can not use
+this. Equivalence relations must be transitive: if we have values \(x\),
+\(y\), and \(z\), and \(x\) is equivalent to both \(y\) and \(z\),
+then \(y\) and \(z\) must also be equivalent. This tolerance-based
+equivalence is not transitive: it is reasonably straightforward to set up
+three values so that the outer values are far enough apart to be considered
+non-equivalent, but the middle value is close enough to be considered
+equivalent to both of them. Using this to determine functional dependencies,
+therefore, could easily result in a large number of inconsistencies.</p>
+<p>This means we have no good option for comparing numerical/complex values
+as-is for equivalence, with consistent results across different machines, so
+we must treat them differently. We have three options:</p><ul><li><p>Round/truncate the values, before comparison, to some low degree of precision;</p></li>
+<li><p>Coerce the values to another class before passing them into <code>discover</code>;</p></li>
+<li><p>Read values as characters if reading data from a file.</p></li>
+</ul><p><code>discover</code> takes the first option, with a default number of significant
+digits low enough to ensure consistency across different machines. However,
+the user can also use any of these options when processing the data before
+passing it to <code>discover</code>. The third option, in particular, is
+recommended if reading data from a file.</p>
+</div>
+
+<div class="section">
 <h3 id="skipping-bijections">Skipping bijections<a class="anchor" aria-label="anchor" href="#skipping-bijections"></a></h3>
 
 
