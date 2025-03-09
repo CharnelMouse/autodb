@@ -266,7 +266,7 @@ describe("relation", {
     )
   })
 
-  it("is subsetted to a valid relation schema, obeys usual subsetting rules", {
+  it("is subsetted to a valid relation schema, obeys usual subsetting rules...", {
     forall(
       gen.relation(letters[1:6], 0, 8) |>
         gen.and_then(\(rel) list(
@@ -350,6 +350,17 @@ describe("relation", {
         is_valid_relation(rel[indices])
       },
       curry = TRUE
+    )
+  })
+  it("... except allowing non-matches as NAs", {
+    rel <- relation_schema(
+      list(a = list("a", list("a"))),
+      c("a")
+    ) |>
+      create()
+    expect_error(
+      rel[c("b", "c")],
+      "^subset names that don't exist: b, c$"
     )
   })
   it("can be subsetted while preserving attributes", {

@@ -390,7 +390,7 @@ describe("database", {
     )
   })
 
-  it("is subsetted to a valid database schema, obeys usual subsetting rules", {
+  it("is subsetted to a valid database schema, obeys usual subsetting rules...", {
     forall(
       gen.element(c(FALSE, TRUE)) |>
         gen.list(of = 2) |>
@@ -490,6 +490,20 @@ describe("database", {
         is_valid_database(db[indices])
       },
       curry = TRUE
+    )
+  })
+  it("... except allowing non-matches as NAs", {
+    db <- database_schema(
+      relation_schema(
+        list(a = list("a", list("a"))),
+        c("a")
+      ),
+      list()
+    ) |>
+      create()
+    expect_error(
+      db[c("b", "c")],
+      "^subset names that don't exist: b, c$"
     )
   })
   it("can be subsetted while preserving attributes order", {

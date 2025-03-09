@@ -555,6 +555,8 @@ insert.relation <- function(x, vals, relations = names(x), all = FALSE, ...) {
   attrs <- attributes(x)
   indices <- stats::setNames(seq_along(x), names(x))
   taken <- indices[i]
+  if (anyNA(taken))
+    stop("subset names that don't exist: ", toString(i[is.na(taken)]))
   res <- unclass(x)[taken]
   attrs$names <- make.unique(unname(stats::setNames(nm = attrs$names)[taken]))
   attributes(res) <- attrs

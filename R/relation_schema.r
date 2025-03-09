@@ -361,6 +361,8 @@ merge_schemas.relation_schema <- function(x, to_remove, merge_into, ...) {
   attrs <- attributes(x)
   indices <- stats::setNames(seq_along(x), names(x))
   taken <- indices[i]
+  if (anyNA(taken))
+    stop("subset names that don't exist: ", toString(i[is.na(taken)]))
   res <- unclass(x)[taken]
   attrs$names <- make.unique(unname(stats::setNames(nm = attrs$names)[taken]))
   attributes(res) <- attrs
