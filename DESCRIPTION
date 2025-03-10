@@ -1,5 +1,5 @@
 Package: autodb
-Title: Automatic database normalisation for data frames
+Title: Automatic Database Normalisation for Data Frames
 Version: 2.2.0
 Authors@R: 
     person(
@@ -13,7 +13,7 @@ Description: Automatic normalisation of a data frame to third normal form, with
   the intention of easing the process of data cleaning. (Usage to design your
   actual database for you is not advised.)
   Originally inspired by Alteryx's AutoNormalize Python library
-  (https://github.com/alteryx/autonormalize), with various changes and
+  (<https://github.com/alteryx/autonormalize>), with various changes and
   improvements. Automatic discovery of functional or approximate dependencies,
   normalisation based on those, and plotting of the resulting "database" via
   Graphviz, with options to exclude some attributes at discovery time, or remove
