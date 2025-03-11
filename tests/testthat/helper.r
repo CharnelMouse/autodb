@@ -895,33 +895,27 @@ remove_reference_violations <- function(relation, references) {
   if (length(references) == 0L)
     return(relation)
   change <- TRUE
+  recs <- records(relation)
   while (change) {
     change <- FALSE
     for (ref in references) {
-      recs <- records(relation)
       child_name <- ref[[1]]
       child <- recs[[child_name]][, ref[[2]], drop = FALSE]
       if (nrow(child) > 0L) {
+        child_records <- do.call(Map, `names<-`(c(list, child), NULL))
         parent_name <- ref[[3]]
         parent <- recs[[parent_name]][, ref[[4]], drop = FALSE]
         parent_keys <- keys(relation)[[parent_name]]
         stopifnot(is.element(list(ref[[4]]), parent_keys))
-        valid <- vapply(
-          seq_len(nrow(child)),
-          \(n) nrow(df_join(
-            child[n, , drop = FALSE],
-            parent,
-            by.x = ref[[2]],
-            by.y = ref[[4]]
-          )) > 0L,
-          logical(1)
-        )
-        records(relation)[[child_name]] <- recs[[child_name]][valid, , drop = FALSE]
+        parent_records <- do.call(Map, `names<-`(c(list, parent), NULL))
+        valid <- is.element(child_records, parent_records)
+        recs[[child_name]] <- recs[[child_name]][valid, , drop = FALSE]
         if (!all(valid))
           change <- TRUE
       }
     }
   }
+  records(relation) <- recs
   relation
 }
 
