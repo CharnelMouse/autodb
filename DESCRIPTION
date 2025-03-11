@@ -12,12 +12,12 @@ Authors@R:
 Description: Automatic normalisation of a data frame to third normal form, with
   the intention of easing the process of data cleaning. (Usage to design your
   actual database for you is not advised.)
-  Originally inspired by Alteryx's AutoNormalize Python library
+  Originally inspired by the 'AutoNormalize' library for 'Python' by 'Alteryx'
   (<https://github.com/alteryx/autonormalize>), with various changes and
   improvements. Automatic discovery of functional or approximate dependencies,
   normalisation based on those, and plotting of the resulting "database" via
-  Graphviz, with options to exclude some attributes at discovery time, or remove
-  discovered dependencies at normalisation time.
+  'Graphviz', with options to exclude some attributes at discovery time, or
+  remove discovered dependencies at normalisation time.
 License: BSD_3_clause + file LICENSE
 Encoding: UTF-8
 Language: en-GB
