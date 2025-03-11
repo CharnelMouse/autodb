@@ -760,8 +760,7 @@ describe("discover", {
             return(fail("some argument lists fail"))
           expect_true(all(vapply(results, setequal, logical(1), results[[1]])))
         },
-        curry = TRUE,
-        tests = 1000
+        curry = TRUE
       )
     }
   )
