@@ -858,15 +858,15 @@ gen.database_schema_empty_keys <- function(
 }
 
 gen.database <- function(
-    x,
-    from,
-    to,
-    single_empty_key = FALSE,
-    same_attr_name = TRUE,
-    single_key_pairs = TRUE,
-    rows_from = 0L,
-    rows_to = 10L,
-    variant = c("data.frame", "tibble")
+  x,
+  from,
+  to,
+  single_empty_key = FALSE,
+  same_attr_name = TRUE,
+  single_key_pairs = TRUE,
+  rows_from = 0L,
+  rows_to = 10L,
+  variant = c("data.frame", "tibble")
 ) {
   list(
     gen.database_schema(
