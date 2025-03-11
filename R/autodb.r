@@ -78,16 +78,17 @@ autodb <- function(
 }
 
 # like format_if_float for discover(), but keeping the original class
+# "NA" -> NA to prevent "NAs introduced by coercion" warning
 coarsen_if_float <- function(x, digits) {
   if (inherits(x, "numeric")) {
-    y <- as.numeric(format(x, digits = digits, scientific = FALSE))
-    class(y) <- class(x)
-    return(y)
+    nas <- is.na(x)
+    x[!nas] <- as.numeric(format(x[!nas], digits = digits, scientific = FALSE))
+    return(x)
   }
   if (inherits(x, "complex")) {
-    y <- as.complex(format(x, digits = digits, scientific = FALSE))
-    class(y) <- class(x)
-    return(y)
+    nas <- is.na(x)
+    x[!nas] <- as.complex(format(x[!nas], digits = digits, scientific = FALSE))
+    return(x)
   }
   x
 }
