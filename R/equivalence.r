@@ -28,8 +28,8 @@ df_equiv <- function(df1, df2, digits = getOption("digits")) {
         dfs1 <- stats::setNames(df1, make.unique(names(df1)))
         dfs2 <- stats::setNames(df2, make.unique(names(df2)))
         dfs2 <- dfs2[, names(dfs1), drop = FALSE]
-        recs1 <- do.call(Map, `names<-`(c(list, dfs1), NULL))
-        recs2 <- do.call(Map, `names<-`(c(list, dfs2), NULL))
+        recs1 <- df_records(dfs1)
+        recs2 <- df_records(dfs2)
         # below is similar to
         # identical(table(match(recs2, recs1)), table(match(recs1, recs1))),
         # without match's undocumented treatment of floats, lists etc.

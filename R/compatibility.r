@@ -70,3 +70,34 @@ df_rbind <- function(...) {
   res <- do.call(rbind, dfs)
   res[, -ncol(res), drop = FALSE]
 }
+
+#' @rdname df_duplicated
+#' @param use_rownames a logical, FALSE by default, indicating whether row
+#'   values should keep the row names from \code{x}. Defaults to FALSE.
+#' @param use_colnames a logical, FALSE by default, indicating whether row
+#'   values should keep the column names from \code{x} for their elements.
+#'   Defaults to FALSE.
+#' @return For \code{df_records}, a list of the row values in \code{x}. This is
+#'   based on a step in \code{\link{duplicated.data.frame}}. However, for data
+#'   frames with zero columns, special handling returns a list of empty row
+#'   values, one for each row in \code{x}. Without special handling, this step
+#'   returns an empty list. This was the cause for \code{\link{duplicated}}
+#'   returning incorrect results for zero-column data frames in older versions
+#'   of R.
+#' @examples
+#' # row values for a 5x0 data frame
+#' x <- data.frame(a = 1:5)[, FALSE, drop = FALSE]
+#' do.call(Map, unname(c(list, x))) # original step returns empty list
+#' df_records(x) # corrected version preserves row count
+#' @export
+df_records <- function(x, use_rownames = FALSE, use_colnames = FALSE) {
+  if (ncol(x) == 0)
+    return(rep(list(list()), nrow(x)))
+  args <- c(list, x)
+  if (!use_colnames)
+    names(args) <- NULL
+  res <- do.call(Map, args)
+  if (use_rownames)
+    names(res) <- row.names(x)
+  res
+}

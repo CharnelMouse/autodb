@@ -903,12 +903,12 @@ remove_reference_violations <- function(relation, references) {
       child_name <- ref[[1]]
       child <- recs[[child_name]][, ref[[2]], drop = FALSE]
       if (nrow(child) > 0L) {
-        child_records <- do.call(Map, `names<-`(c(list, child), NULL))
+        child_records <- df_records(child)
         parent_name <- ref[[3]]
         parent <- recs[[parent_name]][, ref[[4]], drop = FALSE]
         parent_keys <- keys(relation)[[parent_name]]
         stopifnot(is.element(list(ref[[4]]), parent_keys))
-        parent_records <- do.call(Map, `names<-`(c(list, parent), NULL))
+        parent_records <- df_records(parent)
         valid <- is.element(child_records, parent_records)
         recs[[child_name]] <- recs[[child_name]][valid, , drop = FALSE]
         if (!all(valid))

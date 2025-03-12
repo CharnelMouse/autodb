@@ -266,19 +266,8 @@ reference_errors <- function(records, references) {
   references[vapply(
     references,
     \(relat) {
-      referrer <- do.call(
-        Map,
-        `names<-`(
-          c(list, records[[relat[[1]]]][, relat[[2]], drop = FALSE]),
-          NULL
-        )
-      )
-      referee <- do.call(
-        Map,
-        `names<-`(c(list, records[[relat[[3]]]][, relat[[4]], drop = FALSE]),
-                  NULL
-        )
-      )
+      referrer <- df_records(records[[relat[[1]]]][, relat[[2]], drop = FALSE])
+      referee <- df_records(records[[relat[[3]]]][, relat[[4]], drop = FALSE])
       !all(is.element(referrer, referee))
     },
     logical(1)

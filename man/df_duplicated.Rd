@@ -4,6 +4,7 @@
 \alias{df_duplicated}
 \alias{df_unique}
 \alias{df_anyDuplicated}
+\alias{df_records}
 \title{Determine Duplicate Elements}
 \usage{
 df_duplicated(x, incomparables = FALSE, fromLast = FALSE, ...)
@@ -11,6 +12,8 @@ df_duplicated(x, incomparables = FALSE, fromLast = FALSE, ...)
 df_unique(x, incomparables = FALSE, fromLast = FALSE, ...)
 
 df_anyDuplicated(x, incomparables = FALSE, fromLast = FALSE, ...)
+
+df_records(x, use_rownames = FALSE, use_colnames = FALSE)
 }
 \arguments{
 \item{x}{a data frame.}
@@ -26,6 +29,13 @@ df_anyDuplicated(x, incomparables = FALSE, fromLast = FALSE, ...)
     elements would correspond to \code{duplicated = FALSE}.}
 
 \item{...}{arguments for particular methods.}
+
+\item{use_rownames}{a logical, FALSE by default, indicating whether row
+values should keep the row names from \code{x}. Defaults to FALSE.}
+
+\item{use_colnames}{a logical, FALSE by default, indicating whether row
+values should keep the column names from \code{x} for their elements.
+Defaults to FALSE.}
 }
 \value{
 For \code{df_duplicated}, a logical vector with one element for each
@@ -38,6 +48,14 @@ occurrences of the unique rows).
 For \code{df_anyDuplicated}, an integer or real vector of length
 one with value the 1-based index of the first duplicate if any, otherwise
 0.
+
+For \code{df_records}, a list of the row values in \code{x}. This is
+based on a step in \code{\link{duplicated.data.frame}}. However, for data
+frames with zero columns, special handling returns a list of empty row
+values, one for each row in \code{x}. Without special handling, this step
+returns an empty list. This was the cause for \code{\link{duplicated}}
+returning incorrect results for zero-column data frames in older versions
+of R.
 }
 \description{
 \code{\link{duplicated}} "determines which elements of a vector or data frame
@@ -47,6 +65,12 @@ vector indicating which elements (rows) are duplicates". However, as of R
 logical vector. This has repercussions on other functions that use
 \code{duplicated}, such as \code{\link{unique}} and \code{\link{anyDuplicated}}.
 These functions add zero-column data frames as a special case.
+}
+\examples{
+# row values for a 5x0 data frame
+x <- data.frame(a = 1:5)[, FALSE, drop = FALSE]
+do.call(Map, unname(c(list, x))) # original step returns empty list
+df_records(x) # corrected version preserves row count
 }
 \seealso{
 \code{\link{df_rbind}}
