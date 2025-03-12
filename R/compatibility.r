@@ -53,7 +53,7 @@ df_anyDuplicated <- function(x, incomparables = FALSE, fromLast = FALSE, ...) {
 
 #' Combine R Objects by Rows or Columns
 #'
-#' \code{\link{nrow}} takes "a sequence of vector, matrix or data-frame
+#' \code{\link{rbind}} takes "a sequence of vector, matrix or data-frame
 #' arguments", and combines by rows for the latter. However, as of R 4.1,
 #' calling this on data frame with zero columns always returns zero rows, due to
 #' the issue mentioned for \code{\link{df_duplicated}}. This function adds
