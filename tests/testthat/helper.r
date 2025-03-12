@@ -232,11 +232,12 @@ is_valid_relation <- function(x, unique = FALSE, single_empty_key = FALSE) {
   rel_keys <- keys(x)
   rel_key_els <- lapply(rel_keys, \(ks) unique(unlist(ks)))
   rel_attrs <- attrs(x)
-  Map(
-    \(ks, as) expect_identical(as[seq_along(ks)], ks),
+  key_attrs_first <- mapply(
+    \(ks, as) identical(as[seq_along(ks)], ks),
     rel_key_els,
     rel_attrs
   )
+  expect_true(all(key_attrs_first))
   nonprime_attrs <- Map(
     \(ks, as) as[-seq_along(ks)],
     rel_key_els,
