@@ -1,4 +1,22 @@
+# autodb (development version)
+
+## Improvements
+
+* Added a convenience function called `df_records`, for converting a data frame into a list of row values. These are sometimes more useful than data frames, e.g. for checking which rows of a data frame are present in another one.
+* Improved the run time of `database` for larger data sets, specifically the validity checks for the data satisfying the foreign key references.
+* Improved the run time of `create` for `relation_schema` and `database_schema`, by removing validity checks. If the input is valid, these are redundant.
+
+## Fixes
+
+* CRAN fixes to DESCRIPTION.
+* Fixes to documentation.
+
 # autodb 2.2.1
+
+## Fixes
+
+* CRAN fixes to DESCRIPTION.
+* Fixes to documentation: the PDF version of the manual is now created successfully.
 
 # autodb 2.2.0
 
