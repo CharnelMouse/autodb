@@ -27,7 +27,7 @@ df_duplicated <- function(x, incomparables = FALSE, fromLast = FALSE, ...) {
 }
 
 #' @rdname df_duplicated
-#' @return For \code{unique_duplicated}, a data frame is returned with the same
+#' @return For \code{df_unique}, a data frame is returned with the same
 #'   columns, but possible fewer rows (and with row names from the first
 #'   occurrences of the unique rows).
 #' @export
@@ -38,7 +38,7 @@ df_unique <- function(x, incomparables = FALSE, fromLast = FALSE, ...) {
 }
 
 #' @rdname df_duplicated
-#' @return For \code{unique_anyDuplicated}, an integer or real vector of length
+#' @return For \code{df_anyDuplicated}, an integer or real vector of length
 #'   one with value the 1-based index of the first duplicate if any, otherwise
 #'   0.
 #' @export
