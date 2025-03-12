@@ -301,7 +301,7 @@ check_schema_names <- function(nms) {
 
 #' @exportS3Method
 create.relation_schema <- function(x, ...) {
-  relation(
+  relation_nocheck(
     Map(
       \(df, ks) list(df = df, keys = ks),
       lapply(

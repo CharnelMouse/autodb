@@ -302,7 +302,7 @@ subschemas.database_schema <- function(x, ...) {
 
 #' @exportS3Method
 create.database_schema <- function(x, ...) {
-  database(
+  database_nocheck(
     create(subschemas(x)),
     references(x)
   )
