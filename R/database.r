@@ -266,14 +266,20 @@ reference_errors <- function(records, references) {
   references[vapply(
     references,
     \(relat) {
-      referrer <- df_unique(records[[relat[[1]]]][, relat[[2]], drop = FALSE])
-      referee <- df_unique(records[[relat[[3]]]][, relat[[4]], drop = FALSE])
-      !identical(
-        # unique() needed here in case floating-point values cause duplicates in
-        # merge
-        nrow(unique(df_join(referrer, referee, by.x = relat[[2]], by.y = relat[[4]]))),
-        nrow(referrer)
+      referrer <- do.call(
+        Map,
+        `names<-`(
+          c(list, records[[relat[[1]]]][, relat[[2]], drop = FALSE]),
+          NULL
+        )
       )
+      referee <- do.call(
+        Map,
+        `names<-`(c(list, records[[relat[[3]]]][, relat[[4]], drop = FALSE]),
+                  NULL
+        )
+      )
+      !all(is.element(referrer, referee))
     },
     logical(1)
   )]
