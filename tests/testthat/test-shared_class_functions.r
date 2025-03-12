@@ -785,7 +785,7 @@ describe("insert", {
         }),
       \(r, relnames) {
         expect_biidentical(
-          with_args(df_records, relations = relnames),
+          with_args(rel2df, relations = relnames),
           with_args(
             insert,
             vals = data.frame(setNames(
@@ -834,7 +834,7 @@ describe("insert", {
           )
         }),
       \(db, relnames) expect_biidentical(
-        with_args(df_records, relations = relnames),
+        with_args(rel2df, relations = relnames),
         with_args(
           insert,
           vals = data.frame(setNames(

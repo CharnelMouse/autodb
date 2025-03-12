@@ -1106,7 +1106,7 @@ gen.sample_resampleable <- function(x, from = 1, to = NULL, of = NULL) {
   }
 }
 
-df_records <- function(rel, relations) {
+rel2df <- function(rel, relations) {
   records(rel)[relations] <- lapply(records(rel)[relations], as.data.frame)
   rel
 }
