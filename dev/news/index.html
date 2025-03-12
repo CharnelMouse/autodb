@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">autodb</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.1.1.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.2.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,12 +41,36 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="autodb-development-version">autodb (development version)<a class="anchor" aria-label="anchor" href="#autodb-development-version"></a></h2>
-<p>Continuing efforts to prepare for submission to CRAN.</p>
 <div class="section level3">
 <h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
+<ul><li>Added a convenience function called <code>df_records</code>, for converting a data frame into a list of row values. These are sometimes more useful than data frames, e.g. for checking which rows of a data frame are present in another one.</li>
+<li>Improved the run time of <code>database</code> for larger data sets, specifically the validity checks for the data satisfying the foreign key references.</li>
+<li>Improved the run time of <code>create</code> for <code>relation_schema</code> and <code>database_schema</code>, by removing validity checks. If the input is valid, these are redundant.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixes-development-version">Fixes<a class="anchor" aria-label="anchor" href="#fixes-development-version"></a></h3>
+<ul><li>CRAN fixes to DESCRIPTION.</li>
+<li>Fixes to documentation.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.2.1" id="autodb-221">autodb 2.2.1<a class="anchor" aria-label="anchor" href="#autodb-221"></a></h2>
+<div class="section level3">
+<h3 id="fixes-2-2-1">Fixes<a class="anchor" aria-label="anchor" href="#fixes-2-2-1"></a></h3>
+<ul><li>CRAN fixes to DESCRIPTION.</li>
+<li>Fixes to documentation: the PDF version of the manual is now created successfully.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.2.0" id="autodb-220">autodb 2.2.0<a class="anchor" aria-label="anchor" href="#autodb-220"></a></h2>
+<p>Continuing efforts to prepare for submission to CRAN.</p>
+<div class="section level3">
+<h3 id="improvements-2-2-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-2-2-0"></a></h3>
 <ul><li>Changed handling for numerical/complex variables in <code>autodb</code>, <code>discover</code>, and <code>df_equiv</code>, to round to a number of significant digits. Due to the nature of floating-point, and the definition of a functional dependency, floating-point values can’t be compared using equality (<code>==</code>), or by <code>all.equal</code> for the purposes of functional dependency discovery / validation, and have the result be consistent between different machines. Because of this, floating-point variables are now rounded to a small level of precision by default before processing. If the data frame is being loaded from a file, we recommend reading any numerical/complex variables as character values (strings), if it’s appropriate, to avoid loss of precision.</li>
 <li>
 <code>df_equiv</code> now checks rows for exact matches, outside of the rounding mentioned above. Previously, it compared rows using <code>match</code>, which gave no control over float precision.</li>
+<li>
+<code>relation_schema</code>, <code>relation</code>, <code>database_schema</code>, and <code>database</code> now only return a name-based subset successfully if all of the given names exist in the object.</li>
 </ul></div>
 </div>
     <div class="section level2">
