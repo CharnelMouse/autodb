@@ -492,8 +492,7 @@ describe("synthesise", {
     )
     forall(
       gen_flat_deps(7, 20, to = 20L),
-      still_lossless_with_less_or_same_attributes_dep,
-      tests = 1000
+      still_lossless_with_less_or_same_attributes_dep
     )
   })
   it("gives database schemas that enforce the given functional dependencies", {

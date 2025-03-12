@@ -14,8 +14,7 @@ describe("rejoin", {
     # independent ones, or a reference involving several attributes
     forall(
       gen_df(6, 7, remove_dup_rows = TRUE),
-      autodb_inverted_by_rejoin,
-      tests = 1000
+      autodb_inverted_by_rejoin
     )
     forall(
       gen_df(6, 7, remove_dup_rows = FALSE),
@@ -24,8 +23,7 @@ describe("rejoin", {
         with_args(autodb, ensure_lossless = TRUE) %>>%
           rejoin,
         df_unique
-      ),
-      tests = 1000
+      )
     )
   })
   it("is possible for any database constructed from a data frame", {
