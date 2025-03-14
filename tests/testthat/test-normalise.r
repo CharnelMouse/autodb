@@ -28,10 +28,20 @@ describe("normalise", {
   })
   it("is the same as synthesise >> autoref", {
     forall(
-      gen_flat_deps(7, 6, to = 6L),
+      list(
+        gen_flat_deps(7, 6, to = 6L) |>
+          gen.with(list),
+        gen.sample(c(FALSE, TRUE), size = 3, replace = TRUE) |>
+          gen.with(with_args(
+            setNames,
+            nm = c("single_ref", "ensure_lossless", "remove_avoidable")
+          )) |>
+          gen.with(as.list)
+      ) |>
+        gen.with(uncurry(c)),
       expect_biidentical(
-        normalise,
-        synthesise %>>% autoref
+        uncurry(normalise),
+        with_args(`[`, -2) %>>% uncurry(synthesise) %>>% autoref
       )
     )
   })
@@ -45,16 +55,6 @@ describe("normalise", {
     forall(
       gen_flat_deps(7, 20, to = 20L),
       adds_ordered_primary_keys
-    )
-  })
-  it("is equivalent to removing extraneous attributes separately", {
-    forall(
-      gen_flat_deps(7, 20, to = 20),
-      expect_biidentical(
-        normalise,
-        remove_extraneous_attributes %>>%
-          with_args(normalise, reduce_attributes = FALSE)
-      )
     )
   })
 
