@@ -53,6 +53,7 @@ least third normal form, using Bernstein's synthesis.</p>
 <span>  <span class="va">dependencies</span>,</span>
 <span>  single_ref <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  ensure_lossless <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  reduce_attributes <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  remove_avoidable <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  constants_name <span class="op">=</span> <span class="st">"constants"</span>,</span>
 <span>  progress <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -80,6 +81,14 @@ the earliest key for the child relation, as sorted by priority order.</p></dd>
 <dd><p>a logical, TRUE by default. If TRUE, and the
 decomposition isn't lossless, an extra relation is added to make the
 decomposition lossless.</p></dd>
+
+
+<dt id="arg-reduce-attributes">reduce_attributes<a class="anchor" aria-label="anchor" href="#arg-reduce-attributes"></a></dt>
+<dd><p>a logical, TRUE by default. If TRUE,
+<code>dependencies</code> are checked for determinant attributes that are made
+redundant by the other dependencies. This is redundant if
+<code>dependencies</code> is output from <code>discover</code>, since there will be no
+such redundant attributes.</p></dd>
 
 
 <dt id="arg-remove-avoidable">remove_avoidable<a class="anchor" aria-label="anchor" href="#arg-remove-avoidable"></a></dt>

@@ -46,6 +46,7 @@
 <ul><li>Added a convenience function called <code>df_records</code>, for converting a data frame into a list of row values. These are sometimes more useful than data frames, e.g. for checking which rows of a data frame are present in another one.</li>
 <li>Improved the run time of <code>database</code> for larger data sets, specifically the validity checks for the data satisfying the foreign key references.</li>
 <li>Improved the run time of <code>create</code> for <code>relation_schema</code> and <code>database_schema</code>, by removing validity checks. If the input is valid, these are redundant.</li>
+<li>Improved the run time of <code>autodb</code>, by skipping removal of extraneous attributes. This is done on the results of <code>discover</code>, so there won’t be any.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="fixes-development-version">Fixes<a class="anchor" aria-label="anchor" href="#fixes-development-version"></a></h3>
