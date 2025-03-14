@@ -28,11 +28,30 @@ describe("normalise", {
   })
   it("is the same as synthesise >> autoref", {
     forall(
-      gen_flat_deps(7, 6, to = 6L),
-      expect_biidentical(
-        normalise,
-        synthesise %>>% autoref
-      )
+      list(
+        gen_flat_deps(7, 6, to = 6L) |>
+          gen.with(list),
+        gen.sample(c(FALSE, TRUE), size = 3, replace = TRUE) |>
+          gen.with(as.list)
+      ) |>
+        gen.with(uncurry(c)),
+      \(fds, sr, el, ra) {
+        expect_identical(
+          normalise(
+            fds,
+            single_ref = sr,
+            ensure_lossless = el,
+            remove_avoidable = ra
+          ),
+          synthesise(
+            fds,
+            ensure_lossless = el,
+            remove_avoidable = ra
+          ) |>
+            autoref(single_ref = sr)
+        )
+      },
+      curry = TRUE
     )
   })
   it("adds table with key with attributes in original order", {
