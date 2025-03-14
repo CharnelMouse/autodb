@@ -69,10 +69,11 @@ autodb <- function(
     report$op(
       normalise,
       "normalising",
-      single_ref,
-      ensure_lossless,
-      remove_avoidable,
-      constants_name
+      single_ref = single_ref,
+      ensure_lossless = ensure_lossless,
+      reduce_attributes = FALSE,
+      remove_avoidable = remove_avoidable,
+      constants_name = constants_name
     ) |>
     report$op(decompose, "decomposing", df = df)
 }

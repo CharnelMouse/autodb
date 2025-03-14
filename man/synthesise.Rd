@@ -7,6 +7,7 @@
 synthesise(
   dependencies,
   ensure_lossless = TRUE,
+  reduce_attributes = TRUE,
   remove_avoidable = FALSE,
   constants_name = "constants",
   progress = FALSE,
@@ -20,6 +21,12 @@ synthesise(
 \item{ensure_lossless}{a logical, TRUE by default. If TRUE, and the
 decomposition isn't lossless, an extra relation is added to make the
 decomposition lossless.}
+
+\item{reduce_attributes}{a logical, TRUE by default. If TRUE,
+\code{dependencies} are checked for determinant attributes that are made
+redundant by the other dependencies. This is redundant if
+\code{dependencies} is output from \code{discover}, since there will be no
+such redundant attributes.}
 
 \item{remove_avoidable}{a logical, indicating whether to remove avoidable
 attributes in relations. If so, then an attribute are removed from

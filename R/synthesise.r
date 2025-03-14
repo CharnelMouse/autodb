@@ -58,6 +58,7 @@
 synthesise <- function(
   dependencies,
   ensure_lossless = TRUE,
+  reduce_attributes = TRUE,
   remove_avoidable = FALSE,
   constants_name = "constants",
   progress = FALSE,
@@ -67,7 +68,10 @@ synthesise <- function(
 
   inter <- dependencies |>
     report$op(
-      remove_extraneous,
+      if (reduce_attributes)
+        remove_extraneous
+      else
+        remove_extraneous_dependencies,
       "removing extraneous components"
     ) |>
     report$op(

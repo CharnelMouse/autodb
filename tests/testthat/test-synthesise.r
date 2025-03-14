@@ -100,7 +100,7 @@ describe("synthesise", {
     ord <- match("A_D", names(schema))
     expect_identical(setdiff(attrs(schema)[[ord]], c("A", "D")), "B")
   })
-  it("removes extraneous attributes", {
+  it("removes extraneous attributes by default", {
     dependencies <- functional_dependency(
       list(
         list("a", "b"),
@@ -116,6 +116,16 @@ describe("synthesise", {
         keys = list(list("a")),
         attrs_order = c("a", "b", "c"),
         relation_names = "a"
+      )
+    )
+  })
+  it("is equivalent to removing extraneous attributes separately", {
+    forall(
+      gen_flat_deps(7, 20, to = 20),
+      expect_biidentical(
+        synthesise,
+        remove_extraneous_attributes %>>%
+          with_args(synthesise, reduce_attributes = FALSE)
       )
     )
   })

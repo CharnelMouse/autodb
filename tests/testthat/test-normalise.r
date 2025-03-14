@@ -47,6 +47,16 @@ describe("normalise", {
       adds_ordered_primary_keys
     )
   })
+  it("is equivalent to removing extraneous attributes separately", {
+    forall(
+      gen_flat_deps(7, 20, to = 20),
+      expect_biidentical(
+        normalise,
+        remove_extraneous_attributes %>>%
+          with_args(normalise, reduce_attributes = FALSE)
+      )
+    )
+  })
 
   it("returns relations that return themselves if normalised again, if lossless", {
     gen.database_schema_single_lossless <- function(attr_names) {

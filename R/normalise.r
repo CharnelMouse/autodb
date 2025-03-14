@@ -15,6 +15,11 @@
 #' @param ensure_lossless a logical, TRUE by default. If TRUE, and the
 #'   decomposition isn't lossless, an extra relation is added to make the
 #'   decomposition lossless.
+#' @param reduce_attributes a logical, TRUE by default. If TRUE,
+#'   \code{dependencies} are checked for determinant attributes that are made
+#'   redundant by the other dependencies. This is redundant if
+#'   \code{dependencies} is output from \code{discover}, since there will be no
+#'   such redundant attributes.
 #' @inheritParams autodb
 #'
 #' @return A \code{\link{database_schema}} object, containing the synthesis
@@ -24,6 +29,7 @@ normalise <- function(
   dependencies,
   single_ref = FALSE,
   ensure_lossless = TRUE,
+  reduce_attributes = TRUE,
   remove_avoidable = FALSE,
   constants_name = "constants",
   progress = FALSE,
@@ -33,6 +39,7 @@ normalise <- function(
     synthesise(
       dependencies,
       ensure_lossless = ensure_lossless,
+      reduce_attributes = reduce_attributes,
       remove_avoidable = remove_avoidable,
       constants_name = constants_name,
       progress = progress,

@@ -1119,7 +1119,7 @@ expect_bi <- function(logical_fn, fn1, fn2) {
 }
 expect_biequal <- function(fn1, fn2) function(x) expect_equal(fn1(x), fn2(x))
 expect_biidentical <- function(fn1, fn2)
-  function(x) expect_identical(fn1(x), fn2(x))
+  function(...) expect_identical(fn1(...), fn2(...))
 split_by <- function(fn, ...) function(x) split(x, fn(x), ...)
 subset_by <- function(fn) function(x) x[fn(x)]
 sort_by <- function(fn) function(x) x[order(fn(x))]
