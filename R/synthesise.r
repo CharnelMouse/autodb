@@ -225,20 +225,15 @@ remove_extraneous_dependencies <- function(fds) {
 partition_dependencies <- function(vecs) {
   det_sets <- vecs$determinant_sets
   unique_det_sets <- unique(det_sets)
-  partition_det_set <- list()
-  partition_deps <- list()
-  for (det_set in unique_det_sets) {
-    matches <- vapply(det_sets, identical, logical(1), det_set)
-    partition_det_set <- c(partition_det_set, list(det_set))
-    partition_deps <- c(partition_deps, list(vecs$dependants[matches]))
-  }
-  list(
-    determinant_sets = vecs$determinant_sets,
-    dependants = vecs$dependants,
-    partition_determinant_set = partition_det_set,
-    partition_dependants = partition_deps,
-    unique_determinant_sets = unique_det_sets,
-    attrs_order = vecs$attrs_order
+  det_set_matches <- match(det_sets, unique_det_sets)
+  partition_deps <- unname(split(vecs$dependants, det_set_matches))
+  c(
+    vecs,
+    list(
+      partition_determinant_set = unique_det_sets,
+      partition_dependants = partition_deps,
+      unique_determinant_sets = unique_det_sets
+    )
   )
 }
 
