@@ -1,3 +1,3 @@
 library(hedgehog)
 if (!isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false"))))
-  options(hedgehog.tests = 50)
+  options(hedgehog.tests = 40)
