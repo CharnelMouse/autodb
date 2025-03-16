@@ -19,7 +19,7 @@ These functions add zero-column data frames as a special case.'></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">autodb</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,7 +68,9 @@ These functions add zero-column data frames as a special case.</p>
 <span></span>
 <span><span class="fu">df_unique</span><span class="op">(</span><span class="va">x</span>, incomparables <span class="op">=</span> <span class="cn">FALSE</span>, fromLast <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">df_anyDuplicated</span><span class="op">(</span><span class="va">x</span>, incomparables <span class="op">=</span> <span class="cn">FALSE</span>, fromLast <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">df_anyDuplicated</span><span class="op">(</span><span class="va">x</span>, incomparables <span class="op">=</span> <span class="cn">FALSE</span>, fromLast <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">df_records</span><span class="op">(</span><span class="va">x</span>, use_rownames <span class="op">=</span> <span class="cn">FALSE</span>, use_colnames <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -96,23 +98,65 @@ These functions add zero-column data frames as a special case.</p>
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>arguments for particular methods.</p></dd>
 
+
+<dt id="arg-use-rownames">use_rownames<a class="anchor" aria-label="anchor" href="#arg-use-rownames"></a></dt>
+<dd><p>a logical, FALSE by default, indicating whether row
+values should keep the row names from <code>x</code>. Defaults to FALSE.</p></dd>
+
+
+<dt id="arg-use-colnames">use_colnames<a class="anchor" aria-label="anchor" href="#arg-use-colnames"></a></dt>
+<dd><p>a logical, FALSE by default, indicating whether row
+values should keep the column names from <code>x</code> for their elements.
+Defaults to FALSE.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>For <code>df_duplicated</code>, a logical vector with one element for each
 row.</p>
-<p>For <code>unique_duplicated</code>, a data frame is returned with the same
+<p>For <code>df_unique</code>, a data frame is returned with the same
 columns, but possible fewer rows (and with row names from the first
 occurrences of the unique rows).</p>
-<p>For <code>unique_anyDuplicated</code>, an integer or real vector of length
+<p>For <code>df_anyDuplicated</code>, an integer or real vector of length
 one with value the 1-based index of the first duplicate if any, otherwise
 0.</p>
+<p>For <code>df_records</code>, a list of the row values in <code>x</code>. This is
+based on a step in <code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated.data.frame</a></code>. However, for data
+frames with zero columns, special handling returns a list of empty row
+values, one for each row in <code>x</code>. Without special handling, this step
+returns an empty list. This was the cause for <code><a href="https://rdrr.io/r/base/duplicated.html" class="external-link">duplicated</a></code>
+returning incorrect results for zero-column data frames in older versions
+of R.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="df_rbind.html">df_rbind</a></code></p></div>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># row values for a 5x0 data frame</span></span></span>
+<span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span><span class="op">[</span>, <span class="cn">FALSE</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">Map</span>, <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">list</span>, <span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="co"># original step returns empty list</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
+<span class="r-in"><span><span class="fu">df_records</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="co"># corrected version preserves row count</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[3]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[4]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[5]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
