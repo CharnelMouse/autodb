@@ -1,32 +1,29 @@
 This is a re-submission.
-The previous submission failed on pre-checks, as addressed below.
+The previous submission failure are as addressed below.
 
-> Possibly misspelled words in DESCRIPTION:
->   Alteryx's (15:26)
->   AutoNormalize (15:36)
->   Graphviz (19:3)
-
-No changes. These are all names for things, and are spelled correctly.
-
-> The Title field should be in title case. Current version is:
->   'Automatic database normalisation for data frames'
-> In title case that is:
->   'Automatic Database Normalisation for Data Frames'
+> Pls only use the CRAN template for the BSD_3_clause, i.e. only fields
+> YEAR:
+> COPYRIGHT HOLDER:
+> ORGANIZATION:
 
 This has been fixed.
 
-> The Description field contains
->   (https://github.com/alteryx/autonormalize), with various changes and
-> Please enclose URLs in angle brackets (<...>).
+> Please single quote software names in both Title and Description fields
+> of the DESCRIPTION file, e.g., 'Python'
 
 This has been fixed.
 
-> LaTeX errors when creating PDF version.
-> This typically indicates Rd problems.
+> Please reduce the test timings by using
+>   - small toy data only
+>   - few iterations
+>   - or by running less important tests only conditionally if some
+> environment variable is set that you only define on your machine?
+> 
+> Overall checktime of the whole package should stay < 10 minutes even on
+> Windows.
 
-This has been fixed. The issue was with some help files containing the phrase
-
-> \code{\link[base:names]{`names<-`}},
-
-before Markdown conversion. Removing the backticks around names<- fixed the
-issue.
+This has been fixed:
+- The performance of some package functions was improved;
+- Most of the test time is spent on property tests, which check many
+  randomly-generated test cases. These were set to sample less test cases on
+  CRAN.
