@@ -1,5 +1,7 @@
 # autodb (development version)
 
+Some performance improvements, as part of re-submission to CRAN.
+
 ## Improvements
 
 * Added a convenience function called `df_records`, for converting a data frame into a list of row values. These are sometimes more useful than data frames, e.g. for checking which rows of a data frame are present in another one.
