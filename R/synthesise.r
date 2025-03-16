@@ -241,8 +241,6 @@ merge_equivalent_keys <- function(vecs) {
   partition_dependants <- vecs$partition_dependants
 
   partition_keys <- lapply(partition_determinant_set, list)
-  bijection_determinant_sets <- list()
-  bijection_dependant_sets <- list()
   closures <- lapply(
     partition_determinant_set,
     find_closure,
@@ -253,8 +251,8 @@ merge_equivalent_keys <- function(vecs) {
     merged_partition_keys <- list()
     merged_partition_dependants <- list()
     kept <- logical()
-    bijection_determinant_sets2 <- list()
-    bijection_dependant_sets2 <- list()
+    bijection_determinant_sets <- list()
+    bijection_dependant_sets <- list()
   }else{
     included <- outer(
       partition_determinant_set,
@@ -286,26 +284,38 @@ merge_equivalent_keys <- function(vecs) {
       which,
       simplify = FALSE
     ))
-  }
-  if (length(partition_dependants) >= 1) {
-    for (n in setdiff(
-      vapply(merge_groups, `[[`, integer(1), 1),
-      length(partition_dependants)
-    )) {
-      for (m in which((included & t(included))[n, ])[-1]) {
-        stopifnot(included[n, m] && included[m, n])
-        key1 <- partition_determinant_set[[n]]
-        key2 <- partition_determinant_set[[m]]
-        bijection_determinant_sets <- c(
-          bijection_determinant_sets,
-          list(key1, key2)
-        )
-        bijection_dependant_sets <- c(
-          bijection_dependant_sets,
-          list(setdiff(key2, key1), setdiff(key1, key2))
-        )
-      }
-    }
+    bijection_determinant_sets <- Reduce(
+      c,
+      lapply(
+        merge_groups[lengths(merge_groups) > 1],
+        \(grp) {
+          keys <- partition_determinant_set[grp]
+          key1 <- keys[[1]]
+          other_keys <- keys[-1]
+          c(
+            rep(list(key1), length(other_keys)),
+            other_keys
+          )
+        }
+      ),
+      init = list()
+    )
+    bijection_dependant_sets <- Reduce(
+      c,
+      lapply(
+        merge_groups[lengths(merge_groups) > 1],
+        \(grp) {
+          keys <- partition_determinant_set[grp]
+          key1 <- keys[[1]]
+          other_keys <- keys[-1]
+          c(
+            lapply(other_keys, \(key2) setdiff(key2, key1)),
+            lapply(other_keys, \(key2) setdiff(key1, key2))
+          )
+        }
+      ),
+      init = list()
+    )
   }
   list(
     partition_determinant_set = partition_determinant_set[kept],
