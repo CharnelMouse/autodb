@@ -1,4 +1,4 @@
-# autodb (development version)
+# autodb 2.3.0
 
 Some performance improvements, as part of re-submission to CRAN.
 
