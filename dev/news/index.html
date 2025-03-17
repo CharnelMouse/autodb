@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">autodb</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.2.1.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.3.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,15 +41,19 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="autodb-development-version">autodb (development version)<a class="anchor" aria-label="anchor" href="#autodb-development-version"></a></h2>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.3.0" id="autodb-230">autodb 2.3.0<a class="anchor" aria-label="anchor" href="#autodb-230"></a></h2>
+<p>Some performance improvements, as part of re-submission to CRAN.</p>
 <div class="section level3">
-<h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
+<h3 id="improvements-2-3-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-2-3-0"></a></h3>
 <ul><li>Added a convenience function called <code>df_records</code>, for converting a data frame into a list of row values. These are sometimes more useful than data frames, e.g. for checking which rows of a data frame are present in another one.</li>
 <li>Improved the run time of <code>database</code> for larger data sets, specifically the validity checks for the data satisfying the foreign key references.</li>
 <li>Improved the run time of <code>create</code> for <code>relation_schema</code> and <code>database_schema</code>, by removing validity checks. If the input is valid, these are redundant.</li>
 <li>Improved the run time of <code>autodb</code>, by skipping removal of extraneous attributes. This is done on the results of <code>discover</code>, so there won’t be any.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="fixes-development-version">Fixes<a class="anchor" aria-label="anchor" href="#fixes-development-version"></a></h3>
+<h3 id="fixes-2-3-0">Fixes<a class="anchor" aria-label="anchor" href="#fixes-2-3-0"></a></h3>
 <ul><li>CRAN fixes to DESCRIPTION.</li>
 <li>Fixes to documentation.</li>
 </ul></div>
