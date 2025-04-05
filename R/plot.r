@@ -332,11 +332,23 @@ gv_setup_string <- function(df_name) {
   )
 }
 
-relation_string <- function(df, df_labelled, df_keys, df_name, df_label, row_name = c("record", "row")) {
+relation_string <- function(
+  df,
+  df_labelled,
+  df_keys,
+  df_name,
+  df_label,
+  row_name = c("record", "row")
+) {
   row_name <- match.arg(row_name)
   col_classes <- vapply(df, \(a) class(a)[[1]], character(1))
 
-  columns_string <- columns_string(colnames(df), colnames(df_labelled), df_keys, col_classes)
+  columns_string <- columns_string(
+    colnames(df),
+    colnames(df_labelled),
+    df_keys,
+    col_classes
+  )
   label <- paste0(
     "    <TR><TD COLSPAN=\"", length(df_keys) + 2, "\">",
     df_name,
@@ -361,7 +373,13 @@ relation_string <- function(df, df_labelled, df_keys, df_name, df_label, row_nam
   )
 }
 
-relation_schema_string <- function(attrs, attr_labels, keys, relation_name, rel_label) {
+relation_schema_string <- function(
+  attrs,
+  attr_labels,
+  keys,
+  relation_name,
+  rel_label
+) {
   columns_string <- columns_schema_string(attrs, attr_labels, keys)
   label <- paste0(
     "    <TR><TD COLSPAN=\"", length(keys) + 1, "\">",
