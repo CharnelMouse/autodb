@@ -1181,6 +1181,24 @@ describe("database", {
       }
     )
   })
+  it("expects new attribute names to be unique", {
+    expect_error(
+      rename_attrs(
+        database(
+          relation(
+            list(X = list(
+              df = data.frame(a = logical(), b = logical()),
+              keys = list(character())
+            )),
+            c("a", "b")
+          ),
+          list()
+        ),
+        c("c", "c")
+      ),
+      "^attrs_order must be unique: duplicated c$"
+    )
+  })
 
   it("prints", {
     expect_output(

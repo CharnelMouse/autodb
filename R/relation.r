@@ -135,14 +135,7 @@ relation <- function(relations, attrs_order) {
   stopifnot(is.list(relations))
   stopifnot(is.character(attrs_order))
 
-  stop_with_values_if(
-    attrs_order,
-    duplicated(attrs_order),
-    "attrs_order must be unique",
-    "duplicated",
-    suffix_else = "",
-    unique = TRUE
-  )
+  check_relation_attrs_order_unique(attrs_order)
   check_relation_names(names(relations))
   stop_with_elements_if(
     !vapply(relations, \(r) !anyDuplicated(names(r$df)), logical(1)),
@@ -328,13 +321,14 @@ attrs_order.relation <- function(x, ...) {
 
 #' @exportS3Method
 rename_attrs.relation <- function(x, names, ...) {
+  check_relation_attrs_order_unique(names)
   old <- attrs_order(x)
   new_records <- lapply(
     records(x),
     \(df) stats::setNames(df, names[match(names(df), old)])
   )
   new_keys <- lapply(keys(x), lapply, \(as) names[match(as, old)])
-  relation(
+  relation_nocheck(
     stats::setNames(
       Map(\(recs, ks) list(df = recs, keys = ks), new_records, new_keys),
       names(x)
@@ -348,6 +342,17 @@ rename_attrs.relation <- function(x, names, ...) {
   check_relation_names(value)
   attr(x, "names") <- value
   x
+}
+
+check_relation_attrs_order_unique <- function(attrs_order) {
+  stop_with_values_if(
+    attrs_order,
+    duplicated(attrs_order),
+    "attrs_order must be unique",
+    "duplicated",
+    suffix_else = "",
+    unique = TRUE
+  )
 }
 
 check_relation_names <- function(nms) {

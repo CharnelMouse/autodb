@@ -306,7 +306,7 @@ rename_attrs.database <- function(x, names, ...) {
       ref
     }
   )
-  database(
+  database_nocheck(
     new_subrels,
     new_refs
   )

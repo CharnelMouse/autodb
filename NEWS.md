@@ -1,5 +1,9 @@
 # autodb (development version)
 
+## Improvements
+
+* `relation` and `database` methods for `rename_attrs` and `gv` now run significantly more quickly for large data sets, due to not re-running all the key validity checks.
+
 # autodb 2.3.1
 
 Some minor changes to tests, as part of re-submission to CRAN.
