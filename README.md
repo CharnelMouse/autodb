@@ -7,7 +7,13 @@ cleaning. (Usage to design your actual database for you is not advised.)
 
 ## Installation
 
-You can install the development version of autodb from
+Install the stable released version from CRAN with:
+
+``` r
+install.packages("autodb")
+```
+
+Install the unstable development version from
 [GitHub](https://github.com/) with:
 
 ``` r
@@ -26,9 +32,6 @@ library(autodb)
 #> The following object is masked from 'package:stats':
 #> 
 #>     decompose
-```
-
-``` r
 summary(ChickWeight)
 #>      weight           Time           Chick     Diet   
 #>  Min.   : 35.0   Min.   : 0.00   13     : 12   1:220  
@@ -38,12 +41,9 @@ summary(ChickWeight)
 #>  3rd Qu.:163.8   3rd Qu.:16.00   17     : 12          
 #>  Max.   :373.0   Max.   :21.00   19     : 12          
 #>                                  (Other):506
-```
-
-``` r
-db <- autodb(ChickWeight, name = "ChickWeight")
+db <- autodb(ChickWeight)
 db
-#> database ChickWeight with 2 relations
+#> database with 2 relations
 #> 4 attributes: weight, Time, Chick, Diet
 #> relation Chick: Chick, Diet; 50 records
 #>   key 1: Chick
@@ -51,11 +51,9 @@ db
 #>   key 1: Time, Chick
 #> references:
 #> Time_Chick.{Chick} -> Chick.{Chick}
-```
-
-``` r
 graphviz_text <- gv(db)
 DiagrammeR::grViz(graphviz_text)
+#> Google Chrome was not found. Try setting the `CHROMOTE_CHROME` environment variable to the executable of a Chromium-based browser, such as Google Chrome, Chromium or Brave.
 ```
 
 <img src="man/figures/README-example-1.png" width="100%" />
@@ -73,12 +71,9 @@ summary(CO2)
 #>  Qc3    : 7                                    3rd Qu.: 675   3rd Qu.:37.12  
 #>  Qc2    : 7                                    Max.   :1000   Max.   :45.50  
 #>  (Other):42
-```
-
-``` r
-db2_noexclude <- autodb(CO2, name = "CO2")
+db2_noexclude <- autodb(CO2)
 db2_noexclude
-#> database CO2 with 3 relations
+#> database with 3 relations
 #> 5 attributes: Plant, Type, Treatment, conc, uptake
 #> relation Plant: Plant, Type, Treatment; 12 records
 #>   key 1: Plant
@@ -90,9 +85,6 @@ db2_noexclude
 #> references:
 #> Plant_conc.{Plant} -> Plant.{Plant}
 #> Plant_conc.{conc, uptake} -> conc_uptake.{conc, uptake}
-```
-
-``` r
 graphviz_text2_noexclude <- gv(db2_noexclude)
 DiagrammeR::grViz(graphviz_text2_noexclude)
 ```
@@ -100,9 +92,9 @@ DiagrammeR::grViz(graphviz_text2_noexclude)
 <img src="man/figures/README-exclude_example-1.png" width="100%" />
 
 ``` r
-db2 <- autodb(CO2, name = "CO2", exclude = "uptake")
+db2 <- autodb(CO2, exclude = "uptake")
 db2
-#> database CO2 with 2 relations
+#> database with 2 relations
 #> 5 attributes: Plant, Type, Treatment, conc, uptake
 #> relation Plant: Plant, Type, Treatment; 12 records
 #>   key 1: Plant
@@ -110,9 +102,6 @@ db2
 #>   key 1: Plant, conc
 #> references:
 #> Plant_conc.{Plant} -> Plant.{Plant}
-```
-
-``` r
 graphviz_text2 <- gv(db2)
 DiagrammeR::grViz(graphviz_text2)
 ```
