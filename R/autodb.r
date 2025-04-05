@@ -65,7 +65,7 @@ autodb <- function(
       df[] <- lapply(df, coarsen_if_float, digits = digits),
       paste("coarsening numerical/complex variables to", digits, "significant digits")
     )
-  discover(df, 1, digits = digits, progress = progress, progress_file = "", ...) |>
+  discover(df, 1, digits = NA, progress = progress, progress_file = "", ...) |>
     report$op(
       normalise,
       "normalising",
