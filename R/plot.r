@@ -120,7 +120,7 @@ gv.database <- function(x, name = NA_character_, ...) {
   df_strings <- mapply(
     relation_string,
     df = records(x_elemented),
-    df_labelled = records(x_labelled),
+    df_labels = attrs(x_labelled),
     df_keys = keys(x_elemented),
     df_name = names(x_elemented),
     df_label = names(x_labelled),
@@ -166,7 +166,7 @@ gv.relation <- function(x, name = NA_character_, ...) {
   df_strings <- mapply(
     relation_string,
     df = records(x_elemented),
-    df_labelled = records(x_labelled),
+    df_labels = attrs(x_labelled),
     df_keys = keys(x_elemented),
     df_name = names(x_elemented),
     df_label = names(x_labelled)
@@ -305,7 +305,7 @@ gv.data.frame <- function(x, name = NA_character_, ...) {
   names(x_labelled) <- to_attr_name(names(x))
   table_string <- relation_string(
     df = stats::setNames(x, to_element_name(names(x))),
-    df_labelled = x_labelled,
+    df_labels = colnames(x_labelled),
     df_keys = list(),
     df_name = to_element_name(name),
     df_label = to_node_name(name),
@@ -334,7 +334,7 @@ gv_setup_string <- function(df_name) {
 
 relation_string <- function(
   df,
-  df_labelled,
+  df_labels,
   df_keys,
   df_name,
   df_label,
@@ -345,7 +345,7 @@ relation_string <- function(
 
   columns_string <- columns_string(
     colnames(df),
-    colnames(df_labelled),
+    df_labels,
     df_keys,
     col_classes
   )
