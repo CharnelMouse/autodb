@@ -120,10 +120,10 @@ gv.database <- function(x, name = NA_character_, ...) {
   df_strings <- mapply(
     relation_string,
     attrs = attrs(x_elemented),
-    df_labels = attrs(x_labelled),
-    df_keys = keys(x_elemented),
-    df_name = names(x_elemented),
-    df_label = names(x_labelled),
+    attr_labels = attrs(x_labelled),
+    keys = keys(x_elemented),
+    name = names(x_elemented),
+    label = names(x_labelled),
     classes = lapply(
       records(x_elemented),
       \(df) vapply(df, \(a) class(a)[[1]], character(1))
@@ -171,10 +171,10 @@ gv.relation <- function(x, name = NA_character_, ...) {
   df_strings <- mapply(
     relation_string,
     attrs = attrs(x_elemented),
-    df_labels = attrs(x_labelled),
-    df_keys = keys(x_elemented),
-    df_name = names(x_elemented),
-    df_label = names(x_labelled),
+    attr_labels = attrs(x_labelled),
+    keys = keys(x_elemented),
+    name = names(x_elemented),
+    label = names(x_labelled),
     classes = lapply(
       records(x_elemented),
       \(df) vapply(df, \(a) class(a)[[1]], character(1))
@@ -225,8 +225,8 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
     attrs = attrs(x_elemented),
     attr_labels = attrs(x_labelled),
     keys = keys(x_elemented),
-    relation_name = names(x_elemented),
-    rel_label = names(x_labelled)
+    name = names(x_elemented),
+    label = names(x_labelled)
   ) |>
     paste(collapse = "\n")
   reference_strings <- reference_strings(x_labelled)
@@ -272,8 +272,8 @@ gv.relation_schema <- function(x, name = NA_character_, ...) {
     attrs = attrs(x_elemented),
     attr_labels = attrs(x_labelled),
     keys = keys(x_elemented),
-    relation_name = names(x_elemented),
-    rel_label = names(x_labelled)
+    name = names(x_elemented),
+    label = names(x_labelled)
   ) |>
     paste(collapse = "\n")
   teardown_string <- "}\n"
@@ -315,10 +315,10 @@ gv.data.frame <- function(x, name = NA_character_, ...) {
   names(x_labelled) <- to_attr_name(names(x))
   table_string <- relation_string(
     attrs = to_element_name(names(x)),
-    df_labels = colnames(x_labelled),
-    df_keys = list(),
-    df_name = to_element_name(name),
-    df_label = to_node_name(name),
+    attr_labels = colnames(x_labelled),
+    keys = list(),
+    name = to_element_name(name),
+    label = to_node_name(name),
     classes = vapply(x, \(a) class(a)[[1]], character(1)),
     nrow = nrow(x),
     row_name = "row"
@@ -346,10 +346,10 @@ gv_setup_string <- function(df_name) {
 
 relation_string <- function(
   attrs,
-  df_labels,
-  df_keys,
-  df_name,
-  df_label,
+  attr_labels,
+  keys,
+  name,
+  label,
   classes,
   nrow,
   row_name = c("record", "row")
@@ -358,13 +358,13 @@ relation_string <- function(
 
   columns_string <- columns_string(
     attrs,
-    df_labels,
-    df_keys,
+    attr_labels,
+    keys,
     classes
   )
-  label <- paste0(
-    "    <TR><TD COLSPAN=\"", length(df_keys) + 2, "\">",
-    df_name,
+  columns_label <- paste0(
+    "    <TR><TD COLSPAN=\"", length(keys) + 2, "\">",
+    name,
     " (",
     with_number(nrow, row_name, "", "s"),
     ")",
@@ -374,14 +374,14 @@ relation_string <- function(
   )
   paste0(
     "  ",
-    df_label,
+    label,
     " ",
     "[label = <",
     "\n",
     "    ",
     "<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
     "\n",
-    label,
+    columns_label,
     "\n    </TABLE>>];"
   )
 }
@@ -390,27 +390,27 @@ relation_schema_string <- function(
   attrs,
   attr_labels,
   keys,
-  relation_name,
-  rel_label
+  name,
+  label
 ) {
   columns_string <- columns_schema_string(attrs, attr_labels, keys)
-  label <- paste0(
+  columns_label <- paste0(
     "    <TR><TD COLSPAN=\"", length(keys) + 1, "\">",
-    relation_name,
+    name,
     "</TD></TR>",
     "\n",
     columns_string
   )
   paste0(
     "  ",
-    rel_label,
+    label,
     " ",
     "[label = <",
     "\n",
     "    ",
     "<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
     "\n",
-    label,
+    columns_label,
     "\n    </TABLE>>];"
   )
 }
