@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">autodb</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.3.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.3.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,19 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="autodb-development-version">autodb (development version)<a class="anchor" aria-label="anchor" href="#autodb-development-version"></a></h2>
+<div class="section level3">
+<h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
+<ul><li>
+<code>relation</code> and <code>database</code> methods for <code>rename_attrs</code> and <code>gv</code> now run significantly more quickly for large data sets, due to not re-running all the key validity checks.</li>
+<li>Handing for numerical/complex variables is more consistent:
+<ul><li>Values are now rounded by significant digits, as intended, rather than by decimal places.</li>
+<li>In addition to <code>autodb</code>, <code>discover</code>, and <code>df_equiv</code>, values are now also rounded for <code>insert</code> and <code>decompose</code>.</li>
+</ul></li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.3.1" id="autodb-231">autodb 2.3.1<a class="anchor" aria-label="anchor" href="#autodb-231"></a></h2><p class="text-muted">CRAN release: 2025-03-19</p>
+<p>Some minor changes to tests, as part of re-submission to CRAN.</p>
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2.3.0" id="autodb-230">autodb 2.3.0<a class="anchor" aria-label="anchor" href="#autodb-230"></a></h2>

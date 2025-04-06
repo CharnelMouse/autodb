@@ -23,7 +23,7 @@
 
     <a class="navbar-brand me-2" href="index.html">autodb</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.3.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.3.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,8 +63,11 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of autodb from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
+<p>Install the stable released version from CRAN with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"autodb"</span><span class="op">)</span></span></code></pre></div>
+<p>Install the unstable development version from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"CharnelMouse/autodb"</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -72,15 +75,14 @@
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
 </h2>
 <p>Turning a simple data frame into a database:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://charnelmouse.github.io/autodb/">autodb</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Attaching package: 'autodb'</span></span>
 <span><span class="co">#&gt; The following object is masked from 'package:stats':</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     decompose</span></span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">ChickWeight</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     decompose</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">ChickWeight</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      weight           Time           Chick     Diet   </span></span>
 <span><span class="co">#&gt;  Min.   : 35.0   Min.   : 0.00   13     : 12   1:220  </span></span>
 <span><span class="co">#&gt;  1st Qu.: 63.0   1st Qu.: 4.00   9      : 12   2:120  </span></span>
@@ -88,24 +90,23 @@
 <span><span class="co">#&gt;  Mean   :121.8   Mean   :10.72   10     : 12   4:118  </span></span>
 <span><span class="co">#&gt;  3rd Qu.:163.8   3rd Qu.:16.00   17     : 12          </span></span>
 <span><span class="co">#&gt;  Max.   :373.0   Max.   :21.00   19     : 12          </span></span>
-<span><span class="co">#&gt;                                  (Other):506</span></span></code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/autodb.html">autodb</a></span><span class="op">(</span><span class="va">ChickWeight</span>, name <span class="op">=</span> <span class="st">"ChickWeight"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                                  (Other):506</span></span>
+<span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/autodb.html">autodb</a></span><span class="op">(</span><span class="va">ChickWeight</span><span class="op">)</span></span>
 <span><span class="va">db</span></span>
-<span><span class="co">#&gt; database ChickWeight with 2 relations</span></span>
+<span><span class="co">#&gt; database with 2 relations</span></span>
 <span><span class="co">#&gt; 4 attributes: weight, Time, Chick, Diet</span></span>
 <span><span class="co">#&gt; relation Chick: Chick, Diet; 50 records</span></span>
 <span><span class="co">#&gt;   key 1: Chick</span></span>
 <span><span class="co">#&gt; relation Time_Chick: Time, Chick, weight; 578 records</span></span>
 <span><span class="co">#&gt;   key 1: Time, Chick</span></span>
 <span><span class="co">#&gt; references:</span></span>
-<span><span class="co">#&gt; Time_Chick.{Chick} -&gt; Chick.{Chick}</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graphviz_text</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/gv.html">gv</a></span><span class="op">(</span><span class="va">db</span><span class="op">)</span></span>
-<span><span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="va">graphviz_text</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt; Time_Chick.{Chick} -&gt; Chick.{Chick}</span></span>
+<span><span class="va">graphviz_text</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/gv.html">gv</a></span><span class="op">(</span><span class="va">db</span><span class="op">)</span></span>
+<span><span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="va">graphviz_text</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Google Chrome was not found. Try setting the `CHROMOTE_CHROME` environment variable to the executable of a Chromium-based browser, such as Google Chrome, Chromium or Brave.</span></span></code></pre></div>
 <p><img src="reference/figures/README-example-1.png" width="100%"></p>
 <p>Using the <code>exclude</code> argument to forbid certain variables from appearing in keys:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">CO2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      Plant             Type         Treatment       conc          uptake     </span></span>
 <span><span class="co">#&gt;  Qn1    : 7   Quebec     :42   nonchilled:42   Min.   :  95   Min.   : 7.70  </span></span>
@@ -114,11 +115,10 @@
 <span><span class="co">#&gt;  Qc1    : 7                                    Mean   : 435   Mean   :27.21  </span></span>
 <span><span class="co">#&gt;  Qc3    : 7                                    3rd Qu.: 675   3rd Qu.:37.12  </span></span>
 <span><span class="co">#&gt;  Qc2    : 7                                    Max.   :1000   Max.   :45.50  </span></span>
-<span><span class="co">#&gt;  (Other):42</span></span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">db2_noexclude</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/autodb.html">autodb</a></span><span class="op">(</span><span class="va">CO2</span>, name <span class="op">=</span> <span class="st">"CO2"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;  (Other):42</span></span>
+<span><span class="va">db2_noexclude</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/autodb.html">autodb</a></span><span class="op">(</span><span class="va">CO2</span><span class="op">)</span></span>
 <span><span class="va">db2_noexclude</span></span>
-<span><span class="co">#&gt; database CO2 with 3 relations</span></span>
+<span><span class="co">#&gt; database with 3 relations</span></span>
 <span><span class="co">#&gt; 5 attributes: Plant, Type, Treatment, conc, uptake</span></span>
 <span><span class="co">#&gt; relation Plant: Plant, Type, Treatment; 12 records</span></span>
 <span><span class="co">#&gt;   key 1: Plant</span></span>
@@ -129,24 +129,22 @@
 <span><span class="co">#&gt;   key 1: conc, uptake</span></span>
 <span><span class="co">#&gt; references:</span></span>
 <span><span class="co">#&gt; Plant_conc.{Plant} -&gt; Plant.{Plant}</span></span>
-<span><span class="co">#&gt; Plant_conc.{conc, uptake} -&gt; conc_uptake.{conc, uptake}</span></span></code></pre></div>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graphviz_text2_noexclude</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/gv.html">gv</a></span><span class="op">(</span><span class="va">db2_noexclude</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Plant_conc.{conc, uptake} -&gt; conc_uptake.{conc, uptake}</span></span>
+<span><span class="va">graphviz_text2_noexclude</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/gv.html">gv</a></span><span class="op">(</span><span class="va">db2_noexclude</span><span class="op">)</span></span>
 <span><span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="va">graphviz_text2_noexclude</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-exclude_example-1.png" width="100%"></p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">db2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/autodb.html">autodb</a></span><span class="op">(</span><span class="va">CO2</span>, name <span class="op">=</span> <span class="st">"CO2"</span>, exclude <span class="op">=</span> <span class="st">"uptake"</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">db2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/autodb.html">autodb</a></span><span class="op">(</span><span class="va">CO2</span>, exclude <span class="op">=</span> <span class="st">"uptake"</span><span class="op">)</span></span>
 <span><span class="va">db2</span></span>
-<span><span class="co">#&gt; database CO2 with 2 relations</span></span>
+<span><span class="co">#&gt; database with 2 relations</span></span>
 <span><span class="co">#&gt; 5 attributes: Plant, Type, Treatment, conc, uptake</span></span>
 <span><span class="co">#&gt; relation Plant: Plant, Type, Treatment; 12 records</span></span>
 <span><span class="co">#&gt;   key 1: Plant</span></span>
 <span><span class="co">#&gt; relation Plant_conc: Plant, conc, uptake; 84 records</span></span>
 <span><span class="co">#&gt;   key 1: Plant, conc</span></span>
 <span><span class="co">#&gt; references:</span></span>
-<span><span class="co">#&gt; Plant_conc.{Plant} -&gt; Plant.{Plant}</span></span></code></pre></div>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">graphviz_text2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/gv.html">gv</a></span><span class="op">(</span><span class="va">db2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Plant_conc.{Plant} -&gt; Plant.{Plant}</span></span>
+<span><span class="va">graphviz_text2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/gv.html">gv</a></span><span class="op">(</span><span class="va">db2</span><span class="op">)</span></span>
 <span><span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="va">graphviz_text2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-exclude_example-2.png" width="100%"></p>
 <p>There are also functions for doing each step of the database creation separately, including functional dependency detection and normalisation. See the vignette for more details.</p>
@@ -155,6 +153,7 @@
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
+<li><a href="https://cloud.r-project.org/package=autodb" class="external-link">View on CRAN</a></li>
 <li><a href="https://github.com/CharnelMouse/autodb/" class="external-link">Browse source code</a></li>
 <li><a href="https://github.com/CharnelMouse/autodb/issues" class="external-link">Report a bug</a></li>
 </ul>
