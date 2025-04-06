@@ -290,9 +290,9 @@ describe("database", {
     # 3NF schema: abcd[acd].{ab} -> ab[ab,bd].{ab} if exact,
     # abd[ad].{b} -> bd[b].{b}, abc[abc].{b} -> b.{b} for 15 sig. digits
     x_sig <- x
-    x_sig[2:4] <- lapply(x_sig[2:4], format, digit = 15) |> lapply(as.numeric)
+    x_sig[2:4] <- lapply(x_sig[2:4], format, digits = 15) |> lapply(as.numeric)
     ds <- normalise(fds, remove_avoidable = TRUE)
-    rel <- subschemas(ds) |> create() |> insert(x_sig)
+    rel <- subschemas(ds) |> create() |> insert(x_sig, digits = 15)
     refs <- references(ds)
     expect_setequal(
       refs,

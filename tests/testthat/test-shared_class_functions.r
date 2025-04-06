@@ -1164,6 +1164,25 @@ describe("insert", {
       curry = TRUE
     )
   })
+  it("can fail if inserting with different float precision", {
+    x <- data.frame(
+      a = c(0.12345678, 0.12345679),
+      b = c(FALSE, TRUE)
+    )
+    rs <- relation_schema(
+      list(
+        constants = list("a", list(character())),
+        b = list("b", list("b"))
+      ),
+      c("a", "b")
+    )
+    expect_error(insert(create(rs), x, digits = NA))
+    expect_no_error(insert(create(rs), x, digits = 7))
+
+    ds <- database_schema(rs, list())
+    expect_error(insert(create(ds), x, digits = NA))
+    expect_no_error(insert(create(ds), x, digits = 7))
+  })
 })
 
 describe("subrelations", {

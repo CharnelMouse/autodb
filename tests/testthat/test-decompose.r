@@ -1,14 +1,17 @@
 describe("decompose", {
   it("returns valid databases", {
     forall(
-      gen_df(6, 7),
-      dup %>>%
-        (onRight(
-          with_args(discover, accuracy = 1) %>>%
-            normalise
-        )) %>>%
-        uncurry(decompose) %>>%
-        is_valid_database
+      list(
+        gen_df(6, 7),
+        gen.choice(gen.element(7:1), gen.pure(NA_integer_))
+      ),
+      \(x, digits) {
+        fds <- discover(x, 1, digits = digits)
+        schema <- normalise(fds)
+        db <- decompose(x, schema)
+        is_valid_database(db)
+      },
+      curry = TRUE
     )
   })
   it("removes extraneous dependencies", {
@@ -294,17 +297,24 @@ describe("decompose", {
   })
   it("is equivalent to create >> insert for valid data", {
     forall(
-      gen_df(6, 7, remove_dup_rows = TRUE) |>
-        gen.with(\(df) {
+      list(
+        gen_df(6, 7, remove_dup_rows = TRUE),
+        gen.element(c(7:1, NA))
+      ) |>
+        gen.with(uncurry(\(df, digits) {
           list(
             df = df,
-            schema = normalise(discover(df, 1), remove_avoidable = TRUE)
+            schema = normalise(
+              discover(df, 1, digits = digits),
+              remove_avoidable = TRUE
+            ),
+            digits = digits
           )
-        }),
-      \(df, schema) {
+        })),
+      \(df, schema, digits) {
         expect_identical(
-          decompose(df, schema),
-          create(schema) |> insert(df)
+          decompose(df, schema, digits = digits),
+          create(schema) |> insert(df, digits = digits)
         )
       },
       curry = TRUE
@@ -434,15 +444,22 @@ describe("decompose", {
 describe("create_insert", {
   it("is equivalent to create >> insert", {
     forall(
-      gen_df(6, 7, remove_dup_rows = TRUE) |>
-        gen.with(\(df) list(
+      list(
+        gen_df(6, 7, remove_dup_rows = TRUE),
+        gen.element(c(7:1, NA_integer_))
+      ) |>
+        gen.with(uncurry(\(df, digits) list(
           df = df,
-          schema = synthesise(discover(df, 1))
-        )),
-      expect_biidentical(
-        uncurry(create_insert),
-        onRight(create) %>>% rev %>>% uncurry(insert)
-      )
+          schema = synthesise(discover(df, 1)),
+          digits = digits
+        ))),
+      \(df, schema, digits) {
+        expect_identical(
+          create_insert(df, schema, digits = digits),
+          insert(create(schema), df, digits = digits)
+        )
+      },
+      curry = TRUE
     )
   })
 })

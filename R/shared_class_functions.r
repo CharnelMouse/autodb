@@ -441,12 +441,19 @@ create <- function(x, ...) {
 #'   all attributes of all elements of \code{x[relations]}. By default, it is
 #'   not, and data is only inserted into elements of \code{x[relations]} whose
 #'   attributes are all present in \code{vals}.
+#' @param digits a positive integer, indicating how many significant digits are
+#'   to be used for numeric and complex variables. A value of \code{NA} results
+#'   in no rounding. By default, this uses \code{getOption("digits")}, similarly
+#'   to \code{\link{format}}. See the "Floating-point variables" section for
+#'   \code{\link{discover}} for why this rounding is necessary for consistent
+#'   results across different machines. See the note in
+#'   \code{\link{print.default}} about \code{digits >= 16}.
 #' @param ... further arguments pass on to methods.
 #'
 #' @return An R object of the same class as \code{x}, containing the additional
 #'   new data.
 #' @export
-insert <- function(x, vals, relations = names(x), all = FALSE, ...) {
+insert <- function(x, vals, relations = names(x), all = FALSE, digits = getOption("digits"), ...) {
   UseMethod("insert")
 }
 

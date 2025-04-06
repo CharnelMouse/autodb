@@ -75,20 +75,22 @@ autodb <- function(
       remove_avoidable = remove_avoidable,
       constants_name = constants_name
     ) |>
-    report$op(decompose, "decomposing", df = df)
+    report$op(decompose, "decomposing", df = df, digits = NA)
 }
 
 # like format_if_float for discover(), but keeping the original class
 # "NA" -> NA to prevent "NAs introduced by coercion" warning
 coarsen_if_float <- function(x, digits) {
+  if (is.na(digits))
+    return(x)
   if (inherits(x, "numeric")) {
     nas <- is.na(x)
-    x[!nas] <- as.numeric(format(x[!nas], digits = digits, scientific = FALSE))
+    x[!nas] <- as.numeric(format(x[!nas], digits = digits, scientific = TRUE))
     return(x)
   }
   if (inherits(x, "complex")) {
     nas <- is.na(x)
-    x[!nas] <- as.complex(format(x[!nas], digits = digits, scientific = FALSE))
+    x[!nas] <- as.complex(format(x[!nas], digits = digits, scientific = TRUE))
     return(x)
   }
   x

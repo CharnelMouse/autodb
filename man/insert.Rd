@@ -4,7 +4,14 @@
 \alias{insert}
 \title{Insert data}
 \usage{
-insert(x, vals, relations = names(x), all = FALSE, ...)
+insert(
+  x,
+  vals,
+  relations = names(x),
+  all = FALSE,
+  digits = getOption("digits"),
+  ...
+)
 }
 \arguments{
 \item{x}{a relational data object, into which to insert data, such as a
@@ -20,6 +27,14 @@ data into every element.}
 all attributes of all elements of \code{x[relations]}. By default, it is
 not, and data is only inserted into elements of \code{x[relations]} whose
 attributes are all present in \code{vals}.}
+
+\item{digits}{a positive integer, indicating how many significant digits are
+to be used for numeric and complex variables. A value of \code{NA} results
+in no rounding. By default, this uses \code{getOption("digits")}, similarly
+to \code{\link{format}}. See the "Floating-point variables" section for
+\code{\link{discover}} for why this rounding is necessary for consistent
+results across different machines. See the note in
+\code{\link{print.default}} about \code{digits >= 16}.}
 
 \item{...}{further arguments pass on to methods.}
 }

@@ -4,13 +4,21 @@
 \alias{decompose}
 \title{Decompose a data frame based on given normalised dependencies}
 \usage{
-decompose(df, schema)
+decompose(df, schema, digits = getOption("digits"))
 }
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
 
 \item{schema}{a database schema with foreign key references, such as given by
 \code{\link{autoref}}.}
+
+\item{digits}{a positive integer, indicating how many significant digits are
+to be used for numeric and complex variables. A value of \code{NA} results
+in no rounding. By default, this uses \code{getOption("digits")}, similarly
+to \code{\link{format}}. See the "Floating-point variables" section for
+\code{\link{discover}} for why this rounding is necessary for consistent
+results across different machines. See the note in
+\code{\link{print.default}} about \code{digits >= 16}.}
 }
 \value{
 A \code{\link{database}} object, containing the data in \code{df}

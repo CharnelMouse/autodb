@@ -327,6 +327,7 @@ gen_df <- function(
   minrow = 0L,
   mincol = 0L,
   remove_dup_rows = FALSE,
+  digits = NA,
   variant = c("data.frame", "tibble")
 ) {
   asable_classes <- c("logical", "integer", "numeric", "character", "factor")
@@ -340,7 +341,7 @@ gen_df <- function(
     variant = gen.element(variant)
   ) |>
     gen.with(\(lst) c(lst[[1]], lst[2], list(remove_dup_rows = remove_dup_rows), lst[3])) |>
-    gen.and_then(uncurry(gen.df_fixed_ranges))
+    gen.and_then(uncurry(with_args(gen.df_fixed_ranges, digits = digits)))
 }
 
 gen.df_fixed_ranges <- function(
@@ -348,6 +349,7 @@ gen.df_fixed_ranges <- function(
   nms,
   n_records,
   remove_dup_rows,
+  digits = getOption("digits"),
   variant = c("data.frame", "tibble")
 ) {
   variant <- match.arg(variant)
@@ -357,11 +359,19 @@ gen.df_fixed_ranges <- function(
     tibble = with_args(tibble::as_tibble, .name_repair = "minimal")
   )
   as_fns <- list(
-    logical = as.logical,
-    integer = as.integer,
-    numeric = as.numeric,
-    character = as.character,
-    factor = with_args(factor, levels = c(FALSE, TRUE))
+    logical = gen.element(c(FALSE, TRUE, NA)),
+    integer = gen.element(c(-5:5, NA_integer_)),
+    numeric = gen.numeric(),
+    character = gen.element(c("FALSE", "TRUE", NA_character_)),
+    factor = gen.element(c("FALSE", "TRUE", NA_character_)) |>
+      gen.with(with_args(factor, levels = c("FALSE", "TRUE")))
+  )
+  inits <- list(
+    logical = logical(),
+    integer = integer(),
+    numeric = numeric(),
+    character = character(),
+    factor = factor(character(), levels = c("FALSE", "TRUE"))
   )
   if (length(classes) == 0L)
     return(
@@ -376,8 +386,19 @@ gen.df_fixed_ranges <- function(
       # gen.sample only shrinks by reordering,
       # and gen.c incorrectly returns NULL when size = 0,
       # so we need to unlist "manually"
-      as_fns[[cl]](c(FALSE, TRUE, NA)) |>
-        gen.sample_resampleable(of = n_records)
+      as_fns[[cl]] |>
+        gen.list(of = n_records) |>
+        gen.with(\(x) Reduce(
+          c,
+          x,
+          init = inits[[cl]]
+        )) |>
+        gen.and_then(\(x) {
+          if (cl %in% c("numeric", "complex"))
+            gen.float_coincide(x, digits)
+          else
+            gen.pure(x)
+        })
     }
   ) |>
     gen.with(
@@ -387,6 +408,54 @@ gen.df_fixed_ranges <- function(
     ) |>
     gen.with(variant)
 }
+
+gen.float_coincide <- function(x, digits) {
+  x <- coarsen_if_float(x, digits)
+  len <- length(x)
+  given <- which(!is.na(x))
+  plen <- length(given)
+  mag <- ifelse(!is.na(x) & x == 0, 0, floor(log(abs(x[given]), 10)))
+  if (len == 0 || is.na(digits))
+    return(gen.sample_resampleable(x, of = len))
+  gen.sample_resampleable(seq_len(len), of = len) |>
+    gen.and_then(\(inds) {
+      mag_inds <- match(inds, given)
+      mag_inds <- mag_inds[!is.na(mag_inds)]
+      list(
+        gen.pure(x),
+        gen.pure(inds),
+        gen.unif(-0.5, 0.5) |>
+          gen.c(of = length(mag_inds)) |>
+          gen.with(with_args(`*`, 10^(mag[mag_inds] + 1 - digits)))
+      )
+    }) |>
+    gen.with(uncurry(\(x, inds, y) {
+      res <- x[inds]
+      given <- which(!is.na(res))
+      if (length(given) != length(y)) {
+        stop(
+          "x: ", toString(x),
+          "\ninds: ", toString(inds),
+          "\ngiven: ", toString(given),
+          "\nmag_inds: ", toString(match(inds, which(!is.na(x)))),
+          "\nmag: ", toString(mag),
+          "\ndigits: ", digits,
+          "\nexp: ", toString(mag[match(inds, which(!is.na(x)))] + 1 - digits),
+          "\nmult: ", toString(10^(mag[match(inds, which(!is.na(x)))] + 1 - digits)),
+          "\ny: ", toString(y)
+        )
+      }
+      res[given] <- res[given] + y
+      res
+    }))
+}
+
+gen.numeric <- function(weights = c(0.8, 0.2))
+  list(
+    gen.choice(gen.unif(-5, 5), gen.pure(NA_real_), prob = weights),
+    gen.element(-5:5)
+  ) |>
+  gen.and_then(uncurry(\(x, y) x*10^y))
 
 gen_attr_name <- function(len) {
   gen.sample_resampleable(c(letters, LETTERS, "_", " ", "."), to = len) |>
@@ -586,6 +655,7 @@ gen.relation_from_schema <- function(
   rs,
   rows_from = 0L,
   rows_to = 10L,
+  digits = getOption("digits"),
   variant = c("data.frame", "tibble")
 ) {
   variant <- match.arg(variant)
@@ -604,6 +674,7 @@ gen.relation_from_schema <- function(
               classes = rep("logical", r_ncols[[n]]),
               nms = r_attrs[[n]],
               remove_dup_rows = TRUE,
+              digits = digits,
               variant = variant
             )) |>
             gen.with(\(df) list(

@@ -481,13 +481,15 @@ c.relation <- function(...) {
 }
 
 #' @exportS3Method
-insert.relation <- function(x, vals, relations = names(x), all = FALSE, ...) {
+insert.relation <- function(x, vals, relations = names(x), all = FALSE, digits = getOption("digits"), ...) {
   if (any(!is.element(relations, names(x))))
     stop("given relations must exist")
   if (anyDuplicated(relations))
     stop("given relations must be unique")
   if (length(relations) == 0)
     return(x)
+  if (!is.na(digits))
+    vals[] <- lapply(vals, coarsen_if_float, digits = digits)
   extra <- setdiff(names(vals), attrs_order(x))
   if (length(extra) > 0L)
     stop(paste(

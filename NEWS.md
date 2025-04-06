@@ -3,6 +3,9 @@
 ## Improvements
 
 * `relation` and `database` methods for `rename_attrs` and `gv` now run significantly more quickly for large data sets, due to not re-running all the key validity checks.
+* Handing for numerical/complex variables is more consistent:
+    * Values are now rounded by significant digits, as intended, rather than by decimal places.
+    * In addition to `autodb`, `discover`, and `df_equiv`, values are now also rounded for `insert` and `decompose`.
 
 # autodb 2.3.1
 

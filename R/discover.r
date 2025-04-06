@@ -502,7 +502,7 @@ discover <- function(
 
 format_if_float <- function(x, digits) {
   if ((inherits(x, "numeric") || inherits(x, "complex")))
-    format(x, digits = digits, scientific = FALSE)
+    format(x, digits = digits, scientific = TRUE)
   else
     x
 }

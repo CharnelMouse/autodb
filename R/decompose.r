@@ -15,13 +15,23 @@
 #' @param df a data.frame, containing the data to be normalised.
 #' @param schema a database schema with foreign key references, such as given by
 #'   \code{\link{autoref}}.
+#' @param digits a positive integer, indicating how many significant digits are
+#'   to be used for numeric and complex variables. A value of \code{NA} results
+#'   in no rounding. By default, this uses \code{getOption("digits")}, similarly
+#'   to \code{\link{format}}. See the "Floating-point variables" section for
+#'   \code{\link{discover}} for why this rounding is necessary for consistent
+#'   results across different machines. See the note in
+#'   \code{\link{print.default}} about \code{digits >= 16}.
 #'
 #' @return A \code{\link{database}} object, containing the data in \code{df}
 #'   within the database schema given in \code{schema}.
 #' @export
-decompose <- function(df, schema) {
+decompose <- function(df, schema, digits = getOption("digits")) {
   stopifnot(!anyDuplicated(names(schema)))
   stopifnot(identical(names(df), attrs_order(schema)))
+
+  if (!is.na(digits))
+    df[] <- lapply(df, coarsen_if_float, digits = digits)
 
   inferred_fds <- synthesised_fds(attrs(schema), keys(schema))
   if (length(inferred_fds) > 0L)
@@ -52,11 +62,13 @@ decompose <- function(df, schema) {
     ))
   }
 
-  create_insert(df, schema) |>
+  create_insert(df, schema, digits = digits) |>
     database(references(schema))
 }
 
-create_insert <- function(df, schema) {
+create_insert <- function(df, schema, digits = getOption("digits")) {
+  if (!is.na(digits))
+    df[] <- lapply(df, coarsen_if_float, digits = digits)
   relations <- stats::setNames(
     Map(
       \(attrs, keys) {

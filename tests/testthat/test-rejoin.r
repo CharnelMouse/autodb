@@ -1,29 +1,40 @@
 describe("rejoin", {
-  it("is left-inverse for lossless full-dep database creation, outside of row permutations, for tables with unique rows", {
-    autodb_inverted_by_rejoin <- expect_bi(
-      with_args(df_equiv, digits = NA),
-      with_args(autodb, ensure_lossless = TRUE) %>>%
-        rejoin,
-      identity
-    )
+  it("is left-inverse for lossless full-dep database creation, outside of row permutations and rounding, for tables with unique rows", {
+    autodb_inverted_by_rejoin <- function(digits = NA) {
+      expect_bi(
+        with_args(df_equiv, digits = digits),
+        with_args(autodb, digits = digits, ensure_lossless = TRUE) %>>%
+          rejoin,
+        identity
+      )
+    }
     table_dum <- data.frame()
     table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
-    autodb_inverted_by_rejoin(table_dum)
-    autodb_inverted_by_rejoin(table_dee)
+    autodb_inverted_by_rejoin(digits = NA)(table_dum)
+    autodb_inverted_by_rejoin(digits = NA)(table_dee)
     # 6 columns allows for interesting cases, such as a table containing two
     # independent ones, or a reference involving several attributes
     forall(
-      gen_df(6, 7, remove_dup_rows = TRUE),
-      autodb_inverted_by_rejoin
+      list(
+        gen_df(6, 7, remove_dup_rows = TRUE),
+        gen.element(c(7:1, NA_integer_))
+      ),
+      \(x, d) autodb_inverted_by_rejoin(digits = d)(x),
+      curry = TRUE
     )
     forall(
-      gen_df(6, 7, remove_dup_rows = FALSE),
-      expect_bi(
-        with_args(df_equiv, digits = NA),
-        with_args(autodb, ensure_lossless = TRUE) %>>%
-          rejoin,
-        df_unique
-      )
+      list(
+        gen_df(6, 7, remove_dup_rows = FALSE),
+        gen.element(c(7:1, NA_integer_))
+      ),
+      \(x, d) {
+        expect_bi(
+          with_args(df_equiv, digits = d),
+          with_args(autodb, digits = d, ensure_lossless = TRUE) %>>%
+            rejoin,
+          df_unique
+        )(x)
+      }
     )
   })
   it("is possible for any database constructed from a data frame", {

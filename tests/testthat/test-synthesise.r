@@ -481,24 +481,29 @@ describe("synthesise", {
       )))
     }
 
-    still_lossless_with_less_or_same_attributes <- function(df) {
-      flat_deps <- discover(df, 1)
+    still_lossless_with_less_or_same_attributes <- function(df, digits) {
+      flat_deps <- discover(df, 1, digits = digits)
       schema_avoid_lossless <- autoref(synthesise(
         flat_deps,
         remove_avoidable = TRUE
       ))
 
       # schema_avoid_lossless should be lossless
-      database_avoid_lossless <- decompose(df, schema_avoid_lossless)
+      database_avoid_lossless <- decompose(df, schema_avoid_lossless, digits = digits)
       df2 <- rejoin(database_avoid_lossless)
-      expect_identical_unordered_table(df2, df)
+      if (!df_equiv(df2, df))
+        return(expect_true(df_equiv(df2, df, digits = digits)))
 
       still_lossless_with_less_or_same_attributes_dep(flat_deps)
     }
 
     forall(
-      gen_df(10, 7, remove_dup_rows = TRUE),
-      still_lossless_with_less_or_same_attributes
+      list(
+        gen_df(10, 7, remove_dup_rows = TRUE),
+        gen.element(c(7:1, NA_integer_))
+      ),
+      still_lossless_with_less_or_same_attributes,
+      curry = TRUE
     )
     forall(
       gen_flat_deps(7, 20, to = 20L),

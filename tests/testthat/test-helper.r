@@ -27,6 +27,24 @@ test_that("gen_df can generate a tibble without name failure", {
   )
 })
 
+test_that("gen.float_coincide adds offset that disappear in rounding", {
+  forall(
+    list(
+      gen.numeric(c(1, 0)),
+      gen.element(c(7:1, NA_integer_))
+    ) |>
+      gen.and_then(uncurry(\(x, digits) list(
+        gen.pure(x),
+        gen.pure(digits),
+        gen.float_coincide(rep(x, 50), digits = digits)
+      ))),
+    \(x, digits, y) {
+      expect_false(!anyDuplicated(coarsen_if_float(c(x, y), digits)))
+    },
+    curry = TRUE
+  )
+})
+
 test_that("gen_flat_deps_fixed_names generates valid", {
   forall(gen_flat_deps_fixed_names(7, 20, to = 20L), is_valid_functional_dependency)
 })

@@ -20,19 +20,30 @@ describe("autodb", {
     forall(
       list(
         gen_df(6, 7),
+        digits = gen.element(c(7:1, NA_integer_)),
         ensure_lossless = gen.element(c(FALSE, TRUE)),
         remove_avoidable = gen.element(c(FALSE, TRUE))
       ),
-      expect_biidentical(
-        uncurry(autodb),
-        biapply(
-          with_args("[[", 1),
-          (\(x) c(list(discover(x[[1]], 1)), x[-1])) %>>%
-            (uncurry(normalise))
-        ) %>>%
-          (uncurry(decompose))
-      ),
-      curry = FALSE
+      \(df, digits, ensure_lossless, remove_avoidable) {
+        expect_identical(
+          autodb(
+            df,
+            digits = digits,
+            ensure_lossless = ensure_lossless,
+            remove_avoidable = remove_avoidable
+          ),
+          decompose(
+            df,
+            normalise(
+              discover(df, 1, digits = digits),
+              ensure_lossless = ensure_lossless,
+              remove_avoidable = remove_avoidable
+            ),
+            digits = digits
+          )
+        )
+      },
+      curry = TRUE
     )
   })
   it("runs DFD and normalises the given data.frame", {
