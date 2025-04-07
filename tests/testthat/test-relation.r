@@ -102,7 +102,7 @@ describe("relation", {
         list(a = list(df = data.frame(a = rep(1L, 2L)), keys = list("a"))),
         "a"
       ),
-      "^relations must satisfy their keys: element 1\\.\\{a\\}$"
+      "^relations must satisfy their keys: element a\\.\\{a\\}$"
     )
     expect_error(
       relation(
@@ -112,7 +112,7 @@ describe("relation", {
         )),
         "a"
       ),
-      "^relations must satisfy their keys: element 1\\.\\{\\}$"
+      "^relations must satisfy their keys: element a\\.\\{\\}$"
     )
   })
   it("expects valid input: unique relation names", {

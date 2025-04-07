@@ -260,7 +260,7 @@ relation <- function(relations, attrs_order) {
     prefix = "element"
   )
   unsatisfied_keys <- lapply(
-    seq_along(relations),
+    names(relations),
     \(n) {
       r <- relations[[n]]
       failed <- which(vapply(

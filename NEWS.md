@@ -6,6 +6,7 @@
 * Handing for numerical/complex variables is more consistent:
     * Values are now rounded by significant digits, as intended, rather than by decimal places.
     * In addition to `autodb`, `discover`, and `df_equiv`, values are now also rounded for `insert` and `decompose`.
+* Some `relation` error messages are more informative.
 
 # autodb 2.3.1
 
