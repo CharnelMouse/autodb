@@ -73,8 +73,6 @@ create_insert <- function(df, schema, digits = getOption("digits")) {
     Map(
       \(attrs, keys) {
         list(
-          # conditional needed to handle 0-attrs case,
-          # i.e. decomposing to table_dum and table_dee
           df = df_unique(df[, attrs, drop = FALSE]),
           keys = keys
         )
