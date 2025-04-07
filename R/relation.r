@@ -481,7 +481,14 @@ c.relation <- function(...) {
 }
 
 #' @exportS3Method
-insert.relation <- function(x, vals, relations = names(x), all = FALSE, digits = getOption("digits"), ...) {
+insert.relation <- function(
+  x,
+  vals,
+  relations = names(x),
+  all = FALSE,
+  digits = getOption("digits"),
+  ...
+) {
   if (any(!is.element(relations, names(x))))
     stop("given relations must exist")
   if (anyDuplicated(relations))

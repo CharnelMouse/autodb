@@ -435,8 +435,22 @@ c.database <- function(...) {
 }
 
 #' @exportS3Method
-insert.database <- function(x, vals, relations = names(x), all = FALSE, digits = getOption("digits"), ...) {
-  new_subrelations <- insert(subrelations(x), vals, relations, all, digits = digits, ...)
+insert.database <- function(
+  x,
+  vals,
+  relations = names(x),
+  all = FALSE,
+  digits = getOption("digits"),
+  ...
+) {
+  new_subrelations <- insert(
+    subrelations(x),
+    vals,
+    relations,
+    all,
+    digits = digits,
+    ...
+  )
   dfs <- records(new_subrelations)
   reference_checks <- reference_errors(dfs, references(x))
   if (length(reference_checks)) {
