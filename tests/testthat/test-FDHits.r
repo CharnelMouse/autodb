@@ -28,7 +28,7 @@ describe("treeSearchJoint", {
       if (class(D)[[1]] == "try-error")
         return(fail(attr(D, "condition")$message))
 
-      observed <- try(treeSearchJoint(names(x), D, lookup), silent = TRUE)
+      observed <- try(treeSearchJoint(x, D), silent = TRUE)
       if (class(observed)[[1]] == "try-error")
         return(fail(attr(observed, "condition")$message))
       observed_fds <- observed |>

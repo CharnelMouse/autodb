@@ -1,4 +1,6 @@
-treeSearchJoint <- function(attrs, D, lookup, progress = FALSE) {
+treeSearchJoint <- function(x, D, progress = FALSE) {
+  lookup <- lookup_table(x)
+  attrs <- names(x)
   plis <- lapply(lookup, pli)
   treeSearchJoint_rec(
     character(),
