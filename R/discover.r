@@ -281,9 +281,7 @@ discover <- function(
       paste("formatting numerical/complex variables with", digits, "significant digits")
     )
   df <- report$exp(
-    lapply(df, \(x) match(x, x)) |>
-      data.frame() |>
-      stats::setNames(column_names),
+    lookup_table(df),
     "simplifying data types"
   )
   partitions <- list()
@@ -505,6 +503,11 @@ format_if_float <- function(x, digits) {
     format(x, digits = digits, scientific = TRUE)
   else
     x
+}
+
+lookup_table <- function(df) {
+  lapply(df, \(x) match(x, x)) |>
+    data.frame(check.names = FALSE)
 }
 
 find_LHSs_dfd <- function(
