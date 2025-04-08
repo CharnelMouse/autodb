@@ -177,3 +177,49 @@ sample_diffsets <- function(pli, lookup, epsilon = 0.3) {
   ) |>
     unique()
 }
+
+new_diffset <- function(S, W, lookup) {
+  # need a pair of rows that are together in S, but not in W
+  # "... the FD is valid if the PLI is empty. If it is not empty, it is
+  # sufficient to inspect any of the clusters that it contains to find a
+  # violation." ~ Bleifuss et al. 2024
+  # in other words, we take the partition for S, and remove any clusters
+  # that don't differ on A.
+  # For example, if we take the product of the partitions for S and A,
+  # we could then take setdiff(partition(S), partition(S X A)).
+  # The PLI mentioned above comes from the filtering used to update the
+  # partition in refine_partition.
+  partition <- if (length(S) == 0) {
+    list(seq_len(nrow(lookup))) |>
+      (\(x) x[lengths(x) > 1])()
+  }else{
+    unname(split(
+      seq_len(nrow(lookup)),
+      lookup[, S, drop = FALSE]
+    )) |>
+      (\(x) x[lengths(x) > 1])()
+  }
+  if (length(partition) == 0)
+    stop("{", toString(S), "} -> {", toString(W), "} is satisfied")
+  joint_partitions <- lapply(
+    W,
+    \(attr) setdiff(partition, refine_partition(partition, attr, lookup))
+  ) |>
+    Reduce(f = c, init = list())
+  stopifnot(length(joint_partitions) > 0)
+  rows <- joint_partitions[[1]]
+  names(lookup)[vapply(
+    lookup[rows, , drop = FALSE],
+    \(vals) any(vals != vals[[1]]),
+    logical(1)
+  )]
+}
+
+refine_partition <- function(partition, attr, lookup) {
+  lapply(
+    partition,
+    \(cluster) unname(split(cluster, lookup[[attr]][cluster])) |>
+      (\(x) x[lengths(x) > 1])()
+  ) |>
+    Reduce(f = c, init = list())
+}

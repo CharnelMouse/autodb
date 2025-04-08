@@ -1195,7 +1195,7 @@ split_by <- function(fn, ...) function(x) split(x, fn(x), ...)
 subset_by <- function(fn) function(x) x[fn(x)]
 sort_by <- function(fn) function(x) x[order(fn(x))]
 if_discard_else <- function(cond, fn)
-  function(x) if (cond(x)) discard() else fn(x)
+  function(...) if (cond(...)) discard() else fn(...)
 uncurry <- function(fn) function(x) do.call(fn, x)
 with_args <- function(fn, ...) {
   lst <- list(...)
