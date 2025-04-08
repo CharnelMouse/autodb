@@ -1,11 +1,13 @@
-treeSearchJoint <- function(attrs, D, expected, progress = FALSE) {
+treeSearchJoint <- function(attrs, D, lookup, progress = FALSE) {
+  plis <- lapply(lookup, pli)
   treeSearchJoint_rec(
     character(),
     attrs,
     attrs,
     D,
     orig = attrs,
-    expected = expected,
+    lookup,
+    plis,
     progress = progress
   )
 }
@@ -16,7 +18,8 @@ treeSearchJoint_rec <- function(
   W,
   D,
   orig,
-  expected,
+  lookup,
+  plis,
   visited = list(),
   progress = FALSE
 ) {
@@ -24,6 +27,7 @@ treeSearchJoint_rec <- function(
     cat("S =", toString(S), "\n")
     cat("V =", toString(V), "\n")
     cat("W =", toString(W), "\n")
+    flush.console()
   }
   if (is.element(list(list(S, V, W)), visited))
     stop("already visited")
@@ -33,8 +37,10 @@ treeSearchJoint_rec <- function(
     C <- x[[1]]
     A <- x[[2]]
     if (length(critical(C, A, S, D)) == 0) {
-      if (progress)
+      if (progress) {
         cat("pruning", A, "from W: no critical edges for", C, "WRT S\n")
+        flush.console()
+      }
       W <- setdiff(W, A)
     }
   }
@@ -53,22 +59,38 @@ treeSearchJoint_rec <- function(
       )),
       logical(1)
     ))) {
-      if (progress)
+      if (progress) {
         cat("pruning", B, "from V\n")
+        flush.console()
+      }
       V <- setdiff(V, B)
     }
   }
   if (length(W) == 0) {
-    if (progress)
+    if (progress) {
       cat("nothing found\n\n")
+      flush.console()
+    }
     return(list())
   }
   # validation at the leaves
   uncovered <- uncov(S, W, D)
-  if (length(uncovered) == 0 && validate(list(S, W), expected, progress)) {
-    if (progress)
-      cat("found {", toString(S), "} -> {", toString(W), "}\n\n")
-    return(list(list(S, W)))
+  if (length(uncovered) == 0) {
+    if (validate(list(S, W), lookup, plis, progress)) {
+      if (progress) {
+        cat("found {", toString(S), "} -> {", toString(W), "}\n\n")
+        flush.console()
+      }
+      return(list(list(S, W)))
+    }else{
+      stop(paste("found false {", toString(S), "} -> {", toString(W), "}"))
+      # if (progress)
+      #   cat("found false {", toString(S), "} -> {", toString(W), "}\n")
+      # ds <- new_diffset(S, W, lookup)
+      # D <- D + list(ds)
+      # if (progress)
+      #   cat("added diffset", toString(ds), "\n\n")
+    }
   }
   # Branching
   if (progress) {
@@ -76,6 +98,7 @@ treeSearchJoint_rec <- function(
     cat("V =", toString(V), "\n")
     cat("W =", toString(W), "\n")
     cat("uncovered:", sapply(uncovered, \(x) paste0("\n", toString(x))), "\n")
+    flush.console()
   }
   if (length(uncovered) == 0)
     stop(
@@ -87,11 +110,13 @@ treeSearchJoint_rec <- function(
       toString(W)
     )
   E <- sample_minheur(uncovered, E, V, W)
-  if (progress)
+  if (progress) {
     cat("E = ", toString(E), "\n\n")
+    flush.console()
+  }
   Bs <- intersect(E, V)
   c(
-    list(treeSearchJoint_rec(S, V, setdiff(W, E), D, orig, expected, visited, progress = progress)),
+    list(treeSearchJoint_rec(S, V, setdiff(W, E), D, orig, lookup, plis, visited, progress = progress)),
     lapply(
       seq_along(Bs),
       \(n) treeSearchJoint_rec(
@@ -100,7 +125,8 @@ treeSearchJoint_rec <- function(
         setdiff(intersect(W, E), Bs[[n]]),
         D,
         orig,
-        expected,
+        lookup,
+        plis,
         visited,
         progress = progress
       )
@@ -138,18 +164,23 @@ sample_minheur <- function(set, E, V, W) {
   # sample(set[which(heuristics == min(heuristics))], 1)[[1]]
 }
 
-validate <- function(fd, expected, progress = FALSE) {
+validate <- function(fd, lookup, plis, progress = FALSE) {
   if (progress)
     cat("validating", toString(fd[[1]]), "->", fd[[2]], "\n")
-  detset_match <- match(list(fd[[1]]), lapply(expected, `[[`, 1))
-  res <- if (is.na(detset_match))
-    FALSE
-  else{
-    all(is.element(fd[[2]], expected[[detset_match]][[2]]))
-  }
+  detset_pli <- Reduce(\(x, y) stripped_partition_product(x, y, nrow(lookup)), plis[fd[[1]]])
+  combined_plis <- lapply(
+    fd[[2]],
+    \(attr) setdiff(detset_pli, refine_partition(detset_pli, attr, lookup))
+  )
+  res <- all(lengths(combined_plis) == 0)
   if (progress)
     cat(res, "\n")
   res
+}
+
+pli <- function(indices) {
+  clusters <- split(seq_along(indices), indices)
+  unname(clusters[lengths(clusters) > 1])
 }
 
 sample_diffsets <- function(pli, lookup, epsilon = 0.3) {

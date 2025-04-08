@@ -17,6 +17,7 @@ difference_sets <- function(lookup) {
 describe("treeSearchJoint", {
   it("works as an algorithm with complete difference sets and pre-defined validation", {
     treeSearchJoint_works <- function(x) {
+      lookup <- lookup_table(x)
       fds <- discover(x, 1)
       expected <- Map(
         list,
@@ -27,7 +28,7 @@ describe("treeSearchJoint", {
       if (class(D)[[1]] == "try-error")
         return(fail(attr(D, "condition")$message))
 
-      observed <- try(treeSearchJoint(names(x), D, expected), silent = TRUE)
+      observed <- try(treeSearchJoint(names(x), D, lookup), silent = TRUE)
       if (class(observed)[[1]] == "try-error")
         return(fail(attr(observed, "condition")$message))
       observed_fds <- observed |>
@@ -51,10 +52,6 @@ describe("treeSearchJoint", {
 
 describe("sample_diffsets", {
   it("samples distinct pairs of rows that agree on a given attribute", {
-    pli <- function(indices) {
-      clusters <- split(seq_along(indices), indices)
-      unname(clusters[lengths(clusters) > 1])
-    }
     sample_diffsets_works <- function(x) {
       lookup <- lookup_table(x)
       # PLIs are just single-attribute (stripped) partitions
