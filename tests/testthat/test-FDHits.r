@@ -51,17 +51,14 @@ describe("treeSearchJoint", {
 
 describe("sample_diffsets", {
   it("samples distinct pairs of rows that agree on a given attribute", {
+    pli <- function(indices) {
+      clusters <- split(seq_along(indices), indices)
+      unname(clusters[lengths(clusters) > 1])
+    }
     sample_diffsets_works <- function(x) {
       lookup <- lookup_table(x)
       # PLIs are just single-attribute (stripped) partitions
-      plis <- lapply(
-        lookup,
-        \(indices) {
-          split(seq_len(nrow(lookup)), indices) |>
-            (\(vec) vec[lengths(vec) > 1])() |>
-            unname()
-        }
-      )
+      plis <- lapply(lookup, pli)
       all_diff <- difference_sets(lookup)
       expect_true(all(sapply(
         names(plis),
