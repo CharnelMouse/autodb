@@ -56,7 +56,8 @@ describe("sample_diffsets", {
       lookup <- lookup_table(x)
       # PLIs are just single-attribute (stripped) partitions
       plis <- lapply(lookup, pli)
-      all_diff <- difference_sets(lookup)
+      all_diff <- difference_sets(lookup) |>
+        (\(x) x[lengths(x) > 0])()
       expect_true(all(sapply(
         names(plis),
         \(nm) all(is.element(
