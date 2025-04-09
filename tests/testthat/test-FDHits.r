@@ -1,7 +1,7 @@
 difference_sets <- function(lookup) {
   if (nrow(lookup) == 0)
     return(list())
-  lapply(
+  lsts <- lapply(
     seq_len(nrow(lookup) - 1),
     \(n) {
       lapply(
@@ -31,11 +31,7 @@ describe("treeSearchSep", {
       observed <- try(treeSearchSep(x, D), silent = TRUE)
       if (class(observed)[[1]] == "try-error")
         return(fail(attr(observed, "condition")$message))
-      observed_fds <- observed |>
-        lapply(\(x) lapply(x[[2]], \(y) list(x[[1]], y))) |>
-        Reduce(f = c, init = list()) |>
-        functional_dependency(names(x))
-      expect_setequal(observed_fds, fds)
+      expect_setequal(observed, fds)
     }
 
     # example from original paper

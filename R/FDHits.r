@@ -21,7 +21,8 @@ treeSearchSep <- function(x, D, progress = FALSE) {
       )
     }
   ) |>
-    Reduce(f = c, init = list())
+    Reduce(f = c, init = list()) |>
+    functional_dependency(names(x))
 }
 
 treeSearchSep_rec <- function(
