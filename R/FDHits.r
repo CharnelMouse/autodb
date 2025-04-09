@@ -1,23 +1,33 @@
-treeSearchJoint <- function(x, D, progress = FALSE) {
+treeSearchSep <- function(x, D, progress = FALSE) {
   lookup <- lookup_table(x)
   attrs <- names(x)
   plis <- lapply(lookup, pli)
-  treeSearchJoint_rec(
-    character(),
+  lapply(
     attrs,
-    attrs,
-    D,
-    orig = attrs,
-    lookup,
-    plis,
-    progress = progress
-  )
+    \(a) {
+      if (progress) {
+        cat("dependant", a, "\n")
+        flush.console
+      }
+      treeSearchSep_rec(
+        character(),
+        setdiff(attrs, a),
+        a,
+        D,
+        orig = setdiff(attrs, a),
+        lookup,
+        plis,
+        progress = progress
+      )
+    }
+  ) |>
+    Reduce(f = c, init = list())
 }
 
-treeSearchJoint_rec <- function(
+treeSearchSep_rec <- function(
   S,
   V,
-  W,
+  attr,
   D,
   orig,
   lookup,
@@ -28,28 +38,25 @@ treeSearchJoint_rec <- function(
   if (progress) {
     cat("S =", toString(S), "\n")
     cat("V =", toString(V), "\n")
-    cat("W =", toString(W), "\n")
     flush.console()
   }
-  if (is.element(list(list(S, V, W)), visited))
+  if (is.element(list(list(S, V, attr)), visited))
     stop("already visited")
-  visited <- c(visited, list(list(S, V, W)))
+  visited <- c(visited, list(list(S, V, attr)))
   # pruning
-  for (x in Map(list, rep(S, length(W)), rep(W, each = length(S)))) {
-    C <- x[[1]]
-    A <- x[[2]]
-    if (length(critical(C, A, S, D)) == 0) {
+  for (C in S) {
+    if (length(critical(C, attr, S, D)) == 0) {
       if (progress) {
-        cat("pruning", A, "from W: no critical edges for", C, "WRT S\n")
+        cat("no critical edges for", C, "WRT S\n")
         flush.console()
       }
-      W <- setdiff(W, A)
+      return(list())
     }
   }
   for (B in V) {
     # ∀𝐴∈𝑊∃𝐶∈𝑆∀𝐸∈critical(𝐶,𝐴,𝑆):𝐵∈𝐸
     if (all(vapply(
-      W,
+      attr,
       \(A) any(vapply(
         S,
         \(C) all(vapply(
@@ -68,7 +75,7 @@ treeSearchJoint_rec <- function(
       V <- setdiff(V, B)
     }
   }
-  if (length(W) == 0) {
+  if (length(attr) == 0) {
     if (progress) {
       cat("nothing found\n\n")
       flush.console()
@@ -76,16 +83,16 @@ treeSearchJoint_rec <- function(
     return(list())
   }
   # validation at the leaves
-  uncovered <- uncov(S, W, D)
+  uncovered <- uncov(S, attr, D)
   if (length(uncovered) == 0) {
-    if (validate(list(S, W), lookup, plis, progress)) {
+    if (validate(list(S, attr), lookup, plis, progress)) {
       if (progress) {
-        cat("found {", toString(S), "} -> {", toString(W), "}\n\n")
+        cat("found {", toString(S), "} -> {", toString(attr), "}\n\n")
         flush.console()
       }
-      return(list(list(S, W)))
+      return(list(list(S, attr)))
     }else{
-      stop(paste("found false {", toString(S), "} -> {", toString(W), "}"))
+      stop(paste("found false {", toString(S), "} -> {", toString(attr), "}"))
       # if (progress)
       #   cat("found false {", toString(S), "} -> {", toString(W), "}\n")
       # ds <- new_diffset(S, W, lookup)
@@ -98,7 +105,6 @@ treeSearchJoint_rec <- function(
   if (progress) {
     cat("S =", toString(S), "\n")
     cat("V =", toString(V), "\n")
-    cat("W =", toString(W), "\n")
     cat("uncovered:", sapply(uncovered, \(x) paste0("\n", toString(x))), "\n")
     flush.console()
   }
@@ -109,29 +115,26 @@ treeSearchJoint_rec <- function(
       "; ",
       toString(V),
       "; ",
-      toString(W)
+      toString(attr)
     )
-  E <- sample_minheur(uncovered, E, V, W)
+  E <- sample_minheur(uncovered, E, V, attr)
   if (progress) {
     cat("E = ", toString(E), "\n\n")
     flush.console()
   }
   Bs <- intersect(E, V)
-  c(
-    list(treeSearchJoint_rec(S, V, setdiff(W, E), D, orig, lookup, plis, visited, progress = progress)),
-    lapply(
-      seq_along(Bs),
-      \(n) treeSearchJoint_rec(
-        union(S, Bs[[n]]) |> (\(x) x[order(match(x, orig))])(),
-        setdiff(V, Bs[seq_len(n)]),
-        setdiff(intersect(W, E), Bs[[n]]),
-        D,
-        orig,
-        lookup,
-        plis,
-        visited,
-        progress = progress
-      )
+  lapply(
+    seq_along(Bs),
+    \(n) treeSearchSep_rec(
+      S = union(S, Bs[[n]]) |> (\(x) x[order(match(x, orig))])(),
+      V = setdiff(V, Bs[seq_len(n)]),
+      attr = attr,
+      D = D,
+      orig = orig,
+      lookup = lookup,
+      plis = plis,
+      visited = visited,
+      progress = progress
     )
   ) |>
     Reduce(f = c)
@@ -208,6 +211,7 @@ sample_diffsets <- function(pli, lookup, epsilon = 0.3) {
     samples,
     \(pair) names(lookup)[lookup[pair[[1]], ] != lookup[pair[[2]], ]]
   ) |>
+    (\(x) x[lengths(x) > 0])() |>
     unique()
 }
 

@@ -14,9 +14,9 @@ difference_sets <- function(lookup) {
     unique()
 }
 
-describe("treeSearchJoint", {
+describe("treeSearchSep", {
   it("works as an algorithm with complete difference sets and pre-defined validation", {
-    treeSearchJoint_works <- function(x) {
+    treeSearchSep_works <- function(x) {
       lookup <- lookup_table(x)
       fds <- discover(x, 1)
       expected <- Map(
@@ -28,7 +28,7 @@ describe("treeSearchJoint", {
       if (class(D)[[1]] == "try-error")
         return(fail(attr(D, "condition")$message))
 
-      observed <- try(treeSearchJoint(x, D), silent = TRUE)
+      observed <- try(treeSearchSep(x, D), silent = TRUE)
       if (class(observed)[[1]] == "try-error")
         return(fail(attr(observed, "condition")$message))
       observed_fds <- observed |>
@@ -39,14 +39,14 @@ describe("treeSearchJoint", {
     }
 
     # example from original paper
-    treeSearchJoint_works(data.frame(
+    treeSearchSep_works(data.frame(
       Room_Nr = c(101L, 101L, 102L, 101L),
       Time = c("Wed 10:00 am", "Wed 02:00 pm", "Fri 02:00 pm", "Fri 02:00 pm"),
       Course = c("Programming", "Databases"),
       Lecturer = c("Miako", "Daniel", "Miako", "Saurabh")
     ))
 
-    forall(gen_df(6, 7, remove_dup_rows = FALSE), treeSearchJoint_works)
+    forall(gen_df(6, 7, remove_dup_rows = FALSE), treeSearchSep_works)
   })
 })
 
