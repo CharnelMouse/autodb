@@ -87,7 +87,12 @@ treeSearchSep_rec <- function(
   # validation at the leaves
   uncovered <- uncov(S, attr, D)
   if (length(uncovered) == 0) {
-    if (validate(list(S, attr), lookup, plis)) {
+    Spli <- Reduce(
+      \(x, y) stripped_partition_product(x, y, nrow(lookup)),
+      plis[S],
+      init = if (nrow(lookup) <= 1) list() else list(seq_len(nrow(lookup)))
+    )
+    if (validate(Spli, attr, lookup, plis)) {
       if (progress) {
         cat("found {", toString(S), "} -> {", toString(attr), "}\n", sep = "")
         flush.console()
@@ -100,14 +105,7 @@ treeSearchSep_rec <- function(
       }
       ds <- new_diffset(S, attr, lookup)
       new_D <- c(D, list(ds))
-      ds2 <- sample_diffsets(
-        Reduce(
-          \(x, y) stripped_partition_product(x, y, nrow(lookup)),
-          plis[S],
-          init = if (nrow(lookup) <= 1) list() else list(seq_len(nrow(lookup)))
-        ),
-        lookup
-      )
+      ds2 <- sample_diffsets(Spli, lookup)
       new_D <- union(new_D, ds2)
       if (progress) {
         cat(paste0(
@@ -182,17 +180,12 @@ sample_minheur <- function(set, E, V, W) {
   # sample(set[which(heuristics == min(heuristics))], 1)[[1]]
 }
 
-validate <- function(fd, lookup, plis) {
-  detset_pli <- Reduce(
-    \(x, y) stripped_partition_product(x, y, nrow(lookup)),
-    plis[fd[[1]]],
-    init = if (nrow(lookup) <= 1) list() else list(seq_len(nrow(lookup)))
-  )
-  combined_plis <- lapply(
-    fd[[2]],
-    \(attr) setdiff(detset_pli, refine_partition(detset_pli, attr, lookup))
-  )
-  all(lengths(combined_plis) == 0)
+validate <- function(Spli, W, lookup, plis) {
+  all(vapply(
+    W,
+    \(attr) all(is.element(Spli, refine_partition(Spli, attr, lookup))),
+    logical(1)
+  ))
 }
 
 pli <- function(indices) {
