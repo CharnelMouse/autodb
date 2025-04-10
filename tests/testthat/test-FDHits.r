@@ -1,7 +1,7 @@
 difference_sets <- function(lookup) {
   if (nrow(lookup) == 0)
     return(list())
-  lsts <- lapply(
+  lapply(
     seq_len(nrow(lookup) - 1),
     \(n) {
       lapply(
@@ -24,11 +24,8 @@ describe("treeSearchSep", {
         unique(detset(fds)),
         unname(split(dependant(fds), detset(fds) |> (\(x) match(x, x))()))
       )
-      D <- try(difference_sets(lookup_table(x)), silent = TRUE)
-      if (class(D)[[1]] == "try-error")
-        return(fail(attr(D, "condition")$message))
 
-      observed <- try(treeSearchSep(x, D), silent = TRUE)
+      observed <- try(treeSearchSep(x), silent = TRUE)
       if (class(observed)[[1]] == "try-error")
         return(fail(attr(observed, "condition")$message))
       expect_setequal(observed, fds)

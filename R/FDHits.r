@@ -1,15 +1,26 @@
-treeSearchSep <- function(x, D, progress = FALSE) {
+treeSearchSep <- function(x, progress = FALSE) {
   lookup <- lookup_table(x)
   attrs <- names(x)
   plis <- lapply(lookup, pli)
-  lapply(
-    attrs,
-    \(a) {
-      if (progress) {
-        cat("dependant", a, "\n")
-        flush.console
-      }
-      treeSearchSep_rec(
+  D <- lapply(plis, sample_diffsets, lookup) |>
+    Reduce(f = c, init = list()) |>
+    unique()
+  if (progress) {
+    cat(paste0(
+      "initial diffsets:\n",
+      paste(vapply(D, toString, character(1)), collapse = "\n"),
+      "\n"
+    ))
+  }
+  res <- list()
+  for (a in attrs) {
+    if (progress) {
+      cat("dependant", a, "\n")
+      flush.console
+    }
+    restart <- TRUE
+    while (restart) {
+      attr_res <- treeSearchSep_rec(
         character(),
         setdiff(attrs, a),
         a,
@@ -19,10 +30,12 @@ treeSearchSep <- function(x, D, progress = FALSE) {
         plis,
         progress = progress
       )
+      D <- attr_res[[2]]
+      restart <- identical(attr_res[[1]], "restart")
     }
-  ) |>
-    Reduce(f = c, init = list()) |>
-    functional_dependency(names(x))
+    res <- c(res, attr_res[[1]])
+  }
+  functional_dependency(res, names(x))
 }
 
 treeSearchSep_rec <- function(
@@ -51,7 +64,7 @@ treeSearchSep_rec <- function(
         cat("no critical edges for", C, "WRT S\n")
         flush.console()
       }
-      return(list())
+      return(list(list(), D))
     }
   }
   for (B in V) {
@@ -81,7 +94,7 @@ treeSearchSep_rec <- function(
       cat("nothing found\n\n")
       flush.console()
     }
-    return(list())
+    return(list(list(), D))
   }
   # validation at the leaves
   uncovered <- uncov(S, attr, D)
@@ -91,15 +104,20 @@ treeSearchSep_rec <- function(
         cat("found {", toString(S), "} -> {", toString(attr), "}\n\n")
         flush.console()
       }
-      return(list(list(S, attr)))
+      return(list(list(list(S, attr)), D))
     }else{
-      stop(paste("found false {", toString(S), "} -> {", toString(attr), "}"))
-      # if (progress)
-      #   cat("found false {", toString(S), "} -> {", toString(W), "}\n")
-      # ds <- new_diffset(S, W, lookup)
-      # D <- D + list(ds)
-      # if (progress)
-      #   cat("added diffset", toString(ds), "\n\n")
+      if (progress) {
+        cat("found false {", toString(S), "} -> {", toString(attr), "}\n")
+        flush.console()
+      }
+      ds <- new_diffset(S, attr, lookup)
+      D <- c(D, list(ds))
+      if (progress) {
+        cat("added diffset", toString(ds), "\nrestarting...\n\n")
+        flush.console()
+      }
+      return(list("restart", D))
+      # uncovered <- uncov(S, attr, D)
     }
   }
   # Branching
@@ -124,9 +142,9 @@ treeSearchSep_rec <- function(
     flush.console()
   }
   Bs <- intersect(E, V)
-  lapply(
-    seq_along(Bs),
-    \(n) treeSearchSep_rec(
+  res <- list()
+  for (n in seq_along(Bs)) {
+    attr_res <- treeSearchSep_rec(
       S = union(S, Bs[[n]]) |> (\(x) x[order(match(x, orig))])(),
       V = setdiff(V, Bs[seq_len(n)]),
       attr = attr,
@@ -137,8 +155,12 @@ treeSearchSep_rec <- function(
       visited = visited,
       progress = progress
     )
-  ) |>
-    Reduce(f = c)
+    if (identical(attr_res[[1]], "restart"))
+      return(attr_res)
+    res <- c(res, attr_res[[1]])
+    D <- attr_res[[2]]
+  }
+  list(res, D)
 }
 
 critical <- function(C, A, S, D) {
@@ -173,7 +195,11 @@ sample_minheur <- function(set, E, V, W) {
 validate <- function(fd, lookup, plis, progress = FALSE) {
   if (progress)
     cat("validating", toString(fd[[1]]), "->", fd[[2]], "\n")
-  detset_pli <- Reduce(\(x, y) stripped_partition_product(x, y, nrow(lookup)), plis[fd[[1]]])
+  detset_pli <- Reduce(
+    \(x, y) stripped_partition_product(x, y, nrow(lookup)),
+    plis[fd[[1]]],
+    init = if (nrow(lookup) <= 1) list() else list(seq_len(nrow(lookup)))
+  )
   combined_plis <- lapply(
     fd[[2]],
     \(attr) setdiff(detset_pli, refine_partition(detset_pli, attr, lookup))
