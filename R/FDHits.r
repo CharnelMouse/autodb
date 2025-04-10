@@ -6,17 +6,14 @@ treeSearchSep <- function(x, progress = FALSE) {
     Reduce(f = c, init = list()) |>
     unique()
   if (progress) {
-    cat(paste0(
-      "initial diffsets:\n",
-      paste(vapply(D, toString, character(1)), collapse = "\n"),
-      "\n"
-    ))
+    cat(with_number(length(D), "initial diffset", "\n\n", "s\n\n"))
+    flush.console()
   }
   res <- list()
   for (a in attrs) {
     if (progress) {
-      cat("dependant", a, "\n")
-      flush.console
+      cat("dependant", a, "\n\n")
+      flush.console()
     }
     restart <- TRUE
     while (restart) {
@@ -34,6 +31,14 @@ treeSearchSep <- function(x, progress = FALSE) {
       restart <- identical(attr_res[[1]], "restart")
     }
     res <- c(res, attr_res[[1]])
+    if (progress) {
+      cat("\n")
+      flush.console()
+    }
+  }
+  if (progress) {
+    cat(with_number(length(D), "final diffset", "\n", "s\n"))
+    flush.console()
   }
   functional_dependency(res, names(x))
 }
@@ -49,21 +54,12 @@ treeSearchSep_rec <- function(
   visited = list(),
   progress = FALSE
 ) {
-  if (progress) {
-    cat("S =", toString(S), "\n")
-    cat("V =", toString(V), "\n")
-    flush.console()
-  }
   if (is.element(list(list(S, V, attr)), visited))
-    stop("already visited")
+    stop("already visited {", toString(S), "}, {", toString(V), "}")
   visited <- c(visited, list(list(S, V, attr)))
   # pruning
   for (C in S) {
     if (length(critical(C, attr, S, D)) == 0) {
-      if (progress) {
-        cat("no critical edges for", C, "WRT S\n")
-        flush.console()
-      }
       return(list(list(), D))
     }
   }
@@ -82,51 +78,49 @@ treeSearchSep_rec <- function(
       )),
       logical(1)
     ))) {
-      if (progress) {
-        cat("pruning", B, "from V\n")
-        flush.console()
-      }
       V <- setdiff(V, B)
     }
   }
   if (length(attr) == 0) {
-    if (progress) {
-      cat("nothing found\n\n")
-      flush.console()
-    }
     return(list(list(), D))
   }
   # validation at the leaves
   uncovered <- uncov(S, attr, D)
   if (length(uncovered) == 0) {
-    if (validate(list(S, attr), lookup, plis, progress)) {
+    if (validate(list(S, attr), lookup, plis)) {
       if (progress) {
-        cat("found {", toString(S), "} -> {", toString(attr), "}\n\n")
+        cat("found {", toString(S), "} -> {", toString(attr), "}\n", sep = "")
         flush.console()
       }
       return(list(list(list(S, attr)), D))
     }else{
       if (progress) {
-        cat("found false {", toString(S), "} -> {", toString(attr), "}\n")
+        cat("found false {", toString(S), "} -> {", toString(attr), "}\n", sep = "")
         flush.console()
       }
       ds <- new_diffset(S, attr, lookup)
-      D <- c(D, list(ds))
+      new_D <- c(D, list(ds))
+      ds2 <- sample_diffsets(
+        Reduce(
+          \(x, y) stripped_partition_product(x, y, nrow(lookup)),
+          plis[S],
+          init = if (nrow(lookup) <= 1) list() else list(seq_len(nrow(lookup)))
+        ),
+        lookup
+      )
+      new_D <- union(new_D, ds2)
       if (progress) {
-        cat("added diffset", toString(ds), "\nrestarting...\n\n")
+        cat(paste0(
+          "added ",
+          with_number(length(new_D) - length(D), "diffset", "", "s"),
+          ", restarting...\n\n"
+        ))
         flush.console()
       }
-      return(list("restart", D))
-      # uncovered <- uncov(S, attr, D)
+      return(list("restart", new_D))
     }
   }
   # Branching
-  if (progress) {
-    cat("S =", toString(S), "\n")
-    cat("V =", toString(V), "\n")
-    cat("uncovered:", sapply(uncovered, \(x) paste0("\n", toString(x))), "\n")
-    flush.console()
-  }
   if (length(uncovered) == 0)
     stop(
       "edge selection impossible at ",
@@ -137,10 +131,6 @@ treeSearchSep_rec <- function(
       toString(attr)
     )
   E <- sample_minheur(uncovered, E, V, attr)
-  if (progress) {
-    cat("E = ", toString(E), "\n\n")
-    flush.console()
-  }
   Bs <- intersect(E, V)
   res <- list()
   for (n in seq_along(Bs)) {
@@ -192,9 +182,7 @@ sample_minheur <- function(set, E, V, W) {
   # sample(set[which(heuristics == min(heuristics))], 1)[[1]]
 }
 
-validate <- function(fd, lookup, plis, progress = FALSE) {
-  if (progress)
-    cat("validating", toString(fd[[1]]), "->", fd[[2]], "\n")
+validate <- function(fd, lookup, plis) {
   detset_pli <- Reduce(
     \(x, y) stripped_partition_product(x, y, nrow(lookup)),
     plis[fd[[1]]],
@@ -204,10 +192,7 @@ validate <- function(fd, lookup, plis, progress = FALSE) {
     fd[[2]],
     \(attr) setdiff(detset_pli, refine_partition(detset_pli, attr, lookup))
   )
-  res <- all(lengths(combined_plis) == 0)
-  if (progress)
-    cat(res, "\n")
-  res
+  all(lengths(combined_plis) == 0)
 }
 
 pli <- function(indices) {
