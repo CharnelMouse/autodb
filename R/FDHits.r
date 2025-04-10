@@ -59,12 +59,17 @@ treeSearchSep_rec <- function(
   visited <- c(visited, list(list(S, V, attr)))
   # pruning
   for (C in S) {
+    # no critical edge for C
+    # => C is redundant in S for W
+    # => S isn't irreducible for W
     if (length(critical(C, attr, S, D)) == 0) {
       return(list(list(), D))
     }
   }
   for (B in V) {
-    # ∀𝐴∈𝑊∃𝐶∈𝑆∀𝐸∈critical(𝐶,𝐴,𝑆):𝐵∈𝐸
+    # ∀ A∈W ∃ C∈S ∀ E∈critical(C,A,S): B∈E
+    # i.e. adding B to S would make some C in S redundant WRT W, as per above
+    # does not check for B being redundant if added
     if (all(vapply(
       attr,
       \(A) any(vapply(
@@ -118,7 +123,7 @@ treeSearchSep_rec <- function(
       return(list("restart", new_D))
     }
   }
-  # Branching
+  # branching
   if (length(uncovered) == 0)
     stop(
       "edge selection impossible at ",
