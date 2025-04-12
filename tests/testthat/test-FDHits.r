@@ -15,6 +15,61 @@ difference_sets <- function(lookup) {
 }
 
 describe("treeSearchSep", {
+  it("gives a deterministic result, except for per-dependant dependency order", {
+    n_copies <- function(n, fn) {
+      function(df) {
+        do.call(fn, replicate(n, df, simplify = FALSE))
+      }
+    }
+    all_terminate_then <- function(fn) {
+      function(...) {
+        lst <- list(...)
+        for (n in seq_along(lst)) {
+          lst[[n]] <- R.utils::withTimeout(
+            treeSearchSep(lst[[n]]),
+            timeout = 5,
+            onTimeout = "silent"
+          )
+          if (is.null(lst[[n]]))
+            return(fail(paste("execution timed out after", timeout, "seconds")))
+        }
+        do.call(fn, lst)
+      }
+    }
+    expect_all_equiv_deps <- function(...) {
+      lst <- list(...)
+      attrs_orders <- lapply(lst, attrs_order)
+      if (!all(vapply(attrs_orders, identical, logical(1), attrs_orders[[1]])))
+        return(fail(paste(
+          "attrs_order inconsistent:",
+          paste(
+            vapply(
+              unique(attrs_orders),
+              \(x) paste0("{", toString(x), "}"),
+              character(1)
+            ),
+            collapse = ", "
+          )
+        )))
+      if (!all(vapply(lst, setequal, logical(1), lst[[1]])))
+        return(fail(paste0(
+          "FDs inconsistent:\n",
+          paste(
+            vapply(
+              unique(lst),
+              \(x) paste0("{", paste(as.character(x), collapse = "; "), "}"),
+              character(1)
+            ),
+            collapse = "\n"
+          )
+        )))
+      succeed()
+    }
+    forall(
+      gen_df(4, 6),
+      n_copies(100, all_terminate_then(expect_all_equiv_deps))
+    )
+  })
   it("works as an algorithm with complete difference sets and pre-defined validation", {
     treeSearchSep_works <- function(x) {
       lookup <- lookup_table(x)
