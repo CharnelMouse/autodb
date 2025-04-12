@@ -70,7 +70,7 @@ describe("treeSearchSep", {
       n_copies(100, all_terminate_then(expect_all_equiv_deps))
     )
   })
-  it("works as an algorithm with complete difference sets and pre-defined validation", {
+  it("gives the same results as DFD", {
     treeSearchSep_works <- function(x) {
       lookup <- lookup_table(x)
       fds <- discover(x, 1)
