@@ -674,7 +674,7 @@ print.relation <- function(x, max = 10, ...) {
 #' @exportS3Method
 format.relation <- function(x, ...) {
   paste0(
-    "schema ",
+    "relation ",
     names(x),
     " (",
     vapply(

@@ -755,4 +755,17 @@ describe("relation_schema", {
     expect_no_error(tb <- data.frame(id = 1:2, schema = rs))
     expect_identical(tb$schema, rs)
   })
+  it("can be formatted, e.g. for data.frame entry", {
+    rs <- relation_schema(
+      list(
+        a_b = list(c("a", "b", "c"), list(c("a", "b"))),
+        a = list(c("a", "d"), list("a"))
+      ),
+      letters[1:4]
+    )
+    expect_identical(
+      format(rs),
+      c("schema a_b", "schema a")
+    )
+  })
 })

@@ -874,4 +874,18 @@ describe("relation", {
     expect_no_error(tb <- data.frame(id = 1:2, relation = rel))
     expect_identical(tb$relation, rel)
   })
+  it("can be formatted, e.g. for data.frame entry", {
+    rel <- relation_schema(
+      list(
+        a_b = list(c("a", "b", "c"), list(c("a", "b"))),
+        a = list(c("a", "d"), list("a"))
+      ),
+      letters[1:4]
+    ) |>
+      create()
+    expect_identical(
+      format(rel),
+      c("relation a_b (0 records)", "relation a (0 records)")
+    )
+  })
 })

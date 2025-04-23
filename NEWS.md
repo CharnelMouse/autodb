@@ -8,6 +8,10 @@
     * In addition to `autodb`, `discover`, and `df_equiv`, values are now also rounded for `insert` and `decompose`.
 * Some `relation` error messages are more informative.
 
+## Fixes
+
+* Fixed the `format` method for `relation` to describe elements as relations, rather than schemas.
+
 # autodb 2.3.1
 
 Some minor changes to tests, as part of re-submission to CRAN.
