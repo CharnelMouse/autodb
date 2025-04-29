@@ -15,21 +15,17 @@ treeSearchSep <- function(x, progress = FALSE) {
       cat("dependant", a, "\n\n")
       flush.console()
     }
-    restart <- TRUE
-    while (restart) {
-      attr_res <- treeSearchSep_rec(
-        character(),
-        setdiff(attrs, a),
-        a,
-        D,
-        orig = setdiff(attrs, a),
-        lookup,
-        plis,
-        progress = progress
-      )
-      D <- attr_res[[2]]
-      restart <- identical(attr_res[[1]], "restart")
-    }
+    attr_res <- treeSearchSep_rec(
+      character(),
+      setdiff(attrs, a),
+      a,
+      D,
+      orig = setdiff(attrs, a),
+      lookup,
+      plis,
+      progress = progress
+    )
+    D <- attr_res[[2]]
     res <- c(res, attr_res[[1]])
     if (progress) {
       cat("\n")
@@ -116,11 +112,12 @@ treeSearchSep_rec <- function(
         cat(paste0(
           "added ",
           with_number(length(new_D) - length(D), "diffset", "", "s"),
-          ", restarting...\n\n"
+          "\n"
         ))
         flush.console()
       }
-      return(list("restart", new_D))
+      D <- new_D
+      uncovered <- uncov(S, attr, D)
     }
   }
   # branching
@@ -136,7 +133,10 @@ treeSearchSep_rec <- function(
   E <- sample_minheur(uncovered, E, V, attr)
   Bs <- intersect(E, V)
   res <- list()
-  for (n in seq_along(Bs)) {
+  # rev() differs from the description in the paper, but the authors gave it as
+  # a fix in private correspondence; I'll add a reference when they've published
+  # the new work
+  for (n in rev(seq_along(Bs))) {
     attr_res <- treeSearchSep_rec(
       S = union(S, Bs[[n]]) |> (\(x) x[order(match(x, orig))])(),
       V = setdiff(V, Bs[seq_len(n)]),
@@ -148,8 +148,6 @@ treeSearchSep_rec <- function(
       visited = visited,
       progress = progress
     )
-    if (identical(attr_res[[1]], "restart"))
-      return(attr_res)
     res <- c(res, attr_res[[1]])
     D <- attr_res[[2]]
   }
