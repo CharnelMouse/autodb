@@ -102,24 +102,26 @@ treeSearchSep_visit <- function(
         list(seq_len(nrow(lookup)))
     }else
       pli(do.call(paste, unname(lookup[S])))
-    new_partitions <- lapply(
-      attr,
+    W <- attr
+    refined_partitions <- lapply(
+      W,
       \(attr) refine_partition(Spli, attr, lookup) |>
         # sort to avoid using is.element or setequal
         (\(x) x[order(vapply(x, `[`, integer(1),1))])()
     )
-    if (validate(new_partitions, Spli)) {
+    if (validate(refined_partitions, Spli)) {
       if (progress) {
-        cat("found {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[attr]), "}\n", sep = "")
+        cat("found {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[W]), "}\n", sep = "")
         flush.console()
       }
-      return(list(list(list(S, attr)), D, list()))
+      return(list(list(list(S, W)), D, list()))
     }
     if (progress) {
       cat("found false {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[attr]), "}\n", sep = "")
       flush.console()
     }
-    ds <- new_diffset(Spli, S, attr, lookup)
+    stopifnot(length(Spli) > 0)
+    ds <- new_diffset(Spli, refined_partitions, lookup)
     dsl <- list(ds)
     new_D <- c(D, dsl)
     ds2 <- sample_diffsets(Spli, lookup)
@@ -232,7 +234,7 @@ sample_diffsets <- function(pli, lookup, epsilon = 0.3) {
     unique()
 }
 
-new_diffset <- function(Spli, S, W, lookup) {
+new_diffset <- function(Spli, refined_partitions, lookup) {
   # need a pair of rows that are together in S, but not in W
   # "... the FD is valid if the PLI is empty. If it is not empty, it is
   # sufficient to inspect any of the clusters that it contains to find a
@@ -243,15 +245,10 @@ new_diffset <- function(Spli, S, W, lookup) {
   # we could then take setdiff(partition(S), partition(S X A)).
   # The PLI mentioned above comes from the filtering used to update the
   # partition in refine_partition.
-  if (length(Spli) == 0)
-    stop("{", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[W]), "} is satisfied")
-  joint_partitions <- lapply(
-    W,
-    \(attr) setdiff(Spli, refine_partition(Spli, attr, lookup))
-  ) |>
+  new_clusters <- lapply(refined_partitions, setdiff, x = Spli) |>
     Reduce(f = c, init = list())
-  stopifnot(length(joint_partitions) > 0)
-  rows <- joint_partitions[[1]]
+  stopifnot(length(new_clusters) > 0)
+  rows <- new_clusters[[1]]
   which(vapply(
     lookup[rows, , drop = FALSE],
     \(vals) any(vals != vals[[1]]),

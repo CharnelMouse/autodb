@@ -206,7 +206,8 @@ describe("new_diffset", {
         gen.violated_fd(lookup) |>
           gen.with(\(lst) {
             S <- lst[[1]]
-            addstep_partition <- if (length(S) == 0) {
+            W <- lst[[2]]
+            Spli <- if (length(S) == 0) {
               list(seq_len(nrow(lookup))) |>
                 (\(x) x[lengths(x) > 1])()
             }else{
@@ -216,9 +217,16 @@ describe("new_diffset", {
               )) |>
                 (\(x) x[lengths(x) > 1])()
             }
+            refined_partitions <- lapply(
+              W,
+              \(attr) refine_partition(Spli, attr, lookup) |>
+                # sort to avoid using is.element or setequal
+                (\(x) x[order(vapply(x, `[`, integer(1),1))])()
+            )
             c(
-              list(addstep_partition),
-              lst,
+              list(Spli),
+              list(refined_partitions),
+              lst[1],
               list(lookup)
             )
           })
@@ -226,8 +234,8 @@ describe("new_diffset", {
     forall(
       gen.input,
       if_discard_else(
-        \(addstep_partition, S, W, lookup) is.null(S),
-        expect_biidentical(new_diffset, new_diffset)
+        \(Spli, new_clusters, S, lookup) is.null(S),
+        \(Spli, new_clusters, S, lookup) expect_biidentical(new_diffset, new_diffset)(Spli, new_clusters, lookup)
       ),
       curry = TRUE
     )
