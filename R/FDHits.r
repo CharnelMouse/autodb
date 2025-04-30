@@ -207,6 +207,15 @@ ffactor1 <- function(x) {
   f
 }
 
+ffactor1i <- function(x) {
+  # x is an integer vector
+  levels <- unique.default(x)
+  f <- match(x, levels)
+  levels(f) <- as.character(levels)
+  class(f) <- "factor"
+  f
+}
+
 sample_diffsets <- function(pli, lookup, epsilon = 0.3) {
   sizes <- choose(lengths(pli), 2)
   cp <- sum(sizes)
@@ -260,7 +269,7 @@ refine_partition <- function(partition, attr, lookup) {
   lapply(
     partition,
     \(cluster) {
-      unname(split(cluster, lookup[[attr]][cluster])) |>
+      unname(split(cluster, ffactor1i(lookup[[attr]][cluster]))) |>
         (\(x) x[lengths(x) > 1])()
     }
   ) |>
