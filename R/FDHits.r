@@ -17,18 +17,26 @@ treeSearchSep <- function(x, progress = FALSE) {
       flush.console()
     }
     rest <- setdiff(attr_indices, a)
-    attr_res <- treeSearchSep_rec(
-      integer(),
-      rest,
-      a,
-      D,
-      orig = rest,
-      lookup,
-      plis,
-      progress = progress
-    )
-    D <- attr_res[[2]]
-    res <- c(res, attr_res[[1]])
+    return_stack <- list(list(integer(), rest, a))
+    visited <- list()
+    while (length(return_stack) > 0) {
+      node <- return_stack[[1]]
+      return_stack <- return_stack[-1]
+      attr_res <- treeSearchSep_visit(
+        node[[1]],
+        node[[2]],
+        node[[3]],
+        D,
+        orig = rest,
+        lookup,
+        plis,
+        visited = visited,
+        progress = progress
+      )
+      res <- c(res, attr_res[[1]])
+      D <- attr_res[[2]]
+      return_stack <- c(attr_res[[3]], return_stack)
+    }
     if (progress) {
       cat("\n")
       flush.console()
@@ -42,7 +50,7 @@ treeSearchSep <- function(x, progress = FALSE) {
   functional_dependency(res, attrs)
 }
 
-treeSearchSep_rec <- function(
+treeSearchSep_visit <- function(
   S,
   V,
   attr,
@@ -62,7 +70,7 @@ treeSearchSep_rec <- function(
     # => C is redundant in S for W
     # => S isn't irreducible for W
     if (length(critical(C, attr, S, D)) == 0) {
-      return(list(list(), D))
+      return(list(list(), D, list()))
     }
   }
   for (B in V) {
@@ -86,7 +94,7 @@ treeSearchSep_rec <- function(
     }
   }
   if (length(attr) == 0) {
-    return(list(list(), D))
+    return(list(list(), D, list()))
   }
   # validation at the leaves
   uncovered <- uncov(S, attr, D)
@@ -101,7 +109,7 @@ treeSearchSep_rec <- function(
         cat("found {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[attr]), "}\n", sep = "")
         flush.console()
       }
-      return(list(list(list(S, attr)), D))
+      return(list(list(list(S, attr)), D, list()))
     }else{
       if (progress) {
         cat("found false {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[attr]), "}\n", sep = "")
@@ -140,23 +148,11 @@ treeSearchSep_rec <- function(
   # rev() differs from the description in the paper, but the authors gave it as
   # a fix in private correspondence; I'll add a reference when they've published
   # the new work
-  for (n in rev(seq_along(Bs))) {
-    attr_res <- treeSearchSep_rec(
-      S = union(S, Bs[[n]]) |>
-        sort(),
-      V = setdiff(V, Bs[seq_len(n)]),
-      attr = attr,
-      D = D,
-      orig = orig,
-      lookup = lookup,
-      plis = plis,
-      visited = visited,
-      progress = progress
-    )
-    res <- c(res, attr_res[[1]])
-    D <- attr_res[[2]]
-  }
-  list(res, D)
+  new_nodes <- lapply(
+    rev(seq_along(Bs)),
+    \(n) list(sort(union(S, Bs[[n]])), setdiff(V, Bs[seq_len(n)]), attr)
+  )
+  list(res, D, new_nodes)
 }
 
 critical <- function(C, A, S, D) {
