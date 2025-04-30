@@ -27,9 +27,7 @@ treeSearchSep <- function(x, progress = FALSE) {
         node[[2]],
         node[[3]],
         D,
-        orig = rest,
         lookup,
-        plis,
         visited = visited,
         progress = progress
       )
@@ -55,9 +53,7 @@ treeSearchSep_visit <- function(
   V,
   attr,
   D,
-  orig,
   lookup,
-  plis,
   visited = list(),
   progress = FALSE
 ) {
@@ -106,7 +102,7 @@ treeSearchSep_visit <- function(
         list(seq_len(nrow(lookup)))
     }else
       pli(do.call(paste, lookup[S]))
-    if (validate(Spli, attr, lookup, plis)) {
+    if (validate(Spli, attr, lookup)) {
       if (progress) {
         cat("found {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[attr]), "}\n", sep = "")
         flush.console()
@@ -144,7 +140,7 @@ treeSearchSep_visit <- function(
       "; ",
       toString(names(lookup)[attr])
     )
-  E <- sample_minheur(uncovered, E, V, attr)
+  E <- sample_minheur(uncovered, V, attr)
   Bs <- intersect(E, V)
   res <- list()
   # rev() differs from the description in the paper, but the authors gave it as
@@ -174,7 +170,7 @@ uncov <- function(S, W, D) {
     Filter(f = \(E) any(is.element(W, E)) && !any(is.element(S, E)))
 }
 
-sample_minheur <- function(set, E, V, W) {
+sample_minheur <- function(set, V, W) {
   if (length(set) == 0)
     stop("can't sample edge from empty set")
   heuristics <- vapply(
@@ -186,7 +182,7 @@ sample_minheur <- function(set, E, V, W) {
   # sample(set[which(heuristics == min(heuristics))], 1)[[1]]
 }
 
-validate <- function(Spli, W, lookup, plis) {
+validate <- function(Spli, W, lookup) {
   all(vapply(
     W,
     \(attr) all(is.element(Spli, refine_partition(Spli, attr, lookup))),
