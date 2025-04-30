@@ -108,27 +108,26 @@ treeSearchSep_visit <- function(
         flush.console()
       }
       return(list(list(list(S, attr)), D, list()))
-    }else{
-      if (progress) {
-        cat("found false {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[attr]), "}\n", sep = "")
-        flush.console()
-      }
-      ds <- new_diffset(S, attr, lookup)
-      dsl <- list(ds)
-      new_D <- c(D, dsl)
-      ds2 <- sample_diffsets(Spli, lookup)
-      new_D <- union(new_D, ds2)
-      if (progress) {
-        cat(paste0(
-          "added ",
-          with_number(length(new_D) - length(D), "diffset", "", "s"),
-          "\n"
-        ))
-        flush.console()
-      }
-      D <- new_D
-      uncovered <- uncov(S, attr, D)
     }
+    if (progress) {
+      cat("found false {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[attr]), "}\n", sep = "")
+      flush.console()
+    }
+    ds <- new_diffset(S, attr, lookup)
+    dsl <- list(ds)
+    new_D <- c(D, dsl)
+    ds2 <- sample_diffsets(Spli, lookup)
+    new_D <- union(new_D, ds2)
+    if (progress) {
+      cat(paste0(
+        "added ",
+        with_number(length(new_D) - length(D), "diffset", "", "s"),
+        "\n"
+      ))
+      flush.console()
+    }
+    D <- new_D
+    uncovered <- uncov(S, attr, D)
   }
   # branching
   if (length(uncovered) == 0)
