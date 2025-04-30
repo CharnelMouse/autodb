@@ -101,8 +101,14 @@ treeSearchSep_visit <- function(
       else
         list(seq_len(nrow(lookup)))
     }else
-      pli(do.call(paste, lookup[S]))
-    if (validate(Spli, attr, lookup)) {
+      pli(do.call(paste, unname(lookup[S])))
+    new_partitions <- lapply(
+      attr,
+      \(attr) refine_partition(Spli, attr, lookup) |>
+        # sort to avoid using is.element or setequal
+        (\(x) x[order(vapply(x, `[`, integer(1),1))])()
+    )
+    if (validate(new_partitions, Spli)) {
       if (progress) {
         cat("found {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[attr]), "}\n", sep = "")
         flush.console()
@@ -113,7 +119,7 @@ treeSearchSep_visit <- function(
       cat("found false {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[attr]), "}\n", sep = "")
       flush.console()
     }
-    ds <- new_diffset(S, attr, lookup)
+    ds <- new_diffset(Spli, S, attr, lookup)
     dsl <- list(ds)
     new_D <- c(D, dsl)
     ds2 <- sample_diffsets(Spli, lookup)
@@ -181,17 +187,8 @@ sample_minheur <- function(set, V, W) {
   # sample(set[which(heuristics == min(heuristics))], 1)[[1]]
 }
 
-validate <- function(Spli, W, lookup) {
-  all(vapply(
-    W,
-    \(attr) identical(
-      Spli,
-      refine_partition(Spli, attr, lookup) |>
-        # sort to avoid using is.element or setequal
-        (\(x) x[order(sapply(x, `[`, 1))])()
-    ),
-    logical(1)
-  ))
+validate <- function(new_partitions, Spli) {
+  all(vapply(new_partitions, identical, logical(1), Spli))
 }
 
 pli <- function(indices) {
@@ -235,7 +232,7 @@ sample_diffsets <- function(pli, lookup, epsilon = 0.3) {
     unique()
 }
 
-new_diffset <- function(S, W, lookup) {
+new_diffset <- function(Spli, S, W, lookup) {
   # need a pair of rows that are together in S, but not in W
   # "... the FD is valid if the PLI is empty. If it is not empty, it is
   # sufficient to inspect any of the clusters that it contains to find a
@@ -246,21 +243,11 @@ new_diffset <- function(S, W, lookup) {
   # we could then take setdiff(partition(S), partition(S X A)).
   # The PLI mentioned above comes from the filtering used to update the
   # partition in refine_partition.
-  partition <- if (length(S) == 0) {
-    list(seq_len(nrow(lookup))) |>
-      (\(x) x[lengths(x) > 1])()
-  }else{
-    unname(fsplit(
-      seq_len(nrow(lookup)),
-      lookup[, S, drop = FALSE]
-    )) |>
-      (\(x) x[lengths(x) > 1])()
-  }
-  if (length(partition) == 0)
+  if (length(Spli) == 0)
     stop("{", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[W]), "} is satisfied")
   joint_partitions <- lapply(
     W,
-    \(attr) setdiff(partition, refine_partition(partition, attr, lookup))
+    \(attr) setdiff(Spli, refine_partition(Spli, attr, lookup))
   ) |>
     Reduce(f = c, init = list())
   stopifnot(length(joint_partitions) > 0)

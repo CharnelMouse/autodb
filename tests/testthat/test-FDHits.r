@@ -204,12 +204,29 @@ describe("new_diffset", {
       gen.with(lookup_table) |>
       gen.and_then(\(lookup)
         gen.violated_fd(lookup) |>
-          gen.with(\(lst) c(lst, list(lookup)))
+          gen.with(\(lst) {
+            S <- lst[[1]]
+            addstep_partition <- if (length(S) == 0) {
+              list(seq_len(nrow(lookup))) |>
+                (\(x) x[lengths(x) > 1])()
+            }else{
+              unname(fsplit(
+                seq_len(nrow(lookup)),
+                lookup[, S, drop = FALSE]
+              )) |>
+                (\(x) x[lengths(x) > 1])()
+            }
+            c(
+              list(addstep_partition),
+              lst,
+              list(lookup)
+            )
+          })
       )
     forall(
       gen.input,
       if_discard_else(
-        \(S, W, lookup) is.null(S),
+        \(addstep_partition, S, W, lookup) is.null(S),
         expect_biidentical(new_diffset, new_diffset)
       ),
       curry = TRUE

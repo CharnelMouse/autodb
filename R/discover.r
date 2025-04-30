@@ -1123,7 +1123,7 @@ fsplit <- function(splitted, splitter) {
   # that would be used as arguments for paste
   single_splitter <- do.call(paste, unname(splitter))
   # determine levels manually to skip factor()'s default level sorting
-  f <- factor(single_splitter, levels = unique(single_splitter))
+  f <- ffactor1(single_splitter)
   split(splitted, f)
 }
 
