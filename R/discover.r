@@ -1117,7 +1117,7 @@ fsplit <- function(splitted, splitter) {
   # calling split. This is much faster than the iterated pasting of multiple f
   # elements done by interaction().
   # splitter is unnamed in case any attributes have names like "sep"
-  # that would be used as arguments for split
+  # that would be used as arguments for paste
   single_splitter <- do.call(paste, unname(splitter))
   split(splitted, single_splitter, drop = TRUE)
 }
