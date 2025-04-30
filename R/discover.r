@@ -1107,8 +1107,9 @@ stripped_partition_product <- function(sp1, sp2, n_rows) {
   tab_both <- paste(tab[in_both], tab2[in_both])
   # not pre-factoring with specified levels results in split calling
   # order(tab_both), which can be very slow for long tab_both
+  # below is very similar to fsplit, but we've already combined factors
   tab_both <- factor(tab_both, levels = unique(tab_both), ordered = FALSE)
-  sp <- split(in_both, tab_both, drop = TRUE)
+  sp <- split(in_both, tab_both, drop = FALSE)
   unname(sp[lengths(sp) >= 2])
 }
 
