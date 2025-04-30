@@ -185,7 +185,12 @@ sample_minheur <- function(set, V, W) {
 validate <- function(Spli, W, lookup) {
   all(vapply(
     W,
-    \(attr) all(is.element(Spli, refine_partition(Spli, attr, lookup))),
+    \(attr) identical(
+      Spli,
+      refine_partition(Spli, attr, lookup) |>
+        # sort to avoid using is.element or setequal
+        (\(x) x[order(sapply(x, `[`, 1))])()
+    ),
     logical(1)
   ))
 }
