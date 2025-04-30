@@ -1,6 +1,7 @@
 treeSearchSep <- function(x, progress = FALSE) {
   lookup <- lookup_table(x)
-  attrs <- names(x)
+  attrs <- names(lookup)
+  attr_indices <- seq_along(x)
   plis <- lapply(lookup, pli)
   D <- lapply(plis, sample_diffsets, lookup) |>
     Reduce(f = c, init = list()) |>
@@ -10,17 +11,18 @@ treeSearchSep <- function(x, progress = FALSE) {
     flush.console()
   }
   res <- list()
-  for (a in attrs) {
+  for (a in attr_indices) {
     if (progress) {
-      cat("dependant", a, "\n\n")
+      cat("dependant", match(a, attrs), "\n\n")
       flush.console()
     }
+    rest <- setdiff(attr_indices, a)
     attr_res <- treeSearchSep_rec(
-      character(),
-      setdiff(attrs, a),
+      integer(),
+      rest,
       a,
       D,
-      orig = setdiff(attrs, a),
+      orig = rest,
       lookup,
       plis,
       progress = progress
@@ -36,7 +38,8 @@ treeSearchSep <- function(x, progress = FALSE) {
     cat(with_number(length(D), "final diffset", "\n", "s\n"))
     flush.console()
   }
-  functional_dependency(res, names(x))
+  res <- lapply(res, lapply, \(x) attrs[x])
+  functional_dependency(res, attrs)
 }
 
 treeSearchSep_rec <- function(
@@ -95,17 +98,18 @@ treeSearchSep_rec <- function(
     )
     if (validate(Spli, attr, lookup, plis)) {
       if (progress) {
-        cat("found {", toString(S), "} -> {", toString(attr), "}\n", sep = "")
+        cat("found {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[attr]), "}\n", sep = "")
         flush.console()
       }
       return(list(list(list(S, attr)), D))
     }else{
       if (progress) {
-        cat("found false {", toString(S), "} -> {", toString(attr), "}\n", sep = "")
+        cat("found false {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[attr]), "}\n", sep = "")
         flush.console()
       }
       ds <- new_diffset(S, attr, lookup)
-      new_D <- c(D, list(ds))
+      dsl <- list(ds)
+      new_D <- c(D, dsl)
       ds2 <- sample_diffsets(Spli, lookup)
       new_D <- union(new_D, ds2)
       if (progress) {
@@ -124,11 +128,11 @@ treeSearchSep_rec <- function(
   if (length(uncovered) == 0)
     stop(
       "edge selection impossible at ",
-      toString(S),
+      toString(names(lookup)[S]),
       "; ",
-      toString(V),
+      toString(names(lookup)[V]),
       "; ",
-      toString(attr)
+      toString(names(lookup)[attr])
     )
   E <- sample_minheur(uncovered, E, V, attr)
   Bs <- intersect(E, V)
@@ -138,7 +142,8 @@ treeSearchSep_rec <- function(
   # the new work
   for (n in rev(seq_along(Bs))) {
     attr_res <- treeSearchSep_rec(
-      S = union(S, Bs[[n]]) |> (\(x) x[order(match(x, orig))])(),
+      S = union(S, Bs[[n]]) |>
+        sort(),
       V = setdiff(V, Bs[seq_len(n)]),
       attr = attr,
       D = D,
@@ -161,7 +166,7 @@ critical <- function(C, A, S, D) {
   # from S.
   # if every C is S has such a critical edge, then S is a minimal hitting set.
   D |>
-    Filter(f = \(E) is.element(A, E)) |>
+    Filter(f = \(E) any(E == A)) |>
     Filter(f = \(E) identical(intersect(E, S), C))
 }
 
@@ -217,7 +222,7 @@ sample_diffsets <- function(pli, lookup, epsilon = 0.3) {
   )
   lapply(
     samples,
-    \(pair) names(lookup)[lookup[pair[[1]], ] != lookup[pair[[2]], ]]
+    \(pair) which(lookup[pair[[1]], ] != lookup[pair[[2]], ])
   ) |>
     (\(x) x[lengths(x) > 0])() |>
     unique()
@@ -245,7 +250,7 @@ new_diffset <- function(S, W, lookup) {
       (\(x) x[lengths(x) > 1])()
   }
   if (length(partition) == 0)
-    stop("{", toString(S), "} -> {", toString(W), "} is satisfied")
+    stop("{", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[W]), "} is satisfied")
   joint_partitions <- lapply(
     W,
     \(attr) setdiff(partition, refine_partition(partition, attr, lookup))
@@ -253,18 +258,20 @@ new_diffset <- function(S, W, lookup) {
     Reduce(f = c, init = list())
   stopifnot(length(joint_partitions) > 0)
   rows <- joint_partitions[[1]]
-  names(lookup)[vapply(
+  which(vapply(
     lookup[rows, , drop = FALSE],
     \(vals) any(vals != vals[[1]]),
     logical(1)
-  )]
+  ))
 }
 
 refine_partition <- function(partition, attr, lookup) {
   lapply(
     partition,
-    \(cluster) unname(split(cluster, lookup[[attr]][cluster])) |>
-      (\(x) x[lengths(x) > 1])()
+    \(cluster) {
+      unname(split(cluster, lookup[[attr]][cluster])) |>
+        (\(x) x[lengths(x) > 1])()
+    }
   ) |>
     Reduce(f = c, init = list())
 }

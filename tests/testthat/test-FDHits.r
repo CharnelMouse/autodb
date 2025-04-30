@@ -110,7 +110,8 @@ describe("sample_diffsets", {
         names(plis),
         \(nm) all(is.element(
           sample_diffsets(plis[[nm]], lookup),
-          Filter(\(d) !is.element(nm, d), all_diff)
+          Filter(\(d) !is.element(nm, d), all_diff) |>
+            lapply(match, names(lookup))
         ))
       )))
       # epsilon = TRUE => samples all pairs => finds all difference sets
@@ -118,7 +119,8 @@ describe("sample_diffsets", {
         names(plis),
         \(nm) setequal(
           sample_diffsets(plis[[nm]], lookup, 1),
-          Filter(\(d) !is.element(nm, d), all_diff)
+          Filter(\(d) !is.element(nm, d), all_diff) |>
+            lapply(match, names(lookup))
         )
       )))
     }
@@ -134,10 +136,11 @@ describe("refine_partition", {
     gen.and_then(\(x) {
       gen.element(names(x)) |>
         gen.and_then(\(attr) {
+          lookup <- lookup_table(x)
           list(
-            gen.pure(lookup_table(x)),
+            gen.pure(lookup),
             gen.sample_resampleable(setdiff(names(x), attr), to = ncol(x) - 1),
-            gen.pure(attr)
+            gen.pure(match(attr, names(lookup)))
           )
         })
     })
@@ -149,7 +152,7 @@ describe("refine_partition", {
       (\(x) x[lengths(x) > 1])()
     expected <- unname(split(
       seq_len(nrow(lookup)),
-      lookup[, c(start_attrs, attr), drop = FALSE]
+      lookup[, c(start_attrs, names(lookup)[attr]), drop = FALSE]
     )) |>
       (\(x) x[lengths(x) > 1])()
     observed <- try(refine_partition(partition, attr, lookup))
@@ -169,7 +172,7 @@ describe("new_diffset", {
           gen.and_then(\(nms) {
             list(
               gen.pure(setdiff(names(lookup), nms)),
-              gen.pure(intersect(names(lookup), nms))
+              gen.pure(match(intersect(names(lookup), nms), names(lookup)))
             )
           })
       }else{
@@ -179,7 +182,7 @@ describe("new_diffset", {
             return(list(gen.pure(NULL), gen.pure(NULL)))
           list(
             gen.pure(character()),
-            gen.pure(nonconstants)
+            gen.pure(match(nonconstants, names(lookup)))
           )
         }else{
           gen.element(fds[lengths(detset(fds)) > 0]) |>
@@ -190,7 +193,7 @@ describe("new_diffset", {
                   S <- setdiff(ds, remove)
                   list(
                     S,
-                    setdiff(names(lookup), S)
+                    match(setdiff(names(lookup), S), names(lookup))
                   )
                 })
             })
