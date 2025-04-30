@@ -1117,6 +1117,8 @@ fsplit <- function(splitted, splitter) {
   # Column contents are known to be integer, so we paste them together before
   # calling split. This is much faster than the iterated pasting of multiple f
   # elements done by interaction().
+  # If there's known to be only one splitter, we're best off just calling
+  # split, which calls as.factor, which has special handling for integers.
   # splitter is unnamed in case any attributes have names like "sep"
   # that would be used as arguments for paste
   single_splitter <- do.call(paste, unname(splitter))
