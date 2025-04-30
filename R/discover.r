@@ -1119,7 +1119,9 @@ fsplit <- function(splitted, splitter) {
   # splitter is unnamed in case any attributes have names like "sep"
   # that would be used as arguments for paste
   single_splitter <- do.call(paste, unname(splitter))
-  split(splitted, single_splitter, drop = TRUE)
+  # determine levels manually to skip factor()'s default level sorting
+  f <- factor(single_splitter, levels = unique(single_splitter))
+  split(splitted, f)
 }
 
 fsplit_rows <- function(df, attr_indices) {
