@@ -99,11 +99,13 @@ treeSearchSep_visit <- function(
   # validation at the leaves
   uncovered <- uncov(S, attr, D)
   if (length(uncovered) == 0) {
-    Spli <- Reduce(
-      \(x, y) stripped_partition_product(x, y, nrow(lookup)),
-      plis[S],
-      init = if (nrow(lookup) <= 1) list() else list(seq_len(nrow(lookup)))
-    )
+    Spli <- if (length(S) == 0) {
+      if (nrow(lookup) <= 1)
+        list()
+      else
+        list(seq_len(nrow(lookup)))
+    }else
+      pli(do.call(paste, lookup[S]))
     if (validate(Spli, attr, lookup, plis)) {
       if (progress) {
         cat("found {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[attr]), "}\n", sep = "")
@@ -193,8 +195,17 @@ validate <- function(Spli, W, lookup, plis) {
 }
 
 pli <- function(indices) {
-  clusters <- split(seq_along(indices), indices)
+  clusters <- split(seq_along(indices), ffactor1(indices))
   unname(clusters[lengths(clusters) > 1])
+}
+
+ffactor1 <- function(x) {
+  # x is a character vector, as from combining lookups
+  levels <- unique.default(x)
+  f <- match(x, levels)
+  levels(f) <- levels
+  class(f) <- "factor"
+  f
 }
 
 sample_diffsets <- function(pli, lookup, epsilon = 0.3) {
@@ -239,7 +250,7 @@ new_diffset <- function(S, W, lookup) {
     list(seq_len(nrow(lookup))) |>
       (\(x) x[lengths(x) > 1])()
   }else{
-    unname(split(
+    unname(fsplit(
       seq_len(nrow(lookup)),
       lookup[, S, drop = FALSE]
     )) |>
