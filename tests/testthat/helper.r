@@ -1193,7 +1193,6 @@ expect_biidentical <- function(fn1, fn2)
   function(...) expect_identical(fn1(...), fn2(...))
 split_by <- function(fn, ...) function(x) split(x, fn(x), ...)
 subset_by <- function(fn) function(x) x[fn(x)]
-sort_by <- function(fn) function(x) x[order(fn(x))]
 if_discard_else <- function(cond, fn)
   function(...) if (cond(...)) discard() else fn(...)
 uncurry <- function(fn) function(x) do.call(fn, x)
