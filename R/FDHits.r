@@ -8,13 +8,13 @@ treeSearchSep <- function(x, progress = FALSE) {
     unique()
   if (progress) {
     cat(with_number(length(D), "initial diffset", "\n\n", "s\n\n"))
-    flush.console()
+    utils::flush.console()
   }
   res <- list()
   for (a in attr_indices) {
     if (progress) {
       cat("dependant", match(a, attrs), "\n\n")
-      flush.console()
+      utils::flush.console()
     }
     rest <- setdiff(attr_indices, a)
     return_stack <- list(list(integer(), rest, a))
@@ -37,12 +37,12 @@ treeSearchSep <- function(x, progress = FALSE) {
     }
     if (progress) {
       cat("\n")
-      flush.console()
+      utils::flush.console()
     }
   }
   if (progress) {
     cat(with_number(length(D), "final diffset", "\n", "s\n"))
-    flush.console()
+    utils::flush.console()
   }
   res <- lapply(res, lapply, \(x) attrs[x])
   functional_dependency(res, attrs)
@@ -112,13 +112,13 @@ treeSearchSep_visit <- function(
     if (validate(refined_partitions, Spli)) {
       if (progress) {
         cat("found {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[W]), "}\n", sep = "")
-        flush.console()
+        utils::flush.console()
       }
       return(list(list(list(S, W)), D, list()))
     }
     if (progress) {
       cat("found false {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[attr]), "}\n", sep = "")
-      flush.console()
+      utils::flush.console()
     }
     stopifnot(length(Spli) > 0)
     ds <- new_diffset(Spli, refined_partitions, lookup)
@@ -132,7 +132,7 @@ treeSearchSep_visit <- function(
         with_number(length(new_D) - length(D), "diffset", "", "s"),
         "\n"
       ))
-      flush.console()
+      utils::flush.console()
     }
     D <- new_D
     uncovered <- uncov(S, attr, D)
