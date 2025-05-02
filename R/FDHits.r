@@ -94,21 +94,21 @@ treeSearchJoint <- function(x, progress = FALSE) {
 treeSearchSep_visit <- function(
   S,
   V,
-  attr,
+  A,
   D,
   lookup,
   visited = list(),
   progress = FALSE
 ) {
-  if (is.element(list(list(S, V, attr)), visited))
+  if (is.element(list(list(S, V, A)), visited))
     stop("already visited {", toString(S), "}, {", toString(V), "}")
-  visited <- c(visited, list(list(S, V, attr)))
+  visited <- c(visited, list(list(S, V, A)))
   # pruning
   for (C in S) {
     # no critical edge for C
     # => C is redundant in S for W
     # => S isn't irreducible for W
-    if (length(critical(C, attr, S, D)) == 0) {
+    if (length(critical(C, A, S, D)) == 0) {
       return(list(list(), D, list()))
     }
   }
@@ -116,15 +116,11 @@ treeSearchSep_visit <- function(
     # ∀ A∈W ∃ C∈S ∀ E∈critical(C,A,S): B∈E
     # i.e. adding B to S would make some C in S redundant WRT W, as per above
     # does not check for B being redundant if added
-    if (all(vapply(
-      attr,
-      \(A) any(vapply(
-        S,
-        \(C) all(vapply(
-          critical(C, A, S, D),
-          \(E) B %in% E,
-          logical(1)
-        )),
+    if (any(vapply(
+      S,
+      \(C) all(vapply(
+        critical(C, A, S, D),
+        \(E) B %in% E,
         logical(1)
       )),
       logical(1)
@@ -132,11 +128,8 @@ treeSearchSep_visit <- function(
       V <- setdiff(V, B)
     }
   }
-  if (length(attr) == 0) {
-    return(list(list(), D, list()))
-  }
   # validation at the leaves
-  uncovered <- uncov(S, attr, D)
+  uncovered <- uncov_sep(S, A, D)
   if (length(uncovered) == 0) {
     Spli <- if (length(S) == 0) {
       if (nrow(lookup) <= 1)
@@ -145,22 +138,20 @@ treeSearchSep_visit <- function(
         list(seq_len(nrow(lookup)))
     }else
       pli(do.call(paste, unname(lookup[S])))
-    W <- attr
-    refined_partitions <- lapply(
-      W,
-      \(attr) refine_partition(Spli, attr, lookup) |>
+    refined_partitions <- list(
+      refine_partition(Spli, A, lookup) |>
         # sort to avoid using is.element or setequal
         (\(x) x[order(vapply(x, `[`, integer(1),1))])()
     )
     if (validate(refined_partitions, Spli)) {
       if (progress) {
-        cat("found {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[W]), "}\n", sep = "")
+        cat("found {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[A]), "}\n", sep = "")
         utils::flush.console()
       }
-      return(list(list(list(S, W)), D, list()))
+      return(list(list(list(S, A)), D, list()))
     }
     if (progress) {
-      cat("found false {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[attr]), "}\n", sep = "")
+      cat("found false {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[A]), "}\n", sep = "")
       utils::flush.console()
     }
     stopifnot(length(Spli) > 0)
@@ -178,7 +169,7 @@ treeSearchSep_visit <- function(
       utils::flush.console()
     }
     D <- new_D
-    uncovered <- uncov(S, attr, D)
+    uncovered <- uncov_sep(S, A, D)
   }
   # branching
   if (length(uncovered) == 0)
@@ -188,9 +179,9 @@ treeSearchSep_visit <- function(
       "; ",
       toString(names(lookup)[V]),
       "; ",
-      toString(names(lookup)[attr])
+      toString(names(lookup)[A])
     )
-  E <- sample_minheur_sep(uncovered, V, attr)
+  E <- sample_minheur_sep(uncovered, V)
   Bs <- intersect(E, V)
   res <- list()
   # rev() differs from the description in the paper, but the authors gave it as
@@ -198,7 +189,7 @@ treeSearchSep_visit <- function(
   # the new work
   new_nodes <- lapply(
     rev(seq_along(Bs)),
-    \(n) list(sort(union(S, Bs[[n]])), setdiff(V, Bs[seq_len(n)]), attr)
+    \(n) list(sort(union(S, Bs[[n]])), setdiff(V, Bs[seq_len(n)]), A)
   )
   list(res, D, new_nodes)
 }
@@ -263,7 +254,7 @@ treeSearchJoint_visit <- function(
     return(list(list(), D, list()))
   }
   # validation at the leaves
-  uncovered <- uncov(S, W, D)
+  uncovered <- uncov_joint(S, W, D)
   if (length(uncovered) == 0) {
     Spli <- if (length(S) == 0) {
       if (nrow(lookup) <= 1)
@@ -304,7 +295,7 @@ treeSearchJoint_visit <- function(
       utils::flush.console()
     }
     D <- new_D
-    uncovered <- uncov(S, W, D)
+    uncovered <- uncov_joint(S, W, D)
   }
   # branching
   if (length(uncovered) == 0)
@@ -343,9 +334,14 @@ critical <- function(C, A, S, D) {
   D[vapply(D, \(E) any(E == A) && identical(S[match(E, S, 0L)], C), logical(1))]
 }
 
-uncov <- function(S, W, D) {
+uncov_joint <- function(S, W, D) {
   # set of hyperedges that contain a vertex from W but nothing from S
   D[vapply(D, \(E) any(is.element(W, E)) && !any(is.element(S, E)), logical(1))]
+}
+
+uncov_sep <- function(S, A, D) {
+  # set of hyperedges that contain a vertex from W but nothing from S
+  D[vapply(D, \(E) any(E == A) && !any(is.element(S, E)), logical(1))]
 }
 
 sample_minheur_joint <- function(set, V, W) {
@@ -359,7 +355,7 @@ sample_minheur_joint <- function(set, V, W) {
   set[[which.min(heuristics)]]
 }
 
-sample_minheur_sep <- function(set, V, W) {
+sample_minheur_sep <- function(set, V) {
   # For FDHitsSep, |W| = 1 and W /\ E is empty, so second part
   # of heuristic in sample_minheur_joint is redundant
   if (length(set) == 0)
