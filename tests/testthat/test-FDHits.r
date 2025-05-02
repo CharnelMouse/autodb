@@ -14,7 +14,7 @@ difference_sets <- function(lookup) {
     unique()
 }
 
-describe("treeSearchSep", {
+describe("FDHitsSep", {
   it("gives a deterministic result, except for per-dependant dependency order", {
     n_copies <- function(n, fn) {
       function(df) {
@@ -26,7 +26,7 @@ describe("treeSearchSep", {
         lst <- list(...)
         for (n in seq_along(lst)) {
           lst[[n]] <- R.utils::withTimeout(
-            treeSearchSep(lst[[n]]),
+            FDHitsSep(lst[[n]]),
             timeout = 5,
             onTimeout = "silent"
           )
@@ -71,7 +71,7 @@ describe("treeSearchSep", {
     )
   })
   it("gives the same results as DFD", {
-    treeSearchSep_works <- function(x) {
+    FDHitsSep_works <- function(x) {
       lookup <- lookup_table(x)
       fds <- discover(x, 1)
       expected <- Map(
@@ -80,25 +80,25 @@ describe("treeSearchSep", {
         unname(split(dependant(fds), detset(fds) |> (\(x) match(x, x))()))
       )
 
-      observed <- try(treeSearchSep(x), silent = TRUE)
+      observed <- try(FDHitsSep(x), silent = TRUE)
       if (class(observed)[[1]] == "try-error")
         return(fail(attr(observed, "condition")$message))
       expect_setequal(observed, fds)
     }
 
     # example from original paper
-    treeSearchSep_works(data.frame(
+    FDHitsSep_works(data.frame(
       Room_Nr = c(101L, 101L, 102L, 101L),
       Time = c("Wed 10:00 am", "Wed 02:00 pm", "Fri 02:00 pm", "Fri 02:00 pm"),
       Course = c("Programming", "Databases"),
       Lecturer = c("Miako", "Daniel", "Miako", "Saurabh")
     ))
 
-    forall(gen_df(6, 7, remove_dup_rows = FALSE), treeSearchSep_works)
+    forall(gen_df(6, 7, remove_dup_rows = FALSE), FDHitsSep_works)
   })
 })
 
-describe("treeSearchJoint", {
+describe("FDHitsJoint", {
   it("gives a deterministic result, except for per-dependant dependency order", {
     n_copies <- function(n, fn) {
       function(df) {
@@ -110,7 +110,7 @@ describe("treeSearchJoint", {
         lst <- list(...)
         for (n in seq_along(lst)) {
           lst[[n]] <- R.utils::withTimeout(
-            treeSearchJoint(lst[[n]]),
+            FDHitsJoint(lst[[n]]),
             timeout = 5,
             onTimeout = "silent"
           )
@@ -155,7 +155,7 @@ describe("treeSearchJoint", {
     )
   })
   it("gives the same results as DFD", {
-    treeSearchJoint_works <- function(x) {
+    FDHitsJoint_works <- function(x) {
       lookup <- lookup_table(x)
       fds <- discover(x, 1)
       expected <- Map(
@@ -164,21 +164,21 @@ describe("treeSearchJoint", {
         unname(split(dependant(fds), detset(fds) |> (\(x) match(x, x))()))
       )
 
-      observed <- try(treeSearchJoint(x), silent = TRUE)
+      observed <- try(FDHitsJoint(x), silent = TRUE)
       if (class(observed)[[1]] == "try-error")
         return(fail(attr(observed, "condition")$message))
       expect_setequal(observed, fds)
     }
 
     # example from original paper
-    treeSearchJoint_works(data.frame(
+    FDHitsJoint_works(data.frame(
       Room_Nr = c(101L, 101L, 102L, 101L),
       Time = c("Wed 10:00 am", "Wed 02:00 pm", "Fri 02:00 pm", "Fri 02:00 pm"),
       Course = c("Programming", "Databases"),
       Lecturer = c("Miako", "Daniel", "Miako", "Saurabh")
     ))
 
-    forall(gen_df(6, 7, remove_dup_rows = FALSE), treeSearchJoint_works)
+    forall(gen_df(6, 7, remove_dup_rows = FALSE), FDHitsJoint_works)
   })
 })
 

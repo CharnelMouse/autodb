@@ -1,4 +1,4 @@
-treeSearchSep <- function(x, progress = FALSE) {
+FDHitsSep <- function(x, progress = FALSE) {
   lookup <- lookup_table(x)
   attrs <- names(lookup)
   attr_indices <- seq_along(x)
@@ -22,7 +22,7 @@ treeSearchSep <- function(x, progress = FALSE) {
     while (length(return_stack) > 0) {
       node <- return_stack[[1]]
       return_stack <- return_stack[-1]
-      attr_res <- treeSearchSep_visit(
+      attr_res <- FDHitsSep_visit(
         node[[1]],
         node[[2]],
         node[[3]],
@@ -48,7 +48,7 @@ treeSearchSep <- function(x, progress = FALSE) {
   functional_dependency(res, attrs)
 }
 
-treeSearchJoint <- function(x, progress = FALSE) {
+FDHitsJoint <- function(x, progress = FALSE) {
   lookup <- lookup_table(x)
   attrs <- names(lookup)
   attr_indices <- seq_along(x)
@@ -66,7 +66,7 @@ treeSearchJoint <- function(x, progress = FALSE) {
   while (length(return_stack) > 0) {
     node <- return_stack[[1]]
     return_stack <- return_stack[-1]
-    attr_res <- treeSearchJoint_visit(
+    attr_res <- FDHitsJoint_visit(
       node[[1]],
       node[[2]],
       node[[3]],
@@ -91,7 +91,7 @@ treeSearchJoint <- function(x, progress = FALSE) {
   functional_dependency(res, attrs)
 }
 
-treeSearchSep_visit <- function(
+FDHitsSep_visit <- function(
   S,
   V,
   A,
@@ -194,7 +194,7 @@ treeSearchSep_visit <- function(
   list(res, D, new_nodes)
 }
 
-treeSearchJoint_visit <- function(
+FDHitsJoint_visit <- function(
   S,
   V,
   W,
