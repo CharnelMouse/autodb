@@ -1,10 +1,12 @@
 FDHitsSep <- function(x, progress = FALSE) {
+  if (ncol(x) == 0)
+    return(functional_dependency(list(), character()))
   lookup <- lookup_table(x)
   attrs <- names(lookup)
   attr_indices <- seq_along(x)
   plis <- lapply(lookup, pli)
   D <- lapply(plis, sample_diffsets, lookup) |>
-    Reduce(f = c, init = list()) |>
+    unlist(recursive = FALSE) |>
     unique()
   if (progress) {
     cat(with_number(length(D), "initial diffset", "\n\n", "s\n\n"))
@@ -49,12 +51,14 @@ FDHitsSep <- function(x, progress = FALSE) {
 }
 
 FDHitsJoint <- function(x, progress = FALSE) {
+  if (ncol(x) == 0)
+    return(functional_dependency(list(), character()))
   lookup <- lookup_table(x)
   attrs <- names(lookup)
   attr_indices <- seq_along(x)
   plis <- lapply(lookup, pli)
   D <- lapply(plis, sample_diffsets, lookup) |>
-    Reduce(f = c, init = list()) |>
+    unlist(recursive = FALSE) |>
     unique()
   if (progress) {
     cat(with_number(length(D), "initial diffset", "\n\n", "s\n\n"))
@@ -265,7 +269,7 @@ FDHitsJoint_visit <- function(
       pli(do.call(paste, unname(lookup[S])))
     refined_partitions <- lapply(
       W,
-      \(W) refine_partition(Spli, W, lookup) |>
+      \(A) refine_partition(Spli, A, lookup) |>
         # sort to avoid using is.element or setequal
         (\(x) x[order(vapply(x, `[`, integer(1),1))])()
     )
@@ -407,7 +411,7 @@ sample_diffsets <- function(pli, lookup, epsilon = 0.3) {
   samples <- Map(
     \(offset, rows) {
       # safe to use `:`, since length(rows) > 1 in stripped partitions
-      first_boundaries <- c(0L, cumsum((length(rows) - 1):1))
+      first_boundaries <- c(0, cumsum(as.numeric((length(rows) - 1):1)))
       index <- findInterval(offset, first_boundaries, left.open = TRUE)
       rows[index + c(0L, offset - first_boundaries[[index]])]
     },
@@ -434,7 +438,7 @@ new_diffset <- function(Spli, refined_partitions, lookup) {
   # The PLI mentioned above comes from the filtering used to update the
   # partition in refine_partition.
   new_clusters <- lapply(refined_partitions, setdiff, x = Spli) |>
-    Reduce(f = c, init = list())
+    unlist(recursive = FALSE)
   stopifnot(length(new_clusters) > 0)
   rows <- new_clusters[[1]]
   which(vapply(
@@ -445,6 +449,8 @@ new_diffset <- function(Spli, refined_partitions, lookup) {
 }
 
 refine_partition <- function(partition, attr, lookup) {
+  if (length(partition) == 0)
+    return(list())
   lapply(
     partition,
     \(cluster) {
@@ -452,5 +458,5 @@ refine_partition <- function(partition, attr, lookup) {
         (\(x) x[lengths(x) > 1])()
     }
   ) |>
-    Reduce(f = c, init = list())
+    unlist(recursive = FALSE)
 }
