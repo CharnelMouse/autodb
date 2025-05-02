@@ -108,12 +108,16 @@ FDHitsSep_visit <- function(
     stop("already visited {", toString(S), "}, {", toString(V), "}")
   visited <- c(visited, list(list(S, V, A)))
   # pruning
+  critical_edges <- list()
   for (C in S) {
     # no critical edge for C
     # => C is redundant in S for W
     # => S isn't irreducible for W
-    if (length(critical(C, A, S, D)) == 0) {
+    crits <- critical(C, A, S, D)
+    if (length(crits) == 0) {
       return(list(list(), D, list()))
+    }else{
+      critical_edges[[as.character(C)]] <- crits
     }
   }
   for (B in V) {
@@ -123,7 +127,7 @@ FDHitsSep_visit <- function(
     if (any(vapply(
       S,
       \(C) all(vapply(
-        critical(C, A, S, D),
+        critical_edges[[as.character(C)]],
         \(E) B %in% E,
         logical(1)
       )),
@@ -224,14 +228,19 @@ FDHitsJoint_visit <- function(
     stop("already visited ", node_string)
   visited <- c(visited, list(list(S, V, W)))
   # pruning
+  critical_edges <- list()
   for (A in W) {
     for (C in S) {
       # no critical edge for C
       # => C is redundant in S for (some part of) W
       # => S isn't irreducible for (some part of) W
-      if (length(critical(C, A, S, D)) == 0) {
+      crits <- critical(C, A, S, D)
+      if (length(crits) == 0) {
         W <- W[W != A]
+        critical_edges[[as.character(A)]] <- NULL
         break
+      }else{
+        critical_edges[[as.character(A)]][[as.character(C)]] <- crits
       }
     }
   }
@@ -244,7 +253,7 @@ FDHitsJoint_visit <- function(
       \(A) any(vapply(
         S,
         \(C) all(vapply(
-          critical(C, A, S, D),
+          critical_edges[[as.character(A)]][[as.character(C)]],
           \(E) B %in% E,
           logical(1)
         )),
