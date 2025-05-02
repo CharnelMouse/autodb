@@ -11,13 +11,13 @@ FDHitsSep <- function(x, progress = FALSE) {
     utils::flush.console()
   }
   res <- list()
-  for (a in attr_indices) {
+  for (A in attr_indices) {
     if (progress) {
-      cat("dependant", match(a, attrs), "\n\n")
+      cat("dependant", attrs[A], "\n\n")
       utils::flush.console()
     }
-    rest <- setdiff(attr_indices, a)
-    return_stack <- list(list(integer(), rest, a))
+    rest <- setdiff(attr_indices, A)
+    return_stack <- list(list(integer(), rest, A))
     visited <- list()
     while (length(return_stack) > 0) {
       node <- return_stack[[1]]
