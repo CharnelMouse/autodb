@@ -48,6 +48,49 @@ treeSearchSep <- function(x, progress = FALSE) {
   functional_dependency(res, attrs)
 }
 
+treeSearchJoint <- function(x, progress = FALSE) {
+  lookup <- lookup_table(x)
+  attrs <- names(lookup)
+  attr_indices <- seq_along(x)
+  plis <- lapply(lookup, pli)
+  D <- lapply(plis, sample_diffsets, lookup) |>
+    Reduce(f = c, init = list()) |>
+    unique()
+  if (progress) {
+    cat(with_number(length(D), "initial diffset", "\n\n", "s\n\n"))
+    utils::flush.console()
+  }
+  res <- list()
+  return_stack <- list(list(integer(), attr_indices, attr_indices))
+  visited <- list()
+  while (length(return_stack) > 0) {
+    node <- return_stack[[1]]
+    return_stack <- return_stack[-1]
+    attr_res <- treeSearchJoint_visit(
+      node[[1]],
+      node[[2]],
+      node[[3]],
+      D,
+      lookup,
+      visited = visited,
+      progress = progress
+    )
+    res <- c(res, attr_res[[1]])
+    D <- attr_res[[2]]
+    return_stack <- c(attr_res[[3]], return_stack)
+  }
+  if (progress) {
+    cat("\n")
+    cat(with_number(length(D), "final diffset", "\n", "s\n"))
+    utils::flush.console()
+  }
+  res <- lapply(res, lapply, \(x) attrs[x])
+  # split up into one-dependant FDs
+  res <- lapply(res, \(x) lapply(x[[2]], \(dependant) list(x[[1]], dependant))) |>
+    unlist(recursive = FALSE)
+  functional_dependency(res, attrs)
+}
+
 treeSearchSep_visit <- function(
   S,
   V,
@@ -147,7 +190,7 @@ treeSearchSep_visit <- function(
       "; ",
       toString(names(lookup)[attr])
     )
-  E <- sample_minheur(uncovered, V, attr)
+  E <- sample_minheur_sep(uncovered, V, attr)
   Bs <- intersect(E, V)
   res <- list()
   # rev() differs from the description in the paper, but the authors gave it as
@@ -156,6 +199,135 @@ treeSearchSep_visit <- function(
   new_nodes <- lapply(
     rev(seq_along(Bs)),
     \(n) list(sort(union(S, Bs[[n]])), setdiff(V, Bs[seq_len(n)]), attr)
+  )
+  list(res, D, new_nodes)
+}
+
+treeSearchJoint_visit <- function(
+  S,
+  V,
+  W,
+  D,
+  lookup,
+  visited = list(),
+  progress = FALSE
+) {
+  node_string <- paste0(
+    "Node (S: {",
+    toString(S),
+    "}, V: {",
+    toString(V),
+    "}, W: {",
+    toString(W),
+    "})"
+  )
+  if (progress) {
+    cat(paste0(node_string, "\n"))
+    utils::flush.console()
+  }
+  if (is.element(list(list(S, V, W)), visited))
+    stop("already visited ", node_string)
+  visited <- c(visited, list(list(S, V, W)))
+  # pruning
+  for (C in S) {
+    for (A in W) {
+      # no critical edge for C
+      # => C is redundant in S for (some part of) W
+      # => S isn't irreducible for (some part of) W
+      if (length(critical(C, A, S, D)) == 0) {
+        W <- setdiff(W, A)
+      }
+    }
+  }
+  for (B in V) {
+    # ∀ A∈W ∃ C∈S ∀ E∈critical(C,A,S): B∈E
+    # i.e. adding B to S would make some C in S redundant WRT W, as per above
+    # does not check for B being redundant if added
+    if (all(vapply(
+      W,
+      \(A) any(vapply(
+        S,
+        \(C) all(vapply(
+          critical(C, A, S, D),
+          \(E) B %in% E,
+          logical(1)
+        )),
+        logical(1)
+      )),
+      logical(1)
+    ))) {
+      V <- setdiff(V, B)
+    }
+  }
+  if (length(W) == 0) {
+    return(list(list(), D, list()))
+  }
+  # validation at the leaves
+  uncovered <- uncov(S, W, D)
+  if (length(uncovered) == 0) {
+    Spli <- if (length(S) == 0) {
+      if (nrow(lookup) <= 1)
+        list()
+      else
+        list(seq_len(nrow(lookup)))
+    }else
+      pli(do.call(paste, unname(lookup[S])))
+    refined_partitions <- lapply(
+      W,
+      \(W) refine_partition(Spli, W, lookup) |>
+        # sort to avoid using is.element or setequal
+        (\(x) x[order(vapply(x, `[`, integer(1),1))])()
+    )
+    if (validate(refined_partitions, Spli)) {
+      if (progress) {
+        cat("found {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[W]), "}\n", sep = "")
+        utils::flush.console()
+      }
+      return(list(list(list(S, W)), D, list()))
+    }
+    if (progress) {
+      cat("found false {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[W]), "}\n", sep = "")
+      utils::flush.console()
+    }
+    stopifnot(length(Spli) > 0)
+    ds <- new_diffset(Spli, refined_partitions, lookup)
+    dsl <- list(ds)
+    new_D <- c(D, dsl)
+    ds2 <- sample_diffsets(Spli, lookup)
+    new_D <- union(new_D, ds2)
+    if (progress) {
+      cat(paste0(
+        "added ",
+        with_number(length(new_D) - length(D), "diffset", "", "s"),
+        "\n"
+      ))
+      utils::flush.console()
+    }
+    D <- new_D
+    uncovered <- uncov(S, W, D)
+  }
+  # branching
+  if (length(uncovered) == 0)
+    stop(
+      "edge selection impossible at ",
+      toString(names(lookup)[S]),
+      "; ",
+      toString(names(lookup)[V]),
+      "; ",
+      toString(names(lookup)[W])
+    )
+  E <- sample_minheur_joint(uncovered, V, W)
+  Bs <- intersect(E, V)
+  res <- list()
+  # rev() differs from the description in the paper, but the authors gave it as
+  # a fix in private correspondence; I'll add a reference when they've published
+  # the new work
+  new_nodes <- c(
+    list(list(S, V, setdiff(W, E))), # mu_0
+    lapply( # mu_i
+      rev(seq_along(Bs)),
+      \(n) list(sort(union(S, Bs[[n]])), setdiff(V, Bs[seq_len(n)]), setdiff(intersect(W, E), Bs[[n]]))
+    )
   )
   list(res, D, new_nodes)
 }
@@ -176,7 +348,7 @@ uncov <- function(S, W, D) {
   D[vapply(D, \(E) any(is.element(W, E)) && !any(is.element(S, E)), logical(1))]
 }
 
-sample_minheur <- function(set, V, W) {
+sample_minheur_joint <- function(set, V, W) {
   if (length(set) == 0)
     stop("can't sample edge from empty set")
   heuristics <- vapply(
@@ -185,7 +357,19 @@ sample_minheur <- function(set, V, W) {
     integer(1)
   )
   set[[which.min(heuristics)]]
-  # sample(set[which(heuristics == min(heuristics))], 1)[[1]]
+}
+
+sample_minheur_sep <- function(set, V, W) {
+  # For FDHitsSep, |W| = 1 and W /\ E is empty, so second part
+  # of heuristic in sample_minheur_joint is redundant
+  if (length(set) == 0)
+    stop("can't sample edge from empty set")
+  heuristics <- vapply(
+    set,
+    function(E) length(intersect(E, V)),
+    integer(1)
+  )
+  set[[which.min(heuristics)]]
 }
 
 validate <- function(new_partitions, Spli) {
