@@ -161,20 +161,19 @@ treeSearchSep_visit <- function(
 }
 
 critical <- function(C, A, S, D) {
-  # set that contains the critical edges for C WRT S in the subhypergraph H_A,
+  # Set that contains the critical edges for C WRT S in the subhypergraph H_A,
   # i.e. using only elements of D that include A.
-  # an edge is critical for C in S WRT S if it contains C, and no other vertex
-  # from S.
-  # if every C is S has such a critical edge, then S is a minimal hitting set.
-  D |>
-    Filter(f = \(E) any(E == A)) |>
-    Filter(f = \(E) identical(intersect(E, S), C))
+  # If every C is S has a critical edge, then S is a minimal hitting set.
+  # An edge is critical for C in S WRT S if it contains C, and no other vertex
+  # from S, i.e. E /\ S = {C}.
+  # E and S are already sets, so S[match(E, S, 0L)] is quicker than
+  # intersect(E, S), since it skips removing duplicates.
+  D[vapply(D, \(E) any(E == A) && identical(S[match(E, S, 0L)], C), logical(1))]
 }
 
 uncov <- function(S, W, D) {
   # set of hyperedges that contain a vertex from W but nothing from S
-  D |>
-    Filter(f = \(E) any(is.element(W, E)) && !any(is.element(S, E)))
+  D[vapply(D, \(E) any(is.element(W, E)) && !any(is.element(S, E)), logical(1))]
 }
 
 sample_minheur <- function(set, V, W) {
