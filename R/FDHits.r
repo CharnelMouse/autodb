@@ -224,13 +224,14 @@ FDHitsJoint_visit <- function(
     stop("already visited ", node_string)
   visited <- c(visited, list(list(S, V, W)))
   # pruning
-  for (C in S) {
-    for (A in W) {
+  for (A in W) {
+    for (C in S) {
       # no critical edge for C
       # => C is redundant in S for (some part of) W
       # => S isn't irreducible for (some part of) W
       if (length(critical(C, A, S, D)) == 0) {
-        W <- setdiff(W, A)
+        W <- W[W != A]
+        break
       }
     }
   }
