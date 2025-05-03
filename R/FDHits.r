@@ -1,10 +1,22 @@
 FDHitsSep <- function(x, progress = FALSE) {
   if (ncol(x) == 0)
     return(functional_dependency(list(), character()))
+  if (progress) {
+    cat("simplifying data types\n")
+    utils::flush.console()
+  }
   lookup <- lookup_table(x)
   attrs <- names(lookup)
   attr_indices <- seq_along(x)
+  if (progress) {
+    cat("calculating single-attribute PLIs\n")
+    utils::flush.console()
+  }
   plis <- lapply(lookup, pli)
+  if (progress) {
+    cat("sampling difference sets\n")
+    utils::flush.console()
+  }
   D <- lapply(plis, sample_diffsets, lookup) |>
     unlist(recursive = FALSE) |>
     unique()
@@ -53,10 +65,22 @@ FDHitsSep <- function(x, progress = FALSE) {
 FDHitsJoint <- function(x, progress = FALSE) {
   if (ncol(x) == 0)
     return(functional_dependency(list(), character()))
+  if (progress) {
+    cat("simplifying data types\n")
+    utils::flush.console()
+  }
   lookup <- lookup_table(x)
   attrs <- names(lookup)
   attr_indices <- seq_along(x)
+  if (progress) {
+    cat("calculating single-attribute PLIs\n")
+    utils::flush.console()
+  }
   plis <- lapply(lookup, pli)
+  if (progress) {
+    cat("sampling difference sets\n")
+    utils::flush.console()
+  }
   D <- lapply(plis, sample_diffsets, lookup) |>
     unlist(recursive = FALSE) |>
     unique()
@@ -104,8 +128,16 @@ FDHitsSep_visit <- function(
   visited = list(),
   progress = FALSE
 ) {
-  if (is.element(list(list(S, V, A)), visited))
-    stop("already visited {", toString(S), "}, {", toString(V), "}")
+  if (is.element(list(list(S, V, A)), visited)) {
+    node_string <- paste0(
+      "Node (S: {",
+      toString(names(lookup)[S]),
+      "}, V: {",
+      toString(names(lookup)[V]),
+      "})"
+    )
+    stop("already visited ", node_string)
+  }
   visited <- c(visited, list(list(S, V, A)))
   # pruning
   critical_edges <- list()
@@ -180,15 +212,16 @@ FDHitsSep_visit <- function(
     uncovered <- uncov_sep(S, A, D)
   }
   # branching
-  if (length(uncovered) == 0)
-    stop(
-      "edge selection impossible at ",
+  if (length(uncovered) == 0) {
+    node_string <- paste0(
+      "Node (S: {",
       toString(names(lookup)[S]),
-      "; ",
+      "}, V: {",
       toString(names(lookup)[V]),
-      "; ",
-      toString(names(lookup)[A])
+      "})"
     )
+    stop("edge selection impossible at ", node_string)
+  }
   E <- sample_minheur_sep(uncovered, V)
   Bs <- intersect(E, V)
   res <- list()
@@ -211,21 +244,18 @@ FDHitsJoint_visit <- function(
   visited = list(),
   progress = FALSE
 ) {
-  node_string <- paste0(
-    "Node (S: {",
-    toString(S),
-    "}, V: {",
-    toString(V),
-    "}, W: {",
-    toString(W),
-    "})"
-  )
-  if (progress) {
-    cat(paste0(node_string, "\n"))
-    utils::flush.console()
-  }
-  if (is.element(list(list(S, V, W)), visited))
+  if (is.element(list(list(S, V, W)), visited)) {
+    node_string <- paste0(
+      "Node (S: {",
+      toString(S),
+      "}, V: {",
+      toString(V),
+      "}, W: {",
+      toString(W),
+      "})"
+    )
     stop("already visited ", node_string)
+  }
   visited <- c(visited, list(list(S, V, W)))
   # pruning
   critical_edges <- list()
@@ -312,15 +342,18 @@ FDHitsJoint_visit <- function(
     uncovered <- uncov_joint(S, W, D)
   }
   # branching
-  if (length(uncovered) == 0)
-    stop(
-      "edge selection impossible at ",
+  if (length(uncovered) == 0) {
+    node_string <- paste0(
+      "Node (S: {",
       toString(names(lookup)[S]),
-      "; ",
+      "}, V: {",
       toString(names(lookup)[V]),
-      "; ",
-      toString(names(lookup)[W])
+      "}, W: {",
+      toString(names(lookup)[W]),
+      "})"
     )
+    stop("edge selection impossible at ", node_string)
+  }
   E <- sample_minheur_joint(uncovered, V, W)
   Bs <- intersect(E, V)
   res <- list()
