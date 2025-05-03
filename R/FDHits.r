@@ -143,8 +143,8 @@ FDHitsSep_visit <- function(
   critical_edges <- list()
   for (C in S) {
     # no critical edge for C
-    # => C is redundant in S for W
-    # => S isn't irreducible for W
+    # => C is redundant in S for A
+    # => S isn't irreducible for A
     crits <- critical(C, A, S, D)
     if (length(crits) == 0) {
       return(list(list(), D, list()))
@@ -153,8 +153,8 @@ FDHitsSep_visit <- function(
     }
   }
   for (B in V) {
-    # ∀ A∈W ∃ C∈S ∀ E∈critical(C,A,S): B∈E
-    # i.e. adding B to S would make some C in S redundant WRT W, as per above
+    # remove if ∃ C∈S ∀ E∈critical(C,A,S): B∈E,
+    # i.e. adding B to S would make some C in S redundant WRT A
     # does not check for B being redundant if added
     if (any(vapply(
       S,
@@ -275,8 +275,8 @@ FDHitsJoint_visit <- function(
     }
   }
   for (B in V) {
-    # ∀ A∈W ∃ C∈S ∀ E∈critical(C,A,S): B∈E
-    # i.e. adding B to S would make some C in S redundant WRT W, as per above
+    # remove if ∀ A∈W ∃ C∈S ∀ E∈critical(C,A,S): B∈E,
+    # i.e. adding B to S would make some C in S redundant WRT all of W
     # does not check for B being redundant if added
     if (all(vapply(
       W,
