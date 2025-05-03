@@ -486,11 +486,11 @@ new_diffset <- function(Spli, refined_partitions, lookup) {
     unlist(recursive = FALSE)
   stopifnot(length(new_clusters) > 0)
   rows <- new_clusters[[1]]
-  which(vapply(
+  unname(which(vapply(
     lookup[rows, , drop = FALSE],
     \(vals) any(vals != vals[[1]]),
     logical(1)
-  ))
+  )))
 }
 
 refine_partition <- function(partition, attr, lookup) {
