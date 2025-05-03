@@ -447,7 +447,7 @@ new_diffset <- function(Spli, refined_partitions, lookup) {
   # we could then take setdiff(partition(S), partition(S X A)).
   # The PLI mentioned above comes from the filtering used to update the
   # partition in refine_partition.
-  new_clusters <- lapply(refined_partitions, setdiff, x = Spli) |>
+  new_clusters <- lapply(refined_partitions, \(rp) Spli[!is.element(Spli, rp)]) |>
     unlist(recursive = FALSE)
   stopifnot(length(new_clusters) > 0)
   rows <- new_clusters[[1]]
