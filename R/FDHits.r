@@ -197,13 +197,14 @@ FDHitsSep_visit <- function(
     stopifnot(length(Spli) > 0)
     ds <- new_diffset(Spli, refined_partitions, lookup)
     dsl <- list(ds)
-    new_D <- c(D, dsl)
     ds2 <- sample_diffsets(Spli, lookup)
-    new_D <- union(new_D, ds2)
+    added <- setdiff(c(dsl, ds2), D)
+    stopifnot(length(added) > 0)
+    new_D <- c(D, added)
     if (progress) {
       cat(paste0(
         "added ",
-        with_number(length(new_D) - length(D), "diffset", "", "s"),
+        with_number(length(added), "diffset", "", "s"),
         "\n"
       ))
       utils::flush.console()
@@ -327,9 +328,10 @@ FDHitsJoint_visit <- function(
     stopifnot(length(Spli) > 0)
     ds <- new_diffset(Spli, refined_partitions, lookup)
     dsl <- list(ds)
-    new_D <- c(D, dsl)
     ds2 <- sample_diffsets(Spli, lookup)
-    new_D <- union(new_D, ds2)
+    added <- setdiff(c(dsl, ds2), D)
+    stopifnot(length(added) > 0)
+    new_D <- c(D, added)
     if (progress) {
       cat(paste0(
         "added ",
