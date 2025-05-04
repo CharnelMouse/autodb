@@ -25,6 +25,7 @@ FDHitsSep <- function(x, progress = FALSE) {
     utils::flush.console()
   }
   res <- list()
+  n_visited <- 0L
   for (A in attr_indices) {
     if (progress) {
       cat("dependant", attrs[A], "\n\n")
@@ -45,6 +46,7 @@ FDHitsSep <- function(x, progress = FALSE) {
         visited = visited,
         progress = progress
       )
+      visited <- c(visited, list(node[1:3]))
       res <- c(res, attr_res[[1]])
       D <- attr_res[[2]]
       return_stack <- c(attr_res[[3]], return_stack)
@@ -53,9 +55,11 @@ FDHitsSep <- function(x, progress = FALSE) {
       cat("\n")
       utils::flush.console()
     }
+    n_visited <- n_visited + length(visited)
   }
   if (progress) {
     cat(with_number(length(D), "final diffset", "\n", "s\n"))
+    cat(with_number(n_visited, "node", " visited\n", "s visited\n"))
     utils::flush.console()
   }
   res <- lapply(res, lapply, \(x) attrs[x])
@@ -103,6 +107,7 @@ FDHitsJoint <- function(x, progress = FALSE) {
       visited = visited,
       progress = progress
     )
+    visited <- c(visited, list(node[1:3]))
     res <- c(res, attr_res[[1]])
     D <- attr_res[[2]]
     return_stack <- c(attr_res[[3]], return_stack)
@@ -110,6 +115,7 @@ FDHitsJoint <- function(x, progress = FALSE) {
   if (progress) {
     cat("\n")
     cat(with_number(length(D), "final diffset", "\n", "s\n"))
+    cat(with_number(length(visited), "node", " visited\n", "s visited\n"))
     utils::flush.console()
   }
   res <- lapply(res, lapply, \(x) attrs[x])
