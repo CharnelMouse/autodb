@@ -254,11 +254,11 @@ FDHitsJoint_visit <- function(
   if (is.element(list(list(S, V, W)), visited)) {
     node_string <- paste0(
       "Node (S: {",
-      toString(S),
+      toString(names(lookup)[S]),
       "}, V: {",
-      toString(V),
+      toString(names(lookup)[V]),
       "}, W: {",
-      toString(W),
+      toString(names(lookup)[W]),
       "})"
     )
     stop("already visited ", node_string)
