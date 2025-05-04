@@ -1,36 +1,22 @@
-FDHitsSep <- function(x, progress = FALSE) {
+FDHitsSep <- function(x, progress = FALSE, progress_file = "") {
+  report <- reporter(progress, progress_file, new = TRUE)
   if (ncol(x) == 0)
     return(functional_dependency(list(), character()))
-  if (progress) {
-    cat("simplifying data types\n")
-    utils::flush.console()
-  }
+  report$stat("simplifying data types")
   lookup <- lookup_table(x)
   attrs <- names(lookup)
   attr_indices <- seq_along(x)
-  if (progress) {
-    cat("calculating single-attribute PLIs\n")
-    utils::flush.console()
-  }
+  report$stat("calculating single-attribute PLIs")
   plis <- lapply(lookup, pli)
-  if (progress) {
-    cat("sampling difference sets\n")
-    utils::flush.console()
-  }
+  report$stat("sampling difference sets")
   D <- lapply(plis, sample_diffsets, lookup) |>
     unlist(recursive = FALSE) |>
     unique()
-  if (progress) {
-    cat(with_number(length(D), "initial diffset", "\n\n", "s\n\n"))
-    utils::flush.console()
-  }
+  report$stat(with_number(length(D), "initial diffset", "\n", "s\n"))
   res <- list()
   n_visited <- 0L
   for (A in attr_indices) {
-    if (progress) {
-      cat("dependant", attrs[A], "\n\n")
-      utils::flush.console()
-    }
+    report$stat(paste("dependant", attrs[A]))
     rest <- setdiff(attr_indices, A)
     return_stack <- list(list(integer(), rest, A))
     visited <- list()
@@ -43,55 +29,40 @@ FDHitsSep <- function(x, progress = FALSE) {
         node[[3]],
         D,
         lookup,
-        visited = visited,
-        progress = progress
+        report = report,
+        visited = visited
       )
       visited <- c(visited, list(node[1:3]))
       res <- c(res, attr_res[[1]])
       D <- attr_res[[2]]
       return_stack <- c(attr_res[[3]], return_stack)
     }
-    if (progress) {
-      cat("\n")
-      utils::flush.console()
-    }
+    report$stat("")
     n_visited <- n_visited + length(visited)
   }
-  if (progress) {
-    cat(with_number(length(D), "final diffset", "\n", "s\n"))
-    cat(with_number(n_visited, "node", " visited\n", "s visited\n"))
-    utils::flush.console()
-  }
+  report$stat(paste0(
+    with_number(length(D), "final diffset", "\n", "s\n"),
+    with_number(n_visited, "node", " visited", "s visited")
+  ))
   res <- lapply(res, lapply, \(x) attrs[x])
   functional_dependency(res, attrs)
 }
 
-FDHitsJoint <- function(x, progress = FALSE) {
+FDHitsJoint <- function(x, progress = FALSE, progress_file = "") {
+  report <- reporter(progress, progress_file, new = TRUE)
   if (ncol(x) == 0)
     return(functional_dependency(list(), character()))
-  if (progress) {
-    cat("simplifying data types\n")
-    utils::flush.console()
-  }
+  report$stat("simplifying data types")
   lookup <- lookup_table(x)
   attrs <- names(lookup)
   attr_indices <- seq_along(x)
-  if (progress) {
-    cat("calculating single-attribute PLIs\n")
-    utils::flush.console()
-  }
+  report$stat("calculating single-attribute PLIs")
   plis <- lapply(lookup, pli)
-  if (progress) {
-    cat("sampling difference sets\n")
-    utils::flush.console()
-  }
+  report$stat("sampling difference sets")
   D <- lapply(plis, sample_diffsets, lookup) |>
     unlist(recursive = FALSE) |>
     unique()
-  if (progress) {
-    cat(with_number(length(D), "initial diffset", "\n\n", "s\n\n"))
-    utils::flush.console()
-  }
+  report$stat(with_number(length(D), "initial diffset", "\n", "s\n"))
   res <- list()
   return_stack <- list(list(integer(), attr_indices, attr_indices))
   visited <- list()
@@ -104,20 +75,19 @@ FDHitsJoint <- function(x, progress = FALSE) {
       node[[3]],
       D,
       lookup,
-      visited = visited,
-      progress = progress
+      report = report,
+      visited = visited
     )
-    visited <- c(visited, list(node[1:3]))
+    visited <- c(visited, list(node[c(1, 3)]))
     res <- c(res, attr_res[[1]])
     D <- attr_res[[2]]
     return_stack <- c(attr_res[[3]], return_stack)
   }
-  if (progress) {
-    cat("\n")
-    cat(with_number(length(D), "final diffset", "\n", "s\n"))
-    cat(with_number(length(visited), "node", " visited\n", "s visited\n"))
-    utils::flush.console()
-  }
+  report$stat(paste0(
+    "\n",
+    with_number(length(D), "final diffset", "\n", "s\n"),
+    with_number(length(visited), "node", " visited", "s visited")
+  ))
   res <- lapply(res, lapply, \(x) attrs[x])
   # split up into one-dependant FDs
   res <- lapply(res, \(x) lapply(x[[2]], \(dependant) list(x[[1]], dependant))) |>
@@ -131,19 +101,47 @@ FDHitsSep_visit <- function(
   A,
   D,
   lookup,
-  visited = list(),
-  progress = FALSE
+  report,
+  visited = list()
 ) {
+  node_string <- paste0(
+    "Node (S: {",
+    toString(names(lookup)[S]),
+    "}, V: {",
+    toString(names(lookup)[V]),
+    "}, A: {",
+    toString(names(lookup)[[A]]),
+    "})"
+  )
   if (is.element(list(list(S, V, A)), visited)) {
-    node_string <- paste0(
-      "Node (S: {",
-      toString(names(lookup)[S]),
-      "}, V: {",
-      toString(names(lookup)[V]),
-      "})"
-    )
+    report$stat(paste0(
+      "already visited ", node_string, "\n",
+      "visited:\n",
+      paste(
+        vapply(
+          visited,
+          \(node) {
+            paste0(
+              "Node (S: {",
+              toString(names(lookup)[node[[1]]]),
+              "}, A: {",
+              toString(names(lookup)[[node[[2]]]]),
+              "})"
+            )
+          },
+          character(1)
+        ),
+        collapse = "\n"
+      ),
+      "\ndifference sets:\n",
+      paste(
+        vapply(D, \(d) toString(names(lookup)[d]), character(1)),
+        collapse = "\n"
+      )
+    ))
     stop("already visited ", node_string)
   }
+  report$stat(node_string)
   visited <- c(visited, list(list(S, V, A)))
   # pruning
   critical_edges <- list()
@@ -190,16 +188,22 @@ FDHitsSep_visit <- function(
         (\(x) x[order(vapply(x, `[`, integer(1),1))])()
     )
     if (validate(refined_partitions, Spli)) {
-      if (progress) {
-        cat("found {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[A]), "}\n", sep = "")
-        utils::flush.console()
-      }
+      report$stat(paste0(
+        "  found {",
+        toString(names(lookup)[S]),
+        "} -> {",
+        toString(names(lookup)[A]),
+        "}"
+      ))
       return(list(list(list(S, A)), D, list()))
     }
-    if (progress) {
-      cat("found false {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[A]), "}\n", sep = "")
-      utils::flush.console()
-    }
+    report$stat(paste0(
+      "  found false {",
+      toString(names(lookup)[S]),
+      "} -> {",
+      toString(names(lookup)[A]),
+      "}"
+    ))
     stopifnot(length(Spli) > 0)
     ds <- new_diffset(Spli, refined_partitions, lookup)
     dsl <- list(ds)
@@ -207,14 +211,10 @@ FDHitsSep_visit <- function(
     added <- setdiff(c(dsl, ds2), D)
     stopifnot(length(added) > 0)
     new_D <- c(D, added)
-    if (progress) {
-      cat(paste0(
-        "added ",
-        with_number(length(added), "diffset", "", "s"),
-        "\n"
-      ))
-      utils::flush.console()
-    }
+    report$stat(paste0(
+      "  added ",
+      with_number(length(added), "diffset", "", "s")
+    ))
     D <- new_D
     uncovered <- uncov_sep(S, A, D)
   }
@@ -248,21 +248,47 @@ FDHitsJoint_visit <- function(
   W,
   D,
   lookup,
-  visited = list(),
-  progress = FALSE
+  report,
+  visited = list()
 ) {
-  if (is.element(list(list(S, V, W)), visited)) {
-    node_string <- paste0(
-      "Node (S: {",
-      toString(names(lookup)[S]),
-      "}, V: {",
-      toString(names(lookup)[V]),
-      "}, W: {",
-      toString(names(lookup)[W]),
-      "})"
-    )
+  node_string <- paste0(
+    "Node (S: {",
+    toString(names(lookup)[S]),
+    "}, V: {",
+    toString(names(lookup)[V]),
+    "}, W: {",
+    toString(names(lookup)[W]),
+    "})"
+  )
+  if (is.element(list(list(S,  W)), visited)) {
+    report$stat(paste0(
+      "already visited ", node_string, "\n",
+      "visited:\n",
+      paste(
+        vapply(
+          visited,
+          \(node) {
+            paste0(
+              "Node (S: {",
+              toString(names(lookup)[node[[1]]]),
+              "}, W: {",
+              toString(names(lookup)[node[[2]]]),
+              "})"
+            )
+          },
+          character(1)
+        ),
+        collapse = "\n"
+      ),
+      "\ndifference sets:\n",
+      paste(
+        vapply(D, \(d) toString(names(lookup)[d]), character(1)),
+        collapse = "\n"
+      )
+    ))
     stop("already visited ", node_string)
   }
+  report$stat(node_string)
   visited <- c(visited, list(list(S, V, W)))
   # pruning
   critical_edges <- list()
@@ -321,16 +347,22 @@ FDHitsJoint_visit <- function(
         (\(x) x[order(vapply(x, `[`, integer(1),1))])()
     )
     if (validate(refined_partitions, Spli)) {
-      if (progress) {
-        cat("found {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[W]), "}\n", sep = "")
-        utils::flush.console()
-      }
+      report$stat(paste0(
+        "  found {",
+        toString(names(lookup)[S]),
+        "} -> {",
+        toString(names(lookup)[W]),
+        "}"
+      ))
       return(list(list(list(S, W)), D, list()))
     }
-    if (progress) {
-      cat("found false {", toString(names(lookup)[S]), "} -> {", toString(names(lookup)[W]), "}\n", sep = "")
-      utils::flush.console()
-    }
+    report$stat(paste0(
+      "  found false {",
+      toString(names(lookup)[S]),
+      "} -> {",
+      toString(names(lookup)[W]),
+      "}"
+    ))
     stopifnot(length(Spli) > 0)
     ds <- new_diffset(Spli, refined_partitions, lookup)
     dsl <- list(ds)
@@ -338,14 +370,10 @@ FDHitsJoint_visit <- function(
     added <- setdiff(c(dsl, ds2), D)
     stopifnot(length(added) > 0)
     new_D <- c(D, added)
-    if (progress) {
-      cat(paste0(
-        "added ",
-        with_number(length(new_D) - length(D), "diffset", "", "s"),
-        "\n"
-      ))
-      utils::flush.console()
-    }
+    report$stat(paste0(
+      "  added ",
+      with_number(length(new_D) - length(D), "diffset", "", "s")
+    ))
     D <- new_D
     uncovered <- uncov_joint(S, W, D)
   }
@@ -369,12 +397,39 @@ FDHitsJoint_visit <- function(
   # a fix in private correspondence; I'll add a reference when they've published
   # the new work
   new_nodes <- c(
-    list(list(S, V, setdiff(W, E))), # mu_0
+    if (any(!is.element(W, E))) list(list(S, V, setdiff(W, E))), # mu_0
     lapply( # mu_i
       rev(seq_along(Bs)),
       \(n) list(sort(union(S, Bs[[n]])), setdiff(V, Bs[seq_len(n)]), setdiff(intersect(W, E), Bs[[n]]))
     )
   )
+  report$stat(paste0(
+    "  ",
+    with_number(length(new_nodes), "new return stack node", "", "s"),
+    if (length(new_nodes) > 0)
+      "\n",
+    paste(
+      "  ",
+      vapply(
+        new_nodes,
+        \(node) {
+          paste0(
+            "Node (S: {",
+            toString(names(lookup)[node[[1]]]),
+            "}, V: {",
+            toString(names(lookup)[node[[2]]]),
+            "}, W: {",
+            toString(names(lookup)[node[[3]]]),
+            "})"
+          )
+        },
+        character(1)
+      ),
+      sep = "",
+      collapse = "\n",
+      recycle0 = TRUE
+    )
+  ))
   list(res, D, new_nodes)
 }
 
