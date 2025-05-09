@@ -450,7 +450,7 @@ describe("create_insert", {
       ) |>
         gen.with(uncurry(\(df, digits) list(
           df = df,
-          schema = synthesise(discover(df, 1)),
+          schema = synthesise(discover(df, 1, digits = digits)),
           digits = digits
         ))),
       \(df, schema, digits) {
