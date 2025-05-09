@@ -178,10 +178,9 @@ describe("decompose", {
       reduced_index <- match(reduced_fd, flat_deps)
       if (is.na(reduced_index))
         stop("reduced_fd doesn't exist")
-      reduced_deps <- unclass(flat_deps)
-      reduced_deps[[reduced_index]][[1]] <-
-        reduced_deps[[reduced_index]][[1]][-removed_det]
-      reduced_deps <- functional_dependency(reduced_deps, attrs_order(flat_deps))
+      reduced_deps <- flat_deps
+      detset(reduced_deps)[[reduced_index]] <-
+        detset(reduced_deps)[[reduced_index]][-removed_det]
       schema <- normalise(reduced_deps)
       expect_error(
         decompose(df, schema),
