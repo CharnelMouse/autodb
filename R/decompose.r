@@ -22,44 +22,51 @@
 #'   \code{\link{discover}} for why this rounding is necessary for consistent
 #'   results across different machines. See the note in
 #'   \code{\link{print.default}} about \code{digits >= 16}.
+#' @param check a logical, indicating whether to check that \code{df} satisfies
+#'   the functional dependencies enforced by \code{schema} before creating the
+#'   result. This can find key violations without spending time creating the
+#'   result first, but is redundant if \code{df} was used to create
+#'   \code{schema} in the first place.
 #'
 #' @return A \code{\link{database}} object, containing the data in \code{df}
 #'   within the database schema given in \code{schema}.
 #' @export
-decompose <- function(df, schema, digits = getOption("digits")) {
+decompose <- function(df, schema, digits = getOption("digits"), check = TRUE) {
   stopifnot(!anyDuplicated(names(schema)))
   stopifnot(identical(names(df), attrs_order(schema)))
 
   if (!is.na(digits))
     df[] <- lapply(df, coarsen_if_float, digits = digits)
 
-  inferred_fds <- synthesised_fds(attrs(schema), keys(schema))
-  if (length(inferred_fds) > 0L)
-    inferred_fds <- unlist(inferred_fds, recursive = FALSE)
-  check_fd <- function(df, fd) {
-    both_proj <- df_unique(df[, unlist(fd), drop = FALSE])
-    key_proj <- df_unique(both_proj[, fd[[1]], drop = FALSE])
-    nrow(key_proj) == nrow(both_proj)
-  }
-  fds_satisfied <- vapply(
-    inferred_fds,
-    check_fd,
-    logical(1L),
-    df = df
-  )
-  if (!all(fds_satisfied)) {
-    stop(paste(
-      "df doesn't satisfy functional dependencies in schema:",
-      paste(
-        vapply(
-          inferred_fds[!fds_satisfied],
-          \(fd) paste0("{", toString(fd[[1]]), "} -> ", fd[[2]]),
-          character(1)
+  if (check) {
+    inferred_fds <- synthesised_fds(attrs(schema), keys(schema))
+    if (length(inferred_fds) > 0L)
+      inferred_fds <- unlist(inferred_fds, recursive = FALSE)
+    check_fd <- function(df, fd) {
+      both_proj <- df_unique(df[, unlist(fd), drop = FALSE])
+      key_proj <- df_unique(both_proj[, fd[[1]], drop = FALSE])
+      nrow(key_proj) == nrow(both_proj)
+    }
+    fds_satisfied <- vapply(
+      inferred_fds,
+      check_fd,
+      logical(1L),
+      df = df
+    )
+    if (!all(fds_satisfied)) {
+      stop(paste(
+        "df doesn't satisfy functional dependencies in schema:",
+        paste(
+          vapply(
+            inferred_fds[!fds_satisfied],
+            \(fd) paste0("{", toString(fd[[1]]), "} -> ", fd[[2]]),
+            character(1)
+          ),
+          collapse = "\n"
         ),
-        collapse = "\n"
-      ),
-      sep = "\n"
-    ))
+        sep = "\n"
+      ))
+    }
   }
 
   create_insert(df, schema, digits = digits) |>

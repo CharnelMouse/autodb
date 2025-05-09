@@ -3,12 +3,13 @@ describe("decompose", {
     forall(
       list(
         gen_df(6, 7),
-        gen.choice(gen.element(7:1), gen.pure(NA_integer_))
+        gen.choice(gen.element(7:1), gen.pure(NA_integer_)),
+        gen.element(c(FALSE, TRUE))
       ),
-      \(x, digits) {
+      \(x, digits, check) {
         fds <- discover(x, 1, digits = digits)
         schema <- normalise(fds)
-        db <- decompose(x, schema)
+        db <- decompose(x, schema, check = check)
         is_valid_database(db)
       },
       curry = TRUE
@@ -183,11 +184,29 @@ describe("decompose", {
         detset(reduced_deps)[[reduced_index]][-removed_det]
       schema <- normalise(reduced_deps)
       expect_error(
-        decompose(df, schema),
+        decompose(df, schema, check = TRUE),
         paste0(
           "\\A",
           "df doesn't satisfy functional dependencies in schema:",
           "(\\n\\{.*\\} -> .*)+",
+          "\\Z"
+        ),
+        perl = TRUE
+      )
+      element_regex <- ".+\\.\\{[^}]*\\}"
+      expect_error(
+        decompose(df, schema, check = FALSE),
+        paste0(
+          "\\A",
+          "relations must satisfy their keys:",
+          " element",
+          paste0(
+            "(",
+            " ", element_regex,
+            "|",
+            "s ", element_regex, "(, ", element_regex, ")*",
+            ")"
+          ),
           "\\Z"
         ),
         perl = TRUE
@@ -277,7 +296,7 @@ describe("decompose", {
         "\\.\\{", name_regexp, "(, ", name_regexp, ")*\\}"
       )
       expect_error(
-        decompose(df, dbs),
+        decompose(df, dbs, check = TRUE),
         paste0(
           "\\A",
           "relations must satisfy references in schema:",
@@ -298,21 +317,23 @@ describe("decompose", {
     forall(
       list(
         gen_df(6, 7, remove_dup_rows = TRUE),
-        gen.element(c(7:1, NA))
+        gen.element(c(7:1, NA)),
+        gen.element(c(FALSE, TRUE))
       ) |>
-        gen.with(uncurry(\(df, digits) {
+        gen.with(uncurry(\(df, digits, check) {
           list(
             df = df,
             schema = normalise(
               discover(df, 1, digits = digits),
               remove_avoidable = TRUE
             ),
-            digits = digits
+            digits = digits,
+            check = check
           )
         })),
-      \(df, schema, digits) {
+      \(df, schema, digits, check) {
         expect_identical(
-          decompose(df, schema, digits = digits),
+          decompose(df, schema, digits = digits,  check = check),
           create(schema) |> insert(df, digits = digits)
         )
       },

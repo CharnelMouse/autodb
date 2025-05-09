@@ -4,7 +4,7 @@
 \alias{decompose}
 \title{Decompose a data frame based on given normalised dependencies}
 \usage{
-decompose(df, schema, digits = getOption("digits"))
+decompose(df, schema, digits = getOption("digits"), check = TRUE)
 }
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
@@ -19,6 +19,12 @@ to \code{\link{format}}. See the "Floating-point variables" section for
 \code{\link{discover}} for why this rounding is necessary for consistent
 results across different machines. See the note in
 \code{\link{print.default}} about \code{digits >= 16}.}
+
+\item{check}{a logical, indicating whether to check that \code{df} satisfies
+the functional dependencies enforced by \code{schema} before creating the
+result. This can find key violations without spending time creating the
+result first, but is redundant if \code{df} was used to create
+\code{schema} in the first place.}
 }
 \value{
 A \code{\link{database}} object, containing the data in \code{df}

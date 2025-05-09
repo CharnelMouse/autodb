@@ -75,7 +75,7 @@ autodb <- function(
       remove_avoidable = remove_avoidable,
       constants_name = constants_name
     ) |>
-    report$op(decompose, "decomposing", df = df, digits = NA)
+    report$op(decompose, "decomposing", df = df, digits = NA, check = FALSE)
 }
 
 # like format_if_float for discover(), but keeping the original class
