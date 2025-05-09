@@ -45,6 +45,7 @@
 <h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
 <ul><li>
 <code>relation</code> and <code>database</code> methods for <code>rename_attrs</code> and <code>gv</code> now run significantly more quickly for large data sets, due to not re-running all the key validity checks.</li>
+<li>Added a <code>check</code> parameter to <code>decompose</code>, to allow skipping some checks if the data frame to decompose is the one used to create the schema.</li>
 <li>Handing for numerical/complex variables is more consistent:
 <ul><li>Values are now rounded by significant digits, as intended, rather than by decimal places.</li>
 <li>In addition to <code>autodb</code>, <code>discover</code>, and <code>df_equiv</code>, values are now also rounded for <code>insert</code> and <code>decompose</code>.</li>
