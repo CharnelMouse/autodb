@@ -210,13 +210,12 @@ FDHitsSep_visit <- function(
     ds2 <- sample_diffsets(Spli, lookup)
     added <- setdiff(c(dsl, ds2), D)
     stopifnot(length(added) > 0)
-    new_D <- c(D, added)
     report$stat(paste0(
       "  added ",
       with_number(length(added), "diffset", "", "s")
     ))
-    D <- new_D
-    uncovered <- uncov_sep(S, A, D)
+    uncovered <- uncov_sep(S, A, added)
+    D <- c(D, added)
   }
   # branching
   if (length(uncovered) == 0) {
@@ -369,13 +368,12 @@ FDHitsJoint_visit <- function(
     ds2 <- sample_diffsets(Spli, lookup)
     added <- setdiff(c(dsl, ds2), D)
     stopifnot(length(added) > 0)
-    new_D <- c(D, added)
     report$stat(paste0(
       "  added ",
-      with_number(length(new_D) - length(D), "diffset", "", "s")
+      with_number(length(added), "diffset", "", "s")
     ))
-    D <- new_D
-    uncovered <- uncov_joint(S, W, D)
+    uncovered <- uncov_joint(S, W, added)
+    D <- c(D, added)
   }
   # branching
   if (length(uncovered) == 0) {
