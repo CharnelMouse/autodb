@@ -144,32 +144,19 @@ FDHitsSep_visit <- function(
   report$stat(node_string)
   visited <- c(visited, list(list(S, V, A)))
   # pruning
-  critical_edges <- list()
   for (C in S) {
     # no critical edge for C
     # => C is redundant in S for A
     # => S isn't irreducible for A
     crits <- critical(C, A, S, D)
-    if (length(crits) == 0) {
+    if (length(crits) == 0)
       return(list(list(), D, list()))
-    }else{
-      critical_edges[[as.character(C)]] <- crits
-    }
-  }
-  for (B in V) {
-    # remove if ∃ C∈S ∀ E∈critical(C,A,S): B∈E,
-    # i.e. adding B to S would make some C in S redundant WRT A
-    # does not check for B being redundant if added
-    if (any(vapply(
-      S,
-      \(C) all(vapply(
-        critical_edges[[as.character(C)]],
-        \(E) B %in% E,
-        logical(1)
-      )),
-      logical(1)
-    ))) {
-      V <- setdiff(V, B)
+    for (B in V) {
+      # remove B from V if ∃ C∈S ∀ E∈critical(C,A,S): B∈E,
+      # i.e. adding B to S would make some C in S redundant WRT A
+      # does not check for B being redundant if added
+      if (all(vapply(crits, is.element, logical(1), el = B)))
+        V <- setdiff(V, B)
     }
   }
   # validation at the leaves
