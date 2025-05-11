@@ -557,10 +557,9 @@ refine_partition <- function(partition, attr, lookup) {
     return(list())
   lapply(
     partition,
-    \(cluster) {
-      unname(split(cluster, ffactor1i(lookup[[attr]][cluster]))) |>
-        (\(x) x[lengths(x) > 1])()
-    }
+    \(cluster) split(cluster, ffactor1i(lookup[[attr]][cluster]))
   ) |>
-    unlist(recursive = FALSE)
+    unlist(recursive = FALSE) |>
+    (\(x) x[lengths(x) > 1])() |>
+    unname()
 }
