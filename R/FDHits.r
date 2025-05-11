@@ -156,7 +156,7 @@ FDHitsSep_visit <- function(
       # i.e. adding B to S would make some C in S redundant WRT A
       # does not check for B being redundant if added
       if (all(vapply(crits, is.element, logical(1), el = B)))
-        V <- setdiff(V, B)
+        V <- V[V != B]
     }
   }
   # validation at the leaves
@@ -293,6 +293,9 @@ FDHitsJoint_visit <- function(
       }
     }
   }
+  if (length(W) == 0) {
+    return(list(list(), D, list()))
+  }
   for (B in V) {
     # remove if ∀ A∈W ∃ C∈S ∀ E∈critical(C,A,S): B∈E,
     # i.e. adding B to S would make some C in S redundant WRT all of W
@@ -312,9 +315,6 @@ FDHitsJoint_visit <- function(
     ))) {
       V <- setdiff(V, B)
     }
-  }
-  if (length(W) == 0) {
-    return(list(list(), D, list()))
   }
   # validation at the leaves
   uncovered <- uncov_joint(S, W, D)
