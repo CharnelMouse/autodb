@@ -1,11 +1,15 @@
-FDHitsSep <- function(x, progress = FALSE, progress_file = "") {
+FDHits <- function(
+  x,
+  method = c("Sep", "Joint"),
+  progress = FALSE,
+  progress_file = ""
+) {
+  method <- match.arg(method)
   report <- reporter(progress, progress_file, new = TRUE)
   if (ncol(x) == 0)
     return(functional_dependency(list(), character()))
   report$stat("simplifying data types")
   lookup <- lookup_table(x)
-  attrs <- names(lookup)
-  attr_indices <- seq_along(x)
   report$stat("calculating single-attribute PLIs")
   plis <- lapply(lookup, pli)
   report$stat("sampling difference sets")
@@ -13,6 +17,32 @@ FDHitsSep <- function(x, progress = FALSE, progress_file = "") {
     unlist(recursive = FALSE) |>
     unique()
   report$stat(with_number(length(D), "initial diffset", "\n", "s\n"))
+  switch(
+    method,
+    Sep = FDHitsSepInner(lookup, D, report),
+    Joint = FDHitsJointInner(lookup, D, report)
+  )
+}
+
+FDHitsSep <- function(x, progress = FALSE, progress_file = "") {
+  report <- reporter(progress, progress_file, new = TRUE)
+  if (ncol(x) == 0)
+    return(functional_dependency(list(), character()))
+  report$stat("simplifying data types")
+  lookup <- lookup_table(x)
+  report$stat("calculating single-attribute PLIs")
+  plis <- lapply(lookup, pli)
+  report$stat("sampling difference sets")
+  D <- lapply(plis, sample_diffsets, lookup) |>
+    unlist(recursive = FALSE) |>
+    unique()
+  report$stat(with_number(length(D), "initial diffset", "\n", "s\n"))
+  FDHitsSepInner(lookup, D, report)
+}
+
+FDHitsSepInner <- function(lookup, D, report) {
+  attrs <- names(lookup)
+  attr_indices <- seq_along(lookup)
   res <- list()
   n_visited <- 0L
   for (A in attr_indices) {
@@ -54,8 +84,6 @@ FDHitsJoint <- function(x, progress = FALSE, progress_file = "") {
     return(functional_dependency(list(), character()))
   report$stat("simplifying data types")
   lookup <- lookup_table(x)
-  attrs <- names(lookup)
-  attr_indices <- seq_along(x)
   report$stat("calculating single-attribute PLIs")
   plis <- lapply(lookup, pli)
   report$stat("sampling difference sets")
@@ -63,6 +91,12 @@ FDHitsJoint <- function(x, progress = FALSE, progress_file = "") {
     unlist(recursive = FALSE) |>
     unique()
   report$stat(with_number(length(D), "initial diffset", "\n", "s\n"))
+  FDHitsJointInner(lookup, D, report)
+}
+
+FDHitsJointInner <- function(lookup, D, report) {
+  attrs <- names(lookup)
+  attr_indices <- seq_along(lookup)
   res <- list()
   return_stack <- list(list(integer(), attr_indices, attr_indices))
   visited <- list()

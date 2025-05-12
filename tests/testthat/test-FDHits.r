@@ -14,6 +14,108 @@ difference_sets <- function(lookup) {
     unique()
 }
 
+describe("FDHits", {
+  it("gives a deterministic result, except for per-dependant dependency order", {
+    n_copies <- function(n, fn) {
+      function(df) {
+        do.call(fn, replicate(n, df, simplify = FALSE))
+      }
+    }
+    all_terminate_then <- function(fn) {
+      function(...) {
+        lst <- list(...)
+        for (n in seq_along(lst)) {
+          lst[[n]] <- R.utils::withTimeout(
+            FDHits(lst[[n]]),
+            timeout = 5,
+            onTimeout = "silent"
+          )
+          if (is.null(lst[[n]]))
+            return(fail(paste("execution timed out after", timeout, "seconds")))
+        }
+        do.call(fn, lst)
+      }
+    }
+    expect_all_equiv_deps <- function(...) {
+      lst <- list(...)
+      attrs_orders <- lapply(lst, attrs_order)
+      if (!all(vapply(attrs_orders, identical, logical(1), attrs_orders[[1]])))
+        return(fail(paste(
+          "attrs_order inconsistent:",
+          paste(
+            vapply(
+              unique(attrs_orders),
+              \(x) paste0("{", toString(x), "}"),
+              character(1)
+            ),
+            collapse = ", "
+          )
+        )))
+      if (!all(vapply(lst, setequal, logical(1), lst[[1]])))
+        return(fail(paste0(
+          "FDs inconsistent:\n",
+          paste(
+            vapply(
+              unique(lst),
+              \(x) paste0("{", paste(as.character(x), collapse = "; "), "}"),
+              character(1)
+            ),
+            collapse = "\n"
+          )
+        )))
+      succeed()
+    }
+    forall(
+      gen_df(4, 6),
+      n_copies(100, all_terminate_then(expect_all_equiv_deps))
+    )
+  })
+  it("gives the same results as DFD", {
+    FDHits_works <- function(x, method) {
+      lookup <- lookup_table(x)
+      fds <- discover(x, 1)
+      expected <- Map(
+        list,
+        unique(detset(fds)),
+        unname(split(dependant(fds), detset(fds) |> (\(x) match(x, x))()))
+      )
+
+      observed <- try(FDHits(x, method = method), silent = TRUE)
+      if (class(observed)[[1]] == "try-error")
+        return(fail(attr(observed, "condition")$message))
+      expect_setequal(observed, fds)
+    }
+
+    # example from original paper
+    FDHits_works(
+      data.frame(
+        Room_Nr = c(101L, 101L, 102L, 101L),
+        Time = c("Wed 10:00 am", "Wed 02:00 pm", "Fri 02:00 pm", "Fri 02:00 pm"),
+        Course = c("Programming", "Databases"),
+        Lecturer = c("Miako", "Daniel", "Miako", "Saurabh")
+      ),
+      method = "Sep"
+    )
+    FDHits_works(
+      data.frame(
+        Room_Nr = c(101L, 101L, 102L, 101L),
+        Time = c("Wed 10:00 am", "Wed 02:00 pm", "Fri 02:00 pm", "Fri 02:00 pm"),
+        Course = c("Programming", "Databases"),
+        Lecturer = c("Miako", "Daniel", "Miako", "Saurabh")
+      ),
+      method = "Joint"
+    )
+
+    forall(
+      list(
+        gen_df(6, 7, remove_dup_rows = FALSE),
+        gen.element(c("Sep", "Joint"))
+      ),
+      FDHits_works
+    )
+  })
+})
+
 describe("FDHitsSep", {
   it("gives a deterministic result, except for per-dependant dependency order", {
     n_copies <- function(n, fn) {
