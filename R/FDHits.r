@@ -324,11 +324,15 @@ FDHitsJoint_visit <- function(
         list(seq_len(nrow(lookup)))
     }else
       pli(do.call(paste, unname(lookup[S])))
+    W_individual_indices <- unname(lookup[W])
+    W_indices <- do.call(paste, W_individual_indices) |>
+      (\(x) match(x, x))()
+    relevant_Spli <- filter_partition(Spli, W_indices)
     refined_partitions <- lapply(
-      W,
-      \(A) refine_partition_old(Spli, A, lookup)
+      W_individual_indices,
+      \(A_indices) refine_partition(relevant_Spli, A_indices)
     )
-    if (validate(refined_partitions, Spli)) {
+    if (validate(refined_partitions, relevant_Spli)) {
       report$stat(paste0(
         "  found {",
         toString(names(lookup)[S]),
@@ -345,10 +349,10 @@ FDHitsJoint_visit <- function(
       toString(names(lookup)[W]),
       "}"
     ))
-    stopifnot(length(Spli) > 0)
-    ds <- new_diffset(Spli, refined_partitions, lookup)
+    stopifnot(length(relevant_Spli) > 0)
+    ds <- new_diffset(relevant_Spli, refined_partitions, lookup)
     dsl <- list(ds)
-    ds2 <- sample_diffsets(Spli, lookup)
+    ds2 <- sample_diffsets(relevant_Spli, lookup)
     added <- setdiff(c(dsl, ds2), D)
     stopifnot(length(added) > 0)
     report$stat(paste0(
