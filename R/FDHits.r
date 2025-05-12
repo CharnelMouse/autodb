@@ -19,12 +19,12 @@ FDHits <- function(
   report$stat(with_number(length(D), "initial diffset", "\n", "s\n"))
   switch(
     method,
-    Sep = FDHitsSepInner(lookup, D, report),
-    Joint = FDHitsJointInner(lookup, D, report)
+    Sep = FDHitsSep(lookup, D, report),
+    Joint = FDHitsJoint(lookup, D, report)
   )
 }
 
-FDHitsSepInner <- function(lookup, D, report) {
+FDHitsSep <- function(lookup, D, report) {
   attrs <- names(lookup)
   attr_indices <- seq_along(lookup)
   res <- list()
@@ -62,7 +62,7 @@ FDHitsSepInner <- function(lookup, D, report) {
   functional_dependency(res, attrs)
 }
 
-FDHitsJointInner <- function(lookup, D, report) {
+FDHitsJoint <- function(lookup, D, report) {
   attrs <- names(lookup)
   attr_indices <- seq_along(lookup)
   res <- list()
