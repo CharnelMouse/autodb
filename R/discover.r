@@ -977,7 +977,7 @@ check_FD_partition_stripped <- function(
   partkey <- partitions_ui$lookup_node(partition_node, partitions)
   if (!is.na(partkey)) {
     sp <- partitions_ui$get_with_index(partkey, partitions)
-    return(list(sum(lengths(sp)) - length(sp), partitions))
+    return(list(partition_rank(sp), partitions))
   }
   subset_nodes <- partition_node - attr_nodes
   subsets_match <- vapply(
@@ -1024,7 +1024,12 @@ check_FD_partition_stripped <- function(
     }
   }
   partitions <- partitions_ui$add_partition(partition_node, sp, partitions)
-  list(sum(lengths(sp)) - length(sp), partitions)
+  list(partition_rank(sp), partitions)
+}
+
+partition_rank <- function(partition) {
+  # invariant to whether partition is stripped
+  sum(lengths(partition)) - length(partition)
 }
 
 check_AD_cache <- function(

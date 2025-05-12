@@ -458,12 +458,8 @@ sample_minheur_sep <- function(set, V) {
 }
 
 validate <- function(new_partitions, Spli) {
-  Spli_rank <- sum(lengths(Spli)) - length(Spli)
-  new_ranks <- vapply(
-    new_partitions,
-    \(np) sum(lengths(np)) - length(np),
-    integer(1)
-  )
+  Spli_rank <- partition_rank(Spli)
+  new_ranks <- vapply(new_partitions, partition_rank, integer(1))
   all(new_ranks == Spli_rank)
 }
 
