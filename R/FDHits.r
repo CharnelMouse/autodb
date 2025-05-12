@@ -169,7 +169,7 @@ FDHitsSep_visit <- function(
         list(seq_len(nrow(lookup)))
     }else
       pli(do.call(paste, unname(lookup[S])))
-    inter <- refine_partition2(Spli, A, lookup)
+    inter <- refine_partition(Spli, A, lookup)
     relevant_Spli <- inter[[1]]
     refined_partitions <- inter[2]
     report$stat(paste0(
@@ -331,7 +331,7 @@ FDHitsJoint_visit <- function(
       pli(do.call(paste, unname(lookup[S])))
     refined_partitions <- lapply(
       W,
-      \(A) refine_partition(Spli, A, lookup)
+      \(A) refine_partition_old(Spli, A, lookup)
     )
     if (validate(refined_partitions, Spli)) {
       report$stat(paste0(
@@ -542,7 +542,7 @@ new_diffset <- function(Spli, refined_partitions, lookup) {
   )))
 }
 
-refine_partition <- function(partition, attr, lookup) {
+refine_partition_old <- function(partition, attr, lookup) {
   if (length(partition) == 0)
     return(list())
   lapply(
@@ -554,7 +554,7 @@ refine_partition <- function(partition, attr, lookup) {
     unname()
 }
 
-refine_partition2 <- function(partition, attr, lookup) {
+refine_partition <- function(partition, attr, lookup) {
   if (length(partition) == 0)
     return(list(list(), list()))
   indices <- lookup[[attr]]

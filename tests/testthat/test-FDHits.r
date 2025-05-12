@@ -212,7 +212,7 @@ describe("sample_diffsets", {
   })
 })
 
-describe("refine_partition", {
+describe("refine_partition_old", {
   # There's some verbiage in Bleifuss et al. 2024 about using the lookup table
   # to add an attribute to a partition, without any detail. We attempt this with
   # refine_partition below.
@@ -239,7 +239,7 @@ describe("refine_partition", {
       lookup[, c(start_attrs, names(lookup)[attr]), drop = FALSE]
     )) |>
       (\(x) x[lengths(x) > 1])()
-    observed <- try(refine_partition(partition, attr, lookup))
+    observed <- try(refine_partition_old(partition, attr, lookup))
     if (class(observed)[[1]] == "try-error")
       return(fail)
     expect_setequal(observed, expected)
@@ -303,7 +303,7 @@ describe("new_diffset", {
             }
             refined_partitions <- lapply(
               W,
-              \(attr) refine_partition(Spli, attr, lookup) |>
+              \(attr) refine_partition_old(Spli, attr, lookup) |>
                 # sort to avoid using is.element or setequal
                 (\(x) x[order(vapply(x, `[`, integer(1),1))])()
             )
