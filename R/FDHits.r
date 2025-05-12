@@ -169,11 +169,7 @@ FDHitsSep_visit <- function(
         list(seq_len(nrow(lookup)))
     }else
       pli(do.call(paste, unname(lookup[S])))
-    refined_partitions <- list(
-      refine_partition(Spli, A, lookup) |>
-        # sort to avoid using is.element or setequal
-        (\(x) x[order(vapply(x, `[`, integer(1),1))])()
-    )
+    refined_partitions <- list(refine_partition(Spli, A, lookup))
     if (validate(refined_partitions, Spli)) {
       report$stat(paste0(
         "  found {",
@@ -328,9 +324,7 @@ FDHitsJoint_visit <- function(
       pli(do.call(paste, unname(lookup[S])))
     refined_partitions <- lapply(
       W,
-      \(A) refine_partition(Spli, A, lookup) |>
-        # sort to avoid using is.element or setequal
-        (\(x) x[order(vapply(x, `[`, integer(1),1))])()
+      \(A) refine_partition(Spli, A, lookup)
     )
     if (validate(refined_partitions, Spli)) {
       report$stat(paste0(
@@ -464,7 +458,13 @@ sample_minheur_sep <- function(set, V) {
 }
 
 validate <- function(new_partitions, Spli) {
-  all(vapply(new_partitions, identical, logical(1), Spli))
+  Spli_rank <- sum(lengths(Spli)) - length(Spli)
+  new_ranks <- vapply(
+    new_partitions,
+    \(np) sum(lengths(np)) - length(np),
+    integer(1)
+  )
+  all(new_ranks == Spli_rank)
 }
 
 pli <- function(indices) {
