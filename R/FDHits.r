@@ -567,8 +567,13 @@ refine_partition <- function(partition, attr, lookup) {
     logical(1)
   )
   relevant_partition <- partition[!single_index]
-  refined_partition <- lapply(
-    relevant_partition,
+  refined_partition <- refine_partition_once(relevant_partition, indices)
+  list(relevant_partition, refined_partition)
+}
+
+refine_partition_once <- function(partition, indices) {
+  lapply(
+    partition,
     \(cluster) {
       local_indices <- indices[cluster]
       split(cluster, ffactor1i(local_indices))
@@ -577,5 +582,4 @@ refine_partition <- function(partition, attr, lookup) {
     unlist(recursive = FALSE) |>
     (\(x) x[lengths(x) > 1])() |>
     unname()
-  list(relevant_partition, refined_partition)
 }
