@@ -172,11 +172,6 @@ FDHitsSep_visit <- function(
     A_indices <- lookup[[A]]
     relevant_Spli <- filter_partition(Spli, A_indices)
     refined_partitions <- list(refine_partition(relevant_Spli, A_indices))
-    report$stat(paste0(
-      "Spli: ", partition_rank(Spli),
-      "\nrelevant: ", partition_rank(relevant_Spli),
-      "\nrefined: ", partition_rank(refined_partitions[[1]])
-    ))
     if (validate(refined_partitions, relevant_Spli)) {
       report$stat(paste0(
         "  found {",
