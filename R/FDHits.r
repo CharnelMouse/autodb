@@ -169,9 +169,9 @@ FDHitsSep_visit <- function(
         list(seq_len(nrow(lookup)))
     }else
       pli(do.call(paste, unname(lookup[S])))
-    inter <- refine_partition(Spli, A, lookup)
-    relevant_Spli <- inter[[1]]
-    refined_partitions <- inter[2]
+    A_indices <- lookup[[A]]
+    relevant_Spli <- filter_partition(Spli, A_indices)
+    refined_partitions <- list(refine_partition(relevant_Spli, A_indices))
     report$stat(paste0(
       "Spli: ", partition_rank(Spli),
       "\nrelevant: ", partition_rank(relevant_Spli),
@@ -194,7 +194,7 @@ FDHitsSep_visit <- function(
       toString(names(lookup)[A]),
       "}"
     ))
-    stopifnot(length(Spli) > 0)
+    stopifnot(length(relevant_Spli) > 0)
     ds <- new_diffset(relevant_Spli, refined_partitions, lookup)
     dsl <- list(ds)
     ds2 <- sample_diffsets(relevant_Spli, lookup)
@@ -554,10 +554,9 @@ refine_partition_old <- function(partition, attr, lookup) {
     unname()
 }
 
-refine_partition <- function(partition, attr, lookup) {
+filter_partition <- function(partition, indices) {
   if (length(partition) == 0)
-    return(list(list(), list()))
-  indices <- lookup[[attr]]
+    return(list())
   single_index <- vapply(
     partition,
     \(cluster) {
@@ -566,14 +565,14 @@ refine_partition <- function(partition, attr, lookup) {
     },
     logical(1)
   )
-  relevant_partition <- partition[!single_index]
-  refined_partition <- refine_partition_once(relevant_partition, indices)
-  list(relevant_partition, refined_partition)
+  partition[!single_index]
 }
 
-refine_partition_once <- function(partition, indices) {
+refine_partition <- function(relevant_partition, indices) {
+  if (length(relevant_partition) == 0)
+    return(list())
   lapply(
-    partition,
+    relevant_partition,
     \(cluster) {
       local_indices <- indices[cluster]
       split(cluster, ffactor1i(local_indices))
