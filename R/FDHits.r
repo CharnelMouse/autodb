@@ -169,8 +169,15 @@ FDHitsSep_visit <- function(
         list(seq_len(nrow(lookup)))
     }else
       pli(do.call(paste, unname(lookup[S])))
-    refined_partitions <- list(refine_partition(Spli, A, lookup))
-    if (validate(refined_partitions, Spli)) {
+    inter <- refine_partition2(Spli, A, lookup)
+    relevant_Spli <- inter[[1]]
+    refined_partitions <- inter[2]
+    report$stat(paste0(
+      "Spli: ", partition_rank(Spli),
+      "\nrelevant: ", partition_rank(relevant_Spli),
+      "\nrefined: ", partition_rank(refined_partitions[[1]])
+    ))
+    if (validate(refined_partitions, relevant_Spli)) {
       report$stat(paste0(
         "  found {",
         toString(names(lookup)[S]),
@@ -188,9 +195,9 @@ FDHitsSep_visit <- function(
       "}"
     ))
     stopifnot(length(Spli) > 0)
-    ds <- new_diffset(Spli, refined_partitions, lookup)
+    ds <- new_diffset(relevant_Spli, refined_partitions, lookup)
     dsl <- list(ds)
-    ds2 <- sample_diffsets(Spli, lookup)
+    ds2 <- sample_diffsets(relevant_Spli, lookup)
     added <- setdiff(c(dsl, ds2), D)
     stopifnot(length(added) > 0)
     report$stat(paste0(
@@ -545,4 +552,30 @@ refine_partition <- function(partition, attr, lookup) {
     unlist(recursive = FALSE) |>
     (\(x) x[lengths(x) > 1])() |>
     unname()
+}
+
+refine_partition2 <- function(partition, attr, lookup) {
+  if (length(partition) == 0)
+    return(list(list(), list()))
+  indices <- lookup[[attr]]
+  single_index <- vapply(
+    partition,
+    \(cluster) {
+      local_indices <- indices[cluster]
+      all(local_indices == local_indices[[1]])
+    },
+    logical(1)
+  )
+  relevant_partition <- partition[!single_index]
+  refined_partition <- lapply(
+    relevant_partition,
+    \(cluster) {
+      local_indices <- indices[cluster]
+      split(cluster, ffactor1i(local_indices))
+    }
+  ) |>
+    unlist(recursive = FALSE) |>
+    (\(x) x[lengths(x) > 1])() |>
+    unname()
+  list(relevant_partition, refined_partition)
 }
