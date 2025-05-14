@@ -60,7 +60,6 @@ FDHitsSep <- function(lookup, exclude, dependants, detset_limit, D, report) {
         return_stack
       )
     }
-    report$stat("")
     n_visited <- n_visited + length(visited)
   }
   report$stat(paste0(
@@ -160,7 +159,6 @@ FDHitsSep_visit <- function(
     ))
     stop("already visited ", node_string)
   }
-  report$stat(node_string)
   visited <- c(visited, list(list(S, V, A)))
   # pruning
   for (C in S) {
@@ -191,33 +189,14 @@ FDHitsSep_visit <- function(
     A_indices <- lookup[[A]]
     relevant_Spli <- filter_partition(Spli, A_indices)
     refined_partitions <- list(refine_partition(relevant_Spli, A_indices))
-    if (validate(refined_partitions, relevant_Spli)) {
-      report$stat(paste0(
-        "  found {",
-        toString(names(lookup)[S]),
-        "} -> {",
-        toString(names(lookup)[A]),
-        "}"
-      ))
+    if (validate(refined_partitions, relevant_Spli))
       return(list(list(list(S, A)), D, list()))
-    }
-    report$stat(paste0(
-      "  found false {",
-      toString(names(lookup)[S]),
-      "} -> {",
-      toString(names(lookup)[A]),
-      "}"
-    ))
     stopifnot(length(relevant_Spli) > 0)
     ds <- new_diffset(relevant_Spli, refined_partitions, lookup)
     dsl <- list(ds)
     ds2 <- sample_diffsets(relevant_Spli, lookup)
     added <- setdiff(c(dsl, ds2), D)
     stopifnot(length(added) > 0)
-    report$stat(paste0(
-      "  added ",
-      with_number(length(added), "diffset", "", "s")
-    ))
     uncovered <- uncov_sep(S, A, added)
     D <- c(D, added)
   }
@@ -291,7 +270,6 @@ FDHitsJoint_visit <- function(
     ))
     stop("already visited ", node_string)
   }
-  report$stat(node_string)
   visited <- c(visited, list(list(S, V, W)))
   # pruning
   critical_edges <- list()
@@ -351,33 +329,14 @@ FDHitsJoint_visit <- function(
       W_individual_indices,
       \(A_indices) refine_partition(relevant_Spli, A_indices)
     )
-    if (validate(refined_partitions, relevant_Spli)) {
-      report$stat(paste0(
-        "  found {",
-        toString(names(lookup)[S]),
-        "} -> {",
-        toString(names(lookup)[W]),
-        "}"
-      ))
+    if (validate(refined_partitions, relevant_Spli))
       return(list(list(list(S, W)), D, list()))
-    }
-    report$stat(paste0(
-      "  found false {",
-      toString(names(lookup)[S]),
-      "} -> {",
-      toString(names(lookup)[W]),
-      "}"
-    ))
     stopifnot(length(relevant_Spli) > 0)
     ds <- new_diffset(relevant_Spli, refined_partitions, lookup)
     dsl <- list(ds)
     ds2 <- sample_diffsets(relevant_Spli, lookup)
     added <- setdiff(c(dsl, ds2), D)
     stopifnot(length(added) > 0)
-    report$stat(paste0(
-      "  added ",
-      with_number(length(added), "diffset", "", "s")
-    ))
     uncovered <- uncov_joint(S, W, added)
     D <- c(D, added)
   }
@@ -407,33 +366,6 @@ FDHitsJoint_visit <- function(
       \(n) list(sort(union(S, Bs[[n]])), setdiff(V, Bs[seq_len(n)]), setdiff(intersect(W, E), Bs[[n]]))
     )
   )
-  report$stat(paste0(
-    "  ",
-    with_number(length(new_nodes), "new return stack node", "", "s"),
-    if (length(new_nodes) > 0)
-      "\n",
-    paste(
-      "  ",
-      vapply(
-        new_nodes,
-        \(node) {
-          paste0(
-            "Node (S: {",
-            toString(names(lookup)[node[[1]]]),
-            "}, V: {",
-            toString(names(lookup)[node[[2]]]),
-            "}, W: {",
-            toString(names(lookup)[node[[3]]]),
-            "})"
-          )
-        },
-        character(1)
-      ),
-      sep = "",
-      collapse = "\n",
-      recycle0 = TRUE
-    )
-  ))
   list(res, D, new_nodes)
 }
 
