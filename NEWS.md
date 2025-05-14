@@ -2,6 +2,7 @@
 
 ## Improvements
 
+* Added the new FDHits search algorithm as an alternative option to DFD in `discover`.
 * `relation` and `database` methods for `rename_attrs` and `gv` now run significantly more quickly for large data sets, due to not re-running all the key validity checks.
 * Added a `check` parameter to `decompose`, to allow skipping some checks if the data frame to decompose is the one used to create the schema.
 * Handing for numerical/complex variables is more consistent:

@@ -4,10 +4,14 @@
 #'
 #' Column names for \code{\link{df}} must be unique.
 #'
-#' The algorithm used for finding dependencies is DFD. This searches for
-#' determinant sets for each dependent attribute (dependant) by traversing the
-#' powerset of the other (non-excluded) attributes, and is equivalent to
-#' depth-first.
+#' There are two search algorithms available for finding dependencies: DFD, and FDHits. These are described below.
+#'
+#' ## DFD
+#'
+#' The DFD algorithm searches for determinant sets for each dependant attribute
+#' separately, by traversing the powerset of the other (non-excluded)
+#' attributes. It can roughly be considered as a depth-first search over
+#' candidate determinant sets.
 #'
 #' The implementation for DFD differs a little from the algorithm presented in
 #' the original paper:
@@ -15,7 +19,9 @@
 #'   \item Some attributes, or attribute types, can be designated, ahead of
 #'   time, as not being candidate members for determinant sets. This reduces the
 #'   number of candidate determinant sets to be searched, saving time by not
-#'   searching for determinant sets that the user would remove later anyway.
+#'   searching for determinant sets that the user would remove later anyway. The
+#'   dependants can also be trimmed in similar fashion, although this reduces
+#'   the search space linearly rather than exponentially.
 #'   \item Attributes that have a single unique value, i.e. are
 #'   constant, get attributed a single empty determinant set. In the standard
 #'   DFD algorithm, they would be assigned all the other non-excluded attributes
@@ -42,6 +48,42 @@
 #'   functional dependencies when there are pairwise-equivalent attributes.
 #'   \item Missing values (NA) are treated as a normal value, with NA = NA being
 #'   true, and x = NA being false for any non-NA value of x.
+#' }
+#'
+#' ## FDHits
+#'
+#' FDHits begins by sampling pairs of records for attributes in which their
+#' values differ (difference sets). These difference sets render some
+#' determinant-dependant pairings invalid, pruning the search space. If a
+#' candidate pairing is not rendered invalid by the known difference sets, then
+#' it's validated, resulting in either confirmation as a minimal functional
+#' dependency, or discovery of new difference sets that make it invalid.
+#'
+#' There are two variants. FDHitsSep performs a search for each dependant attribute
+#' separately, in the same way as DFD. FDHitsJoint handles all dependant
+#' attributes at the same time.
+#'
+#' The implementation for FDHits differs a little from the algorithm presented
+#' in the original paper:
+#' \itemize{
+#'   \item Some attributes, or attribute types, can be designated, ahead of
+#'   time, as not being candidate members for determinant sets. This reduces the
+#'   number of candidate determinant sets to be searched, saving time by not
+#'   searching for determinant sets that the user would remove later anyway. The
+#'   dependants can also be trimmed in similar fashion.
+#'   \item The search can be limited to determinant sets up to a given size.
+#'   This is also an option for DFD, but it's more useful for FDHits, due to the
+#'   search order.
+#'   \item As described in the paper, FDHitsSep and FDHitsJoint branch a search
+#'   into several child nodes: \eqn{\mu_0} for FDHitsJoint, and \eqn{\mu_1},
+#'   \eqn{\mu_2} etc. for both. The paper implies that the latter nodes are
+#'   visited in order. However, this causes the algorithm to not always work
+#'   correctly: for guaranteed correctness, they must be visited in reverse
+#'   order, with \eqn{\mu_0} able to be visited at any point. This correction is
+#'   expected to appear in a future paper.
+#'   \item The final algorithm in the paper automatically chooses between
+#'   FDHitsSep and FDHits Joint, depending on the number of initially-sampled
+#'   difference sets. This is not yet implemented.
 #' }
 #'
 #' ## Floating-point variables
@@ -112,7 +154,7 @@
 #' ## Limiting the determinant set size
 #'
 #' Setting \code{detset_limit} smaller than the largest-possible value has
-#' different behaviour for different search algorithms, the result is always
+#' different behaviour for different search algorithms, but the result is always
 #' that \code{discover(x, 1, detset_limit = n)} is equivalent to doing a full
 #' search, \code{fds <- discover(x, 1)}, then
 #' filtering by determinant set size post-hoc, \code{fds[lengths(detset(fds)) <=
@@ -147,9 +189,17 @@
 #' results in a significant speed-up, but it never results in the search having
 #' to visit more nodes than it would without a size limit, so the average search
 #' time is never made worse.
+#'
+#' FDHits implements `detset_limit` more naturally, since it explores
+#' determinant sets in increasing set size. Limiting the size is simply a matter
+#' of only visiting new nodes if their determinant set is within the given size
+#' limit.
 #' @param df a data.frame, the relation to evaluate.
 #' @param accuracy a numeric in (0, 1]: the accuracy threshold required in order
-#'   to conclude a dependency.
+#'   to conclude a dependency. Accuracy thresholds less than one are only
+#'   supported in DFD.
+#' @param method a string, indicating which search algorithm to use. Currently,
+#'   this defaults to DFD. Alternative options are FDHitsSep and FDHitsJoint.
 #' @param digits a positive integer, indicating how many significant digits are
 #'   to be used for numeric and complex variables. A value of \code{NA} results
 #'   in no rounding. By default, this uses \code{getOption("digits")}, similarly
@@ -161,17 +211,18 @@
 #'   how sets of attributes group the relation records (stripped partitions).
 #'   Otherwise, only the number of groups is stored. Storing the stripped
 #'   partition is expected to let the algorithm run more quickly, but might be
-#'   inefficient for small data frames or small amounts of memory.
+#'   inefficient for small data frames or small amounts of memory. Only relevant
+#'   for DFD.
 #' @param store_cache a logical, indicating whether to keep cached information
 #'   to use when finding dependencies for other dependants. This allows the
 #'   algorithm to run more quickly by not having to re-calculate information,
-#'   but takes up more memory.
+#'   but takes up more memory. Only relevant for DFD.
 #' @param skip_bijections a logical, indicating whether to skip some dependency
 #'   searches that are made redundant by discovered bijections between
 #'   attributes. This can significantly speed up the search if \code{df}
 #'   contains equivalent attributes early in column order, but results in
 #'   undefined behaviour if \code{accuracy < 1}. See Details for more
-#'   information.
+#'   information. Currently only implemented for DFD.
 #' @param exclude a character vector, containing names of attributes to not
 #'   consider as members of determinant sets. If names are given that aren't
 #'   present in \code{df}, the user is given a warning.
@@ -195,10 +246,14 @@
 #'   attributes during normalisation.
 #' @encoding UTF-8
 #' @references
-#' Abedjan Z., Schulze P., Naumann F. (2014) DFD: efficient functional
+#' DFD: Abedjan Z., Schulze P., Naumann F. (2014) DFD: efficient functional
 #' dependency discovery. *Proceedings of the 23rd ACM International Conference
 #' on Conference on Information and Knowledge Management (CIKM '14). New York,
 #' U.S.A.*, 949--958.
+#'
+#' FDHits: Bleifuss T., Papenbrock T., Bläsius T., Schirneck M, Naumann F.
+#' (2024) Discovering Functional Dependencies through Hitting Set Enumeration.
+#' *Proc. ACM Manag. Data*, **2, 1**, 43:1--24.
 #' @examples
 #' # simple example
 #' discover(ChickWeight, 1)
@@ -216,6 +271,7 @@
 discover <- function(
   df,
   accuracy,
+  method = c("DFD", "FDHitsSep", "FDHitsJoint"),
   digits = getOption("digits"),
   full_cache = TRUE,
   store_cache = TRUE,
@@ -227,6 +283,12 @@ discover <- function(
   progress = FALSE,
   progress_file = ""
 ) {
+  method <- match.arg(method)
+  if (method == "FDHitsSep" && accuracy < 1)
+    stop("FDHitsSep can not take accuracy < 1")
+  if (method == "FDHitsJoint" && accuracy < 1)
+    stop("FDHitsJoint can not take accuracy < 1")
+
   use_visited <- TRUE
 
   if (skip_bijections && accuracy < 1)
@@ -286,6 +348,27 @@ discover <- function(
   )
   partitions <- list()
   dependencies <- stats::setNames(rep(list(list()), n_cols), column_names)
+
+  if (method == "FDHitsSep")
+    return(FDHits(
+      df,
+      method = "Sep",
+      exclude = match(setdiff(column_names, valid_determinant_attrs_prefixing), column_names),
+      dependants = match(dependants, column_names),
+      detset_limit = detset_limit,
+      progress = progress,
+      progress_file = progress_file
+    ))
+  if (method == "FDHitsJoint")
+    return(FDHits(
+      df,
+      method = "Joint",
+      exclude = match(setdiff(column_names, valid_determinant_attrs_prefixing), column_names),
+      dependants = match(dependants, column_names),
+      detset_limit = detset_limit,
+      progress = progress,
+      progress_file = progress_file
+    ))
 
   # check for constant-value columns, because if columns are fixed we can
   # ignore them for the rest of the search

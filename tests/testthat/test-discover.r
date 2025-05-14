@@ -150,7 +150,15 @@ describe("discover", {
     }
     forall(
       gen_df(4, 6),
-      two_copies(both_terminate_then(expect_equiv_deps, accuracy = 1))
+      two_copies(both_terminate_then(expect_equiv_deps, accuracy = 1, method = "DFD"))
+    )
+    forall(
+      gen_df(4, 6),
+      two_copies(both_terminate_then(expect_equiv_deps, accuracy = 1, method = "FDHitsSep"))
+    )
+    forall(
+      gen_df(4, 6),
+      two_copies(both_terminate_then(expect_equiv_deps, accuracy = 1, method = "FDHitsJoint"))
     )
   })
   it("returns dependencies where shared dependant <=> not sub/supersets for determinants", {
@@ -170,7 +178,9 @@ describe("discover", {
         }
       }
     }
-    forall(gen_df(4, 6), terminates_then(has_non_nested_determinant_sets, 1))
+    forall(gen_df(4, 6), terminates_then(has_non_nested_determinant_sets, 1, method = "DFD"))
+    forall(gen_df(4, 6), terminates_then(has_non_nested_determinant_sets, 1, method = "FDHitsSep"))
+    forall(gen_df(4, 6), terminates_then(has_non_nested_determinant_sets, 1, method = "FDHitsJoint"))
   })
   it("is invariant to an attribute's values being permuted", {
     gen_perm <- function(vals) {
@@ -198,7 +208,17 @@ describe("discover", {
     }
     forall(
       gen_df_and_value_perm(4, 6),
-      both_terminate_then(expect_equiv_deps, 1),
+      both_terminate_then(expect_equiv_deps, 1, method = "DFD"),
+      curry = TRUE
+    )
+    forall(
+      gen_df_and_value_perm(4, 6),
+      both_terminate_then(expect_equiv_deps, 1, method = "FDHitsSep"),
+      curry = TRUE
+    )
+    forall(
+      gen_df_and_value_perm(4, 6),
+      both_terminate_then(expect_equiv_deps, 1, method = "FDHitsJoint"),
       curry = TRUE
     )
   })
@@ -233,7 +253,17 @@ describe("discover", {
     }
     forall(
       gen_df_and_type_change(4, 6),
-      both_terminate_then(expect_equiv_deps_except_classes, 1),
+      both_terminate_then(expect_equiv_deps_except_classes, 1, method = "DFD"),
+      curry = TRUE
+    )
+    forall(
+      gen_df_and_type_change(4, 6),
+      both_terminate_then(expect_equiv_deps_except_classes, 1, method = "FDHitsSep"),
+      curry = TRUE
+    )
+    forall(
+      gen_df_and_type_change(4, 6),
+      both_terminate_then(expect_equiv_deps_except_classes, 1, method = "FDHitsJoint"),
       curry = TRUE
     )
   })
@@ -247,12 +277,19 @@ describe("discover", {
       sep = c(TRUE, TRUE, NA, NA)
     )
     df2 <- df1[, c("l", "j", "t", "b", "u", "sep")]
-    terminates_with_and_without_cache <- terminates_with_and_without_full_cache_then(
-      \(x, y) {},
-      1
-    )
-    terminates_with_and_without_cache(df1)
-    terminates_with_and_without_cache(df2)
+    terminates_with_and_without_cache <- function(...) {
+      terminates_with_and_without_full_cache_then(
+        \(x, y) {},
+        1,
+        ...
+      )
+    }
+    terminates_with_and_without_cache(method = "DFD")(df1)
+    terminates_with_and_without_cache(method = "FDHitsSep")(df1)
+    terminates_with_and_without_cache(method = "FDHitsJoint")(df1)
+    terminates_with_and_without_cache(method = "DFD")(df2)
+    terminates_with_and_without_cache(method = "FDHitsSep")(df2)
+    terminates_with_and_without_cache(method = "FDHitsJoint")(df2)
   })
   it("is invariant, under reordering, to attributes being reordered", {
     gen_df_and_attr_perm <- function(
@@ -271,7 +308,17 @@ describe("discover", {
 
     forall(
       gen_df_and_attr_perm(4, 6),
-      both_terminate_then(expect_equiv_deps, 1),
+      both_terminate_then(expect_equiv_deps, 1, method = "DFD"),
+      curry = TRUE
+    )
+    forall(
+      gen_df_and_attr_perm(4, 6),
+      both_terminate_then(expect_equiv_deps, 1, method = "FDHitsSep"),
+      curry = TRUE
+    )
+    forall(
+      gen_df_and_attr_perm(4, 6),
+      both_terminate_then(expect_equiv_deps, 1, method = "FDHitsJoint"),
       curry = TRUE
     )
   })
@@ -287,11 +334,21 @@ describe("discover", {
     }
     forall(
       gen_df_and_remove_col(4, 6),
-      both_terminate_then(expect_equiv_non_removed_attr_deps, 1),
+      both_terminate_then(expect_equiv_non_removed_attr_deps, 1, method = "DFD"),
+      curry = TRUE
+    )
+    forall(
+      gen_df_and_remove_col(4, 6),
+      both_terminate_then(expect_equiv_non_removed_attr_deps, 1, method = "FDHitsSep"),
+      curry = TRUE
+    )
+    forall(
+      gen_df_and_remove_col(4, 6),
+      both_terminate_then(expect_equiv_non_removed_attr_deps, 1, method = "FDHitsJoint"),
       curry = TRUE
     )
   })
-  it("is invariant to changes of accuracy within same required row count", {
+  it("is invariant to changes of accuracy within same required row count when using DFD", {
     gen_df_and_accuracy_nrow <- function(nrow, ncol, remove_dup_rows = FALSE) {
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.int(nrow(df)))) |>
@@ -314,7 +371,7 @@ describe("discover", {
     }
     forall(
       gen_df_and_accuracy_nrow(4, 6),
-      both_bounds_terminate_then(expect_equiv_deps),
+      both_bounds_terminate_then(expect_equiv_deps, method = "DFD"),
       curry = TRUE
     )
   })
@@ -330,7 +387,17 @@ describe("discover", {
     }
     forall(
       gen_df_and_remove_row(4, 6),
-      both_terminate_then(expect_det_subsets_kept, 1),
+      both_terminate_then(expect_det_subsets_kept, 1, method = "DFD"),
+      curry = TRUE
+    )
+    forall(
+      gen_df_and_remove_row(4, 6),
+      both_terminate_then(expect_det_subsets_kept, 1, method = "FDHitsSep"),
+      curry = TRUE
+    )
+    forall(
+      gen_df_and_remove_row(4, 6),
+      both_terminate_then(expect_det_subsets_kept, 1, method = "FDHitsJoint"),
       curry = TRUE
     )
   })
@@ -346,7 +413,17 @@ describe("discover", {
     }
     forall(
       gen_df_and_name_change(4, 6),
-      both_terminate_then(expect_equiv_deps_except_names, 1),
+      both_terminate_then(expect_equiv_deps_except_names, 1, method = "DFD"),
+      curry = TRUE
+    )
+    forall(
+      gen_df_and_name_change(4, 6),
+      both_terminate_then(expect_equiv_deps_except_names, 1, method = "FDHitsSep"),
+      curry = TRUE
+    )
+    forall(
+      gen_df_and_name_change(4, 6),
+      both_terminate_then(expect_equiv_deps_except_names, 1, method = "FDHitsJoint"),
       curry = TRUE
     )
   })
@@ -366,8 +443,12 @@ describe("discover", {
       )
     )
     stopifnot(df[1, "time"] != df[2, "time"])
-    deps <- discover(df, 1)
+    deps <- discover(df, 1, method = "DFD")
     expect_length(deps[dependant(deps) == "time"], 0L)
+    deps2 <- discover(df, 1, method = "FDHitsSep")
+    expect_length(deps2[dependant(deps2) == "time"], 0L)
+    deps3 <- discover(df, 1, method = "FDHitsJoint")
+    expect_length(deps3[dependant(deps3) == "time"], 0L)
   })
   it("correctly simplifies floating-point numbers to high accuracy", {
     df <- data.frame(
@@ -381,14 +462,42 @@ describe("discover", {
       )
     )
     expect_identical(
-      discover(df, 1, digits = 8),
+      discover(df, 1, digits = 8, method = "DFD"),
       functional_dependency(
         list(list(character(), "x"), list(character(), "y")),
         c("x", "y")
       )
     )
     expect_identical(
-      discover(df, 1, digits = 15),
+      discover(df, 1, digits = 8, method = "FDHitsSep"),
+      functional_dependency(
+        list(list(character(), "x"), list(character(), "y")),
+        c("x", "y")
+      )
+    )
+    expect_identical(
+      discover(df, 1, digits = 8, method = "FDHitsJoint"),
+      functional_dependency(
+        list(list(character(), "x"), list(character(), "y")),
+        c("x", "y")
+      )
+    )
+    expect_identical(
+      discover(df, 1, digits = 15, method = "DFD"),
+      functional_dependency(
+        list(list(character(), "x")),
+        c("x", "y")
+      )
+    )
+    expect_identical(
+      discover(df, 1, digits = 15, method = "FDHitsSep"),
+      functional_dependency(
+        list(list(character(), "x")),
+        c("x", "y")
+      )
+    )
+    expect_identical(
+      discover(df, 1, digits = 15, method = "FDHitsJoint"),
       functional_dependency(
         list(list(character(), "x")),
         c("x", "y")
@@ -416,7 +525,17 @@ describe("discover", {
     }
     forall(
       gen_df_and_exclude(4, 6),
-      terminates_with_exclusion_then_no_trival(1),
+      terminates_with_exclusion_then_no_trival(1, method = "DFD"),
+      curry = TRUE
+    )
+    forall(
+      gen_df_and_exclude(4, 6),
+      terminates_with_exclusion_then_no_trival(1, method = "FDHitsSep"),
+      curry = TRUE
+    )
+    forall(
+      gen_df_and_exclude(4, 6),
+      terminates_with_exclusion_then_no_trival(1, method = "FDHitsJoint"),
       curry = TRUE
     )
   })
@@ -446,7 +565,26 @@ describe("discover", {
       exclude_and_exclude_class_terminate_then(
         expect_equiv_deps,
         accuracy = 1,
-        "logical"
+        "logical",
+        method = "DFD"
+      )
+    )
+    forall(
+      gen_df(4, 6),
+      exclude_and_exclude_class_terminate_then(
+        expect_equiv_deps,
+        accuracy = 1,
+        "logical",
+        method = "FDHitsSep"
+      )
+    )
+    forall(
+      gen_df(4, 6),
+      exclude_and_exclude_class_terminate_then(
+        expect_equiv_deps,
+        accuracy = 1,
+        "logical",
+        method = "FDHitsJoint"
       )
     )
   })
@@ -460,14 +598,18 @@ describe("discover", {
     same_under_constraints_and_filtering <- function(
       x,
       dependants,
-      detset_limit
+      detset_limit,
+      method,
+      ...
     ) {
       by_arguments <- withTimeout(
         discover(
           x,
           1,
           dependants = dependants,
-          detset_limit = detset_limit
+          detset_limit = detset_limit,
+          method = method,
+          ...
         ),
         timeout = 5,
         onTimeout = "silent"
@@ -475,7 +617,7 @@ describe("discover", {
       if (is.null(by_arguments))
         return(fail("discover() with filtering arguments timed out"))
       by_filtering <- withTimeout(
-        discover(x, 1),
+        discover(x, 1, method = method, ...),
         timeout = 5,
         onTimeout = "silent"
       )
@@ -493,7 +635,8 @@ describe("discover", {
           list(
             gen.pure(x),
             gen.sample_resampleable(names(x), from = 0, to = ncol(x)),
-            gen.element(0:(ncol(x) - 1L))
+            gen.element(0:(ncol(x) - 1L)),
+            gen.element(c("DFD", "FDHitsSep", "FDHitsJoint"))
           )
         }),
       same_under_constraints_and_filtering,
@@ -508,14 +651,27 @@ describe("discover", {
       d = c(1L, 1L, NA, 1L),
       e = c(NA, 1L, 1L, 0L)
     )
-    same_under_constraints_and_filtering(x, c("a", "c"), 2L)
+    same_under_constraints_and_filtering(x, c("a", "c"), 2L, method = "DFD")
+    same_under_constraints_and_filtering(x, c("a", "c"), 2L, method = "FDHitsSep")
+    same_under_constraints_and_filtering(x, c("a", "c"), 2L, method = "FDHitsJoint")
   })
   it("gives dependencies for unique attributes (in case don't want them as key)", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), C = c(1, 2, 2))
-    deps <- discover(df, 1)
-    A_deps <- dependant(deps) == "A"
-    A_detsets <- detset(deps[A_deps])
-    expect_identical(A_detsets, list(c("B", "C")))
+
+    deps_dfd <- discover(df, 1, method = "DFD")
+    A_deps_dfd <- dependant(deps_dfd) == "A"
+    A_detsets_dfd <- detset(deps_dfd[A_deps_dfd])
+    expect_identical(A_detsets_dfd, list(c("B", "C")))
+
+    deps_sep <- discover(df, 1, method = "FDHitsSep")
+    A_deps_sep <- dependant(deps_sep) == "A"
+    A_detsets_sep <- detset(deps_sep[A_deps_sep])
+    expect_identical(A_detsets_sep, list(c("B", "C")))
+
+    deps_jnt <- discover(df, 1, method = "FDHitsJoint")
+    A_deps_jnt <- dependant(deps_jnt) == "A"
+    A_detsets_jnt <- detset(deps_jnt[A_deps_jnt])
+    expect_identical(A_detsets_jnt, list(c("B", "C")))
   })
   it("finds dependencies for the team data in test-synthesise", {
     df <- data.frame(
@@ -540,7 +696,6 @@ describe("discover", {
         'HI', 'HI', 'MA', 'MA', 'TX'
       )
     )
-    deps <- discover(df, 1)
     expected_deps <- functional_dependency(
       list(
         list(c('player_name', 'jersey_num'), "team"),
@@ -556,8 +711,17 @@ describe("discover", {
       c("team", "jersey_num", "player_name", "city", "state")
     )
 
-    expect_identical(attrs_order(deps), attrs_order(expected_deps))
-    expect_true(all(is.element(expected_deps, deps)))
+    deps_dfd <- discover(df, 1, method = "DFD")
+    expect_identical(attrs_order(deps_dfd), attrs_order(expected_deps))
+    expect_true(all(is.element(expected_deps, deps_dfd)))
+
+    deps_sep <- discover(df, 1, method = "FDHitsSep")
+    expect_identical(attrs_order(deps_sep), attrs_order(expected_deps))
+    expect_true(all(is.element(expected_deps, deps_sep)))
+
+    deps_jnt <- discover(df, 1, method = "FDHitsJoint")
+    expect_identical(attrs_order(deps_jnt), attrs_order(expected_deps))
+    expect_true(all(is.element(expected_deps, deps_jnt)))
   })
   it("finds dependencies for the team data in original's edit demo", {
     df <- data.frame(
@@ -566,7 +730,6 @@ describe("discover", {
       state = c("MA", "IL", "FL", "TX", "HI", "TX"),
       roster_size = c(20L, 21L, 20L, 20L, 19L, 21L)
     )
-    deps <- discover(df, 1)
     expected_deps <- functional_dependency(
       list(
         list("city", "team"),
@@ -578,8 +741,18 @@ describe("discover", {
       ),
       c("team", "city", "state", "roster_size")
     )
-    expect_identical(attrs_order(deps), attrs_order(expected_deps))
-    expect_true(all(is.element(expected_deps, deps)))
+
+    deps_dfd <- discover(df, 1, method = "DFD")
+    expect_identical(attrs_order(deps_dfd), attrs_order(expected_deps))
+    expect_true(all(is.element(expected_deps, deps_dfd)))
+
+    deps_sep <- discover(df, 1, method = "FDHitsSep")
+    expect_identical(attrs_order(deps_sep), attrs_order(expected_deps))
+    expect_true(all(is.element(expected_deps, deps_sep)))
+
+    deps_jnt <- discover(df, 1, method = "FDHitsJoint")
+    expect_identical(attrs_order(deps_jnt), attrs_order(expected_deps))
+    expect_true(all(is.element(expected_deps, deps_jnt)))
   })
   it("finds dependencies for Wikipedia 1NF->2NF->3NF example", {
     df <- data.frame(
@@ -599,7 +772,6 @@ describe("discover", {
       Genre_Name = rep(c("Tutorial", "Popular science"), each = 2),
       Publisher_ID = rep(1:2, each = 2)
     )
-    deps <- discover(df, 1)
     expected_deps <- functional_dependency(
       list(
         list("Title", "Author"),
@@ -622,42 +794,114 @@ describe("discover", {
         "Publisher_ID"
       )
     )
-    expect_identical(attrs_order(deps), attrs_order(expected_deps))
-    expect_true(all(is.element(expected_deps, deps)))
+    deps_dfd <- discover(df, 1, method = "DFD")
+    deps_sep <- discover(df, 1, method = "FDHitsSep")
+    deps_jnt <- discover(df, 1, method = "FDHitsJoint")
+    expect_identical(attrs_order(deps_dfd), attrs_order(expected_deps))
+    expect_identical(attrs_order(deps_sep), attrs_order(expected_deps))
+    expect_identical(attrs_order(deps_jnt), attrs_order(expected_deps))
+    expect_true(all(is.element(expected_deps, deps_dfd)))
+    expect_true(all(is.element(expected_deps, deps_sep)))
+    expect_true(all(is.element(expected_deps, deps_jnt)))
   })
   it("correctly handles attributes with non-df-standard names", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
       stats::setNames(c("A 1", "B 2", "C 3"))
-    deps <- discover(df, 1)
-    A_1_deps <- dependant(deps) == "A 1"
-    A_1_detsets <- detset(deps[A_1_deps])
-    expect_identical(A_1_detsets, list(c("B 2", "C 3")))
+
+    deps_dfd <- discover(df, 1, method = "DFD")
+    A_1_deps_dfd <- dependant(deps_dfd) == "A 1"
+    A_1_detsets_dfd <- detset(deps_dfd[A_1_deps_dfd])
+    expect_identical(A_1_detsets_dfd, list(c("B 2", "C 3")))
+
+    deps_sep <- discover(df, 1, method = "FDHitsSep")
+    A_1_deps_sep <- dependant(deps_sep) == "A 1"
+    A_1_detsets_sep <- detset(deps_sep[A_1_deps_sep])
+    expect_identical(A_1_detsets_sep, list(c("B 2", "C 3")))
+
+    deps_jnt <- discover(df, 1, method = "FDHitsJoint")
+    A_1_deps_jnt <- dependant(deps_jnt) == "A 1"
+    A_1_detsets_jnt <- detset(deps_jnt[A_1_deps_jnt])
+    expect_identical(A_1_detsets_jnt, list(c("B 2", "C 3")))
   })
   it("expects attribute names to be unique", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), A = c(1, 2, 2), check.names = FALSE)
-    expect_error(discover(df, 1), "^duplicate column names: A$")
+    expect_error(discover(df, 1, method = "DFD"), "^duplicate column names: A$")
+    expect_error(discover(df, 1, method = "FDHitsSep"), "^duplicate column names: A$")
+    expect_error(discover(df, 1, method = "FDHitsJoint"), "^duplicate column names: A$")
   })
   it("gets the same results with and without storing partitions", {
     forall(
       gen_df(20, 5),
-      terminates_with_and_without_full_cache_then(expect_equiv_deps, accuracy = 1),
+      terminates_with_and_without_full_cache_then(
+        expect_equiv_deps,
+        accuracy = 1,
+        method = "DFD"
+      ),
       shrink.limit = Inf
     )
     forall(
       gen_df(20, 5),
-      terminates_with_and_without_full_cache_then(expect_equiv_deps, accuracy = 3/4),
+      terminates_with_and_without_full_cache_then(
+        expect_equiv_deps,
+        accuracy = 1,
+        method = "FDHitsSep"
+      ),
+      shrink.limit = Inf
+    )
+    forall(
+      gen_df(20, 5),
+      terminates_with_and_without_full_cache_then(
+        expect_equiv_deps,
+        accuracy = 1,
+        method = "FDHitsJoint"
+      ),
+      shrink.limit = Inf
+    )
+    forall(
+      gen_df(20, 5),
+      terminates_with_and_without_full_cache_then(
+        expect_equiv_deps,
+        accuracy = 3/4,
+        method = "DFD"
+      ),
       shrink.limit = Inf
     )
   })
-  it("is invariant to whether partition is transferred between dependants", {
+  it("is invariant to whether partition is transferred between dependants, also for accuracy < 1 for DFD", {
     forall(
       gen_df(20, 5),
-      terminates_with_and_without_store_cache_then(expect_equiv_deps, accuracy = 1),
+      terminates_with_and_without_store_cache_then(
+        expect_equiv_deps,
+        accuracy = 1,
+        method = "DFD"
+      ),
       shrink.limit = Inf
     )
     forall(
       gen_df(20, 5),
-      terminates_with_and_without_store_cache_then(expect_equiv_deps, accuracy = 3/4),
+      terminates_with_and_without_store_cache_then(
+        expect_equiv_deps,
+        accuracy = 1,
+        method = "FDHitsSep"
+      ),
+      shrink.limit = Inf
+    )
+    forall(
+      gen_df(20, 5),
+      terminates_with_and_without_store_cache_then(
+        expect_equiv_deps,
+        accuracy = 1,
+        method = "FDHitsJoint"
+      ),
+      shrink.limit = Inf
+    )
+    forall(
+      gen_df(20, 5),
+      terminates_with_and_without_store_cache_then(
+        expect_equiv_deps,
+        accuracy = 3/4,
+        method = "DFD"
+      ),
       shrink.limit = Inf
     )
   })
@@ -683,26 +927,46 @@ describe("discover", {
       d = c(NA, NA, TRUE),
       e = c(FALSE, TRUE, NA)
     )
-    invariant_to_bijection_skip <- terminates_with_and_without_bijection_skip_then(
-      expect_equiv_deps,
-      accuracy = 1
-    )
-    invariant_to_bijection_skip(df1)
-    invariant_to_bijection_skip(df2)
-    invariant_to_bijection_skip(df3)
+    invariant_to_bijection_skip <- function(...) {
+      terminates_with_and_without_bijection_skip_then(
+        expect_equiv_deps,
+        accuracy = 1,
+        ...
+      )
+    }
+    invariant_to_bijection_skip(method = "DFD")(df1)
+    invariant_to_bijection_skip(method = "DFD")(df2)
+    invariant_to_bijection_skip(method = "DFD")(df3)
+    invariant_to_bijection_skip(method = "FDHitsSep")(df1)
+    invariant_to_bijection_skip(method = "FDHitsSep")(df2)
+    invariant_to_bijection_skip(method = "FDHitsSep")(df3)
+    invariant_to_bijection_skip(method = "FDHitsJoint")(df1)
+    invariant_to_bijection_skip(method = "FDHitsJoint")(df2)
+    invariant_to_bijection_skip(method = "FDHitsJoint")(df3)
     forall(
       gen_df(20, 5),
-      invariant_to_bijection_skip,
+      invariant_to_bijection_skip(method = "DFD"),
+      shrink.limit = Inf
+    )
+    forall(
+      gen_df(20, 5),
+      invariant_to_bijection_skip(method = "FDHitsSep"),
+      shrink.limit = Inf
+    )
+    forall(
+      gen_df(20, 5),
+      invariant_to_bijection_skip(method = "FDHitsJoint"),
       shrink.limit = Inf
     )
   })
   it(
     paste(
-      "is invariant to:",
+      "for accuracy = 1, is invariant to:",
+      "- method used",
       "- excluding a class vs. excluding attributes in that class",
       "- filtering by arguments (dependants/detset_limit) or by subsetting results",
       "- whether partition is transferred between dependants",
-      "- whether bijections are skipped (accuracy = 1)",
+      "- whether bijections are skipped",
       sep = "\n"
     ),
     {
@@ -718,6 +982,11 @@ describe("discover", {
         function(df, dependants, detset_limit) {
           arglists <- expand.grid(
             list(list(df = df, accuracy = 1)),
+            list(
+              list(method = "DFD"),
+              list(method = "FDHitsSep"),
+              list(method = "FDHitsJoint")
+            ),
             list(
               list(exclude_class = "logical"),
               list(exclude = names(df)[vapply(df, is.logical, logical(1))])
@@ -767,7 +1036,15 @@ describe("discover", {
   it("returns a minimal functional dependency set", {
     forall(
       gen_df(6, 7),
-      terminates_then(is_valid_minimal_functional_dependency, 1)
+      terminates_then(is_valid_minimal_functional_dependency, 1, method = "DFD")
+    )
+    forall(
+      gen_df(6, 7),
+      terminates_then(is_valid_minimal_functional_dependency, 1, method = "FDHitsSep")
+    )
+    forall(
+      gen_df(6, 7),
+      terminates_then(is_valid_minimal_functional_dependency, 1, method = "FDHitsJoint")
     )
   })
 })

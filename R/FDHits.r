@@ -1,11 +1,14 @@
 FDHits <- function(
   x,
   method = c("Sep", "Joint"),
+  exclude = character(),
+  dependants = seq_along(x),
+  detset_limit = ncol(x) - 1L,
   progress = FALSE,
   progress_file = ""
 ) {
   method <- match.arg(method)
-  report <- reporter(progress, progress_file, new = TRUE)
+  report <- reporter(progress, progress_file, new = FALSE)
   if (ncol(x) == 0)
     return(functional_dependency(list(), character()))
   report$stat("simplifying data types")
@@ -19,19 +22,19 @@ FDHits <- function(
   report$stat(with_number(length(D), "initial diffset", "\n", "s\n"))
   switch(
     method,
-    Sep = FDHitsSep(lookup, D, report),
-    Joint = FDHitsJoint(lookup, D, report)
+    Sep = FDHitsSep(lookup, exclude, dependants, detset_limit, D, report),
+    Joint = FDHitsJoint(lookup, exclude, dependants, detset_limit, D, report)
   )
 }
 
-FDHitsSep <- function(lookup, D, report) {
+FDHitsSep <- function(lookup, exclude, dependants, detset_limit, D, report) {
   attrs <- names(lookup)
   attr_indices <- seq_along(lookup)
   res <- list()
   n_visited <- 0L
-  for (A in attr_indices) {
+  for (A in dependants) {
     report$stat(paste("dependant", attrs[A]))
-    rest <- setdiff(attr_indices, A)
+    rest <- setdiff(attr_indices, c(A, exclude))
     return_stack <- list(list(integer(), rest, A))
     visited <- list()
     while (length(return_stack) > 0) {
@@ -49,7 +52,15 @@ FDHitsSep <- function(lookup, D, report) {
       visited <- c(visited, list(node[1:3]))
       res <- c(res, attr_res[[1]])
       D <- attr_res[[2]]
-      return_stack <- c(attr_res[[3]], return_stack)
+      new_nodes <- attr_res[[3]]
+      return_stack <- c(
+        new_nodes[vapply(
+          new_nodes,
+          \(node) length(node[[1]]) <= detset_limit,
+          logical(1)
+        )],
+        return_stack
+      )
     }
     report$stat("")
     n_visited <- n_visited + length(visited)
@@ -62,11 +73,11 @@ FDHitsSep <- function(lookup, D, report) {
   functional_dependency(res, attrs)
 }
 
-FDHitsJoint <- function(lookup, D, report) {
+FDHitsJoint <- function(lookup, exclude, dependants, detset_limit, D, report) {
   attrs <- names(lookup)
   attr_indices <- seq_along(lookup)
   res <- list()
-  return_stack <- list(list(integer(), attr_indices, attr_indices))
+  return_stack <- list(list(integer(), setdiff(attr_indices, exclude), dependants))
   visited <- list()
   while (length(return_stack) > 0) {
     node <- return_stack[[1]]
@@ -83,7 +94,15 @@ FDHitsJoint <- function(lookup, D, report) {
     visited <- c(visited, list(node[c(1, 3)]))
     res <- c(res, attr_res[[1]])
     D <- attr_res[[2]]
-    return_stack <- c(attr_res[[3]], return_stack)
+    new_nodes <- attr_res[[3]]
+    return_stack <- c(
+      new_nodes[vapply(
+        new_nodes,
+        \(node) length(node[[1]]) <= detset_limit,
+        logical(1)
+      )],
+      return_stack
+    )
   }
   report$stat(paste0(
     "\n",
