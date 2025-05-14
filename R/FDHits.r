@@ -1,16 +1,14 @@
 FDHits <- function(
-  x,
+  lookup,
   method = c("Sep", "Joint"),
   exclude = character(),
-  dependants = seq_along(x),
-  detset_limit = ncol(x) - 1L,
+  dependants = seq_along(lookup),
+  detset_limit = ncol(lookup) - 1L,
   report = reporter(report = FALSE, con = "", new = TRUE)
 ) {
   method <- match.arg(method)
-  if (ncol(x) == 0)
+  if (ncol(lookup) == 0)
     return(functional_dependency(list(), character()))
-  report$stat("simplifying data types")
-  lookup <- lookup_table(x)
   report$stat("calculating single-attribute PLIs")
   plis <- lapply(lookup, pli)
   report$stat("sampling difference sets")

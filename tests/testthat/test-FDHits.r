@@ -66,7 +66,8 @@ describe("FDHits", {
       succeed()
     }
     forall(
-      gen_df(4, 6),
+      gen_df(4, 6) |>
+        gen.with(lookup_table),
       n_copies(100, all_terminate_then(expect_all_equiv_deps))
     )
   })
@@ -80,7 +81,7 @@ describe("FDHits", {
         unname(split(dependant(fds), detset(fds) |> (\(x) match(x, x))()))
       )
 
-      observed <- try(FDHits(x, method = method), silent = TRUE)
+      observed <- try(FDHits(lookup, method = method), silent = TRUE)
       if (class(observed)[[1]] == "try-error")
         return(fail(attr(observed, "condition")$message))
       expect_setequal(observed, fds)
