@@ -353,7 +353,7 @@ discover <- function(
     return(FDHits(
       df,
       method = "Sep",
-      exclude = match(setdiff(column_names, valid_determinant_attrs_prefixing), column_names),
+      determinants = match(valid_determinant_attrs_prefixing, column_names),
       dependants = match(dependants, column_names),
       detset_limit = detset_limit,
       report = report
@@ -362,7 +362,7 @@ discover <- function(
     return(FDHits(
       df,
       method = "Joint",
-      exclude = match(setdiff(column_names, valid_determinant_attrs_prefixing), column_names),
+      determinants = match(valid_determinant_attrs_prefixing, column_names),
       dependants = match(dependants, column_names),
       detset_limit = detset_limit,
       report = report

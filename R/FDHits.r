@@ -1,7 +1,7 @@
 FDHits <- function(
   lookup,
   method = c("Sep", "Joint"),
-  exclude = character(),
+  determinants = seq_along(lookup),
   dependants = seq_along(lookup),
   detset_limit = ncol(lookup) - 1L,
   report = reporter(report = FALSE, con = "", new = TRUE)
@@ -18,19 +18,19 @@ FDHits <- function(
   report$stat(with_number(length(D), "initial diffset", "\n", "s\n"))
   switch(
     method,
-    Sep = FDHitsSep(lookup, exclude, dependants, detset_limit, D, report),
-    Joint = FDHitsJoint(lookup, exclude, dependants, detset_limit, D, report)
+    Sep = FDHitsSep(lookup, determinants, dependants, detset_limit, D, report),
+    Joint = FDHitsJoint(lookup, determinants, dependants, detset_limit, D, report)
   )
 }
 
-FDHitsSep <- function(lookup, exclude, dependants, detset_limit, D, report) {
+FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report) {
   attrs <- names(lookup)
   attr_indices <- seq_along(lookup)
   res <- list()
   n_visited <- 0L
   for (A in dependants) {
     report$stat(paste("dependant", attrs[A]))
-    rest <- setdiff(attr_indices, c(A, exclude))
+    rest <- determinants[determinants != A]
     return_stack <- list(list(integer(), rest, A))
     visited <- list()
     while (length(return_stack) > 0) {
@@ -68,11 +68,11 @@ FDHitsSep <- function(lookup, exclude, dependants, detset_limit, D, report) {
   functional_dependency(res, attrs)
 }
 
-FDHitsJoint <- function(lookup, exclude, dependants, detset_limit, D, report) {
+FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, report) {
   attrs <- names(lookup)
   attr_indices <- seq_along(lookup)
   res <- list()
-  return_stack <- list(list(integer(), setdiff(attr_indices, exclude), dependants))
+  return_stack <- list(list(integer(), determinants, dependants))
   visited <- list()
   while (length(return_stack) > 0) {
     node <- return_stack[[1]]
