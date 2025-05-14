@@ -356,8 +356,7 @@ discover <- function(
       exclude = match(setdiff(column_names, valid_determinant_attrs_prefixing), column_names),
       dependants = match(dependants, column_names),
       detset_limit = detset_limit,
-      progress = progress,
-      progress_file = progress_file
+      report = report
     ))
   if (method == "FDHitsJoint")
     return(FDHits(
@@ -366,8 +365,7 @@ discover <- function(
       exclude = match(setdiff(column_names, valid_determinant_attrs_prefixing), column_names),
       dependants = match(dependants, column_names),
       detset_limit = detset_limit,
-      progress = progress,
-      progress_file = progress_file
+      report = report
     ))
 
   # check for constant-value columns, because if columns are fixed we can

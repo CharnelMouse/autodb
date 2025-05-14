@@ -4,11 +4,9 @@ FDHits <- function(
   exclude = character(),
   dependants = seq_along(x),
   detset_limit = ncol(x) - 1L,
-  progress = FALSE,
-  progress_file = ""
+  report = reporter(report = FALSE, con = "", new = TRUE)
 ) {
   method <- match.arg(method)
-  report <- reporter(progress, progress_file, new = FALSE)
   if (ncol(x) == 0)
     return(functional_dependency(list(), character()))
   report$stat("simplifying data types")
