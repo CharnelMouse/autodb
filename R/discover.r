@@ -390,8 +390,3 @@ lookup_table <- function(df) {
   lapply(df, \(x) match(x, x)) |>
     data.frame(check.names = FALSE)
 }
-
-partition_rank <- function(partition) {
-  # invariant to whether partition is stripped
-  sum(lengths(partition)) - length(partition)
-}
