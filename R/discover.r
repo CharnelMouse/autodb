@@ -302,21 +302,22 @@ discover <- function(
       stats::setNames(list(), character()),
       attrs_order = character()
     ))
-  column_names <- colnames(df)
-  duplicates <- which(duplicated(column_names))
+  attr_names <- colnames(df)
+  duplicates <- which(duplicated(attr_names))
   if (length(duplicates) > 0) {
-    dup_names <- unique(column_names[duplicates])
-    sorted_dup_names <- dup_names[order(match(dup_names, column_names))]
+    dup_names <- unique(attr_names[duplicates])
+    sorted_dup_names <- dup_names[order(match(dup_names, attr_names))]
     stop("duplicate column names: ", toString(sorted_dup_names))
   }
-  if (any(!is.element(exclude, column_names)))
+  if (any(!is.element(exclude, attr_names)))
     warning("there are attribute names in exclude not present in df")
-  if (any(!is.element(dependants, column_names)))
+  if (any(!is.element(dependants, attr_names)))
     warning("there are attribute names in dependants not present in df")
-  dependants <- intersect(column_names, dependants)
-  dependants <- match(dependants, column_names)
+  dependants <- intersect(attr_names, dependants)
+  dependants <- match(dependants, attr_names)
+  attrs <- seq_along(attr_names)
 
-  valid_determinant_name <- !is.element(column_names, exclude)
+  valid_determinant_name <- !is.element(attr_names, exclude)
   valid_determinant_class <- !vapply(
     df,
     inherits,
@@ -348,7 +349,7 @@ discover <- function(
     "simplifying data types"
   )
   partitions <- list()
-  dependencies <- stats::setNames(rep(list(list()), n_cols), column_names)
+  dependencies <- stats::setNames(rep(list(list()), n_cols), attr_names)
 
   if (method == "FDHitsSep")
     return(FDHits(
@@ -372,14 +373,14 @@ discover <- function(
   # check for constant-value columns, because if columns are fixed we can
   # ignore them for the rest of the search
   fixed <- integer()
-  for (attr in seq_along(column_names)) {
+  for (attr in attrs) {
     if (all(df[[attr]] == 1L)) {
-      fixed <- report$op(fixed, c, paste(column_names[attr], "is fixed"), attr)
+      fixed <- report$op(fixed, c, paste(attr_names[[attr]], "is fixed"), attr)
       if (attr %in% dependants)
         dependencies[[attr]] <- list(character())
     }
   }
-  nonfixed <- setdiff(seq_along(column_names), fixed)
+  nonfixed <- setdiff(attrs, fixed)
 
   valid_dependant_attrs <- intersect(dependants, nonfixed)
   # check for zero dependants before removing simple keys, otherwise
@@ -391,7 +392,7 @@ discover <- function(
     report$stat("no valid dependants, or detset_limit < 1, skipping search")
     return(flatten(
       filter_nonflat_dependencies(dependencies, detset_limit),
-      column_names
+      attr_names
     ))
   }
 
@@ -421,7 +422,7 @@ discover <- function(
   determinant_keys <- intersect(simple_keys, valid_determinant_attrs_prekeys)
   dependant_keys <- intersect(simple_keys, valid_dependant_attrs)
   if (length(simple_keys) > 0) {
-    report$stat(paste("single-attribute keys:", toString(column_names[simple_keys])))
+    report$stat(paste("single-attribute keys:", toString(attr_names[simple_keys])))
     valid_determinant_attrs <- setdiff(valid_determinant_attrs, simple_keys)
     if (skip_bijections) {
       valid_dependant_attrs <- setdiff(valid_dependant_attrs, dependant_keys[-1])
@@ -432,7 +433,7 @@ discover <- function(
     report$stat(
       paste(
         "attributes not considered as determinants:",
-        toString(column_names[-valid_determinant_attrs])
+        toString(attr_names[-valid_determinant_attrs])
       )
     )
   }
@@ -473,7 +474,7 @@ discover <- function(
       full_cache
     )
     for (rhs in which(nonfixed %in% valid_dependant_attrs)) {
-      report$stat(paste("dependant", column_names[nonfixed][rhs]))
+      report$stat(paste("dependant", attr_names[nonfixed][rhs]))
       lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
       n_lhs_attrs <- length(lhs_nonfixed_indices)
       expected_n_lhs_attrs <- max_n_lhs_attrs -
@@ -484,11 +485,11 @@ discover <- function(
           names(dependencies)[
             vapply(
               dependencies,
-              \(x) any(vapply(x, identical, logical(1), column_names[nonfixed][[rhs]])),
+              \(x) any(vapply(x, identical, logical(1), attr_names[nonfixed][[rhs]])),
               logical(1)
             )
           ],
-          column_names[nonfixed]
+          attr_names[nonfixed]
         ) |>
         intersect(lhs_nonfixed_indices)
       else
@@ -542,9 +543,9 @@ discover <- function(
             all_powersets[[as.character(max_n_lhs_attrs)]] <- powerset
           }
         }else
-          dependencies[[column_names[nonfixed][rhs]]] <- c(
-            dependencies[[column_names[nonfixed][rhs]]],
-            lapply(lhss[[1]], \(x) column_names[nonfixed][x])
+          dependencies[[attr_names[nonfixed][rhs]]] <- c(
+            dependencies[[attr_names[nonfixed][rhs]]],
+            lapply(lhss[[1]], \(x) attr_names[nonfixed][x])
           )
         if (store_cache)
           partitions <- lhss[[2]]
@@ -555,27 +556,27 @@ discover <- function(
   report$stat("DFD complete")
   dependencies <- add_simple_key_deps(
     dependencies,
-    column_names[determinant_keys],
-    column_names[dependant_keys],
-    column_names[valid_dependant_attrs]
+    attr_names[determinant_keys],
+    attr_names[dependant_keys],
+    attr_names[valid_dependant_attrs]
   )
   if (skip_bijections) {
     dependencies <- add_deps_implied_by_bijections(
       dependencies,
       bijections,
-      column_names[nonfixed],
-      column_names
+      attr_names[nonfixed],
+      attr_names
     )
     dependencies <- add_deps_implied_by_simple_keys(
       dependencies,
-      column_names[determinant_keys],
-      column_names[dependant_keys],
-      column_names[valid_dependant_attrs]
+      attr_names[determinant_keys],
+      attr_names[dependant_keys],
+      attr_names[valid_dependant_attrs]
     )
   }
   flatten(
     filter_nonflat_dependencies(dependencies, detset_limit),
-    column_names
+    attr_names
   )
 }
 
