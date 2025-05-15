@@ -373,7 +373,7 @@ discover <- function(
   # ignore them for the rest of the search
   fixed <- integer()
   for (attr in seq_along(column_names)) {
-    if (all(is.na(df[[attr]])) || all(df[[attr]] == df[[attr]][1])) {
+    if (all(df[[attr]] == 1L)) {
       fixed <- report$op(fixed, c, paste(column_names[attr], "is fixed"), attr)
       if (attr %in% dependants)
         dependencies[[attr]] <- list(character())
