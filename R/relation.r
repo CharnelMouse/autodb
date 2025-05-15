@@ -496,7 +496,7 @@ insert.relation <- function(
   if (length(relations) == 0)
     return(x)
   if (!is.na(digits))
-    vals[] <- lapply(vals, coarsen_if_float, digits = digits)
+    vals <- df_coarsen(vals, digits)
   extra <- setdiff(names(vals), attrs_order(x))
   if (length(extra) > 0L)
     stop(paste(

@@ -495,8 +495,7 @@ describe("synthesise", {
         # can't use df_equiv with digits,
         # because coarsening floats can result in df2 having
         # some rows removed as duplicated after coarsening
-        df_rounded <- df
-        df_rounded[] <- lapply(df_rounded, coarsen_if_float, digits)
+        df_rounded <- df_coarsen(df, digits)
         return(expect_true(df_equiv(df2, unique(df_rounded), digits = NA)))
       }
 

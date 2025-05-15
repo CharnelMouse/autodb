@@ -36,7 +36,7 @@ decompose <- function(df, schema, digits = getOption("digits"), check = TRUE) {
   stopifnot(identical(names(df), attrs_order(schema)))
 
   if (!is.na(digits))
-    df[] <- lapply(df, coarsen_if_float, digits = digits)
+    df <- df_coarsen(df, digits)
 
   if (check) {
     inferred_fds <- synthesised_fds(attrs(schema), keys(schema))
@@ -75,7 +75,7 @@ decompose <- function(df, schema, digits = getOption("digits"), check = TRUE) {
 
 create_insert <- function(df, schema, digits = getOption("digits")) {
   if (!is.na(digits))
-    df[] <- lapply(df, coarsen_if_float, digits = digits)
+    df <- df_coarsen(df, digits)
   relations <- stats::setNames(
     Map(
       \(attrs, keys) {
