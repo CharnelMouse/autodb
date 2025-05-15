@@ -9,7 +9,7 @@ describe("decompose", {
       \(x, digits, check) {
         fds <- discover(x, 1, digits = digits)
         schema <- normalise(fds)
-        db <- decompose(x, schema, check = check)
+        db <- decompose(x, schema, digits = digits, check = check)
         is_valid_database(db)
       },
       curry = TRUE

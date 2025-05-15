@@ -491,8 +491,14 @@ describe("synthesise", {
       # schema_avoid_lossless should be lossless
       database_avoid_lossless <- decompose(df, schema_avoid_lossless, digits = digits)
       df2 <- rejoin(database_avoid_lossless)
-      if (!df_equiv(df2, df))
-        return(expect_true(df_equiv(df2, df, digits = digits)))
+      if (!df_equiv(df2, df)) {
+        # can't use df_equiv with digits,
+        # because coarsening floats can result in df2 having
+        # some rows removed as duplicated after coarsening
+        df_rounded <- df
+        df_rounded[] <- lapply(df_rounded, coarsen_if_float, digits)
+        return(expect_true(df_equiv(df2, unique(df_rounded), digits = NA)))
+      }
 
       still_lossless_with_less_or_same_attributes_dep(flat_deps)
     }
