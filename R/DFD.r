@@ -556,6 +556,21 @@ minimise_seeds <- function(seeds, bitsets) {
 }
 
 partition_computer <- function(df, accuracy, cache) {
+  # A greatly-overcomplicated function generator.
+  # Using the data lookup table to create partitions, and compare those
+  # partitions to determine whether an FD is satisfied, requires a lot of
+  # different information. The idea is to abstract away the information that
+  # doesn't change, leaving FD validation as a function only of the determinant
+  # set, the dependant, and a cache of already-computed partitions. This hides
+  # the following non-changing information, leaving:
+  # - The lookup table the partitions are based on (df)
+  # - The accuracy threshold for FD correctness (accuracy)
+  # - Whether partitions are cached at all (cache)
+  # For DFD, this is the only part of the main search code where these arguments
+  # are required, so compartmentalising them away in this manner makes the
+  # search code a little more concise, and gets rid of a lot of repeated
+  # branching conditional on non-changing information.
+
   threshold <- ceiling(nrow(df)*accuracy)
 
   partitions_ui <- list(
