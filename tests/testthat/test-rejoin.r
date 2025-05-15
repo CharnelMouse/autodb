@@ -5,7 +5,8 @@ describe("rejoin", {
         with_args(df_equiv, digits = digits),
         with_args(autodb, digits = digits, ensure_lossless = TRUE) %>>%
           rejoin,
-        identity
+        with_args(df_coarsen, digits = digits) %>>%
+          df_unique
       )
     }
     table_dum <- data.frame()
@@ -16,25 +17,11 @@ describe("rejoin", {
     # independent ones, or a reference involving several attributes
     forall(
       list(
-        gen_df(6, 7, remove_dup_rows = TRUE),
+        gen_df(6, 7, remove_dup_rows = FALSE),
         gen.element(c(7:1, NA_integer_))
       ),
       \(x, d) autodb_inverted_by_rejoin(digits = d)(x),
       curry = TRUE
-    )
-    forall(
-      list(
-        gen_df(6, 7, remove_dup_rows = FALSE),
-        gen.element(c(7:1, NA_integer_))
-      ),
-      \(x, d) {
-        expect_bi(
-          with_args(df_equiv, digits = d),
-          with_args(autodb, digits = d, ensure_lossless = TRUE) %>>%
-            rejoin,
-          df_unique
-        )(x)
-      }
     )
   })
   it("is possible for any database constructed from a data frame", {
