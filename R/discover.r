@@ -313,7 +313,6 @@ discover <- function(
     warning("there are attribute names in dependants not present in df")
   dependants <- intersect(attr_names, dependants)
   dependants <- match(dependants, attr_names)
-  attrs <- seq_along(attr_names)
 
   valid_determinant_name <- !is.element(attr_names, exclude)
   valid_determinant_class <- !vapply(

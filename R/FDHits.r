@@ -25,7 +25,6 @@ FDHits <- function(
 
 FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report) {
   attrs <- names(lookup)
-  attr_indices <- seq_along(lookup)
   res <- list()
   n_visited <- 0L
   for (A in dependants) {
@@ -70,7 +69,6 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
 
 FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, report) {
   attrs <- names(lookup)
-  attr_indices <- seq_along(lookup)
   res <- list()
   return_stack <- list(list(integer(), determinants, dependants))
   visited <- list()
