@@ -289,8 +289,6 @@ discover <- function(
   if (method == "FDHitsJoint" && accuracy < 1)
     stop("FDHitsJoint can not take accuracy < 1")
 
-  use_visited <- TRUE
-
   if (skip_bijections && accuracy < 1)
     warning("skipping bijections when accuracy < 1 can result in incorrect output")
 
@@ -348,33 +346,62 @@ discover <- function(
     lookup_table(df),
     "simplifying data types"
   )
-  partitions <- list()
-  dependencies <- stats::setNames(rep(list(list()), n_cols), attr_names)
 
-  if (method == "FDHitsSep")
-    return(FDHits(
+  switch(
+    method,
+    DFD = DFD(
+      df,
+      accuracy = accuracy,
+      full_cache  = full_cache,
+      store_cache = store_cache,
+      skip_bijections = skip_bijections,
+      determinants = valid_determinant_attrs_prefixing,
+      dependants = dependants,
+      detset_limit = detset_limit,
+      report = report
+    ),
+    FDHitsSep = FDHits(
       df,
       method = "Sep",
       determinants = valid_determinant_attrs_prefixing,
       dependants = dependants,
       detset_limit = detset_limit,
       report = report
-    ))
-  if (method == "FDHitsJoint")
-    return(FDHits(
+    ),
+    FDHitsJoint = FDHits(
       df,
       method = "Joint",
       determinants = valid_determinant_attrs_prefixing,
       dependants = dependants,
       detset_limit = detset_limit,
       report = report
-    ))
+    )
+  )
+}
+
+DFD <- function(
+  lookup,
+  accuracy = 1,
+  full_cache = TRUE,
+  store_cache = TRUE,
+  skip_bijections = FALSE,
+  determinants = seq_along(lookup),
+  dependants = seq_along(lookup),
+  detset_limit = ncol(lookup) - 1L,
+  report = reporter(report = FALSE, con = "", new = TRUE)
+) {
+  attrs <- seq_along(lookup)
+  attr_names <- names(lookup)
+  n_cols <- length(attrs)
+
+  partitions <- list()
+  dependencies <- stats::setNames(rep(list(list()), n_cols), attr_names)
 
   # check for constant-value columns, because if columns are fixed we can
   # ignore them for the rest of the search
   fixed <- integer()
   for (attr in attrs) {
-    if (all(df[[attr]] == 1L)) {
+    if (all(lookup[[attr]] == 1L)) {
       fixed <- report$op(fixed, c, paste(attr_names[[attr]], "is fixed"), attr)
       if (attr %in% dependants)
         dependencies[[attr]] <- list(character())
@@ -400,7 +427,7 @@ discover <- function(
   # but might not all be valid determinants.
   valid_determinant_attrs_prekeys <- intersect(
     nonfixed,
-    valid_determinant_attrs_prefixing
+    determinants
   )
 
   # Non-fixed attributes might be single-attribute keys: we can list them as
@@ -413,7 +440,7 @@ discover <- function(
   # because df can have duplicate rows, and we can't remove
   # the duplicate rows in df, because it changes the behaviour
   # for accuracy < 1.
-  df_uniq <- df_unique(df)
+  df_uniq <- df_unique(lookup)
   simple_keys <- nonfixed[vapply(
     df_uniq[nonfixed],
     Negate(anyDuplicated),
@@ -463,13 +490,13 @@ discover <- function(
       max_n_lhs_attrs,
       nonempty_powerset,
       "constructing powerset",
-      use_visited
+      use_visited = TRUE
     )
     # cache generated powerset and reductions, otherwise we spend a lot
     # of time duplicating reduction work
     all_powersets <- stats::setNames(list(powerset), max_n_lhs_attrs)
     compute_partitions <- partition_computer(
-      unname(df[, nonfixed, drop = FALSE]),
+      unname(lookup[, nonfixed, drop = FALSE]),
       accuracy,
       full_cache
     )
