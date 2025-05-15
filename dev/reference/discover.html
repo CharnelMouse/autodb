@@ -49,6 +49,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">discover</span><span class="op">(</span></span>
 <span>  <span class="va">df</span>,</span>
 <span>  <span class="va">accuracy</span>,</span>
+<span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"DFD"</span>, <span class="st">"FDHitsSep"</span>, <span class="st">"FDHitsJoint"</span><span class="op">)</span>,</span>
 <span>  digits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"digits"</span><span class="op">)</span>,</span>
 <span>  full_cache <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  store_cache <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -72,7 +73,13 @@
 
 <dt id="arg-accuracy">accuracy<a class="anchor" aria-label="anchor" href="#arg-accuracy"></a></dt>
 <dd><p>a numeric in (0, 1]: the accuracy threshold required in order
-to conclude a dependency.</p></dd>
+to conclude a dependency. Accuracy thresholds less than one are only
+supported in DFD.</p></dd>
+
+
+<dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
+<dd><p>a string, indicating which search algorithm to use. Currently,
+this defaults to DFD. Alternative options are FDHitsSep and FDHitsJoint.</p></dd>
 
 
 <dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
@@ -90,14 +97,15 @@ machines. See the note in <code><a href="https://rdrr.io/r/base/print.default.ht
 how sets of attributes group the relation records (stripped partitions).
 Otherwise, only the number of groups is stored. Storing the stripped
 partition is expected to let the algorithm run more quickly, but might be
-inefficient for small data frames or small amounts of memory.</p></dd>
+inefficient for small data frames or small amounts of memory. Only relevant
+for DFD.</p></dd>
 
 
 <dt id="arg-store-cache">store_cache<a class="anchor" aria-label="anchor" href="#arg-store-cache"></a></dt>
 <dd><p>a logical, indicating whether to keep cached information
 to use when finding dependencies for other dependants. This allows the
 algorithm to run more quickly by not having to re-calculate information,
-but takes up more memory.</p></dd>
+but takes up more memory. Only relevant for DFD.</p></dd>
 
 
 <dt id="arg-skip-bijections">skip_bijections<a class="anchor" aria-label="anchor" href="#arg-skip-bijections"></a></dt>
@@ -106,7 +114,7 @@ searches that are made redundant by discovered bijections between
 attributes. This can significantly speed up the search if <code>df</code>
 contains equivalent attributes early in column order, but results in
 undefined behaviour if <code>accuracy &lt; 1</code>. See Details for more
-information.</p></dd>
+information. Currently only implemented for DFD.</p></dd>
 
 
 <dt id="arg-exclude">exclude<a class="anchor" aria-label="anchor" href="#arg-exclude"></a></dt>
@@ -157,15 +165,21 @@ attributes during normalisation.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Column names for <code><a href="https://rdrr.io/r/stats/Fdist.html" class="external-link">df</a></code> must be unique.</p>
-<p>The algorithm used for finding dependencies is DFD. This searches for
-determinant sets for each dependent attribute (dependant) by traversing the
-powerset of the other (non-excluded) attributes, and is equivalent to
-depth-first.</p>
+<p>There are two search algorithms available for finding dependencies: DFD, and FDHits. These are described below.</p><div class="section">
+<h3 id="dfd">DFD<a class="anchor" aria-label="anchor" href="#dfd"></a></h3>
+
+
+<p>The DFD algorithm searches for determinant sets for each dependant attribute
+separately, by traversing the powerset of the other (non-excluded)
+attributes. It can roughly be considered as a depth-first search over
+candidate determinant sets.</p>
 <p>The implementation for DFD differs a little from the algorithm presented in
 the original paper:</p><ul><li><p>Some attributes, or attribute types, can be designated, ahead of
 time, as not being candidate members for determinant sets. This reduces the
 number of candidate determinant sets to be searched, saving time by not
-searching for determinant sets that the user would remove later anyway.</p></li>
+searching for determinant sets that the user would remove later anyway. The
+dependants can also be trimmed in similar fashion, although this reduces
+the search space linearly rather than exponentially.</p></li>
 <li><p>Attributes that have a single unique value, i.e. are
 constant, get attributed a single empty determinant set. In the standard
 DFD algorithm, they would be assigned all the other non-excluded attributes
@@ -192,7 +206,43 @@ as described in Section 3.5 of the original paper.</p></li>
 functional dependencies when there are pairwise-equivalent attributes.</p></li>
 <li><p>Missing values (NA) are treated as a normal value, with NA = NA being
 true, and x = NA being false for any non-NA value of x.</p></li>
-</ul><div class="section">
+</ul></div>
+
+<div class="section">
+<h3 id="fdhits">FDHits<a class="anchor" aria-label="anchor" href="#fdhits"></a></h3>
+
+
+<p>FDHits begins by sampling pairs of records for attributes in which their
+values differ (difference sets). These difference sets render some
+determinant-dependant pairings invalid, pruning the search space. If a
+candidate pairing is not rendered invalid by the known difference sets, then
+it's validated, resulting in either confirmation as a minimal functional
+dependency, or discovery of new difference sets that make it invalid.</p>
+<p>There are two variants. FDHitsSep performs a search for each dependant attribute
+separately, in the same way as DFD. FDHitsJoint handles all dependant
+attributes at the same time.</p>
+<p>The implementation for FDHits differs a little from the algorithm presented
+in the original paper:</p><ul><li><p>Some attributes, or attribute types, can be designated, ahead of
+time, as not being candidate members for determinant sets. This reduces the
+number of candidate determinant sets to be searched, saving time by not
+searching for determinant sets that the user would remove later anyway. The
+dependants can also be trimmed in similar fashion.</p></li>
+<li><p>The search can be limited to determinant sets up to a given size.
+This is also an option for DFD, but it's more useful for FDHits, due to the
+search order.</p></li>
+<li><p>As described in the paper, FDHitsSep and FDHitsJoint branch a search
+into several child nodes: \(\mu_0\) for FDHitsJoint, and \(\mu_1\),
+\(\mu_2\) etc. for both. The paper implies that the latter nodes are
+visited in order. However, this causes the algorithm to not always work
+correctly: for guaranteed correctness, they must be visited in reverse
+order, with \(\mu_0\) able to be visited at any point. This correction is
+expected to appear in a future paper.</p></li>
+<li><p>The final algorithm in the paper automatically chooses between
+FDHitsSep and FDHits Joint, depending on the number of initially-sampled
+difference sets. This is not yet implemented.</p></li>
+</ul></div>
+
+<div class="section">
 <h3 id="floating-point-variables">Floating-point variables<a class="anchor" aria-label="anchor" href="#floating-point-variables"></a></h3>
 
 
@@ -260,7 +310,7 @@ bijection doesn't imply equivalent approximate dependencies.</p>
 
 
 <p>Setting <code>detset_limit</code> smaller than the largest-possible value has
-different behaviour for different search algorithms, the result is always
+different behaviour for different search algorithms, but the result is always
 that <code>discover(x, 1, detset_limit = n)</code> is equivalent to doing a full
 search, <code>fds &lt;- discover(x, 1)</code>, then
 filtering by determinant set size post-hoc, <code>fds[lengths(detset(fds)) &lt;=
@@ -290,15 +340,22 @@ non-dependencies within the size limit. It turns out to be rare that this
 results in a significant speed-up, but it never results in the search having
 to visit more nodes than it would without a size limit, so the average search
 time is never made worse.</p>
+<p>FDHits implements <code>detset_limit</code> more naturally, since it explores
+determinant sets in increasing set size. Limiting the size is simply a matter
+of only visiting new nodes if their determinant set is within the given size
+limit.</p>
 </div>
 
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Abedjan Z., Schulze P., Naumann F. (2014) DFD: efficient functional
+    <p>DFD: Abedjan Z., Schulze P., Naumann F. (2014) DFD: efficient functional
 dependency discovery. <em>Proceedings of the 23rd ACM International Conference
 on Conference on Information and Knowledge Management (CIKM '14). New York,
 U.S.A.</em>, 949–958.</p>
+<p>FDHits: Bleifuss T., Papenbrock T., Bläsius T., Schirneck M, Naumann F.
+(2024) Discovering Functional Dependencies through Hitting Set Enumeration.
+<em>Proc. ACM Manag. Data</em>, <strong>2, 1</strong>, 43:1–24.</p>
     </div>
 
     <div class="section level2">

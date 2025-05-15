@@ -43,7 +43,8 @@
 <h2 class="pkg-version" data-toc-text="development version" id="autodb-development-version">autodb (development version)<a class="anchor" aria-label="anchor" href="#autodb-development-version"></a></h2>
 <div class="section level3">
 <h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
-<ul><li>
+<ul><li>Added the new FDHits search algorithm as an alternative option to DFD in <code>discover</code>.</li>
+<li>
 <code>relation</code> and <code>database</code> methods for <code>rename_attrs</code> and <code>gv</code> now run significantly more quickly for large data sets, due to not re-running all the key validity checks.</li>
 <li>Added a <code>check</code> parameter to <code>decompose</code>, to allow skipping some checks if the data frame to decompose is the one used to create the schema.</li>
 <li>Handing for numerical/complex variables is more consistent:
