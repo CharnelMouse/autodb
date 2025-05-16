@@ -172,7 +172,7 @@ describe("refine_partition", {
       lookup[, c(start_attrs, names(lookup)[attr]), drop = FALSE]
     )) |>
       (\(x) x[lengths(x) > 1])()
-    observed <- try(refine_partition(partition, indices))
+    observed <- try(refine_partition_by_lookup(partition, indices))
     if (class(observed)[[1]] == "try-error")
       return(fail)
     expect_setequal(observed, expected)
@@ -236,7 +236,7 @@ describe("new_diffset", {
             }
             refined_partitions <- lapply(
               W,
-              \(attr) refine_partition_old(Spli, attr, lookup) |>
+              \(attr) refine_partition_by_lookup(Spli, lookup[[attr]]) |>
                 # sort to avoid using is.element or setequal
                 (\(x) x[order(vapply(x, `[`, integer(1),1))])()
             )

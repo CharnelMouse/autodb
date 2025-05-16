@@ -83,7 +83,7 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
   res <- list()
   return_stack <- list(list(integer(), determinants, dependants))
   visited <- list()
-  refine_partition_wrapped <- partition_refiner(lookup)
+  refine_partition <- partition_refiner(lookup)
   partition_cache <- list(key = character(), value = list())
   while (length(return_stack) > 0) {
     node <- return_stack[[1]]
@@ -95,7 +95,7 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
       D,
       lookup,
       report = report,
-      refine_partition_wrapped,
+      refine_partition,
       partition_cache,
       visited = visited
     )
@@ -243,7 +243,7 @@ FDHitsJoint_visit <- function(
   D,
   lookup,
   report,
-  refine_partition_wrapped,
+  refine_partition,
   partition_cache,
   visited = list()
 ) {
@@ -328,7 +328,7 @@ FDHitsJoint_visit <- function(
   # validation at the leaves
   uncovered <- uncov_joint(S, W, D)
   if (length(uncovered) == 0) {
-    refinement <- refine_partition_wrapped(W, S, partition_cache)
+    refinement <- refine_partition(W, S, partition_cache)
     refined_partitions <- refinement[[1]]
     relevant_Spli <- refinement[[2]]
     partition_cache <- refinement[[3]]
@@ -444,7 +444,7 @@ partition_refiner <- function(df) {
     fetch_partition_stripped(attr_indices, df, partitions, partitions_ui)
   }
   function(rhs, lhs_set, partitions) {
-    refine_partition_generic(
+    fetch_refined_partition(
       df,
       rhs,
       lhs_set,
@@ -545,7 +545,7 @@ fsplit_rows_emptyable <- function(df, attr_indices) {
   fsplit_rows(df, attr_indices)
 }
 
-refine_partition_generic <- function(
+fetch_refined_partition <- function(
   lookup,
   rhs,
   lhs_set,
@@ -566,7 +566,11 @@ refine_partition_generic <- function(
   if (partition_rank(relevant_lhs_partition) == 0)
     return(list(rep(list(list()), length(rhs)), list(), partition_cache))
   list(
-    lapply(individual_rhs_indices, \(r) refine_partition(relevant_lhs_partition, r)),
+    lapply(
+      individual_rhs_indices,
+      refine_partition_by_lookup,
+      relevant_partition = relevant_lhs_partition
+    ),
     relevant_lhs_partition,
     partition_cache
   )
@@ -650,18 +654,6 @@ new_diffset <- function(Spli, refined_partitions, lookup) {
   )))
 }
 
-refine_partition_old <- function(partition, attr, lookup) {
-  if (length(partition) == 0)
-    return(list())
-  lapply(
-    partition,
-    \(cluster) split(cluster, ffactor1i(lookup[[attr]][cluster]))
-  ) |>
-    unlist(recursive = FALSE) |>
-    (\(x) x[lengths(x) > 1])() |>
-    unname()
-}
-
 filter_partition <- function(partition, indices) {
   if (length(partition) == 0)
     return(list())
@@ -676,7 +668,7 @@ filter_partition <- function(partition, indices) {
   partition[!single_index]
 }
 
-refine_partition <- function(relevant_partition, indices) {
+refine_partition_by_lookup <- function(relevant_partition, indices) {
   if (length(relevant_partition) == 0)
     return(list())
   lapply(
