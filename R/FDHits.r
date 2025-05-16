@@ -27,6 +27,8 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
   attrs <- names(lookup)
   res <- list()
   n_visited <- 0L
+  refine_partition_wrapped <- partition_refiner(lookup)
+  partition_cache <- list(key = character(), value = list())
   for (A in dependants) {
     report$stat(paste("dependant", attrs[A]))
     rest <- determinants[determinants != A]
@@ -42,12 +44,15 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
         D,
         lookup,
         report = report,
+        refine_partition_wrapped,
+        partition_cache,
         visited = visited
       )
       visited <- c(visited, list(node[1:3]))
       res <- c(res, attr_res[[1]])
       D <- attr_res[[2]]
       new_nodes <- attr_res[[3]]
+      partition_cache <- attr_res[[4]]
       return_stack <- c(
         new_nodes[vapply(
           new_nodes,
@@ -60,8 +65,11 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
     n_visited <- n_visited + length(visited)
   }
   report$stat(paste0(
-    with_number(length(D), "final diffset", "\n", "s\n"),
-    with_number(n_visited, "node", " visited", "s visited")
+    with_number(length(D), "final diffset", "", "s"),
+    "\n",
+    with_number(n_visited, "node", " visited", "s visited"),
+    "\n",
+    with_number(length(partition_cache$key), "partition", " cached", "s cached")
   ))
   res <- lapply(res, lapply, \(x) attrs[x])
   functional_dependency(res, attrs)
@@ -116,6 +124,8 @@ FDHitsSep_visit <- function(
   D,
   lookup,
   report,
+  refine_partition_wrapped,
+  partition_cache,
   visited = list()
 ) {
   node_string <- paste0(
@@ -163,7 +173,7 @@ FDHitsSep_visit <- function(
     # => S isn't irreducible for A
     crits <- critical(C, A, S, D)
     if (length(crits) == 0)
-      return(list(list(), D, list()))
+      return(list(list(), D, list(), partition_cache))
     for (B in V) {
       # remove B from V if ∃ C∈S ∀ E∈critical(C,A,S): B∈E,
       # i.e. adding B to S would make some C in S redundant WRT A
@@ -175,18 +185,12 @@ FDHitsSep_visit <- function(
   # validation at the leaves
   uncovered <- uncov_sep(S, A, D)
   if (length(uncovered) == 0) {
-    Spli <- if (length(S) == 0) {
-      if (nrow(lookup) <= 1)
-        list()
-      else
-        list(seq_len(nrow(lookup)))
-    }else
-      pli(do.call(paste, unname(lookup[S])))
-    A_indices <- lookup[[A]]
-    relevant_Spli <- filter_partition(Spli, A_indices)
-    refined_partitions <- list(refine_partition(relevant_Spli, A_indices))
+    refinement <- refine_partition_wrapped(A, S, partition_cache)
+    refined_partitions <- list(refinement[[1]])
+    relevant_Spli <- refinement[[2]]
+    partition_cache <- refinement[[3]]
     if (validate(refined_partitions, relevant_Spli))
-      return(list(list(list(S, A)), D, list()))
+      return(list(list(list(S, A)), D, list(), partition_cache))
     stopifnot(length(relevant_Spli) > 0)
     ds <- new_diffset(relevant_Spli, refined_partitions, lookup)
     dsl <- list(ds)
@@ -217,7 +221,7 @@ FDHitsSep_visit <- function(
     rev(seq_along(Bs)),
     \(n) list(sort(union(S, Bs[[n]])), setdiff(V, Bs[seq_len(n)]), A)
   )
-  list(res, D, new_nodes)
+  list(res, D, new_nodes, partition_cache)
 }
 
 FDHitsJoint_visit <- function(
@@ -408,6 +412,151 @@ sample_minheur_sep <- function(set, V) {
     integer(1)
   )
   set[[which.min(heuristics)]]
+}
+
+partition_refiner <- function(df) {
+  partitions_ui <- list(
+    # we could use the partkey directly as an index into a list of
+    # pre-allocated length, but this often requires a very large list that is
+    # slow to assign elements in, so we stick to matching on a growing list
+    # here.
+    # It would also require the partkey to be representable as an integer,
+    # rather than a double, which introduces a tighter constraint on the maximum
+    # number of columns df can have (nonfixed attrs instead of just LHS attrs).
+    # "Partition nodes" in this UI refer to IDs within the partition: these are
+    # different to those used in find_LHSs and powersets.
+    add_partition = function(partition_node, val, partitions) {
+      partitions$key <- c(partitions$key, partition_node)
+      partitions$value <- c(partitions$value, list(val))
+      partitions
+    },
+    get_with_index = function(index, partitions) {
+      partitions$value[[index]]
+    },
+    lookup_node = function(partition_node, partitions) {
+      match(partition_node, partitions$key)
+    }
+  )
+  fetch_partition <- function(attr_indices, df, partitions) {
+    fetch_partition_stripped(attr_indices, df, partitions, partitions_ui)
+  }
+  function(rhs, lhs_set, partitions) {
+    refine_partition_generic(
+      df,
+      rhs,
+      lhs_set,
+      partitions,
+      fetch_partition
+    )
+  }
+}
+
+fetch_partition_stripped <- function(
+  attr_indices,
+  df,
+  partitions,
+  partitions_ui
+) {
+  attr_nodes <- to_partition_nodes_char(attr_indices)
+  partition_node <- to_partition_node_char(attr_indices)
+  partkey <- partitions_ui$lookup_node(partition_node, partitions)
+  if (!is.na(partkey)) {
+    sp <- partitions_ui$get_with_index(partkey, partitions)
+    return(list(sp, partitions))
+  }
+  subset_nodes <- vapply(
+    seq_along(attr_indices),
+    \(n) paste(attr_nodes[-n], collapse = ""),
+    character(1)
+  )
+  subsets_match <- vapply(
+    subset_nodes,
+    partitions_ui$lookup_node,
+    integer(1L),
+    partitions
+  )
+  if (sum(!is.na(subsets_match)) >= 2) {
+    indices <- which(!is.na(subsets_match))[1:2]
+    sp <- stripped_partition_product(
+      partitions_ui$get_with_index(subsets_match[indices[[1]]], partitions),
+      partitions_ui$get_with_index(subsets_match[indices[[2]]], partitions),
+      nrow(df)
+    )
+  }else{
+    if (sum(!is.na(subsets_match)) == 1 && length(attr_indices) > 1) {
+      index <- which(!is.na(subsets_match))
+      small_subset <- attr_indices[[index]]
+      small_subset_node <- attr_nodes[[index]]
+      main_partition <- partitions_ui$get_with_index(
+        subsets_match[index],
+        partitions
+      )
+      subres <- fetch_partition_stripped(
+        small_subset,
+        df,
+        partitions,
+        partitions_ui
+      )
+      partitions <- subres[[2]]
+      small_partition <- partitions_ui$get_with_index(
+        partitions_ui$lookup_node(small_subset_node, partitions),
+        partitions
+      )
+      sp <- stripped_partition_product(
+        main_partition,
+        small_partition,
+        nrow(df)
+      )
+    }else{
+      sp <- fsplit_rows_emptyable(df, attr_indices)
+      sp <- unname(sp[lengths(sp) > 1])
+    }
+  }
+  partitions <- partitions_ui$add_partition(partition_node, sp, partitions)
+  list(sp, partitions)
+}
+
+to_partition_nodes_char <- function(attr_indices) {
+  chars <- vapply(
+    attr_indices,
+    \(n) rawToChar(packBits(intToBits(n), "raw"), multiple = FALSE),
+    character(1)
+  )
+  stopifnot(all(nchar(chars) == 1))
+  chars
+}
+
+to_partition_node_char <- function(attr_indices) {
+  chars <- vapply(
+    attr_indices,
+    \(n) rawToChar(packBits(intToBits(n), "raw"), multiple = FALSE),
+    character(1)
+  )
+  stopifnot(all(nchar(chars) == 1))
+  paste(chars, collapse = "")
+}
+
+fsplit_rows_emptyable <- function(df, attr_indices) {
+  if (length(attr_indices) == 0)
+    return(list(seq_len(nrow(df))))
+  fsplit_rows(df, attr_indices)
+}
+
+refine_partition_generic <- function(
+  lookup,
+  rhs,
+  lhs_set,
+  partition_cache,
+  fetch_partition
+) {
+  res1 <- fetch_partition(lhs_set, lookup, partition_cache)
+  part_lhs <- res1[[1]]
+  rhs_indices <- lookup[[rhs]]
+  relevant_lhs <- filter_partition(part_lhs, rhs_indices)
+  if (partition_rank(relevant_lhs) == 0)
+    return(list(list(), list(), res1[[2]]))
+  partition_cache <- res1[[2]]
+  list(refine_partition(relevant_lhs, rhs_indices), relevant_lhs, partition_cache)
 }
 
 validate <- function(new_partitions, Spli) {
