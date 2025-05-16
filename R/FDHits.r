@@ -83,6 +83,8 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
   res <- list()
   return_stack <- list(list(integer(), determinants, dependants))
   visited <- list()
+  refine_partition_wrapped <- partition_refiner(lookup)
+  partition_cache <- list(key = character(), value = list())
   while (length(return_stack) > 0) {
     node <- return_stack[[1]]
     return_stack <- return_stack[-1]
@@ -93,6 +95,8 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
       D,
       lookup,
       report = report,
+      refine_partition_wrapped,
+      partition_cache,
       visited = visited
     )
     visited <- c(visited, list(node[c(1, 3)]))
@@ -110,8 +114,13 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
   }
   report$stat(paste0(
     "\n",
-    with_number(length(D), "final diffset", "\n", "s\n"),
-    with_number(length(visited), "node", " visited", "s visited")
+    "FDHitsJoint complete",
+    "\n",
+    with_number(length(D), "final diffset", "", "s"),
+    "\n",
+    with_number(length(visited), "node", " visited", "s visited"),
+    "\n",
+    with_number(length(partition_cache$key), "partition", " cached", "s cached")
   ))
   res <- lapply(res, lapply, \(x) attrs[x])
   # split up into one-dependant FDs
@@ -189,7 +198,7 @@ FDHitsSep_visit <- function(
   uncovered <- uncov_sep(S, A, D)
   if (length(uncovered) == 0) {
     refinement <- refine_partition_wrapped(A, S, partition_cache)
-    refined_partitions <- list(refinement[[1]])
+    refined_partitions <- refinement[[1]]
     relevant_Spli <- refinement[[2]]
     partition_cache <- refinement[[3]]
     if (validate(refined_partitions, relevant_Spli))
@@ -234,6 +243,8 @@ FDHitsJoint_visit <- function(
   D,
   lookup,
   report,
+  refine_partition_wrapped,
+  partition_cache,
   visited = list()
 ) {
   node_string <- paste0(
@@ -317,21 +328,10 @@ FDHitsJoint_visit <- function(
   # validation at the leaves
   uncovered <- uncov_joint(S, W, D)
   if (length(uncovered) == 0) {
-    Spli <- if (length(S) == 0) {
-      if (nrow(lookup) <= 1)
-        list()
-      else
-        list(seq_len(nrow(lookup)))
-    }else
-      pli(do.call(paste, unname(lookup[S])))
-    W_individual_indices <- unname(lookup[W])
-    W_indices <- do.call(paste, W_individual_indices) |>
-      (\(x) match(x, x))()
-    relevant_Spli <- filter_partition(Spli, W_indices)
-    refined_partitions <- lapply(
-      W_individual_indices,
-      \(A_indices) refine_partition(relevant_Spli, A_indices)
-    )
+    refinement <- refine_partition_wrapped(W, S, partition_cache)
+    refined_partitions <- refinement[[1]]
+    relevant_Spli <- refinement[[2]]
+    partition_cache <- refinement[[3]]
     if (validate(refined_partitions, relevant_Spli))
       return(list(list(list(S, W)), D, list()))
     stopifnot(length(relevant_Spli) > 0)
@@ -553,13 +553,23 @@ refine_partition_generic <- function(
   fetch_partition
 ) {
   res1 <- fetch_partition(lhs_set, lookup, partition_cache)
-  part_lhs <- res1[[1]]
-  rhs_indices <- lookup[[rhs]]
-  relevant_lhs <- filter_partition(part_lhs, rhs_indices)
-  if (partition_rank(relevant_lhs) == 0)
-    return(list(list(), list(), res1[[2]]))
+  lhs_partition <- res1[[1]]
   partition_cache <- res1[[2]]
-  list(refine_partition(relevant_lhs, rhs_indices), relevant_lhs, partition_cache)
+  individual_rhs_indices <- lapply(rhs, \(r) lookup[[r]])
+  rhs_indices <- if (length(rhs) == 1)
+    individual_rhs_indices[[1]]
+  else {
+    do.call(paste, unname(lookup[rhs])) |>
+      (\(x) match(x, x))()
+  }
+  relevant_lhs_partition <- filter_partition(lhs_partition, rhs_indices)
+  if (partition_rank(relevant_lhs_partition) == 0)
+    return(list(rep(list(list()), length(rhs)), list(), partition_cache))
+  list(
+    lapply(individual_rhs_indices, \(r) refine_partition(relevant_lhs_partition, r)),
+    relevant_lhs_partition,
+    partition_cache
+  )
 }
 
 validate <- function(new_partitions, Spli) {
