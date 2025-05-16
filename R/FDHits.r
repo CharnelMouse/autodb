@@ -65,6 +65,9 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
     n_visited <- n_visited + length(visited)
   }
   report$stat(paste0(
+    "\n",
+    "FDHitsSep complete",
+    "\n",
     with_number(length(D), "final diffset", "", "s"),
     "\n",
     with_number(n_visited, "node", " visited", "s visited"),
