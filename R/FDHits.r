@@ -520,23 +520,11 @@ fetch_partition_stripped <- function(
 }
 
 to_partition_nodes_char <- function(attr_indices) {
-  chars <- vapply(
-    attr_indices,
-    \(n) rawToChar(packBits(intToBits(n), "raw"), multiple = FALSE),
-    character(1)
-  )
-  stopifnot(all(nchar(chars) == 1))
-  chars
+  as.character(attr_indices)
 }
 
 to_partition_node_char <- function(attr_indices) {
-  chars <- vapply(
-    attr_indices,
-    \(n) rawToChar(packBits(intToBits(n), "raw"), multiple = FALSE),
-    character(1)
-  )
-  stopifnot(all(nchar(chars) == 1))
-  paste(chars, collapse = "")
+  toString(attr_indices)
 }
 
 fsplit_rows_emptyable <- function(df, attr_indices) {
