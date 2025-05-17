@@ -28,7 +28,10 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
   res <- list()
   n_visited <- 0L
   refine_partition_wrapped <- partition_refiner(lookup)
-  partition_cache <- list(key = character(), value = list())
+  partition_cache <- list(
+    key = as.character(seq_along(attrs)),
+    value = lapply(unname(as.list(lookup)), pli)
+  )
   for (A in dependants) {
     report$stat(paste("dependant", attrs[A]))
     rest <- determinants[determinants != A]
@@ -84,7 +87,10 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
   return_stack <- list(list(integer(), determinants, dependants))
   visited <- list()
   refine_partition <- partition_refiner(lookup)
-  partition_cache <- list(key = character(), value = list())
+  partition_cache <- list(
+    key = as.character(seq_along(attrs)),
+    value = lapply(unname(as.list(lookup)), pli)
+  )
   while (length(return_stack) > 0) {
     node <- return_stack[[1]]
     return_stack <- return_stack[-1]
@@ -469,7 +475,7 @@ fetch_partition_stripped <- function(
   }
   subset_nodes <- vapply(
     seq_along(attr_indices),
-    \(n) paste(attr_nodes[-n], collapse = ""),
+    \(n) toString(attr_nodes[-n]),
     character(1)
   )
   subsets_match <- vapply(
