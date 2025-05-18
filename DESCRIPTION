@@ -28,14 +28,15 @@ Depends:
 Imports:
     rlang
 Suggests:
-    spelling, 
+    spelling,
     DiagrammeR (>= 1.0.7),
     testthat (>= 3.1.4),
     R.utils (>= 2.11.0),
     hedgehog (>= 0.1),
-    tibble(>= 3.2.1),
+    tibble (>= 3.2.1),
     knitr,
     rmarkdown
+Config/testthat/edition: 3
 VignetteBuilder: knitr
 LazyData: true
 URL: https://charnelmouse.github.io/autodb/, https://github.com/CharnelMouse/autodb
