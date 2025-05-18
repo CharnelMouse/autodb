@@ -53,7 +53,6 @@ db
 #> Time_Chick.{Chick} -> Chick.{Chick}
 graphviz_text <- gv(db)
 DiagrammeR::grViz(graphviz_text)
-#> Google Chrome was not found. Try setting the `CHROMOTE_CHROME` environment variable to the executable of a Chromium-based browser, such as Google Chrome, Chromium or Brave.
 ```
 
 <img src="man/figures/README-example-1.png" width="100%" />
