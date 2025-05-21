@@ -721,9 +721,10 @@ find_closure <- function(attrs, determinant_sets, dependants) {
         stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(dep)))
       if (all(is.element(det_set, attrs))) {
         checked[n] <- TRUE
-        if (!is.element(dep, attrs))
+        if (!is.element(dep, attrs)) {
           change <- TRUE
           attrs <- c(attrs, dep)
+        }
       }
     }
   }
