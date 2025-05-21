@@ -55,8 +55,8 @@ reduce.database <- function(x, ...) {
   }
   sorted_kept <- kept[order(match(kept, names(x)))]
   new_rels <- unclass(x)[sorted_kept]
-  database(
-    relation(
+  database_nocheck(
+    relation_nocheck(
       new_rels,
       attrs_order(x)
     ),
