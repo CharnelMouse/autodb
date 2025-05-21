@@ -6,6 +6,7 @@
 * `relation` and `database` methods for `rename_attrs` and `gv` now run significantly more quickly for large data sets, due to not re-running all the key validity checks.
 * Removed the unnecessary validity checks from the `database` method for `reduce`, so that it runs more quickly, especially for databases with a large number of records.
 * Removed unnecessary validity checks from the `database_schema` and `database` methods for `[`.
+* Removed unnecessary closure calculations in `normalise`.
 * Added a `check` parameter to `decompose`, to allow skipping some checks if the data frame to decompose is the one used to create the schema.
 * Handing for numerical/complex variables is more consistent:
     * Values are now rounded by significant digits, as intended, rather than by decimal places.

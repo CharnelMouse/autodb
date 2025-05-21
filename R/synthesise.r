@@ -168,7 +168,7 @@ remove_extraneous_attributes <- function(deps) {
     rhs <- dps[[n]]
     for (attr in lhs) {
       y_ <- setdiff(dts[[n]], attr)
-      if (rhs %in% find_closure(y_, dts, dps)) {
+      if (check_closure1(y_, rhs, dts, dps)) {
         dts[[n]] <- y_
       }
     }
@@ -204,12 +204,12 @@ remove_extraneous_dependencies <- function(fds) {
       other_det_sets <- new_det_sets[-n]
       other_deps <- new_deps[-n]
       other_rem <- rem[-n]
-      closure <- find_closure(
+      rem[n] <- check_closure1(
         det_set,
+        dep,
         other_det_sets[!other_rem],
         other_deps[!other_rem]
       )
-      rem[n] <- (dep %in% closure)
     }
     new_det_sets <- new_det_sets[!rem]
     new_deps <- new_deps[!rem]
@@ -360,8 +360,9 @@ remove_transitive_dependencies <- function(vecs) {
     keys <- vecs$partition_keys[[flat_groups[n]]]
     key_attrs <- unique(unlist(keys))
     if (!is.element(RHS, key_attrs)) {
-      closure_without <- find_closure(
+      if (check_closure1(
         key_attrs,
+        RHS,
         c(
           flat_partition_determinant_set[-n][!transitive[-n]],
           flat_bijection_determinant_sets
@@ -370,8 +371,7 @@ remove_transitive_dependencies <- function(vecs) {
           flat_partition_dependants[-n][!transitive[-n]],
           flat_bijection_dependants
         )
-      )
-      if (is.element(RHS, closure_without))
+      ))
         transitive[n] <- TRUE
     }
   }
@@ -545,7 +545,7 @@ remove_avoidable_attributes <- function(vecs) {
       X <- Kp[[1]]
       Gp_det_sets <- lapply(unlist(Gp, recursive = FALSE), `[[`, 1)
       Gp_deps <- vapply(unlist(Gp, recursive = FALSE), `[[`, integer(1), 2)
-      if (!is.element(attr, find_closure(X, Gp_det_sets, Gp_deps)))
+      if (!check_closure1(X, attr, Gp_det_sets, Gp_deps))
         next
 
       # check nonessentiality
@@ -555,17 +555,11 @@ remove_avoidable_attributes <- function(vecs) {
       for (X_i in setdiff(K, Kp)) {
         if (
           superfluous &&
-          any(!is.element(
-            relation_attrs,
-            find_closure(X_i, Gp_det_sets, Gp_deps)
-          ))
+          any(!check_closure(X_i, relation_attrs, Gp_det_sets, Gp_deps))
         ) {
           M <- find_closure(X_i, Gp_det_sets, Gp_deps)
           Mp <- setdiff(intersect(M, relation_attrs), attr)
-          if (any(!is.element(
-            relation_attrs,
-            find_closure(Mp, G_det_sets, G_deps)
-          )))
+          if (any(!check_closure(Mp, relation_attrs, G_det_sets, G_deps)))
             superfluous <- FALSE
           else{
             # LTK paper version says to "insert into [Kp] any key of [relation]
@@ -683,12 +677,12 @@ minimal_subset <- function(
     for (n in rev(seq_along(key)[keep])) {
       temp_keep <- keep
       temp_keep[n] <- FALSE
-      temp_closure <- find_closure(
+      if (all(check_closure(
         key[temp_keep],
+        determines,
         determinant_sets,
         dependants
-      )
-      if (all(determines %in% temp_closure)) {
+      ))) {
         keep <- temp_keep
         changed <- TRUE
       }
@@ -705,6 +699,66 @@ convert_to_character_attributes <- function(vecs) {
 
 name_dataframe <- function(index) {
   paste(index, collapse = "_")
+}
+
+check_closure1 <- function(attrs, target, determinant_sets, dependants) {
+  stopifnot(length(target) == 1)
+  if (target %in% attrs)
+    return(TRUE)
+  if (length(dependants) == 0)
+    return(FALSE)
+  checked <- rep(FALSE, length(dependants))
+  change <- TRUE
+  while (change) {
+    change <- FALSE
+    for (n in seq_along(dependants)[!checked]) {
+      det_set <- determinant_sets[[n]]
+      dep <- dependants[n]
+      if (length(dep) != 1)
+        stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(dep)))
+      if (all(is.element(det_set, attrs))) {
+        if (target == dep)
+          return(TRUE)
+        checked[n] <- TRUE
+        if (!is.element(dep, attrs)) {
+          change <- TRUE
+          attrs <- c(attrs, dep)
+        }
+      }
+    }
+  }
+  FALSE
+}
+
+check_closure <- function(attrs, targets, determinant_sets, dependants) {
+  found <- rep(FALSE, length(targets))
+  found[targets %in% attrs] <- TRUE
+  if (length(dependants) == 0 || all(found))
+    return(found)
+  checked <- rep(FALSE, length(dependants))
+  change <- TRUE
+  while (change) {
+    change <- FALSE
+    for (n in seq_along(dependants)[!checked]) {
+      det_set <- determinant_sets[[n]]
+      dep <- dependants[n]
+      if (length(dep) != 1)
+        stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(dep)))
+      if (all(is.element(det_set, attrs))) {
+        checked[n] <- TRUE
+        if (!is.element(dep, attrs)) {
+          if (is.element(dep, targets)) {
+            found[match(dep, targets)] <- TRUE
+            if (all(found))
+              return(found)
+          }
+          change <- TRUE
+          attrs <- c(attrs, dep)
+        }
+      }
+    }
+  }
+  found
 }
 
 find_closure <- function(attrs, determinant_sets, dependants) {
