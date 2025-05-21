@@ -482,7 +482,7 @@ insert.database <- function(
     names(x),
     names(new_relations)
   )
-  database(new_relations, kept_rels)
+  database_nocheck(new_relations, kept_rels)
 }
 
 #' @export

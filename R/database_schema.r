@@ -376,7 +376,7 @@ merge_schemas.database_schema <- function(x, to_remove, merge_into, ...) {
     names(x),
     names(new_schemas)
   )
-  database_schema(new_schemas, kept_rels)
+  database_schema_nocheck(new_schemas, kept_rels)
 }
 
 #' @export
