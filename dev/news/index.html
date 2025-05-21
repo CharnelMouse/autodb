@@ -46,6 +46,9 @@
 <ul><li>Added the new FDHits search algorithm as an alternative option to DFD in <code>discover</code>.</li>
 <li>
 <code>relation</code> and <code>database</code> methods for <code>rename_attrs</code> and <code>gv</code> now run significantly more quickly for large data sets, due to not re-running all the key validity checks.</li>
+<li>Removed the unnecessary validity checks from the <code>database</code> method for <code>reduce</code>, so that it runs more quickly, especially for databases with a large number of records.</li>
+<li>Removed unnecessary validity checks from the <code>database_schema</code> and <code>database</code> methods for <code>[</code>.</li>
+<li>Removed unnecessary closure calculations in <code>normalise</code>.</li>
 <li>Added a <code>check</code> parameter to <code>decompose</code>, to allow skipping some checks if the data frame to decompose is the one used to create the schema.</li>
 <li>Handing for numerical/complex variables is more consistent:
 <ul><li>Values are now rounded by significant digits, as intended, rather than by decimal places.</li>
