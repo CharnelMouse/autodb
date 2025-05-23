@@ -203,7 +203,9 @@ FDHitsSep_visit <- function(
   # validation at the leaves
   uncovered <- uncov_sep(S, A, D)
   if (length(uncovered) == 0) {
-    refinement <- refine_partition_wrapped(A, S, partition_cache)
+    A_bitset <- refine_partition_wrapped$as.bitset(A)
+    S_bitset <- refine_partition_wrapped$as.bitset(S)
+    refinement <- refine_partition_wrapped$refine(A_bitset, S_bitset, partition_cache)
     refined_partitions <- refinement[[1]]
     relevant_Spli <- refinement[[2]]
     partition_cache <- refinement[[3]]
@@ -334,7 +336,9 @@ FDHitsJoint_visit <- function(
   # validation at the leaves
   uncovered <- uncov_joint(S, W, D)
   if (length(uncovered) == 0) {
-    refinement <- refine_partition(W, S, partition_cache)
+    W_bitset <- refine_partition$as.bitset(W)
+    S_bitset <- refine_partition$as.bitset(S)
+    refinement <- refine_partition$refine(W_bitset, S_bitset, partition_cache)
     refined_partitions <- refinement[[1]]
     relevant_Spli <- refinement[[2]]
     partition_cache <- refinement[[3]]
@@ -450,16 +454,20 @@ partition_refiner <- function(df) {
   fetch_partition <- function(attrs_bitset, df, partitions) {
     fetch_partition_stripped(attrs_bitset, df, partitions, partitions_ui)
   }
-  function(rhs, lhs_set, partitions) {
-    fetch_refined_partition(
-      df,
-      bitlen,
-      rhs,
-      lhs_set,
-      partitions,
-      fetch_partition
-    )
-  }
+  list(
+    as.bitset = function(set) {
+      bitset(set, bitlen)
+    },
+    refine = function(rhs_bitset, lhs_bitset, partitions) {
+      fetch_refined_partition(
+        df,
+        rhs_bitset,
+        lhs_bitset,
+        partitions,
+        fetch_partition
+      )
+    }
+  )
 }
 
 fetch_partition_stripped <- function(
@@ -550,13 +558,12 @@ fsplit_rows_emptyable <- function(df, attr_indices) {
 
 fetch_refined_partition <- function(
   lookup,
-  bitlen,
-  rhs,
-  lhs_set,
+  rhs_bitset,
+  lhs_bitset,
   partition_cache,
   fetch_partition
 ) {
-  lhs_bitset <- bitset(lhs_set, bitlen)
+  rhs <- which(rawToBits(rhs_bitset) == 1)
   res1 <- fetch_partition(lhs_bitset, lookup, partition_cache)
   lhs_partition <- res1[[1]]
   partition_cache <- res1[[2]]
