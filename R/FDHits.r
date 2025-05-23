@@ -69,7 +69,7 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
       return_stack <- c(
         new_nodes[vapply(
           new_nodes,
-          \(node) sum(intToBits(node[[1]]) == 1) <= detset_limit,
+          \(node) partition_handler$key_size(node[[1]]) <= detset_limit,
           logical(1)
         )],
         return_stack
@@ -135,7 +135,7 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
     return_stack <- c(
       new_nodes[vapply(
         new_nodes,
-        \(node) length(node[[1]]) <= detset_limit,
+        \(node) partition_handler$key_size(node[[1]]) <= detset_limit,
         logical(1)
       )],
       return_stack
@@ -416,6 +416,7 @@ bitset_partition_handler <- function(df) {
   }
   list(
     as.bitset = bitset_partitions_ui$key,
+    key_size = bitset_partitions_ui$key_size,
     refine = function(rhs_bitset, lhs_bitset, partitions) {
       fetch_refined_partition(
         df,
