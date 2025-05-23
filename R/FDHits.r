@@ -43,21 +43,23 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
     while (length(return_stack) > 0) {
       node <- return_stack[[1]]
       return_stack <- return_stack[-1]
-      attr_res <- FDHitsSep_visit(
-        node[[1]],
-        node[[2]],
-        node[[3]],
-        D,
-        lookup,
-        report = report,
-        partition_handler,
-        partition_cache,
-        visited = visited
-      )
       node_string <- paste0(
         paste(node[[1]], collapse = ""),
         paste(node[[2]], collapse = ""),
         paste(node[[3]], collapse = "")
+      )
+      if (is.element(node_string, visited))
+        stop("node ", node_string, " already visited")
+      attr_res <- FDHitsSep_visit(
+        node[[1]],
+        node[[2]],
+        node[[3]],
+        node_string,
+        D,
+        lookup,
+        report = report,
+        partition_handler,
+        partition_cache
       )
       visited <- c(visited, node_string)
       res <- c(res, attr_res[[1]])
@@ -108,21 +110,23 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
   while (length(return_stack) > 0) {
     node <- return_stack[[1]]
     return_stack <- return_stack[-1]
-    attr_res <- FDHitsJoint_visit(
-      node[[1]],
-      node[[2]],
-      node[[3]],
-      D,
-      lookup,
-      report = report,
-      partition_handler,
-      partition_cache,
-      visited = visited
-    )
     node_string <- paste0(
       paste(node[[1]], collapse = ""),
       paste(node[[2]], collapse = ""),
       paste(node[[3]], collapse = "")
+    )
+    if (is.element(node_string, visited))
+      stop("node ", node_string, " already visited")
+    attr_res <- FDHitsJoint_visit(
+      node[[1]],
+      node[[2]],
+      node[[3]],
+      node_string,
+      D,
+      lookup,
+      report = report,
+      partition_handler,
+      partition_cache
     )
     visited <- c(visited, node_string)
     res <- c(res, attr_res[[1]])
@@ -158,6 +162,7 @@ FDHitsSep_visit <- function(
   S_bitset,
   V_bitset,
   A_bitset,
+  node_string,
   D_bitsets,
   lookup,
   report,
@@ -165,13 +170,6 @@ FDHitsSep_visit <- function(
   partition_cache,
   visited = character()
 ) {
-  node_string <- paste0(
-    paste(S_bitset, collapse = ""),
-    paste(V_bitset, collapse = ""),
-    paste(A_bitset, collapse = "")
-  )
-  if (is.element(node_string, visited))
-    stop("node ", node_string, " already visited")
   # pruning
   for (C in individual_bitsets(S_bitset)) {
     # no critical edge for C
@@ -231,20 +229,13 @@ FDHitsJoint_visit <- function(
   S_bitset,
   V_bitset,
   W_bitset,
+  node_string,
   D_bitsets,
   lookup,
   report,
   partition_handler,
-  partition_cache,
-  visited = list()
+  partition_cache
 ) {
-  node_string <- paste0(
-    paste(S_bitset, collapse = ""),
-    paste(V_bitset, collapse = ""),
-    paste(W_bitset, collapse = "")
-  )
-  if (is.element(node_string, visited))
-    stop("node ", node_string, " already visited")
   # pruning
   critical_edges <- list()
   for (A in individual_bitsets(W_bitset)) {
