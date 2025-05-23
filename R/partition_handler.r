@@ -47,9 +47,9 @@ bitset_partition_handler <- function(df) {
       sp <- fsplit_rows_emptyable(df, attr_indices)
       unname(sp[lengths(sp) > 1])
     },
-    add_partition = function(hash, val, partitions) {
+    add_partition = function(hash, partition, partitions) {
       partitions$key <- c(partitions$key, hash)
-      partitions$value <- c(partitions$value, list(val))
+      partitions$value <- c(partitions$value, list(partition))
       partitions
     }
   )
@@ -199,6 +199,7 @@ integer_partition_handler <- function(df, accuracy, cache) {
   # Hash: key transformed into a string for lookup (lookup uses hash, not key)
   # functions:
   # key: Set -> Key
+  # component_keys: Set -> [Key] (equivalent to key >> decompose_key)
   # hash: Key -> Hash
   # unkey: Key -> Set
   # key_size: Key -> Int
@@ -224,6 +225,8 @@ integer_partition_handler <- function(df, accuracy, cache) {
 
   threshold <- ceiling(nrow(df)*accuracy)
 
+  component_keys <- function(set) as.list(to_partition_nodes(set))
+  unkey <- function(key) which(intToBits(key) == 1)
   partitions_ui <- list(
     # we could use the partkey directly as an index into a list of
     # pre-allocated length, but this often requires a very large list that is
@@ -234,16 +237,21 @@ integer_partition_handler <- function(df, accuracy, cache) {
     # number of columns df can have (nonfixed attrs instead of just LHS attrs).
     # "Partition nodes" in this UI refer to IDs within the partition: these are
     # different to those used in find_LHSs and powersets.
-    add_partition = function(partition_node, val, partitions) {
-      partitions$key <- c(partitions$key, partition_node)
-      partitions$value <- c(partitions$value, list(val))
+    key = function(set) to_partition_node(set),
+    component_keys = function(set) component_keys(set),
+    unkey = function(key) unkey(key),
+    decompose_key = function(key) component_keys(unkey(key)),
+    key_children = function(key) lapply(component_keys(unkey(key)), \(ck) key - ck),
+    add_partition = function(hash, partition, partitions) {
+      partitions$key <- c(partitions$key, hash)
+      partitions$value <- c(partitions$value, list(partition))
       partitions
     },
     get_with_index = function(index, partitions) {
       partitions$value[[index]]
     },
-    lookup_node = function(partition_node, partitions) {
-      match(partition_node, partitions$key)
+    lookup_hash = function(hash, partitions) {
+      match(hash, partitions$key)
     }
   )
 
@@ -337,8 +345,8 @@ check_FD_partition_nclass <- function(
   # This only returns the number |p| of equivalence classes in the partition p,
   # not its contents. This is less demanding on memory than storing stripped
   # partitions, but we cannot efficiently calculate the partition for supersets.
-  partition_node <- to_partition_node(attr_indices)
-  partkey <- partitions_ui$lookup_node(partition_node, partitions)
+  partition_node <- partitions_ui$key(attr_indices)
+  partkey <- partitions_ui$lookup_hash(partition_node, partitions)
   if (!is.na(partkey)) {
     return(list(partitions_ui$get_with_index(partkey, partitions), partitions))
   }
@@ -354,9 +362,9 @@ check_FD_partition_stripped <- function(
   partitions,
   partitions_ui
 ) {
-  attr_nodes <- to_partition_nodes(attr_indices)
-  partition_node <- sum(attr_nodes)
-  partkey <- partitions_ui$lookup_node(partition_node, partitions)
+  partition_node <- partitions_ui$key(attr_indices)
+  attr_nodes <- as.integer(unlist(partitions_ui$component_keys(attr_indices)))
+  partkey <- partitions_ui$lookup_hash(partition_node, partitions)
   if (!is.na(partkey)) {
     sp <- partitions_ui$get_with_index(partkey, partitions)
     return(list(partition_rank(sp), partitions))
@@ -364,7 +372,7 @@ check_FD_partition_stripped <- function(
   subset_nodes <- partition_node - attr_nodes
   subsets_match <- vapply(
     subset_nodes,
-    partitions_ui$lookup_node,
+    partitions_ui$lookup_hash,
     integer(1L),
     partitions
   )
@@ -392,7 +400,7 @@ check_FD_partition_stripped <- function(
       )
       partitions <- subres[[2]]
       small_partition <- partitions_ui$get_with_index(
-        partitions_ui$lookup_node(small_subset_node, partitions),
+        partitions_ui$lookup_hash(small_subset_node, partitions),
         partitions
       )
       sp <- stripped_partition_product(
@@ -419,13 +427,13 @@ check_AD_cache <- function(
   partitions_ui
 ) {
   # e(lhs_set -> rhs)
-  lhs_set_partition_node <- to_partition_node(lhs_set)
-  rhs_partition_node <- to_partition_nodes(rhs)
-  ind_lhs <- partitions_ui$lookup_node(lhs_set_partition_node, partitions)
+  lhs_set_partition_node <- partitions_ui$key(lhs_set)
+  rhs_partition_node <- as.integer(unlist(partitions_ui$component_keys(rhs)))
+  ind_lhs <- partitions_ui$lookup_hash(lhs_set_partition_node, partitions)
   stopifnot(!is.na(ind_lhs))
   classes_lhs <- partitions_ui$get_with_index(ind_lhs, partitions)
   classes_lhs_node <- lhs_set_partition_node + rhs_partition_node
-  ind_union <- partitions_ui$lookup_node(classes_lhs_node, partitions)
+  ind_union <- partitions_ui$lookup_hash(classes_lhs_node, partitions)
   stopifnot(!is.na(ind_union))
   classes_union <- partitions_ui$get_with_index(ind_union, partitions)
   e <- 0L

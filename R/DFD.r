@@ -114,7 +114,7 @@ DFD <- function(
     # cache generated powerset and reductions, otherwise we spend a lot
     # of time duplicating reduction work
     all_powersets <- stats::setNames(list(powerset), max_n_lhs_attrs)
-    compute_partitions <- integer_partition_handler(
+    partition_handler <- integer_partition_handler(
       unname(lookup[, nonfixed, drop = FALSE]),
       accuracy,
       full_cache
@@ -155,7 +155,7 @@ DFD <- function(
           nodes,
           n_lhs_attrs,
           partitions,
-          compute_partitions,
+          partition_handler,
           bijection_candidate_nonfixed_indices,
           detset_limit,
           store_cache
@@ -232,7 +232,7 @@ find_LHSs_dfd <- function(
   nodes,
   n_lhs_attrs,
   partitions,
-  compute_partitions,
+  partition_handler,
   bijection_candidate_nonfixed_indices,
   detset_limit,
   store_cache = FALSE
@@ -326,7 +326,7 @@ find_LHSs_dfd <- function(
         }
         if (nodes$category[node] == 0L) {
           lhs_set <- lhs_nonfixed_indices[nodes$bits[[node]]]
-          cp <- compute_partitions(
+          cp <- partition_handler(
             rhs,
             lhs_set,
             partitions
