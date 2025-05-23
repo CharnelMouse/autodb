@@ -1,8 +1,6 @@
 # Various tests should have random accuracy draws, probably with lots of
 # weight on 1
 
-library(R.utils)
-
 describe("discover", {
   expect_equiv_deps <- function(deps1, deps2) {
     expect_setequal(attrs_order(deps1), attrs_order(deps2))
@@ -71,7 +69,7 @@ describe("discover", {
   }
   terminates_then <- function(fn, accuracy, ...) {
     function(df) {
-      res <- withTimeout(discover(df, accuracy, ...), timeout = 5, onTimeout = "silent")
+      res <- R.utils::withTimeout(discover(df, accuracy, ...), timeout = 5, onTimeout = "silent")
       if (is.null(res)) {
         return(fail("discover() timed out"))
       }
@@ -81,22 +79,22 @@ describe("discover", {
   }
   both_terminate_then <- function(fn, accuracy, ...) {
     function(df1, df2) {
-      res1 <- withTimeout(discover(df1, accuracy, ...), timeout = 5, onTimeout = "silent")
+      res1 <- R.utils::withTimeout(discover(df1, accuracy, ...), timeout = 5, onTimeout = "silent")
       expect_true(!is.null(res1))
-      res2 <- withTimeout(discover(df2, accuracy, ...), timeout = 5, onTimeout = "silent")
+      res2 <- R.utils::withTimeout(discover(df2, accuracy, ...), timeout = 5, onTimeout = "silent")
       expect_true(!is.null(res2))
       fn(res1, res2)
     }
   }
   terminates_with_and_without_full_cache_then <- function(fn, accuracy, ...) {
     function(df) {
-      res_cache <- withTimeout(
+      res_cache <- R.utils::withTimeout(
         discover(df, accuracy, full_cache = TRUE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
       expect_true(!is.null(res_cache))
-      res_nocache <- withTimeout(
+      res_nocache <- R.utils::withTimeout(
         discover(df, accuracy, full_cache = FALSE, ...),
         timeout = 5,
         onTimeout = "silent"
@@ -107,13 +105,13 @@ describe("discover", {
   }
   terminates_with_and_without_store_cache_then <- function(fn, accuracy, ...) {
     function(df) {
-      res_store <- withTimeout(
+      res_store <- R.utils::withTimeout(
         discover(df, accuracy, full_cache = TRUE, store_cache = TRUE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
       expect_true(!is.null(res_store))
-      res_nostore <- withTimeout(
+      res_nostore <- R.utils::withTimeout(
         discover(df, accuracy, full_cache = TRUE, store_cache = FALSE, ...),
         timeout = 5,
         onTimeout = "silent"
@@ -124,14 +122,14 @@ describe("discover", {
   }
   terminates_with_and_without_bijection_skip_then <- function(fn, accuracy, ...) {
     function(df) {
-      res_skip <- withTimeout(
+      res_skip <- R.utils::withTimeout(
         discover(df, accuracy, full_cache = TRUE, store_cache = TRUE, skip_bijections = TRUE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
       if (is.null(res_skip))
         return(fail("discover() with bijection skip timed out"))
-      res_noskip <- withTimeout(
+      res_noskip <- R.utils::withTimeout(
         discover(df, accuracy, full_cache = TRUE, store_cache = TRUE, skip_bijections = FALSE, ...),
         timeout = 5,
         onTimeout = "silent"
@@ -362,9 +360,9 @@ describe("discover", {
     }
     both_bounds_terminate_then <- function(fn, ...) {
       function(df, low, high) {
-        res1 <- withTimeout(discover(df, low, ...), timeout = 5, onTimeout = "silent")
+        res1 <- R.utils::withTimeout(discover(df, low, ...), timeout = 5, onTimeout = "silent")
         expect_true(!is.null(res1))
-        res2 <- withTimeout(discover(df, high, ...), timeout = 5, onTimeout = "silent")
+        res2 <- R.utils::withTimeout(discover(df, high, ...), timeout = 5, onTimeout = "silent")
         expect_true(!is.null(res2))
         fn(res1, res2)
       }
@@ -511,7 +509,7 @@ describe("discover", {
     }
     terminates_with_exclusion_then_no_trival <- function(accuracy, ...) {
       function(df, attr) {
-        deps <- withTimeout(
+        deps <- R.utils::withTimeout(
           discover(df, accuracy, exclude = attr, ...),
           timeout = 5,
           onTimeout = "silent"
@@ -543,14 +541,14 @@ describe("discover", {
     exclude_and_exclude_class_terminate_then <- function(fn, accuracy, class, ...) {
       function(df) {
         attrs_with_class <- names(df)[vapply(df, inherits, logical(1), class)]
-        deps1 <- withTimeout(
+        deps1 <- R.utils::withTimeout(
           discover(df, accuracy, exclude = attrs_with_class, ...),
           timeout = 5,
           onTimeout = "silent"
         )
         if (is.null(deps1))
           return(fail("discover() with exclude timed out"))
-        deps2 <- withTimeout(
+        deps2 <- R.utils::withTimeout(
           discover(df, accuracy, exclude_class = class, ...),
           timeout = 5,
           onTimeout = "silent"
@@ -602,7 +600,7 @@ describe("discover", {
       method,
       ...
     ) {
-      by_arguments <- withTimeout(
+      by_arguments <- R.utils::withTimeout(
         discover(
           x,
           1,
@@ -616,7 +614,7 @@ describe("discover", {
       )
       if (is.null(by_arguments))
         return(fail("discover() with filtering arguments timed out"))
-      by_filtering <- withTimeout(
+      by_filtering <- R.utils::withTimeout(
         discover(x, 1, method = method, ...),
         timeout = 5,
         onTimeout = "silent"
@@ -1011,7 +1009,7 @@ describe("discover", {
           results <- lapply(
             arglists,
             \(lst) {
-              base <- withTimeout(
+              base <- R.utils::withTimeout(
                 do.call(discover, lst),
                 timeout = 5,
                 onTimeout = "silent"
