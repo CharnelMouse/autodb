@@ -27,17 +27,17 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
   attrs <- names(lookup)
   res <- list()
   n_visited <- 0L
-  refine_partition_wrapped <- partition_refiner(lookup)
+  partition_handler <- partition_refiner(lookup)
   partition_cache <- list(
     key = as.character(seq_along(attrs)),
     value = lapply(unname(as.list(lookup)), pli)
   )
-  D <- lapply(D, refine_partition_wrapped$as.bitset)
+  D <- lapply(D, partition_handler$as.bitset)
   for (A in dependants) {
     report$stat(paste("dependant", attrs[A]))
-    A_bitset <- refine_partition_wrapped$as.bitset(A)
-    rest <- refine_partition_wrapped$as.bitset(determinants[determinants != A])
-    empty <- refine_partition_wrapped$as.bitset(integer())
+    A_bitset <- partition_handler$as.bitset(A)
+    rest <- partition_handler$as.bitset(determinants[determinants != A])
+    empty <- partition_handler$as.bitset(integer())
     return_stack <- list(list(empty, rest, A_bitset))
     visited <- character()
     while (length(return_stack) > 0) {
@@ -50,7 +50,7 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
         D,
         lookup,
         report = report,
-        refine_partition_wrapped,
+        partition_handler,
         partition_cache,
         visited = visited
       )
@@ -93,12 +93,12 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
   attrs <- names(lookup)
   res <- list()
   visited <- character()
-  refine_partition <- partition_refiner(lookup)
+  partition_handler <- partition_refiner(lookup)
 
-  W_bitset <- refine_partition$as.bitset(dependants)
-  V_bitset <- refine_partition$as.bitset(determinants)
-  D <- lapply(D, refine_partition$as.bitset)
-  empty <- refine_partition$as.bitset(integer())
+  W_bitset <- partition_handler$as.bitset(dependants)
+  V_bitset <- partition_handler$as.bitset(determinants)
+  D <- lapply(D, partition_handler$as.bitset)
+  empty <- partition_handler$as.bitset(integer())
   return_stack <- list(list(empty, V_bitset, W_bitset))
 
   partition_cache <- list(
@@ -115,7 +115,7 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
       D,
       lookup,
       report = report,
-      refine_partition,
+      partition_handler,
       partition_cache,
       visited = visited
     )
@@ -161,7 +161,7 @@ FDHitsSep_visit <- function(
   D_bitsets,
   lookup,
   report,
-  refine_partition_wrapped,
+  partition_handler,
   partition_cache,
   visited = character()
 ) {
@@ -191,7 +191,7 @@ FDHitsSep_visit <- function(
   # validation at the leaves
   uncovered <- D_bitsets[uncov_sep(S_bitset, A_bitset, D_bitsets)]
   if (length(uncovered) == 0) {
-    refinement <- refine_partition_wrapped$refine(A_bitset, S_bitset, partition_cache)
+    refinement <- partition_handler$refine(A_bitset, S_bitset, partition_cache)
     refined_partitions <- refinement[[1]]
     relevant_Spli <- refinement[[2]]
     partition_cache <- refinement[[3]]
@@ -201,7 +201,7 @@ FDHitsSep_visit <- function(
     ds <- new_diffset(relevant_Spli, refined_partitions, lookup)
     dsl <- list(ds)
     ds2 <- sample_diffsets(relevant_Spli, lookup)
-    added <- setdiff(lapply(c(dsl, ds2), refine_partition_wrapped$as.bitset), D_bitsets)
+    added <- setdiff(lapply(c(dsl, ds2), partition_handler$as.bitset), D_bitsets)
     stopifnot(length(added) > 0)
     uncovered <- added[uncov_sep(S_bitset, A_bitset, added)]
     D_bitsets <- c(D_bitsets, added)
@@ -234,7 +234,7 @@ FDHitsJoint_visit <- function(
   D_bitsets,
   lookup,
   report,
-  refine_partition,
+  partition_handler,
   partition_cache,
   visited = list()
 ) {
@@ -288,7 +288,7 @@ FDHitsJoint_visit <- function(
   # validation at the leaves
   uncovered_bitsets <- D_bitsets[uncov_joint(S_bitset, W_bitset, D_bitsets)]
   if (length(uncovered_bitsets) == 0) {
-    refinement <- refine_partition$refine(W_bitset, S_bitset, partition_cache)
+    refinement <- partition_handler$refine(W_bitset, S_bitset, partition_cache)
     refined_partitions <- refinement[[1]]
     relevant_Spli <- refinement[[2]]
     partition_cache <- refinement[[3]]
@@ -298,7 +298,7 @@ FDHitsJoint_visit <- function(
     ds <- new_diffset(relevant_Spli, refined_partitions, lookup)
     dsl <- list(ds)
     ds2 <- sample_diffsets(relevant_Spli, lookup)
-    added_bitsets <- setdiff(lapply(c(dsl, ds2), refine_partition$as.bitset), D_bitsets)
+    added_bitsets <- setdiff(lapply(c(dsl, ds2), partition_handler$as.bitset), D_bitsets)
     stopifnot(length(added_bitsets) > 0)
     uncovered_bitsets <- added_bitsets[uncov_joint(S_bitset, W_bitset, added_bitsets)]
     D_bitsets <- c(D_bitsets, added_bitsets)
