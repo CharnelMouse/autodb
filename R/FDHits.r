@@ -93,7 +93,7 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
   attrs <- names(lookup)
   res <- list()
   return_stack <- list(list(integer(), determinants, dependants))
-  visited <- list()
+  visited <- character()
   refine_partition <- partition_refiner(lookup)
   partition_cache <- list(
     key = as.character(seq_along(attrs)),
@@ -113,7 +113,12 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
       partition_cache,
       visited = visited
     )
-    visited <- c(visited, list(node[c(1, 3)]))
+    node_string <- paste0(
+      paste(node[[1]], collapse = ""),
+      paste(node[[2]], collapse = ""),
+      paste(node[[3]], collapse = "")
+    )
+    visited <- c(visited, node_string)
     res <- c(res, attr_res[[1]])
     D <- attr_res[[2]]
     new_nodes <- attr_res[[3]]
@@ -227,49 +232,18 @@ FDHitsJoint_visit <- function(
   partition_cache,
   visited = list()
 ) {
-  node_string <- paste0(
-    "Node (S: {",
-    toString(names(lookup)[S]),
-    "}, V: {",
-    toString(names(lookup)[V]),
-    "}, W: {",
-    toString(names(lookup)[W]),
-    "})"
-  )
-  if (is.element(list(list(S,  W)), visited)) {
-    report$stat(paste0(
-      "already visited ", node_string, "\n",
-      "visited:\n",
-      paste(
-        vapply(
-          visited,
-          \(node) {
-            paste0(
-              "Node (S: {",
-              toString(names(lookup)[node[[1]]]),
-              "}, W: {",
-              toString(names(lookup)[node[[2]]]),
-              "})"
-            )
-          },
-          character(1)
-        ),
-        collapse = "\n"
-      ),
-      "\ndifference sets:\n",
-      paste(
-        vapply(D, \(d) toString(names(lookup)[d]), character(1)),
-        collapse = "\n"
-      )
-    ))
-    stop("already visited ", node_string)
-  }
-  visited <- c(visited, list(list(S, V, W)))
-  # pruning
   W_bitset <- refine_partition$as.bitset(W)
   S_bitset <- refine_partition$as.bitset(S)
   V_bitset <- refine_partition$as.bitset(V)
   D_bitsets <- lapply(D, refine_partition$as.bitset)
+  node_string <- paste0(
+    paste(S_bitset, collapse = ""),
+    paste(V_bitset, collapse = ""),
+    paste(W_bitset, collapse = "")
+  )
+  if (is.element(node_string, visited))
+    stop("node ", node_string, " already visited")
+  # pruning
   critical_edges <- list()
   for (A in individual_bitsets(W_bitset)) {
     for (C in individual_bitsets(S_bitset)) {
@@ -333,15 +307,6 @@ FDHitsJoint_visit <- function(
   }
   # branching
   if (length(uncovered) == 0) {
-    node_string <- paste0(
-      "Node (S: {",
-      toString(names(lookup)[S]),
-      "}, V: {",
-      toString(names(lookup)[V]),
-      "}, W: {",
-      toString(names(lookup)[W]),
-      "})"
-    )
     stop("edge selection impossible at ", node_string)
   }
   E <- sample_minheur_joint(uncovered, V, W)
