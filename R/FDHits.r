@@ -27,7 +27,7 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
   attrs <- names(lookup)
   res <- list()
   n_visited <- 0L
-  partition_handler <- partition_refiner(lookup)
+  partition_handler <- bitset_partition_handler(lookup)
   partition_cache <- list(
     key = as.character(seq_along(attrs)),
     value = lapply(unname(as.list(lookup)), pli)
@@ -95,7 +95,7 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
   attrs <- names(lookup)
   res <- list()
   visited <- character()
-  partition_handler <- partition_refiner(lookup)
+  partition_handler <- bitset_partition_handler(lookup)
 
   W_bitset <- partition_handler$as.bitset(dependants)
   V_bitset <- partition_handler$as.bitset(determinants)
@@ -372,17 +372,10 @@ sample_minheur_sep <- function(set_bitsets, V_bitset) {
   which.min(heuristics)
 }
 
-partition_refiner <- function(df) {
-  partitions_ui <- list(
-    # we could use the partkey directly as an index into a list of
-    # pre-allocated length, but this often requires a very large list that is
-    # slow to assign elements in, so we stick to matching on a growing list
-    # here.
-    # It would also require the partkey to be representable as an integer,
-    # rather than a double, which introduces a tighter constraint on the maximum
-    # number of columns df can have (nonfixed attrs instead of just LHS attrs).
-    # "Partition nodes" in this UI refer to IDs within the partition: these are
-    # different to those used in find_LHSs and powersets.
+bitset_partition_handler <- function(df) {
+  # handles lookup and calculation of partitions, without calling code
+  # having to worry about handling the store, or the lookup table df itself.
+  bitset_partitions_ui <- list(
     add_partition = function(partition_node, val, partitions) {
       partitions$key <- c(partitions$key, partition_node)
       partitions$value <- c(partitions$value, list(val))
@@ -397,12 +390,10 @@ partition_refiner <- function(df) {
   )
   bitlen <- 8*ceiling(ncol(df)/8)
   fetch_partition <- function(attrs_bitset, df, partitions) {
-    fetch_partition_stripped(attrs_bitset, df, partitions, partitions_ui)
+    fetch_partition_stripped(attrs_bitset, df, partitions, bitset_partitions_ui)
   }
   list(
-    as.bitset = function(set) {
-      bitset(set, bitlen)
-    },
+    as.bitset = function(set) bitset(set, bitlen),
     refine = function(rhs_bitset, lhs_bitset, partitions) {
       fetch_refined_partition(
         df,
@@ -470,8 +461,8 @@ fetch_partition_stripped <- function(
         nrow(df)
       )
     }else{
-      attr_indices2 <- which(rawToBits(attrs_bitset)[seq_len(ncol(df))] == 1)
-      sp <- fsplit_rows_emptyable(df, attr_indices2)
+      attr_indices <- which(rawToBits(attrs_bitset)[seq_len(ncol(df))] == 1)
+      sp <- fsplit_rows_emptyable(df, attr_indices)
       sp <- unname(sp[lengths(sp) > 1])
     }
   }
