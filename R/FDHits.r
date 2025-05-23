@@ -32,10 +32,13 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
     key = as.character(seq_along(attrs)),
     value = lapply(unname(as.list(lookup)), pli)
   )
+  D <- lapply(D, refine_partition_wrapped$as.bitset)
   for (A in dependants) {
     report$stat(paste("dependant", attrs[A]))
-    rest <- determinants[determinants != A]
-    return_stack <- list(list(integer(), rest, A))
+    A_bitset <- refine_partition_wrapped$as.bitset(A)
+    rest <- refine_partition_wrapped$as.bitset(determinants[determinants != A])
+    empty <- refine_partition_wrapped$as.bitset(integer())
+    return_stack <- list(list(empty, rest, A_bitset))
     visited <- character()
     while (length(return_stack) > 0) {
       node <- return_stack[[1]]
@@ -52,9 +55,9 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
         visited = visited
       )
       node_string <- paste0(
-        paste(refine_partition_wrapped$as.bitset(node[[1]]), collapse = ""),
-        paste(refine_partition_wrapped$as.bitset(node[[2]]), collapse = ""),
-        paste(refine_partition_wrapped$as.bitset(node[[3]]), collapse = "")
+        paste(node[[1]], collapse = ""),
+        paste(node[[2]], collapse = ""),
+        paste(node[[3]], collapse = "")
       )
       visited <- c(visited, node_string)
       res <- c(res, attr_res[[1]])
@@ -64,7 +67,7 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
       return_stack <- c(
         new_nodes[vapply(
           new_nodes,
-          \(node) length(node[[1]]) <= detset_limit,
+          \(node) sum(intToBits(node[[1]]) == 1) <= detset_limit,
           logical(1)
         )],
         return_stack
@@ -82,7 +85,7 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
     "\n",
     with_number(length(partition_cache$key), "partition", " cached", "s cached")
   ))
-  res <- lapply(res, lapply, \(x) attrs[x])
+  res <- lapply(res, lapply, \(x) attrs[as.logical(rawToBits(x))])
   functional_dependency(res, attrs)
 }
 
@@ -141,20 +144,16 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
 }
 
 FDHitsSep_visit <- function(
-  S,
-  V,
-  A,
-  D,
+  S_bitset,
+  V_bitset,
+  A_bitset,
+  D_bitsets,
   lookup,
   report,
   refine_partition_wrapped,
   partition_cache,
   visited = character()
 ) {
-  A_bitset <- refine_partition_wrapped$as.bitset(A)
-  S_bitset <- refine_partition_wrapped$as.bitset(S)
-  V_bitset <- refine_partition_wrapped$as.bitset(V)
-  D_bitsets <- lapply(D, refine_partition_wrapped$as.bitset)
   node_string <- paste0(
     paste(S_bitset, collapse = ""),
     paste(V_bitset, collapse = ""),
@@ -169,7 +168,7 @@ FDHitsSep_visit <- function(
     # => S isn't irreducible for A
     crits <- critical(C, A_bitset, S_bitset, D_bitsets)
     if (length(crits) == 0)
-      return(list(list(), D, list(), partition_cache))
+      return(list(list(), D_bitsets, list(), partition_cache))
     for (B in individual_bitsets(V_bitset)) {
       # remove B from V if ∃ C∈S ∀ E∈critical(C,A,S): B∈E,
       # i.e. adding B to S would make some C in S redundant WRT A
@@ -178,33 +177,29 @@ FDHitsSep_visit <- function(
         V_bitset <- xor(V_bitset, B)
     }
   }
-  V <- which(as.logical(rawToBits(V_bitset)))
   # validation at the leaves
-  uncovered <- D[uncov_sep(S_bitset, A_bitset, D_bitsets)]
+  uncovered <- D_bitsets[uncov_sep(S_bitset, A_bitset, D_bitsets)]
   if (length(uncovered) == 0) {
     refinement <- refine_partition_wrapped$refine(A_bitset, S_bitset, partition_cache)
     refined_partitions <- refinement[[1]]
     relevant_Spli <- refinement[[2]]
     partition_cache <- refinement[[3]]
     if (validate(refined_partitions, relevant_Spli))
-      return(list(list(list(S, A)), D, list(), partition_cache))
+      return(list(list(list(S_bitset, A_bitset)), D_bitsets, list(), partition_cache))
     stopifnot(length(relevant_Spli) > 0)
     ds <- new_diffset(relevant_Spli, refined_partitions, lookup)
     dsl <- list(ds)
     ds2 <- sample_diffsets(relevant_Spli, lookup)
-    added <- setdiff(c(dsl, ds2), D)
+    added <- setdiff(lapply(c(dsl, ds2), refine_partition_wrapped$as.bitset), D_bitsets)
     stopifnot(length(added) > 0)
-    added_bitsets <- lapply(added, refine_partition_wrapped$as.bitset)
-    uncovered <- added[uncov_sep(S_bitset, A_bitset, added_bitsets)]
-    D <- c(D, added)
-    D_bitsets <- c(D_bitsets, added_bitsets)
+    uncovered <- added[uncov_sep(S_bitset, A_bitset, added)]
+    D_bitsets <- c(D_bitsets, added)
   }
-  uncovered_bitsets <- lapply(uncovered, refine_partition_wrapped$as.bitset)
   # branching
-  if (length(uncovered_bitsets) == 0) {
+  if (length(uncovered) == 0) {
     stop("edge selection impossible at ", node_string)
   }
-  E_bitset <- uncovered_bitsets[[sample_minheur_sep(uncovered_bitsets, V_bitset)]]
+  E_bitset <- uncovered[[sample_minheur_sep(uncovered, V_bitset)]]
   Bs_bitsets <- individual_bitsets(E_bitset & V_bitset)
   res <- list()
   # rev() differs from the description in the paper, but the authors gave it as
@@ -213,12 +208,12 @@ FDHitsSep_visit <- function(
   new_nodes <- lapply(
     rev(seq_along(Bs_bitsets)),
     \(n) {
-      b <- which(as.logical(rawToBits(Bs_bitsets[[n]])))
-      rem <- which(as.logical(rawToBits(Reduce(`|`, Bs_bitsets[seq_len(n)]))))
-      list(sort(union(S, b)), setdiff(V, rem), A)
+      b <- Bs_bitsets[[n]]
+      rem <- Reduce(`|`, Bs_bitsets[seq_len(n)])
+      list(S_bitset | b, V_bitset & !rem, A_bitset)
     }
   )
-  list(res, D, new_nodes, partition_cache)
+  list(res, D_bitsets, new_nodes, partition_cache)
 }
 
 FDHitsJoint_visit <- function(
