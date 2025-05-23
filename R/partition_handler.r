@@ -225,6 +225,7 @@ integer_partition_handler <- function(df, accuracy, cache) {
 
   threshold <- ceiling(nrow(df)*accuracy)
 
+  full_key <- to_partition_node(seq_len(ncol(df)))
   component_keys <- function(set) as.list(to_partition_nodes(set))
   unkey <- function(key) which(intToBits(key) == 1)
   partitions_ui <- list(
@@ -239,19 +240,17 @@ integer_partition_handler <- function(df, accuracy, cache) {
     # different to those used in find_LHSs and powersets.
     key = function(set) to_partition_node(set),
     component_keys = function(set) component_keys(set),
+    hash = function(key) key,
     unkey = function(key) unkey(key),
     decompose_key = function(key) component_keys(unkey(key)),
     key_children = function(key) lapply(component_keys(unkey(key)), \(ck) key - ck),
+    invert_key = function(key) bitwXor(key, full_key),
+    lookup_hash = function(hash, partitions) match(hash, partitions$key),
+    get_with_index = function(index, partitions) partitions$value[[index]],
     add_partition = function(hash, partition, partitions) {
       partitions$key <- c(partitions$key, hash)
       partitions$value <- c(partitions$value, list(partition))
       partitions
-    },
-    get_with_index = function(index, partitions) {
-      partitions$value[[index]]
-    },
-    lookup_hash = function(hash, partitions) {
-      match(hash, partitions$key)
     }
   )
 
@@ -337,7 +336,7 @@ approximate_dependencies <- function(
 }
 
 check_FD_partition_nclass <- function(
-  attr_indices,
+  set,
   df,
   partitions,
   partitions_ui
@@ -345,81 +344,85 @@ check_FD_partition_nclass <- function(
   # This only returns the number |p| of equivalence classes in the partition p,
   # not its contents. This is less demanding on memory than storing stripped
   # partitions, but we cannot efficiently calculate the partition for supersets.
-  partition_node <- partitions_ui$key(attr_indices)
-  partkey <- partitions_ui$lookup_hash(partition_node, partitions)
-  if (!is.na(partkey)) {
-    return(list(partitions_ui$get_with_index(partkey, partitions), partitions))
+  hash <- partitions_ui$hash(partitions_ui$key(set))
+  index <- partitions_ui$lookup_hash(hash, partitions)
+  if (!is.na(index)) {
+    return(list(partitions_ui$get_with_index(index, partitions), partitions))
   }
-  df_attrs_only <- df[, attr_indices, drop = FALSE]
-  n_remove <- sum(duplicated(df_attrs_only))
-  partitions <- partitions_ui$add_partition(partition_node, n_remove, partitions)
+  df_set_only <- df[, set, drop = FALSE]
+  n_remove <- sum(duplicated(df_set_only))
+  partitions <- partitions_ui$add_partition(hash, n_remove, partitions)
   list(n_remove, partitions)
 }
 
 check_FD_partition_stripped <- function(
-  attr_indices,
+  set,
   df,
   partitions,
   partitions_ui
 ) {
-  partition_node <- partitions_ui$key(attr_indices)
-  attr_nodes <- as.integer(unlist(partitions_ui$component_keys(attr_indices)))
-  partkey <- partitions_ui$lookup_hash(partition_node, partitions)
-  if (!is.na(partkey)) {
-    sp <- partitions_ui$get_with_index(partkey, partitions)
+  key <- partitions_ui$key(set)
+  key_elements <- as.integer(unlist(partitions_ui$component_keys(set)))
+  hash <- partitions_ui$hash(key)
+  index <- partitions_ui$lookup_hash(hash, partitions)
+  if (!is.na(index)) {
+    sp <- partitions_ui$get_with_index(index, partitions)
     return(list(partition_rank(sp), partitions))
   }
-  subset_nodes <- partition_node - attr_nodes
-  subsets_match <- vapply(
-    subset_nodes,
+  child_keys <- key - key_elements
+  child_hashes <- lapply(child_keys, partitions_ui$hash)
+  child_indices <- vapply(
+    child_hashes,
     partitions_ui$lookup_hash,
     integer(1L),
     partitions
   )
-  if (sum(!is.na(subsets_match)) >= 2) {
-    indices <- which(!is.na(subsets_match))[1:2]
+  if (sum(!is.na(child_indices)) >= 2) {
+    chosen_indices <- which(!is.na(child_indices))[1:2]
     sp <- stripped_partition_product(
-      partitions_ui$get_with_index(subsets_match[indices[[1]]], partitions),
-      partitions_ui$get_with_index(subsets_match[indices[[2]]], partitions),
+      partitions_ui$get_with_index(child_indices[chosen_indices[[1]]], partitions),
+      partitions_ui$get_with_index(child_indices[chosen_indices[[2]]], partitions),
       nrow(df)
     )
   }else{
-    if (sum(!is.na(subsets_match)) == 1) {
-      index <- which(!is.na(subsets_match))
-      small_subset <- attr_indices[[index]]
-      small_subset_node <- attr_nodes[[index]]
-      main_partition <- partitions_ui$get_with_index(
-        subsets_match[index],
+    if (sum(!is.na(child_indices)) == 1) {
+      existing_child_position <- which(!is.na(child_indices))
+      remainder_element <- set[[existing_child_position]]
+      remainder_key <- key_elements[[existing_child_position]]
+      existing_child_sp <- partitions_ui$get_with_index(
+        child_indices[existing_child_position],
         partitions
       )
-      subres <- check_FD_partition_stripped(
-        small_subset,
+      remainder_result <- check_FD_partition_stripped(
+        remainder_element,
         df,
         partitions,
         partitions_ui
       )
-      partitions <- subres[[2]]
-      small_partition <- partitions_ui$get_with_index(
-        partitions_ui$lookup_hash(small_subset_node, partitions),
+      remainder_rank <- remainder_result[[1]]
+      partitions <- remainder_result[[2]]
+      remainder_sp <- partitions_ui$get_with_index(
+        partitions_ui$lookup_hash(remainder_key, partitions),
         partitions
       )
+      stopifnot(identical(remainder_rank, partition_rank(remainder_sp)))
       sp <- stripped_partition_product(
-        main_partition,
-        small_partition,
+        existing_child_sp,
+        remainder_sp,
         nrow(df)
       )
     }else{
-      sp <- fsplit_rows(df, attr_indices)
+      sp <- fsplit_rows(df, set)
       sp <- unname(sp[lengths(sp) > 1])
     }
   }
-  partitions <- partitions_ui$add_partition(partition_node, sp, partitions)
+  partitions <- partitions_ui$add_partition(hash, sp, partitions)
   list(partition_rank(sp), partitions)
 }
 
 check_AD_cache <- function(
   df,
-  rhs,
+  rhs_set,
   lhs_set,
   partitions,
   threshold,
@@ -427,13 +430,16 @@ check_AD_cache <- function(
   partitions_ui
 ) {
   # e(lhs_set -> rhs)
-  lhs_set_partition_node <- partitions_ui$key(lhs_set)
-  rhs_partition_node <- as.integer(unlist(partitions_ui$component_keys(rhs)))
-  ind_lhs <- partitions_ui$lookup_hash(lhs_set_partition_node, partitions)
+  lhs_key <- partitions_ui$key(lhs_set)
+  lhs_hash <- partitions_ui$hash(lhs_key)
+  rhs_keys <- partitions_ui$component_keys(rhs_set)
+  stopifnot(length(rhs_keys) == 1)
+  rhs_key <- rhs_keys[[1]]
+  ind_lhs <- partitions_ui$lookup_hash(lhs_hash, partitions)
   stopifnot(!is.na(ind_lhs))
   classes_lhs <- partitions_ui$get_with_index(ind_lhs, partitions)
-  classes_lhs_node <- lhs_set_partition_node + rhs_partition_node
-  ind_union <- partitions_ui$lookup_hash(classes_lhs_node, partitions)
+  classes_lhs_key <- lhs_key + rhs_key
+  ind_union <- partitions_ui$lookup_hash(partitions_ui$hash(classes_lhs_key), partitions)
   stopifnot(!is.na(ind_union))
   classes_union <- partitions_ui$get_with_index(ind_union, partitions)
   e <- 0L
@@ -453,7 +459,7 @@ check_AD_cache <- function(
 
 check_AD_nocache <- function(
   df,
-  rhs,
+  rhs_set,
   lhs_set,
   partitions,
   threshold,
@@ -463,10 +469,8 @@ check_AD_nocache <- function(
   # This is a quick working version I put together to replace the non-working
   # original. The quicker version from Tane requires cache = TRUE for stripped
   # partition information.
-  majority_size <- function(x) {
-    max(tabulate(x))
-  }
-  splitted <- df[[rhs]]
+  majority_size <- function(x) max(tabulate(x))
+  splitted <- df[[rhs_set]]
   splitter <- df[, lhs_set, drop = FALSE]
   rhs_split <- fsplit(splitted, splitter)
   majorities_total <- sum(vapply(
