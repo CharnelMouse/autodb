@@ -206,7 +206,7 @@ FDHitsSep_visit <- function(
   }
   V <- which(as.logical(rawToBits(V_bitset)))
   # validation at the leaves
-  uncovered <- uncov_sep(S, A, D)
+  uncovered <- D[uncov_sep(S_bitset, A_bitset, D_bitsets)]
   if (length(uncovered) == 0) {
     A_bitset <- refine_partition_wrapped$as.bitset(A)
     S_bitset <- refine_partition_wrapped$as.bitset(S)
@@ -222,11 +222,14 @@ FDHitsSep_visit <- function(
     ds2 <- sample_diffsets(relevant_Spli, lookup)
     added <- setdiff(c(dsl, ds2), D)
     stopifnot(length(added) > 0)
-    uncovered <- uncov_sep(S, A, added)
+    added_bitsets <- lapply(added, refine_partition_wrapped$as.bitset)
+    uncovered <- added[uncov_sep(S_bitset, A_bitset, added_bitsets)]
     D <- c(D, added)
+    D_bitsets <- c(D_bitsets, added_bitsets)
   }
+  uncovered_bitsets <- lapply(uncovered, refine_partition_wrapped$as.bitset)
   # branching
-  if (length(uncovered) == 0) {
+  if (length(uncovered_bitsets) == 0) {
     node_string <- paste0(
       "Node (S: {",
       toString(names(lookup)[S]),
@@ -236,15 +239,19 @@ FDHitsSep_visit <- function(
     )
     stop("edge selection impossible at ", node_string)
   }
-  E <- sample_minheur_sep(uncovered, V)
-  Bs <- intersect(E, V)
+  E_bitset <- uncovered_bitsets[[sample_minheur_sep(uncovered_bitsets, V_bitset)]]
+  Bs_bitsets <- individual_bitsets(E_bitset & V_bitset)
   res <- list()
   # rev() differs from the description in the paper, but the authors gave it as
   # a fix in private correspondence; I'll add a reference when they've published
   # the new work
   new_nodes <- lapply(
-    rev(seq_along(Bs)),
-    \(n) list(sort(union(S, Bs[[n]])), setdiff(V, Bs[seq_len(n)]), A)
+    rev(seq_along(Bs_bitsets)),
+    \(n) {
+      b <- which(as.logical(rawToBits(Bs_bitsets[[n]])))
+      rem <- which(as.logical(rawToBits(Reduce(`|`, Bs_bitsets[seq_len(n)]))))
+      list(sort(union(S, b)), setdiff(V, rem), A)
+    }
   )
   list(res, D, new_nodes, partition_cache)
 }
@@ -413,9 +420,9 @@ uncov_joint <- function(S, W, D) {
   D[vapply(D, \(E) any(is.element(W, E)) && !any(is.element(S, E)), logical(1))]
 }
 
-uncov_sep <- function(S, A, D) {
+uncov_sep <- function(S_bitset, A_bitset, D_bitset) {
   # set of hyperedges that contain a vertex from W but nothing from S
-  D[vapply(D, \(E) any(E == A) && !any(is.element(S, E)), logical(1))]
+  vapply(D_bitset, \(E) any((E & A_bitset) > 0) && all((S_bitset & E) == 0), logical(1))
 }
 
 sample_minheur_joint <- function(set, V, W) {
@@ -429,17 +436,17 @@ sample_minheur_joint <- function(set, V, W) {
   set[[which.min(heuristics)]]
 }
 
-sample_minheur_sep <- function(set, V) {
+sample_minheur_sep <- function(set_bitsets, V_bitset) {
   # For FDHitsSep, |W| = 1 and W /\ E is empty, so second part
   # of heuristic in sample_minheur_joint is redundant
-  if (length(set) == 0)
+  if (length(set_bitsets) == 0)
     stop("can't sample edge from empty set")
   heuristics <- vapply(
-    set,
-    function(E) length(intersect(E, V)),
+    set_bitsets,
+    function(E) sum(as.logical(rawToBits(E & V_bitset))),
     integer(1)
   )
-  set[[which.min(heuristics)]]
+  which.min(heuristics)
 }
 
 partition_refiner <- function(df) {
