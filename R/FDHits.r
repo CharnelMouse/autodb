@@ -185,21 +185,26 @@ FDHitsSep_visit <- function(
   }
   visited <- c(visited, list(list(S, V, A)))
   # pruning
-  for (C in S) {
+  A_bitset <- refine_partition_wrapped$as.bitset(A)
+  S_bitset <- refine_partition_wrapped$as.bitset(S)
+  V_bitset <- refine_partition_wrapped$as.bitset(V)
+  D_bitsets <- lapply(D, refine_partition_wrapped$as.bitset)
+  for (C in individual_bitsets(S_bitset)) {
     # no critical edge for C
     # => C is redundant in S for A
     # => S isn't irreducible for A
-    crits <- critical(C, A, S, D)
+    crits <- critical(C, A_bitset, S_bitset, D_bitsets)
     if (length(crits) == 0)
       return(list(list(), D, list(), partition_cache))
-    for (B in V) {
+    for (B in individual_bitsets(V_bitset)) {
       # remove B from V if ∃ C∈S ∀ E∈critical(C,A,S): B∈E,
       # i.e. adding B to S would make some C in S redundant WRT A
       # does not check for B being redundant if added
-      if (all(vapply(crits, is.element, logical(1), el = B)))
-        V <- V[V != B]
+      if (all(vapply(D_bitsets[crits], \(Db) any((Db & B) != 0), logical(1))))
+        V_bitset <- xor(V_bitset, B)
     }
   }
+  V <- which(as.logical(rawToBits(V_bitset)))
   # validation at the leaves
   uncovered <- uncov_sep(S, A, D)
   if (length(uncovered) == 0) {
@@ -294,45 +299,51 @@ FDHitsJoint_visit <- function(
   }
   visited <- c(visited, list(list(S, V, W)))
   # pruning
+  W_bitset <- refine_partition$as.bitset(W)
+  S_bitset <- refine_partition$as.bitset(S)
+  V_bitset <- refine_partition$as.bitset(V)
+  D_bitsets <- lapply(D, refine_partition$as.bitset)
   critical_edges <- list()
-  for (A in W) {
-    for (C in S) {
+  for (A in individual_bitsets(W_bitset)) {
+    for (C in individual_bitsets(S_bitset)) {
       # no critical edge for C
       # => C is redundant in S for (some part of) W
       # => S isn't irreducible for (some part of) W
-      crits <- critical(C, A, S, D)
+      crits <- critical(C, A, S_bitset, D_bitsets)
       if (length(crits) == 0) {
-        W <- W[W != A]
-        critical_edges[[as.character(A)]] <- NULL
+        W_bitset <- xor(W_bitset, A)
+        critical_edges[[as.character(which(rawToBits(A) == 1))]] <- NULL
         break
       }else{
-        critical_edges[[as.character(A)]][[as.character(C)]] <- crits
+        critical_edges[[as.character(which(rawToBits(A) == 1))]][[as.character(which(rawToBits(C) == 1))]] <- D_bitsets[crits]
       }
     }
   }
+  W <- which(as.logical(rawToBits(W_bitset)))
   if (length(W) == 0) {
     return(list(list(), D, list()))
   }
-  for (B in V) {
+  for (B in individual_bitsets(V_bitset)) {
     # remove if ∀ A∈W ∃ C∈S ∀ E∈critical(C,A,S): B∈E,
     # i.e. adding B to S would make some C in S redundant WRT all of W
     # does not check for B being redundant if added
     if (all(vapply(
-      W,
+      individual_bitsets(W_bitset),
       \(A) any(vapply(
-        S,
+        individual_bitsets(S_bitset),
         \(C) all(vapply(
-          critical_edges[[as.character(A)]][[as.character(C)]],
-          \(E) B %in% E,
+          critical_edges[[as.character(which(rawToBits(A) == 1))]][[as.character(which(rawToBits(C) == 1))]],
+          \(E) (B & E) == B,
           logical(1)
         )),
         logical(1)
       )),
       logical(1)
     ))) {
-      V <- setdiff(V, B)
+      V_bitset <- xor(V_bitset, B)
     }
   }
+  V <- which(as.logical(rawToBits(V_bitset)))
   # validation at the leaves
   uncovered <- uncov_joint(S, W, D)
   if (length(uncovered) == 0) {
@@ -382,7 +393,7 @@ FDHitsJoint_visit <- function(
   list(res, D, new_nodes)
 }
 
-critical <- function(C, A, S, D) {
+critical <- function(C_bitset, A_bitset, S_bitset, D_bitsets) {
   # Set that contains the critical edges for C WRT S in the subhypergraph H_A,
   # i.e. using only elements of D that include A.
   # If every C is S has a critical edge, then S is a minimal hitting set.
@@ -390,7 +401,11 @@ critical <- function(C, A, S, D) {
   # from S, i.e. E /\ S = {C}.
   # E and S are already sets, so S[match(E, S, 0L)] is quicker than
   # intersect(E, S), since it skips removing duplicates.
-  D[vapply(D, \(E) any(E == A) && identical(S[match(E, S, 0L)], C), logical(1))]
+  which(vapply(
+    D_bitsets,
+    \(E) any((E & A_bitset) != 0) && all((S_bitset & E) == C_bitset),
+    logical(1)
+  ))
 }
 
 uncov_joint <- function(S, W, D) {
