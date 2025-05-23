@@ -36,7 +36,7 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
     report$stat(paste("dependant", attrs[A]))
     rest <- determinants[determinants != A]
     return_stack <- list(list(integer(), rest, A))
-    visited <- list()
+    visited <- character()
     while (length(return_stack) > 0) {
       node <- return_stack[[1]]
       return_stack <- return_stack[-1]
@@ -51,7 +51,12 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
         partition_cache,
         visited = visited
       )
-      visited <- c(visited, list(node[1:3]))
+      node_string <- paste0(
+        paste(refine_partition_wrapped$as.bitset(node[[1]]), collapse = ""),
+        paste(refine_partition_wrapped$as.bitset(node[[2]]), collapse = ""),
+        paste(refine_partition_wrapped$as.bitset(node[[3]]), collapse = "")
+      )
+      visited <- c(visited, node_string)
       res <- c(res, attr_res[[1]])
       D <- attr_res[[2]]
       new_nodes <- attr_res[[3]]
@@ -144,51 +149,20 @@ FDHitsSep_visit <- function(
   report,
   refine_partition_wrapped,
   partition_cache,
-  visited = list()
+  visited = character()
 ) {
-  node_string <- paste0(
-    "Node (S: {",
-    toString(names(lookup)[S]),
-    "}, V: {",
-    toString(names(lookup)[V]),
-    "}, A: {",
-    toString(names(lookup)[[A]]),
-    "})"
-  )
-  if (is.element(list(list(S, V, A)), visited)) {
-    report$stat(paste0(
-      "already visited ", node_string, "\n",
-      "visited:\n",
-      paste(
-        vapply(
-          visited,
-          \(node) {
-            paste0(
-              "Node (S: {",
-              toString(names(lookup)[node[[1]]]),
-              "}, A: {",
-              toString(names(lookup)[[node[[2]]]]),
-              "})"
-            )
-          },
-          character(1)
-        ),
-        collapse = "\n"
-      ),
-      "\ndifference sets:\n",
-      paste(
-        vapply(D, \(d) toString(names(lookup)[d]), character(1)),
-        collapse = "\n"
-      )
-    ))
-    stop("already visited ", node_string)
-  }
-  visited <- c(visited, list(list(S, V, A)))
-  # pruning
   A_bitset <- refine_partition_wrapped$as.bitset(A)
   S_bitset <- refine_partition_wrapped$as.bitset(S)
   V_bitset <- refine_partition_wrapped$as.bitset(V)
   D_bitsets <- lapply(D, refine_partition_wrapped$as.bitset)
+  node_string <- paste0(
+    paste(S_bitset, collapse = ""),
+    paste(V_bitset, collapse = ""),
+    paste(A_bitset, collapse = "")
+  )
+  if (is.element(node_string, visited))
+    stop("node ", node_string, " already visited")
+  # pruning
   for (C in individual_bitsets(S_bitset)) {
     # no critical edge for C
     # => C is redundant in S for A
@@ -208,8 +182,6 @@ FDHitsSep_visit <- function(
   # validation at the leaves
   uncovered <- D[uncov_sep(S_bitset, A_bitset, D_bitsets)]
   if (length(uncovered) == 0) {
-    A_bitset <- refine_partition_wrapped$as.bitset(A)
-    S_bitset <- refine_partition_wrapped$as.bitset(S)
     refinement <- refine_partition_wrapped$refine(A_bitset, S_bitset, partition_cache)
     refined_partitions <- refinement[[1]]
     relevant_Spli <- refinement[[2]]
@@ -230,13 +202,6 @@ FDHitsSep_visit <- function(
   uncovered_bitsets <- lapply(uncovered, refine_partition_wrapped$as.bitset)
   # branching
   if (length(uncovered_bitsets) == 0) {
-    node_string <- paste0(
-      "Node (S: {",
-      toString(names(lookup)[S]),
-      "}, V: {",
-      toString(names(lookup)[V]),
-      "})"
-    )
     stop("edge selection impossible at ", node_string)
   }
   E_bitset <- uncovered_bitsets[[sample_minheur_sep(uncovered_bitsets, V_bitset)]]
