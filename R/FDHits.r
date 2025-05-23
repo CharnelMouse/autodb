@@ -512,27 +512,27 @@ fsplit_rows_emptyable <- function(df, attr_indices) {
 
 fetch_refined_partition <- function(
   lookup,
-  rhs,
-  lhs_bitset,
+  rhs_set,
+  lhs_key,
   partition_cache,
   fetch_partition
 ) {
-  res1 <- fetch_partition(lhs_bitset, lookup, partition_cache)
+  res1 <- fetch_partition(lhs_key, lookup, partition_cache)
   lhs_partition <- res1[[1]]
   partition_cache <- res1[[2]]
-  individual_rhs_indices <- lapply(rhs, \(r) lookup[[r]])
-  rhs_indices <- if (length(rhs) == 1)
-    individual_rhs_indices[[1]]
+  individual_rhs_lookup_indices <- lapply(rhs_set, \(r) lookup[[r]])
+  rhs_lookup_indices <- if (length(rhs_set) == 1)
+    individual_rhs_lookup_indices[[1]]
   else {
-    do.call(paste, unname(lookup[rhs])) |>
+    do.call(paste, unname(lookup[rhs_set])) |>
       (\(x) match(x, x))()
   }
-  relevant_lhs_partition <- filter_partition(lhs_partition, rhs_indices)
+  relevant_lhs_partition <- filter_partition(lhs_partition, rhs_lookup_indices)
   if (partition_rank(relevant_lhs_partition) == 0)
-    return(list(rep(list(list()), length(rhs)), list(), partition_cache))
+    return(list(rep(list(list()), length(rhs_set)), list(), partition_cache))
   list(
     lapply(
-      individual_rhs_indices,
+      individual_rhs_lookup_indices,
       refine_partition_by_lookup,
       relevant_partition = relevant_lhs_partition
     ),
