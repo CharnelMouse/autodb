@@ -373,31 +373,53 @@ sample_minheur_sep <- function(set_bitsets, V_bitset) {
 }
 
 bitset_partition_handler <- function(df) {
-  # handles lookup and calculation of partitions, without calling code
+  # handles lookup and calculation of stripped partitions, without calling code
   # having to worry about handling the store, or the lookup table df itself.
+  # the partitions_ui handles the former.
+  # general partitions UI elements:
+  # set: original values, that subset the original lookup table df
+  # key: transformed set; what is usually passed around
+  # hash: key transformed into a string for lookup (lookup uses hash, not key)
+  # lookup_hash: hash -> partitions -> option<index>
+  # bitset partitions UI elements:
+  # set: a no-duplicate integer vector, for which columns of df to use
+  # key: a bitset
+  # hash: the bitset, with its bytes pasted together to make a string
+  bitlen <- 8*ceiling(ncol(df)/8)
+  unkey <- function(key) which(rawToBits(key) == 1)
   bitset_partitions_ui <- list(
-    add_partition = function(partition_node, val, partitions) {
-      partitions$key <- c(partitions$key, partition_node)
+    key = function(set) bitset(set, bitlen),
+    hash = function(key) to_partition_node_char(key),
+    unkey = function(key) unkey(key),
+    key_size = function(key) length(unkey(key)),
+    decompose_key = function(key) individual_bitsets(key),
+    key_children = function(key) lapply(individual_bitsets(key), xor, key),
+    invert_key = function(key) {
+      df_mask <- packBits(c(rep(TRUE, ncol(df)), rep(FALSE, bitlen - ncol(df))))
+      !key & df_mask
+    },
+    lookup_hash = function(hash, partitions) match(hash, partitions$key),
+    get_with_index = function(index, partitions) partitions$value[[index]],
+    calculate_partition = function(key) {
+      attr_indices <- unkey(key)
+      sp <- fsplit_rows_emptyable(df, attr_indices)
+      unname(sp[lengths(sp) > 1])
+    },
+    add_partition = function(hash, val, partitions) {
+      partitions$key <- c(partitions$key, hash)
       partitions$value <- c(partitions$value, list(val))
       partitions
-    },
-    get_with_index = function(index, partitions) {
-      partitions$value[[index]]
-    },
-    lookup_node = function(partition_node, partitions) {
-      match(partition_node, partitions$key)
     }
   )
-  bitlen <- 8*ceiling(ncol(df)/8)
   fetch_partition <- function(attrs_bitset, df, partitions) {
     fetch_partition_stripped(attrs_bitset, df, partitions, bitset_partitions_ui)
   }
   list(
-    as.bitset = function(set) bitset(set, bitlen),
+    as.bitset = bitset_partitions_ui$key,
     refine = function(rhs_bitset, lhs_bitset, partitions) {
       fetch_refined_partition(
         df,
-        rhs_bitset,
+        bitset_partitions_ui$unkey(rhs_bitset),
         lhs_bitset,
         partitions,
         fetch_partition
@@ -407,66 +429,62 @@ bitset_partition_handler <- function(df) {
 }
 
 fetch_partition_stripped <- function(
-  attrs_bitset,
+  key,
   df,
   partitions,
   partitions_ui
 ) {
-  child_bitsets <- individual_bitsets(attrs_bitset)
-  attr_nodes <- vapply(child_bitsets, to_partition_node_char, character(1))
-  partition_node <- to_partition_node_char(attrs_bitset)
-  partkey <- partitions_ui$lookup_node(partition_node, partitions)
-  if (!is.na(partkey)) {
-    sp <- partitions_ui$get_with_index(partkey, partitions)
+  key_elements <- partitions_ui$decompose_key(key)
+  element_hashes <- vapply(key_elements, partitions_ui$hash, character(1))
+  hash <- partitions_ui$hash(key)
+  partition_index <- partitions_ui$lookup_hash(hash, partitions)
+  if (!is.na(partition_index)) {
+    sp <- partitions_ui$get_with_index(partition_index, partitions)
     return(list(sp, partitions))
   }
-  child_antibitsets <- lapply(child_bitsets, xor, attrs_bitset)
-  subset_nodes <- vapply(child_antibitsets, to_partition_node_char, character(1))
-  subsets_match <- vapply(
-    subset_nodes,
-    partitions_ui$lookup_node,
+  child_keys <- partitions_ui$key_children(key)
+  child_hashes <- vapply(child_keys, partitions_ui$hash, character(1))
+  child_indices <- vapply(
+    child_hashes,
+    partitions_ui$lookup_hash,
     integer(1L),
     partitions
   )
-  if (sum(!is.na(subsets_match)) >= 2) {
-    indices <- which(!is.na(subsets_match))[1:2]
+  if (sum(!is.na(child_indices)) >= 2) {
+    chosen_indices <- which(!is.na(child_indices))[1:2]
     sp <- stripped_partition_product(
-      partitions_ui$get_with_index(subsets_match[indices[[1]]], partitions),
-      partitions_ui$get_with_index(subsets_match[indices[[2]]], partitions),
+      partitions_ui$get_with_index(child_indices[[chosen_indices[[1]]]], partitions),
+      partitions_ui$get_with_index(child_indices[[chosen_indices[[2]]]], partitions),
       nrow(df)
     )
   }else{
-    if (sum(!is.na(subsets_match)) == 1 && sum(rawToBits(attrs_bitset) == 1) > 1) {
-      index <- which(!is.na(subsets_match))
-      small_subset <- child_bitsets[[index]]
-      small_subset_node <- attr_nodes[[index]]
-      main_partition <- partitions_ui$get_with_index(
-        subsets_match[index],
+    if (sum(!is.na(child_indices)) == 1 && partitions_ui$key_size(key) > 1) {
+      existing_child_position <- which(!is.na(child_indices))
+      remainder_element <- key_elements[[existing_child_position]]
+      remainder_hash <- element_hashes[[existing_child_position]]
+      existing_child_index <- child_indices[[existing_child_position]]
+      existing_child_sp <- partitions_ui$get_with_index(
+        existing_child_index,
         partitions
       )
-      subres <- fetch_partition_stripped(
-        small_subset,
+      remainder_result <- fetch_partition_stripped(
+        remainder_element,
         df,
         partitions,
         partitions_ui
       )
-      partitions <- subres[[2]]
-      small_partition <- partitions_ui$get_with_index(
-        partitions_ui$lookup_node(small_subset_node, partitions),
-        partitions
-      )
+      remainder_sp <- remainder_result[[1]]
+      partitions <- remainder_result[[2]]
       sp <- stripped_partition_product(
-        main_partition,
-        small_partition,
+        existing_child_sp,
+        remainder_sp,
         nrow(df)
       )
     }else{
-      attr_indices <- which(rawToBits(attrs_bitset)[seq_len(ncol(df))] == 1)
-      sp <- fsplit_rows_emptyable(df, attr_indices)
-      sp <- unname(sp[lengths(sp) > 1])
+      sp <- partitions_ui$calculate_partition(key)
     }
   }
-  partitions <- partitions_ui$add_partition(partition_node, sp, partitions)
+  partitions <- partitions_ui$add_partition(hash, sp, partitions)
   list(sp, partitions)
 }
 
@@ -494,12 +512,11 @@ fsplit_rows_emptyable <- function(df, attr_indices) {
 
 fetch_refined_partition <- function(
   lookup,
-  rhs_bitset,
+  rhs,
   lhs_bitset,
   partition_cache,
   fetch_partition
 ) {
-  rhs <- which(rawToBits(rhs_bitset) == 1)
   res1 <- fetch_partition(lhs_bitset, lookup, partition_cache)
   lhs_partition <- res1[[1]]
   partition_cache <- res1[[2]]
