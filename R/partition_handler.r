@@ -121,6 +121,7 @@ bitset_partitions_ui <- function(df) {
   # Key: a bitset
   # Hash: the bitset, with its bytes pasted together to make a string
   bitlen <- 8*ceiling(ncol(df)/8)
+  df_mask <- packBits(c(rep(TRUE, ncol(df)), rep(FALSE, bitlen - ncol(df))))
   list(
     key = function(set) bitset(set, bitlen),
     component_keys = function(set) lapply(set, bitset, bitlen),
@@ -129,14 +130,11 @@ bitset_partitions_ui <- function(df) {
     key_size = function(key) length(unbitset(key)),
     decompose_key = function(key) individual_bitsets(key),
     key_children = function(key) lapply(individual_bitsets(key), xor, key),
-    invert_key = function(key) {
-      df_mask <- packBits(c(rep(TRUE, ncol(df)), rep(FALSE, bitlen - ncol(df))))
-      !key & df_mask
-    },
-    key_union = function(key1, key2) stop("not implemented"),
-    distinct_key_union = function(key1, key2) stop("not implemented"),
-    key_difference = function(key1, key2) stop("not implemented"),
-    subkey_difference = function(key, subkey) stop("not implemented"),
+    invert_key = function(key) !key & df_mask,
+    key_union = function(key1, key2) key1 & key2,
+    distinct_key_union = function(key1, key2) key1 & key2,
+    key_difference = function(key1, key2) key1 & !key2,
+    subkey_difference = function(key, subkey) key & !subkey, # xor is slower
     lookup_hash = function(hash, partitions) match(hash, partitions$key),
     get_with_index = function(index, partitions) partitions$value[[index]],
     calculate_partition = function(key) {
