@@ -1,14 +1,14 @@
-bitset_partition_handler <- function(df) {
+bitset_partition_handler <- function(lookup) {
   # Gives a list of functions that handle lookup and calculation of stripped
   # partitions, encapsulating dependence on the partitions cache and the
-  # original lookup table df. The intention is for all use of df to be done
+  # original lookup table. The intention is for all use of lookup to be done
   # through the "interface" provided by these functions, so the main code can
   # focus on implementing the search.
 
   # The partitions UI encapsulates the partition cache.
-  partitions_ui <- partitions_ui(df, key_class = "bitset")
-  fetch_partition <- function(attrs_bitset, df, partitions) {
-    fetch_partition_stripped(attrs_bitset, df, partitions, partitions_ui)
+  partitions_ui <- partitions_ui(lookup, key_class = "bitset")
+  fetch_partition <- function(attrs_bitset, lookup, partitions) {
+    fetch_partition_stripped(attrs_bitset, lookup, partitions, partitions_ui)
   }
   list(
     key = partitions_ui$key,
@@ -16,7 +16,7 @@ bitset_partition_handler <- function(df) {
     decompose_key = partitions_ui$decompose_key,
     refine = function(rhs_bitset, lhs_bitset, partitions) {
       fetch_refined_partition(
-        df,
+        lookup,
         partitions_ui$unkey(rhs_bitset),
         lhs_bitset,
         partitions,
@@ -26,42 +26,42 @@ bitset_partition_handler <- function(df) {
   )
 }
 
-integer_partition_handler <- function(df, accuracy, cache) {
+integer_partition_handler <- function(lookup, accuracy, cache) {
   # Gives a list of functions that handle lookup and calculation of stripped
   # partitions, encapsulating dependence on the partitions cache and the
-  # original lookup table df. The intention is for all use of df to be done
+  # original lookup table. The intention is for all use of lookup to be done
   # through the "interface" provided by these functions, so the main code can
   # focus on implementing the search.
 
-  # The integer partitions handler takes some additional arguments on top of df,
-  # since its use in DFD has some further requirements.
+  # The integer partitions handler takes some additional arguments on top of
+  # lookup, since its use in DFD has some further requirements.
   # accuracy is a threshold for FD correctness.
   # cache is a logical indicating whether partitions are cached at all.
-  # As with df, the intention is all use of these arguments to be done through
-  # the resulting interface.
+  # As with lookup, the intention is all use of these arguments to be done
+  # through the resulting interface.
 
   # The partitions UI encapsulates the partition cache.
-  partitions_ui <- partitions_ui(df, key_class = "integer")
+  partitions_ui <- partitions_ui(lookup, key_class = "integer")
 
   check_FD_partition <- if (cache)
-    function(attr_indices, df, partitions)
-      check_FD_partition_stripped(attr_indices, df, partitions, partitions_ui)
+    function(attr_indices, lookup, partitions)
+      check_FD_partition_stripped(attr_indices, lookup, partitions, partitions_ui)
   else
-    function(attr_indices, df, partitions)
-      check_FD_partition_nclass(attr_indices, df, partitions, partitions_ui)
+    function(attr_indices, lookup, partitions)
+      check_FD_partition_nclass(attr_indices, lookup, partitions, partitions_ui)
 
-  threshold <- ceiling(nrow(df)*accuracy)
-  limit <- nrow(df) - threshold
+  threshold <- ceiling(nrow(lookup)*accuracy)
+  limit <- nrow(lookup) - threshold
   if (limit > 0L) {
     check_AD <- if (cache)
-      function(df, rhs, lhs_set, partitions, limit)
-        check_AD_cache(df, rhs, lhs_set, partitions, limit, partitions_ui)
+      function(lookup, rhs, lhs_set, partitions, limit)
+        check_AD_cache(lookup, rhs, lhs_set, partitions, limit, partitions_ui)
     else
-      function(df, rhs, lhs_set, partitions, limit)
-        check_AD_nocache(df, rhs, lhs_set, partitions, limit, partitions_ui)
+      function(lookup, rhs, lhs_set, partitions, limit)
+        check_AD_nocache(lookup, rhs, lhs_set, partitions, limit, partitions_ui)
     function(rhs, lhs_set, partitions) {
       approximate_dependencies(
-        df,
+        lookup,
         rhs,
         lhs_set,
         partitions,
@@ -73,7 +73,7 @@ integer_partition_handler <- function(df, accuracy, cache) {
   }else
     function(rhs, lhs_set, partitions) {
       exact_dependencies(
-        df,
+        lookup,
         rhs,
         lhs_set,
         partitions,
@@ -82,11 +82,11 @@ integer_partition_handler <- function(df, accuracy, cache) {
     }
 }
 
-partitions_ui <- function(df, key_class = c("bitset", "integer")) {
+partitions_ui <- function(lookup, key_class = c("bitset", "integer")) {
   # The partitions UI encapsulates the partition cache.
 
   # General partitions UI elements:
-  # Set: original values, that subset the original lookup table df
+  # Set: original values, that subset the original lookup table
   # Key: transformed set; what is usually passed around
   # Hash: key transformed into a format for subsetting (lookup uses hash, not key)
 
@@ -105,23 +105,26 @@ partitions_ui <- function(df, key_class = c("bitset", "integer")) {
   # subkey_difference: Key -> Key -> Key (faster key_difference for subkey)
   # lookup_hash: Hash -> Partitions -> Option<Index>
   # get_with_index: Index -> Partitions -> StrippedPartition
-  # calculate_partition: Key -> StrippedPartition (calculate from df)
+  # calculate_partition: Key -> StrippedPartition (calculate from lookup)
   # add_partition: Hash -> Partition -> Partitions -> Partitions
   key_class <- match.arg(key_class)
   switch(
     key_class,
-    bitset = bitset_partitions_ui(df),
-    integer = integer_partitions_ui(df)
+    bitset = bitset_partitions_ui(lookup),
+    integer = integer_partitions_ui(lookup)
   )
 }
 
-bitset_partitions_ui <- function(df) {
+bitset_partitions_ui <- function(lookup) {
   # Bitset partitions UI types:
-  # Set: a no-duplicate integer vector, for which columns of df to use
+  # Set: a no-duplicate integer vector, for which columns of lookup to use
   # Key: a bitset
   # Hash: the bitset, with its bytes pasted together to make a string
-  bitlen <- 8*ceiling(ncol(df)/8)
-  df_mask <- packBits(c(rep(TRUE, ncol(df)), rep(FALSE, bitlen - ncol(df))))
+  bitlen <- 8*ceiling(ncol(lookup)/8)
+  full_key <- packBits(c(
+    rep(TRUE, ncol(lookup)),
+    rep(FALSE, bitlen - ncol(lookup))
+  ))
   list(
     key = function(set) bitset(set, bitlen),
     component_keys = function(set) lapply(set, bitset, bitlen),
@@ -130,7 +133,7 @@ bitset_partitions_ui <- function(df) {
     key_size = function(key) length(unbitset(key)),
     decompose_key = function(key) individual_bitsets(key),
     key_children = function(key) lapply(individual_bitsets(key), xor, key),
-    invert_key = function(key) !key & df_mask,
+    invert_key = function(key) !key & full_key,
     key_union = function(key1, key2) key1 & key2,
     distinct_key_union = function(key1, key2) key1 & key2,
     key_difference = function(key1, key2) key1 & !key2,
@@ -139,7 +142,7 @@ bitset_partitions_ui <- function(df) {
     get_with_index = function(index, partitions) partitions$value[[index]],
     calculate_partition = function(key) {
       attr_indices <- unbitset(key)
-      sp <- fsplit_rows_emptyable(df, attr_indices)
+      sp <- fsplit_rows_emptyable(lookup, attr_indices)
       unname(sp[lengths(sp) > 1])
     },
     add_partition = function(hash, partition, partitions) {
@@ -150,12 +153,12 @@ bitset_partitions_ui <- function(df) {
   )
 }
 
-integer_partitions_ui <- function(df) {
+integer_partitions_ui <- function(lookup) {
   # Integer partitions UI types:
-  # Set: a no-duplicate integer vector, for which columns of df to use
+  # Set: a no-duplicate integer vector, for which columns of lookup to use
   # Key: an integer
   # Hash: an integer, for direct subsetting
-  full_key <- to_partition_node(seq_len(ncol(df)))
+  full_key <- to_partition_node(seq_len(ncol(lookup)))
   component_keys <- function(set) as.list(to_partition_nodes(set))
   unkey <- function(key) which(intToBits(key) == 1)
   subkey_difference <- function(key, subkey) key - subkey
@@ -166,9 +169,10 @@ integer_partitions_ui <- function(df) {
     # here.
     # It would also require the partkey to be representable as an integer,
     # rather than a double, which introduces a tighter constraint on the maximum
-    # number of columns df can have (nonfixed attrs instead of just LHS attrs).
-    # "Partition nodes" in this UI refer to IDs within the partition: these are
-    # different to those used in find_LHSs and powersets.
+    # number of columns lookup can have (nonfixed attrs instead of just LHS
+    # attrs).
+    # "Partition node" in this UI refers to an ID within the partition cache,
+    # not to the nodes used in find_LHSs and powersets.
     key = function(set) to_partition_node(set),
     component_keys = function(set) component_keys(set),
     hash = function(key) key,
@@ -198,7 +202,7 @@ unbitset <- function(key) which(rawToBits(key) == 1)
 
 fetch_partition_stripped <- function(
   key,
-  df,
+  lookup,
   partitions,
   partitions_ui
 ) {
@@ -223,7 +227,7 @@ fetch_partition_stripped <- function(
     sp <- stripped_partition_product(
       partitions_ui$get_with_index(child_indices[[chosen_indices[[1]]]], partitions),
       partitions_ui$get_with_index(child_indices[[chosen_indices[[2]]]], partitions),
-      nrow(df)
+      nrow(lookup)
     )
   }else{
     if (sum(!is.na(child_indices)) == 1 && partitions_ui$key_size(key) > 1) {
@@ -237,7 +241,7 @@ fetch_partition_stripped <- function(
       )
       remainder_result <- fetch_partition_stripped(
         remainder_element,
-        df,
+        lookup,
         partitions,
         partitions_ui
       )
@@ -246,7 +250,7 @@ fetch_partition_stripped <- function(
       sp <- stripped_partition_product(
         existing_child_sp,
         remainder_sp,
-        nrow(df)
+        nrow(lookup)
       )
     }else{
       sp <- partitions_ui$calculate_partition(key)
@@ -272,10 +276,10 @@ bitset <- function(attr_indices, bitlen) {
   packBits(bools)
 }
 
-fsplit_rows_emptyable <- function(df, attr_indices) {
+fsplit_rows_emptyable <- function(lookup, attr_indices) {
   if (length(attr_indices) == 0)
-    return(list(seq_len(nrow(df))))
-  fsplit_rows(df, attr_indices)
+    return(list(seq_len(nrow(lookup))))
+  fsplit_rows(lookup, attr_indices)
 }
 
 fetch_refined_partition <- function(
@@ -310,25 +314,25 @@ fetch_refined_partition <- function(
 }
 
 exact_dependencies <- function(
-  df,
+  lookup,
   rhs,
   lhs_set,
   partitions,
   check_FD_partition
 ) {
-  lhs_result <- check_FD_partition(lhs_set, df, partitions)
+  lhs_result <- check_FD_partition(lhs_set, lookup, partitions)
   lhs_rank <- lhs_result[[1]]
   partitions <- lhs_result[[2]]
   if (lhs_rank == 0)
     return(list(TRUE, partitions))
-  union_result <- check_FD_partition(union(lhs_set, rhs), df, partitions)
+  union_result <- check_FD_partition(union(lhs_set, rhs), lookup, partitions)
   union_rank <- union_result[[1]]
   partitions <- union_result[[2]]
   list(union_rank == lhs_rank, partitions)
 }
 
 approximate_dependencies <- function(
-  df,
+  lookup,
   rhs,
   lhs_set,
   partitions,
@@ -342,23 +346,23 @@ approximate_dependencies <- function(
   # and LHS -> RHS is approximately true if error <= limit,
   # so if lhs_rank <= limit or limit < lhs_rank - union_rank
   # then we can skip the calculation of error.
-  lhs_result <- check_FD_partition(lhs_set, df, partitions)
+  lhs_result <- check_FD_partition(lhs_set, lookup, partitions)
   lhs_rank <- lhs_result[[1]]
   partitions <- lhs_result[[2]]
   if (lhs_rank <= limit)
     return(list(TRUE, partitions))
-  union_result <- check_FD_partition(union(lhs_set, rhs), df, partitions)
+  union_result <- check_FD_partition(union(lhs_set, rhs), lookup, partitions)
   union_rank <- union_result[[1]]
   partitions <- union_result[[2]]
   if (lhs_rank - union_rank > limit)
     return(list(FALSE, partitions))
 
-  check_AD(df, rhs, lhs_set, partitions, limit)
+  check_AD(lookup, rhs, lhs_set, partitions, limit)
 }
 
 check_FD_partition_nclass <- function(
   set,
-  df,
+  lookup,
   partitions,
   partitions_ui
 ) {
@@ -370,15 +374,15 @@ check_FD_partition_nclass <- function(
   if (!is.na(index)) {
     return(list(partitions_ui$get_with_index(index, partitions), partitions))
   }
-  df_set_only <- df[, set, drop = FALSE]
-  set_rank <- sum(duplicated(df_set_only))
+  lookup_set_only <- lookup[, set, drop = FALSE]
+  set_rank <- sum(duplicated(lookup_set_only))
   partitions <- partitions_ui$add_partition(hash, set_rank, partitions)
   list(set_rank, partitions)
 }
 
 check_FD_partition_stripped <- function(
   set,
-  df,
+  lookup,
   partitions,
   partitions_ui
 ) {
@@ -403,7 +407,7 @@ check_FD_partition_stripped <- function(
     sp <- stripped_partition_product(
       partitions_ui$get_with_index(child_indices[chosen_indices[[1]]], partitions),
       partitions_ui$get_with_index(child_indices[chosen_indices[[2]]], partitions),
-      nrow(df)
+      nrow(lookup)
     )
   }else{
     if (sum(!is.na(child_indices)) == 1) {
@@ -416,7 +420,7 @@ check_FD_partition_stripped <- function(
       )
       remainder_result <- check_FD_partition_stripped(
         remainder_element,
-        df,
+        lookup,
         partitions,
         partitions_ui
       )
@@ -430,10 +434,10 @@ check_FD_partition_stripped <- function(
       sp <- stripped_partition_product(
         existing_child_sp,
         remainder_sp,
-        nrow(df)
+        nrow(lookup)
       )
     }else{
-      sp <- fsplit_rows(df, set)
+      sp <- fsplit_rows(lookup, set)
       sp <- unname(sp[lengths(sp) > 1])
     }
   }
@@ -442,7 +446,7 @@ check_FD_partition_stripped <- function(
 }
 
 check_AD_cache <- function(
-  df,
+  lookup,
   rhs_set,
   lhs_set,
   partitions,
@@ -462,12 +466,12 @@ check_AD_cache <- function(
   union_index <- partitions_ui$lookup_hash(partitions_ui$hash(union_key), partitions)
   stopifnot(!is.na(union_index))
   union_sp <- partitions_ui$get_with_index(union_index, partitions)
-  error <- stripped_partition_error(lhs_sp, union_sp, nrow(df))
+  error <- stripped_partition_error(lhs_sp, union_sp, nrow(lookup))
   list(error <= limit, partitions)
 }
 
 check_AD_nocache <- function(
-  df,
+  lookup,
   rhs_set,
   lhs_set,
   partitions,
@@ -477,10 +481,10 @@ check_AD_nocache <- function(
   # This is a quick working version I put together to replace the non-working
   # original. The quicker version from Tane requires cache = TRUE for stripped
   # partition information.
-  splitted <- df[[rhs_set]]
-  splitter <- df[, lhs_set, drop = FALSE]
+  splitted <- lookup[[rhs_set]]
+  splitter <- lookup[, lhs_set, drop = FALSE]
   rhs_value_lhs_partition <- fsplit(splitted, splitter)
-  error <- value_partition_error(rhs_value_lhs_partition, nrow(df))
+  error <- value_partition_error(rhs_value_lhs_partition, nrow(lookup))
   list(error <= limit, partitions)
 }
 
@@ -492,8 +496,8 @@ to_partition_nodes <- function(element_indices) {
   as.integer(2^(element_indices - 1L))
 }
 
-fsplit_rows <- function(df, attr_indices) {
-  fsplit(seq_len(nrow(df)), df[, attr_indices, drop = FALSE])
+fsplit_rows <- function(lookup, attr_indices) {
+  fsplit(seq_len(nrow(lookup)), lookup[, attr_indices, drop = FALSE])
 }
 
 fsplit <- function(splitted, splitter) {
