@@ -5,7 +5,7 @@ bitset_partition_handler <- function(lookup) {
   # through the "interface" provided by these functions, so the main code can
   # focus on implementing the search.
 
-  # The partitions UI encapsulates the partition cache.
+  # The partitions UI encapsulates interacting with the partition cache.
   partitions_ui <- partitions_ui(lookup, key_class = "bitset")
   fetch_partition <- function(attrs_bitset, lookup, partitions) {
     fetch_partition_stripped(attrs_bitset, lookup, partitions, partitions_ui)
@@ -40,7 +40,7 @@ integer_partition_handler <- function(lookup, accuracy, cache) {
   # As with lookup, the intention is all use of these arguments to be done
   # through the resulting interface.
 
-  # The partitions UI encapsulates the partition cache.
+  # The partitions UI encapsulates interacting with the partition cache.
   partitions_ui <- partitions_ui(lookup, key_class = "integer")
 
   fetch_rank <- if (cache)
@@ -83,7 +83,7 @@ integer_partition_handler <- function(lookup, accuracy, cache) {
 }
 
 partitions_ui <- function(lookup, key_class = c("bitset", "integer")) {
-  # The partitions UI encapsulates the partition cache.
+  # The partitions UI encapsulates interacting with the partition cache.
 
   # General partitions UI elements:
   # Set: original values, that subset the original lookup table
