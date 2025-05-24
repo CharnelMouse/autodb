@@ -43,22 +43,22 @@ integer_partition_handler <- function(lookup, accuracy, cache) {
   # The partitions UI encapsulates the partition cache.
   partitions_ui <- partitions_ui(lookup, key_class = "integer")
 
-  check_FD_partition <- if (cache)
+  fetch_rank <- if (cache)
     function(attr_indices, lookup, partitions)
-      check_FD_partition_stripped(attr_indices, lookup, partitions, partitions_ui)
+      fetch_rank_full_cache(attr_indices, lookup, partitions, partitions_ui)
   else
     function(attr_indices, lookup, partitions)
-      check_FD_partition_nclass(attr_indices, lookup, partitions, partitions_ui)
+      fetch_rank_rank_cache(attr_indices, lookup, partitions, partitions_ui)
 
   threshold <- ceiling(nrow(lookup)*accuracy)
   limit <- nrow(lookup) - threshold
   if (limit > 0L) {
-    check_AD <- if (cache)
+    fetch_error <- if (cache)
       function(lookup, rhs, lhs_set, partitions)
-        check_AD_cache(lookup, rhs, lhs_set, partitions, partitions_ui)
+        fetch_error_withcache(lookup, rhs, lhs_set, partitions, partitions_ui)
     else
       function(lookup, rhs, lhs_set, partitions)
-        check_AD_nocache(lookup, rhs, lhs_set, partitions, partitions_ui)
+        fetch_error_nocache(lookup, rhs, lhs_set, partitions, partitions_ui)
     function(rhs, lhs_set, partitions) {
       approximate_dependencies(
         lookup,
@@ -66,8 +66,8 @@ integer_partition_handler <- function(lookup, accuracy, cache) {
         lhs_set,
         partitions,
         limit,
-        check_FD_partition,
-        check_AD
+        fetch_rank,
+        fetch_error
       )
     }
   }else
@@ -77,7 +77,7 @@ integer_partition_handler <- function(lookup, accuracy, cache) {
         rhs,
         lhs_set,
         partitions,
-        check_FD_partition
+        fetch_rank
       )
     }
 }
@@ -318,14 +318,14 @@ exact_dependencies <- function(
   rhs,
   lhs_set,
   partitions,
-  check_FD_partition
+  fetch_rank
 ) {
-  lhs_result <- check_FD_partition(lhs_set, lookup, partitions)
+  lhs_result <- fetch_rank(lhs_set, lookup, partitions)
   lhs_rank <- lhs_result[[1]]
   partitions <- lhs_result[[2]]
   if (lhs_rank == 0)
     return(list(TRUE, partitions))
-  union_result <- check_FD_partition(union(lhs_set, rhs), lookup, partitions)
+  union_result <- fetch_rank(union(lhs_set, rhs), lookup, partitions)
   union_rank <- union_result[[1]]
   partitions <- union_result[[2]]
   list(union_rank == lhs_rank, partitions)
@@ -337,8 +337,8 @@ approximate_dependencies <- function(
   lhs_set,
   partitions,
   limit,
-  check_FD_partition,
-  check_AD
+  fetch_rank,
+  fetch_error
 ) {
   # cheaper bounds checks:
   # lhs_rank - union_rank <= error <= lhs_rank is always true,
@@ -346,22 +346,22 @@ approximate_dependencies <- function(
   # and LHS -> RHS is approximately true if error <= limit,
   # so if lhs_rank <= limit or limit < lhs_rank - union_rank
   # then we can skip the calculation of error.
-  lhs_result <- check_FD_partition(lhs_set, lookup, partitions)
+  lhs_result <- fetch_rank(lhs_set, lookup, partitions)
   lhs_rank <- lhs_result[[1]]
   partitions <- lhs_result[[2]]
   if (lhs_rank <= limit)
     return(list(TRUE, partitions))
-  union_result <- check_FD_partition(union(lhs_set, rhs), lookup, partitions)
+  union_result <- fetch_rank(union(lhs_set, rhs), lookup, partitions)
   union_rank <- union_result[[1]]
   partitions <- union_result[[2]]
   if (lhs_rank - union_rank > limit)
     return(list(FALSE, partitions))
 
-  error <- check_AD(lookup, rhs, lhs_set, partitions)
+  error <- fetch_error(lookup, rhs, lhs_set, partitions)
   list(error <= limit, partitions)
 }
 
-check_FD_partition_nclass <- function(
+fetch_rank_rank_cache <- function(
   set,
   lookup,
   partitions,
@@ -381,7 +381,7 @@ check_FD_partition_nclass <- function(
   list(set_rank, partitions)
 }
 
-check_FD_partition_stripped <- function(
+fetch_rank_full_cache <- function(
   set,
   lookup,
   partitions,
@@ -419,7 +419,7 @@ check_FD_partition_stripped <- function(
         child_indices[existing_child_position],
         partitions
       )
-      remainder_result <- check_FD_partition_stripped(
+      remainder_result <- fetch_rank_full_cache(
         remainder_element,
         lookup,
         partitions,
@@ -446,7 +446,7 @@ check_FD_partition_stripped <- function(
   list(partition_rank(sp), partitions)
 }
 
-check_AD_cache <- function(
+fetch_error_withcache <- function(
   lookup,
   rhs_set,
   lhs_set,
@@ -454,41 +454,35 @@ check_AD_cache <- function(
   partitions_ui
 ) {
   # e(lhs_set -> rhs)
-  fetch_error_cached <- function(lookup, rhs_set, lhs_set, partitions, partitions_ui) {
-    lhs_key <- partitions_ui$key(lhs_set)
-    lhs_hash <- partitions_ui$hash(lhs_key)
-    rhs_keys <- partitions_ui$component_keys(rhs_set)
-    stopifnot(length(rhs_keys) == 1)
-    rhs_key <- rhs_keys[[1]]
-    lhs_index <- partitions_ui$lookup_hash(lhs_hash, partitions)
-    stopifnot(!is.na(lhs_index))
-    lhs_sp <- partitions_ui$get_with_index(lhs_index, partitions)
-    union_key <- partitions_ui$distinct_key_union(lhs_key, rhs_key)
-    union_index <- partitions_ui$lookup_hash(partitions_ui$hash(union_key), partitions)
-    stopifnot(!is.na(union_index))
-    union_sp <- partitions_ui$get_with_index(union_index, partitions)
-    stripped_partition_error(lhs_sp, union_sp, nrow(lookup))
-  }
-  fetch_error_cached(lookup, rhs_set, lhs_set, partitions, partitions_ui)
+  lhs_key <- partitions_ui$key(lhs_set)
+  lhs_hash <- partitions_ui$hash(lhs_key)
+  rhs_keys <- partitions_ui$component_keys(rhs_set)
+  stopifnot(length(rhs_keys) == 1)
+  rhs_key <- rhs_keys[[1]]
+  lhs_index <- partitions_ui$lookup_hash(lhs_hash, partitions)
+  stopifnot(!is.na(lhs_index))
+  lhs_sp <- partitions_ui$get_with_index(lhs_index, partitions)
+  union_key <- partitions_ui$distinct_key_union(lhs_key, rhs_key)
+  union_index <- partitions_ui$lookup_hash(partitions_ui$hash(union_key), partitions)
+  stopifnot(!is.na(union_index))
+  union_sp <- partitions_ui$get_with_index(union_index, partitions)
+  stripped_partition_error(lhs_sp, union_sp, nrow(lookup))
 }
 
-check_AD_nocache <- function(
+fetch_error_nocache <- function(
   lookup,
   rhs_set,
   lhs_set,
   partitions,
   partitions_ui
 ) {
-  fetch_error_nocache <- function(lookup, rhs_set, lhs_set) {
-    # This is a quick working version I put together to replace the non-working
-    # original. The quicker version from Tane requires cache = TRUE for stripped
-    # partition information.
-    splitted <- lookup[[rhs_set]]
-    splitter <- lookup[, lhs_set, drop = FALSE]
-    rhs_value_lhs_partition <- fsplit(splitted, splitter)
-    value_partition_error(rhs_value_lhs_partition, nrow(lookup))
-  }
-  fetch_error_nocache(lookup, rhs_set, lhs_set)
+  # This is a quick working version I put together to replace the non-working
+  # original. The quicker version from Tane requires cache = TRUE for stripped
+  # partition information.
+  splitted <- lookup[[rhs_set]]
+  splitter <- lookup[, lhs_set, drop = FALSE]
+  rhs_value_lhs_partition <- fsplit(splitted, splitter)
+  value_partition_error(rhs_value_lhs_partition, nrow(lookup))
 }
 
 to_partition_node <- function(element_indices) {
