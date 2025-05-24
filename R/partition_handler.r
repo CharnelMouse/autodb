@@ -304,15 +304,15 @@ exact_dependencies <- function(
   partitions,
   check_FD_partition
 ) {
-  res1 <- check_FD_partition(lhs_set, df, partitions)
-  part_lhs <- res1[[1]]
-  partitions <- res1[[2]]
-  if (part_lhs == 0)
+  lhs_result <- check_FD_partition(lhs_set, df, partitions)
+  lhs_rank <- lhs_result[[1]]
+  partitions <- lhs_result[[2]]
+  if (lhs_rank == 0)
     return(list(TRUE, partitions))
-  res2 <- check_FD_partition(union(lhs_set, rhs), df, partitions)
-  part_union <- res2[[1]]
-  partitions <- res2[[2]]
-  list(part_union == part_lhs, partitions)
+  union_result <- check_FD_partition(union(lhs_set, rhs), df, partitions)
+  union_rank <- union_result[[1]]
+  partitions <- union_result[[2]]
+  list(union_rank == lhs_rank, partitions)
 }
 
 approximate_dependencies <- function(
@@ -325,20 +325,20 @@ approximate_dependencies <- function(
   check_AD
 ) {
   # cheaper bounds checks:
-  # lhs_remove - union_remove <= error <= lhs_remove is always true,
+  # lhs_rank - union_rank <= error <= lhs_rank is always true,
   # (paper version: e(X) - e(X /\ Y) <= e(X -> Y) <= e(X))
   # and LHS -> RHS is approximately true if error <= limit,
-  # so if lhs_remove <= limit or limit < lhs_remove - union_remove
+  # so if lhs_rank <= limit or limit < lhs_rank - union_rank
   # then we can skip the calculation of error.
   lhs_result <- check_FD_partition(lhs_set, df, partitions)
-  lhs_error <- lhs_result[[1]]
+  lhs_rank <- lhs_result[[1]]
   partitions <- lhs_result[[2]]
-  if (lhs_error <= limit)
+  if (lhs_rank <= limit)
     return(list(TRUE, partitions))
   union_result <- check_FD_partition(union(lhs_set, rhs), df, partitions)
-  union_error <- union_result[[1]]
+  union_rank <- union_result[[1]]
   partitions <- union_result[[2]]
-  if (lhs_error - union_error > limit)
+  if (lhs_rank - union_rank > limit)
     return(list(FALSE, partitions))
 
   check_AD(df, rhs, lhs_set, partitions, limit)
@@ -359,9 +359,9 @@ check_FD_partition_nclass <- function(
     return(list(partitions_ui$get_with_index(index, partitions), partitions))
   }
   df_set_only <- df[, set, drop = FALSE]
-  n_remove <- sum(duplicated(df_set_only))
-  partitions <- partitions_ui$add_partition(hash, n_remove, partitions)
-  list(n_remove, partitions)
+  set_rank <- sum(duplicated(df_set_only))
+  partitions <- partitions_ui$add_partition(hash, set_rank, partitions)
+  list(set_rank, partitions)
 }
 
 check_FD_partition_stripped <- function(
