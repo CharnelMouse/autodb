@@ -12,10 +12,11 @@ bitset_partition_handler <- function(df) {
   # Hash: key transformed into a string for lookup (lookup uses hash, not key)
   # functions:
   # key: Set -> Key
+  # component_keys: Set -> [Key] (equivalent to key >> decompose_key)
   # hash: Key -> Hash
   # unkey: Key -> Set
   # key_size: Key -> Int
-  # decompose_key: Key -> [Key] (one key for each atomic element)
+  # decompose_key: Key -> [Key] (per atomic element; unkey >> component_keys)
   # key_children: Key -> [Key] (remove one element from the key each time)
   # invert_key: Key -> Key (bitwise negation on the used bits only)
   # lookup_hash: Hash -> Partitions -> Option<Index>
@@ -28,12 +29,12 @@ bitset_partition_handler <- function(df) {
   # Key: a bitset
   # Hash: the bitset, with its bytes pasted together to make a string
   bitlen <- 8*ceiling(ncol(df)/8)
-  unkey <- function(key) which(rawToBits(key) == 1)
   bitset_partitions_ui <- list(
     key = function(set) bitset(set, bitlen),
+    component_keys = function(set) lapply(set, bitset, bitlen),
     hash = function(key) to_partition_node_char(key),
-    unkey = function(key) unkey(key),
-    key_size = function(key) length(unkey(key)),
+    unkey = function(key) unbitset(key),
+    key_size = function(key) length(unbitset(key)),
     decompose_key = function(key) individual_bitsets(key),
     key_children = function(key) lapply(individual_bitsets(key), xor, key),
     invert_key = function(key) {
@@ -43,7 +44,7 @@ bitset_partition_handler <- function(df) {
     lookup_hash = function(hash, partitions) match(hash, partitions$key),
     get_with_index = function(index, partitions) partitions$value[[index]],
     calculate_partition = function(key) {
-      attr_indices <- unkey(key)
+      attr_indices <- unbitset(key)
       sp <- fsplit_rows_emptyable(df, attr_indices)
       unname(sp[lengths(sp) > 1])
     },
@@ -71,6 +72,8 @@ bitset_partition_handler <- function(df) {
     }
   )
 }
+
+unbitset <- function(key) which(rawToBits(key) == 1)
 
 fetch_partition_stripped <- function(
   key,
@@ -138,7 +141,7 @@ to_partition_node_char <- function(attrs_bitset) {
 
 individual_bitsets <- function(attrs_bitset) {
   bitlen <- 8L*length(attrs_bitset)
-  bits <- which(rawToBits(attrs_bitset) == 1)
+  bits <- unbitset(attrs_bitset)
   lapply(bits, bitset, bitlen)
 }
 
@@ -226,6 +229,7 @@ integer_partition_handler <- function(df, accuracy, cache) {
   full_key <- to_partition_node(seq_len(ncol(df)))
   component_keys <- function(set) as.list(to_partition_nodes(set))
   unkey <- function(key) which(intToBits(key) == 1)
+  subkey_difference <- function(key, subkey) key - subkey
   partitions_ui <- list(
     # we could use the partkey directly as an index into a list of
     # pre-allocated length, but this often requires a very large list that is
@@ -246,8 +250,9 @@ integer_partition_handler <- function(df, accuracy, cache) {
     key_union = function(key1, key2) bitwOr(key1, key2),
     distinct_key_union = function(key1, key2) key1 + key2,
     key_difference = function(key1, key2) bitwAnd(key1, bitwNot(key2)),
+    subkey_difference = function(key, subkey) subkey_difference(key, subkey),
     key_children = function(key) {
-      lapply(component_keys(unkey(key)), \(ck) key - ck)
+      lapply(component_keys(unkey(key)), subkey_difference, key = key)
     },
     lookup_hash = function(hash, partitions) match(hash, partitions$key),
     get_with_index = function(index, partitions) partitions$value[[index]],
@@ -378,7 +383,7 @@ check_FD_partition_stripped <- function(
     sp <- partitions_ui$get_with_index(index, partitions)
     return(list(partition_rank(sp), partitions))
   }
-  child_keys <- key - key_elements
+  child_keys <- lapply(key_elements, partitions_ui$subkey_difference, key = key)
   child_hashes <- lapply(child_keys, partitions_ui$hash)
   child_indices <- vapply(
     child_hashes,
