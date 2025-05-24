@@ -99,6 +99,10 @@ partitions_ui <- function(df, key_class = c("bitset", "integer")) {
   # decompose_key: Key -> [Key] (per atomic element; unkey >> component_keys)
   # key_children: Key -> [Key] (remove one element from the key each time)
   # invert_key: Key -> Key (bitwise negation on the used bits only)
+  # key_union: Key -> Key -> Key
+  # distinct_key_union: Key -> Key -> Key (faster key_union for distinct keys)
+  # key_difference: Key -> Key -> Key
+  # subkey_difference: Key -> Key -> Key (faster key_difference for subkey)
   # lookup_hash: Hash -> Partitions -> Option<Index>
   # get_with_index: Index -> Partitions -> StrippedPartition
   # calculate_partition: Key -> StrippedPartition (calculate from df)
@@ -129,6 +133,10 @@ bitset_partitions_ui <- function(df) {
       df_mask <- packBits(c(rep(TRUE, ncol(df)), rep(FALSE, bitlen - ncol(df))))
       !key & df_mask
     },
+    key_union = function(key1, key2) stop("not implemented"),
+    distinct_key_union = function(key1, key2) stop("not implemented"),
+    key_difference = function(key1, key2) stop("not implemented"),
+    subkey_difference = function(key, subkey) stop("not implemented"),
     lookup_hash = function(hash, partitions) match(hash, partitions$key),
     get_with_index = function(index, partitions) partitions$value[[index]],
     calculate_partition = function(key) {
@@ -147,8 +155,8 @@ bitset_partitions_ui <- function(df) {
 integer_partitions_ui <- function(df) {
   # Integer partitions UI types:
   # Set: a no-duplicate integer vector, for which columns of df to use
-  # Key: ???
-  # Hash: an integer, for direct subsetting.
+  # Key: an integer
+  # Hash: an integer, for direct subsetting
   full_key <- to_partition_node(seq_len(ncol(df)))
   component_keys <- function(set) as.list(to_partition_nodes(set))
   unkey <- function(key) which(intToBits(key) == 1)
@@ -169,16 +177,17 @@ integer_partitions_ui <- function(df) {
     unkey = function(key) unkey(key),
     key_size = function(key) length(unkey(key)),
     decompose_key = function(key) component_keys(unkey(key)),
+    key_children = function(key) {
+      lapply(component_keys(unkey(key)), subkey_difference, key = key)
+    },
     invert_key = function(key) bitwXor(key, full_key),
     key_union = function(key1, key2) bitwOr(key1, key2),
     distinct_key_union = function(key1, key2) key1 + key2,
     key_difference = function(key1, key2) bitwAnd(key1, bitwNot(key2)),
     subkey_difference = function(key, subkey) subkey_difference(key, subkey),
-    key_children = function(key) {
-      lapply(component_keys(unkey(key)), subkey_difference, key = key)
-    },
     lookup_hash = function(hash, partitions) match(hash, partitions$key),
     get_with_index = function(index, partitions) partitions$value[[index]],
+    calculate_partition = function(key) stop("not implemented"),
     add_partition = function(hash, partition, partitions) {
       partitions$key <- c(partitions$key, hash)
       partitions$value <- c(partitions$value, list(partition))
