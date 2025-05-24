@@ -90,14 +90,14 @@ partitions_ui <- function(df, key_class = c("bitset", "integer")) {
   # Key: transformed set; what is usually passed around
   # Hash: key transformed into a format for subsetting (lookup uses hash, not key)
 
-  # functions:
+  # Functions, in Haskell-like notation:
   # key: Set -> Key
   # component_keys: Set -> [Key] (equivalent to key >> decompose_key)
   # hash: Key -> Hash
   # unkey: Key -> Set
   # key_size: Key -> Int
   # decompose_key: Key -> [Key] (per atomic element; unkey >> component_keys)
-  # key_children: Key -> [Key] (remove one element from the key each time)
+  # key_children: Key -> [Key] (invert_key on atomic elements' keys, in order)
   # invert_key: Key -> Key (bitwise negation on the used bits only)
   # key_union: Key -> Key -> Key
   # distinct_key_union: Key -> Key -> Key (faster key_union for distinct keys)
