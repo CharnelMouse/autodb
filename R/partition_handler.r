@@ -223,8 +223,6 @@ integer_partition_handler <- function(df, accuracy, cache) {
   # As with df, the intention is all use of these arguments to be done through
   # the resulting interface.
 
-  threshold <- ceiling(nrow(df)*accuracy)
-
   full_key <- to_partition_node(seq_len(ncol(df)))
   component_keys <- function(set) as.list(to_partition_nodes(set))
   unkey <- function(key) which(intToBits(key) == 1)
@@ -267,20 +265,22 @@ integer_partition_handler <- function(df, accuracy, cache) {
     function(attr_indices, df, partitions)
       check_FD_partition_nclass(attr_indices, df, partitions, partitions_ui)
 
-  if (threshold < nrow(df)) {
+  threshold <- ceiling(nrow(df)*accuracy)
+  limit <- nrow(df) - threshold
+  if (limit > 0L) {
     check_AD <- if (cache)
-      function(df, rhs, lhs_set, partitions, threshold, limit)
-        check_AD_cache(df, rhs, lhs_set, partitions, threshold, limit, partitions_ui)
+      function(df, rhs, lhs_set, partitions, limit)
+        check_AD_cache(df, rhs, lhs_set, partitions, limit, partitions_ui)
     else
-      function(df, rhs, lhs_set, partitions, threshold, limit)
-        check_AD_nocache(df, rhs, lhs_set, partitions, threshold, limit, partitions_ui)
+      function(df, rhs, lhs_set, partitions, limit)
+        check_AD_nocache(df, rhs, lhs_set, partitions, limit, partitions_ui)
     function(rhs, lhs_set, partitions) {
       approximate_dependencies(
         df,
         rhs,
         lhs_set,
         partitions,
-        threshold,
+        limit,
         check_FD_partition,
         check_AD
       )
@@ -320,25 +320,28 @@ approximate_dependencies <- function(
   rhs,
   lhs_set,
   partitions,
-  threshold,
+  limit,
   check_FD_partition,
   check_AD
 ) {
-  limit <- nrow(df) - threshold
   # cheaper bounds checks:
-  # nrow(df) - (part_lhs - part_union) <= majorities_total <= nrow(df) - part_lhs
-  res1 <- check_FD_partition(lhs_set, df, partitions)
-  part_lhs <- res1[[1]]
-  partitions <- res1[[2]]
-  if (part_lhs <= limit)
+  # lhs_remove - union_remove <= error <= lhs_remove is always true,
+  # (paper version: e(X) - e(X /\ Y) <= e(X -> Y) <= e(X))
+  # and LHS -> RHS is approximately true if error <= limit,
+  # so if lhs_remove <= limit or limit < lhs_remove - union_remove
+  # then we can skip the calculation of error.
+  lhs_result <- check_FD_partition(lhs_set, df, partitions)
+  lhs_error <- lhs_result[[1]]
+  partitions <- lhs_result[[2]]
+  if (lhs_error <= limit)
     return(list(TRUE, partitions))
-  res2 <- check_FD_partition(union(lhs_set, rhs), df, partitions)
-  part_union <- res2[[1]]
-  partitions <- res2[[2]]
-  if (part_lhs - part_union > limit)
+  union_result <- check_FD_partition(union(lhs_set, rhs), df, partitions)
+  union_error <- union_result[[1]]
+  partitions <- union_result[[2]]
+  if (lhs_error - union_error > limit)
     return(list(FALSE, partitions))
 
-  check_AD(df, rhs, lhs_set, partitions, threshold, limit)
+  check_AD(df, rhs, lhs_set, partitions, limit)
 }
 
 check_FD_partition_nclass <- function(
@@ -431,7 +434,6 @@ check_AD_cache <- function(
   rhs_set,
   lhs_set,
   partitions,
-  threshold,
   limit,
   partitions_ui
 ) {
@@ -448,7 +450,7 @@ check_AD_cache <- function(
   union_index <- partitions_ui$lookup_hash(partitions_ui$hash(union_key), partitions)
   stopifnot(!is.na(union_index))
   union_sp <- partitions_ui$get_with_index(union_index, partitions)
-  error <- stripped_partition_error(lhs_sp, union_sp)
+  error <- stripped_partition_error(lhs_sp, union_sp, nrow(df))
   list(error <= limit, partitions)
 }
 
@@ -457,23 +459,17 @@ check_AD_nocache <- function(
   rhs_set,
   lhs_set,
   partitions,
-  threshold,
   limit,
   partitions_ui
 ) {
   # This is a quick working version I put together to replace the non-working
   # original. The quicker version from Tane requires cache = TRUE for stripped
   # partition information.
-  majority_size <- function(x) max(tabulate(x))
   splitted <- df[[rhs_set]]
   splitter <- df[, lhs_set, drop = FALSE]
-  rhs_split <- fsplit(splitted, splitter)
-  majorities_total <- sum(vapply(
-    rhs_split,
-    majority_size,
-    integer(1)
-  ))
-  list(majorities_total >= threshold, partitions)
+  rhs_value_lhs_partition <- fsplit(splitted, splitter)
+  error <- value_partition_error(rhs_value_lhs_partition, nrow(df))
+  list(error <= limit, partitions)
 }
 
 to_partition_node <- function(element_indices) {
