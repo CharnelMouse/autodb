@@ -52,26 +52,9 @@ integer_partition_handler <- function(lookup, accuracy, cache) {
 
   threshold <- ceiling(nrow(lookup)*accuracy)
   limit <- nrow(lookup) - threshold
-  if (limit > 0L) {
-    fetch_error <- if (cache)
-      function(lookup, rhs, lhs_set, partitions)
-        fetch_error_withcache(lookup, rhs, lhs_set, partitions, partitions_ui)
-    else
-      function(lookup, rhs, lhs_set, partitions)
-        fetch_error_nocache(lookup, rhs, lhs_set, partitions, partitions_ui)
-    function(rhs, lhs_set, partitions) {
-      approximate_dependencies(
-        lookup,
-        rhs,
-        lhs_set,
-        partitions,
-        limit,
-        fetch_rank,
-        fetch_error
-      )
-    }
-  }else
-    function(rhs, lhs_set, partitions) {
+  if (limit == 0L)
+    # exact dependences have no need to calculate FD error (e(X -> Y))
+    return(function(rhs, lhs_set, partitions) {
       exact_dependencies(
         lookup,
         rhs,
@@ -79,7 +62,24 @@ integer_partition_handler <- function(lookup, accuracy, cache) {
         partitions,
         fetch_rank
       )
-    }
+    })
+  fetch_error <- if (cache)
+    function(lookup, rhs, lhs_set, partitions)
+      fetch_error_withcache(lookup, rhs, lhs_set, partitions, partitions_ui)
+  else
+    function(lookup, rhs, lhs_set, partitions)
+      fetch_error_nocache(lookup, rhs, lhs_set, partitions, partitions_ui)
+  function(rhs, lhs_set, partitions) {
+    approximate_dependencies(
+      lookup,
+      rhs,
+      lhs_set,
+      partitions,
+      limit,
+      fetch_rank,
+      fetch_error
+    )
+  }
 }
 
 partitions_ui <- function(lookup, key_class = c("bitset", "integer")) {
