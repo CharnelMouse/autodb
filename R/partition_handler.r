@@ -6,65 +6,18 @@ bitset_partition_handler <- function(df) {
   # focus on implementing the search.
 
   # The partitions UI encapsulates the partition cache.
-  # General partitions UI elements:
-  # Set: original values, that subset the original lookup table df
-  # Key: transformed set; what is usually passed around
-  # Hash: key transformed into a string for lookup (lookup uses hash, not key)
-  # functions:
-  # key: Set -> Key
-  # component_keys: Set -> [Key] (equivalent to key >> decompose_key)
-  # hash: Key -> Hash
-  # unkey: Key -> Set
-  # key_size: Key -> Int
-  # decompose_key: Key -> [Key] (per atomic element; unkey >> component_keys)
-  # key_children: Key -> [Key] (remove one element from the key each time)
-  # invert_key: Key -> Key (bitwise negation on the used bits only)
-  # lookup_hash: Hash -> Partitions -> Option<Index>
-  # get_with_index: Index -> Partitions -> StrippedPartition
-  # calculate_partition: Key -> StrippedPartition (calculate from df)
-  # add_partition: Hash -> Partition -> Partitions -> Partitions
-
-  # Bitset partitions UI types:
-  # Set: a no-duplicate integer vector, for which columns of df to use
-  # Key: a bitset
-  # Hash: the bitset, with its bytes pasted together to make a string
-  bitlen <- 8*ceiling(ncol(df)/8)
-  bitset_partitions_ui <- list(
-    key = function(set) bitset(set, bitlen),
-    component_keys = function(set) lapply(set, bitset, bitlen),
-    hash = function(key) to_partition_node_char(key),
-    unkey = function(key) unbitset(key),
-    key_size = function(key) length(unbitset(key)),
-    decompose_key = function(key) individual_bitsets(key),
-    key_children = function(key) lapply(individual_bitsets(key), xor, key),
-    invert_key = function(key) {
-      df_mask <- packBits(c(rep(TRUE, ncol(df)), rep(FALSE, bitlen - ncol(df))))
-      !key & df_mask
-    },
-    lookup_hash = function(hash, partitions) match(hash, partitions$key),
-    get_with_index = function(index, partitions) partitions$value[[index]],
-    calculate_partition = function(key) {
-      attr_indices <- unbitset(key)
-      sp <- fsplit_rows_emptyable(df, attr_indices)
-      unname(sp[lengths(sp) > 1])
-    },
-    add_partition = function(hash, partition, partitions) {
-      partitions$key <- c(partitions$key, hash)
-      partitions$value <- c(partitions$value, list(partition))
-      partitions
-    }
-  )
+  partitions_ui <- partitions_ui(df, key_class = "bitset")
   fetch_partition <- function(attrs_bitset, df, partitions) {
-    fetch_partition_stripped(attrs_bitset, df, partitions, bitset_partitions_ui)
+    fetch_partition_stripped(attrs_bitset, df, partitions, partitions_ui)
   }
   list(
-    key = bitset_partitions_ui$key,
-    key_size = bitset_partitions_ui$key_size,
-    decompose_key = bitset_partitions_ui$decompose_key,
+    key = partitions_ui$key,
+    key_size = partitions_ui$key_size,
+    decompose_key = partitions_ui$decompose_key,
     refine = function(rhs_bitset, lhs_bitset, partitions) {
       fetch_refined_partition(
         df,
-        bitset_partitions_ui$unkey(rhs_bitset),
+        partitions_ui$unkey(rhs_bitset),
         lhs_bitset,
         partitions,
         fetch_partition
@@ -195,73 +148,15 @@ integer_partition_handler <- function(df, accuracy, cache) {
   # through the "interface" provided by these functions, so the main code can
   # focus on implementing the search.
 
-  # The partitions UI encapsulates the partition cache.
-  # General partitions UI elements:
-  # Set: original values, that subset the original lookup table df
-  # Key: transformed set; what is usually passed around
-  # Hash: key transformed into a string for lookup (lookup uses hash, not key)
-  # functions:
-  # key: Set -> Key
-  # component_keys: Set -> [Key] (equivalent to key >> decompose_key)
-  # hash: Key -> Hash
-  # unkey: Key -> Set
-  # key_size: Key -> Int
-  # decompose_key: Key -> [Key] (one key for each atomic element)
-  # key_children: Key -> [Key] (remove one element from the key each time)
-  # invert_key: Key -> Key (bitwise negation on the used bits only)
-  # lookup_hash: Hash -> Partitions -> Option<Index>
-  # get_with_index: Index -> Partitions -> StrippedPartition
-  # calculate_partition: Key -> StrippedPartition (calculate from df)
-  # add_partition: Hash -> Partition -> Partitions -> Partitions
-
-  # Integer partitions UI types:
-  # Set: a no-duplicate integer vector, for which columns of df to use
-  # Key: ???
-  # Hash: an integer, for direct subsetting.
-
-  # The integer partitions UI takes some additional arguments on top of df,
+  # The integer partitions handler takes some additional arguments on top of df,
   # since its use in DFD has some further requirements.
   # accuracy is a threshold for FD correctness.
   # cache is a logical indicating whether partitions are cached at all.
   # As with df, the intention is all use of these arguments to be done through
   # the resulting interface.
 
-  full_key <- to_partition_node(seq_len(ncol(df)))
-  component_keys <- function(set) as.list(to_partition_nodes(set))
-  unkey <- function(key) which(intToBits(key) == 1)
-  subkey_difference <- function(key, subkey) key - subkey
-  partitions_ui <- list(
-    # we could use the partkey directly as an index into a list of
-    # pre-allocated length, but this often requires a very large list that is
-    # slow to assign elements in, so we stick to matching on a growing list
-    # here.
-    # It would also require the partkey to be representable as an integer,
-    # rather than a double, which introduces a tighter constraint on the maximum
-    # number of columns df can have (nonfixed attrs instead of just LHS attrs).
-    # "Partition nodes" in this UI refer to IDs within the partition: these are
-    # different to those used in find_LHSs and powersets.
-    key = function(set) to_partition_node(set),
-    component_keys = function(set) component_keys(set),
-    hash = function(key) key,
-    unkey = function(key) unkey(key),
-    key_size = function(key) length(unkey(key)),
-    decompose_key = function(key) component_keys(unkey(key)),
-    invert_key = function(key) bitwXor(key, full_key),
-    key_union = function(key1, key2) bitwOr(key1, key2),
-    distinct_key_union = function(key1, key2) key1 + key2,
-    key_difference = function(key1, key2) bitwAnd(key1, bitwNot(key2)),
-    subkey_difference = function(key, subkey) subkey_difference(key, subkey),
-    key_children = function(key) {
-      lapply(component_keys(unkey(key)), subkey_difference, key = key)
-    },
-    lookup_hash = function(hash, partitions) match(hash, partitions$key),
-    get_with_index = function(index, partitions) partitions$value[[index]],
-    add_partition = function(hash, partition, partitions) {
-      partitions$key <- c(partitions$key, hash)
-      partitions$value <- c(partitions$value, list(partition))
-      partitions
-    }
-  )
+  # The partitions UI encapsulates the partition cache.
+  partitions_ui <- partitions_ui(df, key_class = "integer")
 
   check_FD_partition <- if (cache)
     function(attr_indices, df, partitions)
@@ -300,6 +195,111 @@ integer_partition_handler <- function(df, accuracy, cache) {
         check_FD_partition
       )
     }
+}
+
+partitions_ui <- function(df, key_class = c("bitset", "integer")) {
+  # The partitions UI encapsulates the partition cache.
+
+  # General partitions UI elements:
+  # Set: original values, that subset the original lookup table df
+  # Key: transformed set; what is usually passed around
+  # Hash: key transformed into a format for subsetting (lookup uses hash, not key)
+
+  # functions:
+  # key: Set -> Key
+  # component_keys: Set -> [Key] (equivalent to key >> decompose_key)
+  # hash: Key -> Hash
+  # unkey: Key -> Set
+  # key_size: Key -> Int
+  # decompose_key: Key -> [Key] (per atomic element; unkey >> component_keys)
+  # key_children: Key -> [Key] (remove one element from the key each time)
+  # invert_key: Key -> Key (bitwise negation on the used bits only)
+  # lookup_hash: Hash -> Partitions -> Option<Index>
+  # get_with_index: Index -> Partitions -> StrippedPartition
+  # calculate_partition: Key -> StrippedPartition (calculate from df)
+  # add_partition: Hash -> Partition -> Partitions -> Partitions
+  key_class <- match.arg(key_class)
+  switch(
+    key_class,
+    bitset = bitset_partitions_ui(df),
+    integer = integer_partitions_ui(df)
+  )
+}
+
+bitset_partitions_ui <- function(df) {
+  # Bitset partitions UI types:
+  # Set: a no-duplicate integer vector, for which columns of df to use
+  # Key: a bitset
+  # Hash: the bitset, with its bytes pasted together to make a string
+  bitlen <- 8*ceiling(ncol(df)/8)
+  list(
+    key = function(set) bitset(set, bitlen),
+    component_keys = function(set) lapply(set, bitset, bitlen),
+    hash = function(key) to_partition_node_char(key),
+    unkey = function(key) unbitset(key),
+    key_size = function(key) length(unbitset(key)),
+    decompose_key = function(key) individual_bitsets(key),
+    key_children = function(key) lapply(individual_bitsets(key), xor, key),
+    invert_key = function(key) {
+      df_mask <- packBits(c(rep(TRUE, ncol(df)), rep(FALSE, bitlen - ncol(df))))
+      !key & df_mask
+    },
+    lookup_hash = function(hash, partitions) match(hash, partitions$key),
+    get_with_index = function(index, partitions) partitions$value[[index]],
+    calculate_partition = function(key) {
+      attr_indices <- unbitset(key)
+      sp <- fsplit_rows_emptyable(df, attr_indices)
+      unname(sp[lengths(sp) > 1])
+    },
+    add_partition = function(hash, partition, partitions) {
+      partitions$key <- c(partitions$key, hash)
+      partitions$value <- c(partitions$value, list(partition))
+      partitions
+    }
+  )
+}
+
+integer_partitions_ui <- function(df) {
+  # Integer partitions UI types:
+  # Set: a no-duplicate integer vector, for which columns of df to use
+  # Key: ???
+  # Hash: an integer, for direct subsetting.
+  full_key <- to_partition_node(seq_len(ncol(df)))
+  component_keys <- function(set) as.list(to_partition_nodes(set))
+  unkey <- function(key) which(intToBits(key) == 1)
+  subkey_difference <- function(key, subkey) key - subkey
+  list(
+    # we could use the partkey directly as an index into a list of
+    # pre-allocated length, but this often requires a very large list that is
+    # slow to assign elements in, so we stick to matching on a growing list
+    # here.
+    # It would also require the partkey to be representable as an integer,
+    # rather than a double, which introduces a tighter constraint on the maximum
+    # number of columns df can have (nonfixed attrs instead of just LHS attrs).
+    # "Partition nodes" in this UI refer to IDs within the partition: these are
+    # different to those used in find_LHSs and powersets.
+    key = function(set) to_partition_node(set),
+    component_keys = function(set) component_keys(set),
+    hash = function(key) key,
+    unkey = function(key) unkey(key),
+    key_size = function(key) length(unkey(key)),
+    decompose_key = function(key) component_keys(unkey(key)),
+    invert_key = function(key) bitwXor(key, full_key),
+    key_union = function(key1, key2) bitwOr(key1, key2),
+    distinct_key_union = function(key1, key2) key1 + key2,
+    key_difference = function(key1, key2) bitwAnd(key1, bitwNot(key2)),
+    subkey_difference = function(key, subkey) subkey_difference(key, subkey),
+    key_children = function(key) {
+      lapply(component_keys(unkey(key)), subkey_difference, key = key)
+    },
+    lookup_hash = function(hash, partitions) match(hash, partitions$key),
+    get_with_index = function(index, partitions) partitions$value[[index]],
+    add_partition = function(hash, partition, partitions) {
+      partitions$key <- c(partitions$key, hash)
+      partitions$value <- c(partitions$value, list(partition))
+      partitions
+    }
+  )
 }
 
 exact_dependencies <- function(
