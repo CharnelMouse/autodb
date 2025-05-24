@@ -20,3 +20,27 @@ stripped_partition_product <- function(sp1, sp2, n_rows) {
   sp <- split(in_both, tab_both, drop = FALSE)
   unname(sp[lengths(sp) >= 2])
 }
+
+stripped_partition_error <- function(lhs_sp, union_sp) {
+  # For LHS -> RHS, error is the total number of records to remove
+  # for the FD to be satisfied. Each subset in the LHS partition
+  # becomes one or more subsets in the combined partition, and all
+  # but one of them must be removed for LHS -> RHS to be satisfied,
+  # i.e. we keep the largest one.
+  # Note that the above is for non-stripped partitions. The algorithm
+  # below is that for stripped partitions, as given in the Tane paper,
+  # but without scaling by the record count at the end.
+  error <- 0L
+  Ts <- integer()
+  for (cl in union_sp) {
+    Ts[cl[1]] <- length(cl)
+  }
+  for (cl in lhs_sp) {
+    m <- 1L
+    for (ts in cl) {
+      m <- max(m, Ts[ts], na.rm = TRUE)
+    }
+    error <- error + length(cl) - m
+  }
+  error
+}

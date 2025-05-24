@@ -242,9 +242,15 @@ integer_partition_handler <- function(df, accuracy, cache) {
     component_keys = function(set) component_keys(set),
     hash = function(key) key,
     unkey = function(key) unkey(key),
+    key_size = function(key) length(unkey(key)),
     decompose_key = function(key) component_keys(unkey(key)),
-    key_children = function(key) lapply(component_keys(unkey(key)), \(ck) key - ck),
     invert_key = function(key) bitwXor(key, full_key),
+    key_union = function(key1, key2) bitwOr(key1, key2),
+    distinct_key_union = function(key1, key2) key1 + key2,
+    key_difference = function(key1, key2) bitwAnd(key1, bitwNot(key2)),
+    key_children = function(key) {
+      lapply(component_keys(unkey(key)), \(ck) key - ck)
+    },
     lookup_hash = function(hash, partitions) match(hash, partitions$key),
     get_with_index = function(index, partitions) partitions$value[[index]],
     add_partition = function(hash, partition, partitions) {
@@ -435,26 +441,15 @@ check_AD_cache <- function(
   rhs_keys <- partitions_ui$component_keys(rhs_set)
   stopifnot(length(rhs_keys) == 1)
   rhs_key <- rhs_keys[[1]]
-  ind_lhs <- partitions_ui$lookup_hash(lhs_hash, partitions)
-  stopifnot(!is.na(ind_lhs))
-  classes_lhs <- partitions_ui$get_with_index(ind_lhs, partitions)
-  classes_lhs_key <- lhs_key + rhs_key
-  ind_union <- partitions_ui$lookup_hash(partitions_ui$hash(classes_lhs_key), partitions)
-  stopifnot(!is.na(ind_union))
-  classes_union <- partitions_ui$get_with_index(ind_union, partitions)
-  e <- 0L
-  Ts <- integer()
-  for (c in classes_union) {
-    Ts[c[1]] <- length(c)
-  }
-  for (c in classes_lhs) {
-    m <- 1L
-    for (ts in c) {
-      m <- max(m, Ts[ts], na.rm = TRUE)
-    }
-    e <- e + length(c) - m
-  }
-  list(e <= limit, partitions)
+  lhs_index <- partitions_ui$lookup_hash(lhs_hash, partitions)
+  stopifnot(!is.na(lhs_index))
+  lhs_sp <- partitions_ui$get_with_index(lhs_index, partitions)
+  union_key <- partitions_ui$distinct_key_union(lhs_key, rhs_key)
+  union_index <- partitions_ui$lookup_hash(partitions_ui$hash(union_key), partitions)
+  stopifnot(!is.na(union_index))
+  union_sp <- partitions_ui$get_with_index(union_index, partitions)
+  error <- stripped_partition_error(lhs_sp, union_sp)
+  list(error <= limit, partitions)
 }
 
 check_AD_nocache <- function(
