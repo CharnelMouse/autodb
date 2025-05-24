@@ -199,10 +199,10 @@ integer_partitions_ui <- function(df) {
 unbitset <- function(key) which(rawToBits(key) == 1)
 
 fetch_partition_stripped <- function(
-    key,
-    df,
-    partitions,
-    partitions_ui
+  key,
+  df,
+  partitions,
+  partitions_ui
 ) {
   key_elements <- partitions_ui$decompose_key(key)
   element_hashes <- vapply(key_elements, partitions_ui$hash, character(1))
@@ -281,11 +281,11 @@ fsplit_rows_emptyable <- function(df, attr_indices) {
 }
 
 fetch_refined_partition <- function(
-    lookup,
-    rhs_set,
-    lhs_key,
-    partition_cache,
-    fetch_partition
+  lookup,
+  rhs_set,
+  lhs_key,
+  partition_cache,
+  fetch_partition
 ) {
   res1 <- fetch_partition(lhs_key, lookup, partition_cache)
   lhs_partition <- res1[[1]]
