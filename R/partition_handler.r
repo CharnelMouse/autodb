@@ -143,31 +143,28 @@ bitset_partitions_ui <- function(lookup) {
   # Key: a bitset
   # Hash: the bitset, with its bytes pasted together to make a string
   bitlen <- 8*ceiling(ncol(lookup)/8)
+  key <- function(set) {
+    bools <- rep(FALSE, bitlen)
+    bools[set] <- TRUE
+    packBits(bools)
+  }
   full_key <- packBits(c(
     rep(TRUE, ncol(lookup)),
     rep(FALSE, bitlen - ncol(lookup))
   ))
-  key <- function(attr_indices, bitlen) {
-    bools <- rep(FALSE, bitlen)
-    bools[attr_indices] <- TRUE
-    packBits(bools)
-  }
-  subkey_difference <- function(key, subkey) key & !subkey # xor is slower
-  unkey <- function(key) which(rawToBits(key) == 1)
+  component_keys <- function(set) lapply(set, key)
   hash <- function(key) paste(key, collapse = "")
-  decompose_key <- function(key) {
-    bitlen <- 8L*length(key)
-    bits <- unkey(key)
-    lapply(bits, key, bitlen)
-  }
+  unkey <- function(key) which(rawToBits(key) == 1)
+  subkey_difference <- function(key, subkey) key & !subkey # xor is slower
+  decompose_key <- function(key) component_keys(unkey(key))
 
   list(
-    key = function(set) key(set, bitlen),
-    component_keys = function(set) lapply(set, key, bitlen),
-    hash = function(key) hash(key),
-    unkey = function(key) unkey(key),
+    key = key,
+    component_keys = component_keys,
+    hash = hash,
+    unkey = unkey,
     key_size = function(key) length(unkey(key)),
-    decompose_key = function(key) decompose_key(key),
+    decompose_key = decompose_key,
     key_children = function(key) {
       lapply(decompose_key(key), subkey_difference, key = key)
     },
@@ -175,7 +172,7 @@ bitset_partitions_ui <- function(lookup) {
     key_union = function(key1, key2) key1 & key2,
     distinct_key_union = function(key1, key2) key1 & key2,
     key_difference = function(key1, key2) key1 & !key2,
-    subkey_difference = function(key, subkey) subkey_difference(key, subkey),
+    subkey_difference = subkey_difference,
     lookup_hash = function(hash, partitions) match(hash, partitions$key),
     get_with_index = function(index, partitions) partitions$value[[index]],
     calculate_partition = function(set) {
@@ -203,12 +200,12 @@ integer_partitions_ui <- function(lookup) {
   decompose_key <- function(key) component_keys(unkey(key))
 
   list(
-    key = function(set) key(set),
-    component_keys = function(set) component_keys(set),
-    hash = function(key) key,
-    unkey = function(key) unkey(key),
+    key = key,
+    component_keys = component_keys,
+    hash = identity,
+    unkey = unkey,
     key_size = function(key) length(unkey(key)),
-    decompose_key = function(key) decompose_key(key),
+    decompose_key = decompose_key,
     key_children = function(key) {
       lapply(decompose_key(key), subkey_difference, key = key)
     },
@@ -216,7 +213,7 @@ integer_partitions_ui <- function(lookup) {
     key_union = function(key1, key2) bitwOr(key1, key2),
     distinct_key_union = function(key1, key2) key1 + key2,
     key_difference = function(key1, key2) bitwAnd(key1, bitwNot(key2)),
-    subkey_difference = function(key, subkey) subkey_difference(key, subkey),
+    subkey_difference = subkey_difference,
     lookup_hash = function(hash, partitions) match(hash, partitions$key),
     get_with_index = function(index, partitions) partitions$value[[index]],
     calculate_partition = function(set) {
