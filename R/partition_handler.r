@@ -60,14 +60,17 @@ integer_partition_handler <- function(lookup, accuracy, cache) {
   partitions_ui <- partitions_ui(lookup, key_class = "integer")
 
   fetch_rank <- if (cache)
-    function(attr_indices, lookup, partitions)
-      fetch_rank_full_cache(
+    function(attr_indices, lookup, partitions) {
+      result <- fetch_stripped_partition_full_cache(
         attr_indices,
         partitions_ui$key(attr_indices),
         lookup,
         partitions,
         partitions_ui
       )
+      result[[1]] <- partition_rank(result[[1]])
+      result
+    }
   else
     function(attr_indices, lookup, partitions)
       fetch_rank_rank_cache(attr_indices, lookup, partitions, partitions_ui)
@@ -278,24 +281,6 @@ approximate_dependencies <- function(
 
   error <- fetch_error(lookup, rhs_set, lhs_set, partitions)
   list(error <= limit, partitions)
-}
-
-fetch_rank_full_cache <- function(
-  set,
-  key,
-  lookup,
-  partitions,
-  partitions_ui
-) {
-  result <- fetch_stripped_partition_full_cache(
-    set,
-    key,
-    lookup,
-    partitions,
-    partitions_ui
-  )
-  result[[1]] <- partition_rank(result[[1]])
-  result
 }
 
 fetch_stripped_partition_full_cache <- function(
