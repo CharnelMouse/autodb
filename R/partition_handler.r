@@ -115,7 +115,7 @@ partitions_ui <- function(lookup, key_class = c("bitset", "integer")) {
   # subkey_difference: Key -> Key -> Key (faster key_difference for subkey)
   # lookup_hash: Hash -> Partitions -> Option<Index>
   # get_with_index: Index -> Partitions -> StrippedPartition
-  # calculate_partition: Key -> StrippedPartition (calculate from lookup)
+  # calculate_partition: Set -> StrippedPartition (calculate from lookup)
   # add_partition: Hash -> Partition -> Partitions -> Partitions
   key_class <- match.arg(key_class)
   switch(
@@ -150,9 +150,8 @@ bitset_partitions_ui <- function(lookup) {
     subkey_difference = function(key, subkey) key & !subkey, # xor is slower
     lookup_hash = function(hash, partitions) match(hash, partitions$key),
     get_with_index = function(index, partitions) partitions$value[[index]],
-    calculate_partition = function(key) {
-      attr_indices <- unkey_bitset(key)
-      sp <- fsplit_rows_emptyable(lookup, attr_indices)
+    calculate_partition = function(set) {
+      sp <- fsplit_rows_emptyable(lookup, set)
       unname(sp[lengths(sp) > 1])
     },
     add_partition = function(hash, partition, partitions) {
@@ -199,7 +198,10 @@ integer_partitions_ui <- function(lookup) {
     subkey_difference = function(key, subkey) subkey_difference(key, subkey),
     lookup_hash = function(hash, partitions) match(hash, partitions$key),
     get_with_index = function(index, partitions) partitions$value[[index]],
-    calculate_partition = function(key) stop("not implemented"),
+    calculate_partition = function(set) {
+      sp <- fsplit_rows(lookup, set)
+      unname(sp[lengths(sp) > 1])
+    },
     add_partition = function(hash, partition, partitions) {
       partitions$key <- c(partitions$key, hash)
       partitions$value <- c(partitions$value, list(partition))
@@ -321,8 +323,7 @@ fetch_partition_full_cache <- function(set, lookup, partitions, partitions_ui) {
         nrow(lookup)
       )
     }else{
-      sp <- fsplit_rows(lookup, set)
-      sp <- unname(sp[lengths(sp) > 1])
+      sp <- partitions_ui$calculate_partition(set)
     }
   }
   partitions <- partitions_ui$add_partition(hash, sp, partitions)
@@ -382,7 +383,7 @@ fetch_partition_stripped <- function(
         nrow(lookup)
       )
     }else{
-      sp <- partitions_ui$calculate_partition(key)
+      sp <- partitions_ui$calculate_partition(partitions_ui$unkey(key))
     }
   }
   partitions <- partitions_ui$add_partition(hash, sp, partitions)
