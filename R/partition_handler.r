@@ -11,6 +11,12 @@ bitset_partition_handler <- function(lookup) {
     fetch_partition_stripped(attrs_bitset, lookup, partitions, partitions_ui)
   }
   list(
+    initialise = function() {
+      list(
+        key = as.character(seq_along(lookup)),
+        value = lapply(unname(as.list(lookup)), pli)
+      )
+    },
     key = partitions_ui$key,
     key_size = partitions_ui$key_size,
     decompose_key = partitions_ui$decompose_key,
