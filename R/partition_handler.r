@@ -120,7 +120,7 @@ partitions_ui <- function(lookup, key_class = c("bitset", "integer")) {
   # component_keys: Set -> [Key] (equivalent to key >> decompose_key)
   # hash: Key -> Hash
   # unkey: Key -> Set
-  # key_size: Key -> Int
+  # key_size: Key -> Int (equivalent to unkey >> length)
   # decompose_key: Key -> [Key] (per atomic element; unkey >> component_keys)
   # key_children: Key -> [Key] (decompose_key >> lapply(subkey_difference, key))
   # invert_key: Key -> Key (bitwise negation on the used bits only)
