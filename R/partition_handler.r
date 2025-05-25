@@ -90,10 +90,10 @@ integer_partition_handler <- function(lookup, accuracy, cache) {
     })
   fetch_error <- if (cache)
     function(lookup, rhs, lhs_set, partitions)
-      fetch_error_withcache(lookup, rhs, lhs_set, partitions, partitions_ui)
+      fetch_error_full_cache(lookup, rhs, lhs_set, partitions, partitions_ui)
   else
     function(lookup, rhs, lhs_set, partitions)
-      fetch_error_nocache(lookup, rhs, lhs_set, partitions, partitions_ui)
+      fetch_error_no_cache(lookup, rhs, lhs_set, partitions, partitions_ui)
   function(rhs, lhs_set, partitions) {
     approximate_dependencies(
       lookup,
@@ -395,7 +395,7 @@ fetch_rank_rank_cache <- function(
   list(set_rank, partitions)
 }
 
-fetch_error_withcache <- function(
+fetch_error_full_cache <- function(
   lookup,
   rhs_set,
   lhs_set,
@@ -418,7 +418,7 @@ fetch_error_withcache <- function(
   stripped_partition_error(lhs_sp, union_sp, nrow(lookup))
 }
 
-fetch_error_nocache <- function(
+fetch_error_no_cache <- function(
   lookup,
   rhs_set,
   lhs_set,
