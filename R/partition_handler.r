@@ -13,7 +13,11 @@ bitset_partition_handler <- function(lookup) {
   list(
     initialise = function() {
       list(
-        key = as.character(seq_along(lookup)),
+        key = vapply(
+          seq_along(lookup),
+          \(set) partitions_ui$hash(partitions_ui$key(set)),
+          character(1)
+        ),
         value = lapply(unname(as.list(lookup)), pli)
       )
     },
@@ -365,10 +369,7 @@ fetch_partition_stripped <- function(
       nrow(lookup)
     )
   }else{
-    # key_size check is here because the bitset partition doesn't currently
-    # get initialised with zero- and single-attribute partitions; once this
-    # is fixed, we can get rid of it
-    if (sum(!is.na(child_indices)) == 1 && partitions_ui$key_size(key) > 1) {
+    if (sum(!is.na(child_indices)) == 1) {
       existing_child_position <- which(!is.na(child_indices))
       remainder_key <- key_elements[[existing_child_position]]
       existing_child_index <- child_indices[[existing_child_position]]
