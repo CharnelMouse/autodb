@@ -286,7 +286,13 @@ fetch_rank_full_cache <- function(
   result
 }
 
-fetch_partition_full_cache <- function(set, key, lookup, partitions, partitions_ui) {
+fetch_partition_full_cache <- function(
+  set,
+  key,
+  lookup,
+  partitions,
+  partitions_ui
+) {
   key_elements <- partitions_ui$component_keys(set)
   hash <- partitions_ui$hash(key)
   index <- partitions_ui$lookup_hash(hash, partitions)
