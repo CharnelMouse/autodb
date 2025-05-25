@@ -307,23 +307,14 @@ fetch_partition_full_cache <- function(set, lookup, partitions, partitions_ui) {
         existing_child_index,
         partitions
       )
-
-      # fetch rank to put partition in cache, then fetch it
-      # could just fetch it in the first place
-      remainder_result <- fetch_rank_full_cache(
+      remainder_result <- fetch_partition_full_cache(
         remainder_element,
         lookup,
         partitions,
         partitions_ui
       )
-      remainder_rank <- remainder_result[[1]]
+      remainder_sp <- remainder_result[[1]]
       partitions <- remainder_result[[2]]
-      remainder_sp <- partitions_ui$get_with_index(
-        partitions_ui$lookup_hash(remainder_key, partitions),
-        partitions
-      )
-      stopifnot(identical(remainder_rank, partition_rank(remainder_sp)))
-
       sp <- stripped_partition_product(
         existing_child_sp,
         remainder_sp,
