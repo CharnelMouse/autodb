@@ -275,8 +275,8 @@ fetch_rank_full_cache <- function(
 
 fetch_partition_full_cache <- function(set, lookup, partitions, partitions_ui) {
   key <- partitions_ui$key(set)
-  key_elements <- partitions_ui$component_keys(set)
 
+  key_elements <- partitions_ui$component_keys(set)
   hash <- partitions_ui$hash(key)
   index <- partitions_ui$lookup_hash(hash, partitions)
   if (!is.na(index)) {
@@ -336,8 +336,9 @@ fetch_partition_stripped <- function(
   partitions,
   partitions_ui
 ) {
-  key_elements <- partitions_ui$decompose_key(key)
+  set <- partitions_ui$unkey(key)
 
+  key_elements <- partitions_ui$component_keys(set)
   hash <- partitions_ui$hash(key)
   index <- partitions_ui$lookup_hash(hash, partitions)
   if (!is.na(index)) {
@@ -383,7 +384,7 @@ fetch_partition_stripped <- function(
         nrow(lookup)
       )
     }else{
-      sp <- partitions_ui$calculate_partition(partitions_ui$unkey(key))
+      sp <- partitions_ui$calculate_partition(set)
     }
   }
   partitions <- partitions_ui$add_partition(hash, sp, partitions)
