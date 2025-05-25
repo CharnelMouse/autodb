@@ -119,7 +119,7 @@ partitions_ui <- function(lookup, key_class = c("bitset", "integer")) {
   # unkey: Key -> Set
   # key_size: Key -> Int
   # decompose_key: Key -> [Key] (per atomic element; unkey >> component_keys)
-  # key_children: Key -> [Key] (invert_key on atomic elements' keys, in order)
+  # key_children: Key -> [Key] (decompose_key >> lapply(subkey_difference, key))
   # invert_key: Key -> Key (bitwise negation on the used bits only)
   # key_union: Key -> Key -> Key
   # distinct_key_union: Key -> Key -> Key (faster key_union for distinct keys)
@@ -147,19 +147,35 @@ bitset_partitions_ui <- function(lookup) {
     rep(TRUE, ncol(lookup)),
     rep(FALSE, bitlen - ncol(lookup))
   ))
+  key <- function(attr_indices, bitlen) {
+    bools <- rep(FALSE, bitlen)
+    bools[attr_indices] <- TRUE
+    packBits(bools)
+  }
+  subkey_difference <- function(key, subkey) key & !subkey # xor is slower
+  unkey <- function(key) which(rawToBits(key) == 1)
+  hash <- function(key) paste(key, collapse = "")
+  decompose_key <- function(key) {
+    bitlen <- 8L*length(key)
+    bits <- unkey(key)
+    lapply(bits, key, bitlen)
+  }
+
   list(
-    key = function(set) bitset_key(set, bitlen),
-    component_keys = function(set) lapply(set, bitset_key, bitlen),
-    hash = function(key) hash_bitset_key(key),
-    unkey = function(key) unkey_bitset(key),
-    key_size = function(key) length(unkey_bitset(key)),
-    decompose_key = function(key) decompose_bitset_key(key),
-    key_children = function(key) lapply(decompose_bitset_key(key), xor, key),
+    key = function(set) key(set, bitlen),
+    component_keys = function(set) lapply(set, key, bitlen),
+    hash = function(key) hash(key),
+    unkey = function(key) unkey(key),
+    key_size = function(key) length(unkey(key)),
+    decompose_key = function(key) decompose_key(key),
+    key_children = function(key) {
+      lapply(decompose_key(key), subkey_difference, key = key)
+    },
     invert_key = function(key) !key & full_key,
     key_union = function(key1, key2) key1 & key2,
     distinct_key_union = function(key1, key2) key1 & key2,
     key_difference = function(key1, key2) key1 & !key2,
-    subkey_difference = function(key, subkey) key & !subkey, # xor is slower
+    subkey_difference = function(key, subkey) subkey_difference(key, subkey),
     lookup_hash = function(hash, partitions) match(hash, partitions$key),
     get_with_index = function(index, partitions) partitions$value[[index]],
     calculate_partition = function(set) {
@@ -179,29 +195,22 @@ integer_partitions_ui <- function(lookup) {
   # Set: a no-duplicate integer vector, for which columns of lookup to use
   # Key: an integer
   # Hash: an integer, for direct subsetting
-  full_key <- integer_key(seq_len(ncol(lookup)))
-  component_keys <- function(set) as.list(integer_component_keys(set))
+  key <- function(set) as.integer(sum(2^(set - 1L)))
+  full_key <- key(seq_len(ncol(lookup)))
+  component_keys <- function(set) as.list(as.integer(2^(set - 1L)))
   unkey <- function(key) which(intToBits(key) == 1)
   subkey_difference <- function(key, subkey) key - subkey
+  decompose_key <- function(key) component_keys(unkey(key))
+
   list(
-    # we could use the partkey directly as an index into a list of
-    # pre-allocated length, but this often requires a very large list that is
-    # slow to assign elements in, so we stick to matching on a growing list
-    # here.
-    # It would also require the partkey to be representable as an integer,
-    # rather than a double, which introduces a tighter constraint on the maximum
-    # number of columns lookup can have (nonfixed attrs instead of just LHS
-    # attrs).
-    # "Partition node" in this UI refers to an ID within the partition cache,
-    # not to the nodes used in find_LHSs and powersets.
-    key = function(set) integer_key(set),
+    key = function(set) key(set),
     component_keys = function(set) component_keys(set),
     hash = function(key) key,
     unkey = function(key) unkey(key),
     key_size = function(key) length(unkey(key)),
-    decompose_key = function(key) component_keys(unkey(key)),
+    decompose_key = function(key) decompose_key(key),
     key_children = function(key) {
-      lapply(component_keys(unkey(key)), subkey_difference, key = key)
+      lapply(decompose_key(key), subkey_difference, key = key)
     },
     invert_key = function(key) bitwXor(key, full_key),
     key_union = function(key1, key2) bitwOr(key1, key2),
@@ -312,8 +321,8 @@ fetch_partition_full_cache <- function(
   if (sum(!is.na(child_indices)) >= 2) {
     chosen_indices <- which(!is.na(child_indices))[1:2]
     sp <- stripped_partition_product(
-      partitions_ui$get_with_index(child_indices[chosen_indices[[1]]], partitions),
-      partitions_ui$get_with_index(child_indices[chosen_indices[[2]]], partitions),
+      partitions_ui$get_with_index(child_indices[[chosen_indices[[1]]]], partitions),
+      partitions_ui$get_with_index(child_indices[[chosen_indices[[2]]]], partitions),
       nrow(lookup)
     )
   }else{
@@ -321,12 +330,12 @@ fetch_partition_full_cache <- function(
       existing_child_position <- which(!is.na(child_indices))
       remainder_element <- set[[existing_child_position]]
       remainder_key <- key_elements[[existing_child_position]]
-      existing_child_index <- child_indices[existing_child_position]
+      existing_child_index <- child_indices[[existing_child_position]]
       existing_child_sp <- partitions_ui$get_with_index(
         existing_child_index,
         partitions
       )
-      remainder_result <- fetch_partition_full_cache(
+      remainder_result <- fetch_partition_stripped(
         remainder_element,
         remainder_key,
         lookup,
@@ -362,7 +371,7 @@ fetch_partition_stripped <- function(
     sp <- partitions_ui$get_with_index(index, partitions)
     return(list(sp, partitions))
   }
-  child_keys <- partitions_ui$key_children(key)
+  child_keys <- lapply(key_elements, partitions_ui$subkey_difference, key = key)
   child_hashes <- lapply(child_keys, partitions_ui$hash)
   child_indices <- vapply(
     child_hashes,
@@ -381,6 +390,7 @@ fetch_partition_stripped <- function(
   }else{
     if (sum(!is.na(child_indices)) == 1) {
       existing_child_position <- which(!is.na(child_indices))
+      remainder_element <- set[[existing_child_position]]
       remainder_key <- key_elements[[existing_child_position]]
       existing_child_index <- child_indices[[existing_child_position]]
       existing_child_sp <- partitions_ui$get_with_index(
@@ -388,7 +398,7 @@ fetch_partition_stripped <- function(
         partitions
       )
       remainder_result <- fetch_partition_stripped(
-        partitions_ui$unkey(remainder_key),
+        remainder_element,
         remainder_key,
         lookup,
         partitions,
@@ -496,32 +506,6 @@ fetch_error_nocache <- function(
   splitter <- lookup[, lhs_set, drop = FALSE]
   rhs_value_lhs_partition <- fsplit(splitted, splitter)
   value_partition_error(rhs_value_lhs_partition, nrow(lookup))
-}
-
-bitset_key <- function(attr_indices, bitlen) {
-  bools <- rep(FALSE, bitlen)
-  bools[attr_indices] <- TRUE
-  packBits(bools)
-}
-
-unkey_bitset <- function(key) which(rawToBits(key) == 1)
-
-hash_bitset_key <- function(key) {
-  paste(key, collapse = "")
-}
-
-decompose_bitset_key <- function(key) {
-  bitlen <- 8L*length(key)
-  bits <- unkey_bitset(key)
-  lapply(bits, bitset_key, bitlen)
-}
-
-integer_key <- function(set) {
-  as.integer(sum(2^(set - 1L)))
-}
-
-integer_component_keys <- function(set) {
-  as.integer(2^(set - 1L))
 }
 
 fsplit_rows_emptyable <- function(lookup, set) {
