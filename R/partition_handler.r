@@ -8,7 +8,13 @@ bitset_partition_handler <- function(lookup) {
   # The partitions UI encapsulates interacting with the partition cache.
   partitions_ui <- partitions_ui(lookup, key_class = "bitset")
   fetch_partition <- function(attrs_bitset, lookup, partitions) {
-    fetch_partition_stripped(attrs_bitset, lookup, partitions, partitions_ui)
+    fetch_partition_stripped(
+      partitions_ui$unkey(attrs_bitset),
+      attrs_bitset,
+      lookup,
+      partitions,
+      partitions_ui
+    )
   }
   list(
     initialise = function() {
@@ -55,7 +61,13 @@ integer_partition_handler <- function(lookup, accuracy, cache) {
 
   fetch_rank <- if (cache)
     function(attr_indices, lookup, partitions)
-      fetch_rank_full_cache(attr_indices, lookup, partitions, partitions_ui)
+      fetch_rank_full_cache(
+        attr_indices,
+        partitions_ui$key(attr_indices),
+        lookup,
+        partitions,
+        partitions_ui
+      )
   else
     function(attr_indices, lookup, partitions)
       fetch_rank_rank_cache(attr_indices, lookup, partitions, partitions_ui)
@@ -264,18 +276,17 @@ approximate_dependencies <- function(
 
 fetch_rank_full_cache <- function(
   set,
+  key,
   lookup,
   partitions,
   partitions_ui
 ) {
-  result <- fetch_partition_full_cache(set, lookup, partitions, partitions_ui)
+  result <- fetch_partition_full_cache(set, key, lookup, partitions, partitions_ui)
   result[[1]] <- partition_rank(result[[1]])
   result
 }
 
-fetch_partition_full_cache <- function(set, lookup, partitions, partitions_ui) {
-  key <- partitions_ui$key(set)
-
+fetch_partition_full_cache <- function(set, key, lookup, partitions, partitions_ui) {
   key_elements <- partitions_ui$component_keys(set)
   hash <- partitions_ui$hash(key)
   index <- partitions_ui$lookup_hash(hash, partitions)
@@ -311,6 +322,7 @@ fetch_partition_full_cache <- function(set, lookup, partitions, partitions_ui) {
       )
       remainder_result <- fetch_partition_full_cache(
         remainder_element,
+        remainder_key,
         lookup,
         partitions,
         partitions_ui
@@ -331,13 +343,12 @@ fetch_partition_full_cache <- function(set, lookup, partitions, partitions_ui) {
 }
 
 fetch_partition_stripped <- function(
+  set,
   key,
   lookup,
   partitions,
   partitions_ui
 ) {
-  set <- partitions_ui$unkey(key)
-
   key_elements <- partitions_ui$component_keys(set)
   hash <- partitions_ui$hash(key)
   index <- partitions_ui$lookup_hash(hash, partitions)
@@ -371,6 +382,7 @@ fetch_partition_stripped <- function(
         partitions
       )
       remainder_result <- fetch_partition_stripped(
+        partitions_ui$unkey(remainder_key),
         remainder_key,
         lookup,
         partitions,
