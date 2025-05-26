@@ -126,6 +126,7 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
     res <- c(res, attr_res[[1]])
     D <- attr_res[[2]]
     new_nodes <- attr_res[[3]]
+    partition_cache <- attr_res[[4]]
     return_stack <- c(
       new_nodes[vapply(
         new_nodes,
@@ -248,7 +249,7 @@ FDHitsJoint_visit <- function(
     }
   }
   if (all(W_bitset == 0)) {
-    return(list(list(), D_bitsets, list()))
+    return(list(list(), D_bitsets, list(), partition_cache))
   }
   for (B in partition_handler$decompose_key(V_bitset)) {
     # remove if ∀ A∈W ∃ C∈S ∀ E∈critical(C,A,S): B∈E,
@@ -278,7 +279,7 @@ FDHitsJoint_visit <- function(
     relevant_Spli <- refinement[[2]]
     partition_cache <- refinement[[3]]
     if (validate(refined_partitions, relevant_Spli))
-      return(list(list(list(S_bitset, W_bitset)), D_bitsets, list()))
+      return(list(list(list(S_bitset, W_bitset)), D_bitsets, list(), partition_cache))
     stopifnot(length(relevant_Spli) > 0)
     ds <- new_diffset(relevant_Spli, refined_partitions, lookup)
     dsl <- list(ds)
@@ -314,7 +315,7 @@ FDHitsJoint_visit <- function(
       }
     )
   )
-  list(res, D_bitsets, new_nodes)
+  list(res, D_bitsets, new_nodes, partition_cache)
 }
 
 critical <- function(C_bitset, A_bitset, S_bitset, D_bitsets) {
