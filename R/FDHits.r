@@ -399,21 +399,21 @@ ffactor1i <- function(x) {
 sample_diffsets <- function(pli, lookup, epsilon = 0.3) {
   sizes <- choose(lengths(pli), 2)
   cp <- sum(sizes)
-  indices <- sample.int(cp, floor(cp^epsilon), replace = FALSE)
-  boundaries <- c(0L, cumsum(sizes))
-  intervals <- findInterval(indices, boundaries, left.open = TRUE)
-  offsets <- indices - boundaries[intervals]
-  sample_sizes <- sizes[intervals]
-  stopifnot(all(1 <= offsets & offsets <= sample_sizes))
-  samples <- Map(
-    \(offset, rows) {
-      # safe to use `:`, since length(rows) > 1 in stripped partitions
-      first_boundaries <- c(0, cumsum(as.numeric((length(rows) - 1):1)))
-      index <- findInterval(offset, first_boundaries, left.open = TRUE)
-      rows[index + c(0L, offset - first_boundaries[[index]])]
-    },
-    offsets,
-    pli[intervals]
+  if (cp == 0)
+    return(list())
+  sample_sets <- sample.int(
+    length(sizes),
+    floor(cp^epsilon),
+    replace = TRUE,
+    prob = sizes
+  )
+  samples <- lapply(
+    sample_sets,
+    \(n) {
+      set <- pli[[n]]
+      inds <- sample.int(length(set), 2, replace = FALSE)
+      set[inds]
+    }
   )
   lapply(
     samples,

@@ -133,15 +133,8 @@ describe("sample_diffsets", {
             lapply(match, names(lookup))
         ))
       )))
-      # epsilon = TRUE => samples all pairs => finds all difference sets
-      expect_true(all(sapply(
-        names(plis),
-        \(nm) setequal(
-          sample_diffsets(plis[[nm]], lookup, 1),
-          Filter(\(d) !is.element(nm, d), all_diff) |>
-            lapply(match, names(lookup))
-        )
-      )))
+      # epsilon = 1 needn't sample every relevant difference set,
+      # since sampling can have duplicates
     }
     forall(gen_df(6, 7), sample_diffsets_works)
   })
