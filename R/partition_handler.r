@@ -360,7 +360,7 @@ fetch_refined_partition <- function(
     individual_rhs_lookup_indices[[1]]
   else {
     do.call(paste, unname(lookup[rhs_set])) |>
-      (\(x) match(x, x))()
+      lookup_indices()
   }
   relevant_lhs_partition <- filter_partition(lhs_partition, rhs_lookup_indices)
   if (partition_rank(relevant_lhs_partition) == 0)

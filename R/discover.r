@@ -386,6 +386,8 @@ format_if_float <- function(x, digits) {
 }
 
 lookup_table <- function(df) {
-  lapply(df, \(x) match(x, x)) |>
+  lapply(df, lookup_indices) |>
     data.frame(check.names = FALSE)
 }
+
+lookup_indices <- function(x) match(x, x)
