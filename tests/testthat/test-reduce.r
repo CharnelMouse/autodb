@@ -1,3 +1,21 @@
+describe("reduce", {
+  it("decompose >> reduce is equivalent to reduce(main_names) >> decompose", {
+    forall(
+      gen_df(6, 7),
+      function(x) {
+        schema <- normalise(discover(x, 1))
+        db <- decompose(x, schema)
+        sizes <- vapply(records(db), nrow, integer(1))
+        mains <- names(db)[which(sizes == max(sizes))]
+        reduced_db <- reduce(db)
+        db_reduced <- decompose(x, reduce(schema, main = mains))
+        expect_identical(length(reduced_db), length(db_reduced))
+        expect_identical(reduced_db, db_reduced[names(reduced_db)])
+      }
+    )
+  })
+})
+
 describe("reduce.database", {
   it("is idempotent", {
     has_idempotent_reduction <- function(df) {
