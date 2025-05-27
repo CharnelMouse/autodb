@@ -1,17 +1,34 @@
 describe("reduce", {
   it("decompose >> reduce is equivalent to reduce(main_names) >> decompose", {
     forall(
-      gen_df(6, 7),
-      function(x) {
-        schema <- normalise(discover(x, 1))
+      gen_df(6, 7) |>
+        gen.with(\(x) {
+          list(
+            x,
+            normalise(discover(x, 1))
+          )
+        }) |>
+        gen.and_then(uncurry(\(x, schema) {
+          list(
+            gen.pure(x),
+            gen.pure(schema),
+            gen.choice(
+              gen.pure(NULL),
+              gen.subsequence(names(schema))
+            )
+          )
+        })),
+      function(x, schema, mains) {
         db <- decompose(x, schema)
         sizes <- vapply(records(db), nrow, integer(1))
-        mains <- names(db)[which(sizes == max(sizes))]
-        reduced_db <- reduce(db)
+        if (is.null(mains))
+          mains <- names(db)[which(sizes == max(sizes))]
+        reduced_db <- reduce(db, main = mains)
         db_reduced <- decompose(x, reduce(schema, main = mains))
         expect_identical(length(reduced_db), length(db_reduced))
         expect_identical(reduced_db, db_reduced[names(reduced_db)])
-      }
+      },
+      curry = TRUE
     )
   })
 })

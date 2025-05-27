@@ -12,6 +12,7 @@
     * Values are now rounded by significant digits, as intended, rather than by decimal places.
     * In addition to `autodb`, `discover`, and `df_equiv`, values are now also rounded for `insert` and `decompose`.
 * Some `relation` error messages are more informative.
+* Added a `main` argument for the `database` method of `reduce`.
 
 ## Fixes
 

@@ -36,14 +36,20 @@ reduce <- function(x, ...) {
 #' likely to fail or return incomplete results.
 #'
 #' @param x A database, whose relations are to be filtered.
+#' @param main A character vector, containing names of relations to be
+#'   considered as the "main" relations. If missing, taken to be the names of
+#'   all relations with the largest record count.
 #' @inheritParams reduce
 #'
 #' @return A database, with the auxiliary relations and foreign key
 #'   references removed.
 #' @exportS3Method
-reduce.database <- function(x, ...) {
-  relation_nrows <- vapply(records(x), nrow, integer(1))
-  queue <- names(relation_nrows)[relation_nrows == max(relation_nrows)]
+reduce.database <- function(x, main, ...) {
+  if (missing(main)) {
+    relation_nrows <- vapply(records(x), nrow, integer(1))
+    main <- names(relation_nrows)[relation_nrows == max(relation_nrows)]
+  }
+  queue <- main
   kept <- character()
   while (length(queue) > 0) {
     current <- queue[1]

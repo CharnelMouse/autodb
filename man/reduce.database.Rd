@@ -4,10 +4,14 @@
 \alias{reduce.database}
 \title{Remove database relations not linked to the main relations}
 \usage{
-\method{reduce}{database}(x, ...)
+\method{reduce}{database}(x, main, ...)
 }
 \arguments{
 \item{x}{A database, whose relations are to be filtered.}
+
+\item{main}{A character vector, containing names of relations to be
+considered as the "main" relations. If missing, taken to be the names of
+all relations with the largest record count.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
