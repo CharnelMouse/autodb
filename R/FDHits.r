@@ -176,11 +176,7 @@ FDHitsSep_visit <- function(
     }
   }
   # validation at the leaves
-  uncovered <- partition_handler$get_diffset_keys()[uncov_sep(
-    S_bitset,
-    A_bitset,
-    partition_handler$get_diffset_keys()
-  )]
+  uncovered <- partition_handler$get_uncovered_keys_sep(S_bitset, A_bitset)
   if (length(uncovered) == 0) {
     refinement <- partition_handler$refine(A_bitset, S_bitset)
     refined_partitions <- refinement[[1]]
@@ -196,7 +192,11 @@ FDHitsSep_visit <- function(
       partition_handler$get_diffset_keys()
     )
     stopifnot(length(added) > 0)
-    uncovered <- added[uncov_sep(S_bitset, A_bitset, added)]
+    uncovered <- partition_handler$get_uncovered_keys_sep(
+      S_bitset,
+      A_bitset,
+      diffsets = added
+    )
     partition_handler$add_diffset_keys(added)
   }
   # branching
@@ -271,11 +271,7 @@ FDHitsJoint_visit <- function(
     }
   }
   # validation at the leaves
-  uncovered_bitsets <- partition_handler$get_diffset_keys()[uncov_joint(
-    S_bitset,
-    W_bitset,
-    partition_handler$get_diffset_keys()
-  )]
+  uncovered_bitsets <- partition_handler$get_uncovered_keys_joint(S_bitset, W_bitset)
   if (length(uncovered_bitsets) == 0) {
     refinement <- partition_handler$refine(W_bitset, S_bitset)
     refined_partitions <- refinement[[1]]
@@ -291,7 +287,11 @@ FDHitsJoint_visit <- function(
       partition_handler$get_diffset_keys()
     )
     stopifnot(length(added_bitsets) > 0)
-    uncovered_bitsets <- added_bitsets[uncov_joint(S_bitset, W_bitset, added_bitsets)]
+    uncovered_bitsets <- partition_handler$get_uncovered_keys_joint(
+      S_bitset,
+      W_bitset,
+      added_bitsets
+    )
     partition_handler$add_diffset_keys(added_bitsets)
   }
   # branching
