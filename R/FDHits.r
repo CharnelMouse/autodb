@@ -271,7 +271,7 @@ FDHitsJoint_visit <- function(
     }
   }
   # validation at the leaves
-  uncovered_bitsets <- partition_handler$get_uncovered_keys(S_bitset, W_bitset)
+  uncovered_bitsets <- partition_handler$fetch_uncovered_keys(S_bitset, W_bitset)
   if (length(uncovered_bitsets) == 0) {
     refinement <- partition_handler$refine(W_bitset, S_bitset)
     refined_partitions <- refinement[[1]]
@@ -287,7 +287,7 @@ FDHitsJoint_visit <- function(
       partition_handler$get_diffset_keys()
     )
     stopifnot(length(added_bitsets) > 0)
-    uncovered_bitsets <- partition_handler$get_uncovered_keys(
+    uncovered_bitsets <- partition_handler$fetch_uncovered_keys(
       S_bitset,
       W_bitset,
       added_bitsets

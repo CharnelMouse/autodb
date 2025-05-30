@@ -45,9 +45,6 @@ refineable_partition_handler <- function(lookup, key_class) {
     diffset_cache
   }
   stopifnot(key_class == "bitset")
-  get_uncovered_keys_bitset <- function(S_key, W_key, diffsets = diffset_cache) {
-    diffsets[uncov(S_key, W_key, diffsets)]
-  }
   fetch_uncovered_keys_bitset <- function(S_key, W_key, diffsets = diffset_cache) {
     res <- fetch_uncovered_keys_bitset_pure(
       S_key,
@@ -76,9 +73,6 @@ refineable_partition_handler <- function(lookup, key_class) {
     },
     add_diffset_keys = function(diffset_keys) add_diffsets(diffset_keys),
     get_diffset_keys = function() get_diffsets(),
-    get_uncovered_keys = function(S_key, W_key, ...) {
-      get_uncovered_keys_bitset(S_key, W_key, ...)
-    },
     fetch_uncovered_keys = function(S_key, W_key, ...) {
       fetch_uncovered_keys_bitset(S_key, W_key, ...)
     }
@@ -312,6 +306,9 @@ bitset_uncov_ui <- function(lookup) {
     hash = hash,
     lookup_hash = function(hash, partitions) match(hash, partitions$key),
     get_with_index = function(index, partitions) partitions$value[[index]],
+    calculate = function(S_key, W_key, diffsets) {
+      diffsets[uncov(S_key, W_key, diffsets)]
+    },
     add = function(hash, uncov, uncov_cache) {
       uncov_cache$key <- c(uncov_cache$key, hash)
       uncov_cache$value <- c(uncov_cache$value, list(uncov))
@@ -545,7 +542,7 @@ fetch_uncovered_keys_bitset_pure <- function(
   index <- uncov_ui$lookup_hash(hash, uncov_cache)
   if (!is.na(index))
     return(list(uncov_ui$get_with_index(index), uncov_cache))
-  result <- diffsets[uncov(S_key, W_key, diffsets)]
+  result <- uncov_ui$calculate(S_key, W_key, diffsets)
   uncov_cache <- uncov_ui$add(index, result, uncov_cache)
   list(result, uncov_cache)
 }
