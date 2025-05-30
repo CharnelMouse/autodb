@@ -34,11 +34,11 @@ bitset_partition_handler <- function(lookup) {
     res[[1]]
   }
   list(
+    cache_size = function() length(partition_cache$key),
     reset = function() reset_cache(initial_cache),
     key = partitions_ui$key,
     key_size = partitions_ui$key_size,
     decompose_key = partitions_ui$decompose_key,
-    cache_size = function() length(partition_cache$key),
     refine = function(rhs_bitset, lhs_bitset) {
       fetch_refined_partition(
         lookup,
@@ -123,6 +123,7 @@ integer_partition_handler <- function(lookup, accuracy, full_cache) {
       fetch_error_no_cache(lookup, rhs, lhs_set, partition_cache, partitions_ui)
 
   list(
+    cache_size = function() length(partition_cache$key),
     reset = function() reset_cache(initial_cache),
     check = function(rhs, lhs_set) {
       approximate_dependencies(
@@ -133,8 +134,7 @@ integer_partition_handler <- function(lookup, accuracy, full_cache) {
         fetch_rank,
         fetch_error
       )
-    },
-    cache_size = function() length(partition_cache$key)
+    }
   )
 }
 
