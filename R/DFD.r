@@ -155,9 +155,10 @@ DFD <- function(
           n_lhs_attrs,
           partition_handler,
           bijection_candidate_nonfixed_indices,
-          detset_limit,
-          store_cache
+          detset_limit
         )
+        if (!store_cache)
+          partition_handler$clear()
         if (lhss[[2]]) {
           stopifnot(
             is.element(lhss[[1]], bijection_candidate_nonfixed_indices),
@@ -191,8 +192,6 @@ DFD <- function(
             dependencies[[attr_names[nonfixed][rhs]]],
             lapply(lhss[[1]], \(x) attr_names[nonfixed][x])
           )
-        if (!store_cache)
-          partition_handler$clear()
       }
     }
   }
@@ -235,8 +234,7 @@ find_LHSs_dfd <- function(
   n_lhs_attrs,
   partition_handler,
   bijection_candidate_nonfixed_indices,
-  detset_limit,
-  store_cache = FALSE
+  detset_limit
 ) {
   # The original library "names" nodes with their attribute set,
   # so finding a node involves matching a character vector against
@@ -295,8 +293,6 @@ find_LHSs_dfd <- function(
                 lhs_index,
                 bijection_candidate_nonfixed_indices
               ))
-              if (!store_cache)
-                partition_handler$clear()
               return(list(lhs_index, TRUE))
             }
           }
@@ -343,8 +339,6 @@ find_LHSs_dfd <- function(
                   lhs_index,
                   bijection_candidate_nonfixed_indices
                 ))
-                if (!store_cache)
-                  partition_handler$clear()
                 return(list(lhs_index, TRUE))
               }
             }
@@ -386,8 +380,6 @@ find_LHSs_dfd <- function(
       detset_limit
     )
   }
-  if (!store_cache)
-    partition_handler$clear()
   list(
     lapply(min_deps, \(md) lhs_nonfixed_indices[nodes$bits[[md]]]),
     FALSE
