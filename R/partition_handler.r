@@ -22,10 +22,10 @@ refineable_partition_handler <- function(lookup, key_class) {
   reset_cache <- function(initial_cache) {
     partition_cache <<- initial_cache
   }
-  fetch_partition <- function(attrs_bitset, lookup) {
+  fetch_partition <- function(key, lookup) {
     res <- fetch_stripped_partition_full_cache(
-      partitions_ui$unkey(attrs_bitset),
-      attrs_bitset,
+      partitions_ui$unkey(key),
+      key,
       lookup,
       partition_cache,
       partitions_ui
@@ -39,11 +39,11 @@ refineable_partition_handler <- function(lookup, key_class) {
     key = partitions_ui$key,
     key_size = partitions_ui$key_size,
     decompose_key = partitions_ui$decompose_key,
-    refine = function(rhs_bitset, lhs_bitset) {
+    refine = function(rhs_key, lhs_key) {
       fetch_refined_partition(
         lookup,
-        partitions_ui$unkey(rhs_bitset),
-        lhs_bitset,
+        partitions_ui$unkey(rhs_key),
+        lhs_key,
         fetch_partition
       )
     }
@@ -75,10 +75,10 @@ checkable_partition_handler <- function(lookup, key_class, accuracy, full_cache)
     partition_cache <<- initial_cache
   }
   fetch_rank <- if (full_cache)
-    function(attr_indices, lookup) {
+    function(set, lookup) {
       result <- fetch_stripped_partition_full_cache(
-        attr_indices,
-        partitions_ui$key(attr_indices),
+        set,
+        partitions_ui$key(set),
         lookup,
         partition_cache,
         partitions_ui
@@ -87,9 +87,9 @@ checkable_partition_handler <- function(lookup, key_class, accuracy, full_cache)
       partition_rank(result[[1]])
     }
   else
-    function(attr_indices, lookup) {
+    function(set, lookup) {
       result <- fetch_rank_rank_cache(
-        attr_indices,
+        set,
         lookup,
         partition_cache,
         partitions_ui
@@ -104,10 +104,10 @@ checkable_partition_handler <- function(lookup, key_class, accuracy, full_cache)
     # exact dependences have no need to calculate FD error (e(X -> Y))
     return(list(
       reset = function() reset_cache(initial_cache),
-      check = function(rhs, lhs_set) {
+      check = function(rhs_set, lhs_set) {
         exact_dependencies(
           lookup,
-          rhs,
+          rhs_set,
           lhs_set,
           fetch_rank
         )
@@ -115,20 +115,20 @@ checkable_partition_handler <- function(lookup, key_class, accuracy, full_cache)
       cache_size = function() length(partition_cache$key)
     ))
   fetch_error <- if (full_cache)
-    function(lookup, rhs, lhs_set) {
-      fetch_error_full_cache(lookup, rhs, lhs_set, partition_cache, partitions_ui)
+    function(lookup, rhs_set, lhs_set) {
+      fetch_error_full_cache(lookup, rhs_set, lhs_set, partition_cache, partitions_ui)
     }
   else
-    function(lookup, rhs, lhs_set)
-      fetch_error_no_cache(lookup, rhs, lhs_set, partition_cache, partitions_ui)
+    function(lookup, rhs_set, lhs_set)
+      fetch_error_no_cache(lookup, rhs_set, lhs_set, partition_cache, partitions_ui)
 
   list(
     cache_size = function() length(partition_cache$key),
     reset = function() reset_cache(initial_cache),
-    check = function(rhs, lhs_set) {
+    check = function(rhs_set, lhs_set) {
       approximate_dependencies(
         lookup,
-        rhs,
+        rhs_set,
         lhs_set,
         limit,
         fetch_rank,
