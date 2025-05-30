@@ -13,7 +13,6 @@ DFD <- function(
   attr_names <- names(lookup)
   n_cols <- length(attrs)
 
-  partitions <- list()
   dependencies <- stats::setNames(rep(list(list()), n_cols), attr_names)
 
   # check for constant-value columns, because if columns are fixed we can
@@ -154,13 +153,12 @@ DFD <- function(
           lhs_nonfixed_indices,
           nodes,
           n_lhs_attrs,
-          partitions,
           partition_handler,
           bijection_candidate_nonfixed_indices,
           detset_limit,
           store_cache
         )
-        if (lhss[[2 + store_cache]]) {
+        if (lhss[[2]]) {
           stopifnot(
             is.element(lhss[[1]], bijection_candidate_nonfixed_indices),
             lhss[[1]] < rhs
@@ -193,13 +191,17 @@ DFD <- function(
             dependencies[[attr_names[nonfixed][rhs]]],
             lapply(lhss[[1]], \(x) attr_names[nonfixed][x])
           )
-        if (store_cache)
-          partitions <- lhss[[2]]
+        if (!store_cache)
+          partition_handler$clear()
       }
     }
   }
 
-  report$stat("DFD complete")
+  report$stat(paste0(
+    "DFD complete",
+    "\n",
+    with_number(partition_handler$cache_size(), "partition", " cached", "s cached")
+  ))
   dependencies <- add_simple_key_deps(
     dependencies,
     attr_names[determinant_keys],
@@ -231,7 +233,6 @@ find_LHSs_dfd <- function(
   lhs_nonfixed_indices,
   nodes,
   n_lhs_attrs,
-  partitions,
   partition_handler,
   bijection_candidate_nonfixed_indices,
   detset_limit,
@@ -294,10 +295,9 @@ find_LHSs_dfd <- function(
                 lhs_index,
                 bijection_candidate_nonfixed_indices
               ))
-              if (store_cache)
-                return(list(lhs_index, partitions, TRUE))
-              else
-                return(list(lhs_index, TRUE))
+              if (!store_cache)
+                partition_handler$clear()
+              return(list(lhs_index, TRUE))
             }
           }
           if (isFALSE(min_infer))
@@ -326,13 +326,10 @@ find_LHSs_dfd <- function(
         }
         if (nodes$category[node] == 0L) {
           lhs_set <- lhs_nonfixed_indices[nodes$bits[[node]]]
-          cp <- partition_handler(
+          result <- partition_handler$check(
             rhs,
-            lhs_set,
-            partitions
+            lhs_set
           )
-          result <- cp[[1]]
-          partitions <- cp[[2]]
           if (result) {
             min_infer <- is_minimal(node, nodes)
             if (isFALSE(min_infer))
@@ -346,10 +343,9 @@ find_LHSs_dfd <- function(
                   lhs_index,
                   bijection_candidate_nonfixed_indices
                 ))
-                if (store_cache)
-                  return(list(lhs_index, partitions, TRUE))
-                else
-                  return(list(lhs_index, TRUE))
+                if (!store_cache)
+                  partition_handler$clear()
+                return(list(lhs_index, TRUE))
               }
             }
             if (is.na(min_infer))
@@ -390,17 +386,12 @@ find_LHSs_dfd <- function(
       detset_limit
     )
   }
-  if (store_cache)
-    list(
-      lapply(min_deps, \(md) lhs_nonfixed_indices[nodes$bits[[md]]]),
-      partitions,
-      FALSE
-    )
-  else
-    list(
-      lapply(min_deps, \(md) lhs_nonfixed_indices[nodes$bits[[md]]]),
-      FALSE
-    )
+  if (!store_cache)
+    partition_handler$clear()
+  list(
+    lapply(min_deps, \(md) lhs_nonfixed_indices[nodes$bits[[md]]]),
+    FALSE
+  )
 }
 
 pick_next_node <- function(node, nodes, trace, min_deps, max_non_deps) {

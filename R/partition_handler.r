@@ -44,7 +44,7 @@ bitset_partition_handler <- function(lookup) {
   )
 }
 
-integer_partition_handler <- function(lookup, accuracy, cache) {
+integer_partition_handler <- function(lookup, accuracy, full_cache) {
   # Gives a list of functions that handle lookup and calculation of stripped
   # partitions, encapsulating dependence on the partitions cache and the
   # original lookup table. The intention is for all use of lookup to be done
@@ -61,52 +61,73 @@ integer_partition_handler <- function(lookup, accuracy, cache) {
   # The partitions UI encapsulates interacting with the partition cache.
   partitions_ui <- partitions_ui(lookup, key_class = "integer")
 
-  fetch_rank <- if (cache)
-    function(attr_indices, lookup, partitions) {
+  # fetch_rank and clear_cache encapsulate accessing and modifying the cache
+  # itself.
+  partition_cache <- list()
+  fetch_rank <- if (full_cache)
+    function(attr_indices, lookup) {
       result <- fetch_stripped_partition_full_cache(
         attr_indices,
         partitions_ui$key(attr_indices),
         lookup,
-        partitions,
+        partition_cache,
         partitions_ui
       )
-      result[[1]] <- partition_rank(result[[1]])
-      result
+      partition_cache <<- result[[2]]
+      partition_rank(result[[1]])
     }
   else
-    function(attr_indices, lookup, partitions)
-      fetch_rank_rank_cache(attr_indices, lookup, partitions, partitions_ui)
+    function(attr_indices, lookup) {
+      result <- fetch_rank_rank_cache(
+        attr_indices,
+        lookup,
+        partition_cache,
+        partitions_ui
+      )
+      partition_cache <<- result[[2]]
+      result[[1]]
+    }
+  clear_cache <- function() {
+    partition_cache <<- list()
+  }
 
   threshold <- ceiling(nrow(lookup)*accuracy)
   limit <- nrow(lookup) - threshold
   if (limit == 0L)
     # exact dependences have no need to calculate FD error (e(X -> Y))
-    return(function(rhs, lhs_set, partitions) {
-      exact_dependencies(
+    return(list(
+      check = function(rhs, lhs_set) {
+        exact_dependencies(
+          lookup,
+          rhs,
+          lhs_set,
+          fetch_rank
+        )
+      },
+      clear = function() clear_cache(),
+      cache_size = function() length(partition_cache$key)
+    ))
+  fetch_error <- if (full_cache)
+    function(lookup, rhs, lhs_set) {
+      fetch_error_full_cache(lookup, rhs, lhs_set, partition_cache, partitions_ui)
+    }
+  else
+    function(lookup, rhs, lhs_set)
+      fetch_error_no_cache(lookup, rhs, lhs_set, partition_cache, partitions_ui)
+  list(
+    check = function(rhs, lhs_set) {
+      approximate_dependencies(
         lookup,
         rhs,
         lhs_set,
-        partitions,
-        fetch_rank
+        limit,
+        fetch_rank,
+        fetch_error
       )
-    })
-  fetch_error <- if (cache)
-    function(lookup, rhs, lhs_set, partitions)
-      fetch_error_full_cache(lookup, rhs, lhs_set, partitions, partitions_ui)
-  else
-    function(lookup, rhs, lhs_set, partitions)
-      fetch_error_no_cache(lookup, rhs, lhs_set, partitions, partitions_ui)
-  function(rhs, lhs_set, partitions) {
-    approximate_dependencies(
-      lookup,
-      rhs,
-      lhs_set,
-      partitions,
-      limit,
-      fetch_rank,
-      fetch_error
-    )
-  }
+    },
+    clear = function() clear_cache(),
+    cache_size = function() length(partition_cache$key)
+  )
 }
 
 partitions_ui <- function(lookup, key_class = c("bitset", "integer")) {
@@ -237,29 +258,24 @@ exact_dependencies <- function(
   lookup,
   rhs_set,
   lhs_set,
-  partitions,
   fetch_rank
 ) {
   # compare to approximate_dependencies:
   # limit = 0 simplifies the early exit conditions,
   # and if lhs_rank - union_rank > 0 then they're equal,
   # so error = 0.
-  lhs_result <- fetch_rank(lhs_set, lookup, partitions)
+  lhs_result <- fetch_rank(lhs_set, lookup)
   lhs_rank <- lhs_result[[1]]
-  partitions <- lhs_result[[2]]
   if (lhs_rank == 0)
-    return(list(TRUE, partitions))
-  union_result <- fetch_rank(union(lhs_set, rhs_set), lookup, partitions)
-  union_rank <- union_result[[1]]
-  partitions <- union_result[[2]]
-  list(union_rank == lhs_rank, partitions)
+    return(TRUE)
+  union_rank <- fetch_rank(union(lhs_set, rhs_set), lookup)
+  union_rank == lhs_rank
 }
 
 approximate_dependencies <- function(
   lookup,
   rhs_set,
   lhs_set,
-  partitions,
   limit,
   fetch_rank,
   fetch_error
@@ -270,19 +286,15 @@ approximate_dependencies <- function(
   # and LHS -> RHS is approximately true if error <= limit,
   # so if lhs_rank <= limit or limit < lhs_rank - union_rank
   # then we can skip the calculation of error.
-  lhs_result <- fetch_rank(lhs_set, lookup, partitions)
-  lhs_rank <- lhs_result[[1]]
-  partitions <- lhs_result[[2]]
+  lhs_rank <- fetch_rank(lhs_set, lookup)
   if (lhs_rank <= limit)
-    return(list(TRUE, partitions))
-  union_result <- fetch_rank(union(lhs_set, rhs_set), lookup, partitions)
-  union_rank <- union_result[[1]]
-  partitions <- union_result[[2]]
+    return(TRUE)
+  union_rank <- fetch_rank(union(lhs_set, rhs_set), lookup)
   if (lhs_rank - union_rank > limit)
-    return(list(FALSE, partitions))
+    return(FALSE)
 
-  error <- fetch_error(lookup, rhs_set, lhs_set, partitions)
-  list(error <= limit, partitions)
+  error <- fetch_error(lookup, rhs_set, lhs_set)
+  error <= limit
 }
 
 fetch_stripped_partition_full_cache <- function(
