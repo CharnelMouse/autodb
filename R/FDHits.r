@@ -176,7 +176,7 @@ FDHitsSep_visit <- function(
     }
   }
   # validation at the leaves
-  uncovered <- partition_handler$get_uncovered_keys_sep(S_bitset, A_bitset)
+  uncovered <- partition_handler$get_uncovered_keys(S_bitset, A_bitset)
   if (length(uncovered) == 0) {
     refinement <- partition_handler$refine(A_bitset, S_bitset)
     refined_partitions <- refinement[[1]]
@@ -192,7 +192,7 @@ FDHitsSep_visit <- function(
       partition_handler$get_diffset_keys()
     )
     stopifnot(length(added) > 0)
-    uncovered <- partition_handler$get_uncovered_keys_sep(
+    uncovered <- partition_handler$get_uncovered_keys(
       S_bitset,
       A_bitset,
       diffsets = added
@@ -271,7 +271,7 @@ FDHitsJoint_visit <- function(
     }
   }
   # validation at the leaves
-  uncovered_bitsets <- partition_handler$get_uncovered_keys_joint(S_bitset, W_bitset)
+  uncovered_bitsets <- partition_handler$get_uncovered_keys(S_bitset, W_bitset)
   if (length(uncovered_bitsets) == 0) {
     refinement <- partition_handler$refine(W_bitset, S_bitset)
     refined_partitions <- refinement[[1]]
@@ -287,7 +287,7 @@ FDHitsJoint_visit <- function(
       partition_handler$get_diffset_keys()
     )
     stopifnot(length(added_bitsets) > 0)
-    uncovered_bitsets <- partition_handler$get_uncovered_keys_joint(
+    uncovered_bitsets <- partition_handler$get_uncovered_keys(
       S_bitset,
       W_bitset,
       added_bitsets
@@ -338,14 +338,9 @@ critical <- function(C_bitset, A_bitset, S_bitset, D_bitsets) {
   ))
 }
 
-uncov_joint <- function(S, W, D) {
+uncov <- function(S, W, D) {
   # set of hyperedges that contain a vertex from W but nothing from S
   vapply(D, \(E) any((E & W) > 0) && all((S & E) == 0), logical(1))
-}
-
-uncov_sep <- function(S_bitset, A_bitset, D_bitset) {
-  # set of hyperedges that contain a vertex from W but nothing from S
-  vapply(D_bitset, \(E) any((E & A_bitset) > 0) && all((S_bitset & E) == 0), logical(1))
 }
 
 sample_minheur_joint <- function(set_bitsets, V_bitset, W_bitset) {

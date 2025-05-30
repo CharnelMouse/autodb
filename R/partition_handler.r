@@ -42,11 +42,9 @@ refineable_partition_handler <- function(lookup, key_class) {
   get_diffsets <- function() {
     diffset_cache
   }
-  get_uncovered_keys_sep <- function(S_key, A_key, diffsets = diffset_cache) {
-    diffsets[uncov_sep(S_key, A_key, diffsets)]
-  }
-  get_uncovered_keys_joint <- function(S_key, W_key, diffsets = diffset_cache) {
-    diffsets[uncov_joint(S_key, W_key, diffsets)]
+  stopifnot(key_class == "bitset")
+  get_uncovered_keys_bitset <- function(S_key, W_key, diffsets = diffset_cache) {
+    diffsets[uncov(S_key, W_key, diffsets)]
   }
 
   list(
@@ -65,11 +63,8 @@ refineable_partition_handler <- function(lookup, key_class) {
     },
     add_diffset_keys = function(diffset_keys) add_diffsets(diffset_keys),
     get_diffset_keys = function() get_diffsets(),
-    get_uncovered_keys_sep = function(S_key, A_key, ...) {
-      get_uncovered_keys_sep(S_key, A_key, ...)
-    },
-    get_uncovered_keys_joint = function(S_key, A_key, ...) {
-      get_uncovered_keys_joint(S_key, A_key, ...)
+    get_uncovered_keys = function(S_key, W_key, ...) {
+      get_uncovered_keys_bitset(S_key, W_key, ...)
     }
   )
 }
