@@ -113,10 +113,11 @@ DFD <- function(
     # cache generated powerset and reductions, otherwise we spend a lot
     # of time duplicating reduction work
     all_powersets <- stats::setNames(list(powerset), max_n_lhs_attrs)
-    partition_handler <- integer_partition_handler(
+    partition_handler <- checkable_partition_handler(
       unname(lookup[, nonfixed, drop = FALSE]),
-      accuracy,
-      full_cache
+      key_class = "integer",
+      accuracy = accuracy,
+      full_cache = full_cache
     )
     for (rhs in which(nonfixed %in% valid_dependant_attrs)) {
       report$stat(paste("dependant", attr_names[nonfixed][rhs]))

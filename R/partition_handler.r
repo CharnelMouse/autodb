@@ -1,4 +1,4 @@
-bitset_partition_handler <- function(lookup) {
+refineable_partition_handler <- function(lookup, key_class) {
   # Gives a list of functions that handle lookup and calculation of stripped
   # partitions, encapsulating dependence on the partitions cache and the
   # original lookup table. The intention is for all use of lookup to be done
@@ -6,7 +6,7 @@ bitset_partition_handler <- function(lookup) {
   # focus on implementing the search.
 
   # The partitions UI encapsulates interacting with the partition cache.
-  partitions_ui <- partitions_ui(lookup, key_class = "bitset")
+  partitions_ui <- partitions_ui(lookup, key_class = key_class)
 
   initial_cache <- list(
     key = vapply(
@@ -50,14 +50,14 @@ bitset_partition_handler <- function(lookup) {
   )
 }
 
-integer_partition_handler <- function(lookup, accuracy, full_cache) {
+checkable_partition_handler <- function(lookup, key_class, accuracy, full_cache) {
   # Gives a list of functions that handle lookup and calculation of stripped
   # partitions, encapsulating dependence on the partitions cache and the
   # original lookup table. The intention is for all use of lookup to be done
   # through the "interface" provided by these functions, so the main code can
   # focus on implementing the search.
 
-  # The integer partitions handler takes some additional arguments on top of
+  # The checkable partitions handler takes some additional arguments on top of
   # lookup, since its use in DFD has some further requirements.
   # accuracy is a threshold for FD correctness.
   # cache is a logical indicating whether partitions are cached at all.
@@ -65,7 +65,7 @@ integer_partition_handler <- function(lookup, accuracy, full_cache) {
   # through the resulting interface.
 
   # The partitions UI encapsulates interacting with the partition cache.
-  partitions_ui <- partitions_ui(lookup, key_class = "integer")
+  partitions_ui <- partitions_ui(lookup, key_class = key_class)
 
   initial_cache <- list()
   partition_cache <- initial_cache

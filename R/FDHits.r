@@ -27,7 +27,7 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
   attrs <- names(lookup)
   res <- list()
   n_visited <- 0L
-  partition_handler <- bitset_partition_handler(lookup)
+  partition_handler <- refineable_partition_handler(lookup, key_class = "bitset")
   D <- lapply(D, partition_handler$key)
   for (A in dependants) {
     report$stat(paste("dependant", attrs[A]))
@@ -89,7 +89,7 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
   attrs <- names(lookup)
   res <- list()
   visited <- character()
-  partition_handler <- bitset_partition_handler(lookup)
+  partition_handler <- refineable_partition_handler(lookup, key_class = "bitset")
 
   W_bitset <- partition_handler$key(dependants)
   V_bitset <- partition_handler$key(determinants)
