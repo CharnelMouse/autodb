@@ -17,6 +17,7 @@ refineable_partition_handler <- function(lookup, key_class) {
     value = lapply(unname(as.list(lookup)), pli)
   )
   partition_cache <- initial_cache
+  diffset_cache <- list()
 
   # These functions encapsulate the cache itself, including modification.
   reset_cache <- function(initial_cache) {
@@ -33,6 +34,15 @@ refineable_partition_handler <- function(lookup, key_class) {
     partition_cache <<- res[[2]]
     res[[1]]
   }
+
+  # These functions encapsulate the difference sets.
+  add_diffsets <- function(diffsets) {
+    diffset_cache <<- c(diffset_cache, diffsets)
+  }
+  get_diffsets <- function() {
+    diffset_cache
+  }
+
   list(
     cache_size = function() length(partition_cache$key),
     reset = function() reset_cache(initial_cache),
@@ -46,7 +56,9 @@ refineable_partition_handler <- function(lookup, key_class) {
         lhs_key,
         fetch_partition
       )
-    }
+    },
+    add_diffset_keys = function(diffset_keys) add_diffsets(diffset_keys),
+    get_diffset_keys = function() get_diffsets()
   )
 }
 
