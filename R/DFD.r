@@ -158,7 +158,7 @@ DFD <- function(
           detset_limit
         )
         if (!store_cache)
-          partition_handler$clear()
+          partition_handler$reset()
         if (lhss[[2]]) {
           stopifnot(
             is.element(lhss[[1]], bijection_candidate_nonfixed_indices),

@@ -7,7 +7,8 @@ bitset_partition_handler <- function(lookup) {
 
   # The partitions UI encapsulates interacting with the partition cache.
   partitions_ui <- partitions_ui(lookup, key_class = "bitset")
-  partition_cache <- list(
+
+  initial_cache <- list(
     key = vapply(
       seq_along(lookup),
       \(set) partitions_ui$hash(partitions_ui$key(set)),
@@ -15,8 +16,12 @@ bitset_partition_handler <- function(lookup) {
     ),
     value = lapply(unname(as.list(lookup)), pli)
   )
+  partition_cache <- initial_cache
 
-  # fetch_partition encapsulates the partition cache itself.
+  # These functions encapsulate the cache itself, including modification.
+  reset_cache <- function(initial_cache) {
+    partition_cache <<- initial_cache
+  }
   fetch_partition <- function(attrs_bitset, lookup) {
     res <- fetch_stripped_partition_full_cache(
       partitions_ui$unkey(attrs_bitset),
@@ -29,6 +34,7 @@ bitset_partition_handler <- function(lookup) {
     res[[1]]
   }
   list(
+    reset = function() reset_cache(initial_cache),
     key = partitions_ui$key,
     key_size = partitions_ui$key_size,
     decompose_key = partitions_ui$decompose_key,
@@ -61,9 +67,13 @@ integer_partition_handler <- function(lookup, accuracy, full_cache) {
   # The partitions UI encapsulates interacting with the partition cache.
   partitions_ui <- partitions_ui(lookup, key_class = "integer")
 
-  # fetch_rank and clear_cache encapsulate accessing and modifying the cache
-  # itself.
-  partition_cache <- list()
+  initial_cache <- list()
+  partition_cache <- initial_cache
+
+  # These functions encapsulate the cache itself, including modification.
+  reset_cache <- function(initial_cache) {
+    partition_cache <<- initial_cache
+  }
   fetch_rank <- if (full_cache)
     function(attr_indices, lookup) {
       result <- fetch_stripped_partition_full_cache(
@@ -87,15 +97,13 @@ integer_partition_handler <- function(lookup, accuracy, full_cache) {
       partition_cache <<- result[[2]]
       result[[1]]
     }
-  clear_cache <- function() {
-    partition_cache <<- list()
-  }
 
   threshold <- ceiling(nrow(lookup)*accuracy)
   limit <- nrow(lookup) - threshold
   if (limit == 0L)
     # exact dependences have no need to calculate FD error (e(X -> Y))
     return(list(
+      reset = function() reset_cache(initial_cache),
       check = function(rhs, lhs_set) {
         exact_dependencies(
           lookup,
@@ -104,7 +112,6 @@ integer_partition_handler <- function(lookup, accuracy, full_cache) {
           fetch_rank
         )
       },
-      clear = function() clear_cache(),
       cache_size = function() length(partition_cache$key)
     ))
   fetch_error <- if (full_cache)
@@ -114,7 +121,9 @@ integer_partition_handler <- function(lookup, accuracy, full_cache) {
   else
     function(lookup, rhs, lhs_set)
       fetch_error_no_cache(lookup, rhs, lhs_set, partition_cache, partitions_ui)
+
   list(
+    reset = function() reset_cache(initial_cache),
     check = function(rhs, lhs_set) {
       approximate_dependencies(
         lookup,
@@ -125,7 +134,6 @@ integer_partition_handler <- function(lookup, accuracy, full_cache) {
         fetch_error
       )
     },
-    clear = function() clear_cache(),
     cache_size = function() length(partition_cache$key)
   )
 }
