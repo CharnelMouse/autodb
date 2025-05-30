@@ -7,35 +7,37 @@ bitset_partition_handler <- function(lookup) {
 
   # The partitions UI encapsulates interacting with the partition cache.
   partitions_ui <- partitions_ui(lookup, key_class = "bitset")
-  fetch_partition <- function(attrs_bitset, lookup, partitions) {
-    fetch_stripped_partition_full_cache(
+  partition_cache <- list(
+    key = vapply(
+      seq_along(lookup),
+      \(set) partitions_ui$hash(partitions_ui$key(set)),
+      character(1)
+    ),
+    value = lapply(unname(as.list(lookup)), pli)
+  )
+
+  # fetch_partition encapsulates the partition cache itself.
+  fetch_partition <- function(attrs_bitset, lookup) {
+    res <- fetch_stripped_partition_full_cache(
       partitions_ui$unkey(attrs_bitset),
       attrs_bitset,
       lookup,
-      partitions,
+      partition_cache,
       partitions_ui
     )
+    partition_cache <<- res[[2]]
+    res[[1]]
   }
   list(
-    initialise = function() {
-      list(
-        key = vapply(
-          seq_along(lookup),
-          \(set) partitions_ui$hash(partitions_ui$key(set)),
-          character(1)
-        ),
-        value = lapply(unname(as.list(lookup)), pli)
-      )
-    },
     key = partitions_ui$key,
     key_size = partitions_ui$key_size,
     decompose_key = partitions_ui$decompose_key,
-    refine = function(rhs_bitset, lhs_bitset, partitions) {
+    cache_size = function() length(partition_cache$key),
+    refine = function(rhs_bitset, lhs_bitset) {
       fetch_refined_partition(
         lookup,
         partitions_ui$unkey(rhs_bitset),
         lhs_bitset,
-        partitions,
         fetch_partition
       )
     }
@@ -349,12 +351,9 @@ fetch_refined_partition <- function(
   lookup,
   rhs_set,
   lhs_key,
-  partition_cache,
   fetch_partition
 ) {
-  res1 <- fetch_partition(lhs_key, lookup, partition_cache)
-  lhs_partition <- res1[[1]]
-  partition_cache <- res1[[2]]
+  lhs_partition <- fetch_partition(lhs_key, lookup)
   individual_rhs_lookup_indices <- lapply(rhs_set, \(r) lookup[[r]])
   rhs_lookup_indices <- if (length(rhs_set) == 1)
     individual_rhs_lookup_indices[[1]]
@@ -364,15 +363,14 @@ fetch_refined_partition <- function(
   }
   relevant_lhs_partition <- filter_partition(lhs_partition, rhs_lookup_indices)
   if (partition_rank(relevant_lhs_partition) == 0)
-    return(list(rep(list(list()), length(rhs_set)), list(), partition_cache))
+    return(list(rep(list(list()), length(rhs_set)), list()))
   list(
     lapply(
       individual_rhs_lookup_indices,
       refine_partition_by_lookup,
       relevant_partition = relevant_lhs_partition
     ),
-    relevant_lhs_partition,
-    partition_cache
+    relevant_lhs_partition
   )
 }
 

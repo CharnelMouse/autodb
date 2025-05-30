@@ -28,7 +28,6 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
   res <- list()
   n_visited <- 0L
   partition_handler <- bitset_partition_handler(lookup)
-  partition_cache <- partition_handler$initialise()
   D <- lapply(D, partition_handler$key)
   for (A in dependants) {
     report$stat(paste("dependant", attrs[A]))
@@ -55,14 +54,12 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
         D,
         lookup,
         report = report,
-        partition_handler,
-        partition_cache
+        partition_handler
       )
       visited <- c(visited, node_string)
       res <- c(res, attr_res[[1]])
       D <- attr_res[[2]]
       new_nodes <- attr_res[[3]]
-      partition_cache <- attr_res[[4]]
       return_stack <- c(
         new_nodes[vapply(
           new_nodes,
@@ -82,7 +79,7 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
     "\n",
     with_number(n_visited, "node", " visited", "s visited"),
     "\n",
-    with_number(length(partition_cache$key), "partition", " cached", "s cached")
+    with_number(partition_handler$cache_size(), "partition", " cached", "s cached")
   ))
   res <- lapply(res, lapply, \(x) attrs[as.logical(rawToBits(x))])
   functional_dependency(res, attrs)
@@ -100,7 +97,6 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
   empty <- partition_handler$key(integer())
   return_stack <- list(list(empty, V_bitset, W_bitset))
 
-  partition_cache <- partition_handler$initialise()
   while (length(return_stack) > 0) {
     node <- return_stack[[1]]
     return_stack <- return_stack[-1]
@@ -119,14 +115,12 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
       D,
       lookup,
       report = report,
-      partition_handler,
-      partition_cache
+      partition_handler
     )
     visited <- c(visited, node_string)
     res <- c(res, attr_res[[1]])
     D <- attr_res[[2]]
     new_nodes <- attr_res[[3]]
-    partition_cache <- attr_res[[4]]
     return_stack <- c(
       new_nodes[vapply(
         new_nodes,
@@ -144,7 +138,7 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
     "\n",
     with_number(length(visited), "node", " visited", "s visited"),
     "\n",
-    with_number(length(partition_cache$key), "partition", " cached", "s cached")
+    with_number(partition_handler$cache_size(), "partition", " cached", "s cached")
   ))
   res <- lapply(res, lapply, \(x) attrs[as.logical(rawToBits(x))])
   # split up into one-dependant FDs
@@ -162,7 +156,6 @@ FDHitsSep_visit <- function(
   lookup,
   report,
   partition_handler,
-  partition_cache,
   visited = character()
 ) {
   # pruning
@@ -172,7 +165,7 @@ FDHitsSep_visit <- function(
     # => S isn't irreducible for A
     crits <- critical(C, A_bitset, S_bitset, D_bitsets)
     if (length(crits) == 0)
-      return(list(list(), D_bitsets, list(), partition_cache))
+      return(list(list(), D_bitsets, list()))
     for (B in partition_handler$decompose_key(V_bitset)) {
       # remove B from V if ∃ C∈S ∀ E∈critical(C,A,S): B∈E,
       # i.e. adding B to S would make some C in S redundant WRT A
@@ -184,12 +177,11 @@ FDHitsSep_visit <- function(
   # validation at the leaves
   uncovered <- D_bitsets[uncov_sep(S_bitset, A_bitset, D_bitsets)]
   if (length(uncovered) == 0) {
-    refinement <- partition_handler$refine(A_bitset, S_bitset, partition_cache)
+    refinement <- partition_handler$refine(A_bitset, S_bitset)
     refined_partitions <- refinement[[1]]
     relevant_Spli <- refinement[[2]]
-    partition_cache <- refinement[[3]]
     if (validate(refined_partitions, relevant_Spli))
-      return(list(list(list(S_bitset, A_bitset)), D_bitsets, list(), partition_cache))
+      return(list(list(list(S_bitset, A_bitset)), D_bitsets, list()))
     stopifnot(length(relevant_Spli) > 0)
     ds <- new_diffset(relevant_Spli, refined_partitions, lookup)
     dsl <- list(ds)
@@ -217,7 +209,7 @@ FDHitsSep_visit <- function(
       list(S_bitset | b, V_bitset & !rem, A_bitset)
     }
   )
-  list(res, D_bitsets, new_nodes, partition_cache)
+  list(res, D_bitsets, new_nodes)
 }
 
 FDHitsJoint_visit <- function(
@@ -228,8 +220,7 @@ FDHitsJoint_visit <- function(
   D_bitsets,
   lookup,
   report,
-  partition_handler,
-  partition_cache
+  partition_handler
 ) {
   # pruning
   critical_edges <- list()
@@ -249,7 +240,7 @@ FDHitsJoint_visit <- function(
     }
   }
   if (all(W_bitset == 0)) {
-    return(list(list(), D_bitsets, list(), partition_cache))
+    return(list(list(), D_bitsets, list()))
   }
   for (B in partition_handler$decompose_key(V_bitset)) {
     # remove if ∀ A∈W ∃ C∈S ∀ E∈critical(C,A,S): B∈E,
@@ -274,12 +265,11 @@ FDHitsJoint_visit <- function(
   # validation at the leaves
   uncovered_bitsets <- D_bitsets[uncov_joint(S_bitset, W_bitset, D_bitsets)]
   if (length(uncovered_bitsets) == 0) {
-    refinement <- partition_handler$refine(W_bitset, S_bitset, partition_cache)
+    refinement <- partition_handler$refine(W_bitset, S_bitset)
     refined_partitions <- refinement[[1]]
     relevant_Spli <- refinement[[2]]
-    partition_cache <- refinement[[3]]
     if (validate(refined_partitions, relevant_Spli))
-      return(list(list(list(S_bitset, W_bitset)), D_bitsets, list(), partition_cache))
+      return(list(list(list(S_bitset, W_bitset)), D_bitsets, list()))
     stopifnot(length(relevant_Spli) > 0)
     ds <- new_diffset(relevant_Spli, refined_partitions, lookup)
     dsl <- list(ds)
@@ -315,7 +305,7 @@ FDHitsJoint_visit <- function(
       }
     )
   )
-  list(res, D_bitsets, new_nodes, partition_cache)
+  list(res, D_bitsets, new_nodes)
 }
 
 critical <- function(C_bitset, A_bitset, S_bitset, D_bitsets) {
