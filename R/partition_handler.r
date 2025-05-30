@@ -7,6 +7,7 @@ refineable_partition_handler <- function(lookup, key_class) {
 
   # The partitions UI encapsulates interacting with the partition cache.
   partitions_ui <- partitions_ui(lookup, key_class = key_class)
+  uncov_ui <- uncov_ui(lookup, key_class = key_class)
 
   initial_cache <- list(
     key = vapply(
@@ -18,6 +19,7 @@ refineable_partition_handler <- function(lookup, key_class) {
   )
   partition_cache <- initial_cache
   diffset_cache <- list()
+  uncov_cache <- list()
 
   # These functions encapsulate the cache itself, including modification.
   reset_cache <- function(initial_cache) {
@@ -46,6 +48,17 @@ refineable_partition_handler <- function(lookup, key_class) {
   get_uncovered_keys_bitset <- function(S_key, W_key, diffsets = diffset_cache) {
     diffsets[uncov(S_key, W_key, diffsets)]
   }
+  fetch_uncovered_keys_bitset <- function(S_key, W_key, diffsets = diffset_cache) {
+    res <- fetch_uncovered_keys_bitset_pure(
+      S_key,
+      W_key,
+      diffsets,
+      uncov_cache,
+      uncov_ui
+    )
+    uncov_cache <<- res[[2]]
+    res[[1]]
+  }
 
   list(
     cache_size = function() length(partition_cache$key),
@@ -65,6 +78,9 @@ refineable_partition_handler <- function(lookup, key_class) {
     get_diffset_keys = function() get_diffsets(),
     get_uncovered_keys = function(S_key, W_key, ...) {
       get_uncovered_keys_bitset(S_key, W_key, ...)
+    },
+    fetch_uncovered_keys = function(S_key, W_key, ...) {
+      fetch_uncovered_keys_bitset(S_key, W_key, ...)
     }
   )
 }
@@ -281,6 +297,29 @@ integer_partitions_ui <- function(lookup) {
   )
 }
 
+uncov_ui <- function(lookup, key_class = c("bitset")) {
+  key_class <- match.arg(key_class)
+  switch(
+    key_class,
+    bitset = bitset_uncov_ui(lookup)
+  )
+}
+
+bitset_uncov_ui <- function(lookup) {
+  bitlen <- 16*ceiling(ncol(lookup)/8)
+  hash <- function(key1, key2) paste(c(key1, key2), collapse = "")
+  list(
+    hash = hash,
+    lookup_hash = function(hash, partitions) match(hash, partitions$key),
+    get_with_index = function(index, partitions) partitions$value[[index]],
+    add = function(hash, uncov, uncov_cache) {
+      uncov_cache$key <- c(uncov_cache$key, hash)
+      uncov_cache$value <- c(uncov_cache$value, list(uncov))
+      uncov_cache
+    }
+  )
+}
+
 exact_dependencies <- function(
   lookup,
   rhs_set,
@@ -493,4 +532,20 @@ fsplit <- function(splitted, splitter) {
   # determine levels manually to skip factor()'s default level sorting
   f <- ffactor1(single_splitter)
   split(splitted, f)
+}
+
+fetch_uncovered_keys_bitset_pure <- function(
+  S_key,
+  W_key,
+  diffsets,
+  uncov_cache,
+  uncov_ui
+) {
+  hash <- uncov_ui$hash(S_key, W_key)
+  index <- uncov_ui$lookup_hash(hash, uncov_cache)
+  if (!is.na(index))
+    return(list(uncov_ui$get_with_index(index), uncov_cache))
+  result <- diffsets[uncov(S_key, W_key, diffsets)]
+  uncov_cache <- uncov_ui$add(index, result, uncov_cache)
+  list(result, uncov_cache)
 }
