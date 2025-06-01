@@ -19,7 +19,11 @@ refineable_partition_handler <- function(lookup, key_class) {
   )
   partition_cache <- initial_cache
   diffset_cache <- list()
-  uncov_cache <- list()
+  uncov_cache <- list(
+    # empty attribute set covers none of the zero starting diffsets
+    key = partitions_ui$hash(partitions_ui$key(integer())),
+    value = list(integer())
+  )
 
   # These functions encapsulate the cache itself, including modification.
   reset_cache <- function(initial_cache) {
@@ -39,7 +43,10 @@ refineable_partition_handler <- function(lookup, key_class) {
 
   # These functions encapsulate the difference sets.
   add_diffsets <- function(diffsets) {
+    # known to be new non-redundant diffsets
+    to_add <- length(diffset_cache) + seq_along(diffsets)
     diffset_cache <<- c(diffset_cache, diffsets)
+    uncov_cache$value <<- lapply(uncov_cache$value, \(v) c(v, to_add))
   }
   get_diffsets <- function() {
     diffset_cache
