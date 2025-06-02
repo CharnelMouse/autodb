@@ -467,43 +467,40 @@ fetch_stripped_partition_full_cache <- function(
       integer(1L),
       partitions
     )
+    n_children <- sum(!is.na(child_indices))
 
-    if (sum(!is.na(child_indices)) >= 2) {
+    if (n_children == 0)
+      return(partitions_ui$calculate(set))
+    if (n_children > 1) {
       chosen_indices <- which(!is.na(child_indices))[1:2]
-      sp <- stripped_partition_product(
+      return(stripped_partition_product(
         partitions_ui$get_with_index(child_indices[[chosen_indices[[1]]]], partitions),
         partitions_ui$get_with_index(child_indices[[chosen_indices[[2]]]], partitions),
         nrow(lookup)
-      )
-    }else{
-      if (sum(!is.na(child_indices)) == 1) {
-        existing_child_position <- which(!is.na(child_indices))
-        remainder_element <- set[[existing_child_position]]
-        remainder_key <- key_elements[[existing_child_position]]
-        existing_child_index <- child_indices[[existing_child_position]]
-        existing_child_sp <- partitions_ui$get_with_index(
-          existing_child_index,
-          partitions
-        )
-        remainder_result <- fetch_stripped_partition_full_cache(
-          remainder_element,
-          remainder_key,
-          lookup,
-          partitions,
-          partitions_ui
-        )
-        remainder_sp <- remainder_result[[1]]
-        partitions <- remainder_result[[2]]
-        sp <- stripped_partition_product(
-          existing_child_sp,
-          remainder_sp,
-          nrow(lookup)
-        )
-      }else{
-        sp <- partitions_ui$calculate(set)
-      }
+      ))
     }
-    sp
+    existing_child_position <- which(!is.na(child_indices))
+    remainder_element <- set[[existing_child_position]]
+    remainder_key <- key_elements[[existing_child_position]]
+    existing_child_index <- child_indices[[existing_child_position]]
+    existing_child_sp <- partitions_ui$get_with_index(
+      existing_child_index,
+      partitions
+    )
+    remainder_result <- fetch_stripped_partition_full_cache(
+      remainder_element,
+      remainder_key,
+      lookup,
+      partitions,
+      partitions_ui
+    )
+    remainder_sp <- remainder_result[[1]]
+    partitions <- remainder_result[[2]]
+    stripped_partition_product(
+      existing_child_sp,
+      remainder_sp,
+      nrow(lookup)
+    )
   }
   fetch_pure(hash, input, partitions, partitions_ui, calculate)
 }
