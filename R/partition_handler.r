@@ -455,59 +455,57 @@ fetch_stripped_partition_full_cache <- function(
   partitions,
   partitions_ui
 ) {
-  key_elements <- partitions_ui$component_keys(set)
   hash <- partitions_ui$hash(key)
-  index <- partitions_ui$lookup_hash(hash, partitions)
-  if (!is.na(index)) {
-    sp <- partitions_ui$get_with_index(index, partitions)
-    return(list(sp, partitions))
-  }
-  child_keys <- lapply(key_elements, partitions_ui$subkey_difference, key = key)
-  child_hashes <- lapply(child_keys, partitions_ui$hash)
-  child_indices <- vapply(
-    child_hashes,
-    partitions_ui$lookup_hash,
-    integer(1L),
-    partitions
-  )
-
-  if (sum(!is.na(child_indices)) >= 2) {
-    chosen_indices <- which(!is.na(child_indices))[1:2]
-    sp <- stripped_partition_product(
-      partitions_ui$get_with_index(child_indices[[chosen_indices[[1]]]], partitions),
-      partitions_ui$get_with_index(child_indices[[chosen_indices[[2]]]], partitions),
-      nrow(lookup)
+  input <- list(set, key, lookup, partitions, partitions_ui)
+  calculate <- function(set, key, lookup, partitions, partitions_ui) {
+    key_elements <- partitions_ui$component_keys(set)
+    child_keys <- lapply(key_elements, partitions_ui$subkey_difference, key = key)
+    child_hashes <- lapply(child_keys, partitions_ui$hash)
+    child_indices <- vapply(
+      child_hashes,
+      partitions_ui$lookup_hash,
+      integer(1L),
+      partitions
     )
-  }else{
-    if (sum(!is.na(child_indices)) == 1) {
-      existing_child_position <- which(!is.na(child_indices))
-      remainder_element <- set[[existing_child_position]]
-      remainder_key <- key_elements[[existing_child_position]]
-      existing_child_index <- child_indices[[existing_child_position]]
-      existing_child_sp <- partitions_ui$get_with_index(
-        existing_child_index,
-        partitions
-      )
-      remainder_result <- fetch_stripped_partition_full_cache(
-        remainder_element,
-        remainder_key,
-        lookup,
-        partitions,
-        partitions_ui
-      )
-      remainder_sp <- remainder_result[[1]]
-      partitions <- remainder_result[[2]]
+
+    if (sum(!is.na(child_indices)) >= 2) {
+      chosen_indices <- which(!is.na(child_indices))[1:2]
       sp <- stripped_partition_product(
-        existing_child_sp,
-        remainder_sp,
+        partitions_ui$get_with_index(child_indices[[chosen_indices[[1]]]], partitions),
+        partitions_ui$get_with_index(child_indices[[chosen_indices[[2]]]], partitions),
         nrow(lookup)
       )
     }else{
-      sp <- partitions_ui$calculate(set)
+      if (sum(!is.na(child_indices)) == 1) {
+        existing_child_position <- which(!is.na(child_indices))
+        remainder_element <- set[[existing_child_position]]
+        remainder_key <- key_elements[[existing_child_position]]
+        existing_child_index <- child_indices[[existing_child_position]]
+        existing_child_sp <- partitions_ui$get_with_index(
+          existing_child_index,
+          partitions
+        )
+        remainder_result <- fetch_stripped_partition_full_cache(
+          remainder_element,
+          remainder_key,
+          lookup,
+          partitions,
+          partitions_ui
+        )
+        remainder_sp <- remainder_result[[1]]
+        partitions <- remainder_result[[2]]
+        sp <- stripped_partition_product(
+          existing_child_sp,
+          remainder_sp,
+          nrow(lookup)
+        )
+      }else{
+        sp <- partitions_ui$calculate(set)
+      }
     }
+    sp
   }
-  partitions <- partitions_ui$add(hash, sp, partitions)
-  list(sp, partitions)
+  fetch_pure(hash, input, partitions, partitions_ui, calculate)
 }
 
 fetch_refined_partition <- function(
@@ -547,13 +545,12 @@ fetch_rank_rank_cache <- function(
   # not its contents. This is less demanding on memory than storing stripped
   # partitions, but we cannot efficiently calculate the partition for supersets.
   hash <- partitions_ui$hash(partitions_ui$key(set))
-  index <- partitions_ui$lookup_hash(hash, partitions)
-  if (!is.na(index))
-    return(list(partitions_ui$get_with_index(index, partitions), partitions))
-  lookup_set_only <- lookup[, set, drop = FALSE]
-  set_rank <- sum(duplicated(lookup_set_only))
-  partitions <- partitions_ui$add(hash, set_rank, partitions)
-  list(set_rank, partitions)
+  input <- list(set, lookup)
+  calculate <- function(set, lookup) {
+    lookup_set_only <- lookup[, set, drop = FALSE]
+    sum(duplicated(lookup_set_only))
+  }
+  fetch_pure(hash, input, partitions, partitions_ui, calculate)
 }
 
 fetch_error_full_cache <- function(
@@ -640,12 +637,8 @@ fetch_uncovered_S_only <- function(
   uncov_ui
 ) {
   hash <- uncov_ui$hash(S_key)
-  index <- uncov_ui$lookup_hash(hash, uncov_cache)
-  if (!is.na(index))
-    return(list(uncov_ui$get_with_index(index, uncov_cache), uncov_cache))
-  result <- uncov_ui$calculate(S_key, diffsets)
-  uncov_cache <- uncov_ui$add(hash, result, uncov_cache)
-  list(result, uncov_cache)
+  input <- list(S_key, diffsets)
+  fetch_pure(hash, input, uncov_cache, uncov_ui, uncov_ui$calculate)
 }
 
 fetch_critical_bitset_pure <- function(
@@ -657,10 +650,15 @@ fetch_critical_bitset_pure <- function(
   critical_ui
 ) {
   hash <- critical_ui$hash(c(S_element_key, A_key, S_key))
-  index <- critical_ui$lookup_hash(hash, critical_cache)
+  input <- list(S_element_key, A_key, S_key, diffsets)
+  fetch_pure(hash, input, critical_cache, critical_ui, critical_ui$calculate)
+}
+
+fetch_pure <- function(hash, input, cache, ui, calculate) {
+  index <- ui$lookup_hash(hash, cache)
   if (!is.na(index))
-    return(list(critical_ui$get_with_index(index, critical_cache), critical_cache))
-  result <- critical_ui$calculate(S_element_key, A_key, S_key, diffsets)
-  critical_cache <- critical_ui$add(hash, result, critical_cache)
-  list(result, critical_cache)
+    return(list(ui$get_with_index(index, cache), cache))
+  result <- do.call(calculate, input)
+  cache <- ui$add(hash, result, cache)
+  list(result, cache)
 }
