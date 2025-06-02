@@ -160,7 +160,7 @@ FDHitsSep_visit <- function(
     # no critical edge for C
     # => C is redundant in S for A
     # => S isn't irreducible for A
-    crits <- critical(C, A_bitset, S_bitset, partition_handler$get_diffset_keys())
+    crits <- partition_handler$fetch_critical(C, A_bitset, S_bitset)
     if (length(crits) == 0)
       return(list(list(), list()))
     for (B in partition_handler$decompose_key(V_bitset)) {
@@ -235,7 +235,7 @@ FDHitsJoint_visit <- function(
       # no critical edge for C
       # => C is redundant in S for (some part of) W
       # => S isn't irreducible for (some part of) W
-      crits <- critical(C, A, S_bitset, partition_handler$get_diffset_keys())
+      crits <- partition_handler$fetch_critical(C, A, S_bitset)
       if (length(crits) == 0) {
         W_bitset <- xor(W_bitset, A)
         critical_edges[[paste(A, collapse = "")]] <- NULL

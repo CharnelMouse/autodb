@@ -96,6 +96,9 @@ refineable_partition_handler <- function(lookup, key_class) {
     get_diffset_keys = function() get_diffsets(),
     fetch_uncovered_keys = function(S_key, W_key, ...) {
       fetch_uncovered_keys_bitset(S_key, W_key, ...)
+    },
+    fetch_critical = function(S_element, A, S) {
+      critical(S_element, A, S, diffset_cache)
     }
   )
 }
