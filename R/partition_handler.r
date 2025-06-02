@@ -19,6 +19,7 @@ refineable_partition_handler <- function(lookup, key_class) {
   )
   partition_cache <- initial_cache
   diffset_cache <- list()
+  # element is indices of diffsets not covered by S
   uncov_cache <- list(
     # empty attribute set covers none of the zero starting diffsets
     key = partitions_ui$hash(partitions_ui$key(integer())),
@@ -44,9 +45,22 @@ refineable_partition_handler <- function(lookup, key_class) {
   # These functions encapsulate the difference sets.
   add_diffsets <- function(diffsets) {
     # known to be new non-redundant diffsets
-    to_add <- length(diffset_cache) + seq_along(diffsets)
+    len <- length(diffset_cache)
+    to_add <- len + seq_along(diffsets)
     diffset_cache <<- c(diffset_cache, diffsets)
-    uncov_cache$value <<- lapply(uncov_cache$value, \(v) c(v, to_add))
+    uncov_cache$value <<- Map(
+      \(v, h) {
+        indiv <- strsplit(h, "")[[1]]
+        pairs <- paste0(
+          indiv[seq_len(length(indiv)) %% 2 == 1],
+          indiv[seq_len(length(indiv)) %% 2 == 0]
+        )
+        k <- as.raw(as.hexmode(pairs))
+        c(v, len + which(vapply(diffsets, \(d) all((d & k) == 0), logical(1))))
+      },
+      uncov_cache$value,
+      uncov_cache$key
+    )
   }
   get_diffsets <- function() {
     diffset_cache
@@ -307,14 +321,25 @@ uncov_ui <- function(lookup, key_class = c("bitset")) {
 }
 
 bitset_uncov_ui <- function(lookup) {
-  bitlen <- 16*ceiling(ncol(lookup)/8)
-  hash <- function(key1, key2) paste(c(key1, key2), collapse = "")
+  bitlen <- 8*ceiling(ncol(lookup)/8)
+  key <- function(set) {
+    bools <- rep(FALSE, bitlen)
+    bools[set] <- TRUE
+    packBits(bools)
+  }
+  unkey <- function(key) which(rawToBits(key) == 1)
+  hash <- function(key) paste(key, collapse = "")
+  component_keys <- function(set) lapply(set, key)
+  decompose_key <- function(key) component_keys(unkey(key))
   list(
+    key = key,
+    unkey = unkey,
+    decompose_key = decompose_key,
     hash = hash,
-    lookup_hash = function(hash, partitions) match(hash, partitions$key),
-    get_with_index = function(index, partitions) partitions$value[[index]],
-    calculate = function(S_key, W_key, diffsets) {
-      diffsets[uncov(S_key, W_key, diffsets)]
+    lookup_hash = function(hash, uncov_cache) match(hash, uncov_cache$key),
+    get_with_index = function(index, uncov_cache) uncov_cache$value[[index]],
+    calculate = function(S_key, diffsets) {
+      which(uncov(S_key, key(seq_len(ncol(lookup))), diffsets))
     },
     add = function(hash, uncov, uncov_cache) {
       uncov_cache$key <- c(uncov_cache$key, hash)
@@ -545,11 +570,24 @@ fetch_uncovered_keys_bitset_pure <- function(
   uncov_cache,
   uncov_ui
 ) {
-  hash <- uncov_ui$hash(S_key, W_key)
+  result <- fetch_uncovered_S_only(S_key, diffsets, uncov_cache, uncov_ui)
+  bools <- result[[1]]
+  new_cache <- result[[2]]
+  has_any_W <- vapply(diffsets[bools], \(ds) any((W_key & ds) > 0), logical(1))
+  list(diffsets[bools][has_any_W], new_cache)
+}
+
+fetch_uncovered_S_only <- function(
+  S_key,
+  diffsets,
+  uncov_cache,
+  uncov_ui
+) {
+  hash <- uncov_ui$hash(S_key)
   index <- uncov_ui$lookup_hash(hash, uncov_cache)
   if (!is.na(index))
-    return(list(uncov_ui$get_with_index(index), uncov_cache))
-  result <- uncov_ui$calculate(S_key, W_key, diffsets)
-  uncov_cache <- uncov_ui$add(index, result, uncov_cache)
+    return(list(uncov_ui$get_with_index(index, uncov_cache), uncov_cache))
+  result <- uncov_ui$calculate(S_key, diffsets)
+  uncov_cache <- uncov_ui$add(hash, result, uncov_cache)
   list(result, uncov_cache)
 }

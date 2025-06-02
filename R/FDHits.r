@@ -192,12 +192,11 @@ FDHitsSep_visit <- function(
       partition_handler$get_diffset_keys()
     )
     stopifnot(length(added) > 0)
+    partition_handler$add_diffset_keys(added)
     uncovered <- partition_handler$fetch_uncovered_keys(
       S_bitset,
-      A_bitset,
-      diffsets = added
+      A_bitset
     )
-    partition_handler$add_diffset_keys(added)
   }
   # branching
   if (length(uncovered) == 0) {
@@ -287,12 +286,11 @@ FDHitsJoint_visit <- function(
       partition_handler$get_diffset_keys()
     )
     stopifnot(length(added_bitsets) > 0)
+    partition_handler$add_diffset_keys(added_bitsets)
     uncovered_bitsets <- partition_handler$fetch_uncovered_keys(
       S_bitset,
-      W_bitset,
-      added_bitsets
+      W_bitset
     )
-    partition_handler$add_diffset_keys(added_bitsets)
   }
   # branching
   if (length(uncovered_bitsets) == 0) {
