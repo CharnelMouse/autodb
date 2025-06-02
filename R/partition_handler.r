@@ -8,6 +8,7 @@ refineable_partition_handler <- function(lookup, key_class) {
   # The partitions UI encapsulates interacting with the partition cache.
   partitions_ui <- partitions_ui(lookup, key_class = key_class)
   uncov_ui <- uncov_ui(lookup, key_class = key_class)
+  critical_ui <- critical_ui(lookup, key_class = key_class)
 
   initial_cache <- list(
     key = vapply(
@@ -24,6 +25,9 @@ refineable_partition_handler <- function(lookup, key_class) {
     # empty attribute set covers none of the zero starting diffsets
     key = partitions_ui$hash(partitions_ui$key(integer())),
     value = list(integer())
+  )
+  critical_cache <- list(
+    # not sure yet
   )
 
   # These functions encapsulate the cache itself, including modification.
@@ -77,6 +81,18 @@ refineable_partition_handler <- function(lookup, key_class) {
     uncov_cache <<- res[[2]]
     res[[1]]
   }
+  fetch_critical_bitset <- function(S_element_key, A_key, S_key, diffsets) {
+    res <- fetch_critical_bitset_pure(
+      S_element_key,
+      A_key,
+      S_key,
+      diffsets,
+      critical_cache,
+      critical_ui
+    )
+    critical_cache <<- res[[2]]
+    res[[1]]
+  }
 
   list(
     cache_size = function() length(partition_cache$key),
@@ -98,7 +114,7 @@ refineable_partition_handler <- function(lookup, key_class) {
       fetch_uncovered_keys_bitset(S_key, W_key, ...)
     },
     fetch_critical = function(S_element, A, S) {
-      critical(S_element, A, S, diffset_cache)
+      fetch_critical_bitset(S_element, A, S, diffset_cache)
     }
   )
 }
@@ -352,6 +368,43 @@ bitset_uncov_ui <- function(lookup) {
   )
 }
 
+critical_ui <- function(lookup, key_class = c("bitset")) {
+  key_class <- match.arg(key_class)
+  switch(
+    key_class,
+    bitset = bitset_critical_ui(lookup)
+  )
+}
+
+bitset_critical_ui <- function(lookup) {
+  bitlen <- 8*ceiling(ncol(lookup)/8)
+  key <- function(set) {
+    bools <- rep(FALSE, bitlen)
+    bools[set] <- TRUE
+    packBits(bools)
+  }
+  unkey <- function(key) which(rawToBits(key) == 1)
+  hash <- function(key) paste(key, collapse = "")
+  component_keys <- function(set) lapply(set, key)
+  decompose_key <- function(key) component_keys(unkey(key))
+  list(
+    key = key,
+    unkey = unkey,
+    decompose_key = decompose_key,
+    hash = hash,
+    lookup_hash = function(hash, cache) match(hash, cache$key),
+    get_with_index = function(index, cache) cache$value[[index]],
+    calculate = function(S_element_key, A_key, S_key, diffsets) {
+      critical(S_element_key, A_key, S_key, diffsets)
+    },
+    add = function(hash, value, cache) {
+      cache$key <- c(cache$key, hash)
+      cache$value <- c(cache$value, list(value))
+      cache
+    }
+  )
+}
+
 exact_dependencies <- function(
   lookup,
   rhs_set,
@@ -593,4 +646,21 @@ fetch_uncovered_S_only <- function(
   result <- uncov_ui$calculate(S_key, diffsets)
   uncov_cache <- uncov_ui$add(hash, result, uncov_cache)
   list(result, uncov_cache)
+}
+
+fetch_critical_bitset_pure <- function(
+  S_element_key,
+  A_key,
+  S_key,
+  diffsets,
+  critical_cache,
+  critical_ui
+) {
+  hash <- critical_ui$hash(c(S_element_key, A_key, S_key))
+  index <- critical_ui$lookup_hash(hash, critical_cache)
+  if (!is.na(index))
+    return(list(critical_ui$get_with_index(index, critical_cache), critical_cache))
+  result <- critical_ui$calculate(S_element_key, A_key, S_key, diffsets)
+  critical_cache <- critical_ui$add(hash, result, critical_cache)
+  list(result, critical_cache)
 }
