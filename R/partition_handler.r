@@ -26,8 +26,7 @@ refineable_partition_handler <- function(lookup, key_class) {
     key = partitions_ui$hash(partitions_ui$key(integer())),
     value = list(integer())
   )
-  critical_cache <- list()
-  trace_cache <- list(list(uncov = uncov_cache, critical = critical_cache))
+  trace_cache <- list(list(uncov = uncov_cache, critical = list()))
 
   # These functions encapsulate the cache itself, including modification.
   reset_cache <- function(initial_cache) {
@@ -64,37 +63,6 @@ refineable_partition_handler <- function(lookup, key_class) {
       uncov_cache$value,
       uncov_cache$key
     )
-    critical_cache$value <<- Map(
-      \(v, h) {
-        indiv <- strsplit(h, "")[[1]]
-        pairs <- paste0(
-          indiv[seq_len(length(indiv)) %% 2 == 1],
-          indiv[seq_len(length(indiv)) %% 2 == 0]
-        )
-        k <- as.raw(as.hexmode(pairs))
-        klen <- length(k)
-        grp <- rep(1:3, each = klen/3)
-        S_element_key <- k[grp == 1]
-        A_key <- k[grp == 2]
-        S_key <- k[grp == 3]
-        c(v, len + critical(S_element_key, A_key, S_key, diffsets))
-      },
-      critical_cache$value,
-      critical_cache$key
-    )
-    trace_len <- length(trace_cache)
-    trace_cache[[trace_len]]$uncov <<- uncov_cache[
-      match(
-        trace_cache[[trace_len]]$uncov$key,
-        uncov_cache$key
-      )
-    ]
-    trace_cache[[trace_len]]$critical <<- critical_cache[
-      match(
-        trace_cache[[trace_len]]$critical$key,
-        critical_cache$key
-      )
-    ]
   }
   get_diffsets <- function() {
     diffset_cache
@@ -117,10 +85,9 @@ refineable_partition_handler <- function(lookup, key_class) {
       A_key,
       S_key,
       diffsets,
-      critical_cache,
+      trace_cache[[length(trace_cache)]]$critical,
       critical_ui
     )
-    critical_cache <<- res[[2]]
     res[[1]]
   }
   truncate <- function(n) {
@@ -178,10 +145,9 @@ refineable_partition_handler <- function(lookup, key_class) {
             logical(1)
           )]
           hash <- critical_ui$hash(c(S_element_key, A_key, S_key | new_S_element))
-          if (!is.na(critical_ui$lookup_hash(hash, critical_cache)))
+          if (!is.na(critical_ui$lookup_hash(hash, trace_cache[[tlen + 1]]$critical)))
             # didn't think this could happen...
             next
-          critical_cache <<- critical_ui$add(hash, new, critical_cache)
           trace_cache[[tlen + 1]]$critical <<-
             critical_ui$add(hash, new, trace_cache[[tlen + 1]]$critical)
         }
@@ -193,10 +159,9 @@ refineable_partition_handler <- function(lookup, key_class) {
           logical(1)
         )]
         hash <- critical_ui$hash(c(new_S_element, A_key, S_key | new_S_element))
-        if (!is.na(critical_ui$lookup_hash(hash, critical_cache)))
+        if (!is.na(critical_ui$lookup_hash(hash, trace_cache[[tlen + 1]]$critical)))
           # didn't think this could happen...
           next
-        critical_cache <<- critical_ui$add(hash, new, critical_cache)
         trace_cache[[tlen + 1]] <<- critical_ui$add(hash, new, trace_cache[[tlen + 1]])
       }
       invisible(NULL)
