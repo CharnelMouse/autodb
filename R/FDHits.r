@@ -35,7 +35,7 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
     A_bitset <- partition_handler$key(A)
     rest <- partition_handler$key(determinants[determinants != A])
     empty <- partition_handler$key(integer())
-    return_stack <- list(list(S = empty, V = rest, W = A_bitset, depth = 1L))
+    return_stack <- list(list(S = empty, V = rest, W = A_bitset, depth = 1L, oldS = empty, addS = empty))
     visited <- character()
     new <- TRUE
     while (length(return_stack) > 0) {
@@ -48,8 +48,10 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
       )
       if (is.element(node_string, visited))
         stop("node ", node_string, " already visited")
-      if (!new)
+      if (!new) {
         partition_handler$truncate(node$depth - 1)
+        partition_handler$prepare_growS(node$oldS, node$W, node$addS)
+      }
       new <- FALSE
       attr_res <- FDHitsSep_visit(
         node$S,
@@ -100,7 +102,7 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
   D <- lapply(D, partition_handler$key)
   partition_handler$add_diffset_keys(D)
   empty <- partition_handler$key(integer())
-  return_stack <- list(list(S = empty, V = V_bitset, W = W_bitset, depth = 1L))
+  return_stack <- list(list(S = empty, V = V_bitset, W = W_bitset, depth = 1L, oldS = empty, addS = empty))
   new <- TRUE
 
   while (length(return_stack) > 0) {
@@ -114,8 +116,10 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
     if (is.element(node_string, visited))
       stop("node ", node_string, " already visited")
     depth <- node$depth
-    if (!new)
+    if (!new) {
       partition_handler$truncate(depth - 1)
+      partition_handler$prepare_growS(node$oldS, node$W, node$addS)
+    }
     new <- FALSE
     attr_res <- FDHitsJoint_visit(
       node$S,
@@ -229,13 +233,12 @@ FDHitsSep_visit <- function(
         S = S_bitset | b,
         V = V_bitset & !rem,
         W = A_bitset,
-        depth = depth + 1L
+        depth = depth + 1L,
+        oldS = S_bitset,
+        addS = b
       )
     }
   )
-  # prepare critical cache for new nodes
-  for (B in Bs_bitsets)
-    partition_handler$prepare_growS(S_bitset, A_bitset, B)
   list(res, new_nodes)
 }
 
@@ -325,7 +328,9 @@ FDHitsJoint_visit <- function(
         S = S_bitset,
         V = V_bitset,
         W = W_bitset & !E_bitset,
-        depth = depth + 1L
+        depth = depth + 1L,
+        oldS = S_bitset,
+        addS = partition_handler$key(integer())
       )), # mu_0
     lapply( # mu_i
       rev(seq_along(Bs_bitsets)),
@@ -335,14 +340,13 @@ FDHitsJoint_visit <- function(
           S = S_bitset | B,
           V = V_bitset & !Reduce(`|`, Bs_bitsets[seq_len(n)]),
           W = W_bitset & E_bitset & !B,
-          depth = depth + 1L
+          depth = depth + 1L,
+          oldS = S_bitset,
+          addS = B
         )
       }
     )
   )
-  # prepare critical cache for new nodes
-  for (B in Bs_bitsets)
-    partition_handler$prepare_growS(S_bitset, W_bitset, B)
   list(res, new_nodes)
 }
 
