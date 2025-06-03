@@ -216,6 +216,9 @@ FDHitsSep_visit <- function(
       list(S_bitset | b, V_bitset & !rem, A_bitset)
     }
   )
+  # prepare critical cache for new nodes
+  for (B in Bs_bitsets)
+    partition_handler$prepare_growS(S_bitset, A_bitset, B)
   list(res, new_nodes)
 }
 
@@ -313,6 +316,9 @@ FDHitsJoint_visit <- function(
       }
     )
   )
+  # prepare critical cache for new nodes
+  for (B in Bs_bitsets)
+    partition_handler$prepare_growS(S_bitset, W_bitset, B)
   list(res, new_nodes)
 }
 

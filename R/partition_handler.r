@@ -135,6 +135,38 @@ refineable_partition_handler <- function(lookup, key_class) {
     },
     fetch_critical_diffsets = function(S_element, A, S) {
       diffset_cache[fetch_critical_bitset(S_element, A, S, diffset_cache)]
+    },
+    prepare_growS = function(S_key, W_key, new_S_element) {
+      new_W_key <- partitions_ui$key_difference(W_key, new_S_element)
+      for (A_key in partitions_ui$decompose(new_W_key)) {
+        for (S_element_key in partitions_ui$decompose_key(S_key)) {
+          # store version with S | new_S_element
+          old <- fetch_critical_bitset(S_element_key, A_key, S_key, diffset_cache)
+          new <- old[vapply(
+            diffset_cache[old],
+            \(ds) all((ds & new_S_element) == 0),
+            logical(1)
+          )]
+          hash <- critical_ui$hash(c(S_element_key, A_key, S_key | new_S_element))
+          if (!is.na(critical_ui$lookup_hash(hash, critical_cache)))
+            # didn't think this could happen...
+            next
+          critical_cache <<- critical_ui$add(hash, new, critical_cache)
+        }
+        # store version with new_S_element as S_element
+        candidates <- match(fetch_uncovered_keys_bitset(S_key, A_key), diffset_cache)
+        new <- candidates[vapply(
+          diffset_cache[candidates],
+          \(ds) all((ds & new_S_element) == new_S_element),
+          logical(1)
+        )]
+        hash <- critical_ui$hash(c(new_S_element, A_key, S_key | new_S_element))
+        if (!is.na(critical_ui$lookup_hash(hash, critical_cache)))
+          # didn't think this could happen...
+          next
+        critical_cache <<- critical_ui$add(hash, new, critical_cache)
+      }
+      invisible(NULL)
     }
   )
 }
