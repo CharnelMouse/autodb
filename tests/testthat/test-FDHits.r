@@ -304,7 +304,7 @@ describe("critical", {
       "adding C to S:",
       "- removes all diffsets containing C as critical for original elements",
       "- has edges critical for C that can't include those previously critical elsewhere",
-      "- more strongly, edges critical for C are those previously uncovered that contain C",
+      "- more strongly, edges critical for C are those previously uncovered for A that contain C",
       sep = "\n"
     ),
     {
@@ -369,7 +369,7 @@ describe("critical", {
             )
           )
           if (!new_criticals_from_uncovered)
-            return(fail("new element's critical edges not from uncovered"))
+            return(fail("new element's critical edges not from uncovered_A"))
           succeed()
         },
         curry = TRUE
