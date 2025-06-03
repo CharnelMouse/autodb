@@ -148,11 +148,8 @@ refineable_partition_handler <- function(lookup, key_class) {
             logical(1)
           )]
           hash <- critical_ui$hash(c(S_element_key, A_key, S_key | new_S_element))
-          if (!is.na(critical_ui$lookup_hash(hash, trace_cache[[tlen + 1]]$critical)))
-            # didn't think this could happen...
-            next
           trace_cache[[tlen + 1]]$critical <<-
-            critical_ui$add(hash, new, trace_cache[[tlen + 1]]$critical)
+            critical_ui$add_new(hash, new, trace_cache[[tlen + 1]]$critical)
         }
         # store version with new_S_element as S_element
         candidates <- match(fetch_uncovered_keys_bitset(S_key, A_key), diffset_cache)
@@ -162,10 +159,8 @@ refineable_partition_handler <- function(lookup, key_class) {
           logical(1)
         )]
         hash <- critical_ui$hash(c(new_S_element, A_key, S_key | new_S_element))
-        if (!is.na(critical_ui$lookup_hash(hash, trace_cache[[tlen + 1]]$critical)))
-          # didn't think this could happen...
-          next
-        trace_cache[[tlen + 1]] <<- critical_ui$add(hash, new, trace_cache[[tlen + 1]])
+        trace_cache[[tlen + 1]]$critical <<-
+          critical_ui$add_new(hash, new, trace_cache[[tlen + 1]]$critical)
       }
       invisible(NULL)
     }
@@ -451,6 +446,12 @@ bitset_critical_ui <- function(lookup) {
       critical(S_element_key, A_key, S_key, diffsets)
     },
     add = function(hash, value, cache) {
+      cache$key <- c(cache$key, hash)
+      cache$value <- c(cache$value, list(value))
+      cache
+    },
+    add_new = function(hash, value, cache) {
+      stopifnot(is.na(match(hash, cache$key)))
       cache$key <- c(cache$key, hash)
       cache$value <- c(cache$value, list(value))
       cache
