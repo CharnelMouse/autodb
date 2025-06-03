@@ -35,7 +35,14 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
     A_bitset <- partition_handler$key(A)
     rest <- partition_handler$key(determinants[determinants != A])
     empty <- partition_handler$key(integer())
-    return_stack <- list(list(S = empty, V = rest, W = A_bitset, depth = 1L, oldS = empty, addS = empty))
+    return_stack <- list(list(
+      S = empty,
+      V = rest,
+      W = A_bitset,
+      depth = 1L,
+      oldS = empty,
+      addS = empty
+    ))
     visited <- character()
     new <- TRUE
     while (length(return_stack) > 0) {
@@ -102,7 +109,14 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
   D <- lapply(D, partition_handler$key)
   partition_handler$add_diffset_keys(D)
   empty <- partition_handler$key(integer())
-  return_stack <- list(list(S = empty, V = V_bitset, W = W_bitset, depth = 1L, oldS = empty, addS = empty))
+  return_stack <- list(list(
+    S = empty,
+    V = V_bitset,
+    W = W_bitset,
+    depth = 1L,
+    oldS = empty,
+    addS = empty
+  ))
   new <- TRUE
 
   while (length(return_stack) > 0) {
