@@ -251,3 +251,80 @@ describe("new_diffset", {
     )
   })
 })
+
+describe("critical", {
+  ints_to_bitset <- function(x, bitlen) {
+    bools <- rep(FALSE, bitlen)
+    bools[x] <- TRUE
+    packBits(bools)
+  }
+  it("returns indices of all diffsets that contain A, and only given element of S", {
+    forall(
+      gen.sample(seq_len(10), gen.element(2:10), replace = FALSE) |>
+        gen.list(from = 1, to = 10) |>
+        gen.with(\(lst) {
+          ints <- lst[[1]]
+          list(
+            ints_to_bitset(ints[[1]], 16),
+            ints_to_bitset(ints[-1], 16),
+            ints_to_bitset(ints[[2]], 16),
+            lapply(lst[-1], ints_to_bitset, 16)
+          )
+        }),
+      function(A, S, S_element, diffsets) {
+        crits <- critical(S_element, A, S, diffsets)
+        has_A <- vapply(diffsets, \(ds) all((A & ds) == A), logical(1))
+        has_only_el <- vapply(diffsets, \(ds) all((S & ds) == S_element), logical(1))
+        expect_identical(crits, which(has_A & has_only_el))
+      },
+      curry = TRUE
+    )
+  })
+  it("adding C to S removes all diffsets containing C as critical in original S", {
+    forall(
+      gen.sample(seq_len(10), gen.element(3:10), replace = FALSE) |>
+        gen.list(from = 1, to = 10) |>
+        gen.with(\(lst) {
+          ints <- lst[[1]]
+          list(
+            ints_to_bitset(ints[[1]], 16),
+            ints_to_bitset(ints[-(1:2)], 16),
+            ints_to_bitset(ints[[3]], 16),
+            ints_to_bitset(ints[[2]], 16),
+            lapply(lst[-1], ints_to_bitset, 16)
+          )
+        }),
+      function(A, S, S_element, new_S_element, diffsets) {
+        old_critical <- critical(S_element, A, S, diffsets)
+        new_critical <- critical(S_element, A, S | new_S_element, diffsets)
+        filtered_old_critical <- old_critical[vapply(
+          diffsets[old_critical],
+          \(edge) all((edge & new_S_element) == 0),
+          logical(1)
+        )]
+        expect_setequal(new_critical, filtered_old_critical)
+      },
+      curry = TRUE
+    )
+  })
+  it("removes all diffsets when A is added to S", {
+    forall(
+      gen.sample(seq_len(10), gen.element(2:10), replace = FALSE) |>
+        gen.list(from = 1, to = 10) |>
+        gen.with(\(lst) {
+          ints <- lst[[1]]
+          list(
+            ints_to_bitset(ints[[1]], 16),
+            ints_to_bitset(ints[-1], 16),
+            ints_to_bitset(ints[[2]], 16),
+            lapply(lst[-1], ints_to_bitset, 16)
+          )
+        }),
+      function(A, S, S_element, diffsets) {
+        new_critical <- critical(S_element, A, S | A, diffsets)
+        expect_length(new_critical, 0)
+      },
+      curry = TRUE
+    )
+  })
+})
