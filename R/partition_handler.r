@@ -27,6 +27,7 @@ refineable_partition_handler <- function(lookup, key_class) {
     value = list(integer())
   )
   critical_cache <- list()
+  trace_cache <- list(list(uncov = uncov_cache, critical = critical_cache))
 
   # These functions encapsulate the cache itself, including modification.
   reset_cache <- function(initial_cache) {
@@ -81,6 +82,19 @@ refineable_partition_handler <- function(lookup, key_class) {
       critical_cache$value,
       critical_cache$key
     )
+    trace_len <- length(trace_cache)
+    trace_cache[[trace_len]]$uncov <<- uncov_cache[
+      match(
+        trace_cache[[trace_len]]$uncov$key,
+        uncov_cache$key
+      )
+    ]
+    trace_cache[[trace_len]]$critical <<- critical_cache[
+      match(
+        trace_cache[[trace_len]]$critical$key,
+        critical_cache$key
+      )
+    ]
   }
   get_diffsets <- function() {
     diffset_cache
@@ -109,8 +123,18 @@ refineable_partition_handler <- function(lookup, key_class) {
     critical_cache <<- res[[2]]
     res[[1]]
   }
+  truncate <- function(n) {
+    trace_cache <<- trace_cache[seq_len(min(n, length(trace_cache)))]
+  }
+  clone <- function() {
+    if (length(trace_cache))
+      stop("cache empty, cannot clone")
+    trace_cache <<- c(trace_cache, trace_cache[length(trace_cache)])
+  }
 
   list(
+    truncate = function(n) truncate(n),
+    clone = function() clone(),
     cache_size = function() length(partition_cache$key),
     reset = function() reset_cache(initial_cache),
     key = partitions_ui$key,
@@ -137,6 +161,12 @@ refineable_partition_handler <- function(lookup, key_class) {
       diffset_cache[fetch_critical_bitset(S_element, A, S, diffset_cache)]
     },
     prepare_growS = function(S_key, W_key, new_S_element) {
+      tlen <- length(trace_cache)
+      trace_cache <<- c(trace_cache, trace_cache[tlen])
+      stopifnot(length(trace_cache) == tlen + 1L)
+      # reset critical, since the below adds elements back but doesn't
+      # remove the unneeded parts
+      trace_cache[[tlen + 1]]$critical <- list()
       new_W_key <- partitions_ui$key_difference(W_key, new_S_element)
       for (A_key in partitions_ui$decompose(new_W_key)) {
         for (S_element_key in partitions_ui$decompose_key(S_key)) {
@@ -152,6 +182,8 @@ refineable_partition_handler <- function(lookup, key_class) {
             # didn't think this could happen...
             next
           critical_cache <<- critical_ui$add(hash, new, critical_cache)
+          trace_cache[[tlen + 1]]$critical <<-
+            critical_ui$add(hash, new, trace_cache[[tlen + 1]]$critical)
         }
         # store version with new_S_element as S_element
         candidates <- match(fetch_uncovered_keys_bitset(S_key, A_key), diffset_cache)
@@ -165,6 +197,7 @@ refineable_partition_handler <- function(lookup, key_class) {
           # didn't think this could happen...
           next
         critical_cache <<- critical_ui$add(hash, new, critical_cache)
+        trace_cache[[tlen + 1]] <<- critical_ui$add(hash, new, trace_cache[[tlen + 1]])
       }
       invisible(NULL)
     }
