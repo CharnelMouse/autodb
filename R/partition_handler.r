@@ -26,9 +26,7 @@ refineable_partition_handler <- function(lookup, key_class) {
     key = partitions_ui$hash(partitions_ui$key(integer())),
     value = list(integer())
   )
-  critical_cache <- list(
-    # not sure yet
-  )
+  critical_cache <- list()
 
   # These functions encapsulate the cache itself, including modification.
   reset_cache <- function(initial_cache) {
@@ -100,6 +98,7 @@ refineable_partition_handler <- function(lookup, key_class) {
     key = partitions_ui$key,
     key_size = partitions_ui$key_size,
     decompose_key = partitions_ui$decompose_key,
+    subkey_difference = partitions_ui$subkey_difference,
     refine = function(rhs_key, lhs_key) {
       fetch_refined_partition(
         lookup,
@@ -113,8 +112,11 @@ refineable_partition_handler <- function(lookup, key_class) {
     fetch_uncovered_keys = function(S_key, W_key, ...) {
       fetch_uncovered_keys_bitset(S_key, W_key, ...)
     },
-    fetch_critical = function(S_element, A, S) {
+    fetch_critical_indices = function(S_element, A, S) {
       fetch_critical_bitset(S_element, A, S, diffset_cache)
+    },
+    fetch_critical_diffsets = function(S_element, A, S) {
+      diffset_cache[fetch_critical_bitset(S_element, A, S, diffset_cache)]
     }
   )
 }

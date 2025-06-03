@@ -160,7 +160,7 @@ FDHitsSep_visit <- function(
     # no critical edge for C
     # => C is redundant in S for A
     # => S isn't irreducible for A
-    crits <- partition_handler$fetch_critical(C, A_bitset, S_bitset)
+    crits <- partition_handler$fetch_critical_diffsets(C, A_bitset, S_bitset)
     if (length(crits) == 0)
       return(list(list(), list()))
     for (B in partition_handler$decompose_key(V_bitset)) {
@@ -168,11 +168,11 @@ FDHitsSep_visit <- function(
       # i.e. adding B to S would make some C in S redundant WRT A
       # does not check for B being redundant if added
       if (all(vapply(
-        partition_handler$get_diffset_keys()[crits],
+        crits,
         \(Db) any((Db & B) != 0),
         logical(1)
       )))
-        V_bitset <- xor(V_bitset, B)
+        V_bitset <- partition_handler$subkey_difference(V_bitset, B)
     }
   }
   # validation at the leaves
@@ -229,20 +229,15 @@ FDHitsJoint_visit <- function(
   partition_handler
 ) {
   # pruning
-  critical_edges <- list()
   for (A in partition_handler$decompose_key(W_bitset)) {
     for (C in partition_handler$decompose_key(S_bitset)) {
       # no critical edge for C
       # => C is redundant in S for (some part of) W
       # => S isn't irreducible for (some part of) W
-      crits <- partition_handler$fetch_critical(C, A, S_bitset)
+      crits <- partition_handler$fetch_critical_indices(C, A, S_bitset)
       if (length(crits) == 0) {
-        W_bitset <- xor(W_bitset, A)
-        critical_edges[[paste(A, collapse = "")]] <- NULL
+        W_bitset <- partition_handler$subkey_difference(W_bitset, A)
         break
-      }else{
-        critical_edges[[paste(A, collapse = "")]][[paste(C, collapse = "")]] <-
-          partition_handler$get_diffset_keys()[crits]
       }
     }
   }
@@ -258,7 +253,7 @@ FDHitsJoint_visit <- function(
       \(A) any(vapply(
         partition_handler$decompose_key(S_bitset),
         \(C) all(vapply(
-          critical_edges[[paste(A, collapse = "")]][[paste(C, collapse = "")]],
+          partition_handler$fetch_critical_diffsets(C, A, S_bitset),
           \(E) all((B & E) == B),
           logical(1)
         )),
@@ -266,7 +261,7 @@ FDHitsJoint_visit <- function(
       )),
       logical(1)
     ))) {
-      V_bitset <- xor(V_bitset, B)
+      V_bitset <- partition_handler$subkey_difference(V_bitset, B)
     }
   }
   # validation at the leaves
