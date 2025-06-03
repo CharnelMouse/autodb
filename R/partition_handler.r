@@ -63,6 +63,25 @@ refineable_partition_handler <- function(lookup, key_class) {
       uncov_cache$value,
       uncov_cache$key
     )
+    critical_cache$value <<- Map(
+      \(v, h) {
+        indiv <- strsplit(h, "")[[1]]
+        pairs <- paste0(
+          indiv[seq_len(length(indiv)) %% 2 == 1],
+          indiv[seq_len(length(indiv)) %% 2 == 0]
+        )
+        k <- as.raw(as.hexmode(pairs))
+        klen <- length(k)
+        boundaries <- c(0, klen/3, 2*klen/3, klen)
+        grp <- findInterval(seq_len(klen), boundaries)
+        S_element_key <- k[grp == 1]
+        A_key <- k[grp == 2]
+        S_key <- k[grp == 3]
+        c(v, len + critical(S_element_key, A_key, S_key, diffsets))
+      },
+      critical_cache$value,
+      critical_cache$key
+    )
   }
   get_diffsets <- function() {
     diffset_cache
