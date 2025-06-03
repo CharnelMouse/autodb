@@ -258,73 +258,122 @@ describe("critical", {
     bools[x] <- TRUE
     packBits(bools)
   }
-  it("returns indices of all diffsets that contain A, and only given element of S", {
-    forall(
-      gen.sample(seq_len(10), gen.element(2:10), replace = FALSE) |>
-        gen.list(from = 1, to = 10) |>
-        gen.with(\(lst) {
-          ints <- lst[[1]]
-          list(
-            ints_to_bitset(ints[[1]], 16),
-            ints_to_bitset(ints[-1], 16),
-            ints_to_bitset(ints[[2]], 16),
-            lapply(lst[-1], ints_to_bitset, 16)
+  it(
+    paste(
+      "for C in S:",
+      "- returns indices of diffsets that contain A, and only C from S",
+      "- by above, returns nothing if A is in S and C != A",
+      sep = "\n"
+    ),
+    {
+      forall(
+        list(
+          gen.int(10),
+          gen.sample(seq_len(10), gen.int(10), replace = FALSE),
+          gen.sample(seq_len(10), gen.element(0:10), replace = FALSE) |>
+            gen.list(from = 0, to = 10)
+        ) |>
+          gen.with(\(lst) {
+            A <- lst[[1]]
+            S <- lst[[2]]
+            diffsets <- lst[[3]]
+            list(
+              ints_to_bitset(A, 16),
+              ints_to_bitset(S, 16),
+              ints_to_bitset(S[[1]], 16),
+              lapply(diffsets, ints_to_bitset, 16)
+            )
+          }),
+        function(A, S, S_element, diffsets) {
+          crits <- critical(S_element, A, S, diffsets)
+          if (all((A & S) == A) && !all(A == S_element) && length(crits) > 0)
+            return(fail(paste(
+              "A is in S, but critical edges for C aren't empty:",
+              toString(crits)
+            )))
+          has_A <- vapply(diffsets, \(ds) all((A & ds) == A), logical(1))
+          has_only_el <- vapply(diffsets, \(ds) all((S & ds) == S_element), logical(1))
+          expect_identical(crits, which(has_A & has_only_el))
+        },
+        curry = TRUE
+      )
+    }
+  )
+  it(
+    paste(
+      "adding C to S:",
+      "- removes all diffsets containing C as critical for original elements",
+      "- has edges critical for C that can't include those previously critical elsewhere",
+      "- more strongly, edges critical for C are those previously uncovered that contain C",
+      sep = "\n"
+    ),
+    {
+      forall(
+        gen.sample(seq_len(10), gen.element(2:10), replace = FALSE) |>
+          gen.list(from = 1, to = 10) |>
+          gen.with(\(lst) {
+            ints <- lst[[1]]
+            list(
+              ints_to_bitset(ints[[1]], 16),
+              ints_to_bitset(ints[-(1:2)], 16),
+              lapply(ints[-(1:2)], ints_to_bitset, 16),
+              ints_to_bitset(ints[[2]], 16),
+              lapply(lst[-1], ints_to_bitset, 16)
+            )
+          }),
+        function(A, S, S_elements, new_S_element, diffsets) {
+          old_criticals <- lapply(
+            S_elements,
+            \(S_element) critical(S_element, A, S, diffsets)
           )
-        }),
-      function(A, S, S_element, diffsets) {
-        crits <- critical(S_element, A, S, diffsets)
-        has_A <- vapply(diffsets, \(ds) all((A & ds) == A), logical(1))
-        has_only_el <- vapply(diffsets, \(ds) all((S & ds) == S_element), logical(1))
-        expect_identical(crits, which(has_A & has_only_el))
-      },
-      curry = TRUE
-    )
-  })
-  it("adding C to S removes all diffsets containing C as critical in original S", {
-    forall(
-      gen.sample(seq_len(10), gen.element(3:10), replace = FALSE) |>
-        gen.list(from = 1, to = 10) |>
-        gen.with(\(lst) {
-          ints <- lst[[1]]
-          list(
-            ints_to_bitset(ints[[1]], 16),
-            ints_to_bitset(ints[-(1:2)], 16),
-            ints_to_bitset(ints[[3]], 16),
-            ints_to_bitset(ints[[2]], 16),
-            lapply(lst[-1], ints_to_bitset, 16)
+          remaining_diffsets <- setdiff(
+            seq_along(diffsets),
+            unlist(old_criticals)
           )
-        }),
-      function(A, S, S_element, new_S_element, diffsets) {
-        old_critical <- critical(S_element, A, S, diffsets)
-        new_critical <- critical(S_element, A, S | new_S_element, diffsets)
-        filtered_old_critical <- old_critical[vapply(
-          diffsets[old_critical],
-          \(edge) all((edge & new_S_element) == 0),
-          logical(1)
-        )]
-        expect_setequal(new_critical, filtered_old_critical)
-      },
-      curry = TRUE
-    )
-  })
-  it("removes all diffsets when A is added to S", {
-    forall(
-      gen.sample(seq_len(10), gen.element(2:10), replace = FALSE) |>
-        gen.list(from = 1, to = 10) |>
-        gen.with(\(lst) {
-          ints <- lst[[1]]
-          list(
-            ints_to_bitset(ints[[1]], 16),
-            ints_to_bitset(ints[-1], 16),
-            ints_to_bitset(ints[[2]], 16),
-            lapply(lst[-1], ints_to_bitset, 16)
+
+          new_criticals <- lapply(
+            S_elements,
+            \(S_element) critical(S_element, A, S | new_S_element, diffsets)
           )
-        }),
-      function(A, S, S_element, diffsets) {
-        new_critical <- critical(S_element, A, S | A, diffsets)
-        expect_length(new_critical, 0)
-      },
-      curry = TRUE
-    )
-  })
+          new_critical <- critical(new_S_element, A, S | new_S_element, diffsets)
+
+          old_criticals_reduced <- mapply(
+            function(old, new) {
+              filtered_old <- old[vapply(
+                diffsets[old],
+                \(edge) all((edge & new_S_element) == 0),
+                logical(1)
+              )]
+              identical(new, filtered_old)
+            },
+            old_criticals,
+            new_criticals
+          )
+          if (!all(old_criticals_reduced))
+            return(fail("some critical edge sets weren't reduced"))
+          new_criticals_from_remaining <- all(is.element(
+            new_critical,
+            remaining_diffsets
+          ))
+          if (!new_criticals_from_remaining)
+            return(fail("new element's critical edges not from non-critical"))
+          new_criticals_from_uncovered <- setequal(
+            new_critical,
+            which(
+              uncov(S, A, diffsets) &
+                vapply(
+                  diffsets,
+                  \(ds) all((ds & new_S_element) == new_S_element),
+                  logical(1)
+                )
+            )
+          )
+          if (!new_criticals_from_uncovered)
+            return(fail("new element's critical edges not from uncovered"))
+          succeed()
+        },
+        curry = TRUE
+      )
+    }
+  )
 })
