@@ -44,7 +44,6 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
       addS = empty
     ))
     visited <- character()
-    new <- TRUE
     while (length(return_stack) > 0) {
       node <- return_stack[[1]]
       return_stack <- return_stack[-1]
@@ -55,11 +54,8 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
       )
       if (is.element(node_string, visited))
         stop("node ", node_string, " already visited")
-      if (!new) {
-        partition_handler$truncate(node$depth - 1)
-        partition_handler$prepare_growS(node$oldS, node$W, node$addS)
-      }
-      new <- FALSE
+      partition_handler$truncate(node$depth - 1)
+      partition_handler$prepare_growS(node$oldS, node$W, node$addS)
       attr_res <- FDHitsSep_visit(
         node$S,
         node$V,
@@ -117,7 +113,6 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
     oldS = empty,
     addS = empty
   ))
-  new <- TRUE
 
   while (length(return_stack) > 0) {
     node <- return_stack[[1]]
@@ -130,11 +125,8 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
     if (is.element(node_string, visited))
       stop("node ", node_string, " already visited")
     depth <- node$depth
-    if (!new) {
-      partition_handler$truncate(depth - 1)
-      partition_handler$prepare_growS(node$oldS, node$W, node$addS)
-    }
-    new <- FALSE
+    partition_handler$truncate(depth - 1)
+    partition_handler$prepare_growS(node$oldS, node$W, node$addS)
     attr_res <- FDHitsJoint_visit(
       node$S,
       node$V,
