@@ -54,7 +54,7 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
       )
       if (is.element(node_string, visited))
         stop("node ", node_string, " already visited")
-      partition_handler$truncate(node$depth - 1)
+      partition_handler$truncate(node$depth)
       partition_handler$prepare_growS(node$oldS, node$W, node$addS)
       attr_res <- FDHitsSep_visit(
         node$S,
@@ -125,7 +125,7 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
     if (is.element(node_string, visited))
       stop("node ", node_string, " already visited")
     depth <- node$depth
-    partition_handler$truncate(depth - 1)
+    partition_handler$truncate(depth)
     partition_handler$prepare_growS(node$oldS, node$W, node$addS)
     attr_res <- FDHitsJoint_visit(
       node$S,

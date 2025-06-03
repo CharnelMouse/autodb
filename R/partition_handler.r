@@ -26,7 +26,7 @@ refineable_partition_handler <- function(lookup, key_class) {
     key = partitions_ui$hash(partitions_ui$key(integer())),
     value = list(integer())
   )
-  trace_cache <- list()
+  trace_cache <- list(list(uncov = uncov_cache, critical = list()))
 
   # These functions encapsulate the cache itself, including modification.
   reset_cache <- function(initial_cache) {
@@ -129,10 +129,7 @@ refineable_partition_handler <- function(lookup, key_class) {
     },
     prepare_growS = function(S_key, W_key, new_S_element) {
       tlen <- length(trace_cache)
-      if (tlen == 0)
-        trace_cache <<- list(list(uncov = uncov_cache, critical = list()))
-      else
-        trace_cache <<- c(trace_cache, trace_cache[tlen])
+      trace_cache <<- c(trace_cache, trace_cache[tlen])
       stopifnot(length(trace_cache) == tlen + 1L)
       # reset critical, since the below adds elements back but doesn't
       # remove the unneeded parts
