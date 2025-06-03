@@ -20,13 +20,15 @@ refineable_partition_handler <- function(lookup, key_class) {
   )
   partition_cache <- initial_cache
   diffset_cache <- list()
-  # element is indices of diffsets not covered by S
-  uncov_cache <- list(
-    # empty attribute set covers none of the zero starting diffsets
-    key = partitions_ui$hash(partitions_ui$key(integer())),
-    value = list(integer())
-  )
-  trace_cache <- list(list(uncov = uncov_cache, critical = list()))
+  trace_cache <- list(list(
+    uncov = list(
+      # element is indices of diffsets not covered by S
+      # empty attribute set covers none of the zero starting diffsets
+      key = partitions_ui$hash(partitions_ui$key(integer())),
+      value = list(integer())
+    ),
+    critical = list()
+  ))
 
   # These functions encapsulate the cache itself, including modification.
   reset_cache <- function(initial_cache) {
@@ -50,18 +52,24 @@ refineable_partition_handler <- function(lookup, key_class) {
     len <- length(diffset_cache)
     to_add <- len + seq_along(diffsets)
     diffset_cache <<- c(diffset_cache, diffsets)
-    uncov_cache$value <<- Map(
-      \(v, h) {
-        indiv <- strsplit(h, "")[[1]]
-        pairs <- paste0(
-          indiv[seq_len(length(indiv)) %% 2 == 1],
-          indiv[seq_len(length(indiv)) %% 2 == 0]
+    trace_cache <<- lapply(
+      trace_cache,
+      \(cache) {
+        cache$uncov$value <- Map(
+          \(v, h) {
+            indiv <- strsplit(h, "")[[1]]
+            pairs <- paste0(
+              indiv[seq_len(length(indiv)) %% 2 == 1],
+              indiv[seq_len(length(indiv)) %% 2 == 0]
+            )
+            k <- as.raw(as.hexmode(pairs))
+            c(v, len + which(vapply(diffsets, \(d) all((d & k) == 0), logical(1))))
+          },
+          cache$uncov$value,
+          cache$uncov$key
         )
-        k <- as.raw(as.hexmode(pairs))
-        c(v, len + which(vapply(diffsets, \(d) all((d & k) == 0), logical(1))))
-      },
-      uncov_cache$value,
-      uncov_cache$key
+        cache
+      }
     )
   }
   get_diffsets <- function() {
@@ -73,10 +81,10 @@ refineable_partition_handler <- function(lookup, key_class) {
       S_key,
       W_key,
       diffset_cache,
-      uncov_cache,
+      trace_cache[[length(trace_cache)]]$uncov,
       uncov_ui
     )
-    uncov_cache <<- res[[2]]
+    trace_cache[[length(trace_cache)]]$uncov <<- res[[2]]
     res[[1]]
   }
   fetch_uncovered_keys_bitset <- function(S_key, W_key, diffsets = diffset_cache) {
@@ -84,10 +92,10 @@ refineable_partition_handler <- function(lookup, key_class) {
       S_key,
       W_key,
       diffsets,
-      uncov_cache,
+      trace_cache[[length(trace_cache)]]$uncov,
       uncov_ui
     )
-    uncov_cache <<- res[[2]]
+    trace_cache[[length(trace_cache)]]$uncov <<- res[[2]]
     res[[1]]
   }
   fetch_critical_bitset <- function(S_element_key, A_key, S_key, diffsets) {
