@@ -72,8 +72,7 @@ refineable_partition_handler <- function(lookup, key_class) {
         )
         k <- as.raw(as.hexmode(pairs))
         klen <- length(k)
-        boundaries <- c(0, klen/3, 2*klen/3, klen)
-        grp <- findInterval(seq_len(klen), boundaries)
+        grp <- rep(1:3, each = klen/3)
         S_element_key <- k[grp == 1]
         A_key <- k[grp == 2]
         S_key <- k[grp == 3]
