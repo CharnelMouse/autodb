@@ -68,6 +68,17 @@ refineable_partition_handler <- function(lookup, key_class) {
     diffset_cache
   }
   stopifnot(key_class == "bitset")
+  fetch_uncovered_indices_bitset <- function(S_key, W_key) {
+    res <- fetch_uncovered_indices_bitset_pure(
+      S_key,
+      W_key,
+      diffset_cache,
+      uncov_cache,
+      uncov_ui
+    )
+    uncov_cache <<- res[[2]]
+    res[[1]]
+  }
   fetch_uncovered_keys_bitset <- function(S_key, W_key, diffsets = diffset_cache) {
     res <- fetch_uncovered_keys_bitset_pure(
       S_key,
@@ -159,7 +170,7 @@ refineable_partition_handler <- function(lookup, key_class) {
             critical_ui$add_new(hash, new, trace_cache[[tlen + 1]]$critical)
         }
         # store version with new_S_element as S_element
-        candidates <- match(fetch_uncovered_keys_bitset(S_key, A_key), diffset_cache)
+        candidates <- fetch_uncovered_indices_bitset(S_key, A_key)
         new <- candidates[vapply(
           diffset_cache[candidates],
           \(ds) all((ds & new_S_element) == new_S_element),
@@ -672,6 +683,20 @@ fsplit <- function(splitted, splitter) {
   # determine levels manually to skip factor()'s default level sorting
   f <- ffactor1(single_splitter)
   split(splitted, f)
+}
+
+fetch_uncovered_indices_bitset_pure <- function(
+    S_key,
+    W_key,
+    diffsets,
+    uncov_cache,
+    uncov_ui
+) {
+  result <- fetch_uncovered_S_only(S_key, diffsets, uncov_cache, uncov_ui)
+  bools <- result[[1]]
+  new_cache <- result[[2]]
+  has_any_W <- vapply(diffsets[bools], \(ds) any((W_key & ds) > 0), logical(1))
+  list(bools[has_any_W], new_cache)
 }
 
 fetch_uncovered_keys_bitset_pure <- function(
