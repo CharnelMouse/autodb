@@ -131,14 +131,24 @@ refineable_partition_handler <- function(lookup, key_class) {
       tlen <- length(trace_cache)
       trace_cache <<- c(trace_cache, trace_cache[tlen])
       stopifnot(length(trace_cache) == tlen + 1L)
+      old_critical_cache <- trace_cache[[tlen]]$critical
       # reset critical, since the below adds elements back but doesn't
       # remove the unneeded parts
-      trace_cache[[tlen + 1]]$critical <- list()
+      trace_cache[[tlen + 1]]$critical <<- list(key = character(), value = list())
       new_W_key <- partitions_ui$key_difference(W_key, new_S_element)
       for (A_key in partitions_ui$decompose(new_W_key)) {
         for (S_element_key in partitions_ui$decompose_key(S_key)) {
           # store version with S | new_S_element
-          old <- fetch_critical_bitset(S_element_key, A_key, S_key, diffset_cache)
+          old_result <- fetch_critical_bitset_pure(
+            S_element_key,
+            A_key,
+            S_key,
+            diffset_cache,
+            old_critical_cache,
+            critical_ui
+          )
+          stopifnot(identical(old_result[[2]], old_critical_cache))
+          old <- old_result[[1]]
           new <- old[vapply(
             diffset_cache[old],
             \(ds) all((ds & new_S_element) == 0),
