@@ -35,29 +35,27 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
     A_bitset <- partition_handler$key(A)
     rest <- partition_handler$key(determinants[determinants != A])
     empty <- partition_handler$key(integer())
-    return_stack <- list(list(empty, rest, A_bitset, 1L))
+    return_stack <- list(list(S = empty, V = rest, W = A_bitset, depth = 1L))
     visited <- character()
-    depth <- 1L
     new <- TRUE
     while (length(return_stack) > 0) {
       node <- return_stack[[1]]
       return_stack <- return_stack[-1]
       node_string <- paste0(
-        paste(node[[1]], collapse = ""),
-        paste(node[[2]], collapse = ""),
-        paste(node[[3]], collapse = "")
+        paste(node$S, collapse = ""),
+        paste(node$V, collapse = ""),
+        paste(node$W, collapse = "")
       )
       if (is.element(node_string, visited))
         stop("node ", node_string, " already visited")
-      depth <- node[[4]]
       if (!new)
-        partition_handler$truncate(depth - 1)
+        partition_handler$truncate(node$depth - 1)
       new <- FALSE
       attr_res <- FDHitsSep_visit(
-        node[[1]],
-        node[[2]],
-        node[[3]],
-        depth,
+        node$S,
+        node$V,
+        node$W,
+        node$depth,
         node_string,
         lookup,
         report = report,
@@ -69,7 +67,7 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
       return_stack <- c(
         new_nodes[vapply(
           new_nodes,
-          \(node) partition_handler$key_size(node[[1]]) <= detset_limit,
+          \(node) partition_handler$key_size(node$S) <= detset_limit,
           logical(1)
         )],
         return_stack
@@ -102,29 +100,28 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
   D <- lapply(D, partition_handler$key)
   partition_handler$add_diffset_keys(D)
   empty <- partition_handler$key(integer())
-  return_stack <- list(list(empty, V_bitset, W_bitset, 1L))
-  depth <- 1L
+  return_stack <- list(list(S = empty, V = V_bitset, W = W_bitset, depth = 1L))
   new <- TRUE
 
   while (length(return_stack) > 0) {
     node <- return_stack[[1]]
     return_stack <- return_stack[-1]
     node_string <- paste0(
-      paste(node[[1]], collapse = ""),
-      paste(node[[2]], collapse = ""),
-      paste(node[[3]], collapse = "")
+      paste(node$S, collapse = ""),
+      paste(node$V, collapse = ""),
+      paste(node$W, collapse = "")
     )
     if (is.element(node_string, visited))
       stop("node ", node_string, " already visited")
-    depth <- node[[4]]
+    depth <- node$depth
     if (!new)
       partition_handler$truncate(depth - 1)
     new <- FALSE
     attr_res <- FDHitsJoint_visit(
-      node[[1]],
-      node[[2]],
-      node[[3]],
-      depth,
+      node$S,
+      node$V,
+      node$W,
+      node$depth,
       node_string,
       lookup,
       report = report,
@@ -136,7 +133,7 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
     return_stack <- c(
       new_nodes[vapply(
         new_nodes,
-        \(node) partition_handler$key_size(node[[1]]) <= detset_limit,
+        \(node) partition_handler$key_size(node$S) <= detset_limit,
         logical(1)
       )],
       return_stack
@@ -228,7 +225,12 @@ FDHitsSep_visit <- function(
     \(n) {
       b <- Bs_bitsets[[n]]
       rem <- Reduce(`|`, Bs_bitsets[seq_len(n)])
-      list(S_bitset | b, V_bitset & !rem, A_bitset, depth + 1L)
+      list(
+        S = S_bitset | b,
+        V = V_bitset & !rem,
+        W = A_bitset,
+        depth = depth + 1L
+      )
     }
   )
   # prepare critical cache for new nodes
@@ -319,16 +321,21 @@ FDHitsJoint_visit <- function(
   # the new work
   new_nodes <- c(
     if (any((W_bitset & E_bitset) != W_bitset))
-      list(list(S_bitset, V_bitset, W_bitset & !E_bitset, depth + 1L)), # mu_0
+      list(list(
+        S = S_bitset,
+        V = V_bitset,
+        W = W_bitset & !E_bitset,
+        depth = depth + 1L
+      )), # mu_0
     lapply( # mu_i
       rev(seq_along(Bs_bitsets)),
       \(n) {
         B <- Bs_bitsets[[n]]
         list(
-          S_bitset | B,
-          V_bitset & !Reduce(`|`, Bs_bitsets[seq_len(n)]),
-          W_bitset & E_bitset & !B,
-          depth + 1L
+          S = S_bitset | B,
+          V = V_bitset & !Reduce(`|`, Bs_bitsets[seq_len(n)]),
+          W = W_bitset & E_bitset & !B,
+          depth = depth + 1L
         )
       }
     )
