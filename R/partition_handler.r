@@ -153,6 +153,7 @@ refineable_partition_handler <- function(lookup, key_class) {
       tlen <- length(trace_cache)
       trace_cache <<- c(trace_cache, trace_cache[tlen])
       stopifnot(length(trace_cache) == tlen + 1L)
+      old_uncov_cache <- trace_cache[[tlen]]$uncov
       old_critical_cache <- trace_cache[[tlen]]$critical
       new_S_key <- S_key | new_S_element
       new_W_key <- partitions_ui$subkey_difference(W_key, removed_W)
@@ -183,7 +184,15 @@ refineable_partition_handler <- function(lookup, key_class) {
             critical_ui$add_new(hash, new, trace_cache[[tlen + 1]]$critical)
         }
         # store version with new_S_element as S_element
-        candidates <- fetch_uncovered_indices_bitset(S_key, A_key)
+        candidates_result <- fetch_uncovered_indices_bitset_pure(
+          S_key,
+          A_key,
+          diffset_cache,
+          old_uncov_cache,
+          uncov_ui
+        )
+        stopifnot(identical(candidates_result[[2]], old_uncov_cache))
+        candidates <- candidates_result[[1]]
         new <- candidates[vapply(
           diffset_cache[candidates],
           \(ds) all((ds & new_S_element) == new_S_element),
