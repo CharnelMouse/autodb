@@ -67,16 +67,14 @@ refineable_partition_handler <- function(lookup, key_class) {
       trace_cache[[length(trace_cache)]]$uncov
     )
   }
-  fetch_critical_bitset <- function(S_element_key, A_key, S_key, diffsets) {
-    res <- fetch_critical_bitset_pure(
+  get_critical_bitset <- function(S_element_key, A_key, S_key, diffsets) {
+    get_critical_bitset_pure(
       S_element_key,
       A_key,
-      S_key,
       diffsets,
       trace_cache[[length(trace_cache)]]$critical,
       critical_ui
     )
-    res[[1]]
   }
   truncate <- function(n) {
     trace_cache <<- trace_cache[seq_len(min(n, length(trace_cache)))]
@@ -110,10 +108,10 @@ refineable_partition_handler <- function(lookup, key_class) {
       get_uncovered_keys_bitset(S_key, W_key, ...)
     },
     fetch_critical_indices = function(S_element, A, S) {
-      fetch_critical_bitset(S_element, A, S, diffset_cache)
+      get_critical_bitset(S_element, A, S, diffset_cache)
     },
     fetch_critical_diffsets = function(S_element, A, S) {
-      diffset_cache[fetch_critical_bitset(S_element, A, S, diffset_cache)]
+      diffset_cache[get_critical_bitset(S_element, A, S, diffset_cache)]
     },
     prepare_growS = function(S_key, W_key, new_S_element, removed_W) {
       # prepares a node's cache information, making use of its parent's info
@@ -145,22 +143,19 @@ refineable_partition_handler <- function(lookup, key_class) {
       for (A_key in partitions_ui$decompose(new_W_key)) {
         for (S_element_key in partitions_ui$decompose_key(S_key)) {
           # store version with S | new_S_element
-          old_result <- fetch_critical_bitset_pure(
+          old <- get_critical_bitset_pure(
             S_element_key,
             A_key,
-            S_key,
             diffset_cache,
             old_critical_cache,
             critical_ui
           )
-          stopifnot(identical(old_result[[2]], old_critical_cache))
-          old <- old_result[[1]]
           new <- old[vapply(
             diffset_cache[old],
             \(ds) all((ds & new_S_element) == 0),
             logical(1)
           )]
-          hash <- critical_ui$hash(c(S_element_key, A_key, S_key | new_S_element))
+          hash <- critical_ui$hash(c(S_element_key, A_key))
           trace_cache[[tlen + 1]]$critical <<-
             critical_ui$add_new(hash, new, trace_cache[[tlen + 1]]$critical)
         }
@@ -175,7 +170,7 @@ refineable_partition_handler <- function(lookup, key_class) {
           diffset_cache,
           trace_cache[[tlen + 1]]$uncov
         )
-        hash <- critical_ui$hash(c(new_S_element, A_key, S_key | new_S_element))
+        hash <- critical_ui$hash(c(new_S_element, A_key))
         trace_cache[[tlen + 1]]$critical <<-
           critical_ui$add_new(hash, setdiff(old, new), trace_cache[[tlen + 1]]$critical)
       }
@@ -666,17 +661,21 @@ get_uncovered_keys_bitset_pure <- function(
   diffsets[uncov_cache][has_any_W]
 }
 
-fetch_critical_bitset_pure <- function(
+get_critical_bitset_pure <- function(
   S_element_key,
   A_key,
-  S_key,
   diffsets,
   critical_cache,
   critical_ui
 ) {
-  hash <- critical_ui$hash(c(S_element_key, A_key, S_key))
-  input <- list(S_element_key, A_key, S_key, diffsets)
-  fetch_pure(hash, input, critical_cache, critical_ui, critical_ui$calculate)
+  hash <- critical_ui$hash(c(S_element_key, A_key))
+  get_pure(hash, critical_cache, critical_ui)
+}
+
+get_pure <- function(hash, cache, ui) {
+  index <- ui$lookup_hash(hash, cache)
+  stopifnot(!is.na(index))
+  ui$get_with_index(index, cache)
 }
 
 fetch_pure <- function(hash, input, cache, ui, calculate) {
