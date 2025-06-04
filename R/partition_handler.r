@@ -80,9 +80,6 @@ refineable_partition_handler <- function(lookup, key_class) {
       logical(1)
     )]
 
-    # reset critical, since the below adds elements back but doesn't
-    # remove the unneeded parts
-    trace_cache[[tlen + 1]]$critical <<- list(key = character(), value = list())
     for (A_key in partitions_ui$decompose(new_W_key)) {
       for (S_element_key in partitions_ui$decompose_key(S_key)) {
         # store version with S | new_S_element
@@ -90,7 +87,7 @@ refineable_partition_handler <- function(lookup, key_class) {
           S_element_key,
           A_key,
           diffset_cache,
-          old_critical_cache,
+          trace_cache[[tlen + 1]]$critical,
           critical_ui
         )
         new <- old[vapply(
@@ -100,22 +97,27 @@ refineable_partition_handler <- function(lookup, key_class) {
         )]
         hash <- critical_ui$hash(c(S_element_key, A_key))
         trace_cache[[tlen + 1]]$critical <<-
-          critical_ui$add_new(hash, new, trace_cache[[tlen + 1]]$critical)
+          critical_ui$modify(hash, new, trace_cache[[tlen + 1]]$critical)
       }
       # store version with new_S_element as S_element
-      old <- get_uncovered_indices_bitset_pure(
-        A_key,
-        diffset_cache,
-        old_uncov_cache
-      )
-      new <- get_uncovered_indices_bitset_pure(
-        A_key,
-        diffset_cache,
-        trace_cache[[tlen + 1]]$uncov
-      )
-      hash <- critical_ui$hash(c(new_S_element, A_key))
-      trace_cache[[tlen + 1]]$critical <<-
-        critical_ui$add_new(hash, setdiff(old, new), trace_cache[[tlen + 1]]$critical)
+      if (any(new_S_element != 0)) {
+        old <- get_uncovered_indices_bitset_pure(
+          A_key,
+          diffset_cache,
+          old_uncov_cache
+        )
+        new <- get_uncovered_indices_bitset_pure(
+          A_key,
+          diffset_cache,
+          trace_cache[[tlen + 1]]$uncov
+        )
+        hash <- critical_ui$hash(c(new_S_element, A_key))
+        trace_cache[[tlen + 1]]$critical <<- critical_ui$add_new(
+          hash,
+          old[!is.element(old, new)],
+          trace_cache[[tlen + 1]]$critical
+        )
+      }
     }
 
     invisible(NULL)
@@ -432,6 +434,12 @@ bitset_critical_ui <- function(lookup) {
       stopifnot(is.na(match(hash, cache$key)))
       cache$key <- c(cache$key, hash)
       cache$value <- c(cache$value, list(value))
+      cache
+    },
+    modify = function(hash, value, cache) {
+      index <- match(hash, cache$key)
+      stopifnot(!is.na(index))
+      cache$value[[index]] <- value
       cache
     }
   )
