@@ -146,7 +146,7 @@ refineable_partition_handler <- function(lookup, key_class) {
     fetch_critical_diffsets = function(S_element, A, S) {
       diffset_cache[fetch_critical_bitset(S_element, A, S, diffset_cache)]
     },
-    prepare_growS = function(S_key, W_key, new_S_element) {
+    prepare_growS = function(S_key, W_key, new_S_element, removed_W) {
       tlen <- length(trace_cache)
       trace_cache <<- c(trace_cache, trace_cache[tlen])
       stopifnot(length(trace_cache) == tlen + 1L)
@@ -154,7 +154,8 @@ refineable_partition_handler <- function(lookup, key_class) {
       # reset critical, since the below adds elements back but doesn't
       # remove the unneeded parts
       trace_cache[[tlen + 1]]$critical <<- list(key = character(), value = list())
-      new_W_key <- partitions_ui$key_difference(W_key, new_S_element)
+      new_S_key <- S_key | new_S_element
+      new_W_key <- partitions_ui$subkey_difference(W_key, removed_W)
       for (A_key in partitions_ui$decompose(new_W_key)) {
         for (S_element_key in partitions_ui$decompose_key(S_key)) {
           # store version with S | new_S_element

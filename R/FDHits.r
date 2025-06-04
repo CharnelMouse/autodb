@@ -41,7 +41,8 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
       W = A_bitset,
       depth = 1L,
       oldS = empty,
-      addS = empty
+      addS = empty,
+      remW = empty
     ))
     visited <- character()
     while (length(return_stack) > 0) {
@@ -55,7 +56,7 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
       if (is.element(node_string, visited))
         stop("node ", node_string, " already visited")
       partition_handler$truncate(node$depth)
-      partition_handler$prepare_growS(node$oldS, node$W, node$addS)
+      partition_handler$prepare_growS(node$oldS, node$W, node$addS, node$remW)
       attr_res <- FDHitsSep_visit(
         node$S,
         node$V,
@@ -111,7 +112,8 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
     W = W_bitset,
     depth = 1L,
     oldS = empty,
-    addS = empty
+    addS = empty,
+    remW = empty
   ))
 
   while (length(return_stack) > 0) {
@@ -126,7 +128,7 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
       stop("node ", node_string, " already visited")
     depth <- node$depth
     partition_handler$truncate(depth)
-    partition_handler$prepare_growS(node$oldS, node$W, node$addS)
+    partition_handler$prepare_growS(node$oldS, node$W, node$addS, node$remW)
     attr_res <- FDHitsJoint_visit(
       node$S,
       node$V,
@@ -241,7 +243,8 @@ FDHitsSep_visit <- function(
         W = A_bitset,
         depth = depth + 1L,
         oldS = S_bitset,
-        addS = b
+        addS = b,
+        remW = partition_handler$key(integer())
       )
     }
   )
@@ -258,6 +261,7 @@ FDHitsJoint_visit <- function(
   report,
   partition_handler
 ) {
+  old_W <- W_bitset
   # pruning
   for (A in partition_handler$decompose_key(W_bitset)) {
     for (C in partition_handler$decompose_key(S_bitset)) {
@@ -336,7 +340,8 @@ FDHitsJoint_visit <- function(
         W = W_bitset & !E_bitset,
         depth = depth + 1L,
         oldS = S_bitset,
-        addS = partition_handler$key(integer())
+        addS = partition_handler$key(integer()),
+        remW = partition_handler$subkey_difference(old_W, W_bitset & !E_bitset)
       )), # mu_0
     lapply( # mu_i
       rev(seq_along(Bs_bitsets)),
@@ -348,7 +353,8 @@ FDHitsJoint_visit <- function(
           W = W_bitset & E_bitset & !B,
           depth = depth + 1L,
           oldS = S_bitset,
-          addS = B
+          addS = B,
+          remW = partition_handler$subkey_difference(old_W, W_bitset & E_bitset & !B)
         )
       }
     )
