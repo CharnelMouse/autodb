@@ -56,6 +56,70 @@ refineable_partition_handler <- function(lookup, key_class) {
       }
     )
   }
+  push_node <- function(S_key, W_key, new_S_element, removed_W) {
+    # prepares a node's cache information, making use of its parent's info
+    # if new_S is empty, this is a W reduction (mu_0)
+    # otherwise, it's an S growth (mu_i)
+    tlen <- length(trace_cache)
+    trace_cache <<- c(trace_cache, trace_cache[tlen])
+    stopifnot(length(trace_cache) == tlen + 1L)
+    old_uncov_cache <- trace_cache[[tlen]]$uncov
+    old_critical_cache <- trace_cache[[tlen]]$critical
+    new_S_key <- S_key | new_S_element
+    new_W_key <- partitions_ui$subkey_difference(W_key, removed_W)
+
+    # remove any uncovered edges now covered by new_S, or irrelevant for
+    # remaining W
+    trace_cache[[tlen + 1]]$uncov <<- trace_cache[[tlen + 1]]$uncov[vapply(
+      trace_cache[[tlen + 1]]$uncov,
+      \(int) {
+        ds <- diffset_cache[[int]]
+        any((ds & W_key) > 0) &&
+          (all(new_S_element == 0) || all((ds & new_S_element) == 0))
+      },
+      logical(1)
+    )]
+
+    # reset critical, since the below adds elements back but doesn't
+    # remove the unneeded parts
+    trace_cache[[tlen + 1]]$critical <<- list(key = character(), value = list())
+    for (A_key in partitions_ui$decompose(new_W_key)) {
+      for (S_element_key in partitions_ui$decompose_key(S_key)) {
+        # store version with S | new_S_element
+        old <- get_critical_bitset_pure(
+          S_element_key,
+          A_key,
+          diffset_cache,
+          old_critical_cache,
+          critical_ui
+        )
+        new <- old[vapply(
+          diffset_cache[old],
+          \(ds) all((ds & new_S_element) == 0),
+          logical(1)
+        )]
+        hash <- critical_ui$hash(c(S_element_key, A_key))
+        trace_cache[[tlen + 1]]$critical <<-
+          critical_ui$add_new(hash, new, trace_cache[[tlen + 1]]$critical)
+      }
+      # store version with new_S_element as S_element
+      old <- get_uncovered_indices_bitset_pure(
+        A_key,
+        diffset_cache,
+        old_uncov_cache
+      )
+      new <- get_uncovered_indices_bitset_pure(
+        A_key,
+        diffset_cache,
+        trace_cache[[tlen + 1]]$uncov
+      )
+      hash <- critical_ui$hash(c(new_S_element, A_key))
+      trace_cache[[tlen + 1]]$critical <<-
+        critical_ui$add_new(hash, setdiff(old, new), trace_cache[[tlen + 1]]$critical)
+    }
+
+    invisible(NULL)
+  }
   get_diffsets <- function() {
     diffset_cache
   }
@@ -113,70 +177,8 @@ refineable_partition_handler <- function(lookup, key_class) {
     fetch_critical_diffsets = function(S_element, A, S) {
       diffset_cache[get_critical_bitset(S_element, A, S, diffset_cache)]
     },
-    prepare_growS = function(S_key, W_key, new_S_element, removed_W) {
-      # prepares a node's cache information, making use of its parent's info
-      # if new_S is empty, this is a W reduction (mu_0)
-      # otherwise, it's an S growth (mu_i)
-      tlen <- length(trace_cache)
-      trace_cache <<- c(trace_cache, trace_cache[tlen])
-      stopifnot(length(trace_cache) == tlen + 1L)
-      old_uncov_cache <- trace_cache[[tlen]]$uncov
-      old_critical_cache <- trace_cache[[tlen]]$critical
-      new_S_key <- S_key | new_S_element
-      new_W_key <- partitions_ui$subkey_difference(W_key, removed_W)
-
-      # remove any uncovered edges now covered by new_S, or irrelevant for
-      # remaining W
-      trace_cache[[tlen + 1]]$uncov <<- trace_cache[[tlen + 1]]$uncov[vapply(
-        trace_cache[[tlen + 1]]$uncov,
-        \(int) {
-          ds <- diffset_cache[[int]]
-          any((ds & W_key) > 0) &&
-            (all(new_S_element == 0) || all((ds & new_S_element) == 0))
-        },
-        logical(1)
-      )]
-
-      # reset critical, since the below adds elements back but doesn't
-      # remove the unneeded parts
-      trace_cache[[tlen + 1]]$critical <<- list(key = character(), value = list())
-      for (A_key in partitions_ui$decompose(new_W_key)) {
-        for (S_element_key in partitions_ui$decompose_key(S_key)) {
-          # store version with S | new_S_element
-          old <- get_critical_bitset_pure(
-            S_element_key,
-            A_key,
-            diffset_cache,
-            old_critical_cache,
-            critical_ui
-          )
-          new <- old[vapply(
-            diffset_cache[old],
-            \(ds) all((ds & new_S_element) == 0),
-            logical(1)
-          )]
-          hash <- critical_ui$hash(c(S_element_key, A_key))
-          trace_cache[[tlen + 1]]$critical <<-
-            critical_ui$add_new(hash, new, trace_cache[[tlen + 1]]$critical)
-        }
-        # store version with new_S_element as S_element
-        old <- get_uncovered_indices_bitset_pure(
-          A_key,
-          diffset_cache,
-          old_uncov_cache
-        )
-        new <- get_uncovered_indices_bitset_pure(
-          A_key,
-          diffset_cache,
-          trace_cache[[tlen + 1]]$uncov
-        )
-        hash <- critical_ui$hash(c(new_S_element, A_key))
-        trace_cache[[tlen + 1]]$critical <<-
-          critical_ui$add_new(hash, setdiff(old, new), trace_cache[[tlen + 1]]$critical)
-      }
-
-      invisible(NULL)
-    }
+    prepare_growS = push_node,
+    current_cache = function() trace_cache[[length(trace_cache)]]
   )
 }
 
