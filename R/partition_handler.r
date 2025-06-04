@@ -60,16 +60,16 @@ refineable_partition_handler <- function(lookup, key_class) {
     # if new_S is empty, this is a W reduction (mu_0)
     # otherwise, it's an S growth (mu_i)
     tlen <- length(trace_cache)
-    trace_cache <<- c(trace_cache, trace_cache[tlen])
-    stopifnot(length(trace_cache) == tlen + 1L)
-    old_uncov_cache <- trace_cache[[tlen]]$uncov
     new_W_key <- partitions_ui$subkey_difference(W_key, removed_W)
+
+    new_cache <- trace_cache[[tlen]]
+    old_uncov_cache <- new_cache$uncov
 
     # remove any uncovered edges now covered by new_S, or irrelevant for
     # remaining W
     if (any(new_S_element != 0))
-      trace_cache[[tlen + 1]]$uncov <<- trace_cache[[tlen + 1]]$uncov[vapply(
-        trace_cache[[tlen + 1]]$uncov,
+      new_cache$uncov <- new_cache$uncov[vapply(
+        new_cache$uncov,
         \(int) {
           ds <- diffset_cache[[int]]
           any((ds & new_W_key) > 0) && all((ds & new_S_element) == 0)
@@ -77,14 +77,22 @@ refineable_partition_handler <- function(lookup, key_class) {
         logical(1)
       )]
 
+    # remove any critical edge info for removed W elements
+    for (A_key in partitions_ui$decompose(removed_W)) {
+      for (S_element_key in partitions_ui$decompose_key(S_key)) {
+        hash <- critical_ui$hash(c(S_element_key, A_key))
+        new_cache$critical <- critical_ui$remove(hash, new_cache$critical)
+      }
+    }
+
     for (A_key in partitions_ui$decompose(new_W_key)) {
       for (S_element_key in partitions_ui$decompose_key(S_key)) {
-        # store version with S | new_S_element
+        # remove old critical diffsets that include new S element, if any
         old <- get_critical_bitset_pure(
           S_element_key,
           A_key,
           diffset_cache,
-          trace_cache[[tlen + 1]]$critical,
+          new_cache$critical,
           critical_ui
         )
         new <- old[vapply(
@@ -93,8 +101,8 @@ refineable_partition_handler <- function(lookup, key_class) {
           logical(1)
         )]
         hash <- critical_ui$hash(c(S_element_key, A_key))
-        trace_cache[[tlen + 1]]$critical <<-
-          critical_ui$modify(hash, new, trace_cache[[tlen + 1]]$critical)
+        new_cache$critical <-
+          critical_ui$modify(hash, new, new_cache$critical)
       }
       # store version with new_S_element as S_element
       if (any(new_S_element != 0)) {
@@ -106,17 +114,18 @@ refineable_partition_handler <- function(lookup, key_class) {
         new <- get_uncovered_indices_bitset_pure(
           A_key,
           diffset_cache,
-          trace_cache[[tlen + 1]]$uncov
+          new_cache$uncov
         )
         hash <- critical_ui$hash(c(new_S_element, A_key))
-        trace_cache[[tlen + 1]]$critical <<- critical_ui$add_new(
+        new_cache$critical <- critical_ui$add_new(
           hash,
           old[!is.element(old, new)],
-          trace_cache[[tlen + 1]]$critical
+          new_cache$critical
         )
       }
     }
 
+    trace_cache <<- c(trace_cache, list(new_cache))
     invisible(NULL)
   }
   get_diffsets <- function() {
@@ -431,6 +440,13 @@ bitset_critical_ui <- function(lookup) {
       stopifnot(is.na(match(hash, cache$key)))
       cache$key <- c(cache$key, hash)
       cache$value <- c(cache$value, list(value))
+      cache
+    },
+    remove = function(hash, cache) {
+      index <- match(hash, cache$key)
+      stopifnot(!is.na(index))
+      cache$key <- cache$key[-index]
+      cache$value <- cache$value[-index]
       cache
     },
     modify = function(hash, value, cache) {
