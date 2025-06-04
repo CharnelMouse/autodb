@@ -21,12 +21,9 @@ refineable_partition_handler <- function(lookup, key_class) {
   partition_cache <- initial_cache
   diffset_cache <- list()
   trace_cache <- list(list(
-    uncov = list(
-      # element is indices of diffsets not covered by S
-      # empty attribute set covers none of the zero starting diffsets
-      key = partitions_ui$hash(partitions_ui$key(integer())),
-      value = list(integer())
-    ),
+    # element is indices of diffsets not covered by current S
+    # empty attribute set covers none of the zero starting diffsets
+    uncov = integer(),
     critical = list(key = character(), value = list())
   ))
 
@@ -55,19 +52,7 @@ refineable_partition_handler <- function(lookup, key_class) {
     trace_cache <<- lapply(
       trace_cache,
       \(cache) {
-        cache$uncov$value <- Map(
-          \(v, h) {
-            indiv <- strsplit(h, "")[[1]]
-            pairs <- paste0(
-              indiv[seq_len(length(indiv)) %% 2 == 1],
-              indiv[seq_len(length(indiv)) %% 2 == 0]
-            )
-            k <- as.raw(as.hexmode(pairs))
-            c(v, len + which(vapply(diffsets, \(d) all((d & k) == 0), logical(1))))
-          },
-          cache$uncov$value,
-          cache$uncov$key
-        )
+        cache$uncov <- c(cache$uncov, len + seq_along(diffsets))
         cache
       }
     )
@@ -76,27 +61,23 @@ refineable_partition_handler <- function(lookup, key_class) {
     diffset_cache
   }
   stopifnot(key_class == "bitset")
-  fetch_uncovered_indices_bitset <- function(S_key, W_key) {
-    res <- fetch_uncovered_indices_bitset_pure(
+  get_uncovered_indices_bitset <- function(S_key, W_key) {
+    get_uncovered_indices_bitset_pure(
       S_key,
       W_key,
       diffset_cache,
       trace_cache[[length(trace_cache)]]$uncov,
       uncov_ui
     )
-    trace_cache[[length(trace_cache)]]$uncov <<- res[[2]]
-    res[[1]]
   }
-  fetch_uncovered_keys_bitset <- function(S_key, W_key, diffsets = diffset_cache) {
-    res <- fetch_uncovered_keys_bitset_pure(
+  get_uncovered_keys_bitset <- function(S_key, W_key, diffsets = diffset_cache) {
+    get_uncovered_keys_bitset_pure(
       S_key,
       W_key,
       diffsets,
       trace_cache[[length(trace_cache)]]$uncov,
       uncov_ui
     )
-    trace_cache[[length(trace_cache)]]$uncov <<- res[[2]]
-    res[[1]]
   }
   fetch_critical_bitset <- function(S_element_key, A_key, S_key, diffsets) {
     res <- fetch_critical_bitset_pure(
@@ -138,7 +119,7 @@ refineable_partition_handler <- function(lookup, key_class) {
     add_diffset_keys = function(diffset_keys) add_diffsets(diffset_keys),
     get_diffset_keys = function() get_diffsets(),
     fetch_uncovered_keys = function(S_key, W_key, ...) {
-      fetch_uncovered_keys_bitset(S_key, W_key, ...)
+      get_uncovered_keys_bitset(S_key, W_key, ...)
     },
     fetch_critical_indices = function(S_element, A, S) {
       fetch_critical_bitset(S_element, A, S, diffset_cache)
@@ -157,6 +138,18 @@ refineable_partition_handler <- function(lookup, key_class) {
       old_critical_cache <- trace_cache[[tlen]]$critical
       new_S_key <- S_key | new_S_element
       new_W_key <- partitions_ui$subkey_difference(W_key, removed_W)
+
+      # remove any uncovered edges now covered by new_S, or irrelevant for
+      # remaining W
+      trace_cache[[tlen + 1]]$uncov <<- trace_cache[[tlen + 1]]$uncov[vapply(
+        trace_cache[[tlen + 1]]$uncov,
+        \(int) {
+          ds <- diffset_cache[[int]]
+          any((ds & W_key) > 0) &&
+            (all(new_S_element == 0) || all((ds & new_S_element) == 0))
+        },
+        logical(1)
+      )]
 
       # reset critical, since the below adds elements back but doesn't
       # remove the unneeded parts
@@ -184,15 +177,13 @@ refineable_partition_handler <- function(lookup, key_class) {
             critical_ui$add_new(hash, new, trace_cache[[tlen + 1]]$critical)
         }
         # store version with new_S_element as S_element
-        candidates_result <- fetch_uncovered_indices_bitset_pure(
+        candidates <- get_uncovered_indices_bitset_pure(
           S_key,
           A_key,
           diffset_cache,
           old_uncov_cache,
           uncov_ui
         )
-        stopifnot(identical(candidates_result[[2]], old_uncov_cache))
-        candidates <- candidates_result[[1]]
         new <- candidates[vapply(
           diffset_cache[candidates],
           \(ds) all((ds & new_S_element) == new_S_element),
@@ -708,43 +699,37 @@ fsplit <- function(splitted, splitter) {
   split(splitted, f)
 }
 
-fetch_uncovered_indices_bitset_pure <- function(
-    S_key,
-    W_key,
-    diffsets,
-    uncov_cache,
-    uncov_ui
-) {
-  result <- fetch_uncovered_S_only(S_key, diffsets, uncov_cache, uncov_ui)
-  bools <- result[[1]]
-  new_cache <- result[[2]]
-  has_any_W <- vapply(diffsets[bools], \(ds) any((W_key & ds) > 0), logical(1))
-  list(bools[has_any_W], new_cache)
-}
-
-fetch_uncovered_keys_bitset_pure <- function(
+get_uncovered_indices_bitset_pure <- function(
   S_key,
   W_key,
   diffsets,
   uncov_cache,
   uncov_ui
 ) {
-  result <- fetch_uncovered_S_only(S_key, diffsets, uncov_cache, uncov_ui)
-  bools <- result[[1]]
-  new_cache <- result[[2]]
+  bools <- get_uncovered_S_only(S_key, diffsets, uncov_cache, uncov_ui)
   has_any_W <- vapply(diffsets[bools], \(ds) any((W_key & ds) > 0), logical(1))
-  list(diffsets[bools][has_any_W], new_cache)
+  bools[has_any_W]
 }
 
-fetch_uncovered_S_only <- function(
+get_uncovered_keys_bitset_pure <- function(
+  S_key,
+  W_key,
+  diffsets,
+  uncov_cache,
+  uncov_ui
+) {
+  bools <- get_uncovered_S_only(S_key, diffsets, uncov_cache, uncov_ui)
+  has_any_W <- vapply(diffsets[bools], \(ds) any((W_key & ds) > 0), logical(1))
+  diffsets[bools][has_any_W]
+}
+
+get_uncovered_S_only <- function(
   S_key,
   diffsets,
   uncov_cache,
   uncov_ui
 ) {
-  hash <- uncov_ui$hash(S_key)
-  input <- list(S_key, diffsets)
-  fetch_pure(hash, input, uncov_cache, uncov_ui, uncov_ui$calculate)
+  uncov_cache
 }
 
 fetch_critical_bitset_pure <- function(
