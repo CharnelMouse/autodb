@@ -67,15 +67,15 @@ refineable_partition_handler <- function(lookup, key_class) {
 
     # remove any uncovered edges now covered by new_S, or irrelevant for
     # remaining W
-    trace_cache[[tlen + 1]]$uncov <<- trace_cache[[tlen + 1]]$uncov[vapply(
-      trace_cache[[tlen + 1]]$uncov,
-      \(int) {
-        ds <- diffset_cache[[int]]
-        any((ds & W_key) > 0) &&
-          (all(new_S_element == 0) || all((ds & new_S_element) == 0))
-      },
-      logical(1)
-    )]
+    if (any(new_S_element != 0))
+      trace_cache[[tlen + 1]]$uncov <<- trace_cache[[tlen + 1]]$uncov[vapply(
+        trace_cache[[tlen + 1]]$uncov,
+        \(int) {
+          ds <- diffset_cache[[int]]
+          any((ds & new_W_key) > 0) && all((ds & new_S_element) == 0)
+        },
+        logical(1)
+      )]
 
     for (A_key in partitions_ui$decompose(new_W_key)) {
       for (S_element_key in partitions_ui$decompose_key(S_key)) {
