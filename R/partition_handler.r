@@ -46,7 +46,6 @@ refineable_partition_handler <- function(lookup, key_class) {
   add_diffsets <- function(diffsets) {
     # known to be new non-redundant diffsets
     len <- length(diffset_cache)
-    to_add <- len + seq_along(diffsets)
     diffset_cache <<- c(diffset_cache, diffsets)
     trace_cache <<- lapply(
       trace_cache,
@@ -64,8 +63,6 @@ refineable_partition_handler <- function(lookup, key_class) {
     trace_cache <<- c(trace_cache, trace_cache[tlen])
     stopifnot(length(trace_cache) == tlen + 1L)
     old_uncov_cache <- trace_cache[[tlen]]$uncov
-    old_critical_cache <- trace_cache[[tlen]]$critical
-    new_S_key <- S_key | new_S_element
     new_W_key <- partitions_ui$subkey_difference(W_key, removed_W)
 
     # remove any uncovered edges now covered by new_S, or irrelevant for
