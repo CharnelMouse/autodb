@@ -320,9 +320,9 @@ bitset_partitions_ui <- function(lookup) {
   key <- function(set) {
     bools <- rep(FALSE, bitlen)
     bools[set] <- TRUE
-    packBits(bools)
+    fpack(bools)
   }
-  full_key <- packBits(c(
+  full_key <- fpack(c(
     rep(TRUE, ncol(lookup)),
     rep(FALSE, bitlen - ncol(lookup))
   ))
@@ -415,7 +415,7 @@ bitset_critical_ui <- function(lookup) {
   key <- function(set) {
     bools <- rep(FALSE, bitlen)
     bools[set] <- TRUE
-    packBits(bools)
+    fpack(bools)
   }
   unkey <- function(key) which(rawToBits(key) == 1)
   hash <- function(key) paste(key, collapse = "")
@@ -709,3 +709,9 @@ fetch_pure <- function(hash, input, cache, ui, calculate) {
   cache <- ui$add(hash, result, cache)
   list(result, cache)
 }
+
+# packBits(x, "raw") has a call to match.arg with choices missing,
+# which takes up the majority of the runtime for packBits; this is
+# a problem when calls to packBits take up a significant proportion
+# of the runtime for discover() when using FDHits.
+fpack <- function(x) .Internal(packBits(x, "raw"))
