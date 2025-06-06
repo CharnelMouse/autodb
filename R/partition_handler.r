@@ -712,8 +712,5 @@ fetch_pure <- function(hash, input, cache, ui, calculate) {
   list(result, cache)
 }
 
-# packBits(x, "raw") has a call to match.arg with choices missing,
-# which takes up the majority of the runtime for packBits; this is
-# a problem when calls to packBits take up a significant proportion
-# of the runtime for discover() when using FDHits.
-fpack <- function(x) .Internal(packBits(x, "raw"))
+# match.arg is quickest when passed NULL as the argument
+fpack <- function(x) packBits(x, NULL)
