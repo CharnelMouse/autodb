@@ -272,26 +272,27 @@ FDHitsJoint_visit <- function(
   if (all(W_bitset == 0)) {
     return(list(list(), list()))
   }
-  for (B in partition_handler$decompose_key(V_bitset)) {
-    # remove if ∀ A∈W ∃ C∈S ∀ E∈critical(C,A,S): B∈E,
-    # i.e. adding B to S would make some C in S redundant WRT all of W
-    # does not check for B being redundant if added
-    if (all(vapply(
-      partition_handler$decompose_key(W_bitset),
-      \(A) any(vapply(
+  anywhere_common <- lapply(
+    partition_handler$decompose_key(W_bitset),
+    \(A) {
+      commons <- lapply(
         partition_handler$decompose_key(S_bitset),
         \(C) {
-          ds <- partition_handler$fetch_critical_diffsets(C, A, S_bitset)
-          common <- Reduce(`&`, ds)
-          all((common & B) == B)
-        },
-        logical(1)
-      )),
-      logical(1)
-    ))) {
-      V_bitset <- partition_handler$subkey_difference(V_bitset, B)
+          # Bs that would make C redundant WRT A
+          Reduce(
+            `&`,
+            partition_handler$fetch_critical_diffsets(C, A, S_bitset),
+            init = partition_handler$full_key
+          )
+        }
+      )
+      # Bs that would make some C redundant WRT A
+      Reduce(`|`, commons, init = partition_handler$empty_key)
     }
-  }
+  )
+  # Bs that, for every A, make some C redundant
+  always_common <- Reduce(`&`, anywhere_common, init = V_bitset)
+  V_bitset <- partition_handler$subkey_difference(V_bitset, always_common)
   # validation at the leaves
   uncovered_bitsets <- partition_handler$fetch_uncovered_keys(S_bitset, W_bitset)
   if (length(uncovered_bitsets) == 0) {

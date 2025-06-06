@@ -163,6 +163,8 @@ refineable_partition_handler <- function(lookup, key_class) {
     cache_size = function() length(partition_cache$key),
     reset = function() reset_cache(initial_cache),
     key = partitions_ui$key,
+    empty_key = partitions_ui$key(integer()),
+    full_key = partitions_ui$key(seq_len(ncol(lookup))),
     key_size = partitions_ui$key_size,
     decompose_key = partitions_ui$decompose_key,
     subkey_difference = partitions_ui$subkey_difference,
