@@ -343,8 +343,8 @@ bitset_partitions_ui <- function(lookup) {
       lapply(decompose_key(key), subkey_difference, key = key)
     },
     invert_key = function(key) !key & full_key,
-    key_union = function(key1, key2) key1 & key2,
-    distinct_key_union = function(key1, key2) key1 & key2,
+    key_union = function(key1, key2) key1 | key2,
+    distinct_key_union = function(key1, key2) key1 | key2,
     key_difference = function(key1, key2) key1 & !key2,
     subkey_difference = subkey_difference,
     lookup_hash = function(hash, partitions) match(hash, partitions$key),
