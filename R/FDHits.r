@@ -42,7 +42,7 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
       depth = 1L,
       oldS = empty,
       addS = empty,
-      remW = empty
+      remW = partition_handler$invert_key(A_bitset)
     ))
     visited <- character()
     while (length(return_stack) > 0) {
@@ -113,7 +113,7 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
     depth = 1L,
     oldS = empty,
     addS = empty,
-    remW = empty
+    remW = partition_handler$invert_key(W_bitset)
   ))
 
   while (length(return_stack) > 0) {

@@ -104,16 +104,11 @@ refineable_partition_handler <- function(lookup, key_class) {
       )
 
     # remove any critical edge info for removed W elements
-    for (A_key in partitions_ui$decompose(removed_W)) {
-      for (S_element_key in partitions_ui$decompose_key(S_key)) {
-        hash <- critical_ui$hash(c(S_element_key, A_key))
-        new_cache$critical <- new_cache$critical[
-          ,
-          vapply(partitions_ui$decompose_key(new_W_key), partitions_ui$hash, character(1)),
-          drop = FALSE
-        ]
-      }
-    }
+    new_cache$critical <- new_cache$critical[
+      ,
+      vapply(partitions_ui$decompose_key(new_W_key), partitions_ui$hash, character(1)),
+      drop = FALSE
+    ]
 
     for (A_key in partitions_ui$decompose(new_W_key)) {
       for (S_element_key in partitions_ui$decompose_key(S_key)) {
@@ -192,6 +187,7 @@ refineable_partition_handler <- function(lookup, key_class) {
     full_key = partitions_ui$full_key,
     key_size = partitions_ui$key_size,
     decompose_key = partitions_ui$decompose_key,
+    invert_key = partitions_ui$invert_key,
     subkey_difference = partitions_ui$subkey_difference,
     refine = function(rhs_key, lhs_key) {
       fetch_refined_partition(
@@ -213,7 +209,8 @@ refineable_partition_handler <- function(lookup, key_class) {
       diffset_cache[get_critical_bitset(S_element, A, S, diffset_cache)]
     },
     prepare_growS = push_node,
-    current_cache = function() trace_cache[[length(trace_cache)]]
+    current_cache = function() trace_cache[[length(trace_cache)]],
+    trace_size = function() length(trace_cache)
   )
 }
 
