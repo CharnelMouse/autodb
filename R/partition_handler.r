@@ -23,7 +23,19 @@ refineable_partition_handler <- function(lookup, key_class) {
     # element is indices of diffsets not covered by current S
     # empty attribute set covers none of the zero starting diffsets
     uncov = integer(),
-    critical = list(key = character(), value = list())
+    critical = matrix(
+      list(),
+      nrow = 0,
+      ncol = ncol(lookup),
+      dimnames = list(
+        character(),
+        vapply(
+          partitions_ui$decompose_key(partitions_ui$full_key),
+          partitions_ui$hash,
+          character(1)
+        )
+      )
+    )
   ))
 
   # These functions encapsulate the cache itself, including modification.
@@ -77,32 +89,49 @@ refineable_partition_handler <- function(lookup, key_class) {
         logical(1)
       )]
 
+    # expand critical matrix for new S
+    if (any(new_S_element != 0))
+      new_cache$critical <- rbind(
+        new_cache$critical,
+        matrix(
+          list(integer()),
+          ncol = ncol(new_cache$critical),
+          dimnames = list(
+            partitions_ui$hash(new_S_element),
+            colnames(new_cache$critical)
+          )
+        )
+      )
+
     # remove any critical edge info for removed W elements
     for (A_key in partitions_ui$decompose(removed_W)) {
       for (S_element_key in partitions_ui$decompose_key(S_key)) {
         hash <- critical_ui$hash(c(S_element_key, A_key))
-        new_cache$critical <- critical_ui$remove(hash, new_cache$critical)
+        new_cache$critical <- new_cache$critical[
+          ,
+          vapply(partitions_ui$decompose_key(new_W_key), partitions_ui$hash, character(1)),
+          drop = FALSE
+        ]
       }
     }
 
     for (A_key in partitions_ui$decompose(new_W_key)) {
       for (S_element_key in partitions_ui$decompose_key(S_key)) {
         # remove old critical diffsets that include new S element, if any
-        old <- get_critical_bitset_pure(
-          S_element_key,
-          A_key,
-          diffset_cache,
-          new_cache$critical,
-          critical_ui
-        )
+        old <- new_cache$critical[[
+          partitions_ui$hash(S_element_key),
+          partitions_ui$hash(A_key)
+        ]]
         new <- old[vapply(
           diffset_cache[old],
           \(ds) all((ds & new_S_element) == 0),
           logical(1)
         )]
         hash <- critical_ui$hash(c(S_element_key, A_key))
-        new_cache$critical <-
-          critical_ui$modify(hash, new, new_cache$critical)
+        new_cache$critical[[
+          partitions_ui$hash(S_element_key),
+          partitions_ui$hash(A_key)
+        ]] <- new
       }
       # store version with new_S_element as S_element
       if (any(new_S_element != 0)) {
@@ -117,11 +146,10 @@ refineable_partition_handler <- function(lookup, key_class) {
           new_cache$uncov
         )
         hash <- critical_ui$hash(c(new_S_element, A_key))
-        new_cache$critical <- critical_ui$add_new(
-          hash,
-          old[!is.element(old, new)],
-          new_cache$critical
-        )
+        new_cache$critical[[
+          partitions_ui$hash(new_S_element),
+          partitions_ui$hash(A_key)
+        ]] <- old[!is.element(old, new)]
       }
     }
 
@@ -140,13 +168,10 @@ refineable_partition_handler <- function(lookup, key_class) {
     )
   }
   get_critical_bitset <- function(S_element_key, A_key, S_key, diffsets) {
-    get_critical_bitset_pure(
-      S_element_key,
-      A_key,
-      diffsets,
-      trace_cache[[length(trace_cache)]]$critical,
-      critical_ui
-    )
+    trace_cache[[length(trace_cache)]]$critical[[
+      partitions_ui$hash(S_element_key),
+      partitions_ui$hash(A_key)
+    ]]
   }
   truncate <- function(n) {
     trace_cache <<- trace_cache[seq_len(min(n, length(trace_cache)))]
@@ -164,7 +189,7 @@ refineable_partition_handler <- function(lookup, key_class) {
     reset = function() reset_cache(initial_cache),
     key = partitions_ui$key,
     empty_key = partitions_ui$key(integer()),
-    full_key = partitions_ui$key(seq_len(ncol(lookup))),
+    full_key = partitions_ui$full_key,
     key_size = partitions_ui$key_size,
     decompose_key = partitions_ui$decompose_key,
     subkey_difference = partitions_ui$subkey_difference,
@@ -336,6 +361,7 @@ bitset_partitions_ui <- function(lookup) {
 
   list(
     key = key,
+    full_key = full_key,
     component_keys = component_keys,
     hash = hash,
     unkey = unkey,
