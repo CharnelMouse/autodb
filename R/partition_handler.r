@@ -84,9 +84,9 @@ refineable_partition_handler <- function(lookup, key_class) {
       drop = FALSE
     ]
 
-    # remove any uncovered edges now covered by new_S, or irrelevant for
-    # remaining W
-    if (any(new_S_element != 0))
+    if (any(new_S_element != 0)) {
+      # remove any uncovered edges now covered by new_S, or irrelevant for
+      # remaining W
       new_cache$uncov <- new_cache$uncov[vapply(
         new_cache$uncov,
         \(int) {
@@ -96,8 +96,7 @@ refineable_partition_handler <- function(lookup, key_class) {
         logical(1)
       )]
 
-    # expand critical matrix for new S
-    if (any(new_S_element != 0))
+      # expand critical matrix for new S
       new_cache$critical <- rbind(
         new_cache$critical,
         matrix(
@@ -111,26 +110,25 @@ refineable_partition_handler <- function(lookup, key_class) {
         )
       )
 
-    for (A_key in partitions_ui$decompose(new_W_key)) {
-      for (S_element_key in partitions_ui$decompose_key(S_key)) {
-        # remove old critical diffsets that include new S element, if any
-        old <- new_cache$critical[[
-          partitions_ui$hash(S_element_key),
-          partitions_ui$hash(A_key)
-        ]]
-        new <- old[vapply(
-          diffset_cache[old],
-          \(ds) all((ds & new_S_element) == 0),
-          logical(1)
-        )]
-        hash <- critical_ui$hash(c(S_element_key, A_key))
-        new_cache$critical[[
-          partitions_ui$hash(S_element_key),
-          partitions_ui$hash(A_key)
-        ]] <- new
-      }
-      # store version with new_S_element as S_element
-      if (any(new_S_element != 0)) {
+      for (A_key in partitions_ui$decompose(new_W_key)) {
+        for (S_element_key in partitions_ui$decompose_key(S_key)) {
+          # remove old critical diffsets that include new S element, if any
+          old <- new_cache$critical[[
+            partitions_ui$hash(S_element_key),
+            partitions_ui$hash(A_key)
+          ]]
+          new <- old[vapply(
+            diffset_cache[old],
+            \(ds) all((ds & new_S_element) == 0),
+            logical(1)
+          )]
+          hash <- critical_ui$hash(c(S_element_key, A_key))
+          new_cache$critical[[
+            partitions_ui$hash(S_element_key),
+            partitions_ui$hash(A_key)
+          ]] <- new
+        }
+        # store version with new_S_element as S_element
         old <- get_uncovered_indices_bitset_pure(
           A_key,
           diffset_cache,
