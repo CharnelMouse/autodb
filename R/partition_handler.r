@@ -77,6 +77,13 @@ refineable_partition_handler <- function(lookup, key_class) {
     new_cache <- trace_cache[[tlen]]
     old_uncov_cache <- new_cache$uncov
 
+    # remove any critical edge info for removed W elements
+    new_cache$critical <- new_cache$critical[
+      ,
+      vapply(partitions_ui$decompose_key(new_W_key), partitions_ui$hash, character(1)),
+      drop = FALSE
+    ]
+
     # remove any uncovered edges now covered by new_S, or irrelevant for
     # remaining W
     if (any(new_S_element != 0))
@@ -95,6 +102,7 @@ refineable_partition_handler <- function(lookup, key_class) {
         new_cache$critical,
         matrix(
           list(integer()),
+          nrow = 1,
           ncol = ncol(new_cache$critical),
           dimnames = list(
             partitions_ui$hash(new_S_element),
@@ -102,13 +110,6 @@ refineable_partition_handler <- function(lookup, key_class) {
           )
         )
       )
-
-    # remove any critical edge info for removed W elements
-    new_cache$critical <- new_cache$critical[
-      ,
-      vapply(partitions_ui$decompose_key(new_W_key), partitions_ui$hash, character(1)),
-      drop = FALSE
-    ]
 
     for (A_key in partitions_ui$decompose(new_W_key)) {
       for (S_element_key in partitions_ui$decompose_key(S_key)) {
