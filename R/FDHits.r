@@ -422,7 +422,7 @@ ffactor1 <- function(x) {
 }
 
 ffactor1i <- function(x) {
-  # x is an integer vector
+  # x is an integer or numeric vector
   levels <- unique.default(x)
   f <- match(x, levels)
   levels(f) <- as.character(levels)
