@@ -168,7 +168,12 @@ remove_extraneous_attributes <- function(deps) {
     rhs <- dps[[n]]
     for (attr in lhs) {
       y_ <- setdiff(dts[[n]], attr)
-      if (check_closure1(y_, rhs, dts, dps)) {
+      if (check_closure1(
+        match(y_, attrs_order(deps)),
+        match(rhs, attrs_order(deps)),
+        lapply(dts, match, attrs_order(deps)),
+        match(dps, attrs_order(deps))
+      )) {
         dts[[n]] <- y_
       }
     }
@@ -205,10 +210,10 @@ remove_extraneous_dependencies <- function(fds) {
       other_deps <- new_deps[-n]
       other_rem <- rem[-n]
       rem[n] <- check_closure1(
-        det_set,
-        dep,
-        other_det_sets[!other_rem],
-        other_deps[!other_rem]
+        match(det_set, attrs_order(fds)),
+        match(dep, attrs_order(fds)),
+        lapply(other_det_sets[!other_rem], match, attrs_order(fds)),
+        match(other_deps[!other_rem], attrs_order(fds))
       )
     }
     new_det_sets <- new_det_sets[!rem]
@@ -702,32 +707,44 @@ name_dataframe <- function(index) {
 }
 
 check_closure1 <- function(attrs, target, determinant_sets, dependants) {
+  stopifnot(is.integer(dependants))
   stopifnot(length(target) == 1)
   if (target %in% attrs)
     return(TRUE)
   if (length(dependants) == 0)
     return(FALSE)
-  checked <- rep(FALSE, length(dependants))
-  change <- TRUE
-  while (change) {
-    change <- FALSE
-    for (n in seq_along(dependants)[!checked]) {
-      det_set <- determinant_sets[[n]]
-      dep <- dependants[n]
-      if (length(dep) != 1)
-        stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(dep)))
-      if (all(is.element(det_set, attrs))) {
-        if (target == dep)
-          return(TRUE)
-        checked[n] <- TRUE
-        if (!is.element(dep, attrs)) {
-          change <- TRUE
-          attrs <- c(attrs, dep)
-        }
-      }
-    }
+  if (!is.element(target, dependants))
+    return(FALSE)
+
+  nargs <- max(c(dependants, unlist(determinant_sets)))
+  if (target > nargs)
+    return(FALSE)
+  detn <- lengths(determinant_sets)
+  detmat <- t(vapply(
+    determinant_sets,
+    \(ns) {
+      res <- rep(FALSE, nargs)
+      res[ns] <- TRUE
+      res
+    },
+    logical(nargs)
+  ))
+  depvec <- dependants
+  curr_attrs <- attrs[attrs <= nargs]
+
+  while (TRUE) {
+    curr_n <- rowSums(detmat[, curr_attrs, drop = FALSE])
+    new <- curr_n == detn
+    if (!any(new))
+      return(FALSE)
+    new_attrs <- setdiff(depvec[new], curr_attrs)
+    if (target %in% new_attrs)
+      return(TRUE)
+    detn <- detn[!new]
+    detmat <- detmat[!new, , drop = FALSE]
+    depvec <- depvec[!new]
+    curr_attrs <- c(curr_attrs, new_attrs)
   }
-  FALSE
 }
 
 check_closure <- function(attrs, targets, determinant_sets, dependants) {

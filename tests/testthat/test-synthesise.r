@@ -84,6 +84,20 @@ describe("synthesise", {
     )
     normalisation_permutation_invariant(list(deps, deps[c(1, 2, 4, 3)]))
 
+    deps <- functional_dependency(
+      list(
+        list(character(), "b"),
+        list(character(), "i"),
+        list(c("b", "c", "e"), "h"),
+        list(character(), "i"),
+        list(character(), "j"),
+        list(character(), "j")
+      ),
+      attrs_order = letters[1:10],
+      unique = FALSE
+    )
+    normalisation_permutation_invariant(list(deps, deps[c(3, 1, 2, 4:6)]))
+
     forall(gen_permutation, normalisation_permutation_invariant)
   })
   it("removes longer/later-attributed dependency sets if given a choce", {
