@@ -542,7 +542,10 @@ describe("synthesise", {
       dep_closures <- lapply(
         lapply(detset(deps), match, attrs_order(deps)),
         find_closure,
-        lapply(detset(implied_flat_fds), match, attrs_order(deps)),
+        detset_matrix(
+          lapply(detset(implied_flat_fds), match, attrs_order(deps)),
+          length(attrs_order(deps))
+        ),
         match(dependant(implied_flat_fds), attrs_order(deps))
       ) |>
         lapply(\(x) attrs_order(deps)[x])
@@ -803,7 +806,10 @@ describe("synthesised_fds", {
             dep <- match(dep, attrs_order(fds2))
             dep %in% find_closure(
               dets,
-              lapply(detset(fds2), match, attrs_order(fds2)),
+              detset_matrix(
+                lapply(detset(fds2), match, attrs_order(fds2)),
+                length(attrs_order(fds2))
+              ),
               match(dependant(fds2), attrs_order(fds2))
             )
           },
@@ -816,7 +822,10 @@ describe("synthesised_fds", {
             dep <- match(dep, attrs_order(fds1))
             dep %in% find_closure(
               dets,
-              lapply(detset(fds1), match, attrs_order(fds1)),
+              detset_matrix(
+                lapply(detset(fds1), match, attrs_order(fds1)),
+                length(attrs_order(fds1))
+              ),
               match(dependant(fds1), attrs_order(fds1))
             )
           },

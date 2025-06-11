@@ -237,10 +237,11 @@ merge_equivalent_keys <- function(vecs) {
   partition_dependants <- vecs$partition_dependants
 
   partition_keys <- lapply(partition_determinant_set, list)
+  detmat <- detset_matrix(vecs$determinant_sets, length(vecs$attrs_order))
   closures <- lapply(
     partition_determinant_set,
     find_closure,
-    vecs$determinant_sets,
+    detmat,
     vecs$dependants
   )
   if (length(partition_determinant_set) == 0) {
@@ -564,7 +565,7 @@ remove_avoidable_attributes <- function(vecs) {
           superfluous &&
           any(!check_closure(X_i, relation_attrs, Gp_det_sets, Gp_deps))
         ) {
-          M <- find_closure(X_i, Gp_det_sets, Gp_deps)
+          M <- find_closure(X_i, Gp_detmat, Gp_deps)
           Mp <- setdiff(intersect(M, relation_attrs), attr)
           if (any(!check_closure(Mp, relation_attrs, G_det_sets, G_deps)))
             superfluous <- FALSE
@@ -613,10 +614,11 @@ ensure_lossless <- function(schema) {
   G_det_sets <- lapply(unlist(G, recursive = FALSE), `[[`, 1)
   G_deps <- vapply(unlist(G, recursive = FALSE), `[[`, character(1), 2)
   primaries <- lapply(keys, `[[`, 1)
+  detmat <- detset_matrix(lapply(G_det_sets, match, attrs_order), length(attrs_order))
   closures <- lapply(
     lapply(primaries, match, attrs_order),
     find_closure,
-    lapply(G_det_sets, match, attrs_order),
+    detmat,
     match(G_deps, attrs_order)
   ) |>
     lapply(\(x) attrs_order[x])
@@ -771,13 +773,10 @@ check_closure <- function(attrs, targets, determinant_sets, dependants) {
   found
 }
 
-find_closure <- function(attrs, determinant_sets, dependants) {
+find_closure <- function(attrs, detmat, dependants) {
   stopifnot(is.integer(dependants))
   if (length(dependants) == 0)
     return(attrs)
-  checked <- rep(FALSE, length(dependants))
-  nargs <- max(c(attrs, unlist(determinant_sets), dependants))
-  detmat <- detset_matrix(determinant_sets, nargs)
   detn <- colSums(detmat)
   while (TRUE) {
     curr_n <- colSums(detmat[attrs, , drop = FALSE])
@@ -832,7 +831,8 @@ detset_matrix <- function(determinant_sets, nargs) {
       },
       logical(nargs)
     ),
-    nrow = nargs
+    nrow = nargs,
+    ncol = length(determinant_sets)
   )
 }
 
