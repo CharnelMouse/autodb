@@ -625,7 +625,13 @@ ensure_lossless <- function(schema) {
   if (any(vapply(closures, setequal, logical(1), attrs_order)))
     return(schema)
 
-  new_key <- minimal_subset(attrs_order, attrs_order, G_det_sets, G_deps)
+  new_key <- minimal_subset(
+    seq_along(attrs_order),
+    seq_along(attrs_order),
+    lapply(G_det_sets, match, attrs_order),
+    match(G_deps, attrs_order)
+  ) |>
+    (\(x) attrs_order[x])()
   attrs <- c(attrs, list(new_key))
   keys <- c(keys, list(list(new_key)))
   new_name <- paste(new_key, collapse = "_")
@@ -685,6 +691,7 @@ minimal_subset <- function(
   determinant_sets,
   dependants
 ) {
+  stopifnot(is.integer(dependants))
   keep <- rep(TRUE, length(key))
   changed <- TRUE
   while (changed) {
@@ -743,6 +750,7 @@ check_closure1 <- function(attrs, target, detmat, dependants) {
 }
 
 check_closure <- function(attrs, targets, determinant_sets, dependants) {
+  stopifnot(is.integer(dependants))
   found <- rep(FALSE, length(targets))
   found[targets %in% attrs] <- TRUE
   if (length(dependants) == 0 || all(found))
