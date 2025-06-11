@@ -160,7 +160,7 @@ remove_extraneous_attributes <- function(deps) {
         int_deps
       )) {
         dts[[n]] <- y_
-        detmat[[n, match(attr, attrs_order(deps))]] <- FALSE
+        detmat[[match(attr, attrs_order(deps)), n]] <- FALSE
       }
     }
   }
@@ -192,9 +192,9 @@ remove_extraneous_dependencies <- function(fds) {
     rem_ind <- which(!main_rem)
     rem <- rep(FALSE, length(new_deps))
     for (n in rev(seq_along(new_deps))) {
-      other_detmat <- new_detmat[-n, , drop = FALSE][!rem[-n], , drop = FALSE]
+      other_detmat <- new_detmat[, -n, drop = FALSE][, !rem[-n], drop = FALSE]
       other_int_deps <- new_int_deps[-n][!rem[-n]]
-      int_det_set <- which(new_detmat[n, ])
+      int_det_set <- which(new_detmat[, n])
       int_dep <- match(new_deps[n], attrs_order(fds))
       rem[n] <- check_closure1(
         int_det_set,
@@ -204,14 +204,14 @@ remove_extraneous_dependencies <- function(fds) {
       )
     }
     new_deps <- new_deps[!rem]
-    new_detmat <- new_detmat[!rem, , drop = FALSE]
+    new_detmat <- new_detmat[, !rem, drop = FALSE]
     new_int_deps <- new_int_deps[!rem]
     main_rem[rem_ind] <- rem
   }
   stopifnot(
-    nrow(new_detmat) == 0 ||
+    ncol(new_detmat) == 0 ||
       identical(
-        apply(new_detmat, 1, \(l) attrs_order(fds)[l], simplify = FALSE),
+        apply(new_detmat, 2, \(l) attrs_order(fds)[l], simplify = FALSE),
         detset(fds)[ord][!main_rem]
       )
   )
@@ -364,8 +364,8 @@ remove_transitive_dependencies <- function(vecs) {
     keys <- vecs$partition_keys[[flat_groups[n]]]
     key_attrs <- unique(unlist(keys))
     if (!is.element(RHS, key_attrs)) {
-      detmat <- rbind(
-        partition_detmat[-n, , drop = FALSE][!transitive[-n], , drop = FALSE],
+      detmat <- cbind(
+        partition_detmat[, -n, drop = FALSE][, !transitive[-n], drop = FALSE],
         bijection_detmat
       )
       int_deps <- c(
@@ -718,12 +718,12 @@ check_closure1 <- function(attrs, target, detmat, dependants) {
   if (!is.element(target, dependants))
     return(FALSE)
 
-  detn <- rowSums(detmat)
+  detn <- colSums(detmat)
   depvec <- dependants
   curr_attrs <- attrs
 
   while (TRUE) {
-    curr_n <- rowSums(detmat[, curr_attrs, drop = FALSE])
+    curr_n <- colSums(detmat[curr_attrs, , drop = FALSE])
     new <- curr_n == detn
     if (!any(new))
       return(FALSE)
@@ -731,7 +731,7 @@ check_closure1 <- function(attrs, target, detmat, dependants) {
     if (target %in% new_attrs)
       return(TRUE)
     detn <- detn[!new]
-    detmat <- detmat[!new, , drop = FALSE]
+    detmat <- detmat[, !new, drop = FALSE]
     depvec <- depvec[!new]
     curr_attrs <- c(curr_attrs, new_attrs)
   }
@@ -819,7 +819,7 @@ find_closure_with_used <- function(attrs, determinant_sets, dependants) {
 }
 
 detset_matrix <- function(determinant_sets, nargs) {
-  t(matrix(
+  matrix(
     vapply(
       determinant_sets,
       \(ns) {
@@ -830,7 +830,7 @@ detset_matrix <- function(determinant_sets, nargs) {
       logical(nargs)
     ),
     nrow = nargs
-  ))
+  )
 }
 
 keys_order_same_lengths <- function(keys) {
