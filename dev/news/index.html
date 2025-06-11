@@ -43,12 +43,17 @@
 <h2 class="pkg-version" data-toc-text="development version" id="autodb-development-version">autodb (development version)<a class="anchor" aria-label="anchor" href="#autodb-development-version"></a></h2>
 <div class="section level3">
 <h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
-<ul><li>Added the new FDHits search algorithm as an alternative option to DFD in <code>discover</code>.</li>
-<li>
+<ul><li>The package has no remaining package dependencies. There is still an implicit dependency on GraphViz, if you use <code>gv</code> to export plotting code.</li>
+<li>Added the new FDHits search algorithm as an alternative option to DFD in <code>discover</code>.</li>
+<li>Performance improvements:
+<ul><li>
 <code>relation</code> and <code>database</code> methods for <code>rename_attrs</code> and <code>gv</code> now run significantly more quickly for large data sets, due to not re-running all the key validity checks.</li>
 <li>Removed the unnecessary validity checks from the <code>database</code> method for <code>reduce</code>, so that it runs more quickly, especially for databases with a large number of records.</li>
 <li>Removed unnecessary validity checks from the <code>database_schema</code> and <code>database</code> methods for <code>[</code>.</li>
 <li>Removed unnecessary closure calculations in <code>normalise</code>.</li>
+<li>
+<code>normalise</code>, <code>synthesise</code>, and <code>autoref</code> have improved performance, due to more efficient closure checks.</li>
+</ul></li>
 <li>Added a <code>check</code> parameter to <code>decompose</code>, to allow skipping some checks if the data frame to decompose is the one used to create the schema.</li>
 <li>Handing for numerical/complex variables is more consistent:
 <ul><li>Values are now rounded by significant digits, as intended, rather than by decimal places.</li>
