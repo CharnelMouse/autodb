@@ -9,13 +9,13 @@ FDHits <- function(
   method <- match.arg(method)
   if (ncol(lookup) == 0)
     return(functional_dependency(list(), character()))
-  report$stat("calculating single-attribute PLIs")
+  report("calculating single-attribute PLIs")
   plis <- lapply(lookup, pli)
-  report$stat("sampling difference sets")
+  report("sampling difference sets")
   D <- lapply(plis, sample_diffsets, lookup) |>
     unlist(recursive = FALSE) |>
     unique()
-  report$stat(with_number(length(D), "initial diffset", "\n", "s\n"))
+  report(with_number(length(D), "initial diffset", "\n", "s\n"))
   switch(
     method,
     Sep = FDHitsSep(lookup, determinants, dependants, detset_limit, D, report),
@@ -31,7 +31,7 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
   D <- lapply(D, partition_handler$key)
   partition_handler$add_diffset_keys(D)
   for (A in dependants) {
-    report$stat(paste("dependant", attrs[A]))
+    report(paste("dependant", attrs[A]))
     A_bitset <- partition_handler$key(A)
     rest <- partition_handler$key(determinants[determinants != A])
     empty <- partition_handler$key(integer())
@@ -81,7 +81,7 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
     }
     n_visited <- n_visited + length(visited)
   }
-  report$stat(paste0(
+  report(paste0(
     "\n",
     "FDHitsSep complete",
     "\n",
@@ -151,7 +151,7 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
       return_stack
     )
   }
-  report$stat(paste0(
+  report(paste0(
     "\n",
     "FDHitsJoint complete",
     "\n",

@@ -5,33 +5,12 @@
 reporter <- function(report, con, new = FALSE) {
   force(new)
   if (report)
-    list(
-      op = function(x, f, text, ...) {
-        x <- eval(substitute(x, rlang::caller_env()))
-        cat(paste0(text, "\n"), file = con, append = !new)
-        utils::flush.console()
-        new <<- FALSE
-        f(x, ...)
-      },
-      exp = function(expression, text) {
-        cat(paste0(text, "\n"), file = con, append = !new)
-        utils::flush.console()
-        new <<- FALSE
-        eval(substitute(expression, rlang::caller_env()))
-      },
-      stat = function(text){
-        cat(paste0(text, "\n"), file = con, append = !new)
-        utils::flush.console()
-        new <<- FALSE
-        invisible(NULL)
-      }
-    )
+    function(text) {
+      cat(paste0(text, "\n"), file = con, append = !new)
+      utils::flush.console()
+      new <<- FALSE
+      invisible(NULL)
+    }
   else
-    list(
-      op = function(x, f, text, ...) f(x, ...),
-      exp = function(expression, text) {
-        eval(substitute(expression, rlang::caller_env()))
-      },
-      stat = function(text) invisible(NULL)
-    )
+    function(text) invisible(NULL)
 }

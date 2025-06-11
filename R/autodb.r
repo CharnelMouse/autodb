@@ -60,22 +60,26 @@ autodb <- function(
   ...
 ) {
   report <- reporter(progress, progress_file)
-  if (!is.na(digits))
-    report$exp(
-      df <- df_coarsen(df, digits),
-      paste("coarsening numerical/complex variables to", digits, "significant digits")
-    )
-  discover(df, 1, digits = NA, progress = progress, progress_file = "", ...) |>
-    report$op(
-      normalise,
-      "normalising",
-      single_ref = single_ref,
-      ensure_lossless = ensure_lossless,
-      reduce_attributes = FALSE,
-      remove_avoidable = remove_avoidable,
-      constants_name = constants_name
-    ) |>
-    report$op(decompose, "decomposing", df = df, digits = NA, check = FALSE)
+  if (!is.na(digits)) {
+    report(paste(
+      "coarsening numerical/complex variables to",
+      digits,
+      "significant digits"
+    ))
+    df <- df_coarsen(df, digits)
+  }
+  fds <- discover(df, 1, digits = NA, progress = progress, progress_file = "", ...)
+  report("normalising")
+  ds <- normalise(
+    fds,
+    single_ref = single_ref,
+    ensure_lossless = ensure_lossless,
+    reduce_attributes = FALSE,
+    remove_avoidable = remove_avoidable,
+    constants_name = constants_name
+  )
+  report("decomposing")
+  decompose(df, ds, digits = NA, check = FALSE)
 }
 
 df_coarsen <- function(x, digits) {

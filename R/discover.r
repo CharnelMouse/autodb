@@ -336,15 +336,16 @@ discover <- function(
   #   floats in 64-bit, but x86 represents in 80 bits first and then rounds,
   #   so non-representable numbers get approximated differently, resulting in
   #   different partition results
-  if (!is.na(digits))
-    report$exp(
-      df[] <- lapply(df, format_if_float, digits = digits),
-      paste("formatting numerical/complex variables with", digits, "significant digits")
-    )
-  df <- report$exp(
-    lookup_table(df),
-    "simplifying data types"
-  )
+  if (!is.na(digits)) {
+    report(paste(
+      "formatting numerical/complex variables with",
+      digits,
+      "significant digits"
+    ))
+    df[] <- lapply(df, format_if_float, digits = digits)
+  }
+  report("simplifying data types")
+  df <- lookup_table(df)
 
   switch(
     method,

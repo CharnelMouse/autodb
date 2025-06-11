@@ -66,53 +66,33 @@ synthesise <- function(
 ) {
   report <- reporter(progress, progress_file)
 
-  inter <- dependencies |>
-    report$op(
-      if (reduce_attributes)
-        remove_extraneous
-      else
-        remove_extraneous_dependencies,
-      "removing extraneous components"
-    ) |>
-    report$op(
-      convert_to_vectors,
-      "simplifying dependency format"
-    ) |>
-    convert_to_integer_attributes() |>
-    report$op(
-      partition_dependencies,
-      "partitioning dependencies"
-    ) |>
-    report$op(
-      merge_equivalent_keys,
-      "merging keys"
-    ) |>
-    report$op(
-      remove_transitive_dependencies,
-      "removing transitive dependencies"
-    ) |>
-    report$op(
-      add_bijections,
-      "re-adding bijections"
-    ) |>
-    report$op(
-      construct_relation_schemas,
-      "constructing relation schemas"
-    )
+  report("removing extraneous components")
+  inter <- if (reduce_attributes)
+    remove_extraneous(dependencies)
+  else
+    remove_extraneous_dependencies(dependencies)
+  report("simplifying dependency format")
+  inter <- convert_to_vectors(inter) |>
+    convert_to_integer_attributes()
+  report("partitioning dependencies")
+  inter <- partition_dependencies(inter)
+  report("merging keys")
+  inter <- merge_equivalent_keys(inter)
+  report("removing transitive dependencies")
+  inter <- remove_transitive_dependencies(inter)
+  report("re-adding bijections")
+  inter <- add_bijections(inter)
+  report("constructing relation schemas")
+  inter <- construct_relation_schemas(inter)
   ord <- keys_order(lapply(inter$keys, \(ks) ks[[1]]))
   inter$attrs <- inter$attrs[ord]
   inter$keys <- inter$keys[ord]
-  if (remove_avoidable)
-    inter <- inter |>
-    report$op(
-      remove_avoidable_attributes,
-      "removing avoidable attributes"
-    )
-  inter <- inter |>
-    report$op(
-      convert_to_character_attributes,
-      "converting to readable format"
-    )
+  if (remove_avoidable) {
+    report("removing avoidable attributes")
+    inter <- remove_avoidable_attributes(inter)
+  }
+  report("converting to readable format")
+  inter <- convert_to_character_attributes(inter)
   relation_names <- vapply(
     inter$keys,
     \(keys) name_dataframe(keys[[1]]),

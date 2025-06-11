@@ -20,7 +20,8 @@ DFD <- function(
   fixed <- integer()
   for (attr in attrs) {
     if (all(lookup[[attr]] == 1L)) {
-      fixed <- report$op(fixed, c, paste(attr_names[[attr]], "is fixed"), attr)
+      report(paste(attr_names[[attr]], "is fixed"))
+      fixed <- c(fixed, attr)
       if (attr %in% dependants)
         dependencies[[attr]] <- list(character())
     }
@@ -34,7 +35,7 @@ DFD <- function(
     length(valid_dependant_attrs) == 0 ||
     detset_limit < 1
   ) {
-    report$stat("no valid dependants, or detset_limit < 1, skipping search")
+    report("no valid dependants, or detset_limit < 1, skipping search")
     return(flatten(
       filter_nonflat_dependencies(dependencies, detset_limit),
       attr_names
@@ -67,7 +68,7 @@ DFD <- function(
   determinant_keys <- intersect(simple_keys, valid_determinant_attrs_prekeys)
   dependant_keys <- intersect(simple_keys, valid_dependant_attrs)
   if (length(simple_keys) > 0) {
-    report$stat(paste("single-attribute keys:", toString(attr_names[simple_keys])))
+    report(paste("single-attribute keys:", toString(attr_names[simple_keys])))
     valid_determinant_attrs <- setdiff(valid_determinant_attrs, simple_keys)
     if (skip_bijections) {
       valid_dependant_attrs <- setdiff(valid_dependant_attrs, dependant_keys[-1])
@@ -75,7 +76,7 @@ DFD <- function(
   }
 
   if (length(valid_determinant_attrs) < n_cols) {
-    report$stat(
+    report(
       paste(
         "attributes not considered as determinants:",
         toString(attr_names[-valid_determinant_attrs])
@@ -104,10 +105,9 @@ DFD <- function(
 
   # main search
   if (max_n_lhs_attrs > 0) {
-    powerset <- report$op(
+    report("constructing powerset")
+    powerset <- nonempty_powerset(
       max_n_lhs_attrs,
-      nonempty_powerset,
-      "constructing powerset",
       use_visited = TRUE
     )
     # cache generated powerset and reductions, otherwise we spend a lot
@@ -120,7 +120,7 @@ DFD <- function(
       full_cache = full_cache
     )
     for (rhs in which(nonfixed %in% valid_dependant_attrs)) {
-      report$stat(paste("dependant", attr_names[nonfixed][rhs]))
+      report(paste("dependant", attr_names[nonfixed][rhs]))
       lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
       n_lhs_attrs <- length(lhs_nonfixed_indices)
       expected_n_lhs_attrs <- max_n_lhs_attrs -
@@ -147,10 +147,9 @@ DFD <- function(
           nodes <- reduce_powerset(powerset, n_lhs_attrs)
           all_powersets[[as.character(n_lhs_attrs)]] <- nodes
         }
-        lhss <- report$op(
+        report("determinants available, starting search")
+        lhss <- find_LHSs_dfd(
           rhs,
-          find_LHSs_dfd,
-          "determinants available, starting search",
           lhs_nonfixed_indices,
           nodes,
           n_lhs_attrs,
@@ -197,7 +196,7 @@ DFD <- function(
     }
   }
 
-  report$stat(paste0(
+  report(paste0(
     "DFD complete",
     "\n",
     with_number(partition_handler$cache_size(), "partition", " cached", "s cached")
