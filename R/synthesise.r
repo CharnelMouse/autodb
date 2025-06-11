@@ -163,6 +163,8 @@ remove_extraneous <- function(deps) {
 remove_extraneous_attributes <- function(deps) {
   dts <- detset(deps)
   dps <- dependant(deps)
+  int_detsets <- lapply(dts, match, attrs_order(deps))
+  int_deps <- match(dps, attrs_order(deps))
   for (n in seq_along(deps)) {
     lhs <- dts[[n]]
     rhs <- dps[[n]]
@@ -171,10 +173,11 @@ remove_extraneous_attributes <- function(deps) {
       if (check_closure1(
         match(y_, attrs_order(deps)),
         match(rhs, attrs_order(deps)),
-        lapply(dts, match, attrs_order(deps)),
-        match(dps, attrs_order(deps))
+        int_detsets,
+        int_deps
       )) {
         dts[[n]] <- y_
+        int_detsets[[n]] <- match(y_, attrs_order(deps))
       }
     }
   }
@@ -199,25 +202,28 @@ remove_extraneous_dependencies <- function(fds) {
   old_deps <- NULL
   new_deps <- dependant(fds)[ord]
   main_rem <- rep(FALSE, length(new_deps))
+  new_int_detsets <- lapply(new_det_sets, match, attrs_order(fds))
+  new_int_deps <- match(new_deps, attrs_order(fds))
   while (!identical(old_deps, new_deps)) {
     old_deps <- new_deps
     rem_ind <- which(!main_rem)
     rem <- rep(FALSE, length(new_deps))
     for (n in rev(seq_along(new_deps))) {
+      other_int_detsets <- new_int_detsets[-n][!rem[-n]]
+      other_int_deps <- new_int_deps[-n][!rem[-n]]
       det_set <- new_det_sets[[n]]
       dep <- new_deps[n]
-      other_det_sets <- new_det_sets[-n]
-      other_deps <- new_deps[-n]
-      other_rem <- rem[-n]
       rem[n] <- check_closure1(
         match(det_set, attrs_order(fds)),
         match(dep, attrs_order(fds)),
-        lapply(other_det_sets[!other_rem], match, attrs_order(fds)),
-        match(other_deps[!other_rem], attrs_order(fds))
+        other_int_detsets,
+        other_int_deps
       )
     }
     new_det_sets <- new_det_sets[!rem]
     new_deps <- new_deps[!rem]
+    new_int_detsets <- new_int_detsets[!rem]
+    new_int_deps <- new_int_deps[!rem]
     main_rem[rem_ind] <- rem
   }
   stopifnot(identical(
