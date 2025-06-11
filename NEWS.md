@@ -27,6 +27,7 @@
 ## Fixes
 
 * Fixed the `format` method for `relation` to describe elements as relations, rather than schemas.
+* Fixed `autodb` to pass its `progress_file` argument on to `discover`.
 
 # autodb 2.3.1
 
