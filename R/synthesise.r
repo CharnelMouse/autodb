@@ -613,7 +613,13 @@ ensure_lossless <- function(schema) {
   G_det_sets <- lapply(unlist(G, recursive = FALSE), `[[`, 1)
   G_deps <- vapply(unlist(G, recursive = FALSE), `[[`, character(1), 2)
   primaries <- lapply(keys, `[[`, 1)
-  closures <- lapply(primaries, find_closure, G_det_sets, G_deps)
+  closures <- lapply(
+    lapply(primaries, match, attrs_order),
+    find_closure,
+    lapply(G_det_sets, match, attrs_order),
+    match(G_deps, attrs_order)
+  ) |>
+    lapply(\(x) attrs_order[x])
   if (any(vapply(closures, setequal, logical(1), attrs_order)))
     return(schema)
 
@@ -769,25 +775,25 @@ check_closure <- function(attrs, targets, determinant_sets, dependants) {
 }
 
 find_closure <- function(attrs, determinant_sets, dependants) {
+  stopifnot(is.integer(dependants))
   if (length(dependants) == 0)
     return(attrs)
   checked <- rep(FALSE, length(dependants))
-  change <- TRUE
-  while (change) {
-    change <- FALSE
-    for (n in seq_along(dependants)[!checked]) {
-      det_set <- determinant_sets[[n]]
-      dep <- dependants[n]
-      if (length(dep) != 1)
-        stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(dep)))
-      if (all(is.element(det_set, attrs))) {
-        checked[n] <- TRUE
-        if (!is.element(dep, attrs)) {
-          change <- TRUE
-          attrs <- c(attrs, dep)
-        }
-      }
-    }
+  nargs <- max(c(attrs), unlist(determinant_sets), dependants)
+  detmat <- detset_matrix(determinant_sets, nargs)
+  detn <- colSums(detmat)
+  while (TRUE) {
+    curr_n <- colSums(detmat[attrs, , drop = FALSE])
+    new <- curr_n == detn
+    if (!any(new))
+      break
+    new_attrs <- setdiff(dependants[new], attrs)
+    if (length(new_attrs) == 0)
+      break
+    attrs <- c(attrs, new_attrs)
+    detn <- detn[!new]
+    detmat <- detmat[, !new, drop = FALSE]
+    dependants <- dependants[!new]
   }
   attrs
 }

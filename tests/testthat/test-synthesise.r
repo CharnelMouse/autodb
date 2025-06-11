@@ -540,11 +540,12 @@ describe("synthesise", {
         implied_flat_fds <- unlist(implied_flat_fds, recursive = FALSE)
       implied_flat_fds <- functional_dependency(implied_flat_fds, attrs_order(deps))
       dep_closures <- lapply(
-        detset(deps),
+        lapply(detset(deps), match, attrs_order(deps)),
         find_closure,
-        detset(implied_flat_fds),
-        dependant(implied_flat_fds)
-      )
+        lapply(detset(implied_flat_fds), match, attrs_order(deps)),
+        match(dependant(implied_flat_fds), attrs_order(deps))
+      ) |>
+        lapply(\(x) attrs_order(deps)[x])
       fds_reproduced <- mapply(
         \(closure, dep) dep %in% closure,
         dep_closures,
@@ -798,14 +799,26 @@ describe("synthesised_fds", {
       expect_true(all(c(
         mapply(
           \(dets, dep) {
-            dep %in% find_closure(dets, detset(fds2), dependant(fds2))
+            dets <- match(dets, attrs_order(fds2))
+            dep <- match(dep, attrs_order(fds2))
+            dep %in% find_closure(
+              dets,
+              lapply(detset(fds2), match, attrs_order(fds2)),
+              match(dependant(fds2), attrs_order(fds2))
+            )
           },
           detset(fds1),
           dependant(fds1)
         ),
         mapply(
           \(dets, dep) {
-            dep %in% find_closure(dets, detset(fds1), dependant(fds1))
+            dets <- match(dets, attrs_order(fds1))
+            dep <- match(dep, attrs_order(fds1))
+            dep %in% find_closure(
+              dets,
+              lapply(detset(fds1), match, attrs_order(fds1)),
+              match(dependant(fds1), attrs_order(fds1))
+            )
           },
           detset(fds2),
           dependant(fds2)
