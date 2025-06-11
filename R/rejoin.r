@@ -57,6 +57,7 @@ rejoin <- function(database) {
     return(data.frame())
   if (length(database) == 1)
     return(records(database)[[1]][, attrs_order, drop = FALSE])
+
   keys <- keys(database)
   G <- synthesised_fds(attrs, keys)
   G_flattened <- unlist(G, recursive = FALSE, use.names = FALSE)
@@ -88,6 +89,7 @@ rejoin <- function(database) {
       paste(vapply(best_merges, toString, character(1)), collapse = "\n")
     )
   }
+
   to_merge <- unique(G_relations[closure_usedlists[[which(is_main)[[1]]]]])
   stopifnot(!is.null(names(is_main)))
   main_relation <- records(database)[[which(is_main)[[1]]]]
@@ -112,5 +114,6 @@ rejoin <- function(database) {
     ))
     stopifnot(identical(nrow(main_relation), old_nrow))
   }
+
   main_relation[, attrs_order, drop = FALSE]
 }
