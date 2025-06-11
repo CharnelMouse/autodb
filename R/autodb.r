@@ -68,7 +68,7 @@ autodb <- function(
     ))
     df <- df_coarsen(df, digits)
   }
-  fds <- discover(df, 1, digits = NA, progress = progress, progress_file = "", ...)
+  fds <- discover(df, digits = NA, progress = progress, progress_file = "", ...)
   report("normalising")
   ds <- normalise(
     fds,

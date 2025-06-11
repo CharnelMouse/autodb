@@ -69,7 +69,7 @@ describe("discover", {
   }
   terminates_then <- function(fn, accuracy, ...) {
     function(df) {
-      res <- R.utils::withTimeout(discover(df, accuracy, ...), timeout = 5, onTimeout = "silent")
+      res <- R.utils::withTimeout(discover(df, accuracy = accuracy, ...), timeout = 5, onTimeout = "silent")
       if (is.null(res)) {
         return(fail("discover() timed out"))
       }
@@ -79,9 +79,9 @@ describe("discover", {
   }
   both_terminate_then <- function(fn, accuracy, ...) {
     function(df1, df2) {
-      res1 <- R.utils::withTimeout(discover(df1, accuracy, ...), timeout = 5, onTimeout = "silent")
+      res1 <- R.utils::withTimeout(discover(df1, accuracy = accuracy, ...), timeout = 5, onTimeout = "silent")
       expect_true(!is.null(res1))
-      res2 <- R.utils::withTimeout(discover(df2, accuracy, ...), timeout = 5, onTimeout = "silent")
+      res2 <- R.utils::withTimeout(discover(df2, accuracy = accuracy, ...), timeout = 5, onTimeout = "silent")
       expect_true(!is.null(res2))
       fn(res1, res2)
     }
@@ -89,13 +89,13 @@ describe("discover", {
   terminates_with_and_without_full_cache_then <- function(fn, accuracy, ...) {
     function(df) {
       res_cache <- R.utils::withTimeout(
-        discover(df, accuracy, full_cache = TRUE, ...),
+        discover(df, accuracy = accuracy, full_cache = TRUE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
       expect_true(!is.null(res_cache))
       res_nocache <- R.utils::withTimeout(
-        discover(df, accuracy, full_cache = FALSE, ...),
+        discover(df, accuracy = accuracy, full_cache = FALSE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
@@ -106,13 +106,13 @@ describe("discover", {
   terminates_with_and_without_store_cache_then <- function(fn, accuracy, ...) {
     function(df) {
       res_store <- R.utils::withTimeout(
-        discover(df, accuracy, full_cache = TRUE, store_cache = TRUE, ...),
+        discover(df, accuracy = accuracy, full_cache = TRUE, store_cache = TRUE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
       expect_true(!is.null(res_store))
       res_nostore <- R.utils::withTimeout(
-        discover(df, accuracy, full_cache = TRUE, store_cache = FALSE, ...),
+        discover(df, accuracy = accuracy, full_cache = TRUE, store_cache = FALSE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
@@ -123,14 +123,14 @@ describe("discover", {
   terminates_with_and_without_bijection_skip_then <- function(fn, accuracy, ...) {
     function(df) {
       res_skip <- R.utils::withTimeout(
-        discover(df, accuracy, full_cache = TRUE, store_cache = TRUE, skip_bijections = TRUE, ...),
+        discover(df, accuracy = accuracy, full_cache = TRUE, store_cache = TRUE, skip_bijections = TRUE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
       if (is.null(res_skip))
         return(fail("discover() with bijection skip timed out"))
       res_noskip <- R.utils::withTimeout(
-        discover(df, accuracy, full_cache = TRUE, store_cache = TRUE, skip_bijections = FALSE, ...),
+        discover(df, accuracy = accuracy, full_cache = TRUE, store_cache = TRUE, skip_bijections = FALSE, ...),
         timeout = 5,
         onTimeout = "silent"
       )
@@ -360,9 +360,9 @@ describe("discover", {
     }
     both_bounds_terminate_then <- function(fn, ...) {
       function(df, low, high) {
-        res1 <- R.utils::withTimeout(discover(df, low, ...), timeout = 5, onTimeout = "silent")
+        res1 <- R.utils::withTimeout(discover(df, accuracy = low, ...), timeout = 5, onTimeout = "silent")
         expect_true(!is.null(res1))
-        res2 <- R.utils::withTimeout(discover(df, high, ...), timeout = 5, onTimeout = "silent")
+        res2 <- R.utils::withTimeout(discover(df, accuracy = high, ...), timeout = 5, onTimeout = "silent")
         expect_true(!is.null(res2))
         fn(res1, res2)
       }
@@ -441,11 +441,11 @@ describe("discover", {
       )
     )
     stopifnot(df[1, "time"] != df[2, "time"])
-    deps <- discover(df, 1, method = "DFD")
+    deps <- discover(df, method = "DFD")
     expect_length(deps[dependant(deps) == "time"], 0L)
-    deps2 <- discover(df, 1, method = "FDHitsSep")
+    deps2 <- discover(df, method = "FDHitsSep")
     expect_length(deps2[dependant(deps2) == "time"], 0L)
-    deps3 <- discover(df, 1, method = "FDHitsJoint")
+    deps3 <- discover(df, method = "FDHitsJoint")
     expect_length(deps3[dependant(deps3) == "time"], 0L)
   })
   it("correctly simplifies floating-point numbers to high accuracy", {
@@ -460,42 +460,42 @@ describe("discover", {
       )
     )
     expect_identical(
-      discover(df, 1, digits = 8, method = "DFD"),
+      discover(df, digits = 8, method = "DFD"),
       functional_dependency(
         list(list(character(), "x"), list(character(), "y")),
         c("x", "y")
       )
     )
     expect_identical(
-      discover(df, 1, digits = 8, method = "FDHitsSep"),
+      discover(df, digits = 8, method = "FDHitsSep"),
       functional_dependency(
         list(list(character(), "x"), list(character(), "y")),
         c("x", "y")
       )
     )
     expect_identical(
-      discover(df, 1, digits = 8, method = "FDHitsJoint"),
+      discover(df, digits = 8, method = "FDHitsJoint"),
       functional_dependency(
         list(list(character(), "x"), list(character(), "y")),
         c("x", "y")
       )
     )
     expect_identical(
-      discover(df, 1, digits = 15, method = "DFD"),
+      discover(df, digits = 15, method = "DFD"),
       functional_dependency(
         list(list(character(), "x")),
         c("x", "y")
       )
     )
     expect_identical(
-      discover(df, 1, digits = 15, method = "FDHitsSep"),
+      discover(df, digits = 15, method = "FDHitsSep"),
       functional_dependency(
         list(list(character(), "x")),
         c("x", "y")
       )
     )
     expect_identical(
-      discover(df, 1, digits = 15, method = "FDHitsJoint"),
+      discover(df, digits = 15, method = "FDHitsJoint"),
       functional_dependency(
         list(list(character(), "x")),
         c("x", "y")
@@ -510,7 +510,7 @@ describe("discover", {
     terminates_with_exclusion_then_no_trival <- function(accuracy, ...) {
       function(df, attr) {
         deps <- R.utils::withTimeout(
-          discover(df, accuracy, exclude = attr, ...),
+          discover(df, accuracy = accuracy, exclude = attr, ...),
           timeout = 5,
           onTimeout = "silent"
         )
@@ -542,14 +542,14 @@ describe("discover", {
       function(df) {
         attrs_with_class <- names(df)[vapply(df, inherits, logical(1), class)]
         deps1 <- R.utils::withTimeout(
-          discover(df, accuracy, exclude = attrs_with_class, ...),
+          discover(df, accuracy = accuracy, exclude = attrs_with_class, ...),
           timeout = 5,
           onTimeout = "silent"
         )
         if (is.null(deps1))
           return(fail("discover() with exclude timed out"))
         deps2 <- R.utils::withTimeout(
-          discover(df, accuracy, exclude_class = class, ...),
+          discover(df, accuracy = accuracy, exclude_class = class, ...),
           timeout = 5,
           onTimeout = "silent"
         )
@@ -603,7 +603,6 @@ describe("discover", {
       by_arguments <- R.utils::withTimeout(
         discover(
           x,
-          1,
           dependants = dependants,
           detset_limit = detset_limit,
           method = method,
@@ -615,7 +614,7 @@ describe("discover", {
       if (is.null(by_arguments))
         return(fail("discover() with filtering arguments timed out"))
       by_filtering <- R.utils::withTimeout(
-        discover(x, 1, method = method, ...),
+        discover(x, method = method, ...),
         timeout = 5,
         onTimeout = "silent"
       )
@@ -656,17 +655,17 @@ describe("discover", {
   it("gives dependencies for unique attributes (in case don't want them as key)", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), C = c(1, 2, 2))
 
-    deps_dfd <- discover(df, 1, method = "DFD")
+    deps_dfd <- discover(df, method = "DFD")
     A_deps_dfd <- dependant(deps_dfd) == "A"
     A_detsets_dfd <- detset(deps_dfd[A_deps_dfd])
     expect_identical(A_detsets_dfd, list(c("B", "C")))
 
-    deps_sep <- discover(df, 1, method = "FDHitsSep")
+    deps_sep <- discover(df, method = "FDHitsSep")
     A_deps_sep <- dependant(deps_sep) == "A"
     A_detsets_sep <- detset(deps_sep[A_deps_sep])
     expect_identical(A_detsets_sep, list(c("B", "C")))
 
-    deps_jnt <- discover(df, 1, method = "FDHitsJoint")
+    deps_jnt <- discover(df, method = "FDHitsJoint")
     A_deps_jnt <- dependant(deps_jnt) == "A"
     A_detsets_jnt <- detset(deps_jnt[A_deps_jnt])
     expect_identical(A_detsets_jnt, list(c("B", "C")))
@@ -709,15 +708,15 @@ describe("discover", {
       c("team", "jersey_num", "player_name", "city", "state")
     )
 
-    deps_dfd <- discover(df, 1, method = "DFD")
+    deps_dfd <- discover(df, method = "DFD")
     expect_identical(attrs_order(deps_dfd), attrs_order(expected_deps))
     expect_true(all(is.element(expected_deps, deps_dfd)))
 
-    deps_sep <- discover(df, 1, method = "FDHitsSep")
+    deps_sep <- discover(df, method = "FDHitsSep")
     expect_identical(attrs_order(deps_sep), attrs_order(expected_deps))
     expect_true(all(is.element(expected_deps, deps_sep)))
 
-    deps_jnt <- discover(df, 1, method = "FDHitsJoint")
+    deps_jnt <- discover(df, method = "FDHitsJoint")
     expect_identical(attrs_order(deps_jnt), attrs_order(expected_deps))
     expect_true(all(is.element(expected_deps, deps_jnt)))
   })
@@ -740,15 +739,15 @@ describe("discover", {
       c("team", "city", "state", "roster_size")
     )
 
-    deps_dfd <- discover(df, 1, method = "DFD")
+    deps_dfd <- discover(df, method = "DFD")
     expect_identical(attrs_order(deps_dfd), attrs_order(expected_deps))
     expect_true(all(is.element(expected_deps, deps_dfd)))
 
-    deps_sep <- discover(df, 1, method = "FDHitsSep")
+    deps_sep <- discover(df, method = "FDHitsSep")
     expect_identical(attrs_order(deps_sep), attrs_order(expected_deps))
     expect_true(all(is.element(expected_deps, deps_sep)))
 
-    deps_jnt <- discover(df, 1, method = "FDHitsJoint")
+    deps_jnt <- discover(df, method = "FDHitsJoint")
     expect_identical(attrs_order(deps_jnt), attrs_order(expected_deps))
     expect_true(all(is.element(expected_deps, deps_jnt)))
   })
@@ -792,9 +791,9 @@ describe("discover", {
         "Publisher_ID"
       )
     )
-    deps_dfd <- discover(df, 1, method = "DFD")
-    deps_sep <- discover(df, 1, method = "FDHitsSep")
-    deps_jnt <- discover(df, 1, method = "FDHitsJoint")
+    deps_dfd <- discover(df, method = "DFD")
+    deps_sep <- discover(df, method = "FDHitsSep")
+    deps_jnt <- discover(df, method = "FDHitsJoint")
     expect_identical(attrs_order(deps_dfd), attrs_order(expected_deps))
     expect_identical(attrs_order(deps_sep), attrs_order(expected_deps))
     expect_identical(attrs_order(deps_jnt), attrs_order(expected_deps))
@@ -806,26 +805,26 @@ describe("discover", {
     df <- data.frame(1:3, c(1, 1, 2), c(1, 2, 2)) |>
       stats::setNames(c("A 1", "B 2", "C 3"))
 
-    deps_dfd <- discover(df, 1, method = "DFD")
+    deps_dfd <- discover(df, method = "DFD")
     A_1_deps_dfd <- dependant(deps_dfd) == "A 1"
     A_1_detsets_dfd <- detset(deps_dfd[A_1_deps_dfd])
     expect_identical(A_1_detsets_dfd, list(c("B 2", "C 3")))
 
-    deps_sep <- discover(df, 1, method = "FDHitsSep")
+    deps_sep <- discover(df, method = "FDHitsSep")
     A_1_deps_sep <- dependant(deps_sep) == "A 1"
     A_1_detsets_sep <- detset(deps_sep[A_1_deps_sep])
     expect_identical(A_1_detsets_sep, list(c("B 2", "C 3")))
 
-    deps_jnt <- discover(df, 1, method = "FDHitsJoint")
+    deps_jnt <- discover(df, method = "FDHitsJoint")
     A_1_deps_jnt <- dependant(deps_jnt) == "A 1"
     A_1_detsets_jnt <- detset(deps_jnt[A_1_deps_jnt])
     expect_identical(A_1_detsets_jnt, list(c("B 2", "C 3")))
   })
   it("expects attribute names to be unique", {
     df <- data.frame(A = 1:3, B = c(1, 1, 2), A = c(1, 2, 2), check.names = FALSE)
-    expect_error(discover(df, 1, method = "DFD"), "^duplicate column names: A$")
-    expect_error(discover(df, 1, method = "FDHitsSep"), "^duplicate column names: A$")
-    expect_error(discover(df, 1, method = "FDHitsJoint"), "^duplicate column names: A$")
+    expect_error(discover(df, method = "DFD"), "^duplicate column names: A$")
+    expect_error(discover(df, method = "FDHitsSep"), "^duplicate column names: A$")
+    expect_error(discover(df, method = "FDHitsJoint"), "^duplicate column names: A$")
   })
   it("gets the same results with and without storing partitions", {
     forall(

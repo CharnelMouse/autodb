@@ -613,8 +613,8 @@ describe("gv", {
     it("works for degenerate cases", {
       table_dum <- data.frame()
       table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
-      rel_dum <- create(synthesise(discover(table_dum, 1)))
-      rel_dee <- create(synthesise(discover(table_dee, 1)))
+      rel_dum <- create(synthesise(discover(table_dum)))
+      rel_dee <- create(synthesise(discover(table_dee)))
       expect_errorless(gv(rel_dum))
       expect_errorless(gv(rel_dee))
     })
@@ -649,7 +649,7 @@ describe("gv", {
       forall(
         gen_df(6, 7),
         \(df) {
-          ds <- normalise(discover(df, 1))
+          ds <- normalise(discover(df))
           if (length(ds) == 0)
             discard()
           attr(ds, "names")[[1]] <- "" # skip schema name guard
@@ -681,8 +681,8 @@ describe("gv", {
     it("works for degenerate cases", {
       table_dum <- data.frame()
       table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
-      schema_dum <- normalise(discover(table_dum, 1))
-      schema_dee <- normalise(discover(table_dee, 1))
+      schema_dum <- normalise(discover(table_dum))
+      schema_dee <- normalise(discover(table_dee))
       expect_errorless(gv(schema_dum))
       expect_errorless(gv(schema_dee))
     })
@@ -813,7 +813,7 @@ describe("gv", {
       forall(
         gen_df(6, 7),
         \(df) {
-          rs <- subschemas(normalise(discover(df, 1)))
+          rs <- subschemas(normalise(discover(df)))
           if (length(rs) == 0)
             discard()
           attr(rs, "names")[[1]] <- "" # skip schema name guard
@@ -845,8 +845,8 @@ describe("gv", {
     it("works for degenerate cases", {
       table_dum <- data.frame()
       table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
-      schema_dum <- synthesise(discover(table_dum, 1))
-      schema_dee <- synthesise(discover(table_dee, 1))
+      schema_dum <- synthesise(discover(table_dum))
+      schema_dee <- synthesise(discover(table_dee))
       expect_errorless(gv(schema_dum))
       expect_errorless(gv(schema_dee))
     })

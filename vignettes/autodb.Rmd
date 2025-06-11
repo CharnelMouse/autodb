@@ -118,13 +118,11 @@ We can see that `ChickWeight` was split into two relations, with a weight for ea
 
 ## Finding functional dependencies
 
-Having looked at the final result first, we now look at the individual steps. The first step is to find the (non-trivial and minimal) dependencies present in the given data frame. There are various ways to do this; by default, the package uses DFD, a depth-first search algorithm. We run this using the `discover` function, setting `progress` to `TRUE` to see the steps taken:
+Having looked at the final result first, we now look at the individual steps. The first step is to find the (non-trivial and minimal) dependencies present in the given data frame. There are various ways to do this; by default, the package uses FDHitsSep, a depth-first search algorithm. We run this using the `discover` function, setting `progress` to `TRUE` to see the steps taken:
 
 ```{r}
-deps <- discover(ChickWeight, accuracy = 1, progress = TRUE)
+deps <- discover(ChickWeight, progress = TRUE)
 ```
-
-The `accuracy` argument expects a number between zero and one, determining what proportion of a data frame's records need to satisfy a given dependency for the algorithm to consider it valid. Setting `accuracy` to one, as done here, limits us to exact dependencies. We'll look at other values later, in the section on approximate dependencies.
 
 ```{r}
 deps
@@ -177,21 +175,21 @@ If we use `autodb` again, we get the following database:
 show(autodb(as.data.frame(Titanic)))
 ```
 
-Oops! The DFD algorithm found some functional dependencies where the count could be used to determine another attribute. These are clearly spurious: frequency count can't causally determine age, for example. However, the algorithm still finds these dependencies, because the counts are unique often enough to make these dependencies hold in the given data.
+Oops! The search found some functional dependencies where the count could be used to determine another attribute. These are clearly spurious: frequency count can't causally determine age, for example. However, the algorithm still finds these dependencies, because the counts are unique often enough to make these dependencies hold in the given data.
 
 There are two approaches we can take to eliminate these spurious dependencies: not letting them be detected in the first place, and removing them before using `synthesise`.
 
 To stop them being detected, we can put constraints on what is discovered by `discover`: we can ask for certain attributes to not be considered as determinants, or we can exclude attributes that inherit from certain classes. In this example, we could exclude `Freq` from being considered:
 
 ```{r}
-titanic_deps_freqonly <- discover(as.data.frame(Titanic), 1, exclude = "Freq")
+titanic_deps_freqonly <- discover(as.data.frame(Titanic), exclude = "Freq")
 titanic_deps_freqonly
 ```
 
 Alternatively, we could exclude all attributes that inherit from "numeric":
 
 ```{r}
-identical(titanic_deps_freqonly, discover(as.data.frame(Titanic), 1, exclude_class = "numeric"))
+identical(titanic_deps_freqonly, discover(as.data.frame(Titanic), exclude_class = "numeric"))
 ```
 
 These can both be used as arguments to `autodb` too:
@@ -205,7 +203,7 @@ Generally, excluding numeric attributes as determinants is often useful, because
 Alternatively, we could remove unwanted dependencies before using `decompose`. Here are the found dependencies, if we don't exclude anything:
 
 ```{r}
-titanic_deps <- discover(as.data.frame(Titanic), 1)
+titanic_deps <- discover(as.data.frame(Titanic))
 titanic_deps
 ```
 
@@ -281,7 +279,6 @@ Getting full dependency information for this relation can take a long time, so h
 ```{r nudge_database}
 nudge_deps <- discover(
   nudge,
-  accuracy = 1,
   exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
   exclude_class = "numeric"
 )
@@ -343,7 +340,7 @@ show(nudge_schema_filtered)
 We now, finally, have the study location in a non-spurious relation. If we want to, we could also add the dependencies we fail to find, due to excluding the sample size attributes from determinant sets:
 
 ```{r nudge_sizes}
-nudge_deps_size <- discover(nudge[, startsWith(names(nudge), "n_")], 1)
+nudge_deps_size <- discover(nudge[, startsWith(names(nudge), "n_")])
 nudge_deps_size
 nudge_deps_final <- c(nudge_deps_filtered, nudge_deps_size)
 nudge_schema_final <- normalise(nudge_deps_final, remove_avoidable = TRUE)
@@ -457,10 +454,13 @@ Larger datasets can often have entry errors, without an easy way to remove or de
 
 Suppose that we normalise `nudge` again, without any manual dependency removal, but allowing approximate dependencies. We could cheat, knowing that the questionable data example found above showed there to be two questionable records: one for a duplicated publication ID, and one for a duplicated reference. Since `nudge` has `r nrow(nudge)` records, we can get rid of the resulting questionable dependencies by setting the accuracy to allow two discrepant records.
 
+The `accuracy` argument for `discover` expects a number between zero and one, determining what proportion of a data frame's records need to satisfy a given dependency for the algorithm to consider it valid. By default, it's equal to one, so only exact dependencies are returned. If we set it to less than one, we need to use the slower DFD search algorithm, since approximate dependency search is not implemented for the default FDHitsSep algorithm.
+
 ```{r nudge_approximate_cheat}
 nudge_approx_cheat_database_schema <- discover(
   nudge,
   accuracy = 1 - 2/nrow(nudge),
+  method = "DFD",
   exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
   exclude_class = "numeric"
 ) |>
@@ -481,6 +481,7 @@ Lowering the accuracy results in more dependencies being found, and so in more r
 nudge_approx_database_schema <- discover(
   nudge,
   accuracy = 0.99,
+  method = "DFD",
   exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
   exclude_class = "numeric"
 ) |>

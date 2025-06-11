@@ -78,19 +78,19 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) {
   DiagrammeR::grViz(txt_db)
 }
 # simple relation schemas
-rschema <- synthesise(discover(ChickWeight, 1))
+rschema <- synthesise(discover(ChickWeight))
 txt_rschema <- gv(rschema)
 cat(txt_rschema)
 if (requireNamespace("DiagrammeR", quietly = TRUE)) {
   DiagrammeR::grViz(txt_rschema)
 }
 # simple database schema
-dschema <- normalise(discover(ChickWeight, 1))
+dschema <- normalise(discover(ChickWeight))
 txt_dschema <- gv(dschema)
 cat(txt_dschema)
 DiagrammeR::grViz(txt_dschema)
 # simple relations
-rel <- create(synthesise(discover(ChickWeight, 1)))
+rel <- create(synthesise(discover(ChickWeight)))
 txt_rel <- gv(rel)
 cat(txt_rel)
 if (requireNamespace("DiagrammeR", quietly = TRUE)) {

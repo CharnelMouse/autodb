@@ -5,7 +5,7 @@ describe("reduce", {
         gen.with(\(x) {
           list(
             x,
-            normalise(discover(x, 1))
+            normalise(discover(x))
           )
         }) |>
         gen.and_then(uncurry(\(x, schema) {
@@ -128,7 +128,7 @@ describe("reduce.database", {
 describe("reduce.database_schema", {
   it("is idempotent", {
     has_idempotent_reduction <- function(df) {
-      database_schema <- discover(as.data.frame(df), 1) |>
+      database_schema <- discover(as.data.frame(df)) |>
         normalise(ensure_lossless = TRUE)
       once_schema <- reduce(database_schema, names(database_schema)[[1L]])
       twice_schema <- reduce(once_schema, names(database_schema)[[1L]])
@@ -138,7 +138,7 @@ describe("reduce.database_schema", {
   })
   it("removes added relations with less rows than existing non-parent relations", {
     removes_added_non_parent_with_non_maximum_nrow <- function(df) {
-      ds <- discover(df, 1) |>
+      ds <- discover(df) |>
         normalise(ensure_lossless = TRUE)
       once <- reduce(ds, names(ds)[[1L]])
 
@@ -178,7 +178,7 @@ describe("reduce.database_schema", {
   })
   it("returns a subset", {
     reduced_to_subset <- function(df) {
-      database_schema <- discover(df, 1) |>
+      database_schema <- discover(df) |>
         normalise(ensure_lossless = TRUE)
       reduced <- reduce(database_schema, names(database_schema)[[1L]])
       kept <- match(names(reduced), names(database_schema))
@@ -199,7 +199,7 @@ describe("reduce.database_schema", {
   })
   it("returns a schema with named subschema, and any parents", {
     contains_named_relation_and_parents <- function(df) {
-      ds <- discover(df, 1) |>
+      ds <- discover(df) |>
         normalise(ensure_lossless = TRUE)
       base <- names(ds)[[1]]
       reduced <- reduce(ds, base)

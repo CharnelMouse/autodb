@@ -74,7 +74,7 @@ describe("FDHits", {
   it("gives the same results as DFD", {
     FDHits_works <- function(x, method) {
       lookup <- lookup_table(x)
-      fds <- discover(x, 1)
+      fds <- discover(x, method = "DFD")
       expected <- Map(
         list,
         unique(detset(fds)),
@@ -176,7 +176,7 @@ describe("refine_partition", {
 describe("new_diffset", {
   it("deterministically finds a difference set overlapping with W, not hit by S", {
     gen.violated_fd <- function(lookup) {
-      fds <- discover(lookup, 1)
+      fds <- discover(lookup, method = "DFD")
       if (length(fds) == 0) {
         gen.sample_resampleable(names(lookup), to = ncol(lookup)) |>
           gen.and_then(\(nms) {

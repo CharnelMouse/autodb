@@ -496,7 +496,7 @@ describe("synthesise", {
     }
 
     still_lossless_with_less_or_same_attributes <- function(df, digits) {
-      flat_deps <- discover(df, 1, digits = digits)
+      flat_deps <- discover(df, digits = digits)
       schema_avoid_lossless <- autoref(synthesise(
         flat_deps,
         remove_avoidable = TRUE

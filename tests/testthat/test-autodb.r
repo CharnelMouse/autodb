@@ -11,7 +11,7 @@ describe("autodb", {
   it("is the same as discover >> normalise >> decompose", {
     df <- data.frame(a = 1:4, b = 1:2)
     database <- autodb(df)
-    database2 <- discover(df, 1) |>
+    database2 <- discover(df) |>
       normalise() |>
       decompose(df = df)
     expect_identical(database, database2)
@@ -35,7 +35,7 @@ describe("autodb", {
           decompose(
             df,
             normalise(
-              discover(df, 1, digits = digits),
+              discover(df, digits = digits),
               ensure_lossless = ensure_lossless,
               remove_avoidable = remove_avoidable
             ),

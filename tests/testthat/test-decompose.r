@@ -7,7 +7,7 @@ describe("decompose", {
         gen.element(c(FALSE, TRUE))
       ),
       \(x, digits, check) {
-        fds <- discover(x, 1, digits = digits)
+        fds <- discover(x, digits = digits)
         schema <- normalise(fds)
         db <- decompose(x, schema, digits = digits, check = check)
         is_valid_database(db)
@@ -158,7 +158,7 @@ describe("decompose", {
       df2
     }
     gen_fd_reduction_for_df <- function(df) {
-      true_fds <- discover(df, 1)
+      true_fds <- discover(df)
       nonempty_detsets <- which(lengths(detset(true_fds)) > 0L)
       if (length(nonempty_detsets) == 0)
         return(gen.pure(list(df, NULL, NULL)))
@@ -175,7 +175,7 @@ describe("decompose", {
     expect_decompose_error <- function(df, reduced_fd, removed_det) {
       if (nrow(df) <= 1)
         discard()
-      flat_deps <- discover(df, 1)
+      flat_deps <- discover(df)
       reduced_index <- match(reduced_fd, flat_deps)
       if (is.na(reduced_index))
         stop("reduced_fd doesn't exist")
@@ -226,7 +226,7 @@ describe("decompose", {
       df
     }
     gen_fk_reduction_for_df <- function(df) {
-      true_dbs <- normalise(discover(df, 1))
+      true_dbs <- normalise(discover(df))
       true_fks <- references(true_dbs)
       true_fk_key_switch <- lapply(
         true_fks,
@@ -324,7 +324,7 @@ describe("decompose", {
           list(
             df = df,
             schema = normalise(
-              discover(df, 1, digits = digits),
+              discover(df, digits = digits),
               remove_avoidable = TRUE
             ),
             digits = digits,
@@ -470,7 +470,7 @@ describe("create_insert", {
       ) |>
         gen.with(uncurry(\(df, digits) list(
           df = df,
-          schema = synthesise(discover(df, 1, digits = digits)),
+          schema = synthesise(discover(df, digits = digits)),
           digits = digits
         ))),
       \(df, schema, digits) {

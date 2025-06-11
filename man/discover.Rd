@@ -7,26 +7,22 @@
 \usage{
 discover(
   df,
-  accuracy,
-  method = c("DFD", "FDHitsSep", "FDHitsJoint"),
+  method = c("FDHitsSep", "FDHitsJoint", "DFD"),
   digits = getOption("digits"),
-  full_cache = TRUE,
-  store_cache = TRUE,
-  skip_bijections = FALSE,
   exclude = character(),
   exclude_class = character(),
   dependants = names(df),
   detset_limit = ncol(df) - 1L,
   progress = FALSE,
-  progress_file = ""
+  progress_file = "",
+  skip_bijections = FALSE,
+  accuracy = 1,
+  full_cache = TRUE,
+  store_cache = TRUE
 )
 }
 \arguments{
 \item{df}{a data.frame, the relation to evaluate.}
-
-\item{accuracy}{a numeric in (0, 1]: the accuracy threshold required in order
-to conclude a dependency. Accuracy thresholds less than one are only
-supported in DFD.}
 
 \item{method}{a string, indicating which search algorithm to use. Currently,
 this defaults to DFD. Alternative options are FDHitsSep and FDHitsJoint.}
@@ -38,25 +34,6 @@ to \code{\link{format}}. See the "Floating-point variables" section below
 for why this rounding is necessary for consistent results across different
 machines. See the note in \code{\link{print.default}} about \code{digits >=
   16}.}
-
-\item{full_cache}{a logical, indicating whether to store information about
-how sets of attributes group the relation records (stripped partitions).
-Otherwise, only the number of groups is stored. Storing the stripped
-partition is expected to let the algorithm run more quickly, but might be
-inefficient for small data frames or small amounts of memory. Only relevant
-for DFD.}
-
-\item{store_cache}{a logical, indicating whether to keep cached information
-to use when finding dependencies for other dependants. This allows the
-algorithm to run more quickly by not having to re-calculate information,
-but takes up more memory. Only relevant for DFD.}
-
-\item{skip_bijections}{a logical, indicating whether to skip some dependency
-searches that are made redundant by discovered bijections between
-attributes. This can significantly speed up the search if \code{df}
-contains equivalent attributes early in column order, but results in
-undefined behaviour if \code{accuracy < 1}. See Details for more
-information. Currently only implemented for DFD.}
 
 \item{exclude}{a character vector, containing names of attributes to not
 consider as members of determinant sets. If names are given that aren't
@@ -83,6 +60,29 @@ dependency search in \code{\link{discover}}.}
 \item{progress_file}{a scalar character or a connection. If \code{progress}
 is non-zero, determines where the progress is written to, in the same way
 as the \code{file} argument for \code{\link[base]{cat}}.}
+
+\item{skip_bijections}{a logical, indicating whether to skip some dependency
+searches that are made redundant by discovered bijections between
+attributes. This can significantly speed up the search if \code{df}
+contains equivalent attributes early in column order, but results in
+undefined behaviour if \code{accuracy < 1}. See Details for more
+information. Currently only implemented for DFD.}
+
+\item{accuracy}{a numeric in (0, 1]: the accuracy threshold required in order
+to conclude a dependency. Accuracy thresholds less than one are only
+supported in DFD.}
+
+\item{full_cache}{a logical, indicating whether to store information about
+how sets of attributes group the relation records (stripped partitions).
+Otherwise, only the number of groups is stored. Storing the stripped
+partition is expected to let the algorithm run more quickly, but might be
+inefficient for small data frames or small amounts of memory. Only relevant
+for DFD.}
+
+\item{store_cache}{a logical, indicating whether to keep cached information
+to use when finding dependencies for other dependants. This allows the
+algorithm to run more quickly by not having to re-calculate information,
+but takes up more memory. Only relevant for DFD.}
 }
 \value{
 A \code{\link{functional_dependency}} object, containing the discovered
@@ -294,17 +294,17 @@ limit.
 }
 \examples{
 # simple example
-discover(ChickWeight, 1)
+discover(ChickWeight)
 
 # example with spurious dependencies
-discover(CO2, 1)
+discover(CO2)
 # exclude attributes that can't be determinants.
 # in this case, the numeric attributes are now
 # not determined by anything, because of repeat measurements
 # with no variable to mark them as such.
-discover(CO2, 1, exclude_class = "numeric")
+discover(CO2, exclude_class = "numeric")
 # include only dependencies with dependants of interest.
-discover(CO2, 1, dependants = c("Treatment", "uptake"))
+discover(CO2, dependants = c("Treatment", "uptake"))
 }
 \references{
 DFD: Abedjan Z., Schulze P., Naumann F. (2014) DFD: efficient functional

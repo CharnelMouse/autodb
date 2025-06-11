@@ -264,7 +264,7 @@ describe("database", {
     )
     # FDs: acd -> b, ab -> d, bd -> a if numbers were represented exactly,
     # ad -> b, b -> d when using 15 significant digits
-    fds <- discover(x, 1, digits = 15)
+    fds <- discover(x, digits = 15)
     expect_setequal(
       fds,
       functional_dependency(
@@ -275,7 +275,7 @@ describe("database", {
         names(x)
       )
     )
-    fds_simple <- discover(x, 1, digits = 8)
+    fds_simple <- discover(x, digits = 8)
     expect_setequal(
       fds_simple,
       functional_dependency(
