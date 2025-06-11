@@ -164,6 +164,7 @@ remove_extraneous_attributes <- function(deps) {
   dts <- detset(deps)
   dps <- dependant(deps)
   int_detsets <- lapply(dts, match, attrs_order(deps))
+  detmat <- detset_matrix(int_detsets, length(attrs_order(deps)))
   int_deps <- match(dps, attrs_order(deps))
   for (n in seq_along(deps)) {
     lhs <- dts[[n]]
@@ -175,11 +176,11 @@ remove_extraneous_attributes <- function(deps) {
       if (check_closure1(
         int_y_,
         int_rhs,
-        detset_matrix(int_detsets, length(attrs_order(deps))),
+        detmat,
         int_deps
       )) {
         dts[[n]] <- y_
-        int_detsets[[n]] <- match(y_, attrs_order(deps))
+        detmat[[n, match(attr, attrs_order(deps))]] <- FALSE
       }
     }
   }
@@ -200,40 +201,40 @@ remove_extraneous_dependencies <- function(fds) {
   ord <- order(keys_rank(det_inds), dep_inds)
   inv_ord <- order(ord)
 
-  new_det_sets <- detset(fds)[ord]
   old_deps <- NULL
   new_deps <- dependant(fds)[ord]
   main_rem <- rep(FALSE, length(new_deps))
-  new_int_detsets <- lapply(new_det_sets, match, attrs_order(fds))
+  new_int_detsets <- lapply(detset(fds)[ord], match, attrs_order(fds))
+  new_detmat <- detset_matrix(new_int_detsets, length(attrs_order(fds)))
   new_int_deps <- match(new_deps, attrs_order(fds))
   while (!identical(old_deps, new_deps)) {
     old_deps <- new_deps
     rem_ind <- which(!main_rem)
     rem <- rep(FALSE, length(new_deps))
     for (n in rev(seq_along(new_deps))) {
-      other_int_detsets <- new_int_detsets[-n][!rem[-n]]
+      other_detmat <- new_detmat[-n, , drop = FALSE][!rem[-n], , drop = FALSE]
       other_int_deps <- new_int_deps[-n][!rem[-n]]
-      det_set <- new_det_sets[[n]]
-      dep <- new_deps[n]
-      int_det_set <- match(det_set, attrs_order(fds))
-      int_dep <- match(dep, attrs_order(fds))
+      int_det_set <- which(new_detmat[n, ])
+      int_dep <- match(new_deps[n], attrs_order(fds))
       rem[n] <- check_closure1(
         int_det_set,
         int_dep,
-        detset_matrix(other_int_detsets, length(attrs_order(fds))),
+        other_detmat,
         other_int_deps
       )
     }
-    new_det_sets <- new_det_sets[!rem]
     new_deps <- new_deps[!rem]
-    new_int_detsets <- new_int_detsets[!rem]
+    new_detmat <- new_detmat[!rem, , drop = FALSE]
     new_int_deps <- new_int_deps[!rem]
     main_rem[rem_ind] <- rem
   }
-  stopifnot(identical(
-    new_det_sets,
-    detset(fds)[ord][!main_rem]
-  ))
+  stopifnot(
+    nrow(new_detmat) == 0 ||
+      identical(
+        apply(new_detmat, 1, \(l) attrs_order(fds)[l], simplify = FALSE),
+        detset(fds)[ord][!main_rem]
+      )
+  )
   fds[!main_rem[inv_ord]]
 }
 
@@ -353,6 +354,10 @@ remove_transitive_dependencies <- function(vecs) {
     vecs$partition_determinant_set,
     lengths(vecs$partition_dependants)
   )
+  partition_detmat <- detset_matrix(
+    flat_partition_determinant_set,
+    length(vecs$attrs_order)
+  )
   flat_partition_dependants <- unlist(vecs$partition_dependants)
   if (is.null(flat_partition_dependants))
     flat_partition_dependants <- integer()
@@ -365,6 +370,10 @@ remove_transitive_dependencies <- function(vecs) {
     vecs$bijection_determinant_sets,
     lengths(vecs$bijection_dependant_sets)
   )
+  bijection_detmat <- detset_matrix(
+    flat_bijection_determinant_sets,
+    length(vecs$attrs_order)
+  )
   flat_bijection_dependants <- unlist(vecs$bijection_dependant_sets)
   if (is.null(flat_bijection_dependants))
     flat_bijection_dependants <- integer()
@@ -375,9 +384,9 @@ remove_transitive_dependencies <- function(vecs) {
     keys <- vecs$partition_keys[[flat_groups[n]]]
     key_attrs <- unique(unlist(keys))
     if (!is.element(RHS, key_attrs)) {
-      int_detsets <- c(
-        flat_partition_determinant_set[-n][!transitive[-n]],
-        flat_bijection_determinant_sets
+      detmat <- rbind(
+        partition_detmat[-n, , drop = FALSE][!transitive[-n], , drop = FALSE],
+        bijection_detmat
       )
       int_deps <- c(
         flat_partition_dependants[-n][!transitive[-n]],
@@ -386,7 +395,7 @@ remove_transitive_dependencies <- function(vecs) {
       if (check_closure1(
         key_attrs,
         RHS,
-        detset_matrix(int_detsets, length(vecs$attrs_order)),
+        detmat,
         int_deps
       ))
         transitive[n] <- TRUE
@@ -561,8 +570,9 @@ remove_avoidable_attributes <- function(vecs) {
       Gp[[relation]] <- Filter(\(fd) !is.element(attr, unlist(fd)), Gp[[relation]])
       X <- Kp[[1]]
       Gp_det_sets <- lapply(unlist(Gp, recursive = FALSE), `[[`, 1)
+      Gp_detmat <- detset_matrix(Gp_det_sets, length(attrs_order))
       Gp_deps <- vapply(unlist(Gp, recursive = FALSE), `[[`, integer(1), 2)
-      if (!check_closure1(X, attr, detset_matrix(Gp_det_sets, length(attrs_order)), Gp_deps))
+      if (!check_closure1(X, attr, Gp_detmat, Gp_deps))
         next
 
       # check nonessentiality
@@ -829,14 +839,17 @@ find_closure_with_used <- function(attrs, determinant_sets, dependants) {
 }
 
 detset_matrix <- function(determinant_sets, nargs) {
-  t(vapply(
-    determinant_sets,
-    \(ns) {
-      res <- rep(FALSE, nargs)
-      res[ns] <- TRUE
-      res
-    },
-    logical(nargs)
+  t(matrix(
+    vapply(
+      determinant_sets,
+      \(ns) {
+        res <- rep(FALSE, nargs)
+        res[ns] <- TRUE
+        res
+      },
+      logical(nargs)
+    ),
+    nrow = nargs
   ))
 }
 
