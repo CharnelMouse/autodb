@@ -725,21 +725,18 @@ check_closure1 <- function(attrs, target, detmat, dependants) {
     return(FALSE)
 
   detn <- colSums(detmat)
-  depvec <- dependants
-  curr_attrs <- attrs
-
   while (TRUE) {
-    curr_n <- colSums(detmat[curr_attrs, , drop = FALSE])
+    curr_n <- colSums(detmat[attrs, , drop = FALSE])
     new <- curr_n == detn
     if (!any(new))
       return(FALSE)
-    new_attrs <- setdiff(depvec[new], curr_attrs)
+    new_attrs <- setdiff(dependants[new], attrs)
     if (target %in% new_attrs)
       return(TRUE)
     detn <- detn[!new]
     detmat <- detmat[, !new, drop = FALSE]
-    depvec <- depvec[!new]
-    curr_attrs <- c(curr_attrs, new_attrs)
+    dependants <- dependants[!new]
+    attrs <- c(attrs, new_attrs)
   }
 }
 
@@ -779,7 +776,7 @@ find_closure <- function(attrs, determinant_sets, dependants) {
   if (length(dependants) == 0)
     return(attrs)
   checked <- rep(FALSE, length(dependants))
-  nargs <- max(c(attrs), unlist(determinant_sets), dependants)
+  nargs <- max(c(attrs, unlist(determinant_sets), dependants))
   detmat <- detset_matrix(determinant_sets, nargs)
   detn <- colSums(detmat)
   while (TRUE) {
