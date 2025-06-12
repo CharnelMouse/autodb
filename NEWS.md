@@ -16,7 +16,7 @@
   * Removed the unnecessary validity checks from the `database` method for `reduce`, so that it runs more quickly, especially for databases with a large number of records.
   * Removed unnecessary validity checks from the `database_schema` and `database` methods for `[`.
   * Removed unnecessary closure calculations in `normalise`.
-  * `normalise`, `synthesise`, and `autoref` have improved performance, due to more efficient closure checks.
+  * `normalise`, `synthesise`, `autoref`, and `rejoin` have improved performance, due to more efficient closure checks.
 * Added a `check` parameter to `decompose`, to allow skipping some checks if the data frame to decompose is the one used to create the schema.
 * Handing for numerical/complex variables is more consistent:
     * Values are now rounded by significant digits, as intended, rather than by decimal places.

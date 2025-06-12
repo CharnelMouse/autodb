@@ -65,12 +65,12 @@ rejoin <- function(database) {
   G_deps <- vapply(G_flattened, `[[`, character(1), 2)
   G_relations <- rep(seq_along(attrs), lengths(G))
   closures <- lapply(
-    attrs,
+    lapply(attrs, match, attrs_order),
     find_closure_with_used,
-    G_det_sets,
-    G_deps
+    detset_matrix(lapply(G_det_sets, match, attrs_order), length(attrs_order)),
+    match(G_deps, attrs_order)
   )
-  closure_attrs <- lapply(closures, `[[`, 1)
+  closure_attrs <- lapply(closures, \(x) attrs_order[x[[1]]])
   closure_usedlists <- lapply(closures, `[[`, 2)
   is_main <- vapply(closure_attrs, setequal, logical(1), attrs_order)
   if (!any(is_main)) {

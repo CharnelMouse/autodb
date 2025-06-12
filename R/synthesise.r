@@ -796,28 +796,29 @@ find_closure <- function(attrs, detmat, dependants) {
   attrs
 }
 
-find_closure_with_used <- function(attrs, determinant_sets, dependants) {
+find_closure_with_used <- function(attrs, detmat, dependants) {
+  stopifnot(is.integer(dependants))
   if (length(dependants) == 0)
     return(list(attrs, integer()))
+  detn <- colSums(detmat)
   checked <- rep(FALSE, length(dependants))
-  change <- TRUE
   ordered_use <- integer()
-  while (change) {
-    change <- FALSE
-    for (n in seq_along(dependants)[!checked]) {
-      det_set <- determinant_sets[[n]]
-      dep <- dependants[n]
-      if (length(dep) != 1)
-        stop(paste(toString(dep), length(dep), toString(lengths(dep)), toString(dep)))
-      if (all(is.element(det_set, attrs))) {
-        checked[n] <- TRUE
-        if (!is.element(dep, attrs)) {
-          change <- TRUE
-          attrs <- c(attrs, dep)
-          ordered_use <- c(ordered_use, n)
-        }
-      }
-    }
+  indices <- seq_along(dependants)
+  while (TRUE) {
+    curr_n <- colSums(detmat[attrs, , drop = FALSE])
+    new <- (curr_n == detn)
+    if (!any(new))
+      break
+    new_attrs <- setdiff(dependants[new], attrs)
+    if (length(new_attrs) == 0)
+      break
+    needed <- match(new_attrs, dependants[new]) # only include a dependant once
+    attrs <- c(attrs, new_attrs)
+    detn <- detn[!new]
+    detmat <- detmat[, !new, drop = FALSE]
+    dependants <- dependants[!new]
+    ordered_use <- c(ordered_use, indices[new][needed])
+    indices <- indices[!new]
   }
   list(attrs, ordered_use)
 }
