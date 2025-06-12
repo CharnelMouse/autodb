@@ -44,6 +44,7 @@
 #' all(rj2 == ChickWeight) # TRUE
 #' @export
 rejoin <- function(database) {
+  keys <- keys(database)
   attrs_order <- attrs_order(database)
   attrs <- attrs(database)
   missing <- setdiff(attrs_order, unlist(attrs))
@@ -58,20 +59,24 @@ rejoin <- function(database) {
   if (length(database) == 1)
     return(records(database)[[1]][, attrs_order, drop = FALSE])
 
-  keys <- keys(database)
   G <- synthesised_fds(attrs, keys)
+
+  # calculate closures for relations if we merge in other relations where a key
+  # can be determined (not just via foreign key references), and order in which
+  # to merge things in
   G_flattened <- unlist(G, recursive = FALSE, use.names = FALSE)
   G_det_sets <- lapply(G_flattened, `[[`, 1)
   G_deps <- vapply(G_flattened, `[[`, character(1), 2)
-  G_relations <- rep(seq_along(attrs), lengths(G))
   closures <- lapply(
     lapply(attrs, match, attrs_order),
     find_closure_with_used,
     detset_matrix(lapply(G_det_sets, match, attrs_order), length(attrs_order)),
     match(G_deps, attrs_order)
   )
+
+  # find relations whose closure contains everything, i.e. can merge in
+  # "children" to contain all attributes
   closure_attrs <- lapply(closures, \(x) attrs_order[x[[1]]])
-  closure_usedlists <- lapply(closures, `[[`, 2)
   is_main <- vapply(closure_attrs, setequal, logical(1), attrs_order)
   if (!any(is_main)) {
     sorted_closure_attrs <- unique(lapply(
@@ -90,6 +95,9 @@ rejoin <- function(database) {
     )
   }
 
+  # merge everything into a "main" relation, in closure order
+  G_relations <- rep(seq_along(attrs), lengths(G))
+  closure_usedlists <- lapply(closures, `[[`, 2)
   to_merge <- unique(G_relations[closure_usedlists[[which(is_main)[[1]]]]])
   stopifnot(!is.null(names(is_main)))
   main_relation <- records(database)[[which(is_main)[[1]]]]
