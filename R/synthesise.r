@@ -801,7 +801,6 @@ find_closure_with_used <- function(attrs, detmat, dependants) {
   if (length(dependants) == 0)
     return(list(attrs, integer()))
   detn <- colSums(detmat)
-  checked <- rep(FALSE, length(dependants))
   ordered_use <- integer()
   indices <- seq_along(dependants)
   while (TRUE) {

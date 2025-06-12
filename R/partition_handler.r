@@ -122,7 +122,6 @@ refineable_partition_handler <- function(lookup, key_class) {
             \(ds) all((ds & new_S_element) == 0),
             logical(1)
           )]
-          hash <- critical_ui$hash(c(S_element_key, A_key))
           new_cache$critical[[
             partitions_ui$hash(S_element_key),
             partitions_ui$hash(A_key)
@@ -139,7 +138,6 @@ refineable_partition_handler <- function(lookup, key_class) {
           diffset_cache,
           new_cache$uncov
         )
-        hash <- critical_ui$hash(c(new_S_element, A_key))
         new_cache$critical[[
           partitions_ui$hash(new_S_element),
           partitions_ui$hash(A_key)
