@@ -168,15 +168,9 @@ refineable_partition_handler <- function(lookup, key_class) {
   truncate <- function(n) {
     trace_cache <<- trace_cache[seq_len(min(n, length(trace_cache)))]
   }
-  clone <- function() {
-    if (length(trace_cache))
-      stop("cache empty, cannot clone")
-    trace_cache <<- c(trace_cache, trace_cache[length(trace_cache)])
-  }
 
   list(
     truncate = function(n) truncate(n),
-    clone = function() clone(),
     cache_size = function() length(partition_cache$key),
     reset = function() reset_cache(initial_cache),
     key = partitions_ui$key,
@@ -314,7 +308,6 @@ partitions_ui <- function(lookup, key_class = c("bitset", "integer")) {
   # unkey: Key -> Set
   # key_size: Key -> Int (equivalent to unkey >> length)
   # decompose_key: Key -> [Key] (per atomic element; unkey >> component_keys)
-  # key_children: Key -> [Key] (decompose_key >> lapply(subkey_difference, key))
   # invert_key: Key -> Key (bitwise negation on the used bits only)
   # key_union: Key -> Key -> Key
   # distinct_key_union: Key -> Key -> Key (faster key_union for distinct keys)
@@ -361,9 +354,6 @@ bitset_partitions_ui <- function(lookup) {
     unkey = unkey,
     key_size = function(key) length(unkey(key)),
     decompose_key = decompose_key,
-    key_children = function(key) {
-      lapply(decompose_key(key), subkey_difference, key = key)
-    },
     invert_key = function(key) !key & full_key,
     key_union = function(key1, key2) key1 | key2,
     distinct_key_union = function(key1, key2) key1 | key2,
@@ -402,9 +392,6 @@ integer_partitions_ui <- function(lookup) {
     unkey = unkey,
     key_size = function(key) length(unkey(key)),
     decompose_key = decompose_key,
-    key_children = function(key) {
-      lapply(decompose_key(key), subkey_difference, key = key)
-    },
     invert_key = function(key) bitwXor(key, full_key),
     key_union = function(key1, key2) bitwOr(key1, key2),
     distinct_key_union = function(key1, key2) key1 + key2,
@@ -704,23 +691,6 @@ get_uncovered_keys_bitset_pure <- function(
 ) {
   has_any_W <- vapply(diffsets[uncov_cache], \(ds) any((W_key & ds) > 0), logical(1))
   diffsets[uncov_cache][has_any_W]
-}
-
-get_critical_bitset_pure <- function(
-  S_element_key,
-  A_key,
-  diffsets,
-  critical_cache,
-  critical_ui
-) {
-  hash <- critical_ui$hash(c(S_element_key, A_key))
-  get_pure(hash, critical_cache, critical_ui)
-}
-
-get_pure <- function(hash, cache, ui) {
-  index <- ui$lookup_hash(hash, cache)
-  stopifnot(!is.na(index))
-  ui$get_with_index(index, cache)
 }
 
 fetch_pure <- function(hash, input, cache, ui, calculate) {
