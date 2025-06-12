@@ -83,7 +83,10 @@
 #' print(database(
 #'   relation(
 #'     list(
-#'       citation = list(df = data.frame(citer = 1:5, citee = 6:10), keys = list(c("citer", "citee"))),
+#'       citation = list(
+#'         df = data.frame(citer = 1:5, citee = 6:10),
+#'         keys = list(c("citer", "citee"))
+#'       ),
 #'       article = list(df = data.frame(article = 1:10), keys = list("article"))
 #'     ),
 #'     c("citer", "citee", "article")

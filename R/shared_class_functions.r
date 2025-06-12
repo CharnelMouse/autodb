@@ -453,7 +453,14 @@ create <- function(x, ...) {
 #' @return An R object of the same class as \code{x}, containing the additional
 #'   new data.
 #' @export
-insert <- function(x, vals, relations = names(x), all = FALSE, digits = getOption("digits"), ...) {
+insert <- function(
+  x,
+  vals,
+  relations = names(x),
+  all = FALSE,
+  digits = getOption("digits"),
+  ...
+) {
   UseMethod("insert")
 }
 

@@ -4,7 +4,8 @@
 #'
 #' Column names for \code{\link{df}} must be unique.
 #'
-#' There are two search algorithms available for finding dependencies: DFD, and FDHits. These are described below.
+#' There are two search algorithms available for finding dependencies: DFD, and
+#' FDHits. These are described below.
 #'
 #' ## DFD
 #'
@@ -59,9 +60,9 @@
 #' it's validated, resulting in either confirmation as a minimal functional
 #' dependency, or discovery of new difference sets that make it invalid.
 #'
-#' There are two variants. FDHitsSep performs a search for each dependant attribute
-#' separately, in the same way as DFD. FDHitsJoint handles all dependant
-#' attributes at the same time.
+#' There are two variants. FDHitsSep performs a search for each dependant
+#' attribute separately, in the same way as DFD. FDHitsJoint handles all
+#' dependant attributes at the same time.
 #'
 #' The implementation for FDHits differs a little from the algorithm presented
 #' in the original paper:
@@ -104,9 +105,9 @@
 #' computer, and not equal on another. This can happen even if they're both
 #' using 64-bit R, and even though all R platforms work with values conforming
 #' to the same standard (see \code{\link{double}}). For example,
-#' \eqn{8.54917750000000076227} and \eqn{8.54917749999999898591} are converted into
-#' different floating-point representations on x86, but the same representation
-#' on ARM, resulting in inequality and equality respectively.
+#' \eqn{8.54917750000000076227} and \eqn{8.54917749999999898591} are converted
+#' into different floating-point representations on x86, but the same
+#' representation on ARM, resulting in inequality and equality respectively.
 #'
 #' For this and other reasons, checking numerical/complex values for
 #' (near-)equality in R is usually done with \code{\link{all.equal}}. This
@@ -240,10 +241,10 @@
 #'   but takes up more memory. Only relevant for DFD.
 #' @inheritParams autodb
 #'
-#' @return A \code{\link{functional_dependency}} object, containing the discovered
-#'   dependencies. The column names of \code{df} are stored in the \code{attrs}
-#'   attribute, in order, to serve as a default priority order for the
-#'   attributes during normalisation.
+#' @return A \code{\link{functional_dependency}} object, containing the
+#'   discovered dependencies. The column names of \code{df} are stored in the
+#'   \code{attrs} attribute, in order, to serve as a default priority order for
+#'   the attributes during normalisation.
 #' @encoding UTF-8
 #' @references
 #' DFD: Abedjan Z., Schulze P., Naumann F. (2014) DFD: efficient functional
