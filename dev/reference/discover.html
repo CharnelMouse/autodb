@@ -48,18 +48,18 @@
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">discover</span><span class="op">(</span></span>
 <span>  <span class="va">df</span>,</span>
-<span>  <span class="va">accuracy</span>,</span>
-<span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"DFD"</span>, <span class="st">"FDHitsSep"</span>, <span class="st">"FDHitsJoint"</span><span class="op">)</span>,</span>
+<span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"FDHitsSep"</span>, <span class="st">"FDHitsJoint"</span>, <span class="st">"DFD"</span><span class="op">)</span>,</span>
 <span>  digits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"digits"</span><span class="op">)</span>,</span>
-<span>  full_cache <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  store_cache <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  skip_bijections <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  exclude <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  exclude_class <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  dependants <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span>,</span>
 <span>  detset_limit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1L</span>,</span>
 <span>  progress <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  progress_file <span class="op">=</span> <span class="st">""</span></span>
+<span>  progress_file <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  skip_bijections <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  accuracy <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  full_cache <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  store_cache <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -69,12 +69,6 @@
 
 <dl><dt id="arg-df">df<a class="anchor" aria-label="anchor" href="#arg-df"></a></dt>
 <dd><p>a data.frame, the relation to evaluate.</p></dd>
-
-
-<dt id="arg-accuracy">accuracy<a class="anchor" aria-label="anchor" href="#arg-accuracy"></a></dt>
-<dd><p>a numeric in (0, 1]: the accuracy threshold required in order
-to conclude a dependency. Accuracy thresholds less than one are only
-supported in DFD.</p></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
@@ -90,31 +84,6 @@ to <code><a href="https://rdrr.io/r/base/format.html" class="external-link">form
 for why this rounding is necessary for consistent results across different
 machines. See the note in <code><a href="https://rdrr.io/r/base/print.default.html" class="external-link">print.default</a></code> about <code>digits &gt;=
   16</code>.</p></dd>
-
-
-<dt id="arg-full-cache">full_cache<a class="anchor" aria-label="anchor" href="#arg-full-cache"></a></dt>
-<dd><p>a logical, indicating whether to store information about
-how sets of attributes group the relation records (stripped partitions).
-Otherwise, only the number of groups is stored. Storing the stripped
-partition is expected to let the algorithm run more quickly, but might be
-inefficient for small data frames or small amounts of memory. Only relevant
-for DFD.</p></dd>
-
-
-<dt id="arg-store-cache">store_cache<a class="anchor" aria-label="anchor" href="#arg-store-cache"></a></dt>
-<dd><p>a logical, indicating whether to keep cached information
-to use when finding dependencies for other dependants. This allows the
-algorithm to run more quickly by not having to re-calculate information,
-but takes up more memory. Only relevant for DFD.</p></dd>
-
-
-<dt id="arg-skip-bijections">skip_bijections<a class="anchor" aria-label="anchor" href="#arg-skip-bijections"></a></dt>
-<dd><p>a logical, indicating whether to skip some dependency
-searches that are made redundant by discovered bijections between
-attributes. This can significantly speed up the search if <code>df</code>
-contains equivalent attributes early in column order, but results in
-undefined behaviour if <code>accuracy &lt; 1</code>. See Details for more
-information. Currently only implemented for DFD.</p></dd>
 
 
 <dt id="arg-exclude">exclude<a class="anchor" aria-label="anchor" href="#arg-exclude"></a></dt>
@@ -153,6 +122,37 @@ dependency search in <code>discover</code>.</p></dd>
 <dd><p>a scalar character or a connection. If <code>progress</code>
 is non-zero, determines where the progress is written to, in the same way
 as the <code>file</code> argument for <code><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></code>.</p></dd>
+
+
+<dt id="arg-skip-bijections">skip_bijections<a class="anchor" aria-label="anchor" href="#arg-skip-bijections"></a></dt>
+<dd><p>a logical, indicating whether to skip some dependency
+searches that are made redundant by discovered bijections between
+attributes. This can significantly speed up the search if <code>df</code>
+contains equivalent attributes early in column order, but results in
+undefined behaviour if <code>accuracy &lt; 1</code>. See Details for more
+information. Currently only implemented for DFD.</p></dd>
+
+
+<dt id="arg-accuracy">accuracy<a class="anchor" aria-label="anchor" href="#arg-accuracy"></a></dt>
+<dd><p>a numeric in (0, 1]: the accuracy threshold required in order
+to conclude a dependency. Accuracy thresholds less than one are only
+supported in DFD.</p></dd>
+
+
+<dt id="arg-full-cache">full_cache<a class="anchor" aria-label="anchor" href="#arg-full-cache"></a></dt>
+<dd><p>a logical, indicating whether to store information about
+how sets of attributes group the relation records (stripped partitions).
+Otherwise, only the number of groups is stored. Storing the stripped
+partition is expected to let the algorithm run more quickly, but might be
+inefficient for small data frames or small amounts of memory. Only relevant
+for DFD.</p></dd>
+
+
+<dt id="arg-store-cache">store_cache<a class="anchor" aria-label="anchor" href="#arg-store-cache"></a></dt>
+<dd><p>a logical, indicating whether to keep cached information
+to use when finding dependencies for other dependants. This allows the
+algorithm to run more quickly by not having to re-calculate information,
+but takes up more memory. Only relevant for DFD.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -361,32 +361,32 @@ U.S.A.</em>, 949–958.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># simple example</span></span></span>
-<span class="r-in"><span><span class="fu">discover</span><span class="op">(</span><span class="va">ChickWeight</span>, <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">discover</span><span class="op">(</span><span class="va">ChickWeight</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 functional dependencies</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 attributes: weight, Time, Chick, Diet</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Time, Chick -&gt; weight</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Chick -&gt; Diet</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># example with spurious dependencies</span></span></span>
-<span class="r-in"><span><span class="fu">discover</span><span class="op">(</span><span class="va">CO2</span>, <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">discover</span><span class="op">(</span><span class="va">CO2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5 functional dependencies</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5 attributes: Plant, Type, Treatment, conc, uptake</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Treatment, conc, uptake -&gt; Plant</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   Plant -&gt; Type</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            conc, uptake -&gt; Type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   Plant -&gt; Type</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   Plant -&gt; Treatment</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Plant, conc -&gt; uptake</span>
 <span class="r-in"><span><span class="co"># exclude attributes that can't be determinants.</span></span></span>
 <span class="r-in"><span><span class="co"># in this case, the numeric attributes are now</span></span></span>
 <span class="r-in"><span><span class="co"># not determined by anything, because of repeat measurements</span></span></span>
 <span class="r-in"><span><span class="co"># with no variable to mark them as such.</span></span></span>
-<span class="r-in"><span><span class="fu">discover</span><span class="op">(</span><span class="va">CO2</span>, <span class="fl">1</span>, exclude_class <span class="op">=</span> <span class="st">"numeric"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">discover</span><span class="op">(</span><span class="va">CO2</span>, exclude_class <span class="op">=</span> <span class="st">"numeric"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 functional dependencies</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5 attributes: Plant, Type, Treatment, conc, uptake</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Plant -&gt; Type</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Plant -&gt; Treatment</span>
 <span class="r-in"><span><span class="co"># include only dependencies with dependants of interest.</span></span></span>
-<span class="r-in"><span><span class="fu">discover</span><span class="op">(</span><span class="va">CO2</span>, <span class="fl">1</span>, dependants <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Treatment"</span>, <span class="st">"uptake"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">discover</span><span class="op">(</span><span class="va">CO2</span>, dependants <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Treatment"</span>, <span class="st">"uptake"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 functional dependencies</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5 attributes: Plant, Type, Treatment, conc, uptake</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Plant -&gt; Treatment</span>

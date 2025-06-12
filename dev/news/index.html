@@ -42,6 +42,14 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="autodb-development-version">autodb (development version)<a class="anchor" aria-label="anchor" href="#autodb-development-version"></a></h2>
 <div class="section level3">
+<h3 id="breaking-changes-development-version">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-development-version"></a></h3>
+<ul><li>The argument list for <code>discover</code> has been rearranged:
+<ul><li>The <code>accuracy</code> argument is now optional, defaulting to one for exact dependency search. This reflects the reduced focus on approximate dependencies: the main <code>autodb</code> function doesn’t allow for them anyway, and the new FDHits search algorithms can only search for exact dependencies.</li>
+<li>Arguments specific to the DFD algorithm have been moved to the back of the list, since they are of lesser priority. This includes the <code>accuracy</code> parameter.</li>
+<li>The <code>skip_bijections</code> argument is now first in the DFD-specific arguments, since setting it to <code>TRUE</code> speeds up the search, where the other non-<code>accuracy</code> parameters slow it down.</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
 <h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
 <ul><li>The package has no remaining package dependencies. There is still an implicit dependency on GraphViz, if you use <code>gv</code> to export plotting code.</li>
 <li>Added the new FDHits search algorithm as an alternative option to DFD in <code>discover</code>.</li>
@@ -52,7 +60,7 @@
 <li>Removed unnecessary validity checks from the <code>database_schema</code> and <code>database</code> methods for <code>[</code>.</li>
 <li>Removed unnecessary closure calculations in <code>normalise</code>.</li>
 <li>
-<code>normalise</code>, <code>synthesise</code>, and <code>autoref</code> have improved performance, due to more efficient closure checks.</li>
+<code>normalise</code>, <code>synthesise</code>, <code>autoref</code>, and <code>rejoin</code> have improved performance, due to more efficient closure checks.</li>
 </ul></li>
 <li>Added a <code>check</code> parameter to <code>decompose</code>, to allow skipping some checks if the data frame to decompose is the one used to create the schema.</li>
 <li>Handing for numerical/complex variables is more consistent:
@@ -65,6 +73,7 @@
 <div class="section level3">
 <h3 id="fixes-development-version">Fixes<a class="anchor" aria-label="anchor" href="#fixes-development-version"></a></h3>
 <ul><li>Fixed the <code>format</code> method for <code>relation</code> to describe elements as relations, rather than schemas.</li>
+<li>Fixed <code>autodb</code> to pass its <code>progress_file</code> argument on to <code>discover</code>.</li>
 </ul></div>
 </div>
     <div class="section level2">
