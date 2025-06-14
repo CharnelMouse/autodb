@@ -12,14 +12,14 @@ stripped_partition_product <- function(sp1, sp2, n_rows) {
     return(list())
   tab <- invert_partition(sp1, n_rows)
   tab2 <- invert_partition(sp2, n_rows)
-  in_both <- which(!is.na(tab) & !is.na(tab2))
   # Numerical combination is faster than paste or combining as a complex, once
   # we account for converting to a factor. However, we do need to convert from
   # integer to numeric, to avoid overflow.
-  tab_both <- as.numeric(tab[in_both])*n_rows + as.numeric(tab2[in_both])
+  tab_both <- tab*as.numeric(n_rows) + tab2
+  in_both <- which(!is.na(tab_both))
   # below is similar to fsplit, but with inverses combined in a simpler way
   tab_both <- ffactor1i(tab_both)
-  sp <- split(in_both, tab_both, drop = FALSE)
+  sp <- split(in_both, tab_both[in_both], drop = FALSE)
   unname(sp[lengths(sp) >= 2])
 }
 
