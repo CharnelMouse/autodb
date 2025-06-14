@@ -574,19 +574,20 @@ fetch_refined_partition <- function(
   fetch_partition
 ) {
   lhs_partition <- fetch_partition(lhs_key, lookup)
-  individual_rhs_lookup_indices <- lapply(rhs_set, \(r) lookup[[r]])
-  rhs_lookup_indices <- if (length(rhs_set) == 1)
-    individual_rhs_lookup_indices[[1]]
+  rhs_lookups <- lapply(rhs_set, \(r) lookup[[r]])
+
+  rhs_joint_lookup <- if (length(rhs_lookups) == 1)
+    rhs_lookups[[1]]
   else {
-    do.call(paste, unname(lookup[rhs_set])) |>
+    do.call(paste, unname(rhs_lookups)) |>
       lookup_indices()
   }
-  relevant_lhs_partition <- filter_partition(lhs_partition, rhs_lookup_indices)
+  relevant_lhs_partition <- filter_partition(lhs_partition, rhs_joint_lookup)
   if (partition_rank(relevant_lhs_partition) == 0)
-    return(list(rep(list(list()), length(rhs_set)), list()))
+    return(list(rep(list(list()), length(rhs_lookups)), list()))
   list(
     lapply(
-      individual_rhs_lookup_indices,
+      rhs_lookups,
       refine_partition_by_lookup,
       relevant_partition = relevant_lhs_partition
     ),
