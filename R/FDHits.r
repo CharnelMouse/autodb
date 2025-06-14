@@ -478,32 +478,3 @@ new_diffset <- function(Spli, refined_partitions, lookup) {
     logical(1)
   )))
 }
-
-filter_partition <- function(partition, indices) {
-  if (length(partition) == 0)
-    return(list())
-  single_index <- vapply(
-    partition,
-    \(cluster) {
-      local_indices <- indices[cluster]
-      all(local_indices == local_indices[[1]])
-    },
-    logical(1)
-  )
-  partition[!single_index]
-}
-
-refine_partition_by_lookup <- function(relevant_partition, indices) {
-  if (length(relevant_partition) == 0)
-    return(list())
-  lapply(
-    relevant_partition,
-    \(cluster) {
-      local_indices <- indices[cluster]
-      split(cluster, ffactor1i(local_indices))
-    }
-  ) |>
-    unlist(recursive = FALSE) |>
-    (\(x) x[lengths(x) > 1])() |>
-    unname()
-}
