@@ -15,6 +15,9 @@
 #' @param df a data.frame, containing the data to be normalised.
 #' @param schema a database schema with foreign key references, such as given by
 #'   \code{\link{autoref}}.
+#' @param keep_rownames  a logical or a string, indicating whether to include the
+#'   row names as a column. If a string is given, it is used as the name for the
+#'   column, otherwise the column is named "row". Set to FALSE by default.
 #' @param digits a positive integer, indicating how many significant digits are
 #'   to be used for numeric and complex variables. A value of \code{NA} results
 #'   in no rounding. By default, this uses \code{getOption("digits")}, similarly
@@ -31,8 +34,19 @@
 #' @return A \code{\link{database}} object, containing the data in \code{df}
 #'   within the database schema given in \code{schema}.
 #' @export
-decompose <- function(df, schema, digits = getOption("digits"), check = TRUE) {
+decompose <- function(
+  df,
+  schema,
+  keep_rownames = FALSE,
+  digits = getOption("digits"),
+  check = TRUE
+) {
   stopifnot(!anyDuplicated(names(schema)))
+
+  if (!isFALSE(keep_rownames)) {
+    nm <- if (isTRUE(keep_rownames)) "row" else keep_rownames[[1]]
+    df <- cbind(stats::setNames(data.frame(rownames(df)), nm), df)
+  }
   stopifnot(identical(names(df), attrs_order(schema)))
 
   if (!is.na(digits))

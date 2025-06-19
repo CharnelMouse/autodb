@@ -23,6 +23,7 @@
     * In addition to `autodb`, `discover`, and `df_equiv`, values are now also rounded for `insert` and `decompose`.
 * Some `relation` error messages are more informative.
 * Added a `main` argument for the `database` method of `reduce`.
+* Added a `keep_rownames` argument to `autodb`, `discover`, `decompose`, and `insert`, to include the row names as a column without cbinding them manually.
 
 ## Fixes
 

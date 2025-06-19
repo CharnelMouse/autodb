@@ -4,13 +4,23 @@
 \alias{decompose}
 \title{Decompose a data frame based on given normalised dependencies}
 \usage{
-decompose(df, schema, digits = getOption("digits"), check = TRUE)
+decompose(
+  df,
+  schema,
+  keep_rownames = FALSE,
+  digits = getOption("digits"),
+  check = TRUE
+)
 }
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
 
 \item{schema}{a database schema with foreign key references, such as given by
 \code{\link{autoref}}.}
+
+\item{keep_rownames}{a logical or a string, indicating whether to include the
+row names as a column. If a string is given, it is used as the name for the
+column, otherwise the column is named "row". Set to FALSE by default.}
 
 \item{digits}{a positive integer, indicating how many significant digits are
 to be used for numeric and complex variables. A value of \code{NA} results

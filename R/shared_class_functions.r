@@ -441,6 +441,9 @@ create <- function(x, ...) {
 #'   all attributes of all elements of \code{x[relations]}. By default, it is
 #'   not, and data is only inserted into elements of \code{x[relations]} whose
 #'   attributes are all present in \code{vals}.
+#' @param keep_rownames a logical or a string, indicating whether to include the
+#'   row names as a column. If a string is given, it is used as the name for the
+#'   column, otherwise the column is named "row". Set to FALSE by default.
 #' @param digits a positive integer, indicating how many significant digits are
 #'   to be used for numeric and complex variables. A value of \code{NA} results
 #'   in no rounding. By default, this uses \code{getOption("digits")}, similarly
@@ -458,6 +461,7 @@ insert <- function(
   vals,
   relations = names(x),
   all = FALSE,
+  keep_rownames = FALSE,
   digits = getOption("digits"),
   ...
 ) {

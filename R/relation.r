@@ -486,6 +486,7 @@ insert.relation <- function(
   vals,
   relations = names(x),
   all = FALSE,
+  keep_rownames = FALSE,
   digits = getOption("digits"),
   ...
 ) {
@@ -497,6 +498,10 @@ insert.relation <- function(
     return(x)
   if (!is.na(digits))
     vals <- df_coarsen(vals, digits)
+  if (!isFALSE(keep_rownames)) {
+    nm <- if (isTRUE(keep_rownames)) "row" else keep_rownames[[1]]
+    vals <- cbind(stats::setNames(data.frame(rownames(vals)), nm), vals)
+  }
   extra <- setdiff(names(vals), attrs_order(x))
   if (length(extra) > 0L)
     stop(paste(

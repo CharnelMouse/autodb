@@ -95,7 +95,7 @@ autodb <- function(
     constants_name = constants_name
   )
   report("decomposing")
-  decompose(df, ds, digits = NA, check = FALSE)
+  decompose(df, ds, keep_rownames = FALSE, digits = NA, check = FALSE)
 }
 
 df_coarsen <- function(x, digits) {

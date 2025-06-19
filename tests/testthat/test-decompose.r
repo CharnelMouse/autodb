@@ -339,6 +339,31 @@ describe("decompose", {
       },
       curry = TRUE
     )
+    forall(
+      list(
+        gen_df(6, 7, remove_dup_rows = TRUE),
+        gen.element(c(7:1, NA)),
+        gen.element(c(FALSE, TRUE))
+      ) |>
+        gen.with(uncurry(\(df, digits, check) {
+          list(
+            df = df,
+            schema = normalise(
+              discover(df, keep_rownames = TRUE, digits = digits),
+              remove_avoidable = TRUE
+            ),
+            digits = digits,
+            check = check
+          )
+        })),
+      \(df, schema, digits, check) {
+        expect_identical(
+          decompose(df, schema, keep_rownames = TRUE, digits = digits,  check = check),
+          create(schema) |> insert(df, keep_rownames = TRUE, digits = digits)
+        )
+      },
+      curry = TRUE
+    )
   })
 
   describe("Dependencies", {

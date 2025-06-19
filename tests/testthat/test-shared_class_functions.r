@@ -1183,6 +1183,18 @@ describe("insert", {
     expect_error(insert(create(ds), x, digits = NA))
     expect_no_error(insert(create(ds), x, digits = 7))
   })
+  it("can include row names", {
+    x <- data.frame(a = rep(1, 9), row.names = letters[1:9])
+    rel <- create(relation_schema(
+      list(row = list(c("row", "a"), list("row"))),
+      c("row", "a")
+    ))
+    db <- database(rel, list())
+    rel <- insert(rel, x, keep_rownames = TRUE)
+    db <- insert(db, x, keep_rownames = TRUE)
+    expect_identical(nrow(records(rel)[[1]]), 9L)
+    expect_identical(nrow(records(db)[[1]]), 9L)
+  })
 })
 
 describe("subrelations", {

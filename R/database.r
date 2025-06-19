@@ -443,6 +443,7 @@ insert.database <- function(
   vals,
   relations = names(x),
   all = FALSE,
+  keep_rownames = FALSE,
   digits = getOption("digits"),
   ...
 ) {
@@ -451,6 +452,7 @@ insert.database <- function(
     vals,
     relations,
     all,
+    keep_rownames = keep_rownames,
     digits = digits,
     ...
   )
