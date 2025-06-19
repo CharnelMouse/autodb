@@ -9,6 +9,11 @@
 #' dependencies, the accuracy in `discover` is fixed as 1.
 #'
 #' @param df a data.frame, containing the data to be normalised.
+#' @param keep_rownames  a logical or a string, indicating whether to include the
+#'   row names as a column. If a string is given, it is used as the name for the
+#'   column, otherwise the column is named "row". Like with the other column
+#'   names, the function returns an error if this results in duplicate column
+#'   names. Set to FALSE by default.
 #' @param digits a positive integer, indicating how many significant digits are
 #'   to be used for numeric and complex variables. This is used for both
 #'   pre-formatting in \code{\link{discover}}, and for rounding the data before
@@ -50,6 +55,7 @@
 #' @export
 autodb <- function(
   df,
+  keep_rownames = FALSE,
   digits = getOption("digits"),
   single_ref = FALSE,
   ensure_lossless = TRUE,
@@ -67,6 +73,10 @@ autodb <- function(
       "significant digits"
     ))
     df <- df_coarsen(df, digits)
+  }
+  if (!isFALSE(keep_rownames)) {
+    nm <- if (isTRUE(keep_rownames)) "row" else keep_rownames[[1]]
+    df <- cbind(stats::setNames(data.frame(rownames(df)), nm), df)
   }
   fds <- discover(
     df,

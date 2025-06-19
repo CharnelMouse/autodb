@@ -6,6 +6,7 @@
 \usage{
 autodb(
   df,
+  keep_rownames = FALSE,
   digits = getOption("digits"),
   single_ref = FALSE,
   ensure_lossless = TRUE,
@@ -18,6 +19,12 @@ autodb(
 }
 \arguments{
 \item{df}{a data.frame, containing the data to be normalised.}
+
+\item{keep_rownames}{a logical or a string, indicating whether to include the
+row names as a column. If a string is given, it is used as the name for the
+column, otherwise the column is named "row". Like with the other column
+names, the function returns an error if this results in duplicate column
+names. Set to FALSE by default.}
 
 \item{digits}{a positive integer, indicating how many significant digits are
 to be used for numeric and complex variables. This is used for both

@@ -959,6 +959,7 @@ describe("discover", {
   it(
     paste(
       "for accuracy = 1, is invariant to:",
+      "- having a non-false keep_rownames vs. adding row names as first column",
       "- method used",
       "- excluding a class vs. excluding attributes in that class",
       "- filtering by arguments (dependants/detset_limit) or by subsetting results",
@@ -972,13 +973,27 @@ describe("discover", {
           gen.and_then(\(x) {
             list(
               gen.pure(x),
+              gen.choice(gen.element(c(FALSE, TRUE)), gen_attr_name(9)),
               gen.sample_resampleable(names(x), from = 0, to = ncol(x)),
               gen.element(0:(ncol(x) - 1L))
             )
           }),
-        function(df, dependants, detset_limit) {
+        function(df, keep_rownames, dependants, detset_limit) {
           arglists <- expand.grid(
-            list(list(df = df, accuracy = 1)),
+            if (!isFALSE(keep_rownames)) {
+              tmp <- if (isTRUE(keep_rownames)) "row" else keep_rownames
+              nms <- make.unique(c(names(df), tmp))
+              nm <- nms[[length(nms)]]
+              list(
+                list(df = df, accuracy = 1, keep_rownames = keep_rownames),
+                list(
+                  df = cbind(setNames(data.frame(rownames(df)), nm), df),
+                  accuracy = 1,
+                  keep_rownames = FALSE
+                )
+              )
+            }else
+              list(list(df = df, accuracy = 1, keep_rownames = FALSE)),
             list(
               list(method = "DFD"),
               list(method = "FDHitsSep"),
@@ -1042,6 +1057,24 @@ describe("discover", {
     forall(
       gen_df(6, 7),
       terminates_then(is_valid_minimal_functional_dependency, 1, method = "FDHitsJoint")
+    )
+  })
+  it("can include the rownames, equivalent to adding them as first column", {
+    x <- data.frame(
+      a = c(1, 1, 1, 2, 2, 3, 3, 3, 4),
+      b = c(1, 1, 1, 1, 1, 2, 2, 2, 3),
+      row.names = letters[1:9]
+    )
+    default <- discover(x, keep_rownames = TRUE)
+    explicit <- discover(x, keep_rownames = "id")
+    expected <- discover(x)
+    expect_setequal(
+      default,
+      discover(cbind(data.frame(row = rownames(x)), x))
+    )
+    expect_setequal(
+      explicit,
+      discover(cbind(data.frame(id = rownames(x)), x))
     )
   })
 })

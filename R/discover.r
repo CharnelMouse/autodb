@@ -198,6 +198,11 @@
 #' @param df a data.frame, the relation to evaluate.
 #' @param method a string, indicating which search algorithm to use. Currently,
 #'   this defaults to DFD. Alternative options are FDHitsSep and FDHitsJoint.
+#' @param keep_rownames a logical or a string, indicating whether to include the
+#'   row names as a column. If a string is given, it is used as the name for the
+#'   column, otherwise the column is named "row". Like with the other column
+#'   names, the function returns an error if this results in duplicate column
+#'   names. Set to FALSE by default.
 #' @param digits a positive integer, indicating how many significant digits are
 #'   to be used for numeric and complex variables. A value of \code{NA} results
 #'   in no rounding. By default, this uses \code{getOption("digits")}, similarly
@@ -272,6 +277,7 @@
 discover <- function(
   df,
   method = c("FDHitsSep", "FDHitsJoint", "DFD"),
+  keep_rownames = FALSE,
   digits = getOption("digits"),
   exclude = character(),
   exclude_class = character(),
@@ -294,6 +300,11 @@ discover <- function(
     warning("skipping bijections when accuracy < 1 can result in incorrect output")
 
   report <- reporter(progress, progress_file, new = TRUE)
+
+  if (!isFALSE(keep_rownames)) {
+    nm <- if (isTRUE(keep_rownames)) "row" else keep_rownames[[1]]
+    df <- cbind(stats::setNames(data.frame(rownames(df)), nm), df)
+  }
 
   n_cols <- ncol(df)
   if (n_cols == 0)

@@ -219,4 +219,28 @@ describe("autodb", {
     expect_identical(nrow(records(db_dee)[[1]]), 1L)
     expect_identical(db_deux, db_dee)
   })
+  it("adds row names to database if added in keep_rownames", {
+    x <- data.frame(
+      a = c(1, 1, 1, 2, 2, 3, 3, 3, 4),
+      b = c(1, 1, 1, 1, 1, 2, 2, 2, 3),
+      row.names = letters[1:9]
+    )
+    db <- autodb(x, keep_rownames = TRUE)
+    expect_identical(
+      db,
+      database(
+        relation(
+          list(
+            row = list(
+              df = cbind(data.frame(row = letters[1:9]), x["a"]),
+              keys = list("row")
+            ),
+            a = list(df = unique(x), keys = list("a"))
+          ),
+          c("row", "a", "b")
+        ),
+        list(list("row", "a", "a", "a"))
+      )
+    )
+  })
 })

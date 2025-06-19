@@ -8,6 +8,7 @@
 discover(
   df,
   method = c("FDHitsSep", "FDHitsJoint", "DFD"),
+  keep_rownames = FALSE,
   digits = getOption("digits"),
   exclude = character(),
   exclude_class = character(),
@@ -26,6 +27,12 @@ discover(
 
 \item{method}{a string, indicating which search algorithm to use. Currently,
 this defaults to DFD. Alternative options are FDHitsSep and FDHitsJoint.}
+
+\item{keep_rownames}{a logical or a string, indicating whether to include the
+row names as a column. If a string is given, it is used as the name for the
+column, otherwise the column is named "row". Like with the other column
+names, the function returns an error if this results in duplicate column
+names. Set to FALSE by default.}
 
 \item{digits}{a positive integer, indicating how many significant digits are
 to be used for numeric and complex variables. A value of \code{NA} results
