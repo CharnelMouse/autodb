@@ -763,6 +763,14 @@ describe("create", {
 })
 
 describe("insert", {
+  it("expects unique value column names", {
+    rel <- create(relation_schema(list(a = list("a", list("a"))), "a"))
+    vals <- data.frame(a = FALSE, a = TRUE, check.names = FALSE)
+    expect_error(
+      insert(rel, vals),
+      "^duplicate column names in vals$"
+    )
+  })
   it("expects relations to be unique elements", {
     rel <- create(relation_schema(list(a = list("a", list("a"))), "a"))
     expect_error(

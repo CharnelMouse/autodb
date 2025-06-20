@@ -494,6 +494,8 @@ insert.relation <- function(
     stop("given relations must exist")
   if (anyDuplicated(relations))
     stop("given relations must be unique")
+  if (anyDuplicated(names(vals)))
+    stop("duplicate column names in vals")
   if (length(relations) == 0)
     return(x)
   if (!is.na(digits))

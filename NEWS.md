@@ -6,6 +6,7 @@
   * The `accuracy` argument is now optional, defaulting to one for exact dependency search.  This reflects the reduced focus on approximate dependencies: the main `autodb` function doesn't allow for them anyway, and the new FDHits search algorithms can only search for exact dependencies.
   * Arguments specific to the DFD algorithm have been moved to the back of the list, since they are of lesser priority. This includes the `accuracy` parameter.
   * The `skip_bijections` argument is now first in the DFD-specific arguments, since setting it to `TRUE` speeds up the search, where the other non-`accuracy` parameters slow it down.
+* `insert` methods no longer allow inserting data with duplicate column names, since this makes the expected result ambiguous.
 
 ## Improvements
 

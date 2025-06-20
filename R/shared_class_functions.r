@@ -433,7 +433,8 @@ create <- function(x, ...) {
 #'
 #' @param x a relational data object, into which to insert data, such as a
 #'   \code{\link{relation}} or \code{\link{database}} object.
-#' @param vals a data frame, containing data to insert.
+#' @param vals a data frame, containing data to insert. Column names must be
+#'   unique.
 #' @param relations a character vector, containing names of elements of \code{x}
 #'   into which to insert data. By default, \code{insert} attempts to insert
 #'   data into every element.
