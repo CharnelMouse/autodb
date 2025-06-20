@@ -313,6 +313,9 @@ discover(CO2)
 discover(CO2, exclude_class = "numeric")
 # include only dependencies with dependants of interest.
 discover(CO2, dependants = c("Treatment", "uptake"))
+# approximate dependencies, that hold if we remove up to 20\% of the rows
+# (these need not agree on which rows are removed)
+discover(CO2, method = "DFD", accuracy = 0.8)
 }
 \references{
 DFD: Abedjan Z., Schulze P., Naumann F. (2014) DFD: efficient functional
