@@ -18,7 +18,8 @@ insert(
 \item{x}{a relational data object, into which to insert data, such as a
 \code{\link{relation}} or \code{\link{database}} object.}
 
-\item{vals}{a data frame, containing data to insert.}
+\item{vals}{a data frame, containing data to insert. Column names must be
+unique.}
 
 \item{relations}{a character vector, containing names of elements of \code{x}
 into which to insert data. By default, \code{insert} attempts to insert
