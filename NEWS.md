@@ -2,34 +2,34 @@
 
 ## Breaking changes
 
-* The argument list for `discover` has been rearranged:
+* `discover` has a rearranged argument list:
   * The `accuracy` argument is now optional, defaulting to one for exact dependency search.  This reflects the reduced focus on approximate dependencies: the main `autodb` function doesn't allow for them anyway, and the new FDHits search algorithms can only search for exact dependencies.
-  * Arguments specific to the DFD algorithm have been moved to the back of the list, since they are of lesser priority. This includes the `accuracy` parameter.
-  * The `skip_bijections` argument is now first in the DFD-specific arguments, since setting it to `TRUE` speeds up the search, where the other non-`accuracy` parameters slow it down.
+  * Arguments specific to the DFD algorithm, including `accuracy`, have been moved to the back of the list, since they are of lesser priority.
+  * The `skip_bijections` argument is now first in the DFD-specific arguments, since setting it to the non-default value speeds up the search, whereas doing so for the other non-`accuracy` parameters slows it down.
 * `insert` methods no longer allow inserting data with duplicate column names, since this makes the expected result ambiguous.
 
 ## Improvements
 
-* The package has no remaining package dependencies. There is still an implicit dependency on GraphViz, if you use `gv` to export plotting code.
-* Added the new FDHits search algorithm as an alternative option to DFD in `discover`.
+* The package has no remaining package dependencies; packages in Suggests are purely used for vignettes or testing. There is still an implicit dependency on GraphViz, if you use `gv` to export plotting code.
+* `discover` has two variants on the FDHits search algorithm, as alternatives to DFD. FDHitsSep is now the default algorithm, since it's currently the quickest in general.
 * Performance improvements:
   * `relation` and `database` methods for `rename_attrs` and `gv` now run significantly more quickly for large data sets, due to not re-running all the key validity checks.
-  * Removed the unnecessary validity checks from the `database` method for `reduce`, so that it runs more quickly, especially for databases with a large number of records.
-  * Removed unnecessary validity checks from the `database_schema` and `database` methods for `[`.
-  * Removed unnecessary closure calculations in `normalise`.
+  * The `database` method for `reduce` has unnecessary validity checks removed, so that it runs more quickly, especially for databases with a large number of records.
+  * The `database_schema` and `database` methods for `[` has unnecessary validity checks removed.
+  * `normalise` has unnecessary closure calculations removed.
   * `normalise`, `synthesise`, `autoref`, and `rejoin` have improved performance, due to more efficient closure checks.
-* Added a `check` parameter to `decompose`, to allow skipping some checks if the data frame to decompose is the one used to create the schema.
+* `decompose` has a new `check` parameter, to allow skipping some validity checks if the data frame to decompose is the one used to create the schema.
 * Handing for numerical/complex variables is more consistent:
     * Values are now rounded by significant digits, as intended, rather than by decimal places.
     * In addition to `autodb`, `discover`, and `df_equiv`, values are now also rounded for `insert` and `decompose`.
 * Some `relation` error messages are more informative.
-* Added a `main` argument for the `database` method of `reduce`.
-* Added a `keep_rownames` argument to `autodb`, `discover`, `decompose`, and `insert`, to include the row names as a column instead of the user including them manually.
+* The `database` method of `reduce` has a `main` argument, like the `database_schema` method. The previous behaviour, of taking the names of relations with the most records, is `main`'s default.
+* `autodb`, `discover`, `decompose`, and `insert` have a `keep_rownames` argument, to allow including the row names as a column, instead of the user including them manually.
 
 ## Fixes
 
-* Fixed the `format` method for `relation` to describe elements as relations, rather than schemas.
-* Fixed `autodb` to pass its `progress_file` argument on to `discover`.
+* The `format` method for `relation` now describes elements as relations, rather than schemas.
+* `autodb` passes its `progress_file` argument on to `discover`; previously it passed "", so the progress messages for `discover` were printed to `stdout`.
 
 # autodb 2.3.1
 
