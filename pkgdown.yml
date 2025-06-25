@@ -3,7 +3,7 @@ pkgdown: 2.1.3
 pkgdown_sha: ~
 articles:
   autodb: autodb.html
-last_built: 2025-06-25T20:02Z
+last_built: 2025-06-25T20:16Z
 urls:
   reference: https://charnelmouse.github.io/autodb/reference
   article: https://charnelmouse.github.io/autodb/articles
