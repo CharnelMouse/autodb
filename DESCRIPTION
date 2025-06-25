@@ -25,7 +25,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Depends:
     R (>= 4.1.0)
-Imports:
 Suggests:
     rlang,
     spelling,
@@ -35,9 +34,10 @@ Suggests:
     hedgehog (>= 0.1),
     tibble (>= 3.2.1),
     knitr,
-    rmarkdown
+    rmarkdown,
+    quarto
 Config/testthat/edition: 3
-VignetteBuilder: knitr
+VignetteBuilder: knitr, quarto
 LazyData: true
 URL: https://charnelmouse.github.io/autodb/, https://github.com/CharnelMouse/autodb
 BugReports: https://github.com/CharnelMouse/autodb/issues

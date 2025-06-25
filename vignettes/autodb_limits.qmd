@@ -1,33 +1,20 @@
 ---
 title: "autodb limitations"
-output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{autodb limitations}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{autodb_limits2}
+  %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
+knitr:
+  opts_chunk:
+    collapse: true
+    comment: '#>'
+    fig-width: 7
+    fig-height: 5
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.width = 7,
-  fig.height = 5
-)
-```
-
-```{r setup}
+```{r}
+#| label: setup
 library(autodb)
-```
-
-```{r check_diagrammer}
-if (requireNamespace("DiagrammeR", quietly = TRUE)) {
-  show <- function(x) DiagrammeR::grViz(gv(x))
-  maybe_plot <- function(x) DiagrammeR::grViz(gv(x))
-}else{
-  show <- print
-  maybe_plot <- function(x) invisible(NULL)
-}
 ```
 
 Automatic data normalisation, such as done by `autodb`, is useful, but it isn't magic. This vignette covers some common issues that this approach can't address.
@@ -43,7 +30,7 @@ Another example of the process being agnostic to data values is that it can't ma
 For example, suppose we have a dataset of publication citations, where each row contains the citer and citee IDs, plus supplementary information about both publications. The resulting database given by `autodb` has the following schema, after giving the relations appropriate names:
 
 ```{r}
-show(database_schema(
+database_schema(
   relation_schema(
     list(
       citation = list(c("citer_id", "citee_id"), list(c("citer_id", "citee_id"))),
@@ -59,13 +46,19 @@ show(database_schema(
     list("citation", "citer_id", "citer", "citer_id"),
     list("citation", "citee_id", "citee", "citee_id")
   )
-))
+) |>
+  gv() |>
+  write("citation_separate.gv")
+```
+
+```{dot}
+//| file: citation_separate.gv
 ```
 
 Of course, citers and citees are both publications of the same type, so they shouldn't have separate relations:
 
 ```{r}
-show(database_schema(
+database_schema(
   relation_schema(
     list(
       citation = list(c("citer", "citee"), list(c("citer", "citee"))),
@@ -77,7 +70,13 @@ show(database_schema(
     list("citation", "citer", "publication", "id"),
     list("citation", "citee", "publication", "id")
   )
-))
+) |>
+  gv() |>
+  write("citation_joined.gv")
+```
+
+```{dot}
+//| file: citation_joined.gv
 ```
 
 We make this improvement because `citer_id` and `citee_id` values are, semantically, the same class of object, and the same goes for authors, titles, etc. Semantic types are not something that can be inferred by just looking at the data classes.
@@ -193,7 +192,11 @@ Normalising gives the following relations:
 
 ```{r redundant_keys_schema}
 schema_redkey <- normalise(fds_redkey, remove_avoidable = TRUE)
-show(schema_redkey)
+write(gv(schema_redkey), "redkey.gv")
+```
+
+```{dot}
+//| file: redkey.gv
 ```
 
 These relations have some redundancy: relation `a` implies `{b, d} -> c`, but relation `d` implies that `{d} -> c`. This isn't resolved by removing avoidable attributes, because `d` still needs to be in relation `a`: we just need to remove `{b, d}` as a key. However, this is resolved if we instead use this set of functional dependencies, which is equivalent to the previous set:
@@ -210,7 +213,11 @@ fds_redkey_fix <- functional_dependency(
 )
 fds_redkey_fix
 schema_redkey_fix <- normalise(fds_redkey_fix, remove_avoidable = TRUE)
-show(schema_redkey_fix)
+write(gv(schema_redkey_fix), "redkey_fix.gv")
+```
+
+```{dot}
+//| file: redkey_fix.gv
 ```
 
 Unfortunately, there's no way in the package to find better sets like this.
@@ -223,13 +230,21 @@ For example, take this database schema, whose relation schemas are in third norm
 
 ```{r dup_example}
 dup_db <- autodb(ChickWeight)
-show(dup_db)
+write(gv(dup_db), "dup_base.gv")
+```
+
+```{dot}
+//| file: dup_base.gv
 ```
 
 If we now create copies of these relations, with the intention that copies always contain the same data, then all relations are still in third normal form, and so we'd say this database is also in third normal form:
 
 ```{r dup_example_dup}
-show(dup_db[c(1, 1, 2, 2, 2)])
+write(gv(dup_db[c(1, 1, 2, 2, 2)]), "dup_dup.gv")
+```
+
+```{dot}
+//| file: dup_dup.gv
 ```
 
 However, no one would claim that this is a good database design, since there is clearly a large amount of data redundancy. Higher normal forms would not change this. In fact, since the copies do not reference each other, it is also trivial to insert data to make this database incoherent. For example, `Chick` and `Chick.1` could contain different diet assignments.

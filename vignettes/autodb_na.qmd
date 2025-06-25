@@ -1,22 +1,19 @@
 ---
 title: "Handling missing values in autodb"
-output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Handling missing values in autodb}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
+knitr:
+  opts_chunk:
+    collapse: true
+    comment: '#>'
+    fig-width: 7
+    fig-height: 5
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.width = 7,
-  fig.height = 5
-)
-```
-
-```{r setup}
+```{r}
+#| label: setup
 library(autodb)
 ```
 
@@ -34,7 +31,8 @@ There are other FD variants that handle missing values, but, unlike most of them
 
 However, ignoring the special status of missing values in this way ignores important structural information. In the relational model, and ideally in relational databases, we want to have no missing values at all, partly to avoid awkward questions about what trinary logic means with respect to filtering or joining tables. For example, take the following data frame:
 
-```{r example_data_frame_with_NAs}
+```{r}
+#| label: example_data_frame_with_NAs
 df_nas <- data.frame(
   patient = c(1L, 2L, 3L, 4L),
   trial_entry_date = as.Date(c("2022/05/02", "2022/06/06", "2022/04/01", "2022/03/19")),
@@ -45,13 +43,19 @@ knitr::kable(df_nas)
 
 `autodb` currently treats `NA` as just another value, which results in the initial data frame not being split in the database schema:
 
-```{r example_data_frame_with_NAs_autodb}
-show(autodb(df_nas))
+```{r}
+#| label: example_data_frame_with_NAs_autodb
+write(gv(autodb(df_nas)), "nas.gv")
+```
+
+```{dot}
+//| file: nas.gv
 ```
 
 In this case, a missing exit date represents no exit date, i.e. that the patient is still in the trail, and we would prefer to move exit information to a separate relation, containing only patients with a exit date:
 
-```{r example_data_frame_with_NAs_nullably_normalised}
+```{r}
+#| label: example_data_frame_with_NAs_nullably_normalised
 ideal_db <- decompose(
   df_nas,
   database_schema(
@@ -66,7 +70,11 @@ ideal_db <- decompose(
   )
 )
 records(ideal_db)$patient_exit <- subset(records(ideal_db)$patient_exit, !is.na(trial_exit_date))
-show(ideal_db)
+write(gv(ideal_db), "ideal.gv")
+```
+
+```{dot}
+//| file: ideal.gv
 ```
 
 This makes more of the data's structure apparent, and enforceable, in the database structure, since it makes it clear that the death date is optional. However, removing missing values in this way isn't handled by `autodb` itself, so it has to be done by manually creating the schema and inserting/removing records, as shown above.
@@ -81,7 +89,8 @@ Sometimes, the structure for some attributes depends on whether other attributes
 
 For example, the data below records values, and allows them to be single values, or an interval with an associated distribution, which may have some distribution parameters. This format is common when listing model parameters.
 
-```{r example_data_frame_with_interval_option}
+```{r}
+#| label: example_data_frame_with_interval_option
 df_options <- data.frame(
   id = 1:20,
   value = c(2.3, 2.3, 5.7, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_),
@@ -96,9 +105,14 @@ knitr::kable(df_options)
 
 `autodb` has no way to know about these relationships, because it doesn't treat missing values as a special case, as described above. The resulting schema therefore ignores them:
 
-```{r example_data_frame_with_interval_option_db}
+```{r}
+#| label: example_data_frame_with_interval_option_db
 db_options <- autodb(df_options)
-show(db_options)
+write(gv(db_options), "options.gv")
+```
+
+```{dot}
+//| file: options.gv
 ```
 
 However, from looking at the data ourselves, we can see a clearly-implied structure:
@@ -109,7 +123,8 @@ However, from looking at the data ourselves, we can see a clearly-implied struct
 
 As a general hack for finding these sorts of relationships, I like taking each attribute with missing values, and adding a companion attribute that states whether the value is present or missing:
 
-```{r example_data_frame_with_interval_option_nulls}
+```{r}
+#| label: example_data_frame_with_interval_option_nulls
 df_options_presence <- df_options[vapply(df_options, anyNA, logical(1))]
 df_options_presence[] <- lapply(df_options_presence, Negate(is.na))
 names(df_options_presence) <- paste0(names(df_options_presence), "_present")
@@ -118,46 +133,66 @@ df_options_with_presence <- cbind(df_options, df_options_presence)
 
 This is not always practical, because adding columns rapidly increases the running time for the dependency search. However, when it's practical, it helps to make the structure more apparent in the database schema:
 
-```{r example_data_frame_with_interval_option_nulls_db}
+```{r}
+#| label: example_data_frame_with_interval_option_nulls_db
 db_options_with_presence <- autodb(df_options_with_presence)
-show(db_options_with_presence)
+write(gv(db_options_with_presence), "options_with_presence.gv")
+```
+
+```{dot}
+//| file: options_with_presence.gv
 ```
 
 Some of the new relations just show that an attribute determines its associated presence attribute, which is always true. Of more interest is the `value_present` relation, which shows that the values, bounds, and interval distributions inform the presence of each other:
 
-```{r example_data_frame_with_interval_option_nulls_rel}
+```{r}
+#| label: example_data_frame_with_interval_option_nulls_rel
 knitr::kable(records(db_options_with_presence)$value_present)
 ```
 
 In the `interval_distribution` relation, we can also see how the interval distribution determines how many parameters are required:
 
-```{r example_data_frame_with_interval_option_nulls_distribution_rel}
+```{r}
+#| label: example_data_frame_with_interval_option_nulls_distribution_rel
 knitr::kable(records(db_options_with_presence)$interval_distribution)
 ```
 
 This shows addition structure, specifically an existence constraint: if `param2` is present, then `param1` is also present. If we notice a situation like this, we can attempt further investigation by splitting the data, and passing each part into `autodb` separately. Splitting on whether `param1` is present, we get the following database for records where it is absent:
 
-```{r example_data_frame_with_interval_option_p1absent_db}
+```{r}
+#| label: example_data_frame_with_interval_option_p1absent_db
 db_options_with_presence_p1absent <- autodb(subset(
   df_options_with_presence,
   !param1_present
 ))
-show(db_options_with_presence_p1absent)
+write(gv(db_options_with_presence_p1absent), "options_with_presence_p1absent.gv")
+```
+
+```{dot}
+//| file: options_with_presence_p1absent.gv
 ```
 
 This only contains records for point estimates, or intervals with a uniform distribution, so the distribution value is now equivalent to its presence/absence, or that of the value and bounds. Due to the existence constraint mentioned above, `param2` is constant, since it's always absent:
 
-```{r example_data_frame_with_interval_option_p1absent_constants}
+```{r}
+#| label: example_data_frame_with_interval_option_p1absent_constants
 knitr::kable(records(db_options_with_presence_p1absent)$constants)
 ```
 
 We get the following database for records where `param1` is present:
 
-```{r example_data_frame_with_interval_option_p1present_db}
-show(autodb(subset(
+```{r}
+#| label: example_data_frame_with_interval_option_p1present_db
+autodb(subset(
   df_options_with_presence,
   param1_present
-)))
+)) |>
+  gv() |>
+  write("options_with_presence_p1present.gv")
+```
+
+```{dot}
+//| file: options_with_presence_p1present.gv
 ```
 
 In this case, whether `param2` is present is determined by the distribution used, as we'd expect.
