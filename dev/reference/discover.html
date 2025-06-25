@@ -17,6 +17,12 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/autodb.html">Get started</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/autodb_limits.html">autodb limitations</a></li>
+    <li><a class="dropdown-item" href="../articles/autodb_na.html">Handling missing values in autodb</a></li>
+    <li><a class="dropdown-item" href="../articles/autodb_plan.html">Planned improvements for autodb</a></li>
+  </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -49,6 +55,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">discover</span><span class="op">(</span></span>
 <span>  <span class="va">df</span>,</span>
 <span>  method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"FDHitsSep"</span>, <span class="st">"FDHitsJoint"</span>, <span class="st">"DFD"</span><span class="op">)</span>,</span>
+<span>  keep_rownames <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  digits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"digits"</span><span class="op">)</span>,</span>
 <span>  exclude <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  exclude_class <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
@@ -74,6 +81,14 @@
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
 <dd><p>a string, indicating which search algorithm to use. Currently,
 this defaults to DFD. Alternative options are FDHitsSep and FDHitsJoint.</p></dd>
+
+
+<dt id="arg-keep-rownames">keep_rownames<a class="anchor" aria-label="anchor" href="#arg-keep-rownames"></a></dt>
+<dd><p>a logical or a string, indicating whether to include the
+row names as a column. If a string is given, it is used as the name for the
+column, otherwise the column is named "row". Like with the other column
+names, the function returns an error if this results in duplicate column
+names. Set to FALSE by default.</p></dd>
 
 
 <dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
@@ -157,15 +172,16 @@ but takes up more memory. Only relevant for DFD.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code><a href="functional_dependency.html">functional_dependency</a></code> object, containing the discovered
-dependencies. The column names of <code>df</code> are stored in the <code>attrs</code>
-attribute, in order, to serve as a default priority order for the
-attributes during normalisation.</p>
+    <p>A <code><a href="functional_dependency.html">functional_dependency</a></code> object, containing the
+discovered dependencies. The column names of <code>df</code> are stored in the
+<code>attrs</code> attribute, in order, to serve as a default priority order for
+the attributes during normalisation.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Column names for <code><a href="https://rdrr.io/r/stats/Fdist.html" class="external-link">df</a></code> must be unique.</p>
-<p>There are two search algorithms available for finding dependencies: DFD, and FDHits. These are described below.</p><div class="section">
+<p>There are two search algorithms available for finding dependencies: DFD, and
+FDHits. These are described below.</p><div class="section">
 <h3 id="dfd">DFD<a class="anchor" aria-label="anchor" href="#dfd"></a></h3>
 
 
@@ -218,9 +234,9 @@ determinant-dependant pairings invalid, pruning the search space. If a
 candidate pairing is not rendered invalid by the known difference sets, then
 it's validated, resulting in either confirmation as a minimal functional
 dependency, or discovery of new difference sets that make it invalid.</p>
-<p>There are two variants. FDHitsSep performs a search for each dependant attribute
-separately, in the same way as DFD. FDHitsJoint handles all dependant
-attributes at the same time.</p>
+<p>There are two variants. FDHitsSep performs a search for each dependant
+attribute separately, in the same way as DFD. FDHitsJoint handles all
+dependant attributes at the same time.</p>
 <p>The implementation for FDHits differs a little from the algorithm presented
 in the original paper:</p><ul><li><p>Some attributes, or attribute types, can be designated, ahead of
 time, as not being candidate members for determinant sets. This reduces the
@@ -260,9 +276,9 @@ computer architecture, meaning that two values can be considered equal on one
 computer, and not equal on another. This can happen even if they're both
 using 64-bit R, and even though all R platforms work with values conforming
 to the same standard (see <code><a href="https://rdrr.io/r/base/double.html" class="external-link">double</a></code>). For example,
-\(8.54917750000000076227\) and \(8.54917749999999898591\) are converted into
-different floating-point representations on x86, but the same representation
-on ARM, resulting in inequality and equality respectively.</p>
+\(8.54917750000000076227\) and \(8.54917749999999898591\) are converted
+into different floating-point representations on x86, but the same
+representation on ARM, resulting in inequality and equality respectively.</p>
 <p>For this and other reasons, checking numerical/complex values for
 (near-)equality in R is usually done with <code><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></code>. This
 determines values \(x\) and \(y\) to be equal if their absolute/relative
@@ -390,6 +406,18 @@ U.S.A.</em>, 949–958.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 functional dependencies</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5 attributes: Plant, Type, Treatment, conc, uptake</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Plant -&gt; Treatment</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Plant, conc -&gt; uptake</span>
+<span class="r-in"><span><span class="co"># approximate dependencies, that hold if we remove up to 20% of the rows</span></span></span>
+<span class="r-in"><span><span class="co"># (these need not agree on which rows are removed)</span></span></span>
+<span class="r-in"><span><span class="fu">discover</span><span class="op">(</span><span class="va">CO2</span>, method <span class="op">=</span> <span class="st">"DFD"</span>, accuracy <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7 functional dependencies</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 attributes: Plant, Type, Treatment, conc, uptake</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      uptake -&gt; Plant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Plant -&gt; Type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      uptake -&gt; Type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      uptake -&gt; Treatment</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Plant -&gt; Treatment</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      uptake -&gt; conc</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Plant, conc -&gt; uptake</span>
 </code></pre></div>
     </div>

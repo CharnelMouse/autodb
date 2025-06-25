@@ -17,6 +17,12 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/autodb.html">Get started</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/autodb_limits.html">autodb limitations</a></li>
+    <li><a class="dropdown-item" href="../articles/autodb_na.html">Handling missing values in autodb</a></li>
+    <li><a class="dropdown-item" href="../articles/autodb_plan.html">Planned improvements for autodb</a></li>
+  </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -51,6 +57,7 @@
 <span>  <span class="va">vals</span>,</span>
 <span>  relations <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>,</span>
 <span>  all <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  keep_rownames <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  digits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"digits"</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -66,7 +73,8 @@
 
 
 <dt id="arg-vals">vals<a class="anchor" aria-label="anchor" href="#arg-vals"></a></dt>
-<dd><p>a data frame, containing data to insert.</p></dd>
+<dd><p>a data frame, containing data to insert. Column names must be
+unique.</p></dd>
 
 
 <dt id="arg-relations">relations<a class="anchor" aria-label="anchor" href="#arg-relations"></a></dt>
@@ -80,6 +88,12 @@ data into every element.</p></dd>
 all attributes of all elements of <code>x[relations]</code>. By default, it is
 not, and data is only inserted into elements of <code>x[relations]</code> whose
 attributes are all present in <code>vals</code>.</p></dd>
+
+
+<dt id="arg-keep-rownames">keep_rownames<a class="anchor" aria-label="anchor" href="#arg-keep-rownames"></a></dt>
+<dd><p>a logical or a string, indicating whether to include the
+row names as a column. If a string is given, it is used as the name for the
+column, otherwise the column is named "row". Set to FALSE by default.</p></dd>
 
 
 <dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>

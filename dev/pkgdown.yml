@@ -2,8 +2,11 @@ pandoc: 3.1.11
 pkgdown: 2.1.3
 pkgdown_sha: ~
 articles:
+  autodb_limits: autodb_limits.html
+  autodb_na: autodb_na.html
+  autodb_plan: autodb_plan.html
   autodb: autodb.html
-last_built: 2025-06-12T08:15Z
+last_built: 2025-06-25T11:08Z
 urls:
   reference: https://charnelmouse.github.io/autodb/reference
   article: https://charnelmouse.github.io/autodb/articles
