@@ -1,0 +1,165 @@
+---
+title: "Handling missing values in autodb"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Handling missing values in autodb}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+```{r setup}
+library(autodb)
+```
+
+# Missing values
+
+Strictly speaking, `autodb` does not search for functional dependencies, because these can't account for missing values. Instead, it searches for a weaker variant, which has been called a *literal* functional dependency (LFD) in the literature.
+
+The functional dependency `X -> Y` holds if, for any two possible records whose values in `X` are *equal*, their values in `Y` are also *equal*. This requires attribute values to take the *equality* operator, `==` in R. Additionally, they must take it under binary logic: whether two values are equal can only be true or false, not missing. This disallows the presence of missing values (`NA` and `NaN`), since testing for equality with a missing value returns a missing result.
+
+The literal functional dependency `X -> Y` holds, or the functional dependency `X -> Y` holds literally, if, for any two possible records whose values in `X` are *identical*, their values in `Y` are also *identical*, where values are identical if both are non-missing and equal, or both are missing. In other words, missing values are treated as not equal to non-missing values, but as equal to each other. This requires attribute classes to take the *identity* operator, `identical()` with default optional parameter values in R. Again, they must take it under binary logic, but the identity operator cannot return non-binary results anyway: In R, for example, `identical()` can only return `TRUE` or `FALSE`, never `NA`. There is, therefore, no constraint on missing values in attribute classes, or on attribute classes in general.
+
+LFDs are more generic than standard functional dependencies: since practically every class takes the identity operator, they practically make no assumptions about the attribute classes present in a data set. 
+
+There are other FD variants that handle missing values, but, unlike most of them, LFDs still satisfy Armstrong's axioms, allowing them to be used in normalisation in the same way as normal FDs. For example, they still respect transitivity: if X -> Y and Y -> Z literally, then X -> Z literally. This allows us to construct a database schema with Bernstein synthesis as usual, with LFDs instead of FDs, and still get something coherent.
+
+However, ignoring the special status of missing values in this way ignores important structural information. In the relational model, and ideally in relational databases, we want to have no missing values at all, partly to avoid awkward questions about what trinary logic means with respect to filtering or joining tables. For example, take the following data frame:
+
+```{r example_data_frame_with_NAs}
+df_nas <- data.frame(
+  patient = c(1L, 2L, 3L, 4L),
+  trial_entry_date = as.Date(c("2022/05/02", "2022/06/06", "2022/04/01", "2022/03/19")),
+  trial_exit_date = as.Date(c(NA, NA, "2022/10/07", NA))
+)
+knitr::kable(df_nas)
+```
+
+`autodb` currently treats `NA` as just another value, which results in the initial data frame not being split in the database schema:
+
+```{r example_data_frame_with_NAs_autodb}
+show(autodb(df_nas))
+```
+
+In this case, a missing exit date represents no exit date, i.e. that the patient is still in the trail, and we would prefer to move exit information to a separate relation, containing only patients with a exit date:
+
+```{r example_data_frame_with_NAs_nullably_normalised}
+ideal_db <- decompose(
+  df_nas,
+  database_schema(
+    relation_schema(
+      list(
+        patient = list(c("patient", "trial_entry_date"), list("patient")),
+        patient_exit = list(c("patient", "trial_exit_date"), list("patient"))
+      ),
+      names(df_nas)
+    ),
+    list(list("patient_exit", "patient", "patient", "patient"))
+  )
+)
+records(ideal_db)$patient_exit <- subset(records(ideal_db)$patient_exit, !is.na(trial_exit_date))
+show(ideal_db)
+```
+
+This makes more of the data's structure apparent, and enforceable, in the database structure, since it makes it clear that the death date is optional. However, removing missing values in this way isn't handled by `autodb` itself, so it has to be done by manually creating the schema and inserting/removing records, as shown above.
+
+# Structure conditional on value presence
+
+Sometimes, the structure for some attributes depends on whether other attributes are missing. Here are two possible reasons:
+
+- Some piece of information in a record takes one of several possible formats, which may have different data classes. This leaves the single piece of information spread across multiple sets of attributes, not necessarily disjoint, of which only one set is non-missing per record. In more general programming, this would be referred to as a union type. In relational theory, this is called a disjunctive existence union.
+- A set of attributes are missing or non-missing together. In more general programming, these attributes together represent an option type, or a nullable class.
+- Sets of attributes are mutually exclusive. In more general programming, these attributes together represent a discriminated union, or sum type.
+
+For example, the data below records values, and allows them to be single values, or an interval with an associated distribution, which may have some distribution parameters. This format is common when listing model parameters.
+
+```{r example_data_frame_with_interval_option}
+df_options <- data.frame(
+  id = 1:20,
+  value = c(2.3, 2.3, 5.7, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_),
+  lower_bound = c(NA_real_, NA_real_, NA_real_, 2.4, 0, 1, 0, 5.6, 2.4, 5.3, 5.3, 2.4, 2.4, 2.4, 2.4, 2.4, 2.4, 2.4, 5.6, 2.4),
+  upper_bound = c(NA_real_, NA_real_, NA_real_, 7.1, 10, 10, 13.1, 25.8, 10, 13.1, 10, 25.8, 25.8, 25.8, 25.8,13.1, 13.1, 25.8, 25.8, 25.8),
+  interval_distribution = factor(c(NA, NA, NA, "uniform", "uniform", "uniform", "uniform", "uniform", "Beta", "Beta", "Beta", "Beta", "Kumaraswamy", "Kumaraswamy", "Kumaraswamy", "Kumaraswamy", "PERT", "PERT", "PERT", "PERT")),
+  param1 = c(NA, NA, NA, NA, NA, NA, NA, NA, 1, 1, 1, 2, 2, 2.1, 2, 2, 2, 1, 2, 2),
+  param2 = c(NA, NA, NA, NA, NA, NA, NA, NA, 1, 2, 2, 2, 2, 1, 1, 1, NA, NA, NA, NA)
+)
+knitr::kable(df_options)
+```
+
+`autodb` has no way to know about these relationships, because it doesn't treat missing values as a special case, as described above. The resulting schema therefore ignores them:
+
+```{r example_data_frame_with_interval_option_db}
+db_options <- autodb(df_options)
+show(db_options)
+```
+
+However, from looking at the data ourselves, we can see a clearly-implied structure:
+
+- A record either has a perfectly-known value, or a distribution of what the value could be. These two options have separate attributes.
+- Distribution information contains a lower and upper bound, and a distribution type. Different distributions have different numbers of distribution parameters, which are given in shared parameter attributes.
+- Parameter attributes are ordered: their value can only be non-missing if all of the previous parameter values are non-missing.
+
+As a general hack for finding these sorts of relationships, I like taking each attribute with missing values, and adding a companion attribute that states whether the value is present or missing:
+
+```{r example_data_frame_with_interval_option_nulls}
+df_options_presence <- df_options[vapply(df_options, anyNA, logical(1))]
+df_options_presence[] <- lapply(df_options_presence, Negate(is.na))
+names(df_options_presence) <- paste0(names(df_options_presence), "_present")
+df_options_with_presence <- cbind(df_options, df_options_presence)
+```
+
+This is not always practical, because adding columns rapidly increases the running time for the dependency search. However, when it's practical, it helps to make the structure more apparent in the database schema:
+
+```{r example_data_frame_with_interval_option_nulls_db}
+db_options_with_presence <- autodb(df_options_with_presence)
+show(db_options_with_presence)
+```
+
+Some of the new relations just show that an attribute determines its associated presence attribute, which is always true. Of more interest is the `value_present` relation, which shows that the values, bounds, and interval distributions inform the presence of each other:
+
+```{r example_data_frame_with_interval_option_nulls_rel}
+knitr::kable(records(db_options_with_presence)$value_present)
+```
+
+In the `interval_distribution` relation, we can also see how the interval distribution determines how many parameters are required:
+
+```{r example_data_frame_with_interval_option_nulls_distribution_rel}
+knitr::kable(records(db_options_with_presence)$interval_distribution)
+```
+
+This shows addition structure, specifically an existence constraint: if `param2` is present, then `param1` is also present. If we notice a situation like this, we can attempt further investigation by splitting the data, and passing each part into `autodb` separately. Splitting on whether `param1` is present, we get the following database for records where it is absent:
+
+```{r example_data_frame_with_interval_option_p1absent_db}
+db_options_with_presence_p1absent <- autodb(subset(
+  df_options_with_presence,
+  !param1_present
+))
+show(db_options_with_presence_p1absent)
+```
+
+This only contains records for point estimates, or intervals with a uniform distribution, so the distribution value is now equivalent to its presence/absence, or that of the value and bounds. Due to the existence constraint mentioned above, `param2` is constant, since it's always absent:
+
+```{r example_data_frame_with_interval_option_p1absent_constants}
+knitr::kable(records(db_options_with_presence_p1absent)$constants)
+```
+
+We get the following database for records where `param1` is present:
+
+```{r example_data_frame_with_interval_option_p1present_db}
+show(autodb(subset(
+  df_options_with_presence,
+  param1_present
+)))
+```
+
+In this case, whether `param2` is present is determined by the distribution used, as we'd expect.
+
+Since this data splitting is currently a manual process, there are practical limits to how far we can take this. In the future, I'd like to have automating it as an option, but this could greatly increase the required run time.
