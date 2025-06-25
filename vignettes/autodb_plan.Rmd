@@ -250,7 +250,7 @@ schema <- normalise(fds)
 show(schema)
 ```
 
-The above schema is in third normal form. However, it is not in the higher Boyes-Codd normal form (BCNF), because `c -> a` is present in relation `a_b`, but not in terms of a key. This results in some redundancy, but also means that the two representation of `c -> a` can hold sets of data that aren't mutually coherent :
+The above schema is in third normal form. However, it is not in the higher Boyes-Codd normal form (BCNF), because `c -> a` is present in relation `a_b`, but not in terms of a key. This results in some redundancy, but also means that the two representations of `c -> a` can hold sets of data that aren't mutually coherent :
 
 ```{r bcnf2}
 db <- schema |>
