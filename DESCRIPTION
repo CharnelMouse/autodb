@@ -34,10 +34,9 @@ Suggests:
     hedgehog (>= 0.1),
     tibble (>= 3.2.1),
     knitr,
-    rmarkdown,
-    quarto
+    rmarkdown
 Config/testthat/edition: 3
-VignetteBuilder: knitr, quarto
+VignetteBuilder: knitr
 LazyData: true
 URL: https://charnelmouse.github.io/autodb/, https://github.com/CharnelMouse/autodb
 BugReports: https://github.com/CharnelMouse/autodb/issues

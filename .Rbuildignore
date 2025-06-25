@@ -11,5 +11,3 @@
 ^\.github$
 ^CRAN-SUBMISSION$
 ^cran-comments\.md$
-^vignettes/\.quarto$
-^vignettes/*_files$
