@@ -1,4 +1,4 @@
-# autodb (development version)
+# autodb 3.0.0
 
 ## Breaking changes
 
