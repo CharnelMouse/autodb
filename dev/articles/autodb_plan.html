@@ -182,7 +182,7 @@ BCNF using just relations:</p>
 <script type="application/json" data-for="htmlwidget-10b3b7155e8045a1b2ad">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"a_b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">a_b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a_b\":FROM_c -> \"c\":TO_c;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>The above schema is in third normal form. However, it is not in the
 higher Boyes-Codd normal form (BCNF), because <code>c -&gt; a</code> is
 present in relation <code>a_b</code>, but not in terms of a key. This
-results in some redundancy, but also means that the two representation
+results in some redundancy, but also means that the two representations
 of <code>c -&gt; a</code> can hold sets of data that aren’t mutually
 coherent :</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
