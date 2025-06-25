@@ -37,7 +37,7 @@ When we talk about the type of values an attribute can take, we talk about a *cl
 
 `autodb` is described in the DESCRIPTION file in the following way:
 
-> Automatic normalisation of a data frame to third normal form, with the intention of easing the process of data cleaning. (Usage to design your actual database for you is not advised.)"
+> Automatic normalisation of a data frame to third normal form, with the intention of easing the process of data cleaning. (Usage to design your actual database for you is not advised.)
 
 Let us begin there.
 
