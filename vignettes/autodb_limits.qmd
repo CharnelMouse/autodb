@@ -29,7 +29,28 @@ Another example of the process being agnostic to data values is that it can't ma
 
 For example, suppose we have a dataset of publication citations, where each row contains the citer and citee IDs, plus supplementary information about both publications. The resulting database given by `autodb` has the following schema, after giving the relations appropriate names:
 
+```{.r}
+database_schema(
+  relation_schema(
+    list(
+      citation = list(c("citer_id", "citee_id"), list(c("citer_id", "citee_id"))),
+      citer = list(c("citer_id", "citer_title", "citer_author", "citer_year"), list("citer_id")),
+      citee = list(c("citee_id", "citee_title", "citee_author", "citee_year"), list("citee_id"))
+    ),
+    c(
+      "citer_id", "citer_title", "citer_author", "citer_year",
+      "citee_id", "citee_title", "citee_author", "citee_year"
+    )
+  ),
+  list(
+    list("citation", "citer_id", "citer", "citer_id"),
+    list("citation", "citee_id", "citee", "citee_id")
+  )
+)
+```
+
 ```{r}
+#| include: false
 database_schema(
   relation_schema(
     list(
@@ -57,7 +78,24 @@ database_schema(
 
 Of course, citers and citees are both publications of the same type, so they shouldn't have separate relations:
 
+```{.r}
+database_schema(
+  relation_schema(
+    list(
+      citation = list(c("citer", "citee"), list(c("citer", "citee"))),
+      publication = list(c("id", "title", "author", "year"), list("id"))
+    ),
+    c("citer", "citee", "id", "title", "author", "year")
+  ),
+  list(
+    list("citation", "citer", "publication", "id"),
+    list("citation", "citee", "publication", "id")
+  )
+)
+```
+
 ```{r}
+#| include: false
 database_schema(
   relation_schema(
     list(
@@ -192,6 +230,10 @@ Normalising gives the following relations:
 
 ```{r redundant_keys_schema}
 schema_redkey <- normalise(fds_redkey, remove_avoidable = TRUE)
+```
+
+```{r}
+#| include: false
 write(gv(schema_redkey), "redkey.gv")
 ```
 
@@ -213,6 +255,10 @@ fds_redkey_fix <- functional_dependency(
 )
 fds_redkey_fix
 schema_redkey_fix <- normalise(fds_redkey_fix, remove_avoidable = TRUE)
+```
+
+```{r}
+#| include: false
 write(gv(schema_redkey_fix), "redkey_fix.gv")
 ```
 
@@ -230,6 +276,10 @@ For example, take this database schema, whose relation schemas are in third norm
 
 ```{r dup_example}
 dup_db <- autodb(ChickWeight)
+```
+
+```{r}
+#| include: false
 write(gv(dup_db), "dup_base.gv")
 ```
 
@@ -239,7 +289,12 @@ write(gv(dup_db), "dup_base.gv")
 
 If we now create copies of these relations, with the intention that copies always contain the same data, then all relations are still in third normal form, and so we'd say this database is also in third normal form:
 
+```{.r}
+dup_db[c(1, 1, 2, 2, 2)]
+```
+
 ```{r dup_example_dup}
+#| include: false
 write(gv(dup_db[c(1, 1, 2, 2, 2)]), "dup_dup.gv")
 ```
 
