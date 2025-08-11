@@ -1,5 +1,9 @@
 # autodb (development version)
 
+## Improvements
+
+* Changed `autoref` (and `normalise`) to spend less time removing extraneous references.
+
 # autodb 3.0.0
 
 ## Breaking changes

@@ -87,31 +87,64 @@ remove_extraneous_references <- function(
   ref_attrs,
   schema
 ) {
-  # cheats by using remove_extraneous_dependencies,
-  # but known to work
-  fds <- functional_dependency(
-    Map(list, names(schema)[child_ref_attrs], names(schema)[parent_ref_attrs]) |>
-      unname(),
-    names(schema),
-    unique = FALSE
-  )
-  unique_fds <- unique(fds)
-  unique_fd_indices <- match(fds, unique_fds)
-  filtered_fds <- remove_extraneous_dependencies(unique_fds)
-  filtered_vecs <- list(
-    determinant_sets = detset(filtered_fds),
-    dependants = dependant(filtered_fds)
-  )
+  # Easy approach is to plug the references into remove_extraneous_dependencies
+  # as FDs, but that's slow, because it handles a more general case. Here,
+  # all "determinants" have size one, so we can more simply represent the
+  # problem with a reference matrix, with empty diagonal elements. We can
+  # repeatedly remove any one pairing that also appears in the square of the
+  # matrix.
+  # Re-calculating the square, and which pairs are redundant, is also
+  # somewhat expensive, so instead we modify only the parts affected by the
+  # removed pair.
+  pairs <- Map(c, child_ref_attrs, parent_ref_attrs)
+  unique_pairs <- unique(pairs)
+  unique_pair_indices <- match(pairs, unique_pairs)
+  omat <- matrix(0L, nrow = length(schema), ncol = length(schema))
+  for (pair in unique_pairs) {
+    omat[[pair[[1]], pair[[2]]]] <- 1L
+  }
+  mat <- omat
+  sq <- mat %*% mat
+  redundant <- which(mat & sq, arr.ind = TRUE)
+  while ((nr <- nrow(redundant)) > 0) {
+    # last element in redundant is last by column (parent), then by row (child),
+    # so try to remove last-ordered pair first
+    child <- redundant[[nr, "row"]]
+    parent <- redundant[[nr, "col"]]
 
-  kept <- is.element(unique_fds, filtered_fds)
-  fds_kept <- kept[unique_fd_indices]
-  kept_indices <- match(fds[fds_kept], filtered_fds)
-  stopifnot(!anyNA(fds_kept))
-  filtered_attrs <- ref_attrs[fds_kept]
+    sq[child, ] <- sq[child, ] - mat[parent, ]
+    sq[, parent] <- sq[, parent] - mat[, child]
+    # no need to re-increment sq[c, p],
+    # since mat[p, p] and mat[c, c] are always zero (no self-references)
+
+    redundant <- redundant[-nr, , drop = FALSE]
+    removed_children <- mat[parent, ] == 1 & sq[child, ] == 0
+    removed_parents <- mat[, child] == 1 & sq[, parent] == 0
+    redundant <- redundant[
+      !removed_children[redundant[, "row"]] | redundant[, "col"] != parent,
+      ,
+      drop = FALSE
+    ]
+    redundant <- redundant[
+      redundant[, "row"] != child | !removed_parents[redundant[, "col"]],
+      ,
+      drop = FALSE
+    ]
+
+    mat[[child, parent]] <- 0L
+  }
+  rem <- which(mat == 1, arr.ind = TRUE)
+  filtered_pairs <- Map(c, rem[, "row"], rem[, "col"])
+  kept_alt <- is.element(unique_pairs, filtered_pairs)
+
+  pairs_kept <- kept_alt[unique_pair_indices]
+  kept_indices_alt <- match(pairs[pairs_kept], filtered_pairs)
+  stopifnot(!anyNA(pairs_kept))
+  filtered_attrs_alt <- ref_attrs[pairs_kept]
 
   list(
-    child = filtered_vecs$determinant_sets[kept_indices],
-    parent = filtered_vecs$dependants[kept_indices],
-    attr = filtered_attrs
+    child = as.list(names(schema)[rem[, "row"]][kept_indices_alt]),
+    parent = names(schema)[rem[, "col"]][kept_indices_alt],
+    attr = filtered_attrs_alt
   )
 }
