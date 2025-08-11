@@ -73,8 +73,22 @@ calculate_references <- function(schema, single_ref = FALSE) {
 
   # remove extraneous references, i.e. those that skip relations in the
   # hierarchy, and duplicates
-  # we do this by abusing the remove_extraneous_dependencies function
-  # for functional dependencies
+  remove_extraneous_references(
+    child_ref_attrs,
+    parent_ref_attrs,
+    ref_attrs,
+    schema
+  )
+}
+
+remove_extraneous_references <- function(
+  child_ref_attrs,
+  parent_ref_attrs,
+  ref_attrs,
+  schema
+) {
+  # cheats by using remove_extraneous_dependencies,
+  # but known to work
   fds <- functional_dependency(
     Map(list, names(schema)[child_ref_attrs], names(schema)[parent_ref_attrs]) |>
       unname(),
