@@ -81,10 +81,13 @@ decompose <- function(
         sep = "\n"
       ))
     }
-  }
 
-  create_insert(df, schema, digits = digits) |>
-    database(references(schema))
+    create_insert(df, schema, digits = digits) |>
+      database(references(schema))
+  }else {
+    create_insert(df, schema, digits = digits) |>
+      database(references(schema), check = FALSE)
+  }
 }
 
 create_insert <- function(df, schema, digits = getOption("digits")) {

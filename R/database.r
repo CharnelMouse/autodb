@@ -26,6 +26,14 @@
 #' @inheritParams database_schema
 #' @inheritParams autodb
 #' @param relations a \code{\link{relation}} object.
+#' @param check a logical, indicating whether to check that \code{relations}
+#'   satisfies the foreign key references given in \code{references} before
+#'   creating the result. This is redundant if \code{relations} and
+#'   \code{references} were constructed based on the same functional
+#'   dependencies, such as when using \code{\link{autodb}}. Only set to FALSE if
+#'   the references are definitely satisfied: not checking references that
+#'   violate the data will result in an invalid database, which will not be
+#'   detected until further operated on.
 #'
 #' @return A \code{database} object, containing \code{relations} with
 #'   \code{references} stored in an attribute of the same name. References
@@ -231,28 +239,42 @@
 #'
 #' # can be a data frame column
 #' data.frame(id = 1:2, relation = db)
-database <- function(relations, references) {
+#'
+#' # setting check = FALSE can give invalid databases
+#' chickfds <- discover(ChickWeight)
+#' chickschema <- synthesise(chickfds)
+#' chickrels <- insert(create(chickschema), ChickWeight)
+#' badrefs <- list(list("Time_Chick", "weight", "Chick", "Chick"))
+#' # check = TRUE stops on non-satisfied references
+#' \dontrun{database(chickrels, badrefs)}
+#' # check = FALSE returns an invalid database
+#' baddb <- database(chickrels, badrefs, check = FALSE)
+#' # only returns an error when further manipulated by certain methods
+#' \dontrun{insert(baddb, ChickWeight)}
+database <- function(relations, references, check = TRUE) {
   if (!inherits(relations, "relation"))
     stop("relations must be a relation")
   references <- check_valid_reference(references, relations, "relation")
 
-  relat_errors <- reference_errors(records(relations), references)
-  if (length(relat_errors) > 0)
-    stop(paste0(
-      "relations must satisfy references in schema:\n",
-      paste(
-        vapply(
-          relat_errors,
-          \(relat) paste0(
-            relat[[1]], ".{", toString(relat[[2]]),
-            "} -> ",
-            relat[[3]], ".{", toString(relat[[4]]), "}"
+  if (check) {
+    relat_errors <- reference_errors(records(relations), references)
+    if (length(relat_errors) > 0)
+      stop(paste0(
+        "relations must satisfy references in schema:\n",
+        paste(
+          vapply(
+            relat_errors,
+            \(relat) paste0(
+              relat[[1]], ".{", toString(relat[[2]]),
+              "} -> ",
+              relat[[3]], ".{", toString(relat[[4]]), "}"
+            ),
+            character(1)
           ),
-          character(1)
-        ),
-        collapse = "\n"
-      )
-    ))
+          collapse = "\n"
+        )
+      ))
+  }
 
   database_nocheck(relations, references)
 }

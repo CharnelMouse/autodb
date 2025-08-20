@@ -4,7 +4,7 @@
 \alias{database}
 \title{Databases}
 \usage{
-database(relations, references)
+database(relations, references, check = TRUE)
 }
 \arguments{
 \item{relations}{a \code{\link{relation}} object.}
@@ -16,6 +16,15 @@ vector giving the child attribute names, a scalar giving the name of the
 parent (referee) schema, and a vector giving the parent attribute names. The
 vectors must be of the same length and contain names for attributes present
 in their respective schemas, and the parent attributes must form a key.}
+
+\item{check}{a logical, indicating whether to check that \code{relations}
+satisfies the foreign key references given in \code{references} before
+creating the result. This is redundant if \code{relations} and
+\code{references} were constructed based on the same functional
+dependencies, such as when using \code{\link{autodb}}. Only set to FALSE if
+the references are definitely satisfied: not checking references that
+violate the data will result in an invalid database, which will not be
+detected until further operated on.}
 }
 \value{
 A \code{database} object, containing \code{relations} with
@@ -247,4 +256,16 @@ stopifnot(identical(db_recon2, db))
 
 # can be a data frame column
 data.frame(id = 1:2, relation = db)
+
+# setting check = FALSE can give invalid databases
+chickfds <- discover(ChickWeight)
+chickschema <- synthesise(chickfds)
+chickrels <- insert(create(chickschema), ChickWeight)
+badrefs <- list(list("Time_Chick", "weight", "Chick", "Chick"))
+# check = TRUE stops on non-satisfied references
+\dontrun{database(chickrels, badrefs)}
+# check = FALSE returns an invalid database
+baddb <- database(chickrels, badrefs, check = FALSE)
+# only returns an error when further manipulated by certain methods
+\dontrun{insert(baddb, ChickWeight)}
 }
