@@ -4,14 +4,10 @@
 \alias{d2}
 \title{Generate D2 input text to plot objects}
 \usage{
-d2(x, name = NA_character_, ...)
+d2(x, ...)
 }
 \arguments{
 \item{x}{an object to be plotted.}
-
-\item{name}{a scalar character, giving the name of the object, if any. This
-name is used for the resulting graph, to allow for easier combining of
-graphs into a single diagram if required.}
 
 \item{...}{further arguments passed to or from other methods.}
 }
@@ -73,7 +69,8 @@ the generated board, to make use of D2's composition features.
 cat(d2(ChickWeight, "chick"))
 }
 \seealso{
-\code{\link{d2.data.frame}} for individual methods.
+\code{\link{d2.data.frame}} and \code{\link{d2.relation_schema}} for
+individual methods.
 
 D2 language site: \url{https://d2lang.com}
 

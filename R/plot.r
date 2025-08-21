@@ -142,13 +142,11 @@ gv <- function(x, name = NA_character_, ...) {
 #' the generated board, to make use of D2's composition features.
 #'
 #' @param x an object to be plotted.
-#' @param name a scalar character, giving the name of the object, if any. This
-#'   name is used for the resulting graph, to allow for easier combining of
-#'   graphs into a single diagram if required.
 #' @param ... further arguments passed to or from other methods.
 #'
 #' @return A scalar character, containing text input for D2.
-#' @seealso \code{\link{d2.data.frame}} for individual methods.
+#' @seealso \code{\link{d2.data.frame}} and \code{\link{d2.relation_schema}} for
+#'   individual methods.
 #'
 #' D2 language site: \url{https://d2lang.com}
 #'
@@ -160,7 +158,7 @@ gv <- function(x, name = NA_character_, ...) {
 #' # simple data.frame example
 #' cat(d2(ChickWeight, "chick"))
 #' @export
-d2 <- function(x, name = NA_character_, ...) {
+d2 <- function(x, ...) {
   UseMethod("d2", x)
 }
 
@@ -359,6 +357,45 @@ gv.relation_schema <- function(x, name = NA_character_, ...) {
   )
 }
 
+#' Generate D2 input text to plot relation schemas
+#'
+#' Produces text input for D2 to make a diagram of a given relation schema,
+#' usually rendered with SVG.
+#'
+#' Each relation in the schema is presented as a set of rows, one for each
+#' attribute in the relation. These rows do not include information about the
+#' attribute classes.
+#'
+#' @param x a relation schema, as given by \code{\link{relation_schema}} or
+#'   \code{\link{synthesise}}.
+#' @param name a character scalar, giving the name of the schema, if any.
+#' @inheritParams d2
+#'
+#' @return A scalar character, containing text input for D2.
+#' @seealso The generic \code{\link{d2}}.
+#' @exportS3Method
+d2.relation_schema <- function(x, ...) {
+  if (any(names(x) == ""))
+    stop("relation schema names can not be zero characters in length")
+  x_labelled <- x
+  x_elemented <- x
+  df_strings <- mapply(
+    relation_schema_string_d2,
+    attrs = attrs(x_elemented),
+    attr_labels = attrs(x_labelled),
+    keys = keys(x_elemented),
+    name = names(x_elemented),
+    label = names(x_labelled)
+  ) |>
+    paste(collapse = "\n")
+  teardown_string <- ""
+  paste(
+    df_strings,
+    teardown_string,
+    sep = "\n"
+  )
+}
+
 #' Generate Graphviz input text to plot a data frame
 #'
 #' Produces text input for Graphviz to make an HTML diagram of a given data
@@ -408,7 +445,7 @@ gv.data.frame <- function(x, name = NA_character_, ...) {
 
 #' Generate D2 input text to plot a data frame
 #'
-#' Produces text input for D2 to make an diagram of a given data frame, usually
+#' Produces text input for D2 to make a diagram of a given data frame, usually
 #' rendered with SVG.
 #'
 #' The rows in the plotted data frame include information about the attribute
@@ -563,6 +600,27 @@ relation_schema_string <- function(
   )
 }
 
+relation_schema_string_d2 <- function(
+  attrs,
+  attr_labels,
+  keys,
+  name,
+  label
+) {
+  columns_string <- columns_schema_string_d2(attrs, attr_labels, keys)
+  columns_label <- columns_string
+  paste0(
+    "\"",
+    name,
+    "\": {",
+    "\n",
+    "  shape: sql_table",
+    "\n",
+    columns_label,
+    "\n}"
+  )
+}
+
 columns_string_gv <- function(col_names, col_labels, keys, col_classes) {
   key_membership_strings <- vapply(
     col_names,
@@ -635,6 +693,16 @@ columns_schema_string <- function(col_names, col_labels, keys) {
     "</TD>",
     key_membership_strings,
     "</TR>",
+    recycle0 = TRUE
+  )
+  paste(column_typing_info, collapse = "\n")
+}
+
+columns_schema_string_d2 <- function(col_names, col_labels, keys) {
+  column_typing_info <- paste0(
+    "  \"",
+    col_names,
+    "\"",
     recycle0 = TRUE
   )
   paste(column_typing_info, collapse = "\n")
