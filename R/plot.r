@@ -189,9 +189,9 @@ gv.database <- function(x, name = NA_character_, ...) {
     stop("name must be a length-one character")
   x_labelled <- to_labelled(x)
   x_elemented <- to_elemented(x)
-  setup_string <- gv_setup_string(name)
+  setup_string <- setup_string_gv(name)
   df_strings <- mapply(
-    relation_string,
+    relation_string_gv,
     attrs = attrs(x_elemented),
     attr_labels = attrs(x_labelled),
     keys = keys(x_elemented),
@@ -240,9 +240,9 @@ gv.relation <- function(x, name = NA_character_, ...) {
     stop("name must be a length-one character")
   x_labelled <- to_labelled(x)
   x_elemented <- to_elemented(x)
-  setup_string <- gv_setup_string(name)
+  setup_string <- setup_string_gv(name)
   df_strings <- mapply(
-    relation_string,
+    relation_string_gv,
     attrs = attrs(x_elemented),
     attr_labels = attrs(x_labelled),
     keys = keys(x_elemented),
@@ -292,7 +292,7 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
     stop("name must be a length-one character")
   x_labelled <- to_labelled(x)
   x_elemented <- to_elemented(x)
-  setup_string <- gv_setup_string(name)
+  setup_string <- setup_string_gv(name)
   df_strings <- mapply(
     relation_schema_string,
     attrs = attrs(x_elemented),
@@ -339,7 +339,7 @@ gv.relation_schema <- function(x, name = NA_character_, ...) {
     stop("name must be a length-one character")
   x_labelled <- to_labelled(x)
   x_elemented <- to_elemented(x)
-  setup_string <- gv_setup_string(name)
+  setup_string <- setup_string_gv(name)
   df_strings <- mapply(
     relation_schema_string,
     attrs = attrs(x_elemented),
@@ -383,10 +383,10 @@ gv.data.frame <- function(x, name = NA_character_, ...) {
     stop("name must be non-empty")
   if (!is.character(name) || length(name) != 1)
     stop("name must be a length-one character")
-  setup_string <- gv_setup_string(name)
+  setup_string <- setup_string_gv(name)
   x_labelled <- x
   names(x_labelled) <- to_attr_name(names(x))
-  table_string <- relation_string(
+  table_string <- relation_string_gv(
     attrs = to_element_name(names(x)),
     attr_labels = colnames(x_labelled),
     keys = list(),
@@ -433,7 +433,7 @@ d2.data.frame <- function(x, name = NA_character_, ...) {
 
   x_labelled <- x
   names(x_labelled) <- names(x)
-  table_string <- d2_relation_string(
+  table_string <- relation_string_d2(
     attrs = names(x),
     attr_labels = colnames(x_labelled),
     keys = list(),
@@ -451,7 +451,7 @@ d2.data.frame <- function(x, name = NA_character_, ...) {
   )
 }
 
-gv_setup_string <- function(df_name) {
+setup_string_gv <- function(df_name) {
   paste0(
     "digraph ",
     if (!is.na(df_name))
@@ -462,7 +462,7 @@ gv_setup_string <- function(df_name) {
   )
 }
 
-relation_string <- function(
+relation_string_gv <- function(
   attrs,
   attr_labels,
   keys,
@@ -474,7 +474,7 @@ relation_string <- function(
 ) {
   row_name <- match.arg(row_name)
 
-  columns_string <- columns_string(
+  columns_string <- columns_string_gv(
     attrs,
     attr_labels,
     keys,
@@ -504,7 +504,7 @@ relation_string <- function(
   )
 }
 
-d2_relation_string <- function(
+relation_string_d2 <- function(
   attrs,
   attr_labels,
   keys,
@@ -516,7 +516,7 @@ d2_relation_string <- function(
 ) {
   row_name <- match.arg(row_name)
 
-  columns_string <- d2_columns_string(
+  columns_string <- columns_string_d2(
     attrs,
     attr_labels,
     keys,
@@ -563,7 +563,7 @@ relation_schema_string <- function(
   )
 }
 
-columns_string <- function(col_names, col_labels, keys, col_classes) {
+columns_string_gv <- function(col_names, col_labels, keys, col_classes) {
   key_membership_strings <- vapply(
     col_names,
     \(nm) paste(
@@ -593,7 +593,7 @@ columns_string <- function(col_names, col_labels, keys, col_classes) {
   paste(column_typing_info, collapse = "\n")
 }
 
-d2_columns_string <- function(col_names, col_labels, keys, col_classes) {
+columns_string_d2 <- function(col_names, col_labels, keys, col_classes) {
   column_typing_info <- paste0(
     "  \"",
     col_names,
