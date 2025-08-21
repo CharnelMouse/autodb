@@ -4,6 +4,7 @@
 
 * Changed `autoref` (and `normalise`) to spend less time removing extraneous references.
 * Changed `autodb` (and optionally `database`) to not check foreign key references.
+* Added `d2`, a converter to the D2 plotting language, similar to `gv` for GraphViz. Currently, only data.frames are supported.
 
 # autodb 3.0.0
 

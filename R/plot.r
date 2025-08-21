@@ -91,6 +91,79 @@ gv <- function(x, name = NA_character_, ...) {
   UseMethod("gv", x)
 }
 
+#' Generate D2 input text to plot objects
+#'
+#' Produces text input for D2 to make a diagram of a given object, usually
+#' rendered with SVG.
+#'
+#' The D2 language is in an early stage of development (pre-v1.0), so it may be
+#' subject to changes that make it unable to use output from the current version
+#' of \code{d2}.
+#'
+#' Details of what is plotted are given in individual methods. There are
+#' expected commonalities, which are described below.
+#'
+#' The object is expected to be one of the following:
+#' \itemize{
+#'   \item an object whose elements have the same length. Examples would be
+#'   data frames, matrices, and other objects that can represent relations, with
+#'   names for the elements, and an optional name for the object itself.
+#'   \item a graph of sub-objects, each of which represent a relation as
+#'   described above, possibly with connections between the objects, and an
+#'   optional name for the graph as a whole.
+#' }
+#'
+#' Each relation is presented as a record-like shape, with the following elements:
+#' \itemize{
+#'   \item A optional header with the relation's name, and the number of (unique)
+#'   records.
+#'   \item A set of rows, one for each attribute in the relation. These rows
+#'   have the following contents:
+#'   \itemize{
+#'     \item the attribute names.
+#'     \item a depiction of the relation's (candidate) keys. Each
+#'     column represents a key, and a filled cell indicates that the attribute
+#'     in that row is in that key. The keys are given in lexical order, with
+#'     precedence given to keys with fewer attributes, and keys with attributes
+#'     that appear earlier in the original data frame's attribute order. Default
+#'     output from other package functions will thus have the primary key given
+#'     first. In the future, this will be changed to always give the primary key
+#'     first.
+#'     \item optionally, the attribute types: specifically, the first element
+#'     when passing the attribute's values into \code{\link{class}}.
+#'   }
+#' }
+#'
+#' Any foreign key references between relations are represented by one-way arrows,
+#' one per attribute in the foreign key.
+#'
+#' If the object has a name, then currently the name is not used, except as a
+#' single data frame's name. In the future, this will be used to give a name to
+#' the generated board, to make use of D2's composition features.
+#'
+#' @param x an object to be plotted.
+#' @param name a scalar character, giving the name of the object, if any. This
+#'   name is used for the resulting graph, to allow for easier combining of
+#'   graphs into a single diagram if required.
+#' @param ... further arguments passed to or from other methods.
+#'
+#' @return A scalar character, containing text input for D2.
+#' @seealso \code{\link{d2.data.frame}} for individual methods.
+#'
+#' D2 language site: \url{https://d2lang.com}
+#'
+#' Playground for running online without installation:
+#' \url{https://play.d2lang.com/}
+#'
+#' Quarto extension: \url{https://github.com/data-intuitive/quarto-d2}
+#' @examples
+#' # simple data.frame example
+#' cat(d2(ChickWeight, "chick"))
+#' @export
+d2 <- function(x, name = NA_character_, ...) {
+  UseMethod("d2", x)
+}
+
 #' Generate Graphviz input text to plot databases
 #'
 #' Produces text input for Graphviz to make an HTML diagram of a given database.
@@ -333,6 +406,51 @@ gv.data.frame <- function(x, name = NA_character_, ...) {
   )
 }
 
+#' Generate D2 input text to plot a data frame
+#'
+#' Produces text input for D2 to make an diagram of a given data frame, usually
+#' rendered with SVG.
+#'
+#' The rows in the plotted data frame include information about the attribute
+#' classes.
+#'
+#' @param x a data.frame.
+#' @param name a character scalar, giving the name of the record, if any. The
+#'   name must be non-empty, since it is also used to name the single table in
+#'   the plot. Defaults to `NA`: if left missing, it is set to "data".
+#' @inheritParams d2
+#'
+#' @return A scalar character, containing text input for Graphviz.
+#' @seealso The generic \code{\link{d2}}.
+#' @exportS3Method
+d2.data.frame <- function(x, name = NA_character_, ...) {
+  if (is.na(name))
+    name <- "data"
+  if (name == "")
+    stop("name must be non-empty")
+  if (!is.character(name) || length(name) != 1)
+    stop("name must be a length-one character")
+
+  x_labelled <- x
+  names(x_labelled) <- names(x)
+  table_string <- d2_relation_string(
+    attrs = names(x),
+    attr_labels = colnames(x_labelled),
+    keys = list(),
+    name = name,
+    label = paste0("\"", name, "\""),
+    classes = vapply(x, \(a) class(a)[[1]], character(1)),
+    nrow = nrow(x),
+    row_name = "row"
+  )
+  teardown_string <- ""
+  paste(
+    table_string,
+    teardown_string,
+    sep = "\n"
+  )
+}
+
 gv_setup_string <- function(df_name) {
   paste0(
     "digraph ",
@@ -383,6 +501,36 @@ relation_string <- function(
     "\n",
     columns_label,
     "\n    </TABLE>>];"
+  )
+}
+
+d2_relation_string <- function(
+  attrs,
+  attr_labels,
+  keys,
+  name,
+  label,
+  classes,
+  nrow,
+  row_name = c("record", "row")
+) {
+  row_name <- match.arg(row_name)
+
+  columns_string <- d2_columns_string(
+    attrs,
+    attr_labels,
+    keys,
+    classes
+  )
+  columns_label <- columns_string
+  paste0(
+    label,
+    ": {",
+    "\n",
+    "  shape: sql_table",
+    "\n",
+    columns_label,
+    "\n}"
   )
 }
 
@@ -440,6 +588,17 @@ columns_string <- function(col_names, col_labels, keys, col_classes) {
     key_membership_strings,
     "<TD PORT=\"FROM_", col_labels, "\">", col_classes, "</TD>",
     "</TR>",
+    recycle0 = TRUE
+  )
+  paste(column_typing_info, collapse = "\n")
+}
+
+d2_columns_string <- function(col_names, col_labels, keys, col_classes) {
+  column_typing_info <- paste0(
+    "  \"",
+    col_names,
+    "\": ",
+    col_classes,
     recycle0 = TRUE
   )
   paste(column_typing_info, collapse = "\n")
