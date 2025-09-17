@@ -4,15 +4,15 @@
 \alias{d2.relation_schema}
 \title{Generate D2 input text to plot relation schemas}
 \usage{
-\method{d2}{relation_schema}(x, ...)
+\method{d2}{relation_schema}(x, name = NA_character_, ...)
 }
 \arguments{
 \item{x}{a relation schema, as given by \code{\link{relation_schema}} or
 \code{\link{synthesise}}.}
 
-\item{...}{further arguments passed to or from other methods.}
-
 \item{name}{a character scalar, giving the name of the schema, if any.}
+
+\item{...}{further arguments passed to or from other methods.}
 }
 \value{
 A scalar character, containing text input for D2.
