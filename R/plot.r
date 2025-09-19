@@ -489,9 +489,8 @@ d2.data.frame <- function(x, name = NA_character_, ...) {
   )
   teardown_string <- ""
   paste(
-    table_string,
-    teardown_string,
-    sep = "\n"
+    c(table_string, teardown_string),
+    collapse = "\n"
   )
 }
 
@@ -567,14 +566,11 @@ relation_string_d2 <- function(
     classes
   )
   columns_label <- columns_string
-  paste0(
-    label,
-    ": {",
-    "\n",
+  c(
+    paste0(label, ": {"),
     "  shape: sql_table",
-    "\n",
     columns_label,
-    "\n}"
+    "}"
   )
 }
 
