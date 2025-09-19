@@ -65,10 +65,8 @@ single data frame's name. In the future, this will be used to give a name to
 the generated board, to make use of D2's composition features.
 }
 \examples{
-\dontrun{
 # simple data.frame example
 cat(d2(ChickWeight, "chick"))
-}
 }
 \seealso{
 \code{\link{d2.data.frame}} and \code{\link{d2.relation_schema}} for

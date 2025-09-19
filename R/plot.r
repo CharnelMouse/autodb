@@ -155,10 +155,9 @@ gv <- function(x, name = NA_character_, ...) {
 #'
 #' Quarto extension: \url{https://github.com/data-intuitive/quarto-d2}
 #' @examples
-#' \dontrun{
 #' # simple data.frame example
 #' cat(d2(ChickWeight, "chick"))
-#' }
+#' @export
 d2 <- function(x, ...) {
   UseMethod("d2", x)
 }
@@ -374,6 +373,7 @@ gv.relation_schema <- function(x, name = NA_character_, ...) {
 #'
 #' @return A scalar character, containing text input for D2.
 #' @seealso The generic \code{\link{d2}}.
+#' @exportS3Method
 d2.relation_schema <- function(x, name = NA_character_, ...) {
   if (any(names(x) == ""))
     stop("relation schema names can not be zero characters in length")
@@ -459,6 +459,7 @@ gv.data.frame <- function(x, name = NA_character_, ...) {
 #'
 #' @return A scalar character, containing text input for Graphviz.
 #' @seealso The generic \code{\link{d2}}.
+#' @exportS3Method
 d2.data.frame <- function(x, name = NA_character_, ...) {
   if (is.na(name))
     name <- "data"
