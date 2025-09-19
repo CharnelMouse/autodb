@@ -381,31 +381,26 @@ d2.relation_schema <- function(x, name = NA_character_, ...) {
     stop("name must be a length-one character")
   x_labelled <- x
   x_elemented <- x
-  df_strings <- mapply(
+  df_strings <- Map(
     relation_schema_string_d2,
     attrs = attrs(x_elemented),
     attr_labels = attrs(x_labelled),
     keys = keys(x_elemented),
     name = names(x_elemented),
-    label = names(x_labelled),
-    offset = 2L*!is.na(name)
-  )
+    label = names(x_labelled)
+  ) |>
+    Reduce(f = c, init = character())
   teardown_string <- ""
-  if (is.na(name))
-    paste(
-      c(df_strings, teardown_string),
-      collapse = "\n"
-    )
+  full_text <- if (is.na(name))
+    c(df_strings, teardown_string)
   else
-    paste(
-      c(
-        paste0("\"", name, "\" {"),
-        df_strings,
-        "}",
-        teardown_string
-      ),
-      collapse = "\n"
+    c(
+      paste0("\"", name, "\" {"),
+      paste0("  ", df_strings),
+      "}",
+      teardown_string
     )
+  paste(full_text, collapse = "\n")
 }
 
 #' Generate Graphviz input text to plot a data frame
@@ -617,29 +612,18 @@ relation_schema_string_d2 <- function(
   attr_labels,
   keys,
   name,
-  label,
-  offset = 0L
+  label
 ) {
-  prefix <- paste(rep(" ", offset), collapse = "")
   columns_string <- columns_schema_string_d2(
     attrs,
     attr_labels,
-    keys,
-    prefix = paste0(prefix, "  ")
+    keys
   )
   columns_label <- columns_string
-  paste0(
-    prefix,
-    "\"",
-    name,
-    "\": {",
-    "\n",
-    prefix,
+  c(
+    paste0("\"", name, "\": {"),
     "  shape: sql_table",
-    "\n",
-    columns_label,
-    "\n",
-    prefix,
+    paste0("  ", columns_label),
     "}"
   )
 }
@@ -721,15 +705,13 @@ columns_schema_string <- function(col_names, col_labels, keys) {
   paste(column_typing_info, collapse = "\n")
 }
 
-columns_schema_string_d2 <- function(col_names, col_labels, keys, prefix) {
-  column_typing_info <- paste0(
-    prefix,
+columns_schema_string_d2 <- function(col_names, col_labels, keys) {
+  paste0(
     "\"",
     col_names,
     "\"",
     recycle0 = TRUE
   )
-  paste(column_typing_info, collapse = "\n")
 }
 
 reference_strings <- function(x) {
