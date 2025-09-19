@@ -826,8 +826,16 @@ describe("gv", {
     })
     it("expects a length-one character name", {
       forall(
-        gen.relation_schema(letters[1:6], 0, 4),
-        \(rs) expect_error(gv(rs, c("a", "b")))
+        list(
+          gen.relation_schema(letters[1:6], 0, 4),
+          gen.choice(
+            gen.element(c(0L, 2:6)) |>
+              gen.and_then(\(n) gen.sample_resampleable(letters[1:6], of = n)),
+            gen.int(6)
+          )
+        ),
+        gv %>>% expect_error,
+        curry = TRUE
       )
     })
     it("works for synthesise outputs", {
