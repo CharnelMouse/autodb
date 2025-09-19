@@ -377,6 +377,8 @@ gv.relation_schema <- function(x, name = NA_character_, ...) {
 d2.relation_schema <- function(x, name = NA_character_, ...) {
   if (any(names(x) == ""))
     stop("relation schema names can not be zero characters in length")
+  if (!is.character(name) || length(name) != 1)
+    stop("name must be a length-one character")
   x_labelled <- x
   x_elemented <- x
   df_strings <- mapply(
@@ -385,15 +387,25 @@ d2.relation_schema <- function(x, name = NA_character_, ...) {
     attr_labels = attrs(x_labelled),
     keys = keys(x_elemented),
     name = names(x_elemented),
-    label = names(x_labelled)
-  ) |>
-    paste(collapse = "\n")
-  teardown_string <- ""
-  paste(
-    df_strings,
-    teardown_string,
-    sep = "\n"
+    label = names(x_labelled),
+    offset = 2L*!is.na(name)
   )
+  teardown_string <- ""
+  if (is.na(name))
+    paste(
+      c(df_strings, teardown_string),
+      collapse = "\n"
+    )
+  else
+    paste(
+      c(
+        paste0("\"", name, "\" {"),
+        df_strings,
+        "}",
+        teardown_string
+      ),
+      collapse = "\n"
+    )
 }
 
 #' Generate Graphviz input text to plot a data frame
@@ -605,19 +617,30 @@ relation_schema_string_d2 <- function(
   attr_labels,
   keys,
   name,
-  label
+  label,
+  offset = 0L
 ) {
-  columns_string <- columns_schema_string_d2(attrs, attr_labels, keys)
+  prefix <- paste(rep(" ", offset), collapse = "")
+  columns_string <- columns_schema_string_d2(
+    attrs,
+    attr_labels,
+    keys,
+    prefix = paste0(prefix, "  ")
+  )
   columns_label <- columns_string
   paste0(
+    prefix,
     "\"",
     name,
     "\": {",
     "\n",
+    prefix,
     "  shape: sql_table",
     "\n",
     columns_label,
-    "\n}"
+    "\n",
+    prefix,
+    "}"
   )
 }
 
@@ -698,9 +721,10 @@ columns_schema_string <- function(col_names, col_labels, keys) {
   paste(column_typing_info, collapse = "\n")
 }
 
-columns_schema_string_d2 <- function(col_names, col_labels, keys) {
+columns_schema_string_d2 <- function(col_names, col_labels, keys, prefix) {
   column_typing_info <- paste0(
-    "  \"",
+    prefix,
+    "\"",
     col_names,
     "\"",
     recycle0 = TRUE

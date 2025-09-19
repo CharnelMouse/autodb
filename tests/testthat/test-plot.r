@@ -1063,6 +1063,58 @@ describe("d2", {
         }
       )
     })
+    it("expects a length-one character name", {
+      forall(
+        list(
+          gen.relation_schema(letters[1:6], 0, 4),
+          gen.choice(
+            gen.element(c(0L, 2:6)) |>
+              gen.and_then(\(n) gen.sample_resampleable(letters[1:6], of = n)),
+            gen.int(6)
+          )
+        ),
+        d2 %>>% expect_error,
+        curry = TRUE
+      )
+    })
+    it("uses non-missing name as a cluster", {
+      rs <- relation_schema(
+        list(
+          Measurement = list(c("Chick", "Time", "weight"), list(c("Chick", "Time"))),
+          Chick = list(c("Chick", "Diet"), list("Chick"))
+        ),
+        c("Chick", "Diet", "Time", "weight")
+      )
+      base_text <- c(
+        "\"Measurement\": {",
+        "  shape: sql_table",
+        "  \"Chick\"",
+        "  \"Time\"",
+        "  \"weight\"",
+        "}",
+        "\"Chick\": {",
+        "  shape: sql_table",
+        "  \"Chick\"",
+        "  \"Diet\"",
+        "}"
+      )
+      expect_identical(
+        d2(rs),
+        paste(c(base_text, ""), collapse = "\n")
+      )
+      expect_identical(
+        d2(rs, name = "ChickWeight"),
+        paste(
+          c(
+            "\"ChickWeight\" {",
+            paste0("  ", base_text),
+            "}",
+            ""
+          ),
+          collapse = "\n"
+        )
+      )
+    })
     it("works for synthesise outputs", {
       forall(
         gen_flat_deps(7, 20, to = 20L),
