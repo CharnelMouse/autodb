@@ -705,8 +705,6 @@ describe("gv", {
         "    <TR><TD PORT=\"TO_genre_id\">Genre ID</TD><TD PORT=\"FROM_genre_id\" BGCOLOR=\"black\"></TD></TR>",
         "    <TR><TD PORT=\"TO_genre_name\">Genre Name</TD><TD PORT=\"FROM_genre_name\"></TD></TR>",
         "    </TABLE>>];",
-        "",
-        "",
         "}",
         "",
         sep = "\n"
