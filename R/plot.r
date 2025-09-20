@@ -717,10 +717,22 @@ columns_schema_string <- function(col_names, col_labels, keys) {
 }
 
 columns_schema_string_d2 <- function(col_names, col_labels, keys) {
+  key_matches <- lapply(keys, \(k) is.element(col_labels, k)) |>
+    do.call(what = cbind)
+  key_labels <- paste0("UNQ", seq_along(keys) - 1)
+  if (length(keys) >= 1)
+    key_labels[[1]] <- "PK"
+  key_constraints <- apply(key_matches, 1, \(x) toString(key_labels[x]))
+  key_strings <- ifelse(
+    nchar(key_constraints) == 0,
+    "",
+    paste0(": {constraint: ", key_constraints, "}")
+  )
   paste0(
     "\"",
     col_names,
     "\"",
+    key_strings,
     recycle0 = TRUE
   )
 }

@@ -1086,13 +1086,13 @@ describe("d2", {
       base_text <- c(
         "\"Measurement\": {",
         "  shape: sql_table",
-        "  \"Chick\"",
-        "  \"Time\"",
+        "  \"Chick\": {constraint: PK}",
+        "  \"Time\": {constraint: PK}",
         "  \"weight\"",
         "}",
         "\"Chick\": {",
         "  shape: sql_table",
-        "  \"Chick\"",
+        "  \"Chick\": {constraint: PK}",
         "  \"Diet\"",
         "}"
       )
@@ -1146,7 +1146,7 @@ describe("d2", {
       expected_string <- paste(
         "\"Genre ID\": {",
         "  shape: sql_table",
-        "  \"Genre ID\"",
+        "  \"Genre ID\": {constraint: PK}",
         "  \"Genre Name\"",
         "}",
         "",
@@ -1167,12 +1167,36 @@ describe("d2", {
         paste(
           '"<rel&1>": {',
           "  shape: sql_table",
-          '  "a<1 & b>2"',
+          '  "a<1 & b>2": {constraint: PK}',
           '  "d"',
           "}",
           "",
           sep = "\n"
         )
+      )
+    })
+    it("gives keys as PK and UNQ{number} constraints", {
+      rs <- relation_schema(
+        list(
+          `a + b = c` = list(
+            letters[1:3],
+            list(letters[1:2], letters[c(1, 3)], letters[2:3])
+          )
+        ),
+        letters[1:3]
+      )
+      text <- c(
+        "\"a + b = c\": {",
+        "  shape: sql_table",
+        "  \"a\": {constraint: PK, UNQ1}",
+        "  \"b\": {constraint: PK, UNQ2}",
+        "  \"c\": {constraint: UNQ1, UNQ2}",
+        "}",
+        ""
+      )
+      expect_identical(
+        d2(rs),
+        paste(text, collapse = "\n")
       )
     })
   })
