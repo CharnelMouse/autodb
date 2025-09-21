@@ -267,6 +267,62 @@ gv.relation <- function(x, name = NA_character_, ...) {
   )
 }
 
+#' Generate D2 input text to plot relations
+#'
+#' Produces text input for D2 to make a diagram of a given relation, usually
+#' rendered with SVG.
+#'
+#' Each relation is presented as a set of rows, one for each
+#' attribute in the relation. These rows include information about the
+#' attribute classes.
+#'
+#' @param x a \code{\link{relation}}.
+#' @param name a character scalar, giving the name of the schema, if any.
+#' @inheritParams d2
+#'
+#' @return A scalar character, containing text input for D2.
+#' @seealso The generic \code{\link{d2}}.
+#' @exportS3Method
+d2.relation <- function(x, name = NA_character_, ...) {
+  if (any(names(x) == ""))
+    stop("relation names can not be zero characters in length")
+  if (!is.character(name) || length(name) != 1)
+    stop("name must be a length-one character")
+  x_labelled <- to_quoted(x)
+  x_elemented <- to_quoted(x)
+  df_strings <- Map(
+    relation_string_d2,
+    attrs = attrs(x_elemented),
+    attr_labels = attrs(x_labelled),
+    keys = keys(x_elemented),
+    name = names(x),
+    label = names(x_labelled),
+    classes = lapply(
+      records(x_elemented),
+      \(df) vapply(df, \(a) class(a)[[1]], character(1))
+    ),
+    nrow = lapply(records(x_elemented), nrow)
+  ) |>
+    Reduce(f = c, init = character())
+  teardown_string <- ""
+  full_text <- if (is.na(name))
+    c(
+      df_strings,
+      teardown_string
+    )
+  else
+    c(
+      paste0(to_quoted_name(name), " {"),
+      paste0("  ", df_strings, recycle0 = TRUE),
+      "}",
+      teardown_string
+    )
+  paste(
+    full_text,
+    collapse = "\n"
+  )
+}
+
 #' Generate Graphviz input text to plot database schemas
 #'
 #' Produces text input for Graphviz to make an HTML diagram of a given database
@@ -664,7 +720,7 @@ relation_string_d2 <- function(
   )
   columns_label <- columns_string
   c(
-    paste0("\"", name, " (", with_number(nrow, "row", "", "s"), ")\": {"),
+    paste0("\"", name, " (", with_number(nrow, row_name, "", "s"), ")\": {"),
     "  shape: sql_table",
     columns_label,
     "}"
@@ -761,7 +817,21 @@ columns_string_d2 <- function(col_names, col_labels, keys, col_classes) {
     col_classes,
     recycle0 = TRUE
   )
-  paste(column_typing_info, collapse = "\n")
+  key_matches <- lapply(
+    col_labels,
+    \(label) vapply(keys, is.element, logical(1), el = label)
+  )
+  key_labels <- paste0("UNQ", seq_along(keys) - 1)
+  if (length(keys) >= 1)
+    key_labels[[1]] <- "PK"
+  key_constraints <- lapply(key_matches, \(x) key_labels[x])
+  all_constraints <- vapply(key_constraints, paste, character(1), collapse = "; ")
+  constraint_strings <- ifelse(
+    nchar(all_constraints) == 0,
+    "",
+    paste0(" {constraint: [", all_constraints, "]}")
+  )
+  paste0(column_typing_info, constraint_strings)
 }
 
 columns_schema_string <- function(col_names, col_labels, keys) {

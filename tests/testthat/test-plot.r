@@ -1045,6 +1045,157 @@ describe("gv", {
 })
 
 describe("d2", {
+  describe("relation", {
+    it("expects non-empty relation names", {
+      forall(
+        gen_df(6, 7),
+        \(df) {
+          rl <- subrelations(autodb(df))
+          if (length(rl) == 0)
+            discard()
+          attr(rl, "names")[[1]] <- "" # skip name guard
+          expect_error(
+            d2(rl),
+            "^relation names can not be zero characters in length$"
+          )
+        }
+      )
+    })
+    it("expects a length-one character name", {
+      forall(
+        gen.relation(letters[1:6], 0, 4),
+        \(rel) expect_error(d2(rel, name = c("a", "b")))
+      )
+    })
+    it("uses non-missing name as a cluster", {
+      rs <- relation_schema(
+        list(
+          Measurement = list(c("Chick", "Time", "weight"), list(c("Chick", "Time"))),
+          Chick = list(c("Chick", "Diet"), list("Chick"))
+        ),
+        c("Chick", "Diet", "Time", "weight")
+      )
+      rel <- create(rs)
+      base_text <- c(
+        "\"Measurement (0 records)\": {",
+        "  shape: sql_table",
+        "  \"Chick\": logical {constraint: [PK]}",
+        "  \"Time\": logical {constraint: [PK]}",
+        "  \"weight\": logical",
+        "}",
+        "\"Chick (0 records)\": {",
+        "  shape: sql_table",
+        "  \"Chick\": logical {constraint: [PK]}",
+        "  \"Diet\": logical",
+        "}"
+      )
+      expect_identical(
+        d2(rel),
+        paste(c(base_text, ""), collapse = "\n")
+      )
+      expect_identical(
+        d2(rel, name = "ChickWeight"),
+        paste(
+          c(
+            "\"ChickWeight\" {",
+            paste0("  ", base_text),
+            "}",
+            ""
+          ),
+          collapse = "\n"
+        )
+      )
+    })
+    it("works for synthesise >> create outputs", {
+      forall(
+        gen_flat_deps(7, 20, to = 20L),
+        synthesise %>>% create %>>% d2 %>>% expect_errorless
+      )
+    })
+    it("works for generated cases", {
+      forall(
+        gen.relation(letters[1:6], from = 0, to = 8),
+        d2 %>>% expect_errorless
+      )
+    })
+    it("works for degenerate cases", {
+      table_dum <- data.frame()
+      table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
+      rel_dum <- create(synthesise(discover(table_dum)))
+      rel_dee <- create(synthesise(discover(table_dee)))
+      expect_errorless(d2(rel_dum))
+      expect_errorless(d2(rel_dee))
+    })
+    it("leaves attribute/df names as-is (i.e. no snake case conversion)", {
+      schema <- relation_schema(
+        list(
+          `Genre ID` = list(
+            c("Genre ID", "Genre Name"),
+            list("Genre ID")
+          )
+        ),
+        c("Genre ID", "Genre Name")
+      )
+      rel <- create(schema)
+      expected_string <- paste(
+        "\"Genre ID (0 records)\": {",
+        "  shape: sql_table",
+        "  \"Genre ID\": logical {constraint: [PK]}",
+        "  \"Genre Name\": logical",
+        "}",
+        "",
+        sep = "\n"
+      )
+      expect_identical(
+        d2(rel),
+        expected_string
+      )
+    })
+    it("leaves relation/attribute names as-is (no HTML escape sequences for &<>\")", {
+      rs <- relation_schema(
+        list(`<rel&1>` = list(c("a<1 & b>2", "d"), list("a<1 & b>2"))),
+        c("a<1 & b>2", "d")
+      )
+      rel <- create(rs)
+      expect_identical(
+        d2(rel),
+        paste(
+          '"<rel&1> (0 records)": {',
+          "  shape: sql_table",
+          '  "a<1 & b>2": logical {constraint: [PK]}',
+          '  "d": logical',
+          "}",
+          "",
+          sep = "\n"
+        )
+      )
+    })
+    it("gives keys as PK and UNQ{number} constraints", {
+      rs <- relation_schema(
+        list(
+          `a + b = c` = list(
+            letters[1:3],
+            list(letters[1:2], letters[c(1, 3)], letters[2:3])
+          )
+        ),
+        letters[1:3]
+      )
+      rel <- create(rs)
+      text <- c(
+        "\"a + b = c (0 records)\": {",
+        "  shape: sql_table",
+        "  \"a\": logical {constraint: [PK; UNQ1]}",
+        "  \"b\": logical {constraint: [PK; UNQ2]}",
+        "  \"c\": logical {constraint: [UNQ1; UNQ2]}",
+        "}",
+        ""
+      )
+      expect_identical(
+        d2(rel),
+        paste(text, collapse = "\n")
+      )
+    })
+  })
   describe("database_schema", {
     it("expects non-empty relation schema names", {
       forall(
