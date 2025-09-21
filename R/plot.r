@@ -331,19 +331,36 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
 #' Any foreign key references are represented by arrows
 #' between the attribute pairs.
 #'
+#' The \code{reference_level} argument is intended to allow the output to be
+#' geared towards a specific layout engine. Of the engines currently available,
+#' Dagre can not plot references between relation attributes, just the
+#' attributes themselves, so using \code{reference_level = "relation"} prevents
+#' compound foreign keys resulting in duplicate reference arrows. ELK and Tala
+#' can plot between relation attributes, so the default \code{reference_level =
+#' "attr"} works as intended.
+#'
 #' @param x a relation schema, as given by \code{\link{relation_schema}} or
 #'   \code{\link{synthesise}}.
 #' @param name a character scalar, giving the name of the schema, if any.
+#' @param reference_level a character scalar, indicating the format to use for
+#'   foreign key references. "relation" only specifies the relations involved;
+#'   "attr" also specifies the attributes involved, one pair at a time.
 #' @inheritParams d2
 #'
 #' @return A scalar character, containing text input for D2.
 #' @seealso The generic \code{\link{d2}}.
 #' @exportS3Method
-d2.database_schema <- function(x, name = NA_character_, ...) {
+d2.database_schema <- function(
+  x,
+  name = NA_character_,
+  reference_level = c("attr", "relation"),
+  ...
+) {
   if (any(names(x) == ""))
     stop("relation schema names can not be zero characters in length")
   if (!is.character(name) || length(name) != 1)
     stop("name must be a length-one character")
+  reference_level <- match.arg(reference_level)
   x_labelled <- to_quoted(x)
   x_elemented <- to_quoted(x)
   df_strings <- Map(
@@ -359,7 +376,7 @@ d2.database_schema <- function(x, name = NA_character_, ...) {
     )
   ) |>
     Reduce(f = c, init = character())
-  reference_strings <- reference_strings_d2(x_labelled)
+  reference_strings <- reference_strings_d2(x_labelled, reference_level)
   teardown_string <- ""
   full_text <- if (is.na(name))
     c(
@@ -819,10 +836,14 @@ reference_strings_gv <- function(x) {
     unique() # can have dups if child-parent pairs are linked by multiple keys
 }
 
-reference_strings_d2 <- function(x) {
+reference_strings_d2 <- function(
+  x,
+  reference_level = c("attr", "relation")
+) {
   lapply(
     references(x),
-    reference_string_d2
+    reference_string_d2,
+    reference_level = reference_level
   ) |>
     do.call(what = c) |>
     unique() # can have dups if child-parent pairs are linked by multiple keys
@@ -845,18 +866,29 @@ reference_string_gv <- function(reference) {
   )
 }
 
-reference_string_d2 <- function(reference) {
-  paste0(
-    paste(
-      reference[[1]],
-      reference[[2]],
-      sep = "."
+reference_string_d2 <- function(
+  reference,
+  reference_level = c("attr", "relation")
+) {
+  switch(
+    match.arg(reference_level),
+    attr = paste0(
+      paste(
+        reference[[1]],
+        reference[[2]],
+        sep = "."
+      ),
+      " -> ",
+      paste(
+        reference[[3]],
+        reference[[4]],
+        sep = "."
+      )
     ),
-    " -> ",
-    paste(
-      reference[[3]],
-      reference[[4]],
-      sep = "."
+    relation = paste0(
+      reference[[1]],
+      " -> ",
+      reference[[3]]
     )
   )
 }
