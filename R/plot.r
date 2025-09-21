@@ -732,7 +732,7 @@ relation_schema_string <- function(
   name,
   label
 ) {
-  columns_string <- columns_schema_string(attrs, attr_labels, keys)
+  columns_string <- columns_schema_string_gv(attrs, attr_labels, keys)
   columns_label <- c(
     paste0(
       "<TR><TD COLSPAN=\"", length(keys) + 1, "\">",
@@ -832,7 +832,7 @@ columns_string_d2 <- function(col_names, col_labels, keys, col_classes) {
   paste0(column_typing_info, constraint_strings)
 }
 
-columns_schema_string <- function(col_names, col_labels, keys) {
+columns_schema_string_gv <- function(col_names, col_labels, keys) {
   key_membership_strings <- vapply(
     col_names,
     \(nm) paste(
@@ -911,6 +911,7 @@ reference_strings_d2 <- function(
   x,
   reference_level = c("attr", "relation")
 ) {
+  reference_level <- match.arg(reference_level)
   lapply(
     references(x),
     reference_string_d2,
