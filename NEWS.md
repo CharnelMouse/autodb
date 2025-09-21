@@ -2,7 +2,7 @@
 
 ## Improvements
 
-* Added `d2`, a converter to the D2 plotting language, similar to `gv` for GraphViz. Currently, only data frames and relation schemas are supported.
+* Added `d2`, a converter to the D2 plotting language, similar to `gv` for GraphViz.
 
 # autodb 3.1.0
 
