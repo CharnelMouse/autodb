@@ -218,6 +218,90 @@ gv.database <- function(x, name = NA_character_, ...) {
   )
 }
 
+#' Generate D2 input text to plot databases
+#'
+#' Produces text input for D2 to make a diagram of a given database, usually
+#' rendered with SVG.
+#'
+#' Each relation in the database is presented as a set of rows, one for each
+#' attribute in the relation. These rows include information about the attribute
+#' classes.
+#'
+#' Any foreign key references are represented by arrows between either the
+#' attribute pairs or the relation pairs, depending on the value of
+#' \code{reference_level}. This allows the output to be geared towards a
+#' specific layout engine. Of the engines currently available for D2, Dagre can
+#' not plot references between relation attributes, just the attributes
+#' themselves, so using \code{reference_level = "relation"} prevents compound
+#' foreign keys resulting in duplicate reference arrows. ELK and Tala
+#' can plot between relation attributes, so the default \code{reference_level =
+#' "attr"} works as intended.
+#'
+#' @param x a \code{\link{database}}.
+#' @param name a character scalar, giving the name of the schema, if any.
+#' @param reference_level a character scalar, indicating the format to use for
+#'   foreign key references. "relation" only specifies the relations involved;
+#'   "attr" also specifies the attributes involved, one pair at a time.
+#' @inheritParams d2
+#'
+#' @return A scalar character, containing text input for D2.
+#' @seealso The generic \code{\link{d2}}.
+#' @exportS3Method
+d2.database <- function(
+  x,
+  name = NA_character_,
+  reference_level = c("attr", "relation"),
+  ...
+) {
+  if (any(names(x) == ""))
+    stop("relation names can not be zero characters in length")
+  if (!is.character(name) || length(name) != 1)
+    stop("name must be a length-one character")
+  reference_level <- match.arg(reference_level)
+  x_labelled <- to_quoted(x)
+  x_elemented <- to_quoted(x)
+  df_strings <- Map(
+    relation_string_d2,
+    attrs = attrs(x_elemented),
+    attr_labels = attrs(x_labelled),
+    keys = keys(x_elemented),
+    name = names(x),
+    label = names(x_labelled),
+    classes = lapply(
+      records(x_elemented),
+      \(df) vapply(df, \(a) class(a)[[1]], character(1))
+    ),
+    nrow = lapply(records(x_elemented), nrow),
+    references = lapply(
+      names(x_labelled),
+      \(label) Filter(\(ref) ref[[1]] == label, references(x_labelled))
+    )
+  ) |>
+    Reduce(f = c, init = character())
+  reference_strings <- reference_strings_d2(x_labelled, reference_level)
+  teardown_string <- ""
+  full_text <- if (is.na(name))
+    c(
+      df_strings,
+      if (length(reference_strings) > 0)
+        c("", reference_strings),
+      teardown_string
+    )
+  else
+    c(
+      paste0(to_quoted_name(name), " {"),
+      indent(df_strings),
+      if (length(reference_strings) > 0)
+        c("", indent(reference_strings)),
+      "}",
+      teardown_string
+    )
+  paste(
+    full_text,
+    collapse = "\n"
+  )
+}
+
 #' Generate Graphviz input text to plot relations
 #'
 #' Produces text input for Graphviz to make an HTML diagram of a given relation.
@@ -301,7 +385,8 @@ d2.relation <- function(x, name = NA_character_, ...) {
       records(x_elemented),
       \(df) vapply(df, \(a) class(a)[[1]], character(1))
     ),
-    nrow = lapply(records(x_elemented), nrow)
+    nrow = lapply(records(x_elemented), nrow),
+    MoreArgs = list(references = list())
   ) |>
     Reduce(f = c, init = character())
   teardown_string <- ""
@@ -633,6 +718,7 @@ d2.data.frame <- function(x, name = NA_character_, ...) {
     label = to_quoted_name(name),
     classes = vapply(x, \(a) class(a)[[1]], character(1)),
     nrow = nrow(x),
+    references = list(),
     row_name = "row"
   )
   teardown_string <- ""
@@ -706,6 +792,7 @@ relation_string_d2 <- function(
   label,
   classes,
   nrow,
+  references,
   row_name = c("record", "row")
 ) {
   row_name <- match.arg(row_name)
@@ -714,7 +801,8 @@ relation_string_d2 <- function(
     attrs,
     attr_labels,
     keys,
-    classes
+    classes,
+    references
   )
   columns_label <- columns_string
   c(
@@ -808,7 +896,7 @@ columns_string_gv <- function(col_names, col_labels, keys, col_classes) {
   column_typing_info
 }
 
-columns_string_d2 <- function(col_names, col_labels, keys, col_classes) {
+columns_string_d2 <- function(col_names, col_labels, keys, col_classes, references) {
   column_typing_info <- paste0(
     col_names,
     ": ",
@@ -823,7 +911,16 @@ columns_string_d2 <- function(col_names, col_labels, keys, col_classes) {
   if (length(keys) >= 1)
     key_labels[[1]] <- "PK"
   key_constraints <- lapply(key_matches, \(x) key_labels[x])
-  all_constraints <- vapply(key_constraints, paste, character(1), collapse = "; ")
+  ref_constraints <- lapply(
+    col_labels,
+    \(cl) vapply(references, \(ref) is.element(cl, ref[[2]]), logical(1))
+  ) |>
+    sapply(\(x) paste0("FK", which(x), recycle0 = TRUE))
+  all_constraints <- mapply(
+    \(x, y) paste(c(x, y), collapse = "; "),
+    key_constraints,
+    ref_constraints
+  )
   constraint_strings <- ifelse(
     nchar(all_constraints) == 0,
     "",
