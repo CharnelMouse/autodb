@@ -122,15 +122,24 @@ print_references <- function(x, max) {
     n_references <- length(x)
     for (r in seq_len(min(n_references, max))) {
       rel <- x[[r]]
-      cat(paste0(
-        rel[[1]], ".{", toString(rel[[2]]),
-        "} -> ",
-        rel[[3]], ".{", toString(rel[[4]]), "}\n"
-      ))
+      cat(paste0(refstring(rel), "\n"))
     }
     if (max < n_references)
       cat("... and", n_references - max, "other references\n")
   }
+}
+
+refstring <- function(ref) {
+  paste0(
+    ref[[1]],
+    ".{",
+    toString(ref[[2]]),
+    "} -> ",
+    ref[[3]],
+    ".{",
+    toString(ref[[4]]),
+    "}"
+  )
 }
 
 subset_refs <- function(refs, number_indices, names, new_names) {

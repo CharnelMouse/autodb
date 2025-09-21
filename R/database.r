@@ -264,11 +264,7 @@ database <- function(relations, references, check = TRUE) {
         paste(
           vapply(
             relat_errors,
-            \(relat) paste0(
-              relat[[1]], ".{", toString(relat[[2]]),
-              "} -> ",
-              relat[[3]], ".{", toString(relat[[4]]), "}"
-            ),
+            refstring,
             character(1)
           ),
           collapse = "\n"
@@ -474,11 +470,7 @@ insert.database <- function(
   if (length(reference_checks)) {
     error_strings <- vapply(
       reference_checks,
-      \(relat) paste0(
-        relat[[1]], ".{", toString(relat[[2]]),
-        "} -> ",
-        relat[[3]], ".{", toString(relat[[4]]), "}"
-      ),
+      refstring,
       character(1)
     )
     stop(
