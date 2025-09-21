@@ -806,7 +806,7 @@ relation_string_d2 <- function(
   )
   columns_label <- columns_string
   c(
-    paste0("\"", name, " (", with_number(nrow, row_name, "", "s"), ")\": {"),
+    paste0("\"", name, "\": \"", name, " (", with_number(nrow, row_name, "", "s"), ")\" {"),
     indent("shape: sql_table"),
     indent(columns_label),
     "}"

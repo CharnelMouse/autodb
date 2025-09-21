@@ -1081,13 +1081,13 @@ describe("d2", {
       )
       db <- create(ds)
       base_text <- c(
-        "\"Measurement (0 records)\": {",
+        "\"Measurement\": \"Measurement (0 records)\" {",
         "  shape: sql_table",
         "  \"Chick\": logical {constraint: [PK; FK1]}",
         "  \"Time\": logical {constraint: [PK]}",
         "  \"weight\": logical",
         "}",
-        "\"Chick (0 records)\": {",
+        "\"Chick\": \"Chick (0 records)\" {",
         "  shape: sql_table",
         "  \"Chick\": logical {constraint: [PK]}",
         "  \"Diet\": logical",
@@ -1165,7 +1165,7 @@ describe("d2", {
       ds <- database_schema(schema, list())
       db <- create(ds)
       expected_string <- paste(
-        "\"Genre ID (0 records)\": {",
+        "\"Genre ID\": \"Genre ID (0 records)\" {",
         "  shape: sql_table",
         "  \"Genre ID\": logical {constraint: [PK]}",
         "  \"Genre Name\": logical",
@@ -1188,7 +1188,7 @@ describe("d2", {
       expect_identical(
         d2(db),
         paste(
-          '"<rel&1> (0 records)": {',
+          '"<rel&1>": "<rel&1> (0 records)" {',
           "  shape: sql_table",
           '  "a<1 & b>2": logical {constraint: [PK]}',
           '  "d": logical',
@@ -1211,7 +1211,7 @@ describe("d2", {
       ds <- database_schema(rs, list())
       db <- create(ds)
       text <- c(
-        "\"a + b = c (0 records)\": {",
+        "\"a + b = c\": \"a + b = c (0 records)\" {",
         "  shape: sql_table",
         "  \"a\": logical {constraint: [PK; UNQ1]}",
         "  \"b\": logical {constraint: [PK; UNQ2]}",
@@ -1257,7 +1257,7 @@ describe("d2", {
       )
       ds <- database_schema(rs, references = list())
       text <- c(
-        "\"a + b = c (0 records)\": {",
+        "\"a + b = c\": \"a + b = c (0 records)\" {",
         "  shape: sql_table",
         "  \"a\": logical {constraint: [PK; UNQ1]}",
         "  \"b\": logical {constraint: [PK; UNQ2]}",
@@ -1286,13 +1286,13 @@ describe("d2", {
       )
       db <- create(ds)
       main_text <- c(
-        "\"Measurement (0 records)\": {",
+        "\"Measurement\": \"Measurement (0 records)\" {",
         "  shape: sql_table",
         "  \"Chick\": logical {constraint: [PK; FK1]}",
         "  \"Time\": logical {constraint: [PK; FK1]}",
         "  \"weight\": logical",
         "}",
-        "\"Diet (0 records)\": {",
+        "\"Diet\": \"Diet (0 records)\" {",
         "  shape: sql_table",
         "  \"Diet\": logical {constraint: [PK]}",
         "  \"Chick\": logical {constraint: [UNQ1]}",
@@ -1350,13 +1350,13 @@ describe("d2", {
       )
       rel <- create(rs)
       base_text <- c(
-        "\"Measurement (0 records)\": {",
+        "\"Measurement\": \"Measurement (0 records)\" {",
         "  shape: sql_table",
         "  \"Chick\": logical {constraint: [PK]}",
         "  \"Time\": logical {constraint: [PK]}",
         "  \"weight\": logical",
         "}",
-        "\"Chick (0 records)\": {",
+        "\"Chick\": \"Chick (0 records)\" {",
         "  shape: sql_table",
         "  \"Chick\": logical {constraint: [PK]}",
         "  \"Diet\": logical",
@@ -1411,7 +1411,7 @@ describe("d2", {
       )
       rel <- create(schema)
       expected_string <- paste(
-        "\"Genre ID (0 records)\": {",
+        "\"Genre ID\": \"Genre ID (0 records)\" {",
         "  shape: sql_table",
         "  \"Genre ID\": logical {constraint: [PK]}",
         "  \"Genre Name\": logical",
@@ -1433,7 +1433,7 @@ describe("d2", {
       expect_identical(
         d2(rel),
         paste(
-          '"<rel&1> (0 records)": {',
+          '"<rel&1>": "<rel&1> (0 records)" {',
           "  shape: sql_table",
           '  "a<1 & b>2": logical {constraint: [PK]}',
           '  "d": logical',
@@ -1455,7 +1455,7 @@ describe("d2", {
       )
       rel <- create(rs)
       text <- c(
-        "\"a + b = c (0 records)\": {",
+        "\"a + b = c\": \"a + b = c (0 records)\" {",
         "  shape: sql_table",
         "  \"a\": logical {constraint: [PK; UNQ1]}",
         "  \"b\": logical {constraint: [PK; UNQ2]}",
@@ -1882,7 +1882,7 @@ describe("d2", {
     it("generates a name if not given one", {
       df <- data.frame(a = 1:3)
       g <- strsplit(d2(df), "\n", fixed = TRUE)[[1]]
-      expect_identical(g[[1]], "\"data (3 rows)\": {")
+      expect_identical(g[[1]], "\"data\": \"data (3 rows)\" {")
     })
     it("creates a d2 expression for the data.frame", {
       df <- data.frame(
@@ -1891,7 +1891,7 @@ describe("d2", {
       expect_identical(
         d2(df, "table"),
         paste(
-          "\"table (2 rows)\": {",
+          "\"table\": \"table (2 rows)\" {",
           "  shape: sql_table",
           "  \"a\": integer",
           "  \"b\": character",
@@ -1909,7 +1909,7 @@ describe("d2", {
       expect_identical(
         d2(df, "Table Test"),
         paste(
-          "\"Table Test (2 rows)\": {",
+          "\"Table Test\": \"Table Test (2 rows)\" {",
           "  shape: sql_table",
           "  \"A 1\": integer",
           "  \"b.2\": character",
@@ -1925,7 +1925,7 @@ describe("d2", {
       expect_identical(
         d2(df, "Table Test"),
         paste(
-          "\"Table Test (2 rows)\": {",
+          "\"Table Test\": \"Table Test (2 rows)\" {",
           "  shape: sql_table",
           "  \"a\": integer",
           "  \"b<2 & c>3\": character",
