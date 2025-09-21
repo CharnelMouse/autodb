@@ -204,12 +204,12 @@ gv.database <- function(x, name = NA_character_, ...) {
   ) |>
     Reduce(f = c, init = character())
   reference_strings <- reference_strings_gv(x_labelled)
-  teardown_string <- "}\n"
+  teardown_string <- c("}", "")
   paste(
     c(
       setup_string,
       if (length(df_strings > 0))
-        c("", df_strings),
+        c("", indent(df_strings)),
       if (length(reference_strings) > 0)
         c("", indent(reference_strings)),
       teardown_string
@@ -255,12 +255,12 @@ gv.relation <- function(x, name = NA_character_, ...) {
     nrow = lapply(records(x_elemented), nrow)
   ) |>
     Reduce(f = c, init = character())
-  teardown_string <- "}\n"
+  teardown_string <- c("}", "")
   paste(
     c(
       setup_string,
       if (length(df_strings > 0))
-        c("", df_strings),
+        c("", indent(df_strings)),
       teardown_string
     ),
     collapse = "\n"
@@ -361,12 +361,12 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
   ) |>
     Reduce(f = c, init = character())
   reference_strings <- reference_strings_gv(x_labelled)
-  teardown_string <- "}\n"
+  teardown_string <- c("}", "")
   paste(
     c(
       setup_string,
       if (length(df_strings > 0))
-        c("", df_strings),
+        c("", indent(df_strings)),
       if (length(reference_strings) > 0)
         c("", indent(reference_strings)),
       teardown_string
@@ -484,13 +484,14 @@ gv.relation_schema <- function(x, name = NA_character_, ...) {
     keys = keys(x_elemented),
     name = names(x_elemented),
     label = names(x_labelled)
-  )
-  teardown_string <- "}\n"
+  ) |>
+    Reduce(f = c, init = character())
+  teardown_string <- c("}", "")
   paste(
     c(
       setup_string,
       if (length(df_strings) > 0)
-        c("", df_strings),
+        c("", indent(df_strings)),
       teardown_string
     ),
     collapse = "\n"
@@ -568,8 +569,7 @@ gv.data.frame <- function(x, name = NA_character_, ...) {
     stop("name must be non-empty")
   if (!is.character(name) || length(name) != 1)
     stop("name must be a length-one character")
-  setup_string <- setup_string_gv(name) |>
-    paste(collapse = "\n")
+  setup_string <- setup_string_gv(name)
   x_labelled <- x
   names(x_labelled) <- to_attr_name(names(x))
   x_elemented <- x
@@ -584,12 +584,12 @@ gv.data.frame <- function(x, name = NA_character_, ...) {
     nrow = nrow(x),
     row_name = "row"
   )
-  teardown_string <- "}\n"
+  teardown_string <- c("}", "")
   paste(
     c(
       setup_string,
       "",
-      table_string,
+      indent(table_string),
       teardown_string
     ),
     collapse = "\n"
@@ -650,8 +650,8 @@ setup_string_gv <- function(df_name) {
         paste0(to_main_name(df_name), " "),
       "{"
     ),
-    "  rankdir = \"LR\"",
-    "  node [shape=plaintext];"
+    indent("rankdir = \"LR\""),
+    indent("node [shape=plaintext];")
   )
 }
 
@@ -675,7 +675,7 @@ relation_string_gv <- function(
   )
   columns_label <- c(
     paste0(
-      "    <TR><TD COLSPAN=\"", length(keys) + 2, "\">",
+      "<TR><TD COLSPAN=\"", length(keys) + 2, "\">",
       name,
       " (",
       with_number(nrow, row_name, "", "s"),
@@ -686,17 +686,15 @@ relation_string_gv <- function(
   )
   c(
     paste0(
-      "  ",
       label,
       " ",
       "[label = <"
     ),
-    paste0(
-      "    ",
+    indent(paste0(
       "<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">"
-    ),
-    columns_label,
-    "    </TABLE>>];"
+    )),
+    indent(columns_label),
+    indent("</TABLE>>];")
   )
 }
 
@@ -721,8 +719,8 @@ relation_string_d2 <- function(
   columns_label <- columns_string
   c(
     paste0("\"", name, " (", with_number(nrow, row_name, "", "s"), ")\": {"),
-    "  shape: sql_table",
-    columns_label,
+    indent("shape: sql_table"),
+    indent(columns_label),
     "}"
   )
 }
@@ -735,24 +733,25 @@ relation_schema_string <- function(
   label
 ) {
   columns_string <- columns_schema_string(attrs, attr_labels, keys)
-  columns_label <- paste0(
-    "    <TR><TD COLSPAN=\"", length(keys) + 1, "\">",
-    name,
-    "</TD></TR>",
-    "\n",
+  columns_label <- c(
+    paste0(
+      "<TR><TD COLSPAN=\"", length(keys) + 1, "\">",
+      name,
+      "</TD></TR>"
+    ),
     columns_string
   )
-  paste0(
-    "  ",
-    label,
-    " ",
-    "[label = <",
-    "\n",
-    "    ",
-    "<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
-    "\n",
-    columns_label,
-    "\n    </TABLE>>];"
+  table_header <-
+    "<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">"
+  c(
+    paste0(
+      label,
+      " ",
+      "[label = <"
+    ),
+    indent(table_header),
+    indent(columns_label),
+    indent("</TABLE>>];")
   )
 }
 
@@ -773,7 +772,7 @@ relation_schema_string_d2 <- function(
   columns_label <- columns_string
   c(
     paste0(name, ": {"),
-    "  shape: sql_table",
+    indent("shape: sql_table"),
     indent(columns_label),
     "}"
   )
@@ -796,7 +795,7 @@ columns_string_gv <- function(col_names, col_labels, keys, col_classes) {
     character(1)
   )
   column_typing_info <- paste0(
-    "    <TR><TD PORT=\"TO_",
+    "<TR><TD PORT=\"TO_",
     col_labels,
     "\">",
     col_names,
@@ -811,7 +810,6 @@ columns_string_gv <- function(col_names, col_labels, keys, col_classes) {
 
 columns_string_d2 <- function(col_names, col_labels, keys, col_classes) {
   column_typing_info <- paste0(
-    "  ",
     col_names,
     ": ",
     col_classes,
@@ -858,7 +856,7 @@ columns_schema_string <- function(col_names, col_labels, keys) {
     character(1)
   )
   column_typing_info <- paste0(
-    "    <TR><TD PORT=\"TO_",
+    "<TR><TD PORT=\"TO_",
     col_labels,
     "\">",
     col_names,
@@ -867,7 +865,7 @@ columns_schema_string <- function(col_names, col_labels, keys) {
     "</TR>",
     recycle0 = TRUE
   )
-  paste(column_typing_info, collapse = "\n")
+  column_typing_info
 }
 
 columns_schema_string_d2 <- function(col_names, col_labels, keys, references) {
