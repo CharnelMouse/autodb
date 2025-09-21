@@ -30,14 +30,13 @@ Each relation in the schema is presented as a set of rows, one for each
 attribute in the relation. These rows do not include information about the
 attribute classes.
 
-Any foreign key references are represented by arrows
-between the attribute pairs.
-
-The \code{reference_level} argument is intended to allow the output to be
-geared towards a specific layout engine. Of the engines currently available,
-Dagre can not plot references between relation attributes, just the
-attributes themselves, so using \code{reference_level = "relation"} prevents
-compound foreign keys resulting in duplicate reference arrows. ELK and Tala
+Any foreign key references are represented by arrows between either the
+attribute pairs or the relation pairs, depending on the value of
+\code{reference_level}. This allows the output to be geared towards a
+specific layout engine. Of the engines currently available for D2, Dagre can
+not plot references between relation attributes, just the attributes
+themselves, so using \code{reference_level = "relation"} prevents compound
+foreign keys resulting in duplicate reference arrows. ELK and Tala
 can plot between relation attributes, so the default \code{reference_level =
 "attr"} works as intended.
 }
