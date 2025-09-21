@@ -211,7 +211,7 @@ gv.database <- function(x, name = NA_character_, ...) {
       if (length(df_strings > 0))
         c("", df_strings),
       if (length(reference_strings) > 0)
-        c("", paste0("  ", reference_strings)),
+        c("", indent(reference_strings)),
       teardown_string
     ),
     collapse = "\n"
@@ -313,7 +313,7 @@ d2.relation <- function(x, name = NA_character_, ...) {
   else
     c(
       paste0(to_quoted_name(name), " {"),
-      paste0("  ", df_strings, recycle0 = TRUE),
+      indent(df_strings),
       "}",
       teardown_string
     )
@@ -368,7 +368,7 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
       if (length(df_strings > 0))
         c("", df_strings),
       if (length(reference_strings) > 0)
-        c("", paste0("  ", reference_strings)),
+        c("", indent(reference_strings)),
       teardown_string
     ),
     collapse = "\n"
@@ -443,9 +443,9 @@ d2.database_schema <- function(
   else
     c(
       paste0(to_quoted_name(name), " {"),
-      paste0("  ", df_strings, recycle0 = TRUE),
+      indent(df_strings),
       if (length(reference_strings) > 0)
-        c("", paste0("  ", reference_strings)),
+        c("", indent(reference_strings)),
       "}",
       teardown_string
     )
@@ -537,7 +537,7 @@ d2.relation_schema <- function(x, name = NA_character_, ...) {
   else
     c(
       paste0(to_quoted_name(name), " {"),
-      paste0("  ", df_strings, recycle0 = TRUE),
+      indent(df_strings),
       "}",
       teardown_string
     )
@@ -774,7 +774,7 @@ relation_schema_string_d2 <- function(
   c(
     paste0(name, ": {"),
     "  shape: sql_table",
-    paste0("  ", columns_label),
+    indent(columns_label),
     "}"
   )
 }
@@ -1043,3 +1043,5 @@ make.gv_names <- function(
       sub(pattern = "(^_)_$", replacement = "\\1", perl = TRUE)
   )
 }
+
+indent <- function(x) paste0("  ", x, recycle0 = TRUE)
