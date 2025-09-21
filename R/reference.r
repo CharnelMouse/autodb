@@ -65,7 +65,20 @@ reference_valid_attrs <- function(references, relation_schemas) {
   )
 }
 
-rename_reference_referands <- function(references, old_names, new_names) {
+rename_reference_attrs <- function(x, old_names, names) {
+  lapply(
+    x,
+    \(ref) {
+      ref[c(2, 4)] <- lapply(
+        ref[c(2, 4)],
+        \(as) names[match(as, old_names)]
+      )
+      ref
+    }
+  )
+}
+
+rename_reference_relations <- function(references, old_names, new_names) {
   stopifnot(length(new_names) == length(old_names))
   lapply(
     references,
@@ -90,7 +103,7 @@ merge_reference_referands <- function(
   ind_map[to_remove] <- merge_into
   ind_map <- seq_along(remaining_inds)[match(ind_map, remaining_inds)]
 
-  new_rels <- unique(rename_reference_referands(
+  new_rels <- unique(rename_reference_relations(
     references,
     old_names,
     new_names[ind_map]

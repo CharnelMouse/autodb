@@ -255,16 +255,7 @@ references.database_schema <- function(x, ...) {
 #' @export
 rename_attrs.database_schema <- function(x, names, ...) {
   new_subschemas <- rename_attrs(subschemas(x), names)
-  new_refs <- lapply(
-    references(x),
-    \(ref) {
-      ref[c(2, 4)] <- lapply(
-        ref[c(2, 4)],
-        \(as) names[match(as, attrs_order(x))]
-      )
-      ref
-    }
-  )
+  new_refs <- rename_reference_attrs(references(x), attrs_order(x), names)
   database_schema(
     new_subschemas,
     new_refs
@@ -339,7 +330,7 @@ c.database_schema <- function(...) {
 
   references_list <- lapply(lst, references)
   new_references <- Map(
-    rename_reference_referands,
+    rename_reference_relations,
     references_list,
     lapply(lst, names),
     unname(split(
