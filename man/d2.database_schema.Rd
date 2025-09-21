@@ -7,8 +7,8 @@
 \method{d2}{database_schema}(x, name = NA_character_, reference_level = c("attr", "relation"), ...)
 }
 \arguments{
-\item{x}{a relation schema, as given by \code{\link{relation_schema}} or
-\code{\link{synthesise}}.}
+\item{x}{a database schema, as given by \code{\link{database_schema}} or
+\code{\link{normalise}}.}
 
 \item{name}{a character scalar, giving the name of the schema, if any.}
 

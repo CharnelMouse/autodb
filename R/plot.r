@@ -338,8 +338,8 @@ gv.database_schema <- function(x, name = NA_character_, ...) {
 #' can plot between relation attributes, so the default \code{reference_level =
 #' "attr"} works as intended.
 #'
-#' @param x a relation schema, as given by \code{\link{relation_schema}} or
-#'   \code{\link{synthesise}}.
+#' @param x a database schema, as given by \code{\link{database_schema}} or
+#'   \code{\link{normalise}}.
 #' @param name a character scalar, giving the name of the schema, if any.
 #' @param reference_level a character scalar, indicating the format to use for
 #'   foreign key references. "relation" only specifies the relations involved;
