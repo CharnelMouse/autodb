@@ -573,7 +573,7 @@ d2.data.frame <- function(x, name = NA_character_, ...) {
     attrs = names(x_elemented),
     attr_labels = names(x_labelled),
     keys = list(),
-    name = to_quoted_name(name),
+    name = name,
     label = to_quoted_name(name),
     classes = vapply(x, \(a) class(a)[[1]], character(1)),
     nrow = nrow(x),
@@ -664,7 +664,7 @@ relation_string_d2 <- function(
   )
   columns_label <- columns_string
   c(
-    paste0(label, ": {"),
+    paste0("\"", name, " (", with_number(nrow, "row", "", "s"), ")\": {"),
     "  shape: sql_table",
     columns_label,
     "}"

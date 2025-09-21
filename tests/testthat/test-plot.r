@@ -1458,7 +1458,7 @@ describe("d2", {
     it("generates a name if not given one", {
       df <- data.frame(a = 1:3)
       g <- strsplit(d2(df), "\n", fixed = TRUE)[[1]]
-      expect_identical(g[[1]], "\"data\": {")
+      expect_identical(g[[1]], "\"data (3 rows)\": {")
     })
     it("creates a d2 expression for the data.frame", {
       df <- data.frame(
@@ -1467,7 +1467,7 @@ describe("d2", {
       expect_identical(
         d2(df, "table"),
         paste(
-          "\"table\": {",
+          "\"table (2 rows)\": {",
           "  shape: sql_table",
           "  \"a\": integer",
           "  \"b\": character",
@@ -1485,7 +1485,7 @@ describe("d2", {
       expect_identical(
         d2(df, "Table Test"),
         paste(
-          "\"Table Test\": {",
+          "\"Table Test (2 rows)\": {",
           "  shape: sql_table",
           "  \"A 1\": integer",
           "  \"b.2\": character",
@@ -1501,7 +1501,7 @@ describe("d2", {
       expect_identical(
         d2(df, "Table Test"),
         paste(
-          "\"Table Test\": {",
+          "\"Table Test (2 rows)\": {",
           "  shape: sql_table",
           "  \"a\": integer",
           "  \"b<2 & c>3\": character",
