@@ -1087,13 +1087,13 @@ describe("d2", {
       base_text <- c(
         "\"Measurement\": {",
         "  shape: sql_table",
-        "  \"Chick\": {constraint: PK, FK1}",
-        "  \"Time\": {constraint: PK}",
+        "  \"Chick\": {constraint: [PK; FK1]}",
+        "  \"Time\": {constraint: [PK]}",
         "  \"weight\"",
         "}",
         "\"Chick\": {",
         "  shape: sql_table",
-        "  \"Chick\": {constraint: PK}",
+        "  \"Chick\": {constraint: [PK]}",
         "  \"Diet\"",
         "}"
       )
@@ -1170,7 +1170,7 @@ describe("d2", {
       expected_string <- paste(
         "\"Genre ID\": {",
         "  shape: sql_table",
-        "  \"Genre ID\": {constraint: PK}",
+        "  \"Genre ID\": {constraint: [PK]}",
         "  \"Genre Name\"",
         "}",
         "",
@@ -1192,7 +1192,7 @@ describe("d2", {
         paste(
           '"<rel&1>": {',
           "  shape: sql_table",
-          '  "a<1 & b>2": {constraint: PK}',
+          '  "a<1 & b>2": {constraint: [PK]}',
           '  "d"',
           "}",
           "",
@@ -1214,9 +1214,9 @@ describe("d2", {
       text <- c(
         "\"a + b = c\": {",
         "  shape: sql_table",
-        "  \"a\": {constraint: PK, UNQ1}",
-        "  \"b\": {constraint: PK, UNQ2}",
-        "  \"c\": {constraint: UNQ1, UNQ2}",
+        "  \"a\": {constraint: [PK; UNQ1]}",
+        "  \"b\": {constraint: [PK; UNQ2]}",
+        "  \"c\": {constraint: [UNQ1; UNQ2]}",
         "}",
         ""
       )
@@ -1242,15 +1242,15 @@ describe("d2", {
       main_text <- c(
         "\"Measurement\": {",
         "  shape: sql_table",
-        "  \"Chick\": {constraint: PK, FK1}",
-        "  \"Time\": {constraint: PK, FK1}",
+        "  \"Chick\": {constraint: [PK; FK1]}",
+        "  \"Time\": {constraint: [PK; FK1]}",
         "  \"weight\"",
         "}",
         "\"Diet\": {",
         "  shape: sql_table",
-        "  \"Diet\": {constraint: PK}",
-        "  \"Chick\": {constraint: UNQ1}",
-        "  \"Time\": {constraint: UNQ1}",
+        "  \"Diet\": {constraint: [PK]}",
+        "  \"Chick\": {constraint: [UNQ1]}",
+        "  \"Time\": {constraint: [UNQ1]}",
         "}"
       )
       tableref_text <- c(
@@ -1313,13 +1313,13 @@ describe("d2", {
       base_text <- c(
         "\"Measurement\": {",
         "  shape: sql_table",
-        "  \"Chick\": {constraint: PK}",
-        "  \"Time\": {constraint: PK}",
+        "  \"Chick\": {constraint: [PK]}",
+        "  \"Time\": {constraint: [PK]}",
         "  \"weight\"",
         "}",
         "\"Chick\": {",
         "  shape: sql_table",
-        "  \"Chick\": {constraint: PK}",
+        "  \"Chick\": {constraint: [PK]}",
         "  \"Diet\"",
         "}"
       )
@@ -1373,7 +1373,7 @@ describe("d2", {
       expected_string <- paste(
         "\"Genre ID\": {",
         "  shape: sql_table",
-        "  \"Genre ID\": {constraint: PK}",
+        "  \"Genre ID\": {constraint: [PK]}",
         "  \"Genre Name\"",
         "}",
         "",
@@ -1394,7 +1394,7 @@ describe("d2", {
         paste(
           '"<rel&1>": {',
           "  shape: sql_table",
-          '  "a<1 & b>2": {constraint: PK}',
+          '  "a<1 & b>2": {constraint: [PK]}',
           '  "d"',
           "}",
           "",
@@ -1415,9 +1415,9 @@ describe("d2", {
       text <- c(
         "\"a + b = c\": {",
         "  shape: sql_table",
-        "  \"a\": {constraint: PK, UNQ1}",
-        "  \"b\": {constraint: PK, UNQ2}",
-        "  \"c\": {constraint: UNQ1, UNQ2}",
+        "  \"a\": {constraint: [PK; UNQ1]}",
+        "  \"b\": {constraint: [PK; UNQ2]}",
+        "  \"c\": {constraint: [UNQ1; UNQ2]}",
         "}",
         ""
       )

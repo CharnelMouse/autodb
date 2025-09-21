@@ -813,11 +813,15 @@ columns_schema_string_d2 <- function(col_names, col_labels, keys, references) {
     \(cl) vapply(references, \(ref) is.element(cl, ref[[2]]), logical(1))
   ) |>
     sapply(\(x) paste0("FK", which(x), recycle0 = TRUE))
-  all_constraints <- mapply(\(x, y) toString(c(x, y)), key_constraints, ref_constraints)
+  all_constraints <- mapply(
+    \(x, y) paste(c(x, y), collapse = "; "),
+    key_constraints,
+    ref_constraints
+  )
   constraint_strings <- ifelse(
     nchar(all_constraints) == 0,
     "",
-    paste0(": {constraint: ", all_constraints, "}")
+    paste0(": {constraint: [", all_constraints, "]}")
   )
 
   paste0(
