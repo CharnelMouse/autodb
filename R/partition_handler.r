@@ -110,7 +110,7 @@ refineable_partition_handler <- function(lookup, key_class) {
         )
       )
 
-      for (A_key in partitions_ui$decompose(new_W_key)) {
+      for (A_key in partitions_ui$decompose_key(new_W_key)) {
         for (S_element_key in partitions_ui$decompose_key(S_key)) {
           # remove old critical diffsets that include new S element, if any
           old <- new_cache$critical[[

@@ -394,7 +394,7 @@ remove_transitive_dependencies <- function(vecs) {
 }
 
 add_bijections <- function(vecs) {
-  flat_partition_determinant_set <- vecs$flat_partition_determinant_set
+  flat_partition_determinant_set <- vecs$flat_partition_determinant_sets
   flat_partition_dependants <- vecs$flat_partition_dependants
   flat_groups <- vecs$flat_groups
   bijection_determinant_sets <- vecs$bijection_determinant_sets
