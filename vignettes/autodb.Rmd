@@ -1,5 +1,6 @@
 ---
 title: "Using autodb"
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Using autodb}
   %\VignetteEngine{knitr::rmarkdown}
@@ -12,26 +13,15 @@ knitr:
     fig-height: 5
 ---
 
-```{r, include=FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.width = 7,
-  fig.height = 5
-)
-```
-
 ```{r setup}
 library(autodb)
 ```
 
 # Terminology
 
-To avoid confusion, this vignette is consistent with terminology: a *database* consists of *relations*, which have *records* with the same *attributes*. This is in line with terms used in the relational model; in Statistics, we would talk about tables, which have rows with values for the same variables, with a column for each variable.
+To avoid confusion, this vignette is consistent with terminology: a *data frame* (table) has *records* (rows) with the same *attributes* (columns/variables), and we split it up into a *database*, that consists of *relations* (data frames with key and foreign key constraints between them). This is in line with terms used in the relational model.
 
-For the original data set, which is a flat table, we refer to a *data frame* instead, which also consists of records with attributes.
-
-When we talk about the type of values an attribute can take, we talk about a *class*, as in the relational model and R, rather than a value type, as in many other programming languages.
+When we talk about the type of values an attribute can take, we talk about a data *class*, as in the relational model and R, rather than a value type, as in many other programming languages.
 
 # Motivation
 
@@ -39,7 +29,7 @@ When we talk about the type of values an attribute can take, we talk about a *cl
 
 > Automatic normalisation of a data frame to third normal form, with the intention of easing the process of data cleaning. (Usage to design your actual database for you is not advised.)
 
-Let us begin there.
+Let's cover that with some more detail.
 
 ## For data cleaning
 
@@ -49,25 +39,28 @@ Data cleaning works on the principle that we remove duplicate observations and s
 
 Normalisation is helpful for both of these areas. I usually use the original, flat, "tidy" data for the analysis itself. However, for checking the data's consistency, and for using the data to learn about the domain, normalised data is often helpful, whether it's used for the analysis or not.
 
-I usually do data checking under the following conditions:
+I've often started data checking under the following conditions:
 
--   No need to store the data in normalised form. My own work normally consists of one-off analyses, where I won't see the data again once I've finished the work. For more permanent data, it would be better to store the data in a database designed to hold it, if you're able to.
--   Limited documentation. In my own work, I am lucky if I am given a key or a data dictionary for the data set at all. When I am, it usually proves to be wrong somehow. This makes it even more important to do data checking, not just for looking for errors, but also as an exercise in understanding the problem domain before starting to model it.
--   Data that fits in local memory. This process could be done in batches or using a streaming algorithm, but this is a more advanced case.
+- One-off analyses, where the data is discard at the end, so it's not worth the time to get the data into a proper database.
+- Limited, or unreliable, documentation. This makes it even more important to do data checking, not just for looking for errors, but also as an exercise in understanding the problem domain before modelling it.
+- Data that fits in local memory, presenting less problems for automation.
 
 It's in this context that I would usually have to do the normalisation by hand, and I would like to have a tool that does it semi-automatically. This package is intended to be that tool, using a minimal amount of additional libraries.
 
 ## Not for database design
 
-Good database design is a hard and involved process, which requires a strong grasp on the domain that the database will hold information on. Please don't try to use this package to do it on autopilot. In particular, the conditions described above mean we do things differently to good practice for normalised relational databases:
+Good database design is a hard and involved process, which requires a strong grasp on the domain that the database will hold information on. Please don't try to use this package to do it on autopilot. In particular, the conditions described above mean that the package does things differently to common practice:
 
--   We need to handle constant attributes, that have the same value in every record. In a real database, we would probably expect these to not stay constant when more data is added, and would know which relation to place it in. In one-off data checking, there isn't more data coming, so we need to handle these attributes in an automatic way by placing them in a "constants" relation with an empty key, which database designers would probably frown at.
--   We don't care about database design principles concerned with avoiding errors under deletion, modification, and so on, because the data won't change. This means that we don't care about introducing artificial keys, unless we think it would make data modelling more convenient. Similarly, we don't care about having single-attribute reference relations, which are used to make sure other relations only assign legal values to that relation's attribute.
--   We have no "derived relations", also known as "views", which are additional relations created from the others for lookup convenience. We expect to be using the data frame for modelling, rather than the database, so such lookups aren't commonly necessary, and are left to the discretion of the user to do manually with base R's `merge` function.
+- Since the package can only work with the data it's got, the resulting database schema is specific to the given dataset, rather than data of that type in general.
+- As a special case of the above, we need to handle constant attributes, that have the same value in every record. In a real database, we would either not store them in the database at all, or place them with the expectation that they won't stay constant when more data is added. The former would hide information from the user, and the latter approach can't be decided automatically, so they're placed in a "constants" relation with an empty key. Empty keys are allowed in the relational model, but engines like SQL don't allow it in practice.
+- It doesn't introduce artificial keys, or single-attribute lookup relations, which are a relational database's equivalent to factor levels.
+- It doesn't create "virtual relations", also known as "views", which are data-less relations defined in terms of manipulating real relations (usually to create aggregates). This might change in the future.
 
 ## To third normal form
 
-`autodb` gets a given data frame to third normal form: every attribute depends on the whole key(s), and non-key attributes depend on nothing but the key(s). This was chosen because there is an existing algorithm, Bernstein's synthesis, for normalising to third normal form, and because it's the highest normal form that is attainable with arbitrary original data frames. There is an additional enhancement available as an option: see the section on avoidable attributes for more details.
+`autodb` gets a given data frame to third normal form: every attribute depends on the whole key(s), and non-key attributes depend on nothing but the key(s). This was chosen because there is an existing algorithm, Bernstein's synthesis, for normalising to third normal form, and because it's the highest normal form that is always attainable with only real relations and foreign key constraints.
+
+An additional enhancement, called LTK form, is available as an option: see the section on avoidable attributes for more details.
 
 # Simple examples
 
@@ -90,19 +83,19 @@ db
 
 There is no plotting method within the `autodb` package itself. Instead, there are functions to write normalised objects as inputs to the Graphviz visualisation software, using the DOT language.
 
-The generic function to do this is `gv`, which calls the `gv.database` method on our database, `db`:
+The generic function to do this is `gv`:
 
 ```{r}
 db_text <- gv(db)
 cat(db_text)
 ```
 
-This can be saved to a file for passing to Graphviz elsewhere, or can be passed into an R function that renders Graphviz code. This vignette uses `grViz` from the `DiagrammeR` package. If you're writing a document in Quarto, you can call GraphViz directly using the `dot` engine; this approach avoids loading 2MB of Javascript for HTML widgets into the rendered file.
+The resulting code can be saved to a file for passing to Graphviz elsewhere, or can be passed into an R function that renders Graphviz code. One option for the latter is `grViz` from the `DiagrammeR` package, but the result is an HTML widget: if you're writing a document, this requires inserting 2MB of Javascript code into the file. If you're writing a document in Quarto, you can call GraphViz directly using the `dot` engine, which avoids this.
 
 ```{r check_diagrammer}
 if (requireNamespace("DiagrammeR", quietly = TRUE)) {
-  show <- function(x) DiagrammeR::grViz(gv(x))
-  maybe_plot <- function(x) DiagrammeR::grViz(gv(x))
+  show <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
+  maybe_plot <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
 }else{
   show <- print
   maybe_plot <- function(x) invisible(NULL)
@@ -113,9 +106,11 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) {
 maybe_plot(db)
 ```
 
-Each relation is represented as a box, with the top row giving the relation name and the number of records, and the other rows detailing the attributes. In the middle is a grid of cells: each column of cells represents a (candidate) key for the relation, where attributes in that key have their cell filled in black.
+Each relation is represented as a box: the top row gives the relation name and the number of records, and the other rows list the attributes and their classes.
 
-We can see that `ChickWeight` was split into two relations, with a weight for each unique combination of Chick number and time, and the Chick number by itself determining the diet. We can also see the number of records in each relation, and the classes of the attributes in those relations.
+In the middle is a grid containing black cells: each column of black cells represents a *key* for the relation. Keys are irreducible subsets of a relation's attributes, that take a unique set of values in each record. They can be treated as a unique row identifier. For example, each chick has a unique `Chick` value, and each measurement has a unique `Time`-`Chick` pair.
+
+In summary, `ChickWeight` is split into two relations, where the time and chick uniquely define a measurement -- or a row in the original data -- and the diet is determined by chick alone, i.e. chicks never have their diet changed.
 
 `gv` also has methods for `data.frame`, and for `database_schema`, which is introduced later.
 
@@ -130,7 +125,7 @@ deps
 
 After simplifying the data to something quicker to iterate over -- specifically, by converting all attributes to have integer values -- the algorithm takes each attribute in turn as a possible dependant, and finds sets of the other attributes that determine it.
 
-The result is a list of functional dependencies, in the format `determinant set -> dependant`, with an attribute named `attrs_order` that gives all the attribute names in their original order. Each of these three parts has its own (generic) extraction function:
+The result is a list of functional dependencies, in the format `determinant set -> dependant`, with an attribute named `attrs_order` that gives all the attribute names in their original order. Each of these three parts can be extracted:
 
 ```{r}
 detset(deps)
@@ -138,7 +133,7 @@ dependant(deps)
 attrs_order(deps)
 ```
 
-The former two, especially, are useful for filtering, as we'll see later.
+The former two are useful for filtering, as we'll see later.
 
 ## Normalisation
 
@@ -258,195 +253,6 @@ df_equiv(rejoined, ChickWeight)
 
 When rejoined, the relation attributes will be in the original order. However, the record order might have changed.
 
-# A larger example
-
-Included in the package is a `r paste(dim(nudge), collapse = "-by-")` data frame called `nudge`:
-
-```{r nudge_classes}
-show(nudge)
-```
-
-This is the data set for a meta-analysis, looking at the effectiveness of "nudge" interventions. Measurements are taken within a three-layer hierarchy: publications contain studies, which contain effect size measurements. We expect this hierarchy to be apparent in the normalisation.
-
-## Initial decomposition
-
-Getting full dependency information for this relation can take a long time, so here we search for a reduced set, not considering numeric or sample size attributes as determinants:
-
-```{r nudge_database}
-nudge_deps <- discover(
-  nudge,
-  exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
-  exclude_class = "numeric"
-)
-nudge_schema <- normalise(nudge_deps, remove_avoidable = TRUE)
-show(nudge_schema)
-```
-
-We can see a relation, with many attributes, determined by the effect size ID number, `es_id`. This contains all of the numeric measurements, as expected in the relation for the lowest level in the hierarchy. As also expected, this has a foreign key reference to a relation for study-level information, determined by the study ID number, `study_id`.
-
-However, the publication-level relation this refers to is not determined by the publication ID, `publication_id`, as we would expect; neither is it determined by the publication reference. Instead, it is solely determined by the publication's title: to use the ID, we would need to supplement it with other information, like the publication year, or other choices that come from the middle column of relations, which look likely to be spurious.
-
-This suggests that some publication ID numbers have been erroneously assigned to several publications, which we can easily test:
-
-```{r nudge_publication_check}
-nudge_database <- decompose(nudge, nudge_schema)
-nudge_title_relation <- records(nudge_database)$title
-nudge_pid_duplicates <- unique(nudge_title_relation$publication_id[
-  duplicated(nudge_title_relation$publication_id)
-])
-knitr::kable(subset(nudge_title_relation, publication_id %in% nudge_pid_duplicates))
-```
-
-We'd also expect `reference` to determine the publication, but this is also not the case: it needs additional information, such as `binary_outcome`.
-
-This means that there are publications that share a reference:
-
-```{r nudge_reference_check}
-nudge_reference_duplicates <- unique(nudge_title_relation$reference[
-  duplicated(nudge_title_relation$reference)
-])
-knitr::kable(subset(nudge_title_relation, reference %in% nudge_reference_duplicates))
-```
-
-BETA is the Behavioural Economics Team of the Australian Government, so it's not surprising that they'd have multiple publications/reports per year. Duplicate references is not necessarily an error, but would be awkward if the references were to be used.
-
-There are other, clearly spurious, relations involving `reference`. One of these combines it with `type_experiment` to determine `location`. Since `reference` is a publication-level attribute, and `location` is a study-level attribute, this can't be right.
-
-(As far as I'm aware, the publication ID and reference errors mentioned above would not have affected the meta-analysis results.)
-
-## Removing spurious structure
-
-The publication ID and the reference clearly have issues, so we need to decide what to do about them. Here, I'll show what is usually the correct approach, which is to remove the spurious functional dependencies. We'll look at the other options later.
-
-The better option is to remove all functional dependencies that we'd consider to be spurious: those where publication ID or reference are part of a multiple-attribute determinant set, and the determinant set isn't just those two:
-
-```{r nudge_filter}
-nudge_deps_filtered <- nudge_deps[
-  lengths(detset(nudge_deps)) == 1 |
-    vapply(
-      detset(nudge_deps),
-      \(ds) length(setdiff(ds, c("publication_id", "reference"))) != 1,
-      logical(1)
-    )
-]
-nudge_schema_filtered <- normalise(nudge_deps_filtered, remove_avoidable = TRUE)
-show(nudge_schema_filtered)
-```
-
-We now, finally, have the study location in a non-spurious relation. If we want to, we could also add the dependencies we fail to find, due to excluding the sample size attributes from determinant sets:
-
-```{r nudge_sizes}
-nudge_deps_size <- discover(nudge[, startsWith(names(nudge), "n_")])
-nudge_deps_size
-nudge_deps_final <- c(nudge_deps_filtered, nudge_deps_size)
-nudge_schema_final <- normalise(nudge_deps_final, remove_avoidable = TRUE)
-nudge_database_final <- decompose(nudge, nudge_schema_final)
-
-show(nudge_schema_final)
-```
-
-The new schema confirms what we might expect, that the total sample size, and the sizes of control and treatment arms, only have two degrees of freedom: knowing two of them determines the other.
-
-We'd expect this to be because the total sample size is the sum of the other two. However, the functional dependency can't determine this. Indeed, if we check for this more specific condition, we find that it doesn't hold:
-
-```{r nudge_size_check}
-knitr::kable(unique(subset(
-  nudge,
-  n_comparison != n_control + n_intervention,
-  c(
-    es_id,
-    reference,
-    title,
-    n_study,
-    n_comparison,
-    n_control,
-    n_intervention
-  )
-)))
-```
-
-Looking through the paper, the arm sample sizes aren't given explicitly, but the numbers here are consistent with the parts of the study that have two treatments.
-
-Automatic search for functional dependencies cannot check domain-specific constraints like the summation constraint above, but it can give schemas that suggest constraints to check for, such as the two-degrees relation above.
-
-Going back to the final database schema, removing dependencies has revealed extra information about study locations, via the new `title_type_experiment` relation: studies of the same experiment type in a publication always have the same location. Looking at the resulting database shows that this removes many entries of what would be redundant location information if kept in the study relation:
-
-```{r nudge_clean_database}
-show(nudge_database_final)
-```
-
-While this is not a dependency we could expect to hold if more data was collected, it's a reasonable dependency for the given data set, which won't be added to.
-
-## How not to remove spurious structure
-
-The additional relation mentioned at the end of the previous section is also notable for what we'll now discuss: alternative ways to get rid of spurious structure. How can we do this?
-
--   Remove the offending functional dependencies, and re-do the schema creation (the proper method);
--   Remove offending attributes from the table -- e.g. `publication_id` above, since it doesn't do its intended job of unique publication identification -- and re-do the entire process (re-running `discover` can be expensive; we don't always want to throw out everything to do with an attribute, e.g. `reference -> year`, or `title -> reference`);
--   Add offending attributes to `exclude`, to disallow them in determinant sets, and re-do the entire process (same issues as above, except that we keep `title -> reference`, since an excluded `reference` can still be a dependant);
--   Remove offending schemas from the database schema / database (see below).
-
-What happens if we remove the offending schemas?
-
-```{r nudge_publication_badfilter}
-nudge_schema_relfiltered <- nudge_schema[
-  !grepl("publication_id_", names(nudge_schema), fixed = TRUE) &
-    !grepl("_publication_id", names(nudge_schema), fixed = TRUE) &
-    !grepl("reference_", names(nudge_schema), fixed = TRUE) &
-    !grepl("_reference", names(nudge_schema), fixed = TRUE)
-]
-```
-
-Subsetting a database schema also removes any foreign key references involving removed schemas, so the resulting schema is still valid. However, any foreign key reference chains with removed schemas in the middle are broken. Amongst others, in this case we lose the reference between the three relations for the three hierarchical data levels:
-
-```{r nudge_publication_badfilter_gv}
-show(nudge_schema_relfiltered)
-```
-
-Re-running `autoref` has no effect, because the `es_id` section doesn't contain any key for the `title` section:
-
-```{r nudge_publication_badfilter_autoref}
-identical(autoref(nudge_schema_relfiltered), nudge_schema_relfiltered)
-```
-
-Because the database subschema including the `es_id` relation only has `publication_id` for distinguishing publications, effect sizes for the two publications with the same ID cannot be uniquely associated with their publication: removing schemas irreversibly separates two parts of the database schema.
-
-Furthermore, compared to `nudge_schema_filtered`, there is a relation schema missing: directly removing schemas loses the structure information that results in the `title_type_experiment` relation. How does this happen?
-
-The relation isn't present in the original schema, `nudge_schema_filtered`, because the full set of functional dependencies make its implied dependency transitive. Specifically, `nudge_fds` contains the following functional dependencies:
-
-```{r nudge_badfilter_example_fds}
-example_fds <- functional_dependency(
-  list(
-    list("title", "reference"),
-    list(c("reference", "type_experiment"), "location"),
-    list(c("title", "type_experiment"), "location")
-  ),
-  c("title", "reference", "type_experiment", "location")
-)
-example_fds
-```
-
-The first two dependencies make the third transitive, so it's ignored when constructing the relation schemas: it's implied, and enforced, by the `title` and `reference_type_experiment` relation schemas.
-
-```{r nudge_badfilter_example_transitive}
-show(normalise(example_fds, ensure_lossless = FALSE))
-```
-
-However, when `reference, type_experiment -> location` is removed as spurious, `title, type_experiment -> location` is no longer transitive, so it now appears as its own relation schema.
-
-``` r
-normalise(example_fds[-2], ensure_lossless = FALSE)
-```
-
-```{r nudge_badfilter_example_nontransitive}
-show(normalise(example_fds[-2], ensure_lossless = FALSE))
-```
-
-When we instead remove the `reference_type_experiment` schema, this implicitly also throws away the `title, type_experiment -> location` dependency that it co-implies. We throw away non-spurious information that we don't intend to.
-
-Between the risk of irreversibly breaking the database schema's structure, and the risk of unintentionally removing additional structure information, I hope it's clear why directly removing relations should be avoided.
-
 # Other features
 
 ## Approximate dependencies and database reduction
@@ -471,8 +277,8 @@ Currently `decompose` doesn't account for approximate dependencies, resulting in
 
 Compare this to the database schema we arrived at manually:
 
--   The publication ID, the title, and the reference are considered equivalent, as we'd have originally expected.
--   There is an additional relation, showing `approximation` to be approximately determined by some publication- and study-level attributes, rather than functionally determined at the effect-size level.
+- The publication ID, the title, and the reference are considered equivalent, as we'd have originally expected.
+- There is an additional relation, showing `approximation` to be approximately determined by some publication- and study-level attributes, rather than functionally determined at the effect-size level.
 
 Lowering the accuracy results in more dependencies being found, and so in more relations. The number of relations can get very large. For example, suppose we instead set the accuracy to `0.99`, returning any approximate dependencies that hold in at least `r ceiling(nrow(nudge)*0.99)` records.
 
@@ -537,621 +343,3 @@ show(avoid_schema_removed)
 ```
 
 This schema is now in LTK form, with no remaining avoidable attributes. We could have also removed `A` from relation `A_C` instead of `B`, so this process may not have a unique result. The package's implementation prefers to remove attributes that appear later in the original relation.
-
-# Planned improvements
-
-## Views for connected reference chains
-
-When `autodb`, or `autoref`, generates foreign key references for relations decomposed from a single table, it naturally tends to a structure where there is a single low-level data relation on the left, and higher-level relations are "downstream" with respect to references, with the number of records strictly decreasing as we follow references to higher-level data relations.
-
-```{r nudge, include=FALSE}
-autodb(
-  nudge,
-  remove_avoidable = TRUE,
-  exclude_class = "numeric",
-  exclude = "n_study"
-) |>
-  reduce(main = "study_id") |>
-  show()
-```
-
-The nice thing about this is that, while the schema is created constructively, we can view it as a series of decompositions: start with the original table, split it up into two or more sub-tables, and repeat. Rejoining the database would then do this in reverse.
-
-Unfortunately, not every set of functional dependencies allows this. Consider the following:
-
-```{r nonconnected, include=FALSE}
-fds <- functional_dependency(
-  list(
-    list("a", "b"),
-    list("a", "c"),
-    list("b", "d"),
-    list("c", "e"),
-    list(c("d", "e"), "f")
-  ),
-  letters[1:6]
-)
-fds
-```
-
-Bernstein synthesis, and automatic foreign keys, give the following schema:
-
-```{r nonconnected2, include=FALSE}
-schema <- normalise(fds)
-show(schema)
-```
-
-The schema is not connected, because `d_e`'s key is not present in any other relation. In terms of a series of decompositions, we could think of the original table being split into `{a,b,c,d,e}` and `{d,e,f}` first, with a reference between them, and `d` and `e` being split off later, destroying the reference.
-
-In short, while Boyes-Codd Normal Form may be the first normal form that can't always be satisfied with just relations, if we also want to keep all the relations related to each other with foreign key references for consistency, then third normal form also can't always be satisfied.
-
-One way to solve this, which is a planned addition, is to allow virtual relations, also known as views. These are relations whose data is not stored, because it's generated from other relations that do store their data (real relations).
-
-Usually, views are used to allow easy "look-up" of commonly-queried aggregates. Here, we could use them to maintain the connected schema structure. Here is a mock-up of what the resulting schema might look like:
-
-```{r}
-if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
-  rankdir = \"LR\"
-  node [shape=plaintext];
-
-  \"a\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a</TD></TR>
-    <TR><TD PORT=\"TO_a\">a</TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\"></TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\"></TD></TR>
-    </TABLE>>];
-  \"b\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b</TD></TR>
-    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\"></TD></TR>
-    </TABLE>>];
-  \"c\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c</TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\"></TD></TR>
-    </TABLE>>];
-  \"d_e\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e</TD></TR>
-    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_f\">f</TD><TD PORT=\"FROM_f\"></TD></TR>
-    </TABLE>>];
-  \"view\" [label = <
-    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view</TD></TR>
-    <TR><TD>a</TD></TR>
-    <TR><TD>b</TD></TR>
-    <TR><TD>c</TD></TR>
-    <TR><TD>d</TD></TR>
-    <TR><TD>e</TD></TR>
-    <TR><TD>f</TD></TR>
-    </TABLE>>];
-
-  \"a\":FROM_b -> \"b\":TO_b;
-  \"a\":FROM_c -> \"c\":TO_c;
-
-  \"view\":TITLE -> \"a\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-}")
-```
-
-Note that virtual relations have different rules to real relations:
-
-- Virtual relations need not have a key. In this example, `view` does have `a` as a key, but this key can be inferred from the real relations it's a merging / joining of, so does not need to be stated explicitly.
-- Virtual relations do not contain their own data: it's pulled in from the relations it merges together. This allows it to contain a set of attributes without being an instantiation of any functional dependencies between those attributes. For example, `view` contains `{a, b}`, but does not introduce a redundant instance of `{a} -> b` in addition to the one in relation `a`.
-- Instead of foreign key references to keys in other relations, virtual relations just "refer" to the real relations they are a merging of.
-
-This addition of virtual relations allows databases to always be connected as a tree. This is useful for visualisation, and for planning rejoins, since those can always be done by merging tables along foreign key references.
-
-We could explicitly show *all* of the decomposition steps as virtual relations, but it's not clear that it's worth the bother:
-
-```{r}
-if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
-  rankdir = \"LR\"
-  node [shape=plaintext];
-
-  \"a\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a</TD></TR>
-    <TR><TD PORT=\"TO_a\">a</TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\"></TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\"></TD></TR>
-    </TABLE>>];
-  \"b\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b</TD></TR>
-    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\"></TD></TR>
-    </TABLE>>];
-  \"c\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c</TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\"></TD></TR>
-    </TABLE>>];
-  \"d_e\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e</TD></TR>
-    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_f\">f</TD><TD PORT=\"FROM_f\"></TD></TR>
-    </TABLE>>];
-  \"view\" [label = <
-    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view</TD></TR>
-    <TR><TD>a</TD></TR>
-    <TR><TD>b</TD></TR>
-    <TR><TD>c</TD></TR>
-    <TR><TD>d</TD></TR>
-    <TR><TD>e</TD></TR>
-    <TR><TD>f</TD></TR>
-    </TABLE>>];
-  \"view2\" [label = <
-    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view</TD></TR>
-    <TR><TD>a</TD></TR>
-    <TR><TD>b</TD></TR>
-    <TR><TD>c</TD></TR>
-    <TR><TD>d</TD></TR>
-    <TR><TD>e</TD></TR>
-    </TABLE>>];
-  \"view3\" [label = <
-    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view</TD></TR>
-    <TR><TD>a</TD></TR>
-    <TR><TD>b</TD></TR>
-    <TR><TD>c</TD></TR>
-    <TR><TD>d</TD></TR>
-    </TABLE>>];
-
-  \"a\":FROM_b -> \"b\":TO_b;
-  \"a\":FROM_c -> \"c\":TO_c;
-
-  \"view\":TITLE -> \"view2\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view2\":TITLE -> \"view3\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view2\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view3\":TITLE -> \"a\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view3\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-}")
-```
-
-## Boyes-Codd Normal Form
-
-Another use of the virtual relations mentioned above is that they make BCNF always achievable. For example, take the following standard example of a set of functional dependencies that cannot be expressed in BCNF using just relations:
-
-```{r bcnf, include=FALSE}
-fds <- functional_dependency(
-  list(list(c("a", "b"), "c"), list("c", "a")),
-  letters[1:3]
-)
-fds
-schema <- normalise(fds)
-show(schema)
-```
-
-The above schema is in third normal form. However, it is not in the higher Boyes-Codd normal form (BCNF), because `c -> a` is present in relation `a_b`, but not in terms of a key. This results in some redundancy, but also means that the two representations of `c -> a` can hold sets of data that aren't mutually coherent :
-
-```{r bcnf2}
-db <- schema |>
-  create() |>
-  insert(data.frame(c = 1:2, a = 1:2), relations = "c") |>
-  insert(data.frame(a = 1:2, b = 1L, c = 2:1), relations = "a_b")
-knitr::kable(records(db)$a_b)
-knitr::kable(records(db)$c)
-```
-
-The standard way to fix this schema to satisfy BCNF is by splitting relation `a_b` on the violated functional dependency, namely `c -> a`:
-
-```{r bcnf3, echo=FALSE}
-schema2 <- schema
-keys(schema2)$a_b <- list(c("b", "c"))
-attrs(schema2)$a_b <- c("b", "c")
-names(schema2)[names(schema2) == "a_b"] <- "b_c"
-show(schema2)
-```
-
-The resulting schema is now in BCNF, but we have a different problem: the dependency `{a, b} -> c` has disappeared! Fixing this can't be done with just real relations, but we can solve it by adding a virtual relation. Here is a mock-up of what the resulting schema might look like:
-
-```{r}
-if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
-  rankdir = \"LR\"
-  node [shape=plaintext];
-
-  \"c\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c</TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_a\">a</TD><TD PORT=\"FROM_a\"></TD></TR>
-    </TABLE>>];
-  \"b_c\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b_c</TD></TR>
-    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"></TD></TR>
-    </TABLE>>];
-  \"view\" [label = <
-    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">view</TD></TR>
-    <TR><TD>a</TD><TD BGCOLOR=\"black\"></TD></TR>
-    <TR><TD>b</TD><TD BGCOLOR=\"black\"></TD></TR>
-    <TR><TD>c</TD><TD></TD></TR>
-    </TABLE>>];
-
-  \"b_c\":FROM_c -> \"c\":TO_c;
-
-  \"view\":TITLE -> \"b_c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-}")
-```
-
-Some features to note:
-
-- Unlike before, the key for `view` is required, since it can't be inferred from the real relations. This is how we preserve `{a, b} -> c` when decomposing to BCNF.
-- `view` references both of the real relations, to show that it's the result of combining both of them. This means that `view` "references" relation `c` both directly, and via `b_c`. For real relations, the direct reference would be removed as being transitive, but in this case both give necessary information. If virtual relations get implemented, virtual-to-real "references" would be displayed differently, to make this clear.
-- `view` contains both `a` and `c`, as `a_b` did before. Unlike for `a_b`, this is not an extra appearance of `c -> a`, so is not a violation of BCNF. This is because, since `view` is virtual, its `a` and `c` values are exactly the same as those in relation `c`, so there is no incoherency possible.
-
-## Proper handling of nullable data
-
-This addresses how to decompose data with `NA` values. See the "Handling missing values" section for details.
-
-## Handling of duplicate records
-
-Relational theory is based on data being given as relations, that cannot have duplicate records. However, it's expected that an R user might pass in a data frame with duplicates: for example, R comes with some datasets, such as `iris`, that have duplicates if we don't include the row names.
-
-At the moment, these duplicates are kept when searching for dependencies. This can affect results for approximate dependencies, since it changes how many records must be removed for a given dependency to be satisfied. However, the duplicates are still removed when the data frame is decomposed into a database. At the moment, I'm not certain on whether these duplicates are best handled by removing them before beginning the search, or by simply returning an error if there are duplicate records.
-
-# Handling missing values
-
-## Missing values
-
-Strictly speaking, `autodb` does not search for functional dependencies, because these can't account for missing values. Instead, it searches for a weaker variant, which has been called a *literal* functional dependency (LFD) in the literature.
-
-The functional dependency `X -> Y` holds if, for any two possible records whose values in `X` are *equal*, their values in `Y` are also *equal*. This requires attribute values to take the *equality* operator, `==` in R. Additionally, they must take it under binary logic: whether two values are equal can only be true or false, not missing. This disallows the presence of missing values (`NA` and `NaN`), since testing for equality with a missing value returns a missing result.
-
-The literal functional dependency `X -> Y` holds, or the functional dependency `X -> Y` holds literally, if, for any two possible records whose values in `X` are *identical*, their values in `Y` are also *identical*, where values are identical if both are non-missing and equal, or both are missing. In other words, missing values are treated as not equal to non-missing values, but as equal to each other. This requires attribute classes to take the *identity* operator, `identical()` with default optional parameter values in R. Again, they must take it under binary logic, but the identity operator cannot return non-binary results anyway: In R, for example, `identical()` can only return `TRUE` or `FALSE`, never `NA`. There is, therefore, no constraint on missing values in attribute classes, or on attribute classes in general.
-
-LFDs are more generic than standard functional dependencies: since practically every class takes the identity operator, they practically make no assumptions about the attribute classes present in a data set. 
-
-There are other FD variants that handle missing values, but, unlike most of them, LFDs still satisfy Armstrong's axioms, allowing them to be used in normalisation in the same way as normal FDs. For example, they still respect transitivity: if X -> Y and Y -> Z literally, then X -> Z literally. This allows us to construct a database schema with Bernstein synthesis as usual, with LFDs instead of FDs, and still get something coherent.
-
-However, ignoring the special status of missing values in this way ignores important structural information. In the relational model, and ideally in relational databases, we want to have no missing values at all, partly to avoid awkward questions about what trinary logic means with respect to filtering or joining tables. For example, take the following data frame:
-
-```{r example_data_frame_with_NAs}
-df_nas <- data.frame(
-  patient = c(1L, 2L, 3L, 4L),
-  trial_entry_date = as.Date(c("2022/05/02", "2022/06/06", "2022/04/01", "2022/03/19")),
-  trial_exit_date = as.Date(c(NA, NA, "2022/10/07", NA))
-)
-knitr::kable(df_nas)
-```
-
-`autodb` currently treats `NA` as just another value, which results in the initial data frame not being split in the database schema:
-
-```{r example_data_frame_with_NAs_autodb}
-show(autodb(df_nas))
-```
-
-In this case, a missing exit date represents no exit date, i.e. that the patient is still in the trail, and we would prefer to move exit information to a separate relation, containing only patients with a exit date:
-
-```{r example_data_frame_with_NAs_nullably_normalised}
-ideal_db <- decompose(
-  df_nas,
-  database_schema(
-    relation_schema(
-      list(
-        patient = list(c("patient", "trial_entry_date"), list("patient")),
-        patient_exit = list(c("patient", "trial_exit_date"), list("patient"))
-      ),
-      names(df_nas)
-    ),
-    list(list("patient_exit", "patient", "patient", "patient"))
-  )
-)
-records(ideal_db)$patient_exit <- subset(records(ideal_db)$patient_exit, !is.na(trial_exit_date))
-show(ideal_db)
-```
-
-This makes more of the data's structure apparent, and enforceable, in the database structure, since it makes it clear that the death date is optional. However, removing missing values in this way isn't handled by `autodb` itself, so it has to be done by manually creating the schema and inserting/removing records, as shown above.
-
-## Structure conditional on value presence
-
-Sometimes, the structure for some attributes depends on whether other attributes are missing. Here are two possible reasons:
-
-- Some piece of information in a record takes one of several possible formats, which may have different data classes. This leaves the single piece of information spread across multiple sets of attributes, not necessarily disjoint, of which only one set is non-missing per record. In more general programming, this would be referred to as a union type. In relational theory, this is called a disjunctive existence union.
-- A set of attributes are missing or non-missing together. In more general programming, these attributes together represent an option type, or a nullable class.
-- Sets of attributes are mutually exclusive. In more general programming, these attributes together represent a discriminated union, or sum type.
-
-For example, the data below records values, and allows them to be single values, or an interval with an associated distribution, which may have some distribution parameters. This format is common when listing model parameters.
-
-```{r example_data_frame_with_interval_option}
-df_options <- data.frame(
-  id = 1:20,
-  value = c(2.3, 2.3, 5.7, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_),
-  lower_bound = c(NA_real_, NA_real_, NA_real_, 2.4, 0, 1, 0, 5.6, 2.4, 5.3, 5.3, 2.4, 2.4, 2.4, 2.4, 2.4, 2.4, 2.4, 5.6, 2.4),
-  upper_bound = c(NA_real_, NA_real_, NA_real_, 7.1, 10, 10, 13.1, 25.8, 10, 13.1, 10, 25.8, 25.8, 25.8, 25.8,13.1, 13.1, 25.8, 25.8, 25.8),
-  interval_distribution = factor(c(NA, NA, NA, "uniform", "uniform", "uniform", "uniform", "uniform", "Beta", "Beta", "Beta", "Beta", "Kumaraswamy", "Kumaraswamy", "Kumaraswamy", "Kumaraswamy", "PERT", "PERT", "PERT", "PERT")),
-  param1 = c(NA, NA, NA, NA, NA, NA, NA, NA, 1, 1, 1, 2, 2, 2.1, 2, 2, 2, 1, 2, 2),
-  param2 = c(NA, NA, NA, NA, NA, NA, NA, NA, 1, 2, 2, 2, 2, 1, 1, 1, NA, NA, NA, NA)
-)
-knitr::kable(df_options)
-```
-
-`autodb` has no way to know about these relationships, because it doesn't treat missing values as a special case, as described above. The resulting schema therefore ignores them:
-
-```{r example_data_frame_with_interval_option_db}
-db_options <- autodb(df_options)
-show(db_options)
-```
-
-However, from looking at the data ourselves, we can see a clearly-implied structure:
-
-- A record either has a perfectly-known value, or a distribution of what the value could be. These two options have separate attributes.
-- Distribution information contains a lower and upper bound, and a distribution type. Different distributions have different numbers of distribution parameters, which are given in shared parameter attributes.
-- Parameter attributes are ordered: their value can only be non-missing if all of the previous parameter values are non-missing.
-
-As a general hack for finding these sorts of relationships, I like taking each attribute with missing values, and adding a companion attribute that states whether the value is present or missing:
-
-```{r example_data_frame_with_interval_option_nulls}
-df_options_presence <- df_options[vapply(df_options, anyNA, logical(1))]
-df_options_presence[] <- lapply(df_options_presence, Negate(is.na))
-names(df_options_presence) <- paste0(names(df_options_presence), "_present")
-df_options_with_presence <- cbind(df_options, df_options_presence)
-```
-
-This is not always practical, because adding columns rapidly increases the running time for the dependency search. However, when it's practical, it helps to make the structure more apparent in the database schema:
-
-```{r example_data_frame_with_interval_option_nulls_db}
-db_options_with_presence <- autodb(df_options_with_presence)
-show(db_options_with_presence)
-```
-
-Some of the new relations just show that an attribute determines its associated presence attribute, which is always true. Of more interest is the `value_present` relation, which shows that the values, bounds, and interval distributions inform the presence of each other:
-
-```{r example_data_frame_with_interval_option_nulls_rel}
-knitr::kable(records(db_options_with_presence)$value_present)
-```
-
-In the `interval_distribution` relation, we can also see how the interval distribution determines how many parameters are required:
-
-```{r example_data_frame_with_interval_option_nulls_distribution_rel}
-knitr::kable(records(db_options_with_presence)$interval_distribution)
-```
-
-This shows addition structure, specifically an existence constraint: if `param2` is present, then `param1` is also present. If we notice a situation like this, we can attempt further investigation by splitting the data, and passing each part into `autodb` separately. Splitting on whether `param1` is present, we get the following database for records where it is absent:
-
-```{r example_data_frame_with_interval_option_p1absent_db}
-db_options_with_presence_p1absent <- autodb(subset(
-  df_options_with_presence,
-  !param1_present
-))
-show(db_options_with_presence_p1absent)
-```
-
-This only contains records for point estimates, or intervals with a uniform distribution, so the distribution value is now equivalent to its presence/absence, or that of the value and bounds. Due to the existence constraint mentioned above, `param2` is constant, since it's always absent:
-
-```{r example_data_frame_with_interval_option_p1absent_constants}
-knitr::kable(records(db_options_with_presence_p1absent)$constants)
-```
-
-We get the following database for records where `param1` is present:
-
-```{r example_data_frame_with_interval_option_p1present_db}
-show(autodb(subset(
-  df_options_with_presence,
-  param1_present
-)))
-```
-
-In this case, whether `param2` is present is determined by the distribution used, as we'd expect.
-
-Since this data splitting is currently a manual process, there are practical limits to how far we can take this. In the future, I'd like to have automating it as an option, but this could greatly increase the required run time.
-
-# Limitations
-
-Automatic data normalisation, such as done by `autodb`, is useful, but it isn't magic. This vignette covers some common issues that this approach can't address.
-
-## Value-based constraints
-
-Since the process is agnostic to what kind of data is stored in each attribute, it can't find any constraints that depend on the actual data values. A simple case is that, for example, it won't state whether an attribute's values are within a given range, since that would require making use of the knowledge that the attribute has a number class, such as `integer` or `numeric`.
-
-## Semantic types
-
-Another example of the process being agnostic to data values is that it can't make any inference based on attribute classes. A common example of this is when we have entities of a given type referring to each other.
-
-For example, suppose we have a dataset of publication citations, where each row contains the citer and citee IDs, plus supplementary information about both publications. The resulting database given by `autodb` has the following schema, after giving the relations appropriate names:
-
-```{r}
-show(database_schema(
-  relation_schema(
-    list(
-      citation = list(c("citer_id", "citee_id"), list(c("citer_id", "citee_id"))),
-      citer = list(c("citer_id", "citer_title", "citer_author", "citer_year"), list("citer_id")),
-      citee = list(c("citee_id", "citee_title", "citee_author", "citee_year"), list("citee_id"))
-    ),
-    c(
-      "citer_id", "citer_title", "citer_author", "citer_year",
-      "citee_id", "citee_title", "citee_author", "citee_year"
-    )
-  ),
-  list(
-    list("citation", "citer_id", "citer", "citer_id"),
-    list("citation", "citee_id", "citee", "citee_id")
-  )
-))
-```
-
-Of course, citers and citees are both publications of the same type, so they shouldn't have separate relations:
-
-```{r}
-show(database_schema(
-  relation_schema(
-    list(
-      citation = list(c("citer", "citee"), list(c("citer", "citee"))),
-      publication = list(c("id", "title", "author", "year"), list("id"))
-    ),
-    c("citer", "citee", "id", "title", "author", "year")
-  ),
-  list(
-    list("citation", "citer", "publication", "id"),
-    list("citation", "citee", "publication", "id")
-  )
-))
-```
-
-We make this improvement because `citer_id` and `citee_id` values are, semantically, the same class of object, and the same goes for authors, titles, etc. Semantic types are not something that can be inferred by just looking at the data classes.
-
-If we don't account for this semantic identity, the separate citer and citee information relations in the original schema can both hold information for the same publication. If their information is the same, then there is unwanted redundancy. If their information is different, there is a data incoherency not prevented by the schema. Neither situation is desirable.
-
-Currently, the only way to account for this semantic identity to create or modify the schema manually, like above.
-
-# Table merges don't fix issues with `merge.data.frame`
-
-Rejoining databases, and checking relations satisfy foreign key constraints, is done using `merge.data.frame`. This means that data classes that don't work properly in `merge` aren't guaranteed to work properly in `autodb`.
-
-Any such issues come from how certain data classes are handled during merges in the base language, so they are issues with R, rather than with `autodb`, and I have no plans to fix them. If `autodb` seems to have odd failures, check that used data classes behave correctly in merges.
-
-For example, in older versions of R, the built-in POSIXct date/time class didn't have values merged properly, because the merge didn't account for differences in time zone / daylight saving time. This would result in, for example, the `nycflights13::weather` data set violating the foreign key constraints of its own discovered schema, since one foreign key used a POSIXct attribute.
-
-A more complex example, that still applies and probably always will, is a merge where two attributes being merged on have different classes. In general, this is allowed: since `autodb` is written for R, a dynamically-typed language, it follows SQLite in not constraining the user much when it comes to data classes in schemas. For primitive classes, R's class coercion usually makes things work as you'd expect.
-
-However, merging a factor attribute with a non-factor, non-character attribute should be handled with caution if the latter contains values not in the factor's level set.
-
-For example, we can define these data frames:
-
-```{r factor_example_datasets}
-df_badmerge_int <- cbind(
-  expand.grid(
-    a = c(NA, 0L, 1L),
-    b = c(NA, FALSE, TRUE)
-  ),
-  row = 1:9
-)
-df_badmerge_factor <- df_badmerge_int
-df_badmerge_factor$a <- as.factor(df_badmerge_factor$a)
-knitr::kable(df_badmerge_int)
-df_badmerge_logical <- df_badmerge_int
-df_badmerge_logical$a <- as.logical(df_badmerge_logical$a)
-names(df_badmerge_logical)[[3]] <- "row2"
-knitr::kable(df_badmerge_logical)
-```
-
-We can then merge the data frame with logical `a` with the other two, keeping the `row` attributes to track which records were merged.
-
-Whichever other data frame we merge with, the two sets of `a` values have different classes, so R does coercion. When merging with just `a`, this gives the result we'd expect, for both other data frames and regardless of merge order. For the integer version, the logical values are coerced to integers:
-
-```{r factor_example_int_single}
-knitr::kable(merge(
-  df_badmerge_int[, c("a", "row")],
-  df_badmerge_logical[, c("a", "row2")]
-))
-```
-
-```{r factor_example_int_single_symmetric}
-knitr::kable(merge(
-  df_badmerge_logical[, c("a", "row2")],
-  df_badmerge_int[, c("a", "row")]
-))
-```
-
-For the factor version, the logical values are coerced to factors, but they don't match any of the given levels, so they all become `NA`:
-
-```{r factor_example_single}
-knitr::kable(merge(
-  df_badmerge_factor[, c("a", "row")],
-  df_badmerge_logical[, c("a", "row2")]
-))
-```
-
-```{r factor_example_single_symmetric}
-knitr::kable(merge(
-  df_badmerge_logical[, c("a", "row2")],
-  df_badmerge_factor[, c("a", "row")]
-))
-```
-
-However, we see unexpected behaviour with the factor version, when also merging on another attribute, `b`: the merge result now depends on the input order. With the factor version first, the result is similar to before:
-
-```{r factor_example}
-knitr::kable(merge(
-  df_badmerge_factor,
-  df_badmerge_logical
-))
-```
-
-With the logical version first, however, only the logical `a` values that are `NA` before coercion are kept, rather than all of them: 
-
-```{r factor_example_asymmetric}
-knitr::kable(merge(
-  df_badmerge_logical,
-  df_badmerge_factor
-))
-```
-
-In `autodb`, this could be a problem if two relations in a foreign key constraint contain the same attribute, but one of them has it store factors in records, due to separate insertions. Letting an attribute's class vary across relations should, therefore, be done with caution.
-
-## Synthesis doesn't minimise relation key count
-
-Bernstein's synthesis is guaranteed to minimise the number of relations created for a given set of functional dependencies, and removing avoidable attributes can reduce the number of attributes in those relations. However, there can still be redundant keys. For example, we can take the following set of functional dependencies:
-
-```{r redundant_keys_example}
-fds_redkey <- functional_dependency(
-  list(
-    list("a", "b"),
-    list("d", "c"),
-    list(c("b", "d"), "a"),
-    list("a", "c"),
-    list(c("b", "c"), "d")
-  ),
-  letters[1:4]
-)
-fds_redkey
-```
-
-Normalising gives the following relations:
-
-```{r redundant_keys_schema}
-schema_redkey <- normalise(fds_redkey, remove_avoidable = TRUE)
-show(schema_redkey)
-```
-
-These relations have some redundancy: relation `a` implies `{b, d} -> c`, but relation `d` implies that `{d} -> c`. This isn't resolved by removing avoidable attributes, because `d` still needs to be in relation `a`: we just need to remove `{b, d}` as a key. However, this is resolved if we instead use this set of functional dependencies, which is equivalent to the previous set:
-
-```{r redundant_keys_fix}
-fds_redkey_fix <- functional_dependency(
-  list(
-    list("a", "b"),
-    list("d", "c"),
-    list(c("b", "c"), "a"),
-    list("a", "d")
-  ),
-  letters[1:4]
-)
-fds_redkey_fix
-schema_redkey_fix <- normalise(fds_redkey_fix, remove_avoidable = TRUE)
-show(schema_redkey_fix)
-```
-
-Unfortunately, there's no way in the package to find better sets like this.
-
-## Normal forms are't all there is to database design
-
-Normal forms only refer to one relation at a time: referring to a database as being in a given normal form just means that each if its relations are in it individually. This doesn't address the addition of foreign key references, but, even if the references are sensible, schemas that are in higher normal forms may not be ones that we'd want to use.
-
-For example, take this database schema, whose relation schemas are in third normal form:
-
-```{r dup_example}
-dup_db <- autodb(ChickWeight)
-show(dup_db)
-```
-
-If we now create copies of these relations, with the intention that copies always contain the same data, then all relations are still in third normal form, and so we'd say this database is also in third normal form:
-
-```{.r}
-show(dup_db[c(1, 1, 2, 2, 2)])
-```
-
-However, no one would claim that this is a good database design, since there is clearly a large amount of data redundancy. Higher normal forms would not change this. In fact, since the copies do not reference each other, it is also trivial to insert data to make this database incoherent. For example, `Chick` and `Chick.1` could contain different diet assignments.
