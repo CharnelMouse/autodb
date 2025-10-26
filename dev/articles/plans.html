@@ -94,21 +94,216 @@
 <span>  <span class="va">maybe_plot</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <div class="section level2">
-<h2 id="views-for-connected-reference-chains">Views for connected reference chains<a class="anchor" aria-label="anchor" href="#views-for-connected-reference-chains"></a>
+<h2 id="views-for-bcnf-and-connected-reference-chains">Views for BCNF and connected reference chains<a class="anchor" aria-label="anchor" href="#views-for-bcnf-and-connected-reference-chains"></a>
 </h2>
+<p>Two features that I’d like to add to <code>autodb</code> both have
+issues in the current implementation, that are both solved by allowing a
+restricted version of virtual relations, commonly known as views. I’ll
+show the issues first.</p>
+<div class="section level3">
+<h3 id="boyes-codd-normal-form">Boyes-Codd Normal Form<a class="anchor" aria-label="anchor" href="#boyes-codd-normal-form"></a>
+</h3>
+<p><code>autodb</code> currently normalises data to third normal form
+(3NF). (Actually, it normalises to a slightly strong form called
+elementary key normal form, which has the same issue as presented
+below). Third normal form can be formally defined as follows:</p>
+<p>A database is in <em>third normal form</em> (3NF) if and only if all
+of its relations are in 3NF. A relation is in 3NF if all of the
+non-trivial functional dependencies
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>→</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">X \rightarrow y</annotation></semantics></math>
+satisfied by its attributes satisfy one of the following:</p>
+<ol style="list-style-type: decimal">
+<li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+is a superkey (i.e. contains one of the relation’s keys);</li>
+<li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+is a member of a key.</li>
+</ol>
+<p>A functional dependency (FD)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>→</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">X \rightarrow y</annotation></semantics></math>
+is <em>trivial</em> if
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+is in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>,
+i.e. it states that an attribute co-determines itself, which is
+trivially true.</p>
+<p>Boyes-Codd normal form (BCNF) strengthens this by dropping the second
+condition. (Conversely, second normal form weakens this by adding a
+third option: that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+is a subkey, i.e. is contained in one of the keys.)</p>
+<p>To see the difference between 3NF and BCNF, consider the following
+set of FDs, and the resulting schema given by <code>autodb</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/functional_dependency.html">functional_dependency</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span>, <span class="st">"c"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"c"</span>, <span class="st">"a"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  <span class="va">letters</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">fds</span></span></code></pre></div>
+<pre><code><span><span class="co">## 2 functional dependencies</span></span>
+<span><span class="co">## 3 attributes: a, b, c</span></span>
+<span><span class="co">## a, b -&gt; c</span></span>
+<span><span class="co">##    c -&gt; a</span></span></code></pre>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">schema</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/normalise.html">normalise</a></span><span class="op">(</span><span class="va">fds</span><span class="op">)</span></span>
+<span><span class="fu">show</span><span class="op">(</span><span class="va">schema</span><span class="op">)</span></span></code></pre></div>
+<div id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"a_b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">a_b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a_b\":FROM_c -> \"c\":TO_c;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>The above schema is in 3NF, but not BCNF:</p>
+<ul>
+<li>Relation <code>c</code> contains one FD:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">\{c\} \rightarrow a</annotation></semantics></math>.
+Since
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{c\}</annotation></semantics></math>
+is a key, relation <code>c</code> is in 3NF, and BCNF.</li>
+<li>Relation <code>a_b</code> contains two FDs:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">\{a, b\} \rightarrow c</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">\{c\} \rightarrow a</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{a, b\}</annotation></semantics></math>
+is a key for <code>a_b</code>, but
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{c\}</annotation></semantics></math>
+is not, so <code>a_b</code> is not in BCNF. However,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>
+is within the key <code>\{a, b\}</code>, so relation <code>a_b</code> is
+in 3NF.</li>
+</ul>
+<p>In fact, <code>autodb</code> does more than is required here: the
+relation <code>a_b</code> by itself is in 3NF, and contains all of the
+attributes, so we don’t need relation <code>c</code>.</p>
+<p>This double appearance of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">\{c\} \rightarrow a</annotation></semantics></math>
+results in some redundancy: we’re listing the resulting
+<code>(c, a)</code> pairs twice. Even worse, only one of them is
+enforced via a key: if, after normalising, we add more data to the two
+relations separately, then we can two sets of <code>(c, a)</code> pairs
+that aren’t mutually coherent :</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">db</span> <span class="op">&lt;-</span> <span class="va">schema</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/create.html">create</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/insert.html">insert</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>c <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, a <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">)</span>, relations <span class="op">=</span> <span class="st">"c"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/insert.html">insert</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, b <span class="op">=</span> <span class="fl">1L</span>, c <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">1</span><span class="op">)</span>, relations <span class="op">=</span> <span class="st">"a_b"</span><span class="op">)</span></span>
+<span><span class="va">rab</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/records.html">records</a></span><span class="op">(</span><span class="va">db</span><span class="op">)</span><span class="op">$</span><span class="va">a_b</span></span>
+<span><span class="va">rc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/records.html">records</a></span><span class="op">(</span><span class="va">db</span><span class="op">)</span><span class="op">$</span><span class="va">c</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">rab</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="right">a</th>
+<th align="right">b</th>
+<th align="right">c</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">rc</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="right">c</th>
+<th align="right">a</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">2</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">rab</span>, <span class="va">rc</span>, by <span class="op">=</span> <span class="st">"c"</span>, suffixes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">".a_b"</span>, <span class="st">".c"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="right">c</th>
+<th align="right">a.a_b</th>
+<th align="right">b</th>
+<th align="right">a.c</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+</tr>
+</tbody>
+</table>
+<p>If we remove relation <code>c</code>, we still have the same problem,
+which is that relation <code>a_b</code> doesn’t enforce
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">\{c\} \rightarrow a</annotation></semantics></math>
+with a key, so we can easily insert data that violates it.</p>
+<p>The standard way to fix this schema to satisfy BCNF is by splitting
+relation <code>a_b</code> on the violated functional dependency, namely
+<code>c -&gt; a</code>:</p>
+<div id="htmlwidget-e5c8c404fe174e4c81bd" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-e5c8c404fe174e4c81bd">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b_c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">b_c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"b_c\":FROM_c -> \"c\":TO_c;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>This is now in BCNF: relation <code>c</code> is in BCNF for the same
+reasons as before, and relation <code>b_c</code> contains no FDs at all,
+but is required for the decomposition to be lossless.</p>
+<p>There is now a different issue: the FD
+<code>\{a, b\} \rightarrow c</code> isn’t represented anywhere, let
+alone enforced with a key! This is an example of how BCNF sometimes
+can’t be achieved using just (real) relations.</p>
+<p>We can keep the other FD by noting it somewhere, but this is not what
+I’d call a nice approach. It also raises questions about how to plot the
+schema nicely: we don’t want to just have a list of non-represented FDs
+sitting in a corner of the plot.</p>
+<p>When this problem with BCNF is introduced, it’s often added that this
+is a rare occurrence in practice, and that usually you can normalise to
+3NF and get BCNF for free, without the above issue. All I would say is
+that, for almost every real dataset I’ve worked with, normalising it
+with <code>autodb</code> has demonstrated that a subsection of the data
+has exactly the three-attribute situation shown in the example
+above.</p>
+</div>
+<div class="section level3">
+<h3 id="reference-chains">Reference chains<a class="anchor" aria-label="anchor" href="#reference-chains"></a>
+</h3>
+<p>As described above, Boyes-Codd normal form can not always be
+represented with just (real) relations. However, if we want desirable
+properties for the foreign key references, then we run into problems for
+third normal form too.</p>
 <p>When <code>autodb</code>, or <code>autoref</code>, generates foreign
 key references for relations decomposed from a single table, it
 naturally tends to a structure where there is a single low-level data
-relation on the left, and higher-level relations are “downstream” with
-respect to references, with the number of records strictly decreasing as
-we follow references to higher-level data relations.</p>
-<p>The nice thing about this is that, while the schema is created
+relation on the left – or several if the original data has independent
+partitions – and higher-level relations are “downstream” with respect to
+references, with the number of records strictly decreasing as we follow
+references to higher-level data relations. This resulting database
+schema is acyclic. Acyclic database schemas have some nice properties,
+an important one being that, if we want to join together two relations
+with some common attributes, there is always a way to do so by joining
+along foreign key references.</p>
+<p>Similarly, it’s simple to reconstruct the original simple table: just
+join the relations back together by “telescoping” back along the foreign
+key references.</p>
+<p>Considering this rejoin plan in reverse, while the schema is created
 constructively, we can view it as a series of decompositions: start with
-the original table, split it up into two or more sub-tables, and repeat.
-Rejoining the database would then do this in reverse.</p>
-<p>Unfortunately, not every set of functional dependencies allows this.
-Consider the following:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+the original table, split it up into two or more sub-tables, linked
+together by foreign key references, and repeat. Rejoining the database
+then undoes these decompositions, in the opposite order.</p>
+<p>Unfortunately, not every set of functional dependencies allows this,
+because the resulting schema might not be connected. Consider the
+following set of FDs:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/functional_dependency.html">functional_dependency</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span>,</span>
@@ -129,311 +324,100 @@ Consider the following:</p>
 <span><span class="co">## d, e -&gt; f</span></span></code></pre>
 <p>Bernstein synthesis, and automatic foreign keys, give the following
 schema:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">schema</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/normalise.html">normalise</a></span><span class="op">(</span><span class="va">fds</span><span class="op">)</span></span>
-<span><span class="fu">show</span><span class="op">(</span><span class="va">schema</span><span class="op">)</span></span></code></pre></div>
-<div id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"b\":TO_b;\n  \"a\":FROM_c -> \"c\":TO_c;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>The schema is not connected, because <code>d_e</code>’s key is not
-present in any other relation. In terms of a series of decompositions,
-we could think of the original table being split into
-<code>{a,b,c,d,e}</code> and <code>{d,e,f}</code> first, with a
-reference between them, and <code>d</code> and <code>e</code> being
-split off later, destroying the reference.</p>
-<p>In short, while Boyes-Codd Normal Form may be the first normal form
-that can’t always be satisfied with just relations, if we also want to
-keep all the relations related to each other with foreign key references
-for consistency, then third normal form also can’t always be
-satisfied.</p>
-<p>One way to solve this, which is a planned addition, is to allow
-virtual relations, also known as views. These are relations whose data
-is not stored, because it’s generated from other relations that do store
-their data (real relations).</p>
-<p>Usually, views are used to allow easy “look-up” of commonly-queried
-aggregates. Here, we could use them to maintain the connected schema
-structure. Here is a mock-up of what the resulting schema might look
-like:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="st">"digraph {</span></span>
-<span><span class="st">  rankdir = \"LR\"</span></span>
-<span><span class="st">  node [shape=plaintext];</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  \"a\" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TITLE\" COLSPAN=\"2\"&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_a\"&gt;a&lt;/TD&gt;&lt;TD PORT=\"FROM_a\" BGCOLOR=\"black\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_b\"&gt;b&lt;/TD&gt;&lt;TD PORT=\"FROM_b\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_c\"&gt;c&lt;/TD&gt;&lt;TD PORT=\"FROM_c\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  \"b\" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TITLE\" COLSPAN=\"2\"&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_b\"&gt;b&lt;/TD&gt;&lt;TD PORT=\"FROM_b\" BGCOLOR=\"black\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_d\"&gt;d&lt;/TD&gt;&lt;TD PORT=\"FROM_d\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  \"c\" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TITLE\" COLSPAN=\"2\"&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_c\"&gt;c&lt;/TD&gt;&lt;TD PORT=\"FROM_c\" BGCOLOR=\"black\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_e\"&gt;e&lt;/TD&gt;&lt;TD PORT=\"FROM_e\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  \"d_e\" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TITLE\" COLSPAN=\"2\"&gt;d_e&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_d\"&gt;d&lt;/TD&gt;&lt;TD PORT=\"FROM_d\" BGCOLOR=\"black\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_e\"&gt;e&lt;/TD&gt;&lt;TD PORT=\"FROM_e\" BGCOLOR=\"black\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_f\"&gt;f&lt;/TD&gt;&lt;TD PORT=\"FROM_f\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  \"view\" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TITLE\" COLSPAN=\"1\"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;d&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;e&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;f&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  \"a\":FROM_b -&gt; \"b\":TO_b;</span></span>
-<span><span class="st">  \"a\":FROM_c -&gt; \"c\":TO_c;</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  \"view\":TITLE -&gt; \"a\":TITLE [arrowhead=\"empty\" style=\"dashed\"];</span></span>
-<span><span class="st">  \"view\":TITLE -&gt; \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];</span></span>
-<span><span class="st">}"</span>, width <span class="op">=</span> <span class="st">"100%"</span><span class="op">)</span></span></code></pre></div>
-<div id="htmlwidget-e5c8c404fe174e4c81bd" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-e5c8c404fe174e4c81bd">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <TR><TD>f<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"b\":TO_b;\n  \"a\":FROM_c -> \"c\":TO_c;\n\n  \"view\":TITLE -> \"a\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>Note that virtual relations have different rules to real
-relations:</p>
-<ul>
-<li>Virtual relations need not have a key. In this example,
-<code>view</code> does have <code>a</code> as a key, but this key can be
-inferred from the real relations it’s a merging / joining of, so does
-not need to be stated explicitly.</li>
-<li>Virtual relations do not contain their own data: it’s pulled in from
-the relations it merges together. This allows it to contain a set of
-attributes without being an instantiation of any functional dependencies
-between those attributes. For example, <code>view</code> contains
-<code>{a, b}</code>, but does not introduce a redundant instance of
-<code>{a} -&gt; b</code> in addition to the one in relation
-<code>a</code>.</li>
-<li>Instead of foreign key references to keys in other relations,
-virtual relations just “refer” to the real relations they are a merging
-of.</li>
-</ul>
-<p>This addition of virtual relations allows databases to always be
-connected as a tree. This is useful for visualisation, and for planning
-rejoins, since those can always be done by merging tables along foreign
-key references.</p>
-<p>We could explicitly show <em>all</em> of the decomposition steps as
-virtual relations, but it’s not clear that it’s worth the bother:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="st">"digraph {</span></span>
-<span><span class="st">  rankdir = \"LR\"</span></span>
-<span><span class="st">  node [shape=plaintext];</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  \"a\" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TITLE\" COLSPAN=\"2\"&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_a\"&gt;a&lt;/TD&gt;&lt;TD PORT=\"FROM_a\" BGCOLOR=\"black\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_b\"&gt;b&lt;/TD&gt;&lt;TD PORT=\"FROM_b\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_c\"&gt;c&lt;/TD&gt;&lt;TD PORT=\"FROM_c\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  \"b\" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TITLE\" COLSPAN=\"2\"&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_b\"&gt;b&lt;/TD&gt;&lt;TD PORT=\"FROM_b\" BGCOLOR=\"black\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_d\"&gt;d&lt;/TD&gt;&lt;TD PORT=\"FROM_d\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  \"c\" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TITLE\" COLSPAN=\"2\"&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_c\"&gt;c&lt;/TD&gt;&lt;TD PORT=\"FROM_c\" BGCOLOR=\"black\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_e\"&gt;e&lt;/TD&gt;&lt;TD PORT=\"FROM_e\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  \"d_e\" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TITLE\" COLSPAN=\"2\"&gt;d_e&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_d\"&gt;d&lt;/TD&gt;&lt;TD PORT=\"FROM_d\" BGCOLOR=\"black\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_e\"&gt;e&lt;/TD&gt;&lt;TD PORT=\"FROM_e\" BGCOLOR=\"black\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_f\"&gt;f&lt;/TD&gt;&lt;TD PORT=\"FROM_f\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  \"view\" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TITLE\" COLSPAN=\"1\"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;d&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;e&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;f&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  \"view2\" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TITLE\" COLSPAN=\"1\"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;d&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;e&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  \"view3\" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TITLE\" COLSPAN=\"1\"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;d&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  \"a\":FROM_b -&gt; \"b\":TO_b;</span></span>
-<span><span class="st">  \"a\":FROM_c -&gt; \"c\":TO_c;</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  \"view\":TITLE -&gt; \"view2\":TITLE [arrowhead=\"empty\" style=\"dashed\"];</span></span>
-<span><span class="st">  \"view\":TITLE -&gt; \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];</span></span>
-<span><span class="st">  \"view2\":TITLE -&gt; \"view3\":TITLE [arrowhead=\"empty\" style=\"dashed\"];</span></span>
-<span><span class="st">  \"view2\":TITLE -&gt; \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];</span></span>
-<span><span class="st">  \"view3\":TITLE -&gt; \"a\":TITLE [arrowhead=\"empty\" style=\"dashed\"];</span></span>
-<span><span class="st">  \"view3\":TITLE -&gt; \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];</span></span>
-<span><span class="st">}"</span>, width <span class="op">=</span> <span class="st">"100%"</span><span class="op">)</span></span></code></pre></div>
-<div id="htmlwidget-36aa3d2a04d42bbc2145" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-36aa3d2a04d42bbc2145">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <TR><TD>f<\/TD><\/TR>\n    <\/TABLE>>];\n  \"view2\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <\/TABLE>>];\n  \"view3\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"b\":TO_b;\n  \"a\":FROM_c -> \"c\":TO_c;\n\n  \"view\":TITLE -> \"view2\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view2\":TITLE -> \"view3\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view2\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view3\":TITLE -> \"a\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view3\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
-</div>
-<div class="section level2">
-<h2 id="boyes-codd-normal-form">Boyes-Codd Normal Form<a class="anchor" aria-label="anchor" href="#boyes-codd-normal-form"></a>
-</h2>
-<p>Another use of the virtual relations mentioned above is that they
-make BCNF always achievable. For example, take the following standard
-example of a set of functional dependencies that cannot be expressed in
-BCNF using just relations:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/functional_dependency.html">functional_dependency</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span>, <span class="st">"c"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"c"</span>, <span class="st">"a"</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  <span class="va">letters</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">fds</span></span></code></pre></div>
-<pre><code><span><span class="co">## 2 functional dependencies</span></span>
-<span><span class="co">## 3 attributes: a, b, c</span></span>
-<span><span class="co">## a, b -&gt; c</span></span>
-<span><span class="co">##    c -&gt; a</span></span></code></pre>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">schema</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/normalise.html">normalise</a></span><span class="op">(</span><span class="va">fds</span><span class="op">)</span></span>
-<span><span class="fu">show</span><span class="op">(</span><span class="va">schema</span><span class="op">)</span></span></code></pre></div>
-<div id="htmlwidget-febe03efa1a2d8d52a86" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-febe03efa1a2d8d52a86">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"a_b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">a_b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a_b\":FROM_c -> \"c\":TO_c;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>The above schema is in third normal form. However, it is not in the
-higher Boyes-Codd normal form (BCNF), because <code>c -&gt; a</code> is
-present in relation <code>a_b</code>, but not in terms of a key. This
-results in some redundancy, but also means that the two representations
-of <code>c -&gt; a</code> can hold sets of data that aren’t mutually
-coherent :</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">db</span> <span class="op">&lt;-</span> <span class="va">schema</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/create.html">create</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/insert.html">insert</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>c <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, a <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">)</span>, relations <span class="op">=</span> <span class="st">"c"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/insert.html">insert</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, b <span class="op">=</span> <span class="fl">1L</span>, c <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">1</span><span class="op">)</span>, relations <span class="op">=</span> <span class="st">"a_b"</span><span class="op">)</span></span>
-<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="fu"><a href="../reference/records.html">records</a></span><span class="op">(</span><span class="va">db</span><span class="op">)</span><span class="op">$</span><span class="va">a_b</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="right">a</th>
-<th align="right">b</th>
-<th align="right">c</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="right">1</td>
-<td align="right">1</td>
-<td align="right">2</td>
-</tr>
-<tr class="even">
-<td align="right">2</td>
-<td align="right">1</td>
-<td align="right">1</td>
-</tr>
-</tbody>
-</table>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="fu"><a href="../reference/records.html">records</a></span><span class="op">(</span><span class="va">db</span><span class="op">)</span><span class="op">$</span><span class="va">c</span><span class="op">)</span></span></code></pre></div>
-<table class="table">
-<thead><tr class="header">
-<th align="right">c</th>
-<th align="right">a</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td align="right">1</td>
-<td align="right">1</td>
-</tr>
-<tr class="even">
-<td align="right">2</td>
-<td align="right">2</td>
-</tr>
-</tbody>
-</table>
-<p>The standard way to fix this schema to satisfy BCNF is by splitting
-relation <code>a_b</code> on the violated functional dependency, namely
-<code>c -&gt; a</code>:</p>
+<code class="sourceCode R"><span><span class="va">schema</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/normalise.html">normalise</a></span><span class="op">(</span><span class="va">fds</span><span class="op">)</span></span>
+<span><span class="fu">show</span><span class="op">(</span><span class="va">schema</span><span class="op">)</span></span></code></pre></div>
+<div id="htmlwidget-36aa3d2a04d42bbc2145" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-36aa3d2a04d42bbc2145">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"b\":TO_b;\n  \"a\":FROM_c -> \"c\":TO_c;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>The schema is not connected: relation <code>d_e</code> is stranded,
+because no other relation contains its key, and vice versa. In terms of
+a series of decompositions, we could think of the original table being
+split into <code>{a,b,c,d,e}</code> and <code>{d,e,f}</code> first, with
+<code>\{d, e\}</code> forming a foreign key reference, and
+<code>d</code> and <code>e</code> being split apart later, destroying
+the reference.</p>
+<p>Similarly to the example for BCNF, this has undesirable consequences
+if we add more data after normalisation: because <code>d_e</code> is
+isolated, we can insert data into it that will be inconsistent with the
+other relations if we rejoin everything back together.</p>
+</div>
+<div class="section level3">
+<h3 id="views-as-a-solution">Views as a solution<a class="anchor" aria-label="anchor" href="#views-as-a-solution"></a>
+</h3>
+<p>Virtual relations, or views, are defined as the result of an
+operation on other relations (real or virtual). In real databases, this
+might be done as a convenient way to refer to the result of joining some
+other tables, or aggregating values in a non-trivial way, so that the
+code for these doesn’t need to be repeated. Virtual relations don’t
+store any data themselves: if they’re queried, they’re created from
+scratch, so they’re never inconsistent with the relations they’re
+defined by.</p>
+<p>Here, we use a more restricted version of views, that is defined as
+the join of other relations. Views always have at least one key, implied
+by the relations they’re joining. We extend this by letting them have
+their own non-implied keys, that are required to hold on the join
+result.</p>
+<p>Let’s see how this can solve the issue in the BCNF example, where
+normalising left the FD
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">\{a, b\} \rightarrow c</annotation></semantics></math>
+not represented in the schema:</p>
+<div id="htmlwidget-febe03efa1a2d8d52a86" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-febe03efa1a2d8d52a86">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b_c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b_c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><TD BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD>b<\/TD><TD BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD>c<\/TD><TD><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"b_c\":FROM_c -> \"c\":TO_c;\n\n  \"view\":TITLE -> \"b_c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>The view has a darker background, and points to the relations it’s
+calculated from using different arrows, to mark it out as different.
+Note that it only points to one relation here (<code>b_c</code>), with
+the implication that it first joins that table to all of its ancestors
+(<code>c</code>).</p>
+<p>The view has the implied key
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>b</mi><mo>,</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{b, c\}</annotation></semantics></math>,
+and we show the missing FD
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">\{a, b\} \rightarrow c</annotation></semantics></math>
+by giving
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{a, b\}</annotation></semantics></math>
+as an additional key.</p>
+<p>Note that the view contains both
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>.
+However, unlike the original schema, this is not a repeat occurrence of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">\{c\} \rightarrow a</annotation></semantics></math>,
+because the data is taken directly from its appearance in relation
+<code>c</code>.</p>
+<p>It’s also worth noting that, since the view is just the original 3NF
+solution, it is not in BCNF itself. Views do not need to be in as high a
+normal form as the database they’re in.</p>
+<p>Here’s how views solve the issue in the 3NF example:</p>
 <div id="htmlwidget-1fb4450895fe099f74a1" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-1fb4450895fe099f74a1">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b_c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">b_c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"b_c\":FROM_c -> \"c\":TO_c;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>The resulting schema is now in BCNF, but we have a different problem:
-the dependency <code>{a, b} -&gt; c</code> has disappeared! Fixing this
-can’t be done with just real relations, but we can solve it by adding a
-virtual relation. Here is a mock-up of what the resulting schema might
-look like:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="st">"digraph {</span></span>
-<span><span class="st">  rankdir = \"LR\"</span></span>
-<span><span class="st">  node [shape=plaintext];</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  \"c\" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TITLE\" COLSPAN=\"2\"&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_c\"&gt;c&lt;/TD&gt;&lt;TD PORT=\"FROM_c\" BGCOLOR=\"black\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_a\"&gt;a&lt;/TD&gt;&lt;TD PORT=\"FROM_a\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  \"b_c\" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TITLE\" COLSPAN=\"2\"&gt;b_c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_b\"&gt;b&lt;/TD&gt;&lt;TD PORT=\"FROM_b\" BGCOLOR=\"black\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TO_c\"&gt;c&lt;/TD&gt;&lt;TD PORT=\"FROM_c\" BGCOLOR=\"black\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  \"view\" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT=\"TITLE\" COLSPAN=\"2\"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;a&lt;/TD&gt;&lt;TD BGCOLOR=\"black\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;TD BGCOLOR=\"black\"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;TD&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  \"b_c\":FROM_c -&gt; \"c\":TO_c;</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  \"view\":TITLE -&gt; \"b_c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];</span></span>
-<span><span class="st">  \"view\":TITLE -&gt; \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];</span></span>
-<span><span class="st">}"</span>, width <span class="op">=</span> <span class="st">"100%"</span><span class="op">)</span></span></code></pre></div>
+<script type="application/json" data-for="htmlwidget-1fb4450895fe099f74a1">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <TR><TD>f<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"b\":TO_b;\n  \"a\":FROM_c -> \"c\":TO_c;\n\n  \"view\":TITLE -> \"a\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>Again, note that the view is not in 3NF itself, since it contains
+implied transitive dependencies.</p>
+<p>It might seem unnecessary to bring attribute <code>a</code> into the
+view, since we only need the attributes in relations <code>b</code> and
+<code>c</code> to connect to <code>d_e</code>. However, creating a view
+without <code>a</code> either doesn’t result in an acyclic schema,, or
+requires having a real relation have a foreign key reference to a
+view:</p>
 <div id="htmlwidget-10b3b7155e8045a1b2ad" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-10b3b7155e8045a1b2ad">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b_c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b_c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><TD BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD>b<\/TD><TD BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD>c<\/TD><TD><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"b_c\":FROM_c -> \"c\":TO_c;\n\n  \"view\":TITLE -> \"b_c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>Some features to note:</p>
-<ul>
-<li>Unlike before, the key for <code>view</code> is required, since it
-can’t be inferred from the real relations. This is how we preserve
-<code>{a, b} -&gt; c</code> when decomposing to BCNF.</li>
-<li>
-<code>view</code> references both of the real relations, to show
-that it’s the result of combining both of them. This means that
-<code>view</code> “references” relation <code>c</code> both directly,
-and via <code>b_c</code>. For real relations, the direct reference would
-be removed as being transitive, but in this case both give necessary
-information. If virtual relations get implemented, virtual-to-real
-“references” would be displayed differently, to make this clear.</li>
-<li>
-<code>view</code> contains both <code>a</code> and <code>c</code>,
-as <code>a_b</code> did before. Unlike for <code>a_b</code>, this is not
-an extra appearance of <code>c -&gt; a</code>, so is not a violation of
-BCNF. This is because, since <code>view</code> is virtual, its
-<code>a</code> and <code>c</code> values are exactly the same as those
-in relation <code>c</code>, so there is no incoherency possible.</li>
-</ul>
+<script type="application/json" data-for="htmlwidget-10b3b7155e8045a1b2ad">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <TR><TD>f<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"b\":TO_b;\n  \"a\":FROM_c -> \"c\":TO_c;\n\n  \"view\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><div id="htmlwidget-4018eef1a407a0df6b52" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-4018eef1a407a0df6b52">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <TR><TD>f<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"view\":TO_b;\n  \"a\":FROM_c -> \"view\":TO_c;\n\n  \"view\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>The latter isn’t wrong – referring a view really means referring to
+the relations it gets decomposed into – but it does take some getting
+used to, especially if, like above, the “key” being referred to isn’t
+shown, because it’s implied by the decomposition. It does also bring up
+that a “view” must be viewed as something that’s decomposed, not as the
+result of a Cartesian join of its components. The latter would result in
+the above view containing too many records.</p>
+<p>We could explicitly show <em>all</em> of the decomposition steps as
+views, but it’s not clear that it’s worth the bother:</p>
+<div id="htmlwidget-5b1b2f4ad92281566982" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-5b1b2f4ad92281566982">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <TR><TD>f<\/TD><\/TR>\n    <\/TABLE>>];\n  \"view2\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <\/TABLE>>];\n  \"view3\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"b\":TO_b;\n  \"a\":FROM_c -> \"c\":TO_c;\n\n  \"view\":TITLE -> \"view2\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view2\":TITLE -> \"view3\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view2\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view3\":TITLE -> \"a\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view3\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+</div>
 </div>
 <div class="section level2">
 <h2 id="proper-handling-of-nullable-data">Proper handling of nullable data<a class="anchor" aria-label="anchor" href="#proper-handling-of-nullable-data"></a>
 </h2>
 <p>This addresses how to decompose data with <code>NA</code> values. See
-the “Handling missing values” section for details.</p>
+the <a href="null.html">Handling missing values</a> vignette
+(<code><a href="../articles/null.html">vignette("null", package = "autodb")</a></code>) for details on how
+to currently do this manually. The plan is to allow incorporating some
+of this process into the search, but this is a long way from being
+worked out fully.</p>
 </div>
 <div class="section level2">
 <h2 id="handling-of-duplicate-records">Handling of duplicate records<a class="anchor" aria-label="anchor" href="#handling-of-duplicate-records"></a>

@@ -97,27 +97,40 @@
 useful, but it isn’t magic. This vignette covers some common issues that
 this approach can’t address.</p>
 <div class="section level2">
+<h2 id="meaningful-duplicate-rows-row-order">Meaningful duplicate rows / row order<a class="anchor" aria-label="anchor" href="#meaningful-duplicate-rows-row-order"></a>
+</h2>
+<p><code>autodb</code> assumes that the input data is relational data
+(1NF), where the data can be considered as a set of records. This means
+no duplicate rows – we can remove any duplicates without loss of
+information – and that the order of the rows doesn’t matter. If this
+isn’t the case, the data will need to be manipulated first, so that it
+is.</p>
+</div>
+<div class="section level2">
 <h2 id="value-based-constraints">Value-based constraints<a class="anchor" aria-label="anchor" href="#value-based-constraints"></a>
 </h2>
-<p>Since the process is agnostic to what kind of data is stored in each
-attribute, it can’t find any constraints that depend on the actual data
-values. A simple case is that, for example, it won’t state whether an
-attribute’s values are within a given range, since that would require
-making use of the knowledge that the attribute has a number class, such
-as <code>integer</code> or <code>numeric</code>.</p>
+<p>The FD search is agnostic to what kind of data is stored in each
+attribute; it just cares about when records have the same value for a
+given attribute. It can’t find constraints that depend on the actual
+data values. For example, it can’t determine whether an numeric
+attribute’s values are within an expected interval: that would require
+using knowledge about the attribute’s class. Similarly, it can’t
+determine inequality constraints between numeric attributes: that would
+require knowing both attributes are numeric, and that comparing them is
+suitable (they aren’t integers that represent non-ordinal IDs, for
+example).</p>
 </div>
 <div class="section level2">
 <h2 id="semantic-types">Semantic types<a class="anchor" aria-label="anchor" href="#semantic-types"></a>
 </h2>
-<p>Another example of the process being agnostic to data values is that
-it can’t make any inference based on attribute classes. A common example
-of this is when we have entities of a given type referring to each
-other.</p>
-<p>For example, suppose we have a dataset of publication citations,
-where each row contains the citer and citee IDs, plus supplementary
-information about both publications. The resulting database given by
-<code>autodb</code> has the following schema, after giving the relations
-appropriate names:</p>
+<p>The above section noted that the search can’t account for data
+classes, i.e. the attributes’ syntactic classes (integer, float, etc.).
+It also can’t account for semantic classes.</p>
+<p>Suppose we have a dataset of publication citations, where each row
+contains the citer and citee IDs, plus supplementary information about
+both publications. The resulting database given by <code>autodb</code>
+has the following schema, after giving the relations appropriate
+names:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="fu"><a href="../reference/database_schema.html">database_schema</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/relation_schema.html">relation_schema</a></span><span class="op">(</span></span>
@@ -156,22 +169,23 @@ so they shouldn’t have separate relations:</p>
 <div id="htmlwidget-e5c8c404fe174e4c81bd" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
 <script type="application/json" data-for="htmlwidget-e5c8c404fe174e4c81bd">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"citation\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">citation<\/TD><\/TR>\n    <TR><TD PORT=\"TO_citer\">citer<\/TD><TD PORT=\"FROM_citer\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_citee\">citee<\/TD><TD PORT=\"FROM_citee\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"publication\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">publication<\/TD><\/TR>\n    <TR><TD PORT=\"TO_id\">id<\/TD><TD PORT=\"FROM_id\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_title\">title<\/TD><TD PORT=\"FROM_title\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_author\">author<\/TD><TD PORT=\"FROM_author\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_year\">year<\/TD><TD PORT=\"FROM_year\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"citation\":FROM_citer -> \"publication\":TO_id;\n  \"citation\":FROM_citee -> \"publication\":TO_id;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>We make this improvement because <code>citer_id</code> and
 <code>citee_id</code> values are, semantically, the same class of
-object, and the same goes for authors, titles, etc. Semantic types are
-not something that can be inferred by just looking at the data
+object, and the same goes for authors, titles, etc. Semantic classes are
+not something that can be inferred by just looking at the syntactic/data
 classes.</p>
 <p>If we don’t account for this semantic identity, the separate citer
 and citee information relations in the original schema can both hold
-information for the same publication. If their information is the same,
-then there is unwanted redundancy. If their information is different,
-there is a data incoherency not prevented by the schema. Neither
-situation is desirable.</p>
+information for the same publication. This introduces the possibility
+that they hold different information, so the data for that publication
+is incoherent.</p>
 <p>Currently, the only way to account for this semantic identity to
-create or modify the schema manually, like above.</p>
+create or modify the schema manually, as above.</p>
 </div>
 <div class="section level2">
 <h2 id="table-merges-dont-fix-issues-with-merge-data-frame">Table merges don’t fix issues with
 <code>merge.data.frame</code><a class="anchor" aria-label="anchor" href="#table-merges-dont-fix-issues-with-merge-data-frame"></a>
 </h2>
+<p>This is specific to <code>autodb</code>, rather than the relational
+model in general.</p>
 <p>Rejoining databases, and checking relations satisfy foreign key
 constraints, is done using <code>merge.data.frame</code>. This means
 that data classes that don’t work properly in <code>merge</code> aren’t
@@ -194,9 +208,13 @@ a dynamically-typed language, it follows SQLite in not constraining the
 user much when it comes to data classes in schemas. For primitive
 classes, R’s class coercion usually makes things work as you’d
 expect.</p>
-<p>However, merging a factor attribute with a non-factor, non-character
-attribute should be handled with caution if the latter contains values
-not in the factor’s level set.</p>
+<p>In practice, have an attribute’s class vary across the relation it
+belongs to is asking for trouble.</p>
+<p>In particular, if it’s representing by a factor in one relation, and
+a non-factor, non-character class in another, where the latter has
+values not in the former’s levels, then merging them will cause issues.
+This is not unexpected, it’s just how coercing on factors works in
+R.</p>
 <p>For example, we can define these data frames:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_badmerge_int</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span></span>
@@ -860,11 +878,8 @@ rather than all of them:</p>
 </tr>
 </tbody>
 </table>
-<p>In <code>autodb</code>, this could be a problem if two relations in a
-foreign key constraint contain the same attribute, but one of them has
-it store factors in records, due to separate insertions. Letting an
-attribute’s class vary across relations should, therefore, be done with
-caution.</p>
+<p>As said above, letting an attribute’s class vary across relations
+should be done with caution.</p>
 </div>
 <div class="section level2">
 <h2 id="synthesis-doesnt-minimise-relation-key-count">Synthesis doesn’t minimise relation key count<a class="anchor" aria-label="anchor" href="#synthesis-doesnt-minimise-relation-key-count"></a>
@@ -926,18 +941,17 @@ dependencies, which is equivalent to the previous set:</p>
 <code class="sourceCode R"><span><span class="va">schema_redkey_fix</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/normalise.html">normalise</a></span><span class="op">(</span><span class="va">fds_redkey_fix</span>, remove_avoidable <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu">show</span><span class="op">(</span><span class="va">schema_redkey_fix</span><span class="op">)</span></span></code></pre></div>
 <div id="htmlwidget-febe03efa1a2d8d52a86" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-febe03efa1a2d8d52a86">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD><\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD><\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD><\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">d<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_d -> \"d\":TO_d;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>Unfortunately, there’s no way in the package to find better sets like
+<script type="application/json" data-for="htmlwidget-febe03efa1a2d8d52a86">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD><\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD><\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD><\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">d<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_d -> \"d\":TO_d;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>There’s no way in <code>autodb</code> to find better sets like
 this.</p>
 </div>
 <div class="section level2">
 <h2 id="normal-forms-aret-all-there-is-to-database-design">Normal forms are’t all there is to database design<a class="anchor" aria-label="anchor" href="#normal-forms-aret-all-there-is-to-database-design"></a>
 </h2>
 <p>Normal forms only refer to one relation at a time: referring to a
-database as being in a given normal form just means that each if its
-relations are in it individually. This doesn’t address the addition of
-foreign key references, but, even if the references are sensible,
-schemas that are in higher normal forms may not be ones that we’d want
-to use.</p>
+database as being in a given normal form just means that each of its
+relations are that normal form individually. This independence means
+that it’s easy to make database schemas that are technically
+well-normalised, but have obvious issues.</p>
 <p>For example, take this database schema, whose relation schemas are in
 third normal form:</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
@@ -952,10 +966,11 @@ form:</p>
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="va">dup_db</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p>However, no one would claim that this is a good database design,
 since there is clearly a large amount of data redundancy. Higher normal
-forms would not change this. In fact, since the copies do not reference
-each other, it is also trivial to insert data to make this database
-incoherent. For example, <code>Chick</code> and <code>Chick.1</code>
-could contain different diet assignments.</p>
+forms would not change this. In fact, since I’ve implemented
+subset-based-copying with the copies not referencing each other, it is
+trivial to insert data to make this database incoherent. For example,
+<code>Chick</code> and <code>Chick.1</code> could contain different diet
+assignments.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
