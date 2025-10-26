@@ -25,72 +25,71 @@ When we talk about the type of values an attribute can take, we talk about a dat
 
 # Motivation
 
-`autodb` is described in the DESCRIPTION file in the following way:
+Let's expand on the package DESCRIPTION:
 
 > Automatic normalisation of a data frame to third normal form, with the intention of easing the process of data cleaning. (Usage to design your actual database for you is not advised.)
 
-Let's cover that with some more detail.
+## Database normalisation
 
-## For data cleaning
+Database normalisation is, roughly, the idea of taking a dataset and splitting it up into several linked tables. This is useful, because it makes the structure of the data more explicit, and enforceable.
 
-Database normalisation works on the principle that our data should only express a piece of information in a single place. This is done to reduce the chance that a modification will accidentally change or remove other pieces of information.
-
-Data cleaning works on the principle that we remove duplicate observations and structural errors, and have a clear understanding of any associations between different observations, or parts of observations. This is done to ensure a high quality for the data used in analysis, but I have found that it is equally important for making sure that I understand the domain I am hoping to model.
-
-Normalisation is helpful for both of these areas. I usually use the original, flat, "tidy" data for the analysis itself. However, for checking the data's consistency, and for using the data to learn about the domain, normalised data is often helpful, whether it's used for the analysis or not.
-
-I've often started data checking under the following conditions:
-
-- One-off analyses, where the data is discard at the end, so it's not worth the time to get the data into a proper database.
-- Limited, or unreliable, documentation. This makes it even more important to do data checking, not just for looking for errors, but also as an exercise in understanding the problem domain before modelling it.
-- Data that fits in local memory, presenting less problems for automation.
-
-It's in this context that I would usually have to do the normalisation by hand, and I would like to have a tool that does it semi-automatically. This package is intended to be that tool, using a minimal amount of additional libraries.
-
-## Not for database design
-
-Good database design is a hard and involved process, which requires a strong grasp on the domain that the database will hold information on. Please don't try to use this package to do it on autopilot. In particular, the conditions described above mean that the package does things differently to common practice:
-
-- Since the package can only work with the data it's got, the resulting database schema is specific to the given dataset, rather than data of that type in general.
-- As a special case of the above, we need to handle constant attributes, that have the same value in every record. In a real database, we would either not store them in the database at all, or place them with the expectation that they won't stay constant when more data is added. The former would hide information from the user, and the latter approach can't be decided automatically, so they're placed in a "constants" relation with an empty key. Empty keys are allowed in the relational model, but engines like SQL don't allow it in practice.
-- It doesn't introduce artificial keys, or single-attribute lookup relations, which are a relational database's equivalent to factor levels.
-- It doesn't create "virtual relations", also known as "views", which are data-less relations defined in terms of manipulating real relations (usually to create aggregates). This might change in the future.
-
-## To third normal form
-
-`autodb` gets a given data frame to third normal form: every attribute depends on the whole key(s), and non-key attributes depend on nothing but the key(s). This was chosen because there is an existing algorithm, Bernstein's synthesis, for normalising to third normal form, and because it's the highest normal form that is always attainable with only real relations and foreign key constraints.
-
-An additional enhancement, called LTK form, is available as an option: see the section on avoidable attributes for more details.
-
-# Simple examples
-
-For most of these simple examples, we use the `ChickWeight` dataset, included with base R.
+As an example, let's look at the `ChickWeight` dataset, included with base R.
 
 ```{r}
 summary(ChickWeight)
 ```
 
-## Normalisation with `autodb`
-
-The simplest way to do normalisation is with the `autodb` function:
+This is a simple dataset, but the flat table format obscures some information about the structure of the data. Specifically, chicks have their diet assigned at the beginning of the study, and it's never changed. To make this more explicit, we could split the data into two separate tables:
 
 ```{r}
-db <- autodb(ChickWeight)
-db
+measurement <- unique(subset(ChickWeight, , -Diet))
+chick <- unique(subset(ChickWeight, , c(Chick, Diet)))
+summary(measurement)
+summary(chick)
+stopifnot(
+  identical(
+    merge(measurement, chick, sort = FALSE)[names(ChickWeight)],
+    data.frame(ChickWeight)
+  ),
+  setequal(measurement$Chick, chick$Chick)
+)
 ```
 
-## Plots
+We can also add the restriction that each chick can only appear in the chick table once, and that each chick-time pair can only appear in the measurement table once.
 
-There is no plotting method within the `autodb` package itself. Instead, there are functions to write normalised objects as inputs to the Graphviz visualisation software, using the DOT language.
+For data management, this is good because it prevents some common types of data error: 
 
-The generic function to do this is `gv`:
+- Consistency errors. In the flat table, we can accidentally add a row where a chick is on a different diet to before. In the split tables, the above restrictions mean that this is impossible.
+- Insertion/deletion errors. Suppose we have a chick that's been assigned a diet, but hasn't been measured yet. In the flat table, this information can't be added, unless we use a temporary row where the time and weight are missing, and hope we remember to remove it later. In the split tables, we can just add the chick to the chick table without issue. Conversely, if we removed all of a chick's measurements in the flat table, we'd also lose the information about which diet it's been assigned.
+- Update errors. Suppose we notice that a chick is recorded under the wrong diet, and change values to correct it. In the flat table, a chick's diet is recorded for every measurement, so we could only update some of them by mistake, resulting in inconsistency. In the split tables, the diet is only given once, so this can't happen.
+
+These all tie into the same idea: reducing data redundancy so that each fact is only stated in one place.
+
+## For data cleaning
+
+All of the above points are also useful for data exploration and validation, and that's the emphasis of the package. Being able to make the data's structure more explicit is valuable for making sure that we understand the problem domain before we try to model it. This is true even if we still use the original flat table for the analysis itself, since tools like R generally expect that format.
+
+I've often started data exploration under the following conditions:
+
+- Little prior knowledge of the data, since it's provided by a third party.
+- One-off analyses, where the data is discard at the end, so it's not worth the time to get the data into a proper database.
+- Limited, or unreliable, documentation.
+- Data that fits in local memory, presenting less problems for automation.
+
+It's in this context that I would usually have to do the normalisation by hand, and I would like to have a tool that does it semi-automatically. This package is intended to be that tool, using a minimal amount of additional libraries.
+
+For example, we can pass `ChickWeight` into the main function, `autodb`, and get the expected normalisation:
 
 ```{r}
-db_text <- gv(db)
-cat(db_text)
+chick_db <- autodb(ChickWeight)
+chick_db
 ```
 
-The resulting code can be saved to a file for passing to Graphviz elsewhere, or can be passed into an R function that renders Graphviz code. One option for the latter is `grViz` from the `DiagrammeR` package, but the result is an HTML widget: if you're writing a document, this requires inserting 2MB of Javascript code into the file. If you're writing a document in Quarto, you can call GraphViz directly using the `dot` engine, which avoids this.
+We can also plot it, by using `gv` to turn the result into code for the Graphviz language. In an interactive session, the simplest way to do this is with the DiagrammeR package:
+
+```{r}
+cat(gv(chick_db))
+```
 
 ```{r check_diagrammer}
 if (requireNamespace("DiagrammeR", quietly = TRUE)) {
@@ -102,30 +101,49 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) {
 }
 ```
 
-```{r db_plot}
-maybe_plot(db)
+```{r}
+maybe_plot(chick_db)
 ```
 
-Each relation is represented as a box: the top row gives the relation name and the number of records, and the other rows list the attributes and their classes.
+We could also save the Graphviz code to a file, and either call Graphviz on it directly, or call it from a `dot` code block in Quarto. Unlike DiagrammeR, these don't create an HTML widget, so you get a static image instead of something built on top of about 2MB of Javascript.
 
-In the middle is a grid containing black cells: each column of black cells represents a *key* for the relation. Keys are irreducible subsets of a relation's attributes, that take a unique set of values in each record. They can be treated as a unique row identifier. For example, each chick has a unique `Chick` value, and each measurement has a unique `Time`-`Chick` pair.
+The plot represents each table/relation as a box: the top row gives the relation name and the number of records, and the other rows list the attributes and their classes.
 
-In summary, `ChickWeight` is split into two relations, where the time and chick uniquely define a measurement -- or a row in the original data -- and the diet is determined by chick alone, i.e. chicks never have their diet changed.
+In the middle is a grid containing black cells: each column of black cells represents a *key*, or uniqueness constraint, for the relation. Keys are irreducible subsets of a relation's attributes, that take a unique set of values in each record. They can be treated as a unique row identifier. For example, each chick has a unique `Chick` value, and each measurement has a unique `Time`-`Chick` pair.
 
-`gv` also has methods for `data.frame`, and for `database_schema`, which is introduced later.
+## Not for database design
+
+Good database design is a hard and involved process, which requires a strong grasp on the domain that the database will hold information on. Please don't try to use this package to do it on autopilot. If you do, you'll quickly find some shortcomings with the results:
+
+- Since the package can only work with the data it's got, the resulting database schema is specific to the given dataset, rather than data of that type in general. This is useful for data exploration, since it can give useful information about sampling issues, but not for designing a database.
+- The resulting "databases" might not be something SQL etc. will accept as-is. For example, `autodb` needs to handle constant attributes, that have the same value in every record. This is done by making a relation with an empty key, which is allowed in the relation model, but SQL won't let you do it. In a real database, we would either not store constants in the database at all, or place them with the expectation that they won't stay constant when more data is added.
+- It doesn't introduce artificial keys, if you like using those, or single-attribute lookups, which are a relational database's equivalent to factor levels.
+- It doesn't create "virtual relations", also known as "views", which are data-less relations defined in terms of manipulating real relations (usually to create aggregates).
+- If a relation has multiple keys, it doesn't choose one as a "primary key". Primary keys are implementation details for databases, not part of the relational model, and they're not especially relevant for data exploration. However, SQL etc. will ask for one.
+- It can't account for semantic knowledge, which a person would spot easily.
+
+See the [Limitations](limits.html) vignette (`vignette("limits", package = "autodb")`) for more details.
+
+## To third normal form
+
+`autodb` gets a given data frame to third normal form (3NF): every attribute depends on the whole key(s), and non-key attributes depend on nothing but the key(s). This was mostly chosen because there is an existing algorithm, Bernstein's synthesis, for normalising to third normal form.
+
+`autodb` works by searching for functional dependencies in the data, and the highest normal form attainable with functional dependencies is a higher form called Boyes-Codd normal form (BCNF). However, normalising to BCNF requires more complicated infrastructure, and `autodb` isn't set up for that yet. This may change in the future.
+
+An additional enhancement to 3NF, called LTK form, is available as an option: see the section on avoidable attributes for more details.
+
+# Individual steps
 
 ## Finding functional dependencies
 
-Having looked at the final result first, we now look at the individual steps. The first step is to find the (non-trivial and minimal) dependencies present in the given data frame. There are various ways to do this; by default, the package uses FDHitsSep, a depth-first search algorithm. We run this using the `discover` function, setting `progress` to `TRUE` to see the steps taken:
+Having looked at the final result for `ChickWeight` first, we now look at the individual steps. The first step is to find the (non-trivial and minimal) dependencies present in the given data frame. There are various ways to do this; by default, the package uses FDHitsSep, a depth-first search algorithm. We run this by using the `discover` function, setting `progress` to `TRUE` to see the steps taken:
 
 ```{r}
 deps <- discover(ChickWeight, progress = TRUE)
 deps
 ```
 
-After simplifying the data to something quicker to iterate over -- specifically, by converting all attributes to have integer values -- the algorithm takes each attribute in turn as a possible dependant, and finds sets of the other attributes that determine it.
-
-The result is a list of functional dependencies, in the format `determinant set -> dependant`, with an attribute named `attrs_order` that gives all the attribute names in their original order. Each of these three parts can be extracted:
+The result is a list of *functional dependencies*, in the format `determinant -> dependant`, with an attribute named `attrs_order` that gives all the attribute names in their original order. Each of these three parts can be extracted:
 
 ```{r}
 detset(deps)
@@ -133,80 +151,26 @@ dependant(deps)
 attrs_order(deps)
 ```
 
-The former two are useful for filtering, as we'll see later.
+The former two are useful for filtering.
 
 ## Normalisation
 
-Now that we have a list of discovered dependencies, we can construct a database schema, where the relation schemas are normalised to third normal form. This is done using a version of Bernstein's synthesis.
+Now that we have a list of discovered dependencies, we can construct a database schema, where the relation schemas are normalised to third normal form. This is done using Bernstein's synthesis.
 
 ```{r}
 schema <- synthesise(deps)
 schema
 ```
 
-Like the database before, we can also plot this database schema:
+We can also plot this schema:
 
 ```{r}
 maybe_plot(schema)
 ```
 
-This is similar to the database plot given before, but there is some information not present, that requires the data frame itself. We do have class information about the attributes, extracted from the data frame during dependency discovery, but we have no record counts for the individual relation schemas. However, we do have automatically-generated names for the individual relations.
+This is similar to the database plot given before, but there is some information not present, that requires the data frame itself: record counts, and data classes. We do have automatically-generated names for the individual relations, which are created using the keys.
 
-Additionally, at this point we have no connections between the relation schemas, since Bernstein's synthesis doesn't supply information about foreign key references. We could use this database schema to build a database, but we'd rather add the foreign key references first.
-
-## Tuning detection and normalisation
-
-Let's look at a different dataset for a moment, to look at some cases where we don't want to use the dependencies as given. We'll use the Titanic data set, also provided with base R. This data is in array form, so we first convert it to data frame form:
-
-```{r}
-knitr::kable(as.data.frame(Titanic))
-```
-
-This is a simple set of data, with a single count observation, `Freq`, for each combination of the four determining attributes. In other words, the relation is already normalised, so we only expect one relation in the normalised database.
-
-If we use `autodb` again, we get the following database:
-
-```{r}
-show(autodb(as.data.frame(Titanic)))
-```
-
-Oops! The search found some functional dependencies where the count could be used to determine another attribute. These are clearly spurious: frequency count can't causally determine age, for example. However, the algorithm still finds these dependencies, because the counts are unique often enough to make these dependencies hold in the given data.
-
-There are two approaches we can take to eliminate these spurious dependencies: not letting them be detected in the first place, and removing them before using `synthesise`.
-
-To stop them being detected, we can put constraints on what is discovered by `discover`: we can ask for certain attributes to not be considered as determinants, or we can exclude attributes that inherit from certain classes. In this example, we could exclude `Freq` from being considered:
-
-```{r}
-titanic_deps_freqonly <- discover(as.data.frame(Titanic), exclude = "Freq")
-titanic_deps_freqonly
-```
-
-Alternatively, we could exclude all attributes that inherit from "numeric":
-
-```{r}
-identical(titanic_deps_freqonly, discover(as.data.frame(Titanic), exclude_class = "numeric"))
-```
-
-These can both be used as arguments to `autodb` too:
-
-```{r}
-show(autodb(as.data.frame(Titanic), exclude = "Freq"))
-```
-
-Generally, excluding numeric attributes as determinants is often useful, because we expect non-integer numbers to be a measurement, not part of a primary key.
-
-Alternatively, we could remove unwanted dependencies before using `decompose`. Here are the found dependencies, if we don't exclude anything:
-
-```{r}
-titanic_deps <- discover(as.data.frame(Titanic))
-titanic_deps
-```
-
-We can remove the unwanted dependencies, where `Age` is the dependant:
-
-```{r}
-titanic_deps[dependant(titanic_deps) == "Freq"]
-```
+At this point, we have no references between the relation schemas, since Bernstein's synthesis doesn't supply information about foreign key references. We could use this database schema to build a database, but we'd rather add these foreign key references first.
 
 ## Adding foreign key references
 
@@ -234,11 +198,9 @@ show(linked_schema)
 Finally, once we have our normalised database schema, we can apply it to our original data frame, or a new one with the same structure. This results in a normalised database, as we got from using `autodb`:
 
 ```{r chickWeight_db2_plot}
-db2 <- decompose(ChickWeight, linked_schema)
-show(db2)
+db <- decompose(ChickWeight, linked_schema)
+show(db)
 ```
-
-We now have the record counts added.
 
 ## Rejoining a database back into a data frame
 
@@ -251,62 +213,66 @@ identical(rejoined, ChickWeight)
 df_equiv(rejoined, ChickWeight)
 ```
 
-When rejoined, the relation attributes will be in the original order. However, the record order might have changed.
+## Tuning detection and normalisation
 
-# Other features
+Let's look at a different dataset for a moment, to look at some cases where we don't want to use the dependencies as given. We'll use the Titanic data set, also provided with base R. This data is in array form, so we first convert it to data frame form:
 
-## Approximate dependencies and database reduction
-
-Larger datasets can often have entry errors, without an easy way to remove or deal with them. For this reason, we might be interested in "approximate" functional dependencies, which hold after removing a bounded amount of violating records.
-
-Suppose that we normalise `nudge` again, without any manual dependency removal, but allowing approximate dependencies. We could cheat, knowing that the questionable data example found above showed there to be two questionable records: one for a duplicated publication ID, and one for a duplicated reference. Since `nudge` has `r nrow(nudge)` records, we can get rid of the resulting questionable dependencies by setting the accuracy to allow two discrepant records.
-
-The `accuracy` argument for `discover` expects a number between zero and one, determining what proportion of a data frame's records need to satisfy a given dependency for the algorithm to consider it valid. By default, it's equal to one, so only exact dependencies are returned. If we set it to less than one, we need to use the slower DFD search algorithm, since approximate dependency search is not implemented for the default FDHitsSep algorithm.
-
-```{r nudge_approximate_cheat}
-show(normalise(discover(
-  nudge,
-  accuracy = 1 - 2/nrow(nudge),
-  method = "DFD",
-  exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
-  exclude_class = "numeric"
-)))
+```{r}
+knitr::kable(as.data.frame(Titanic))
 ```
 
-Currently `decompose` doesn't account for approximate dependencies, resulting in invalid databases, so here we just work with the database schema.
+This is a simple set of data, with a single count observation, `Freq`, for each combination of the four determining attributes. In other words, the relation is already normalised, so we only expect one relation in the normalised database.
 
-Compare this to the database schema we arrived at manually:
+If we use `autodb` again, we get the following database:
 
-- The publication ID, the title, and the reference are considered equivalent, as we'd have originally expected.
-- There is an additional relation, showing `approximation` to be approximately determined by some publication- and study-level attributes, rather than functionally determined at the effect-size level.
-
-Lowering the accuracy results in more dependencies being found, and so in more relations. The number of relations can get very large. For example, suppose we instead set the accuracy to `0.99`, returning any approximate dependencies that hold in at least `r ceiling(nrow(nudge)*0.99)` records.
-
-```{r nudge_approximate}
-nudge_approx_database_schema <- discover(
-  nudge,
-  accuracy = 0.99,
-  method = "DFD",
-  exclude = c("n_study", "n_comparison", "n_control", "n_intervention"),
-  exclude_class = "numeric"
-) |>
-  normalise()
-show(nudge_approx_database_schema)
+```{r}
+show(autodb(as.data.frame(Titanic)))
 ```
 
-This is a little overwhelming, so we'll use a utility function called `reduce`. This returns only the named "main" relation, and any relations for which it is a descendant via foreign key references. Reducing the approximate schema, with the effect size table as the main table, gives us this set of relations:
+Oops! The search found some functional dependencies where the count could be used to determine another attribute. These are clearly spurious: frequency count can't causally determine age, for example.
 
-```{r nudge_approximate_reduced}
-show(reduce(nudge_approx_database_schema, "es_id"))
+There are two ways we can remove these spurious dependencies: limiting the search to not check them in the first place, and removing them from the dependencies before using `synthesise`/`normalise`.
+
+To limit the search, we can set certain attributes to not be considered as members of determinants, or we can exclude attributes that inherit from certain classes. In this example, we could exclude `Freq` from being considered:
+
+```{r}
+titanic_deps_freqonly <- discover(as.data.frame(Titanic), exclude = "Freq")
+titanic_deps_freqonly
 ```
 
-Questionable intermediate relations aside, we can see that there is now a publication-level relation with the publication ID as a key, since it determines the publication attributes once we remove one of the duplicate records we discovered before.
+Alternatively, we could exclude all attributes that inherit from "numeric":
 
-`reduce` can also be used on databases, where it considers each relation with the largest number of records as a main table. It needs to be used with caution: while the relations it removes are often spurious, it's possible to find databases where relations not linked to the main relation by foreign key references are required to rejoin to the original data frame, so reduction can remove necessary relations. Its intent is mostly to make glancing at database plots more manageable.
+```{r}
+stopifnot(setequal(
+  titanic_deps_freqonly,
+  discover(as.data.frame(Titanic), exclude_class = "numeric")
+))
+```
 
-## Avoidable attributes
+We can also limit the search when using `autodb`:
 
-The next normal form after third normal form (3NF) is Boyes-Codd normal form (BCNF). Ensuring BCNF is enforced by the database is trickier, as in some cases it can't be enforced with just relations and foreign key constraints.
+```{r}
+show(autodb(as.data.frame(Titanic), exclude = "Freq"))
+```
+
+Excluding numeric attributes as determinants is often useful, because we expect non-integer numbers to be a measurement that doesn't co-determine anything else. The main exception is when some attributes are summaries of others.
+
+Alternatively, we can remove the unwanted dependencies. Here are all the found dependencies, if we don't exclude anything:
+
+```{r}
+titanic_deps <- discover(as.data.frame(Titanic))
+titanic_deps
+```
+
+We can remove the unwanted dependencies, where `Age` is the dependant, using subsetting, `Filter`, etc.:
+
+```{r}
+titanic_deps[dependant(titanic_deps) == "Age"]
+```
+
+# Avoidable attributes
+
+The next normal form after third normal form (3NF) is Boyes-Codd normal form (BCNF). Ensuring BCNF is enforced by the database is trickier: in some cases, it can't be enforced with just relations and foreign key constraints.
 
 However, the package includes an option to convert to enhanced third normal form, also known as LTK form, which can be so enforced. This enhancement is tangential to BCNF, and could also be used to enhance schemas in BCNF.
 

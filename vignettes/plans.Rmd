@@ -27,13 +27,88 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) {
 }
 ```
 
-# Views for connected reference chains
+# Views for BCNF and connected reference chains
 
-When `autodb`, or `autoref`, generates foreign key references for relations decomposed from a single table, it naturally tends to a structure where there is a single low-level data relation on the left, and higher-level relations are "downstream" with respect to references, with the number of records strictly decreasing as we follow references to higher-level data relations.
+Two features that I'd like to add to `autodb` both have issues in the current implementation, that are both solved by allowing a restricted version of virtual relations, commonly known as views. I'll show the issues first.
 
-The nice thing about this is that, while the schema is created constructively, we can view it as a series of decompositions: start with the original table, split it up into two or more sub-tables, and repeat. Rejoining the database would then do this in reverse.
+## Boyes-Codd Normal Form
 
-Unfortunately, not every set of functional dependencies allows this. Consider the following:
+`autodb` currently normalises data to third normal form (3NF). (Actually, it normalises to a slightly strong form called elementary key normal form, which has the same issue as presented below). Third normal form can be formally defined as follows:
+
+A database is in *third normal form* (3NF) if and only if all of its relations are in 3NF. A relation is in 3NF if all of the non-trivial functional dependencies $X \rightarrow y$ satisfied by its attributes satisfy one of the following:
+
+1. $X$ is a superkey (i.e. contains one of the relation's keys);
+2. $y$ is a member of a key.
+
+A functional dependency (FD) $X \rightarrow y$ is *trivial* if $y$ is in $X$, i.e. it states that an attribute co-determines itself, which is trivially true.
+
+Boyes-Codd normal form (BCNF) strengthens this by dropping the second condition. (Conversely, second normal form weakens this by adding a third option: that $X$ is a subkey, i.e. is contained in one of the keys.)
+
+
+To see the difference between 3NF and BCNF, consider the following set of FDs, and the resulting schema given by `autodb`:
+
+```{r bcnf}
+fds <- functional_dependency(
+  list(list(c("a", "b"), "c"), list("c", "a")),
+  letters[1:3]
+)
+fds
+schema <- normalise(fds)
+show(schema)
+```
+
+The above schema is in 3NF, but not BCNF:
+
+- Relation `c` contains one FD: $\{c\} \rightarrow a$. Since $\{c\}$ is a key, relation `c` is in 3NF, and BCNF.
+- Relation `a_b` contains two FDs: $\{a, b\} \rightarrow c$ and $\{c\} \rightarrow a$. $\{a, b\}$ is a key for `a_b`, but $\{c\}$ is not, so `a_b` is not in BCNF. However, $a$ is within the key `\{a, b\}`, so relation `a_b` is in 3NF.
+
+In fact, `autodb` does more than is required here: the relation `a_b` by itself is in 3NF, and contains all of the attributes, so we don't need relation `c`.
+
+This double appearance of $\{c\} \rightarrow a$ results in some redundancy: we're listing the resulting `(c, a)` pairs twice. Even worse, only one of them is enforced via a key: if, after normalising, we add more data to the two relations separately, then we can two sets of `(c, a)` pairs that aren't mutually coherent :
+
+```{r bcnf2}
+db <- schema |>
+  create() |>
+  insert(data.frame(c = 1:2, a = 1:2), relations = "c") |>
+  insert(data.frame(a = 1:2, b = 1L, c = 2:1), relations = "a_b")
+rab <- records(db)$a_b
+rc <- records(db)$c
+knitr::kable(rab)
+knitr::kable(rc)
+knitr::kable(merge(rab, rc, by = "c", suffixes = c(".a_b", ".c")))
+```
+
+If we remove relation `c`, we still have the same problem, which is that relation `a_b` doesn't enforce $\{c\} \rightarrow a$ with a key, so we can easily insert data that violates it.
+
+The standard way to fix this schema to satisfy BCNF is by splitting relation `a_b` on the violated functional dependency, namely `c -> a`:
+
+```{r bcnf3, echo=FALSE}
+schema2 <- schema
+keys(schema2)$a_b <- list(c("b", "c"))
+attrs(schema2)$a_b <- c("b", "c")
+names(schema2)[names(schema2) == "a_b"] <- "b_c"
+show(schema2)
+```
+
+This is now in BCNF: relation `c` is in BCNF for the same reasons as before, and relation `b_c` contains no FDs at all, but is required for the decomposition to be lossless.
+
+There is now a different issue: the FD `\{a, b\} \rightarrow c` isn't represented anywhere, let alone enforced with a key! This is an example of how BCNF sometimes can't be achieved using just (real) relations.
+
+We can keep the other FD by noting it somewhere, but this is not what I'd call a nice approach. It also raises questions about how to plot the schema nicely: we don't want to just have a list of non-represented FDs sitting in a corner of the plot.
+
+When this problem with BCNF is introduced, it's often added that this is a rare occurrence in practice, and that usually you can normalise to 3NF and get BCNF for free, without the above issue. All I would say is that, for almost every real dataset I've worked with, normalising it with `autodb` has demonstrated that a subsection of the data has exactly the three-attribute situation shown in the example above.
+
+## Reference chains
+
+As described above, Boyes-Codd normal form can not always be represented with just (real) relations. However, if we want desirable properties for the foreign key references, then we run into problems for third normal form too.
+
+When `autodb`, or `autoref`, generates foreign key references for relations decomposed from a single table, it naturally tends to a structure where there is a single low-level data relation on the left -- or several if the original data has independent partitions -- and higher-level relations are "downstream" with respect to references, with the number of records strictly decreasing as we follow references to higher-level data relations. This resulting database schema is acyclic. Acyclic database schemas have some nice properties, an important one being that, if we want to join together two relations with some common attributes, there is always a way to do so by joining along foreign key references.
+
+Similarly, it's simple to reconstruct the original simple table: just join the relations back together by "telescoping" back along the foreign key references.
+
+Considering this rejoin plan in reverse, while the schema is created constructively, we can view it as a series of decompositions: start with the original table, split it up into two or more sub-tables, linked together by foreign key references, and repeat. Rejoining the database then undoes these decompositions, in the opposite order.
+
+Unfortunately, not every set of functional dependencies allows this, because the resulting schema might not be connected. Consider the following set of FDs:
 
 ```{r nonconnected}
 fds <- functional_dependency(
@@ -56,15 +131,60 @@ schema <- normalise(fds)
 show(schema)
 ```
 
-The schema is not connected, because `d_e`'s key is not present in any other relation. In terms of a series of decompositions, we could think of the original table being split into `{a,b,c,d,e}` and `{d,e,f}` first, with a reference between them, and `d` and `e` being split off later, destroying the reference.
+The schema is not connected: relation `d_e` is stranded, because no other relation contains its key, and vice versa. In terms of a series of decompositions, we could think of the original table being split into `{a,b,c,d,e}` and `{d,e,f}` first, with `\{d, e\}` forming a foreign key reference, and `d` and `e` being split apart later, destroying the reference.
 
-In short, while Boyes-Codd Normal Form may be the first normal form that can't always be satisfied with just relations, if we also want to keep all the relations related to each other with foreign key references for consistency, then third normal form also can't always be satisfied.
+Similarly to the example for BCNF, this has undesirable consequences if we add more data after normalisation: because `d_e` is isolated, we can insert data into it that will be inconsistent with the other relations if we rejoin everything back together.
 
-One way to solve this, which is a planned addition, is to allow virtual relations, also known as views. These are relations whose data is not stored, because it's generated from other relations that do store their data (real relations).
+## Views as a solution
 
-Usually, views are used to allow easy "look-up" of commonly-queried aggregates. Here, we could use them to maintain the connected schema structure. Here is a mock-up of what the resulting schema might look like:
+Virtual relations, or views, are defined as the result of an operation on other relations (real or virtual). In real databases, this might be done as a convenient way to refer to the result of joining some other tables, or aggregating values in a non-trivial way, so that the code for these doesn't need to be repeated. Virtual relations don't store any data themselves: if they're queried, they're created from scratch, so they're never inconsistent with the relations they're defined by.
 
-```{r}
+Here, we use a more restricted version of views, that is defined as the join of other relations. Views always have at least one key, implied by the relations they're joining. We extend this by letting them have their own non-implied keys, that are required to hold on the join result.
+
+Let's see how this can solve the issue in the BCNF example, where normalising left the FD $\{a, b\} \rightarrow c$ not represented in the schema:
+
+```{r, echo=FALSE}
+if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
+  rankdir = \"LR\"
+  node [shape=plaintext];
+
+  \"c\" [label = <
+    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
+    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c</TD></TR>
+    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"></TD></TR>
+    <TR><TD PORT=\"TO_a\">a</TD><TD PORT=\"FROM_a\"></TD></TR>
+    </TABLE>>];
+  \"b_c\" [label = <
+    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
+    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b_c</TD></TR>
+    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"></TD></TR>
+    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"></TD></TR>
+    </TABLE>>];
+  \"view\" [label = <
+    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
+    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">view</TD></TR>
+    <TR><TD>a</TD><TD BGCOLOR=\"black\"></TD></TR>
+    <TR><TD>b</TD><TD BGCOLOR=\"black\"></TD></TR>
+    <TR><TD>c</TD><TD></TD></TR>
+    </TABLE>>];
+
+  \"b_c\":FROM_c -> \"c\":TO_c;
+
+  \"view\":TITLE -> \"b_c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
+}", width = "100%")
+```
+
+The view has a darker background, and points to the relations it's calculated from using different arrows, to mark it out as different. Note that it only points to one relation here (`b_c`), with the implication that it first joins that table to all of its ancestors (`c`).
+
+The view has the implied key $\{b, c\}$, and we show the missing FD $\{a, b\} \rightarrow c$ by giving $\{a, b\}$ as an additional key.
+
+Note that the view contains both $a$ and $c$. However, unlike the original schema, this is not a repeat occurrence of $\{c\} \rightarrow a$, because the data is taken directly from its appearance in relation `c`.
+
+It's also worth noting that, since the view is just the original 3NF solution, it is not in BCNF itself. Views do not need to be in as high a normal form as the database they're in.
+
+Here's how views solve the issue in the 3NF example:
+
+```{r, echo=FALSE}
 if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
   rankdir = \"LR\"
   node [shape=plaintext];
@@ -114,17 +234,115 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
 }", width = "100%")
 ```
 
-Note that virtual relations have different rules to real relations:
+Again, note that the view is not in 3NF itself, since it contains implied transitive dependencies.
 
-- Virtual relations need not have a key. In this example, `view` does have `a` as a key, but this key can be inferred from the real relations it's a merging / joining of, so does not need to be stated explicitly.
-- Virtual relations do not contain their own data: it's pulled in from the relations it merges together. This allows it to contain a set of attributes without being an instantiation of any functional dependencies between those attributes. For example, `view` contains `{a, b}`, but does not introduce a redundant instance of `{a} -> b` in addition to the one in relation `a`.
-- Instead of foreign key references to keys in other relations, virtual relations just "refer" to the real relations they are a merging of.
+It might seem unnecessary to bring attribute `a` into the view, since we only need  the attributes in relations `b` and `c` to connect to `d_e`. However, creating a view without `a` either doesn't result in an acyclic schema,, or requires having a real relation have a foreign key reference to a view:
 
-This addition of virtual relations allows databases to always be connected as a tree. This is useful for visualisation, and for planning rejoins, since those can always be done by merging tables along foreign key references.
+```{r, echo=FALSE}
+if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
+  rankdir = \"LR\"
+  node [shape=plaintext];
 
-We could explicitly show *all* of the decomposition steps as virtual relations, but it's not clear that it's worth the bother:
+  \"a\" [label = <
+    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
+    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a</TD></TR>
+    <TR><TD PORT=\"TO_a\">a</TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"></TD></TR>
+    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\"></TD></TR>
+    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\"></TD></TR>
+    </TABLE>>];
+  \"b\" [label = <
+    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
+    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b</TD></TR>
+    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"></TD></TR>
+    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\"></TD></TR>
+    </TABLE>>];
+  \"c\" [label = <
+    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
+    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c</TD></TR>
+    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"></TD></TR>
+    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\"></TD></TR>
+    </TABLE>>];
+  \"d_e\" [label = <
+    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
+    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e</TD></TR>
+    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"></TD></TR>
+    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"></TD></TR>
+    <TR><TD PORT=\"TO_f\">f</TD><TD PORT=\"FROM_f\"></TD></TR>
+    </TABLE>>];
+  \"view\" [label = <
+    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
+    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view</TD></TR>
+    <TR><TD>b</TD></TR>
+    <TR><TD>c</TD></TR>
+    <TR><TD>d</TD></TR>
+    <TR><TD>e</TD></TR>
+    <TR><TD>f</TD></TR>
+    </TABLE>>];
 
-```{r}
+  \"a\":FROM_b -> \"b\":TO_b;
+  \"a\":FROM_c -> \"c\":TO_c;
+
+  \"view\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
+  \"view\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
+  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
+}", width = "100%")
+```
+
+```{r, echo=FALSE}
+if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
+  rankdir = \"LR\"
+  node [shape=plaintext];
+
+  \"a\" [label = <
+    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
+    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a</TD></TR>
+    <TR><TD PORT=\"TO_a\">a</TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"></TD></TR>
+    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\"></TD></TR>
+    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\"></TD></TR>
+    </TABLE>>];
+  \"b\" [label = <
+    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
+    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b</TD></TR>
+    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"></TD></TR>
+    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\"></TD></TR>
+    </TABLE>>];
+  \"c\" [label = <
+    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
+    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c</TD></TR>
+    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"></TD></TR>
+    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\"></TD></TR>
+    </TABLE>>];
+  \"d_e\" [label = <
+    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
+    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e</TD></TR>
+    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"></TD></TR>
+    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"></TD></TR>
+    <TR><TD PORT=\"TO_f\">f</TD><TD PORT=\"FROM_f\"></TD></TR>
+    </TABLE>>];
+  \"view\" [label = <
+    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
+    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view</TD></TR>
+    <TR><TD PORT=\"TO_b\">b</TD></TR>
+    <TR><TD PORT=\"TO_c\">c</TD></TR>
+    <TR><TD>d</TD></TR>
+    <TR><TD>e</TD></TR>
+    <TR><TD>f</TD></TR>
+    </TABLE>>];
+
+  \"a\":FROM_b -> \"view\":TO_b;
+  \"a\":FROM_c -> \"view\":TO_c;
+
+  \"view\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
+  \"view\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
+  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
+}", width = "100%")
+```
+
+The latter isn't wrong -- referring a view really means referring to the relations it gets decomposed into -- but it does take some getting used to, especially if, like above, the "key" being referred to isn't shown, because it's implied by the decomposition. It does also bring up that a "view" must be viewed as something that's decomposed, not as the result of a Cartesian join of its components. The latter would result in the above view containing too many records.
+
+We could explicitly show *all* of the decomposition steps as views, but it's not clear that it's worth the bother:
+
+```{r, echo=FALSE}
 if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
   rankdir = \"LR\"
   node [shape=plaintext];
@@ -195,84 +413,9 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
 }", width = "100%")
 ```
 
-# Boyes-Codd Normal Form
-
-Another use of the virtual relations mentioned above is that they make BCNF always achievable. For example, take the following standard example of a set of functional dependencies that cannot be expressed in BCNF using just relations:
-
-```{r bcnf}
-fds <- functional_dependency(
-  list(list(c("a", "b"), "c"), list("c", "a")),
-  letters[1:3]
-)
-fds
-schema <- normalise(fds)
-show(schema)
-```
-
-The above schema is in third normal form. However, it is not in the higher Boyes-Codd normal form (BCNF), because `c -> a` is present in relation `a_b`, but not in terms of a key. This results in some redundancy, but also means that the two representations of `c -> a` can hold sets of data that aren't mutually coherent :
-
-```{r bcnf2}
-db <- schema |>
-  create() |>
-  insert(data.frame(c = 1:2, a = 1:2), relations = "c") |>
-  insert(data.frame(a = 1:2, b = 1L, c = 2:1), relations = "a_b")
-knitr::kable(records(db)$a_b)
-knitr::kable(records(db)$c)
-```
-
-The standard way to fix this schema to satisfy BCNF is by splitting relation `a_b` on the violated functional dependency, namely `c -> a`:
-
-```{r bcnf3, echo=FALSE}
-schema2 <- schema
-keys(schema2)$a_b <- list(c("b", "c"))
-attrs(schema2)$a_b <- c("b", "c")
-names(schema2)[names(schema2) == "a_b"] <- "b_c"
-show(schema2)
-```
-
-The resulting schema is now in BCNF, but we have a different problem: the dependency `{a, b} -> c` has disappeared! Fixing this can't be done with just real relations, but we can solve it by adding a virtual relation. Here is a mock-up of what the resulting schema might look like:
-
-```{r}
-if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
-  rankdir = \"LR\"
-  node [shape=plaintext];
-
-  \"c\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c</TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_a\">a</TD><TD PORT=\"FROM_a\"></TD></TR>
-    </TABLE>>];
-  \"b_c\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b_c</TD></TR>
-    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"></TD></TR>
-    </TABLE>>];
-  \"view\" [label = <
-    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">view</TD></TR>
-    <TR><TD>a</TD><TD BGCOLOR=\"black\"></TD></TR>
-    <TR><TD>b</TD><TD BGCOLOR=\"black\"></TD></TR>
-    <TR><TD>c</TD><TD></TD></TR>
-    </TABLE>>];
-
-  \"b_c\":FROM_c -> \"c\":TO_c;
-
-  \"view\":TITLE -> \"b_c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-}", width = "100%")
-```
-
-Some features to note:
-
-- Unlike before, the key for `view` is required, since it can't be inferred from the real relations. This is how we preserve `{a, b} -> c` when decomposing to BCNF.
-- `view` references both of the real relations, to show that it's the result of combining both of them. This means that `view` "references" relation `c` both directly, and via `b_c`. For real relations, the direct reference would be removed as being transitive, but in this case both give necessary information. If virtual relations get implemented, virtual-to-real "references" would be displayed differently, to make this clear.
-- `view` contains both `a` and `c`, as `a_b` did before. Unlike for `a_b`, this is not an extra appearance of `c -> a`, so is not a violation of BCNF. This is because, since `view` is virtual, its `a` and `c` values are exactly the same as those in relation `c`, so there is no incoherency possible.
-
 # Proper handling of nullable data
 
-This addresses how to decompose data with `NA` values. See the "Handling missing values" section for details.
+This addresses how to decompose data with `NA` values. See the [Handling missing values](null.html) vignette (`vignette("null", package = "autodb")`) for details on how to currently do this manually. The plan is to allow incorporating some of this process into the search, but this is a long way from being worked out fully.
 
 # Handling of duplicate records
 

@@ -29,15 +29,19 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) {
 
 Automatic data normalisation, such as done by `autodb`, is useful, but it isn't magic. This vignette covers some common issues that this approach can't address.
 
+# Meaningful duplicate rows / row order
+
+`autodb` assumes that the input data is relational data (1NF), where the data can be considered as a set of records. This means no duplicate rows -- we can remove any duplicates without loss of information -- and that the order of the rows doesn't matter. If this isn't the case, the data will need to be manipulated first, so that it is.
+
 # Value-based constraints
 
-Since the process is agnostic to what kind of data is stored in each attribute, it can't find any constraints that depend on the actual data values. A simple case is that, for example, it won't state whether an attribute's values are within a given range, since that would require making use of the knowledge that the attribute has a number class, such as `integer` or `numeric`.
+The FD search is agnostic to what kind of data is stored in each attribute; it just cares about when records have the same value for a given attribute. It can't find constraints that depend on the actual data values. For example, it can't determine whether an numeric attribute's values are within an expected interval: that would require using knowledge about the attribute's class. Similarly, it can't determine inequality constraints between numeric attributes: that would require knowing both attributes are numeric, and that comparing them is suitable (they aren't integers that represent non-ordinal IDs, for example).
 
 # Semantic types
 
-Another example of the process being agnostic to data values is that it can't make any inference based on attribute classes. A common example of this is when we have entities of a given type referring to each other.
+The above section noted that the search can't account for data classes, i.e. the attributes' syntactic classes (integer, float, etc.). It also can't account for semantic classes.
 
-For example, suppose we have a dataset of publication citations, where each row contains the citer and citee IDs, plus supplementary information about both publications. The resulting database given by `autodb` has the following schema, after giving the relations appropriate names:
+Suppose we have a dataset of publication citations, where each row contains the citer and citee IDs, plus supplementary information about both publications. The resulting database given by `autodb` has the following schema, after giving the relations appropriate names:
 
 ```{r}
 show(database_schema(
@@ -77,13 +81,15 @@ show(database_schema(
 ))
 ```
 
-We make this improvement because `citer_id` and `citee_id` values are, semantically, the same class of object, and the same goes for authors, titles, etc. Semantic types are not something that can be inferred by just looking at the data classes.
+We make this improvement because `citer_id` and `citee_id` values are, semantically, the same class of object, and the same goes for authors, titles, etc. Semantic classes are not something that can be inferred by just looking at the syntactic/data classes.
 
-If we don't account for this semantic identity, the separate citer and citee information relations in the original schema can both hold information for the same publication. If their information is the same, then there is unwanted redundancy. If their information is different, there is a data incoherency not prevented by the schema. Neither situation is desirable.
+If we don't account for this semantic identity, the separate citer and citee information relations in the original schema can both hold information for the same publication. This introduces the possibility that they hold different information, so the data for that publication is incoherent.
 
-Currently, the only way to account for this semantic identity to create or modify the schema manually, like above.
+Currently, the only way to account for this semantic identity to create or modify the schema manually, as above.
 
 # Table merges don't fix issues with `merge.data.frame`
+
+This is specific to `autodb`, rather than the relational model in general.
 
 Rejoining databases, and checking relations satisfy foreign key constraints, is done using `merge.data.frame`. This means that data classes that don't work properly in `merge` aren't guaranteed to work properly in `autodb`.
 
@@ -93,7 +99,9 @@ For example, in older versions of R, the built-in POSIXct date/time class didn't
 
 A more complex example, that still applies and probably always will, is a merge where two attributes being merged on have different classes. In general, this is allowed: since `autodb` is written for R, a dynamically-typed language, it follows SQLite in not constraining the user much when it comes to data classes in schemas. For primitive classes, R's class coercion usually makes things work as you'd expect.
 
-However, merging a factor attribute with a non-factor, non-character attribute should be handled with caution if the latter contains values not in the factor's level set.
+In practice, have an attribute's class vary across the relation it belongs to is asking for trouble.
+
+In particular, if it's representing by a factor in one relation, and a non-factor, non-character class in another, where the latter has values not in the former's levels, then merging them will cause issues. This is not unexpected, it's just how coercing on factors works in R.
 
 For example, we can define these data frames:
 
@@ -166,7 +174,7 @@ knitr::kable(merge(
 ))
 ```
 
-In `autodb`, this could be a problem if two relations in a foreign key constraint contain the same attribute, but one of them has it store factors in records, due to separate insertions. Letting an attribute's class vary across relations should, therefore, be done with caution.
+As said above, letting an attribute's class vary across relations should be done with caution.
 
 # Synthesis doesn't minimise relation key count
 
@@ -210,11 +218,11 @@ schema_redkey_fix <- normalise(fds_redkey_fix, remove_avoidable = TRUE)
 show(schema_redkey_fix)
 ```
 
-Unfortunately, there's no way in the package to find better sets like this.
+There's no way in `autodb` to find better sets like this.
 
 # Normal forms are't all there is to database design
 
-Normal forms only refer to one relation at a time: referring to a database as being in a given normal form just means that each if its relations are in it individually. This doesn't address the addition of foreign key references, but, even if the references are sensible, schemas that are in higher normal forms may not be ones that we'd want to use.
+Normal forms only refer to one relation at a time: referring to a database as being in a given normal form just means that each of its relations are that normal form individually. This independence means that it's easy to make database schemas that are technically well-normalised, but have obvious issues.
 
 For example, take this database schema, whose relation schemas are in third normal form:
 
@@ -229,4 +237,4 @@ If we now create copies of these relations, with the intention that copies alway
 show(dup_db[c(1, 1, 2, 2, 2)])
 ```
 
-However, no one would claim that this is a good database design, since there is clearly a large amount of data redundancy. Higher normal forms would not change this. In fact, since the copies do not reference each other, it is also trivial to insert data to make this database incoherent. For example, `Chick` and `Chick.1` could contain different diet assignments.
+However, no one would claim that this is a good database design, since there is clearly a large amount of data redundancy. Higher normal forms would not change this. In fact, since I've implemented subset-based-copying with the copies not referencing each other, it is trivial to insert data to make this database incoherent. For example, `Chick` and `Chick.1` could contain different diet assignments.
