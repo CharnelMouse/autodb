@@ -1317,6 +1317,56 @@ describe("d2", {
         paste(c(main_text, attrref_text, ""), collapse = "\n")
       )
     })
+    it("only gives table and attribute references once each", {
+      rs <- relation_schema(
+        list(
+          a_b = list(c("a", "b", "c"), list(c("a", "b"))),
+          d_e = list(c("d", "e"), list(c("d", "e")))
+        ),
+        letters[1:5]
+      )
+      ds <- database_schema(
+        rs,
+        list(
+          list("a_b", c("a", "c"), "d_e", c("d", "e")),
+          list("a_b", c("b", "c"), "d_e", c("d", "e"))
+        )
+      )
+      db <- create(ds)
+      main_text <- c(
+        "\"a_b\": \"a_b (0 records)\" {",
+        "  shape: sql_table",
+        "  \"a\": logical {constraint: [PK; FK1]}",
+        "  \"b\": logical {constraint: [PK; FK2]}",
+        "  \"c\": logical {constraint: [FK1; FK2]}",
+        "}",
+        "\"d_e\": \"d_e (0 records)\" {",
+        "  shape: sql_table",
+        "  \"d\": logical {constraint: [PK]}",
+        "  \"e\": logical {constraint: [PK]}",
+        "}"
+      )
+      # no repeat a_b -> d_e
+      tableref_text <- c(
+        "",
+        "\"a_b\" -> \"d_e\""
+      )
+      # no repeat a_b.a -> d_e.d
+      attrref_text <- c(
+        "",
+        "\"a_b\".\"a\" -> \"d_e\".\"d\"",
+        "\"a_b\".\"c\" -> \"d_e\".\"e\"",
+        "\"a_b\".\"b\" -> \"d_e\".\"d\""
+      )
+      expect_identical(
+        d2(db, reference = "relation"),
+        paste(c(main_text, tableref_text, ""), collapse = "\n")
+      )
+      expect_identical(
+        d2(db, reference = "attr"),
+        paste(c(main_text, attrref_text, ""), collapse = "\n")
+      )
+    })
   })
   describe("relation", {
     it("expects non-empty relation names", {
@@ -1649,42 +1699,45 @@ describe("d2", {
         paste(text, collapse = "\n")
       )
     })
-    it("only gives table references once each", {
+    it("only gives table and attribute references once each", {
       rs <- relation_schema(
         list(
-          Measurement = list(c("Chick", "Time", "weight"), list(c("Chick", "Time"))),
-          Diet = list(c("Chick", "Time", "Diet"), list("Diet", c("Chick", "Time")))
+          a_b = list(c("a", "b", "c"), list(c("a", "b"))),
+          d_e = list(c("d", "e"), list(c("d", "e")))
         ),
-        c("Chick", "Diet", "Time", "weight")
+        letters[1:5]
       )
       ds <- database_schema(
         rs,
-        references = list(
-          list("Measurement", c("Chick", "Time"), "Diet", c("Chick", "Time"))
+        list(
+          list("a_b", c("a", "c"), "d_e", c("d", "e")),
+          list("a_b", c("b", "c"), "d_e", c("d", "e"))
         )
       )
       main_text <- c(
-        "\"Measurement\": {",
+        "\"a_b\": {",
         "  shape: sql_table",
-        "  \"Chick\": {constraint: [PK; FK1]}",
-        "  \"Time\": {constraint: [PK; FK1]}",
-        "  \"weight\"",
+        "  \"a\": {constraint: [PK; FK1]}",
+        "  \"b\": {constraint: [PK; FK2]}",
+        "  \"c\": {constraint: [FK1; FK2]}",
         "}",
-        "\"Diet\": {",
+        "\"d_e\": {",
         "  shape: sql_table",
-        "  \"Diet\": {constraint: [PK]}",
-        "  \"Chick\": {constraint: [UNQ1]}",
-        "  \"Time\": {constraint: [UNQ1]}",
+        "  \"d\": {constraint: [PK]}",
+        "  \"e\": {constraint: [PK]}",
         "}"
       )
+      # no repeat a_b -> d_e
       tableref_text <- c(
         "",
-        "\"Measurement\" -> \"Diet\""
+        "\"a_b\" -> \"d_e\""
       )
+      # no repeat a_b.a -> d_e.d
       attrref_text <- c(
         "",
-        "\"Measurement\".\"Chick\" -> \"Diet\".\"Chick\"",
-        "\"Measurement\".\"Time\" -> \"Diet\".\"Time\""
+        "\"a_b\".\"a\" -> \"d_e\".\"d\"",
+        "\"a_b\".\"c\" -> \"d_e\".\"e\"",
+        "\"a_b\".\"b\" -> \"d_e\".\"d\""
       )
       expect_identical(
         d2(ds, reference = "relation"),
