@@ -604,7 +604,7 @@ describe("relation_schema", {
       gen.sample(letters[1:8], gen.element(1:3)) |>
         gen.with(
           sort %>>%
-            with_args(relation_schema, schema = setNames(list(), character()))
+            with_args(relation_schema, schemas = setNames(list(), character()))
         ) |>
         gen.list(from = 2, to = 5),
       concatenate_keeps_attribute_order,

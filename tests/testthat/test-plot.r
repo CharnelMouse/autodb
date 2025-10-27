@@ -1096,15 +1096,15 @@ describe("d2", {
       tableref_text <- "\"Measurement\" -> \"Chick\""
       attrref_text <- "\"Measurement\".\"Chick\" -> \"Chick\".\"Chick\""
       expect_identical(
-        d2(db, reference = "relation"),
+        d2(db, reference_level = "relation"),
         paste(c(base_text, "", tableref_text, ""), collapse = "\n")
       )
       expect_identical(
-        d2(db, reference = "attr"),
+        d2(db, reference_level = "attr"),
         paste(c(base_text, "", attrref_text, ""), collapse = "\n")
       )
       expect_identical(
-        d2(db, name = "ChickWeight", reference = "relation"),
+        d2(db, name = "ChickWeight", reference_level = "relation"),
         paste(
           c(
             "\"ChickWeight\" {",
@@ -1118,7 +1118,7 @@ describe("d2", {
         )
       )
       expect_identical(
-        d2(db, name = "ChickWeight", reference = "attr"),
+        d2(db, name = "ChickWeight", reference_level = "attr"),
         paste(
           c(
             "\"ChickWeight\" {",
@@ -1309,11 +1309,11 @@ describe("d2", {
         "\"Measurement\".\"Time\" -> \"Diet\".\"Time\""
       )
       expect_identical(
-        d2(db, reference = "relation"),
+        d2(db, reference_level = "relation"),
         paste(c(main_text, tableref_text, ""), collapse = "\n")
       )
       expect_identical(
-        d2(db, reference = "attr"),
+        d2(db, reference_level = "attr"),
         paste(c(main_text, attrref_text, ""), collapse = "\n")
       )
     })
@@ -1359,11 +1359,11 @@ describe("d2", {
         "\"a_b\".\"b\" -> \"d_e\".\"d\""
       )
       expect_identical(
-        d2(db, reference = "relation"),
+        d2(db, reference_level = "relation"),
         paste(c(main_text, tableref_text, ""), collapse = "\n")
       )
       expect_identical(
-        d2(db, reference = "attr"),
+        d2(db, reference_level = "attr"),
         paste(c(main_text, attrref_text, ""), collapse = "\n")
       )
     })
@@ -1574,15 +1574,15 @@ describe("d2", {
       tableref_text <- "\"Measurement\" -> \"Chick\""
       attrref_text <- "\"Measurement\".\"Chick\" -> \"Chick\".\"Chick\""
       expect_identical(
-        d2(ds, reference = "relation"),
+        d2(ds, reference_level = "relation"),
         paste(c(base_text, "", tableref_text, ""), collapse = "\n")
       )
       expect_identical(
-        d2(ds, reference = "attr"),
+        d2(ds, reference_level = "attr"),
         paste(c(base_text, "", attrref_text, ""), collapse = "\n")
       )
       expect_identical(
-        d2(ds, name = "ChickWeight", reference = "relation"),
+        d2(ds, name = "ChickWeight", reference_level = "relation"),
         paste(
           c(
             "\"ChickWeight\" {",
@@ -1596,7 +1596,7 @@ describe("d2", {
         )
       )
       expect_identical(
-        d2(ds, name = "ChickWeight", reference = "attr"),
+        d2(ds, name = "ChickWeight", reference_level = "attr"),
         paste(
           c(
             "\"ChickWeight\" {",
@@ -1740,11 +1740,11 @@ describe("d2", {
         "\"a_b\".\"b\" -> \"d_e\".\"d\""
       )
       expect_identical(
-        d2(ds, reference = "relation"),
+        d2(ds, reference_level = "relation"),
         paste(c(main_text, tableref_text, ""), collapse = "\n")
       )
       expect_identical(
-        d2(ds, reference = "attr"),
+        d2(ds, reference_level = "attr"),
         paste(c(main_text, attrref_text, ""), collapse = "\n")
       )
     })
