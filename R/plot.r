@@ -145,8 +145,9 @@ gv <- function(x, name = NA_character_, ...) {
 #' @param ... further arguments passed to or from other methods.
 #'
 #' @return A scalar character, containing text input for D2.
-#' @seealso \code{\link{d2.data.frame}} and \code{\link{d2.relation_schema}} for
-#'   individual methods.
+#' @seealso \code{\link{d2.data.frame}}, \code{\link{d2.relation_schema}},
+#'   \code{\link{d2.database_schema}}, \code{\link{d2.relation}}, and
+#'   \code{\link{d2.database}} for individual methods.
 #'
 #' D2 language site: \url{https://d2lang.com}
 #'
