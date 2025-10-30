@@ -1097,16 +1097,17 @@ describe("d2", {
       attrref_text <- "\"Measurement\".\"Chick\" -> \"Chick\".\"Chick\""
       expect_identical(
         d2(db, reference_level = "relation"),
-        paste(c(base_text, "", tableref_text, ""), collapse = "\n")
+        paste(c("direction: right", base_text, "", tableref_text, ""), collapse = "\n")
       )
       expect_identical(
         d2(db, reference_level = "attr"),
-        paste(c(base_text, "", attrref_text, ""), collapse = "\n")
+        paste(c("direction: right", base_text, "", attrref_text, ""), collapse = "\n")
       )
       expect_identical(
         d2(db, name = "ChickWeight", reference_level = "relation"),
         paste(
           c(
+            "direction: right",
             "\"ChickWeight\" {",
             paste0("  ", base_text),
             "",
@@ -1121,6 +1122,7 @@ describe("d2", {
         d2(db, name = "ChickWeight", reference_level = "attr"),
         paste(
           c(
+            "direction: right",
             "\"ChickWeight\" {",
             paste0("  ", base_text),
             "",
@@ -1165,6 +1167,7 @@ describe("d2", {
       ds <- database_schema(schema, list())
       db <- create(ds)
       expected_string <- paste(
+        "direction: right",
         "\"Genre ID\": \"Genre ID (0 records)\" {",
         "  shape: sql_table",
         "  \"Genre ID\": logical {constraint: [PK]}",
@@ -1188,6 +1191,7 @@ describe("d2", {
       expect_identical(
         d2(db),
         paste(
+          "direction: right",
           '"<rel&1>": "<rel&1> (0 records)" {',
           "  shape: sql_table",
           '  "a<1 & b>2": logical {constraint: [PK]}',
@@ -1211,6 +1215,7 @@ describe("d2", {
       ds <- database_schema(rs, list())
       db <- create(ds)
       text <- c(
+        "direction: right",
         "\"a + b = c\": \"a + b = c (0 records)\" {",
         "  shape: sql_table",
         "  \"a\": logical {constraint: [PK; UNQ1]}",
@@ -1257,6 +1262,7 @@ describe("d2", {
       )
       ds <- database_schema(rs, references = list())
       text <- c(
+        "direction: right",
         "\"a + b = c\": \"a + b = c (0 records)\" {",
         "  shape: sql_table",
         "  \"a\": logical {constraint: [PK; UNQ1]}",
@@ -1286,6 +1292,7 @@ describe("d2", {
       )
       db <- create(ds)
       main_text <- c(
+        "direction: right",
         "\"Measurement\": \"Measurement (0 records)\" {",
         "  shape: sql_table",
         "  \"Chick\": logical {constraint: [PK; FK1]}",
@@ -1334,6 +1341,7 @@ describe("d2", {
       )
       db <- create(ds)
       main_text <- c(
+        "direction: right",
         "\"a_b\": \"a_b (0 records)\" {",
         "  shape: sql_table",
         "  \"a\": logical {constraint: [PK; FK1]}",
@@ -1414,12 +1422,13 @@ describe("d2", {
       )
       expect_identical(
         d2(rel),
-        paste(c(base_text, ""), collapse = "\n")
+        paste(c("direction: right", base_text, ""), collapse = "\n")
       )
       expect_identical(
         d2(rel, name = "ChickWeight"),
         paste(
           c(
+            "direction: right",
             "\"ChickWeight\" {",
             paste0("  ", base_text),
             "}",
@@ -1461,6 +1470,7 @@ describe("d2", {
       )
       rel <- create(schema)
       expected_string <- paste(
+        "direction: right",
         "\"Genre ID\": \"Genre ID (0 records)\" {",
         "  shape: sql_table",
         "  \"Genre ID\": logical {constraint: [PK]}",
@@ -1483,6 +1493,7 @@ describe("d2", {
       expect_identical(
         d2(rel),
         paste(
+          "direction: right",
           '"<rel&1>": "<rel&1> (0 records)" {',
           "  shape: sql_table",
           '  "a<1 & b>2": logical {constraint: [PK]}',
@@ -1505,6 +1516,7 @@ describe("d2", {
       )
       rel <- create(rs)
       text <- c(
+        "direction: right",
         "\"a + b = c\": \"a + b = c (0 records)\" {",
         "  shape: sql_table",
         "  \"a\": logical {constraint: [PK; UNQ1]}",
@@ -1575,16 +1587,17 @@ describe("d2", {
       attrref_text <- "\"Measurement\".\"Chick\" -> \"Chick\".\"Chick\""
       expect_identical(
         d2(ds, reference_level = "relation"),
-        paste(c(base_text, "", tableref_text, ""), collapse = "\n")
+        paste(c("direction: right", base_text, "", tableref_text, ""), collapse = "\n")
       )
       expect_identical(
         d2(ds, reference_level = "attr"),
-        paste(c(base_text, "", attrref_text, ""), collapse = "\n")
+        paste(c("direction: right", base_text, "", attrref_text, ""), collapse = "\n")
       )
       expect_identical(
         d2(ds, name = "ChickWeight", reference_level = "relation"),
         paste(
           c(
+            "direction: right",
             "\"ChickWeight\" {",
             paste0("  ", base_text),
             "",
@@ -1599,6 +1612,7 @@ describe("d2", {
         d2(ds, name = "ChickWeight", reference_level = "attr"),
         paste(
           c(
+            "direction: right",
             "\"ChickWeight\" {",
             paste0("  ", base_text),
             "",
@@ -1642,6 +1656,7 @@ describe("d2", {
       ) |>
         database_schema(references = list())
       expected_string <- paste(
+        "direction: right",
         "\"Genre ID\": {",
         "  shape: sql_table",
         "  \"Genre ID\": {constraint: [PK]}",
@@ -1664,6 +1679,7 @@ describe("d2", {
       expect_identical(
         d2(rs),
         paste(
+          "direction: right",
           '"<rel&1>": {',
           "  shape: sql_table",
           '  "a<1 & b>2": {constraint: [PK]}',
@@ -1686,6 +1702,7 @@ describe("d2", {
       )
       ds <- database_schema(rs, references = list())
       text <- c(
+        "direction: right",
         "\"a + b = c\": {",
         "  shape: sql_table",
         "  \"a\": {constraint: [PK; UNQ1]}",
@@ -1715,6 +1732,7 @@ describe("d2", {
         )
       )
       main_text <- c(
+        "direction: right",
         "\"a_b\": {",
         "  shape: sql_table",
         "  \"a\": {constraint: [PK; FK1]}",
@@ -1802,12 +1820,13 @@ describe("d2", {
       )
       expect_identical(
         d2(rs),
-        paste(c(base_text, ""), collapse = "\n")
+        paste(c("direction: right", base_text, ""), collapse = "\n")
       )
       expect_identical(
         d2(rs, name = "ChickWeight"),
         paste(
           c(
+            "direction: right",
             "\"ChickWeight\" {",
             paste0("  ", base_text),
             "}",
@@ -1848,6 +1867,7 @@ describe("d2", {
         c("Genre ID", "Genre Name")
       )
       expected_string <- paste(
+        "direction: right",
         "\"Genre ID\": {",
         "  shape: sql_table",
         "  \"Genre ID\": {constraint: [PK]}",
@@ -1869,6 +1889,7 @@ describe("d2", {
       expect_identical(
         d2(rs),
         paste(
+          "direction: right",
           '"<rel&1>": {',
           "  shape: sql_table",
           '  "a<1 & b>2": {constraint: [PK]}',
@@ -1890,6 +1911,7 @@ describe("d2", {
         letters[1:3]
       )
       text <- c(
+        "direction: right",
         "\"a + b = c\": {",
         "  shape: sql_table",
         "  \"a\": {constraint: [PK; UNQ1]}",
@@ -1935,7 +1957,7 @@ describe("d2", {
     it("generates a name if not given one", {
       df <- data.frame(a = 1:3)
       g <- strsplit(d2(df), "\n", fixed = TRUE)[[1]]
-      expect_identical(g[[1]], "\"data\": \"data (3 rows)\" {")
+      expect_identical(g[[2]], "\"data\": \"data (3 rows)\" {")
     })
     it("creates a d2 expression for the data.frame", {
       df <- data.frame(
@@ -1944,6 +1966,7 @@ describe("d2", {
       expect_identical(
         d2(df, "table"),
         paste(
+          "direction: right",
           "\"table\": \"table (2 rows)\" {",
           "  shape: sql_table",
           "  \"a\": integer",
@@ -1962,6 +1985,7 @@ describe("d2", {
       expect_identical(
         d2(df, "Table Test"),
         paste(
+          "direction: right",
           "\"Table Test\": \"Table Test (2 rows)\" {",
           "  shape: sql_table",
           "  \"A 1\": integer",
@@ -1978,6 +2002,7 @@ describe("d2", {
       expect_identical(
         d2(df, "Table Test"),
         paste(
+          "direction: right",
           "\"Table Test\": \"Table Test (2 rows)\" {",
           "  shape: sql_table",
           "  \"a\": integer",

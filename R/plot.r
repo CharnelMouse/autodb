@@ -261,6 +261,7 @@ d2.database <- function(
   reference_level <- match.arg(reference_level)
   x_labelled <- to_quoted(x)
   x_elemented <- to_quoted(x)
+  setup_string <- "direction: right"
   df_strings <- Map(
     relation_string_d2,
     attrs = attrs(x_elemented),
@@ -283,6 +284,7 @@ d2.database <- function(
   teardown_string <- ""
   full_text <- if (is.na(name))
     c(
+      setup_string,
       df_strings,
       if (length(reference_strings) > 0)
         c("", reference_strings),
@@ -290,6 +292,7 @@ d2.database <- function(
     )
   else
     c(
+      setup_string,
       paste0(to_quoted_name(name), " {"),
       indent(df_strings),
       if (length(reference_strings) > 0)
@@ -375,6 +378,7 @@ d2.relation <- function(x, name = NA_character_, ...) {
     stop("name must be a length-one character")
   x_labelled <- to_quoted(x)
   x_elemented <- to_quoted(x)
+  setup_string <- "direction: right"
   df_strings <- Map(
     relation_string_d2,
     attrs = attrs(x_elemented),
@@ -393,11 +397,13 @@ d2.relation <- function(x, name = NA_character_, ...) {
   teardown_string <- ""
   full_text <- if (is.na(name))
     c(
+      setup_string,
       df_strings,
       teardown_string
     )
   else
     c(
+      setup_string,
       paste0(to_quoted_name(name), " {"),
       indent(df_strings),
       "}",
@@ -504,6 +510,7 @@ d2.database_schema <- function(
   reference_level <- match.arg(reference_level)
   x_labelled <- to_quoted(x)
   x_elemented <- to_quoted(x)
+  setup_string <- "direction: right"
   df_strings <- Map(
     relation_schema_string_d2,
     attrs = attrs(x_elemented),
@@ -521,6 +528,7 @@ d2.database_schema <- function(
   teardown_string <- ""
   full_text <- if (is.na(name))
     c(
+      setup_string,
       df_strings,
       if (length(reference_strings) > 0)
         c("", reference_strings),
@@ -528,6 +536,7 @@ d2.database_schema <- function(
     )
   else
     c(
+      setup_string,
       paste0(to_quoted_name(name), " {"),
       indent(df_strings),
       if (length(reference_strings) > 0)
@@ -608,6 +617,7 @@ d2.relation_schema <- function(x, name = NA_character_, ...) {
     stop("name must be a length-one character")
   x_labelled <- to_quoted(x)
   x_elemented <- to_quoted(x)
+  setup_string <- "direction: right"
   df_strings <- Map(
     relation_schema_string_d2,
     attrs = attrs(x_elemented),
@@ -620,9 +630,10 @@ d2.relation_schema <- function(x, name = NA_character_, ...) {
     Reduce(f = c, init = character())
   teardown_string <- ""
   full_text <- if (is.na(name))
-    c(df_strings, teardown_string)
+    c(setup_string, df_strings, teardown_string)
   else
     c(
+      setup_string,
       paste0(to_quoted_name(name), " {"),
       indent(df_strings),
       "}",
@@ -711,6 +722,7 @@ d2.data.frame <- function(x, name = NA_character_, ...) {
   names(x_labelled) <- to_quoted_name(names(x))
   x_elemented <- x
   names(x_elemented) <- to_quoted_name(names(x))
+  setup_string <- "direction: right"
   table_string <- relation_string_d2(
     attrs = names(x_elemented),
     attr_labels = names(x_labelled),
@@ -724,7 +736,7 @@ d2.data.frame <- function(x, name = NA_character_, ...) {
   )
   teardown_string <- ""
   paste(
-    c(table_string, teardown_string),
+    c(setup_string, table_string, teardown_string),
     collapse = "\n"
   )
 }
