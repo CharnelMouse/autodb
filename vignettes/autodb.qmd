@@ -91,8 +91,17 @@ cat(gv(chick_db))
 ```
 
 ```{r, include = FALSE}
+file_path <- function(file) {
+  normalizePath(
+    if (Sys.getenv("QUARTO_DOCUMENT_PATH") != "") {
+      file.path(Sys.getenv("QUARTO_DOCUMENT_PATH"), file)
+    } else {
+      file.path(getwd(), file)
+    }
+  )
+}
 writegv <- function(x, name) {
-  write(gv(x), paste0("autodb-", name, ".gv"))
+  write(gv(x), file_path(paste0("autodb-", name, ".gv")))
 }
 ```
 
