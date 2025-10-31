@@ -1,9 +1,8 @@
 ---
 title: "Handling missing values"
-output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Handling missing values}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
 knitr:
   opts_chunk:
@@ -17,13 +16,9 @@ knitr:
 library(autodb)
 ```
 
-```{r check_diagrammer}
-if (requireNamespace("DiagrammeR", quietly = TRUE)) {
-  show <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
-  maybe_plot <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
-}else{
-  show <- print
-  maybe_plot <- function(x) invisible(NULL)
+```{r, include = FALSE}
+writegv <- function(x, name) {
+  write(gv(x), paste0("null-", name, ".gv"))
 }
 ```
 
@@ -56,8 +51,16 @@ knitr::kable(df_nas)
 
 `autodb` currently treats `NA` as just another value, so the data is all kept together in the database schema:
 
-```{r example_data_frame_with_NAs_autodb}
-show(autodb(df_nas))
+```r
+autodb(df_nas)
+```
+
+```{r, include = FALSE}
+writegv(autodb(df_nas), "autodb(df_nas)")
+```
+
+```{dot}
+//| file: null-autodb(df_nas).gv
 ```
 
 In this case, a missing exit date represents no exit date: the patient is still in the trial. To make this difference explicit -- and enforced -- we move exit information to a separate relation, containing only patients with a exit date. This removes the need for missing values. This decomposition isn't done by `autodb` itself, but we can do it manually:
@@ -87,7 +90,18 @@ ideal_db2 <- create(ds_trial) |>
   insert(subset(df_nas, !is.na(trial_exit_date)), relations = "patient_exit")
 
 stopifnot(identical(ideal_db2, ideal_db))
-show(ideal_db)
+```
+
+```r
+ideal_db
+```
+
+```{r, include = FALSE}
+writegv(ideal_db, "ideal_db")
+```
+
+```{dot}
+//| file: null-ideal_db.gv
 ```
 
 # Structure conditional on value presence
@@ -116,7 +130,14 @@ Since `autodb` doesn't treat missing values as a special case, it can not detect
 
 ```{r example_data_frame_with_interval_option_db}
 db_options <- autodb(df_options)
-show(db_options)
+```
+
+```{r, include = FALSE}
+writegv(db_options, "db_options")
+```
+
+```{dot}
+//| file: null-db_options.gv
 ```
 
 However, from looking at the data ourselves, we can see a clearly-implied structure:
@@ -138,7 +159,14 @@ This is not always practical, because adding columns rapidly increases the searc
 
 ```{r example_data_frame_with_interval_option_nulls_db}
 db_options_with_presence <- autodb(df_options_with_presence)
-show(db_options_with_presence)
+```
+
+```{r, include = FALSE}
+writegv(db_options_with_presence, "db_options_with_presence")
+```
+
+```{dot}
+//| file: null-db_options_with_presence.gv
 ```
 
 Some of the new information is trivially true: attributes always determine their own presence. Of more interest is the `value_present` relation, which shows that the values, bounds, and interval distributions inform the presence of each other:

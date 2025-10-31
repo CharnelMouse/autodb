@@ -1,9 +1,8 @@
 ---
 title: "Planned improvements"
-output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Planned improvements}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
 knitr:
   opts_chunk:
@@ -17,13 +16,9 @@ knitr:
 library(autodb)
 ```
 
-```{r check_diagrammer}
-if (requireNamespace("DiagrammeR", quietly = TRUE)) {
-  show <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
-  maybe_plot <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
-}else{
-  show <- print
-  maybe_plot <- function(x) invisible(NULL)
+```{r, include = FALSE}
+writegv <- function(x, name) {
+  write(gv(x), paste0("plans-", name, ".gv"))
 }
 ```
 
@@ -54,7 +49,14 @@ fds <- functional_dependency(
 )
 fds
 schema <- normalise(fds)
-show(schema)
+```
+
+```{r, include = FALSE}
+writegv(schema, "schema")
+```
+
+```{dot}
+//| file: plans-schema.gv
 ```
 
 The above schema is in 3NF, but not BCNF:
@@ -87,7 +89,18 @@ schema2 <- schema
 keys(schema2)$a_b <- list(c("b", "c"))
 attrs(schema2)$a_b <- c("b", "c")
 names(schema2)[names(schema2) == "a_b"] <- "b_c"
-show(schema2)
+```
+
+```r
+schema2
+```
+
+```{r, include = FALSE}
+writegv(schema2, "schema2")
+```
+
+```{dot}
+//| file: plans-schema2.gv
 ```
 
 This is now in BCNF: relation `c` is in BCNF for the same reasons as before, and relation `b_c` contains no FDs at all, but is required for the decomposition to be lossless.
@@ -126,9 +139,16 @@ fds
 
 Bernstein synthesis, and automatic foreign keys, give the following schema:
 
-```{r nonconnected2}
-schema <- normalise(fds)
-show(schema)
+```r
+normalise(fds)
+```
+
+```{r, include = FALSE}
+writegv(normalise(fds), "nonconnected2")
+```
+
+```{dot}
+//| file: plans-nonconnected2.gv
 ```
 
 The schema is not connected: relation `d_e` is stranded, because no other relation contains its key, and vice versa. In terms of a series of decompositions, we could think of the original table being split into `{a,b,c,d,e}` and `{d,e,f}` first, with `\{d, e\}` forming a foreign key reference, and `d` and `e` being split apart later, destroying the reference.
@@ -143,35 +163,35 @@ Here, we use a more restricted version of views, that is defined as the join of 
 
 Let's see how this can solve the issue in the BCNF example, where normalising left the FD $\{a, b\} \rightarrow c$ not represented in the schema:
 
-```{r, echo=FALSE}
-if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
-  rankdir = \"LR\"
+```{dot}
+digraph {
+  rankdir = "LR"
   node [shape=plaintext];
 
-  \"c\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c</TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_a\">a</TD><TD PORT=\"FROM_a\"></TD></TR>
+  "c" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">c</TD></TR>
+    <TR><TD PORT="TO_c">c</TD><TD PORT="FROM_c" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_a">a</TD><TD PORT="FROM_a"></TD></TR>
     </TABLE>>];
-  \"b_c\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b_c</TD></TR>
-    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"></TD></TR>
+  "b_c" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">b_c</TD></TR>
+    <TR><TD PORT="TO_b">b</TD><TD PORT="FROM_b" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_c">c</TD><TD PORT="FROM_c" BGCOLOR="black"></TD></TR>
     </TABLE>>];
-  \"view\" [label = <
-    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">view</TD></TR>
-    <TR><TD>a</TD><TD BGCOLOR=\"black\"></TD></TR>
-    <TR><TD>b</TD><TD BGCOLOR=\"black\"></TD></TR>
+  "view" [label = <
+    <TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">view</TD></TR>
+    <TR><TD>a</TD><TD BGCOLOR="black"></TD></TR>
+    <TR><TD>b</TD><TD BGCOLOR="black"></TD></TR>
     <TR><TD>c</TD><TD></TD></TR>
     </TABLE>>];
 
-  \"b_c\":FROM_c -> \"c\":TO_c;
+  "b_c":FROM_c -> "c":TO_c;
 
-  \"view\":TITLE -> \"b_c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-}", width = "100%")
+  "view":TITLE -> "b_c":TITLE [arrowhead="empty" style="dashed"];
+}
 ```
 
 The view has a darker background, and points to the relations it's calculated from using different arrows, to mark it out as different. Note that it only points to one relation here (`b_c`), with the implication that it first joins that table to all of its ancestors (`c`).
@@ -184,40 +204,40 @@ It's also worth noting that, since the view is just the original 3NF solution, i
 
 Here's how views solve the issue in the 3NF example:
 
-```{r, echo=FALSE}
-if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
-  rankdir = \"LR\"
+```{dot}
+digraph {
+  rankdir = "LR"
   node [shape=plaintext];
 
-  \"a\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a</TD></TR>
-    <TR><TD PORT=\"TO_a\">a</TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\"></TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\"></TD></TR>
+  "a" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">a</TD></TR>
+    <TR><TD PORT="TO_a">a</TD><TD PORT="FROM_a" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_b">b</TD><TD PORT="FROM_b"></TD></TR>
+    <TR><TD PORT="TO_c">c</TD><TD PORT="FROM_c"></TD></TR>
     </TABLE>>];
-  \"b\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b</TD></TR>
-    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\"></TD></TR>
+  "b" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">b</TD></TR>
+    <TR><TD PORT="TO_b">b</TD><TD PORT="FROM_b" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_d">d</TD><TD PORT="FROM_d"></TD></TR>
     </TABLE>>];
-  \"c\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c</TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\"></TD></TR>
+  "c" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">c</TD></TR>
+    <TR><TD PORT="TO_c">c</TD><TD PORT="FROM_c" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_e">e</TD><TD PORT="FROM_e"></TD></TR>
     </TABLE>>];
-  \"d_e\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e</TD></TR>
-    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_f\">f</TD><TD PORT=\"FROM_f\"></TD></TR>
+  "d_e" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">d_e</TD></TR>
+    <TR><TD PORT="TO_d">d</TD><TD PORT="FROM_d" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_e">e</TD><TD PORT="FROM_e" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_f">f</TD><TD PORT="FROM_f"></TD></TR>
     </TABLE>>];
-  \"view\" [label = <
-    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view</TD></TR>
+  "view" [label = <
+    <TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="1">view</TD></TR>
     <TR><TD>a</TD></TR>
     <TR><TD>b</TD></TR>
     <TR><TD>c</TD></TR>
@@ -226,52 +246,52 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
     <TR><TD>f</TD></TR>
     </TABLE>>];
 
-  \"a\":FROM_b -> \"b\":TO_b;
-  \"a\":FROM_c -> \"c\":TO_c;
+  "a":FROM_b -> "b":TO_b;
+  "a":FROM_c -> "c":TO_c;
 
-  \"view\":TITLE -> \"a\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-}", width = "100%")
+  "view":TITLE -> "a":TITLE [arrowhead="empty" style="dashed"];
+  "view":TITLE -> "d_e":TITLE [arrowhead="empty" style="dashed"];
+}
 ```
 
 Again, note that the view is not in 3NF itself, since it contains implied transitive dependencies.
 
 It might seem unnecessary to bring attribute `a` into the view, since we only need  the attributes in relations `b` and `c` to connect to `d_e`. However, creating a view without `a` either doesn't result in an acyclic schema,, or requires having a real relation have a foreign key reference to a view:
 
-```{r, echo=FALSE}
-if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
-  rankdir = \"LR\"
+```{dot}
+digraph {
+  rankdir = "LR"
   node [shape=plaintext];
 
-  \"a\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a</TD></TR>
-    <TR><TD PORT=\"TO_a\">a</TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\"></TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\"></TD></TR>
+  "a" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">a</TD></TR>
+    <TR><TD PORT="TO_a">a</TD><TD PORT="FROM_a" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_b">b</TD><TD PORT="FROM_b"></TD></TR>
+    <TR><TD PORT="TO_c">c</TD><TD PORT="FROM_c"></TD></TR>
     </TABLE>>];
-  \"b\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b</TD></TR>
-    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\"></TD></TR>
+  "b" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">b</TD></TR>
+    <TR><TD PORT="TO_b">b</TD><TD PORT="FROM_b" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_d">d</TD><TD PORT="FROM_d"></TD></TR>
     </TABLE>>];
-  \"c\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c</TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\"></TD></TR>
+  "c" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">c</TD></TR>
+    <TR><TD PORT="TO_c">c</TD><TD PORT="FROM_c" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_e">e</TD><TD PORT="FROM_e"></TD></TR>
     </TABLE>>];
-  \"d_e\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e</TD></TR>
-    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_f\">f</TD><TD PORT=\"FROM_f\"></TD></TR>
+  "d_e" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">d_e</TD></TR>
+    <TR><TD PORT="TO_d">d</TD><TD PORT="FROM_d" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_e">e</TD><TD PORT="FROM_e" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_f">f</TD><TD PORT="FROM_f"></TD></TR>
     </TABLE>>];
-  \"view\" [label = <
-    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view</TD></TR>
+  "view" [label = <
+    <TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="1">view</TD></TR>
     <TR><TD>b</TD></TR>
     <TR><TD>c</TD></TR>
     <TR><TD>d</TD></TR>
@@ -279,103 +299,103 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
     <TR><TD>f</TD></TR>
     </TABLE>>];
 
-  \"a\":FROM_b -> \"b\":TO_b;
-  \"a\":FROM_c -> \"c\":TO_c;
+  "a":FROM_b -> "b":TO_b;
+  "a":FROM_c -> "c":TO_c;
 
-  \"view\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-}", width = "100%")
+  "view":TITLE -> "b":TITLE [arrowhead="empty" style="dashed"];
+  "view":TITLE -> "c":TITLE [arrowhead="empty" style="dashed"];
+  "view":TITLE -> "d_e":TITLE [arrowhead="empty" style="dashed"];
+}
 ```
 
-```{r, echo=FALSE}
-if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
-  rankdir = \"LR\"
+```{dot}
+digraph {
+  rankdir = "LR"
   node [shape=plaintext];
 
-  \"a\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a</TD></TR>
-    <TR><TD PORT=\"TO_a\">a</TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\"></TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\"></TD></TR>
+  "a" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">a</TD></TR>
+    <TR><TD PORT="TO_a">a</TD><TD PORT="FROM_a" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_b">b</TD><TD PORT="FROM_b"></TD></TR>
+    <TR><TD PORT="TO_c">c</TD><TD PORT="FROM_c"></TD></TR>
     </TABLE>>];
-  \"b\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b</TD></TR>
-    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\"></TD></TR>
+  "b" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">b</TD></TR>
+    <TR><TD PORT="TO_b">b</TD><TD PORT="FROM_b" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_d">d</TD><TD PORT="FROM_d"></TD></TR>
     </TABLE>>];
-  \"c\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c</TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\"></TD></TR>
+  "c" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">c</TD></TR>
+    <TR><TD PORT="TO_c">c</TD><TD PORT="FROM_c" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_e">e</TD><TD PORT="FROM_e"></TD></TR>
     </TABLE>>];
-  \"d_e\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e</TD></TR>
-    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_f\">f</TD><TD PORT=\"FROM_f\"></TD></TR>
+  "d_e" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">d_e</TD></TR>
+    <TR><TD PORT="TO_d">d</TD><TD PORT="FROM_d" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_e">e</TD><TD PORT="FROM_e" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_f">f</TD><TD PORT="FROM_f"></TD></TR>
     </TABLE>>];
-  \"view\" [label = <
-    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view</TD></TR>
-    <TR><TD PORT=\"TO_b\">b</TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD></TR>
+  "view" [label = <
+    <TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="1">view</TD></TR>
+    <TR><TD PORT="TO_b">b</TD></TR>
+    <TR><TD PORT="TO_c">c</TD></TR>
     <TR><TD>d</TD></TR>
     <TR><TD>e</TD></TR>
     <TR><TD>f</TD></TR>
     </TABLE>>];
 
-  \"a\":FROM_b -> \"view\":TO_b;
-  \"a\":FROM_c -> \"view\":TO_c;
+  "a":FROM_b -> "view":TO_b;
+  "a":FROM_c -> "view":TO_c;
 
-  \"view\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-}", width = "100%")
+  "view":TITLE -> "b":TITLE [arrowhead="empty" style="dashed"];
+  "view":TITLE -> "c":TITLE [arrowhead="empty" style="dashed"];
+  "view":TITLE -> "d_e":TITLE [arrowhead="empty" style="dashed"];
+}
 ```
 
 The latter isn't wrong -- referring a view really means referring to the relations it gets decomposed into -- but it does take some getting used to, especially if, like above, the "key" being referred to isn't shown, because it's implied by the decomposition. It does also bring up that a "view" must be viewed as something that's decomposed, not as the result of a Cartesian join of its components. The latter would result in the above view containing too many records.
 
 We could explicitly show *all* of the decomposition steps as views, but it's not clear that it's worth the bother:
 
-```{r, echo=FALSE}
-if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
-  rankdir = \"LR\"
+```{dot}
+digraph {
+  rankdir = "LR"
   node [shape=plaintext];
 
-  \"a\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a</TD></TR>
-    <TR><TD PORT=\"TO_a\">a</TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\"></TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\"></TD></TR>
+  "a" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">a</TD></TR>
+    <TR><TD PORT="TO_a">a</TD><TD PORT="FROM_a" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_b">b</TD><TD PORT="FROM_b"></TD></TR>
+    <TR><TD PORT="TO_c">c</TD><TD PORT="FROM_c"></TD></TR>
     </TABLE>>];
-  \"b\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b</TD></TR>
-    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\"></TD></TR>
+  "b" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">b</TD></TR>
+    <TR><TD PORT="TO_b">b</TD><TD PORT="FROM_b" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_d">d</TD><TD PORT="FROM_d"></TD></TR>
     </TABLE>>];
-  \"c\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c</TD></TR>
-    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\"></TD></TR>
+  "c" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">c</TD></TR>
+    <TR><TD PORT="TO_c">c</TD><TD PORT="FROM_c" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_e">e</TD><TD PORT="FROM_e"></TD></TR>
     </TABLE>>];
-  \"d_e\" [label = <
-    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e</TD></TR>
-    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"></TD></TR>
-    <TR><TD PORT=\"TO_f\">f</TD><TD PORT=\"FROM_f\"></TD></TR>
+  "d_e" [label = <
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="2">d_e</TD></TR>
+    <TR><TD PORT="TO_d">d</TD><TD PORT="FROM_d" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_e">e</TD><TD PORT="FROM_e" BGCOLOR="black"></TD></TR>
+    <TR><TD PORT="TO_f">f</TD><TD PORT="FROM_f"></TD></TR>
     </TABLE>>];
-  \"view\" [label = <
-    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view</TD></TR>
+  "view" [label = <
+    <TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="1">view</TD></TR>
     <TR><TD>a</TD></TR>
     <TR><TD>b</TD></TR>
     <TR><TD>c</TD></TR>
@@ -383,34 +403,34 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz("digraph {
     <TR><TD>e</TD></TR>
     <TR><TD>f</TD></TR>
     </TABLE>>];
-  \"view2\" [label = <
-    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view</TD></TR>
+  "view2" [label = <
+    <TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="1">view</TD></TR>
     <TR><TD>a</TD></TR>
     <TR><TD>b</TD></TR>
     <TR><TD>c</TD></TR>
     <TR><TD>d</TD></TR>
     <TR><TD>e</TD></TR>
     </TABLE>>];
-  \"view3\" [label = <
-    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">
-    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view</TD></TR>
+  "view3" [label = <
+    <TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    <TR><TD PORT="TITLE" COLSPAN="1">view</TD></TR>
     <TR><TD>a</TD></TR>
     <TR><TD>b</TD></TR>
     <TR><TD>c</TD></TR>
     <TR><TD>d</TD></TR>
     </TABLE>>];
 
-  \"a\":FROM_b -> \"b\":TO_b;
-  \"a\":FROM_c -> \"c\":TO_c;
+  "a":FROM_b -> "b":TO_b;
+  "a":FROM_c -> "c":TO_c;
 
-  \"view\":TITLE -> \"view2\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view2\":TITLE -> \"view3\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view2\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view3\":TITLE -> \"a\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-  \"view3\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];
-}", width = "100%")
+  "view":TITLE -> "view2":TITLE [arrowhead="empty" style="dashed"];
+  "view":TITLE -> "d_e":TITLE [arrowhead="empty" style="dashed"];
+  "view2":TITLE -> "view3":TITLE [arrowhead="empty" style="dashed"];
+  "view2":TITLE -> "c":TITLE [arrowhead="empty" style="dashed"];
+  "view3":TITLE -> "a":TITLE [arrowhead="empty" style="dashed"];
+  "view3":TITLE -> "b":TITLE [arrowhead="empty" style="dashed"];
+}
 ```
 
 # Proper handling of nullable data

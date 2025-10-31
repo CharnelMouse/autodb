@@ -1,9 +1,8 @@
 ---
 title: "A larger example: the nudge dataset"
-output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{A larger example: the nudge dataset}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
 knitr:
   opts_chunk:
@@ -17,13 +16,9 @@ knitr:
 library(autodb)
 ```
 
-```{r check_diagrammer}
-if (requireNamespace("DiagrammeR", quietly = TRUE)) {
-  show <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
-  maybe_plot <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
-}else{
-  show <- print
-  maybe_plot <- function(x) invisible(NULL)
+```{r, include = FALSE}
+writegv <- function(x, name) {
+  write(gv(x), paste0("nudge-", name, ".gv"))
 }
 ```
 
@@ -62,7 +57,7 @@ There are a few reasons for this, but the main one is the sheer number of functi
 length(nudge_deps_big)
 ```
 
-Even if we remove the transitive dependencies, which are implied by the others, we still have `r length(autodb:::remove_extraneous_dependencies(nudge_deps_big))` dependenices.
+Even if we remove the transitive dependencies, which are implied by the others, we still have `r length(autodb:::remove_extraneous_dependencies(nudge_deps_big))` dependencies.
 
 # Simplifying the search result
 
@@ -150,8 +145,12 @@ nudge_schema_filtered <- normalise(nudge_deps_big[det_nofloat])
 nudge_db_filtered <- reduce(decompose(nudge, nudge_schema_filtered))
 ```
 
-```{r nudge_gv_big_filtered}
-show(nudge_db_filtered)
+```{r, include = FALSE}
+writegv(nudge_db_filtered, "nudge_db_filtered")
+```
+
+```{dot nudge_gv_big_filtered}
+//| file: nudge-nudge_db_filtered.gv
 ```
 
 Let's look at the resulting relations, in two sets. Here's the left-hand set:
@@ -164,7 +163,18 @@ subsample <- c(
   "intervention_technique",
   "n_comparison_n_control"
 )
-show(nudge_db_filtered[subsample])
+```
+
+```r
+nudge_db_filtered[subsample]
+```
+
+```{r, include = FALSE}
+writegv(nudge_db_filtered[subsample], "nudge_db_filtered_subsample")
+```
+
+```{dot}
+//| file: nudge-nudge_db_filtered_subsample.gv
 ```
 
 We see two relations, `es_id` and `study_id`, that clearly represent the effect and study levels of the data hierarchy, which is encouraging. They both contain the ID for the next level, too, as they should.
@@ -188,14 +198,36 @@ It turns out to be difficult to identify which results in the relevant paper the
 
 In any case, most of these relations in this set seem reasonable. The same can't be said of the other set, which should represent the publication-level data:
 
-```{r nudge_db_big_filtered_sample2}
-show(nudge_db_filtered[setdiff(names(nudge_db_filtered), subsample)])
+```r
+nudge_db_filtered[setdiff(names(nudge_db_filtered), subsample)]
+```
+
+```{r, include = FALSE}
+writegv(
+  nudge_db_filtered[setdiff(names(nudge_db_filtered), subsample)],
+  "nudge_db_big_filtered_sample2"
+)
+```
+
+```{dot nudge_db_big_filtered_sample2}
+//| file: nudge-nudge_db_big_filtered_sample2.gv
 ```
 
 There is a lot going on here, so let's look at the last two:
 
-```{r nudge_db_big_filtered_sample3}
-show(nudge_db_filtered[c("title", "reference")])
+```r
+nudge_db_filtered[c("title", "reference")]
+```
+
+```{r, include = FALSE}
+writegv(
+  nudge_db_filtered[c("title", "reference")],
+  "nudge_db_big_filtered_sample3"
+)
+```
+
+```{dot nudge_db_big_filtered_sample3}
+//| file: nudge-nudge_db_big_filtered_sample3.gv
 ```
 
 This is our publication-level data, but something is wrong. The publication ID is not a simple key, as we'd expect. Neither is the reference, which we'd expect to be unique, otherwise the bibliography will have duplicate entries. Instead, the only simple key is the publication's title. To use the ID or the reference as an identifier for publications, we need to use both together as a compound key.
@@ -247,7 +279,18 @@ db_fixed <- autodb(
   exclude_class = "numeric"
 )
 length(db_fixed)
-show(reduce(db_fixed))
+```
+
+```r
+reduce(db_fixed)
+```
+
+```{r, include = FALSE}
+writegv(reduce(db_fixed), "db_fixed_reduced")
+```
+
+```{dot}
+//| file: nudge-db_fixed_reduced.gv
 ```
 
 This is an improvement: the publications now have an ID and a reference as simple keys, as they should, and some of the questionable relations have disappeared.
@@ -267,14 +310,30 @@ length(db_final)
 
 The database is now small enough to not need to reduce it:
 
-```{r}
-show(db_final)
+```r
+db_final
+```
+
+```{r, include = FALSE}
+writegv(db_final, "db_final")
+```
+
+```{dot}
+//| file: nudge-db_final.gv
 ```
 
 However, the relations not referred to by the effect relation look spurious too, so we can reduce the database to remove them too:
 
-```{r}
-show(reduce(db_final))
+```r
+reduce(db_final)
+```
+
+```{r, include = FALSE}
+writegv(reduce(db_final), "db_final_reduced")
+```
+
+```{dot}
+//| file: nudge-db_final_reduced.gv
 ```
 
 This is a great improvement. We are left with only two relations that we don't expect in general, but hold for this dataset in particular:
@@ -286,13 +345,29 @@ Dataset-particular relations like this are useful to check, since they often ind
 
 We can remove either of these relations easily using `exclude`, since their keys contain attributes that don't appear in keys elsewhere. If we do, we get a schema that looks reasonable for data of this sort in general, apart from the mentioned issue with the effect sample sizes:
 
-```{r}
-show(reduce(autodb(
+```r
+reduce(autodb(
   nudge_fixed,
   exclude = c("type_experiment", "n_study"),
   exclude_class = "numeric",
   detset_limit = 2
-)))
+))
+```
+
+```{r, include = FALSE}
+writegv(
+  reduce(autodb(
+    nudge_fixed,
+    exclude = c("type_experiment", "n_study"),
+    exclude_class = "numeric",
+    detset_limit = 2
+  )),
+  "nudge_fixed_final"
+)
+```
+
+```{dot}
+//| file: nudge-nudge_fixed_final.gv
 ```
 
 # How not to remove spurious structure
@@ -301,7 +376,7 @@ Instead of adding search filters, or removing functional dependencies, we could 
 
 This is the database we had:
 
-```{r nudge_gv_big_filtered}
+```{dot nudge_gv_big_filtered}
 ```
 
 What happens if we remove the offending relations from the schema?
@@ -317,16 +392,34 @@ nudge_schema_relfiltered <- nudge_schema_filtered[
 ]
 ```
 
-```{r nudge_publication_badfilter_gv}
-show(nudge_schema_relfiltered)
+```{r, include = FALSE}
+writegv(
+  nudge_schema_relfiltered,
+  "nudge_schema_relfiltered"
+)
+```
+
+```{dot}
+//| file: nudge-nudge_schema_relfiltered.gv
 ```
 
 The offending relations are removed, but so are any foreign key references involving them. The resulting schema isn't invalid, but it's less connected than before.
 
 Calling `autoref` to re-generate the foreign key references doesn't entirely fix the problem, since, for example, no other relation contains a key for the `title` relation:
 
-```{r nudge_publication_badfilter_autoref}
-show(autoref(nudge_schema_relfiltered))
+```r
+autoref(nudge_schema_relfiltered)
+```
+
+```{r, include = FALSE}
+writegv(
+  autoref(nudge_schema_relfiltered),
+  "nudge_schema_relfiltered2"
+)
+```
+
+```{dot}
+//| file: nudge-nudge_schema_relfiltered2.gv
 ```
 
 This partly happens because removing relations removes more information than it needs to. If we remove the relevant functional dependencies instead, then we can have new intermediate relations appear in the new schema, whose dependencies were originally redundant by transitivity. Removing relations directly can't account for this.
@@ -374,32 +467,48 @@ hfilter <- function(fds, hlev) {
 
 Filtered result for the original data:
 
-```{r nudge_hier}
-original_deps <- discover(
-  nudge,
-  exclude_class = "numeric",
-  detset_limit = 2
-)
-original_deps |>
+```r
+nudge |>
+  discover(exclude_class = "numeric", detset_limit = 2) |>
+  hfilter(hlev) |>
+  normalise(remove_avoidable = TRUE) |>
+  decompose(df = nudge) |>
+  reduce()
+```
+
+```{r, include = FALSE}
+nudge |>
+  discover(exclude_class = "numeric", detset_limit = 2) |>
   hfilter(hlev) |>
   normalise(remove_avoidable = TRUE) |>
   decompose(df = nudge) |>
   reduce() |>
-  show()
+  writegv("nudge_hier")
+```
+
+```{dot}
+//| file: nudge-nudge_hier.gv
 ```
 
 Filtered result for the fixed data:
 
-```{r nudge_hier2}
-fixed_deps <- discover(
-  nudge_fixed,
-  exclude_class = "numeric",
-  detset_limit = 2
-)
-fixed_deps |>
+```r
+nudge_fixed |>
+  discover(exclude_class = "numeric", detset_limit = 2) |>
+  hfilter(hlev) |>
+  normalise(remove_avoidable = TRUE) |>
+  decompose(df = nudge_fixed)
+```
+
+```{r, include = FALSE}
+nudge_fixed |>
+  discover(exclude_class = "numeric", detset_limit = 2) |>
   hfilter(hlev) |>
   normalise(remove_avoidable = TRUE) |>
   decompose(df = nudge_fixed) |>
-  show()
+  writegv("nudge_hier2")
 ```
 
+```{dot}
+//| file: nudge-nudge_hier2.gv
+```
