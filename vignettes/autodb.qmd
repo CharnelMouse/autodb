@@ -90,30 +90,21 @@ We can also plot it, by using `gv` to turn the result into code for the Graphviz
 cat(gv(chick_db))
 ```
 
-```{r, include = FALSE}
-file_path <- function(file) {
-  normalizePath(
-    if (Sys.getenv("QUARTO_DOCUMENT_PATH") != "") {
-      file.path(Sys.getenv("QUARTO_DOCUMENT_PATH"), file)
-    } else {
-      file.path(getwd(), file)
-    }
-  )
-}
-writegv <- function(x, name) {
-  write(gv(x), file_path(paste0("autodb-", name, ".gv")))
+```{r check_diagrammer}
+if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+  show <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
+  maybe_plot <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
+}else{
+  show <- print
+  maybe_plot <- function(x) invisible(NULL)
 }
 ```
 
 ```{r, include = FALSE}
-writegv(chick_db, "chick_db")
+show(chick_db)
 ```
 
-```{dot}
-//| file: autodb-chick_db.gv
-```
-
-In an interactive session, the simplest way to do this is to call `DiagrammeR::grViz` on the output from `gv`. Here, I write the output to a file, and call that file from a `dot` code block in Quarto. The advantage to this is that DiagrammeR creates an HTML widget, and the Quarto block does not, so we avoid needing to include about 2MB of Javascript.
+In an interactive session, the simplest way to do this is to call `DiagrammeR::grViz` on the output from `gv`. In a Quarto file, we can write the output to a file, and call that file from a `dot` code block. The advantage to the latter approach is that DiagrammeR creates an HTML widget, and the Quarto block does not, so we avoid needing to include about 2MB of Javascript.
 
 The plot represents each table/relation as a box: the top row gives the relation name and the number of records, and the other rows list the attributes and their classes.
 
@@ -172,12 +163,8 @@ schema
 
 We can also plot this schema:
 
-```{r, include = FALSE}
-writegv(schema, "schema")
-```
-
-```{dot}
-//| file: autodb-schema.gv
+```{r}
+show(schema)
 ```
 
 This is similar to the database plot given before, but there is some information not present, that requires the data frame itself: record counts, and data classes. We do have automatically-generated names for the individual relations, which are created using the keys.
@@ -201,12 +188,8 @@ normalise(deps)
 
 Plotting this updated database schema shows the same relation schemas as before, linked together by foreign key references:
 
-```{r, include = FALSE}
-writegv(linked_schema, "linked_schema")
-```
-
-```{dot}
-//| file: autodb-linked_schema.gv
+```{r}
+show(linked_schema)
 ```
 
 ## Decomposing the original relation
@@ -217,12 +200,8 @@ Finally, once we have our normalised database schema, we can apply it to our ori
 db <- decompose(ChickWeight, linked_schema)
 ```
 
-```{r, include = FALSE}
-writegv(db, "db")
-```
-
-```{dot}
-//| file: autodb-db.gv
+```{r}
+show(db)
 ```
 
 ## Rejoining a database back into a data frame
@@ -248,16 +227,8 @@ This is a simple set of data, with a single count observation, `Freq`, for each 
 
 If we use `autodb` again, we get the following database:
 
-```r
-autodb(as.data.frame(Titanic))
-```
-
-```{r, include = FALSE}
-writegv(autodb(as.data.frame(Titanic)), "Titanic")
-```
-
-```{dot}
-//| file: autodb-Titanic.gv
+```{r}
+show(autodb(as.data.frame(Titanic)))
 ```
 
 Oops! The search found some functional dependencies where the count could be used to determine another attribute. These are clearly spurious: frequency count can't causally determine age, for example.
@@ -282,16 +253,8 @@ stopifnot(setequal(
 
 We can also limit the search when using `autodb`:
 
-```r
-autodb(as.data.frame(Titanic), exclude = "Freq")
-```
-
-```{r, include = FALSE}
-writegv(autodb(as.data.frame(Titanic), exclude = "Freq"), "Titanic_nofreq")
-```
-
-```{dot}
-//| file: autodb-Titanic_nofreq.gv
+```{r}
+show(autodb(as.data.frame(Titanic), exclude = "Freq"))
 ```
 
 Excluding numeric attributes as determinants is often useful, because we expect non-integer numbers to be a measurement that doesn't co-determine anything else. The main exception is when some attributes are summaries of others.
@@ -334,35 +297,20 @@ avoid_deps
 normalise(avoid_deps)
 ```
 
-```{r, include = FALSE}
-writegv(normalise(avoid_deps), "avoid_schema")
-```
-
-```{dot}
-//| file: autodb-avoid_schema.gv
+```{r}
+show(normalise(avoid_deps))
 ```
 
 Attributes `A` and `B` are equivalent, since relation `A` has them both as a key. In other words, relation `A` is a simple lookup relation. Because of this, we could remove `B` from relation `A_C`, and replace the key `B, D` with `A, D`, which is equivalent when accounting for relation `A`.
 
 We can have this removal of avoidable attributes done automatically, using the `remove_avoidable` flag for `normalise`:
 
-```r
-normalise(
-  avoid_deps,
-  remove_avoidable = TRUE
-)
-```
-
-```{r, include = FALSE}
+```{r}
 normalise(
   avoid_deps,
   remove_avoidable = TRUE
 ) |>
-  writegv("avoid_schema_removed")
-```
-
-```{dot}
-//| file: autodb-avoid_schema_removed.gv
+  show()
 ```
 
 This schema is now in LTK form, with no remaining avoidable attributes. We could have also removed `A` from relation `A_C` instead of `B`, so this process may not have a unique result. The package's implementation prefers to remove attributes that appear later in the original relation.

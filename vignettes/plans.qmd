@@ -16,18 +16,13 @@ knitr:
 library(autodb)
 ```
 
-```{r, include = FALSE}
-file_path <- function(file) {
-  normalizePath(
-    if (Sys.getenv("QUARTO_DOCUMENT_PATH") != "") {
-      file.path(Sys.getenv("QUARTO_DOCUMENT_PATH"), file)
-    } else {
-      file.path(getwd(), file)
-    }
-  )
-}
-writegv <- function(x, name) {
-  write(gv(x), file_path(paste0("plans-", name, ".gv")))
+```{r check_diagrammer}
+if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+  show <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
+  maybe_plot <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
+}else{
+  show <- print
+  maybe_plot <- function(x) invisible(NULL)
 }
 ```
 
@@ -60,12 +55,8 @@ fds
 schema <- normalise(fds)
 ```
 
-```{r, include = FALSE}
-writegv(schema, "schema")
-```
-
-```{dot}
-//| file: plans-schema.gv
+```{r}
+show(schema)
 ```
 
 The above schema is in 3NF, but not BCNF:
@@ -100,16 +91,8 @@ attrs(schema2)$a_b <- c("b", "c")
 names(schema2)[names(schema2) == "a_b"] <- "b_c"
 ```
 
-```r
-schema2
-```
-
-```{r, include = FALSE}
-writegv(schema2, "schema2")
-```
-
-```{dot}
-//| file: plans-schema2.gv
+```{r}
+show(schema2)
 ```
 
 This is now in BCNF: relation `c` is in BCNF for the same reasons as before, and relation `b_c` contains no FDs at all, but is required for the decomposition to be lossless.
@@ -148,16 +131,8 @@ fds
 
 Bernstein synthesis, and automatic foreign keys, give the following schema:
 
-```r
-normalise(fds)
-```
-
-```{r, include = FALSE}
-writegv(normalise(fds), "nonconnected2")
-```
-
-```{dot}
-//| file: plans-nonconnected2.gv
+```{r}
+show(normalise(fds))
 ```
 
 The schema is not connected: relation `d_e` is stranded, because no other relation contains its key, and vice versa. In terms of a series of decompositions, we could think of the original table being split into `{a,b,c,d,e}` and `{d,e,f}` first, with `\{d, e\}` forming a foreign key reference, and `d` and `e` being split apart later, destroying the reference.

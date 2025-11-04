@@ -16,18 +16,13 @@ knitr:
 library(autodb)
 ```
 
-```{r, include = FALSE}
-file_path <- function(file) {
-  normalizePath(
-    if (Sys.getenv("QUARTO_DOCUMENT_PATH") != "") {
-      file.path(Sys.getenv("QUARTO_DOCUMENT_PATH"), file)
-    } else {
-      file.path(getwd(), file)
-    }
-  )
-}
-writegv <- function(x, name) {
-  write(gv(x), file_path(paste0("limits-", name, ".gv")))
+```{r check_diagrammer}
+if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+  show <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
+  maybe_plot <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
+}else{
+  show <- print
+  maybe_plot <- function(x) invisible(NULL)
 }
 ```
 
@@ -47,70 +42,30 @@ The above section noted that the search can't account for data classes, i.e. the
 
 Suppose we have a dataset of publication citations, where each row contains the citer and citee IDs, plus supplementary information about both publications. The resulting database given by `autodb` has the following schema, after giving the relations appropriate names:
 
-```r
-database_schema(
-  relation_schema(
-    list(
-      citation = list(c("citer_id", "citee_id"), list(c("citer_id", "citee_id"))),
-      citer = list(c("citer_id", "citer_title", "citer_author", "citer_year"), list("citer_id")),
-      citee = list(c("citee_id", "citee_title", "citee_author", "citee_year"), list("citee_id"))
-    ),
-    c(
-      "citer_id", "citer_title", "citer_author", "citer_year",
-      "citee_id", "citee_title", "citee_author", "citee_year"
-    )
-  ),
+```{r}
+relation_schema(
   list(
-    list("citation", "citer_id", "citer", "citer_id"),
-    list("citation", "citee_id", "citee", "citee_id")
-  )
-)
-```
-
-```{r, include = FALSE}
-database_schema(
-  relation_schema(
-    list(
-      citation = list(c("citer_id", "citee_id"), list(c("citer_id", "citee_id"))),
-      citer = list(c("citer_id", "citer_title", "citer_author", "citer_year"), list("citer_id")),
-      citee = list(c("citee_id", "citee_title", "citee_author", "citee_year"), list("citee_id"))
-    ),
-    c(
-      "citer_id", "citer_title", "citer_author", "citer_year",
-      "citee_id", "citee_title", "citee_author", "citee_year"
-    )
+    citation = list(c("citer_id", "citee_id"), list(c("citer_id", "citee_id"))),
+    citer = list(c("citer_id", "citer_title", "citer_author", "citer_year"), list("citer_id")),
+    citee = list(c("citee_id", "citee_title", "citee_author", "citee_year"), list("citee_id"))
   ),
-  list(
-    list("citation", "citer_id", "citer", "citer_id"),
-    list("citation", "citee_id", "citee", "citee_id")
+  c(
+    "citer_id", "citer_title", "citer_author", "citer_year",
+    "citee_id", "citee_title", "citee_author", "citee_year"
   )
 ) |>
-  writegv("citation_schema")
-```
-
-```{dot}
-//| file: limits-citation_schema.gv
+  database_schema(
+    list(
+      list("citation", "citer_id", "citer", "citer_id"),
+      list("citation", "citee_id", "citee", "citee_id")
+    )
+  ) |>
+  show()
 ```
 
 Of course, citers and citees are both publications of the same type, so they shouldn't have separate relations:
 
-```r
-database_schema(
-  relation_schema(
-    list(
-      citation = list(c("citer", "citee"), list(c("citer", "citee"))),
-      publication = list(c("id", "title", "author", "year"), list("id"))
-    ),
-    c("citer", "citee", "id", "title", "author", "year")
-  ),
-  list(
-    list("citation", "citer", "publication", "id"),
-    list("citation", "citee", "publication", "id")
-  )
-)
-```
-
-```{r, include = FALSE}
+```{r}
 database_schema(
   relation_schema(
     list(
@@ -124,11 +79,7 @@ database_schema(
     list("citation", "citee", "publication", "id")
   )
 ) |>
-  writegv("citation_schema2")
-```
-
-```{dot}
-//| file: limits-citation_schema2.gv
+  show()
 ```
 
 We make this improvement because `citer_id` and `citee_id` values are, semantically, the same class of object, and the same goes for authors, titles, etc. Semantic classes are not something that can be inferred by just looking at the syntactic/data classes.
@@ -250,13 +201,8 @@ Normalising gives the following relations:
 normalise(fds_redkey, remove_avoidable = TRUE)
 ```
 
-```{r, include = FALSE}
-normalise(fds_redkey, remove_avoidable = TRUE) |>
-  writegv("schema_redkey")
-```
-
-```{dot}
-//| file: limits-schema_redkey.gv
+```{r}
+show(normalise(fds_redkey, remove_avoidable = TRUE))
 ```
 
 These relations have some redundancy: relation `a` implies `{b, d} -> c`, but relation `d` implies that `{d} -> c`. This isn't resolved by removing avoidable attributes, because `d` still needs to be in relation `a`: we just need to remove `{b, d}` as a key. However, this is resolved if we instead use this set of functional dependencies, which is equivalent to the previous set:
@@ -275,8 +221,8 @@ fds_redkey_fix
 schema_redkey_fix <- normalise(fds_redkey_fix, remove_avoidable = TRUE)
 ```
 
-```{r, include = FALSE}
-writegv(schema_redkey_fix, "schema_redkey_fix")
+```{r}
+show(schema_redkey_fix)
 ```
 
 There's no way in `autodb` to find better sets like this.
@@ -291,26 +237,14 @@ For example, take this database schema, whose relation schemas are in third norm
 dup_db <- autodb(ChickWeight)
 ```
 
-```{r, include = FALSE}
-writegv(dup_db, "dup_db")
-```
-
-```{dot}
-//| file: limits-dup_db.gv
+```{r}
+show(dup_db)
 ```
 
 If we now create copies of these relations, with the intention that copies always contain the same data, then all relations are still in third normal form, and so we'd say this database is also in third normal form:
 
-```r
-dup_db[c(1, 1, 2, 2, 2)]
-```
-
-```{r, include = FALSE}
-writegv(dup_db[c(1, 1, 2, 2, 2)], "dup_db2")
-```
-
-```{dot}
-//| file: limits-dup_db2.gv
+```{r}
+show(dup_db[c(1, 1, 2, 2, 2)])
 ```
 
 However, no one would claim that this is a good database design, since there is clearly a large amount of data redundancy. Higher normal forms would not change this. In fact, since I've implemented subset-based-copying with the copies not referencing each other, it is trivial to insert data to make this database incoherent. For example, `Chick` and `Chick.1` could contain different diet assignments.
