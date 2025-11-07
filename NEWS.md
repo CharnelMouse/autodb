@@ -4,7 +4,7 @@
 
 * Added `d2`, a converter to the D2 plotting language, similar to `gv` for GraphViz.
 * Removed some partial match warnings (thanks to Hadley Wickham for the pull request).
-* There are now several smaller vignettes, instead of a single larger one, and they are hopefully a little easier to read.
+* The vignette has been split into several smaller ones, and hopefully is easier to read.
 
 # autodb 3.1.0
 
