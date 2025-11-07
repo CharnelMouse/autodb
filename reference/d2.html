@@ -9,7 +9,7 @@ rendered with SVG."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">autodb</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -19,6 +19,13 @@ rendered with SVG."></head><body>
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/autodb.html">Get started</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/limits.html">Limitations</a></li>
+    <li><a class="dropdown-item" href="../articles/nudge.html">A larger example: the nudge dataset</a></li>
+    <li><a class="dropdown-item" href="../articles/null.html">Handling missing values</a></li>
+    <li><a class="dropdown-item" href="../articles/plans.html">Planned improvements</a></li>
+  </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -104,8 +111,9 @@ the generated board, to make use of D2's composition features.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="d2.data.frame.html">d2.data.frame</a></code> and <code><a href="d2.relation_schema.html">d2.relation_schema</a></code> for
-individual methods.</p>
+    <div class="dont-index"><p><code><a href="d2.data.frame.html">d2.data.frame</a></code>, <code><a href="d2.relation_schema.html">d2.relation_schema</a></code>,
+<code><a href="d2.database_schema.html">d2.database_schema</a></code>, <code><a href="d2.relation.html">d2.relation</a></code>, and
+<code><a href="d2.database.html">d2.database</a></code> for individual methods.</p>
 <p>D2 language site: <a href="https://d2lang.com" class="external-link">https://d2lang.com</a></p>
 <p>Playground for running online without installation:
 <a href="https://play.d2lang.com/" class="external-link">https://play.d2lang.com/</a></p>
@@ -114,10 +122,16 @@ individual methods.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="co"># simple data.frame example</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># simple data.frame example</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu">d2</span><span class="op">(</span><span class="va">ChickWeight</span>, <span class="st">"chick"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> direction: right</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "chick": "chick (578 rows)" {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   shape: sql_table</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "weight": numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Time": numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Chick": ordered</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Diet": factor</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -129,7 +143,7 @@ individual methods.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

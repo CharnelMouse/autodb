@@ -1,0 +1,5 @@
+# License
+
+    YEAR: 2022
+    COPYRIGHT HOLDER: Mark Webster
+    ORGANIZATION: copyright holder

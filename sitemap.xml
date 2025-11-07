@@ -3,6 +3,10 @@
 <url><loc>https://charnelmouse.github.io/autodb/LICENSE-text.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/articles/autodb.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/articles/index.html</loc></url>
+<url><loc>https://charnelmouse.github.io/autodb/articles/limits.html</loc></url>
+<url><loc>https://charnelmouse.github.io/autodb/articles/nudge.html</loc></url>
+<url><loc>https://charnelmouse.github.io/autodb/articles/null.html</loc></url>
+<url><loc>https://charnelmouse.github.io/autodb/articles/plans.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/authors.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/index.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/news/index.html</loc></url>
@@ -13,7 +17,10 @@
 <url><loc>https://charnelmouse.github.io/autodb/reference/autoref.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/create.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/d2.data.frame.html</loc></url>
+<url><loc>https://charnelmouse.github.io/autodb/reference/d2.database.html</loc></url>
+<url><loc>https://charnelmouse.github.io/autodb/reference/d2.database_schema.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/d2.html</loc></url>
+<url><loc>https://charnelmouse.github.io/autodb/reference/d2.relation.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/d2.relation_schema.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/database.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/database_schema.html</loc></url>
