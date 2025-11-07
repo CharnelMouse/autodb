@@ -1,4 +1,4 @@
-# autodb (development version)
+# autodb 3.2.0
 
 ## Improvements
 
