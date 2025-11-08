@@ -2,12 +2,14 @@
 
 ``` r
 library(autodb)
-#> 
-#> Attaching package: 'autodb'
-#> The following object is masked from 'package:stats':
-#> 
-#>     decompose
 ```
+
+    ## 
+    ## Attaching package: 'autodb'
+
+    ## The following object is masked from 'package:stats':
+    ## 
+    ##     decompose
 
 ``` r
 if (requireNamespace("DiagrammeR", quietly = TRUE)) {
@@ -80,16 +82,18 @@ relations than we’d want to go through manually:
 
 ``` r
 length(nudge_schema_big)
-#> [1] 473
 ```
+
+    ## [1] 473
 
 There are a few reasons for this, but the main one is the sheer number
 of functional dependencies discovered:
 
 ``` r
 length(nudge_deps_big)
-#> [1] 3732
 ```
+
+    ## [1] 3732
 
 Even if we remove the transitive dependencies, which are implied by the
 others, we still have 597 dependencies.
@@ -122,8 +126,9 @@ In this case, the reduced database is still too large to easily review:
 
 ``` r
 length(nudge_reduced_big)
-#> [1] 124
 ```
+
+    ## [1] 124
 
 Instead, we get a grip on what’s going on by collecting statistics on
 attributes involved in the determinants.
@@ -132,10 +137,11 @@ For example, we can also see how large the determinants are:
 
 ``` r
 table(lengths(detset(nudge_deps_big)))
-#> 
-#>   1   2   3   4   5   6   7 
-#>  41 545 780 993 926 435  12
 ```
+
+    ## 
+    ##   1   2   3   4   5   6   7 
+    ##  41 545 780 993 926 435  12
 
 While there are some large true determinants in real data, a common rule
 of thumb is that FDs with larger determinants are more likely to be
@@ -146,26 +152,27 @@ We can also see how often each attribute appears in a determinant:
 
 ``` r
 sort(table(unlist(detset(nudge_deps_big))), decreasing = TRUE)
-#> 
-#>           n_comparison        type_experiment  intervention_category 
-#>                   1095                   1085                   1061 
-#>              n_control                 domain         n_intervention 
-#>                   1029                   1016                    993 
-#>                   year          approximation intervention_technique 
-#>                    889                    766                    745 
-#>               location             variance_d        sd_intervention 
-#>                    739                    727                    687 
-#>             sd_control                n_study               cohens_d 
-#>                    684                    628                    549 
-#>         binary_outcome           mean_control      mean_intervention 
-#>                    503                    370                    313 
-#>             population                wansink         publication_id 
-#>                    269                    248                    119 
-#>              reference                  title               study_id 
-#>                    108                     83                     37 
-#>                  es_id 
-#>                     24
 ```
+
+    ## 
+    ##           n_comparison        type_experiment  intervention_category 
+    ##                   1095                   1085                   1061 
+    ##              n_control                 domain         n_intervention 
+    ##                   1029                   1016                    993 
+    ##                   year          approximation intervention_technique 
+    ##                    889                    766                    745 
+    ##               location             variance_d        sd_intervention 
+    ##                    739                    727                    687 
+    ##             sd_control                n_study               cohens_d 
+    ##                    684                    628                    549 
+    ##         binary_outcome           mean_control      mean_intervention 
+    ##                    503                    370                    313 
+    ##             population                wansink         publication_id 
+    ##                    269                    248                    119 
+    ##              reference                  title               study_id 
+    ##                    108                     83                     37 
+    ##                  es_id 
+    ##                     24
 
 We can be more specific, and see how often each attributes appears in a
 determinant of a given size:
@@ -178,33 +185,34 @@ by_lengths <- function(x, f) do.call(cbind, tapply(x, lengths(x), f))
 
 by_lengths(detset(nudge_deps_big), attrs_table) |>
   sort_by_rowSums(decreasing = TRUE)
-#>                         1   2   3   4   5   6  7
-#> n_comparison            0  73  64 342 395 217  4
-#> type_experiment         0   6 114 286 376 295  8
-#> intervention_category   0   2 140 185 389 341  4
-#> n_control               0  53 148 305 361 162  0
-#> domain                  0  23 109 335 453  84 12
-#> n_intervention          0  64 142 283 290 206  8
-#> year                    0  11 266 408 192  12  0
-#> approximation           0   0  35 125 317 277 12
-#> intervention_technique  1  25 124 309 249  37  0
-#> location                0   4  91 191 259 182 12
-#> variance_d              0  76 201 241 164  45  0
-#> sd_intervention         0  15  65 228 227 148  4
-#> sd_control              0  12  65 228 227 148  4
-#> n_study                 0  60  81 224 182  77  4
-#> cohens_d                0 211 258  23  46  11  0
-#> binary_outcome          0   3  20  74 225 177  4
-#> mean_control            1  89 196  59  25   0  0
-#> mean_intervention       1 103 141  46  22   0  0
-#> population              0   0   7  38 112 104  8
-#> wansink                 0   0   0  42 119  87  0
-#> publication_id          0  97  22   0   0   0  0
-#> reference               1  85  22   0   0   0  0
-#> title                   3  58  22   0   0   0  0
-#> study_id               10  20   7   0   0   0  0
-#> es_id                  24   0   0   0   0   0  0
 ```
+
+    ##                         1   2   3   4   5   6  7
+    ## n_comparison            0  73  64 342 395 217  4
+    ## type_experiment         0   6 114 286 376 295  8
+    ## intervention_category   0   2 140 185 389 341  4
+    ## n_control               0  53 148 305 361 162  0
+    ## domain                  0  23 109 335 453  84 12
+    ## n_intervention          0  64 142 283 290 206  8
+    ## year                    0  11 266 408 192  12  0
+    ## approximation           0   0  35 125 317 277 12
+    ## intervention_technique  1  25 124 309 249  37  0
+    ## location                0   4  91 191 259 182 12
+    ## variance_d              0  76 201 241 164  45  0
+    ## sd_intervention         0  15  65 228 227 148  4
+    ## sd_control              0  12  65 228 227 148  4
+    ## n_study                 0  60  81 224 182  77  4
+    ## cohens_d                0 211 258  23  46  11  0
+    ## binary_outcome          0   3  20  74 225 177  4
+    ## mean_control            1  89 196  59  25   0  0
+    ## mean_intervention       1 103 141  46  22   0  0
+    ## population              0   0   7  38 112 104  8
+    ## wansink                 0   0   0  42 119  87  0
+    ## publication_id          0  97  22   0   0   0  0
+    ## reference               1  85  22   0   0   0  0
+    ## title                   3  58  22   0   0   0  0
+    ## study_id               10  20   7   0   0   0  0
+    ## es_id                  24   0   0   0   0   0  0
 
 Either way, we can see that there are attributes that we wouldn’t expect
 to be in a determinant, but often are, especially in larger ones. We
@@ -225,13 +233,14 @@ class_table <- function(x) {
 
 by_lengths(detset(nudge_deps_big), class_table) |>
   sort_by_rowSums(decreasing = TRUE)
-#>            1   2   3    4    5    6  7
-#> factor     1  60 585 1344 1838 1043 44
-#> integer   34 378 730 1562 1420  674 16
-#> numeric    2 506 926  825  711  352  8
-#> logical    0   3  55  241  661  541 16
-#> character  4 143  44    0    0    0  0
 ```
+
+    ##            1   2   3    4    5    6  7
+    ## factor     1  60 585 1344 1838 1043 44
+    ## integer   34 378 730 1562 1420  674 16
+    ## numeric    2 506 926  825  711  352  8
+    ## logical    0   3  55  241  661  541 16
+    ## character  4 143  44    0    0    0  0
 
 This suggests that a simple first step is to remove any FD with a float
 in the determinant. We can write this as a filter vector:
@@ -243,9 +252,10 @@ det_nofloat <- vapply(
   logical(1)
 )
 summary(det_nofloat)
-#>    Mode   FALSE    TRUE 
-#> logical    2784     948
 ```
+
+    ##    Mode   FALSE    TRUE 
+    ## logical    2784     948
 
 This removes a lot!
 
@@ -253,8 +263,9 @@ If we use the filtered set of FDs, we still get a large schema:
 
 ``` r
 length(normalise(nudge_deps_big[det_nofloat]))
-#> [1] 176
 ```
+
+    ## [1] 176
 
 However, if we reduce the resulting database, we get something much more
 manageable:
@@ -426,8 +437,9 @@ db_fixed <- autodb(
   exclude_class = "numeric"
 )
 length(db_fixed)
-#> [1] 170
 ```
+
+    ## [1] 170
 
 ``` r
 show(reduce(db_fixed))
@@ -452,8 +464,9 @@ db_final <- autodb(
   detset_limit = 2
 )
 length(db_final)
-#> [1] 11
 ```
+
+    ## [1] 11
 
 The database is now small enough to not need to reduce it:
 

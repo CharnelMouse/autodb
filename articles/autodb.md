@@ -2,12 +2,14 @@
 
 ``` r
 library(autodb)
-#> 
-#> Attaching package: 'autodb'
-#> The following object is masked from 'package:stats':
-#> 
-#>     decompose
 ```
+
+    ## 
+    ## Attaching package: 'autodb'
+
+    ## The following object is masked from 'package:stats':
+    ## 
+    ##     decompose
 
 ## Terminology
 
@@ -40,15 +42,16 @@ base R.
 
 ``` r
 summary(ChickWeight)
-#>      weight           Time           Chick     Diet   
-#>  Min.   : 35.0   Min.   : 0.00   13     : 12   1:220  
-#>  1st Qu.: 63.0   1st Qu.: 4.00   9      : 12   2:120  
-#>  Median :103.0   Median :10.00   20     : 12   3:120  
-#>  Mean   :121.8   Mean   :10.72   10     : 12   4:118  
-#>  3rd Qu.:163.8   3rd Qu.:16.00   17     : 12          
-#>  Max.   :373.0   Max.   :21.00   19     : 12          
-#>                                  (Other):506
 ```
+
+    ##      weight           Time           Chick     Diet   
+    ##  Min.   : 35.0   Min.   : 0.00   13     : 12   1:220  
+    ##  1st Qu.: 63.0   1st Qu.: 4.00   9      : 12   2:120  
+    ##  Median :103.0   Median :10.00   20     : 12   3:120  
+    ##  Mean   :121.8   Mean   :10.72   10     : 12   4:118  
+    ##  3rd Qu.:163.8   3rd Qu.:16.00   17     : 12          
+    ##  Max.   :373.0   Max.   :21.00   19     : 12          
+    ##                                  (Other):506
 
 This is a simple dataset, but the flat table format obscures some
 information about the structure of the data. Specifically, chicks have
@@ -60,23 +63,31 @@ separate tables:
 measurement <- unique(subset(ChickWeight, , -Diet))
 chick <- unique(subset(ChickWeight, , c(Chick, Diet)))
 summary(measurement)
-#>      weight           Time           Chick    
-#>  Min.   : 35.0   Min.   : 0.00   13     : 12  
-#>  1st Qu.: 63.0   1st Qu.: 4.00   9      : 12  
-#>  Median :103.0   Median :10.00   20     : 12  
-#>  Mean   :121.8   Mean   :10.72   10     : 12  
-#>  3rd Qu.:163.8   3rd Qu.:16.00   17     : 12  
-#>  Max.   :373.0   Max.   :21.00   19     : 12  
-#>                                  (Other):506
+```
+
+    ##      weight           Time           Chick    
+    ##  Min.   : 35.0   Min.   : 0.00   13     : 12  
+    ##  1st Qu.: 63.0   1st Qu.: 4.00   9      : 12  
+    ##  Median :103.0   Median :10.00   20     : 12  
+    ##  Mean   :121.8   Mean   :10.72   10     : 12  
+    ##  3rd Qu.:163.8   3rd Qu.:16.00   17     : 12  
+    ##  Max.   :373.0   Max.   :21.00   19     : 12  
+    ##                                  (Other):506
+
+``` r
 summary(chick)
-#>      Chick    Diet  
-#>  18     : 1   1:20  
-#>  16     : 1   2:10  
-#>  15     : 1   3:10  
-#>  13     : 1   4:10  
-#>  9      : 1         
-#>  20     : 1         
-#>  (Other):44
+```
+
+    ##      Chick    Diet  
+    ##  18     : 1   1:20  
+    ##  16     : 1   2:10  
+    ##  15     : 1   3:10  
+    ##  13     : 1   4:10  
+    ##  9      : 1         
+    ##  20     : 1         
+    ##  (Other):44
+
+``` r
 stopifnot(
   identical(
     merge(measurement, chick, sort = FALSE)[names(ChickWeight)],
@@ -143,42 +154,44 @@ and get the expected normalisation:
 ``` r
 chick_db <- autodb(ChickWeight)
 chick_db
-#> database with 2 relations
-#> 4 attributes: weight, Time, Chick, Diet
-#> relation Chick: Chick, Diet; 50 records
-#>   key 1: Chick
-#> relation Time_Chick: Time, Chick, weight; 578 records
-#>   key 1: Time, Chick
-#> references:
-#> Time_Chick.{Chick} -> Chick.{Chick}
 ```
+
+    ## database with 2 relations
+    ## 4 attributes: weight, Time, Chick, Diet
+    ## relation Chick: Chick, Diet; 50 records
+    ##   key 1: Chick
+    ## relation Time_Chick: Time, Chick, weight; 578 records
+    ##   key 1: Time, Chick
+    ## references:
+    ## Time_Chick.{Chick} -> Chick.{Chick}
 
 We can also plot it, by using `gv` to turn the result into code for the
 Graphviz language, and then calling Graphviz however we prefer.
 
 ``` r
 cat(gv(chick_db))
-#> digraph {
-#>   rankdir = "LR"
-#>   node [shape=plaintext];
-#> 
-#>   "Chick" [label = <
-#>     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
-#>     <TR><TD COLSPAN="3">Chick (50 records)</TD></TR>
-#>     <TR><TD PORT="TO_chick">Chick</TD><TD BGCOLOR="black"></TD><TD PORT="FROM_chick">ordered</TD></TR>
-#>     <TR><TD PORT="TO_diet">Diet</TD><TD></TD><TD PORT="FROM_diet">factor</TD></TR>
-#>     </TABLE>>];
-#>   "Time_Chick" [label = <
-#>     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
-#>     <TR><TD COLSPAN="3">Time_Chick (578 records)</TD></TR>
-#>     <TR><TD PORT="TO_time">Time</TD><TD BGCOLOR="black"></TD><TD PORT="FROM_time">numeric</TD></TR>
-#>     <TR><TD PORT="TO_chick">Chick</TD><TD BGCOLOR="black"></TD><TD PORT="FROM_chick">ordered</TD></TR>
-#>     <TR><TD PORT="TO_weight">weight</TD><TD></TD><TD PORT="FROM_weight">numeric</TD></TR>
-#>     </TABLE>>];
-#> 
-#>   "Time_Chick":FROM_chick -> "Chick":TO_chick;
-#> }
 ```
+
+    ## digraph {
+    ##   rankdir = "LR"
+    ##   node [shape=plaintext];
+    ## 
+    ##   "Chick" [label = <
+    ##     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    ##     <TR><TD COLSPAN="3">Chick (50 records)</TD></TR>
+    ##     <TR><TD PORT="TO_chick">Chick</TD><TD BGCOLOR="black"></TD><TD PORT="FROM_chick">ordered</TD></TR>
+    ##     <TR><TD PORT="TO_diet">Diet</TD><TD></TD><TD PORT="FROM_diet">factor</TD></TR>
+    ##     </TABLE>>];
+    ##   "Time_Chick" [label = <
+    ##     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+    ##     <TR><TD COLSPAN="3">Time_Chick (578 records)</TD></TR>
+    ##     <TR><TD PORT="TO_time">Time</TD><TD BGCOLOR="black"></TD><TD PORT="FROM_time">numeric</TD></TR>
+    ##     <TR><TD PORT="TO_chick">Chick</TD><TD BGCOLOR="black"></TD><TD PORT="FROM_chick">ordered</TD></TR>
+    ##     <TR><TD PORT="TO_weight">weight</TD><TD></TD><TD PORT="FROM_weight">numeric</TD></TR>
+    ##     </TABLE>>];
+    ## 
+    ##   "Time_Chick":FROM_chick -> "Chick":TO_chick;
+    ## }
 
 ``` r
 if (requireNamespace("DiagrammeR", quietly = TRUE)) {
@@ -277,27 +290,32 @@ search algorithm. We run this by using the `discover` function, setting
 
 ``` r
 deps <- discover(ChickWeight, progress = TRUE)
-#> formatting numerical/complex variables with 7 significant digits
-#> simplifying data types
-#> calculating single-attribute PLIs
-#> sampling difference sets
-#> 9 initial diffsets
-#> 
-#> dependant weight
-#> dependant Time
-#> dependant Chick
-#> dependant Diet
-#> 
-#> FDHitsSep complete
-#> 9 final diffsets
-#> 7 nodes visited
-#> 5 partitions cached
-deps
-#> 2 functional dependencies
-#> 4 attributes: weight, Time, Chick, Diet
-#> Time, Chick -> weight
-#>       Chick -> Diet
 ```
+
+    ## formatting numerical/complex variables with 7 significant digits
+    ## simplifying data types
+    ## calculating single-attribute PLIs
+    ## sampling difference sets
+    ## 7 initial diffsets
+    ## 
+    ## dependant weight
+    ## dependant Time
+    ## dependant Chick
+    ## dependant Diet
+    ## 
+    ## FDHitsSep complete
+    ## 9 final diffsets
+    ## 10 nodes visited
+    ## 7 partitions cached
+
+``` r
+deps
+```
+
+    ## 2 functional dependencies
+    ## 4 attributes: weight, Time, Chick, Diet
+    ## Time, Chick -> weight
+    ##       Chick -> Diet
 
 The result is a list of *functional dependencies*, in the format
 `determinant -> dependant`, with an attribute named `attrs_order` that
@@ -306,16 +324,25 @@ three parts can be extracted:
 
 ``` r
 detset(deps)
-#> [[1]]
-#> [1] "Time"  "Chick"
-#> 
-#> [[2]]
-#> [1] "Chick"
-dependant(deps)
-#> [1] "weight" "Diet"
-attrs_order(deps)
-#> [1] "weight" "Time"   "Chick"  "Diet"
 ```
+
+    ## [[1]]
+    ## [1] "Time"  "Chick"
+    ## 
+    ## [[2]]
+    ## [1] "Chick"
+
+``` r
+dependant(deps)
+```
+
+    ## [1] "weight" "Diet"
+
+``` r
+attrs_order(deps)
+```
+
+    ## [1] "weight" "Time"   "Chick"  "Diet"
 
 The former two are useful for filtering.
 
@@ -328,13 +355,14 @@ normal form. This is done using Bernstein’s synthesis.
 ``` r
 schema <- synthesise(deps)
 schema
-#> 2 relation schemas
-#> 4 attributes: weight, Time, Chick, Diet
-#> schema Chick: Chick, Diet
-#>   key 1: Chick
-#> schema Time_Chick: Time, Chick, weight
-#>   key 1: Time, Chick
 ```
+
+    ## 2 relation schemas
+    ## 4 attributes: weight, Time, Chick, Diet
+    ## schema Chick: Chick, Diet
+    ##   key 1: Chick
+    ## schema Time_Chick: Time, Chick, weight
+    ##   key 1: Time, Chick
 
 We can also plot this schema:
 
@@ -363,30 +391,32 @@ this information using `autoref`:
 ``` r
 linked_schema <- autoref(schema)
 linked_schema
-#> database schema with 2 relation schemas
-#> 4 attributes: weight, Time, Chick, Diet
-#> schema Chick: Chick, Diet
-#>   key 1: Chick
-#> schema Time_Chick: Time, Chick, weight
-#>   key 1: Time, Chick
-#> references:
-#> Time_Chick.{Chick} -> Chick.{Chick}
 ```
+
+    ## database schema with 2 relation schemas
+    ## 4 attributes: weight, Time, Chick, Diet
+    ## schema Chick: Chick, Diet
+    ##   key 1: Chick
+    ## schema Time_Chick: Time, Chick, weight
+    ##   key 1: Time, Chick
+    ## references:
+    ## Time_Chick.{Chick} -> Chick.{Chick}
 
 We could also have used `normalise`, instead of `synthesise` and
 `autoref` separately:
 
 ``` r
 normalise(deps)
-#> database schema with 2 relation schemas
-#> 4 attributes: weight, Time, Chick, Diet
-#> schema Chick: Chick, Diet
-#>   key 1: Chick
-#> schema Time_Chick: Time, Chick, weight
-#>   key 1: Time, Chick
-#> references:
-#> Time_Chick.{Chick} -> Chick.{Chick}
 ```
+
+    ## database schema with 2 relation schemas
+    ## 4 attributes: weight, Time, Chick, Diet
+    ## schema Chick: Chick, Diet
+    ##   key 1: Chick
+    ## schema Time_Chick: Time, Chick, weight
+    ##   key 1: Time, Chick
+    ## references:
+    ## Time_Chick.{Chick} -> Chick.{Chick}
 
 Plotting this updated database schema shows the same relation schemas as
 before, linked together by foreign key references:
@@ -419,19 +449,28 @@ function `df_equiv` to check for equivalence under row reordering:
 ``` r
 rejoined <- rejoin(db)
 summary(rejoined)
-#>      weight           Time           Chick     Diet   
-#>  Min.   : 35.0   Min.   : 0.00   13     : 12   1:220  
-#>  1st Qu.: 63.0   1st Qu.: 4.00   9      : 12   2:120  
-#>  Median :103.0   Median :10.00   20     : 12   3:120  
-#>  Mean   :121.8   Mean   :10.72   10     : 12   4:118  
-#>  3rd Qu.:163.8   3rd Qu.:16.00   17     : 12          
-#>  Max.   :373.0   Max.   :21.00   19     : 12          
-#>                                  (Other):506
-identical(rejoined, ChickWeight)
-#> [1] FALSE
-df_equiv(rejoined, ChickWeight)
-#> [1] TRUE
 ```
+
+    ##      weight           Time           Chick     Diet   
+    ##  Min.   : 35.0   Min.   : 0.00   13     : 12   1:220  
+    ##  1st Qu.: 63.0   1st Qu.: 4.00   9      : 12   2:120  
+    ##  Median :103.0   Median :10.00   20     : 12   3:120  
+    ##  Mean   :121.8   Mean   :10.72   10     : 12   4:118  
+    ##  3rd Qu.:163.8   3rd Qu.:16.00   17     : 12          
+    ##  Max.   :373.0   Max.   :21.00   19     : 12          
+    ##                                  (Other):506
+
+``` r
+identical(rejoined, ChickWeight)
+```
+
+    ## [1] FALSE
+
+``` r
+df_equiv(rejoined, ChickWeight)
+```
+
+    ## [1] TRUE
 
 ### Tuning detection and normalisation
 
@@ -506,10 +545,11 @@ being considered:
 ``` r
 titanic_deps_freqonly <- discover(as.data.frame(Titanic), exclude = "Freq")
 titanic_deps_freqonly
-#> 1 functional dependency
-#> 5 attributes: Class, Sex, Age, Survived, Freq
-#> Class, Sex, Age, Survived -> Freq
 ```
+
+    ## 1 functional dependency
+    ## 5 attributes: Class, Sex, Age, Survived, Freq
+    ## Class, Sex, Age, Survived -> Freq
 
 Alternatively, we could exclude all attributes that inherit from
 “numeric”:
@@ -538,23 +578,25 @@ found dependencies, if we don’t exclude anything:
 ``` r
 titanic_deps <- discover(as.data.frame(Titanic))
 titanic_deps
-#> 3 functional dependencies
-#> 5 attributes: Class, Sex, Age, Survived, Freq
-#>       Sex, Survived, Freq -> Age
-#>     Class, Survived, Freq -> Age
-#> Class, Sex, Age, Survived -> Freq
 ```
+
+    ## 3 functional dependencies
+    ## 5 attributes: Class, Sex, Age, Survived, Freq
+    ##       Sex, Survived, Freq -> Age
+    ##     Class, Survived, Freq -> Age
+    ## Class, Sex, Age, Survived -> Freq
 
 We can remove the unwanted dependencies, where `Age` is the dependant,
 using subsetting, `Filter`, etc.:
 
 ``` r
 titanic_deps[dependant(titanic_deps) == "Age"]
-#> 2 functional dependencies
-#> 5 attributes: Class, Sex, Age, Survived, Freq
-#>   Sex, Survived, Freq -> Age
-#> Class, Survived, Freq -> Age
 ```
+
+    ## 2 functional dependencies
+    ## 5 attributes: Class, Sex, Age, Survived, Freq
+    ##   Sex, Survived, Freq -> Age
+    ## Class, Survived, Freq -> Age
 
 ## Avoidable attributes
 
@@ -594,26 +636,31 @@ avoid_deps <- functional_dependency(
   attrs_order = c("A", "B", "C", "D", "E")
 )
 avoid_deps
-#> 5 functional dependencies
-#> 5 attributes: A, B, C, D, E
-#>    A -> B
-#>    B -> A
-#> A, C -> D
-#> A, C -> E
-#> B, D -> C
-normalise(avoid_deps)
-#> database schema with 2 relation schemas
-#> 5 attributes: A, B, C, D, E
-#> schema A: A, B
-#>   key 1: A
-#>   key 2: B
-#> schema A_C: A, C, B, D, E
-#>   key 1: A, C
-#>   key 2: B, D
-#> references:
-#> A_C.{A} -> A.{A}
-#> A_C.{B} -> A.{B}
 ```
+
+    ## 5 functional dependencies
+    ## 5 attributes: A, B, C, D, E
+    ##    A -> B
+    ##    B -> A
+    ## A, C -> D
+    ## A, C -> E
+    ## B, D -> C
+
+``` r
+normalise(avoid_deps)
+```
+
+    ## database schema with 2 relation schemas
+    ## 5 attributes: A, B, C, D, E
+    ## schema A: A, B
+    ##   key 1: A
+    ##   key 2: B
+    ## schema A_C: A, C, B, D, E
+    ##   key 1: A, C
+    ##   key 2: B, D
+    ## references:
+    ## A_C.{A} -> A.{A}
+    ## A_C.{B} -> A.{B}
 
 ``` r
 show(normalise(avoid_deps))

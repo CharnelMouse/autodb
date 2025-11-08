@@ -10,10 +10,7 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="plans_files/libs/quarto-html/popper.min.js"></script><script src="plans_files/libs/quarto-html/tippy.umd.min.js"></script><link href="plans_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="plans_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<script src="plans_files/libs/htmlwidgets-1.6.4/htmlwidgets.js"></script><script src="plans_files/libs/viz-1.8.2/viz.js"></script><link href="plans_files/libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet">
-<script src="plans_files/libs/grViz-binding-1.0.11/grViz.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Planned improvements">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Planned improvements">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -23,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">autodb</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,35 +60,32 @@
 
 
   </div>
-</nav><div class="container template-quarto">
+</nav><div class="container template-article">
+
+
+
+<script src="plans_files/htmlwidgets-1.6.4/htmlwidgets.js"></script><script src="plans_files/viz-1.8.2/viz.js"></script><link href="plans_files/DiagrammeR-styles-0.2/styles.css" rel="stylesheet">
+<script src="plans_files/grViz-binding-1.0.11/grViz.js"></script><link href="plans_files/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet">
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Planned improvements</h1>
-
-
-
-
-      <small class="dont-index">Source: <a href="https://github.com/CharnelMouse/autodb/blob/master/vignettes/plans.qmd" class="external-link"><code>vignettes/plans.qmd</code></a></small>
-      <div class="d-none name"><code></code></div>
+            
+      
+      <small class="dont-index">Source: <a href="https://github.com/CharnelMouse/autodb/blob/master/vignettes/plans.Rmd" class="external-link"><code>vignettes/plans.Rmd</code></a></small>
+      <div class="d-none name"><code>plans.Rmd</code></div>
     </div>
 
-
-
-
-
-
-    <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://charnelmouse.github.io/autodb/">autodb</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: 'autodb'</span></span>
-<span><span class="co">#&gt; The following object is masked from 'package:stats':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     decompose</span></span></code></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="downlit sourceCode r">
+    
+    
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://charnelmouse.github.io/autodb/">autodb</a></span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## </span></span>
+<span><span class="co">## Attaching package: 'autodb'</span></span></code></pre>
+<pre><code><span><span class="co">## The following object is masked from 'package:stats':</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##     decompose</span></span></code></pre>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">show</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="fu"><a href="../reference/gv.html">gv</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, width <span class="op">=</span> <span class="st">"100%"</span><span class="op">)</span></span>
 <span>  <span class="va">maybe_plot</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="fu"><a href="../reference/gv.html">gv</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, width <span class="op">=</span> <span class="st">"100%"</span><span class="op">)</span></span>
@@ -99,53 +93,93 @@
 <span>  <span class="va">show</span> <span class="op">&lt;-</span> <span class="va">print</span></span>
 <span>  <span class="va">maybe_plot</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-</div>
-<section class="section level2"><h2 id="views-for-bcnf-and-connected-reference-chains">Views for BCNF and connected reference chains<a class="anchor" aria-label="anchor" href="#views-for-bcnf-and-connected-reference-chains"></a>
+<div class="section level2">
+<h2 id="views-for-bcnf-and-connected-reference-chains">Views for BCNF and connected reference chains<a class="anchor" aria-label="anchor" href="#views-for-bcnf-and-connected-reference-chains"></a>
 </h2>
-<p>Two features that I’d like to add to <code>autodb</code> both have issues in the current implementation, that are both solved by allowing a restricted version of virtual relations, commonly known as views. I’ll show the issues first.</p>
-<section class="level2"><h3 id="boyes-codd-normal-form">Boyes-Codd Normal Form<a class="anchor" aria-label="anchor" href="#boyes-codd-normal-form"></a>
+<p>Two features that I’d like to add to <code>autodb</code> both have
+issues in the current implementation, that are both solved by allowing a
+restricted version of virtual relations, commonly known as views. I’ll
+show the issues first.</p>
+<div class="section level3">
+<h3 id="boyes-codd-normal-form">Boyes-Codd Normal Form<a class="anchor" aria-label="anchor" href="#boyes-codd-normal-form"></a>
 </h3>
-<p><code>autodb</code> currently normalises data to third normal form (3NF). (Actually, it normalises to a slightly strong form called elementary key normal form, which has the same issue as presented below). Third normal form can be formally defined as follows:</p>
-<p>A database is in <em>third normal form</em> (3NF) if and only if all of its relations are in 3NF. A relation is in 3NF if all of the non-trivial functional dependencies <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>→</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">X \rightarrow y</annotation></semantics></math> satisfied by its attributes satisfy one of the following:</p>
-<ol type="1">
+<p><code>autodb</code> currently normalises data to third normal form
+(3NF). (Actually, it normalises to a slightly strong form called
+elementary key normal form, which has the same issue as presented
+below). Third normal form can be formally defined as follows:</p>
+<p>A database is in <em>third normal form</em> (3NF) if and only if all
+of its relations are in 3NF. A relation is in 3NF if all of the
+non-trivial functional dependencies
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>→</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">X \rightarrow y</annotation></semantics></math>
+satisfied by its attributes satisfy one of the following:</p>
+<ol style="list-style-type: decimal">
 <li>
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math> is a superkey (i.e. contains one of the relation’s keys);</li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+is a superkey (i.e. contains one of the relation’s keys);</li>
 <li>
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math> is a member of a key.</li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+is a member of a key.</li>
 </ol>
-<p>A functional dependency (FD) <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>→</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">X \rightarrow y</annotation></semantics></math> is <em>trivial</em> if <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math> is in <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>, i.e. it states that an attribute co-determines itself, which is trivially true.</p>
-<p>Boyes-Codd normal form (BCNF) strengthens this by dropping the second condition. (Conversely, second normal form weakens this by adding a third option: that <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math> is a subkey, i.e. is contained in one of the keys.)</p>
-<p>To see the difference between 3NF and BCNF, consider the following set of FDs, and the resulting schema given by <code>autodb</code>:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="downlit sourceCode r">
+<p>A functional dependency (FD)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>→</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">X \rightarrow y</annotation></semantics></math>
+is <em>trivial</em> if
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+is in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>,
+i.e. it states that an attribute co-determines itself, which is
+trivially true.</p>
+<p>Boyes-Codd normal form (BCNF) strengthens this by dropping the second
+condition. (Conversely, second normal form weakens this by adding a
+third option: that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+is a subkey, i.e. is contained in one of the keys.)</p>
+<p>To see the difference between 3NF and BCNF, consider the following
+set of FDs, and the resulting schema given by <code>autodb</code>:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/functional_dependency.html">functional_dependency</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span>, <span class="st">"c"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"c"</span>, <span class="st">"a"</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  <span class="va">letters</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">fds</span></span>
-<span><span class="co">#&gt; 2 functional dependencies</span></span>
-<span><span class="co">#&gt; 3 attributes: a, b, c</span></span>
-<span><span class="co">#&gt; a, b -&gt; c</span></span>
-<span><span class="co">#&gt;    c -&gt; a</span></span>
-<span><span class="va">schema</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/normalise.html">normalise</a></span><span class="op">(</span><span class="va">fds</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="downlit sourceCode r">
+<span><span class="va">fds</span></span></code></pre></div>
+<pre><code><span><span class="co">## 2 functional dependencies</span></span>
+<span><span class="co">## 3 attributes: a, b, c</span></span>
+<span><span class="co">## a, b -&gt; c</span></span>
+<span><span class="co">##    c -&gt; a</span></span></code></pre>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">schema</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/normalise.html">normalise</a></span><span class="op">(</span><span class="va">fds</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="va">schema</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="htmlwidget-100d474e51a4453fdbc1" style="width:100%;height:480px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-100d474e51a4453fdbc1">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"a_b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">a_b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a_b\":FROM_c -> \"c\":TO_c;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
-</div>
-</div>
-<p>The above schema is in 3NF, but not BCNF:</p>
+<div id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"a_b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">a_b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a_b\":FROM_c -> \"c\":TO_c;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>The above schema is in 3NF, but not BCNF:</p>
 <ul>
-<li>Relation <code>c</code> contains one FD: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">\{c\} \rightarrow a</annotation></semantics></math>. Since <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{c\}</annotation></semantics></math> is a key, relation <code>c</code> is in 3NF, and BCNF.</li>
-<li>Relation <code>a_b</code> contains two FDs: <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">\{a, b\} \rightarrow c</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">\{c\} \rightarrow a</annotation></semantics></math>. <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{a, b\}</annotation></semantics></math> is a key for <code>a_b</code>, but <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{c\}</annotation></semantics></math> is not, so <code>a_b</code> is not in BCNF. However, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math> is within the key <code>\{a, b\}</code>, so relation <code>a_b</code> is in 3NF.</li>
+<li>Relation <code>c</code> contains one FD:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">\{c\} \rightarrow a</annotation></semantics></math>.
+Since
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{c\}</annotation></semantics></math>
+is a key, relation <code>c</code> is in 3NF, and BCNF.</li>
+<li>Relation <code>a_b</code> contains two FDs:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">\{a, b\} \rightarrow c</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">\{c\} \rightarrow a</annotation></semantics></math>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{a, b\}</annotation></semantics></math>
+is a key for <code>a_b</code>, but
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{c\}</annotation></semantics></math>
+is not, so <code>a_b</code> is not in BCNF. However,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>
+is within the key <code>\{a, b\}</code>, so relation <code>a_b</code> is
+in 3NF.</li>
 </ul>
-<p>In fact, <code>autodb</code> does more than is required here: the relation <code>a_b</code> by itself is in 3NF, and contains all of the attributes, so we don’t need relation <code>c</code>.</p>
-<p>This double appearance of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">\{c\} \rightarrow a</annotation></semantics></math> results in some redundancy: we’re listing the resulting <code>(c, a)</code> pairs twice. Even worse, only one of them is enforced via a key: if, after normalising, we add more data to the two relations separately, then we can two sets of <code>(c, a)</code> pairs that aren’t mutually coherent :</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="downlit sourceCode r">
+<p>In fact, <code>autodb</code> does more than is required here: the
+relation <code>a_b</code> by itself is in 3NF, and contains all of the
+attributes, so we don’t need relation <code>c</code>.</p>
+<p>This double appearance of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">\{c\} \rightarrow a</annotation></semantics></math>
+results in some redundancy: we’re listing the resulting
+<code>(c, a)</code> pairs twice. Even worse, only one of them is
+enforced via a key: if, after normalising, we add more data to the two
+relations separately, then we can two sets of <code>(c, a)</code> pairs
+that aren’t mutually coherent :</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">db</span> <span class="op">&lt;-</span> <span class="va">schema</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/create.html">create</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/insert.html">insert</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>c <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, a <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">)</span>, relations <span class="op">=</span> <span class="st">"c"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -153,97 +187,126 @@
 <span><span class="va">rab</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/records.html">records</a></span><span class="op">(</span><span class="va">db</span><span class="op">)</span><span class="op">$</span><span class="va">a_b</span></span>
 <span><span class="va">rc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/records.html">records</a></span><span class="op">(</span><span class="va">db</span><span class="op">)</span><span class="op">$</span><span class="va">c</span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">rab</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<table class="table caption-top">
+<table class="table">
 <thead><tr class="header">
-<th style="text-align: right;">a</th>
-<th style="text-align: right;">b</th>
-<th style="text-align: right;">c</th>
+<th align="right">a</th>
+<th align="right">b</th>
+<th align="right">c</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="sourceCode cell-code" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">rc</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<table class="table caption-top">
+<table class="table">
 <thead><tr class="header">
-<th style="text-align: right;">c</th>
-<th style="text-align: right;">a</th>
+<th align="right">c</th>
+<th align="right">a</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">2</td>
+<td align="right">2</td>
+<td align="right">2</td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="sourceCode cell-code" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">rab</span>, <span class="va">rc</span>, by <span class="op">=</span> <span class="st">"c"</span>, suffixes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">".a_b"</span>, <span class="st">".c"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<table class="table caption-top">
+<table class="table">
 <thead><tr class="header">
-<th style="text-align: right;">c</th>
-<th style="text-align: right;">a.a_b</th>
-<th style="text-align: right;">b</th>
-<th style="text-align: right;">a.c</th>
+<th align="right">c</th>
+<th align="right">a.a_b</th>
+<th align="right">b</th>
+<th align="right">a.c</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">2</td>
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2</td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-<p>If we remove relation <code>c</code>, we still have the same problem, which is that relation <code>a_b</code> doesn’t enforce <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">\{c\} \rightarrow a</annotation></semantics></math> with a key, so we can easily insert data that violates it.</p>
-<p>The standard way to fix this schema to satisfy BCNF is by splitting relation <code>a_b</code> on the violated functional dependency, namely <code>c -&gt; a</code>:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="downlit sourceCode r">
+<p>If we remove relation <code>c</code>, we still have the same problem,
+which is that relation <code>a_b</code> doesn’t enforce
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">\{c\} \rightarrow a</annotation></semantics></math>
+with a key, so we can easily insert data that violates it.</p>
+<p>The standard way to fix this schema to satisfy BCNF is by splitting
+relation <code>a_b</code> on the violated functional dependency, namely
+<code>c -&gt; a</code>:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="va">schema2</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="htmlwidget-60bc4f5a793308d5c6a7" style="width:100%;height:480px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-60bc4f5a793308d5c6a7">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b_c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">b_c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"b_c\":FROM_c -> \"c\":TO_c;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-e5c8c404fe174e4c81bd" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-e5c8c404fe174e4c81bd">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b_c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">b_c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"b_c\":FROM_c -> \"c\":TO_c;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>This is now in BCNF: relation <code>c</code> is in BCNF for the same
+reasons as before, and relation <code>b_c</code> contains no FDs at all,
+but is required for the decomposition to be lossless.</p>
+<p>There is now a different issue: the FD
+<code>\{a, b\} \rightarrow c</code> isn’t represented anywhere, let
+alone enforced with a key! This is an example of how BCNF sometimes
+can’t be achieved using just (real) relations.</p>
+<p>We can keep the other FD by noting it somewhere, but this is not what
+I’d call a nice approach. It also raises questions about how to plot the
+schema nicely: we don’t want to just have a list of non-represented FDs
+sitting in a corner of the plot.</p>
+<p>When this problem with BCNF is introduced, it’s often added that this
+is a rare occurrence in practice, and that usually you can normalise to
+3NF and get BCNF for free, without the above issue. All I would say is
+that, for almost every real dataset I’ve worked with, normalising it
+with <code>autodb</code> has demonstrated that a subsection of the data
+has exactly the three-attribute situation shown in the example
+above.</p>
 </div>
-</div>
-<p>This is now in BCNF: relation <code>c</code> is in BCNF for the same reasons as before, and relation <code>b_c</code> contains no FDs at all, but is required for the decomposition to be lossless.</p>
-<p>There is now a different issue: the FD <code>\{a, b\} \rightarrow c</code> isn’t represented anywhere, let alone enforced with a key! This is an example of how BCNF sometimes can’t be achieved using just (real) relations.</p>
-<p>We can keep the other FD by noting it somewhere, but this is not what I’d call a nice approach. It also raises questions about how to plot the schema nicely: we don’t want to just have a list of non-represented FDs sitting in a corner of the plot.</p>
-<p>When this problem with BCNF is introduced, it’s often added that this is a rare occurrence in practice, and that usually you can normalise to 3NF and get BCNF for free, without the above issue. All I would say is that, for almost every real dataset I’ve worked with, normalising it with <code>autodb</code> has demonstrated that a subsection of the data has exactly the three-attribute situation shown in the example above.</p>
-</section><section class="level2"><h3 id="reference-chains">Reference chains<a class="anchor" aria-label="anchor" href="#reference-chains"></a>
+<div class="section level3">
+<h3 id="reference-chains">Reference chains<a class="anchor" aria-label="anchor" href="#reference-chains"></a>
 </h3>
-<p>As described above, Boyes-Codd normal form can not always be represented with just (real) relations. However, if we want desirable properties for the foreign key references, then we run into problems for third normal form too.</p>
-<p>When <code>autodb</code>, or <code>autoref</code>, generates foreign key references for relations decomposed from a single table, it naturally tends to a structure where there is a single low-level data relation on the left – or several if the original data has independent partitions – and higher-level relations are “downstream” with respect to references, with the number of records strictly decreasing as we follow references to higher-level data relations. This resulting database schema is acyclic. Acyclic database schemas have some nice properties, an important one being that, if we want to join together two relations with some common attributes, there is always a way to do so by joining along foreign key references.</p>
-<p>Similarly, it’s simple to reconstruct the original simple table: just join the relations back together by “telescoping” back along the foreign key references.</p>
-<p>Considering this rejoin plan in reverse, while the schema is created constructively, we can view it as a series of decompositions: start with the original table, split it up into two or more sub-tables, linked together by foreign key references, and repeat. Rejoining the database then undoes these decompositions, in the opposite order.</p>
-<p>Unfortunately, not every set of functional dependencies allows this, because the resulting schema might not be connected. Consider the following set of FDs:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="downlit sourceCode r">
+<p>As described above, Boyes-Codd normal form can not always be
+represented with just (real) relations. However, if we want desirable
+properties for the foreign key references, then we run into problems for
+third normal form too.</p>
+<p>When <code>autodb</code>, or <code>autoref</code>, generates foreign
+key references for relations decomposed from a single table, it
+naturally tends to a structure where there is a single low-level data
+relation on the left – or several if the original data has independent
+partitions – and higher-level relations are “downstream” with respect to
+references, with the number of records strictly decreasing as we follow
+references to higher-level data relations. This resulting database
+schema is acyclic. Acyclic database schemas have some nice properties,
+an important one being that, if we want to join together two relations
+with some common attributes, there is always a way to do so by joining
+along foreign key references.</p>
+<p>Similarly, it’s simple to reconstruct the original simple table: just
+join the relations back together by “telescoping” back along the foreign
+key references.</p>
+<p>Considering this rejoin plan in reverse, while the schema is created
+constructively, we can view it as a series of decompositions: start with
+the original table, split it up into two or more sub-tables, linked
+together by foreign key references, and repeat. Rejoining the database
+then undoes these decompositions, in the opposite order.</p>
+<p>Unfortunately, not every set of functional dependencies allows this,
+because the resulting schema might not be connected. Consider the
+following set of FDs:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fds</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/functional_dependency.html">functional_dependency</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span><span class="op">)</span>,</span>
@@ -254,242 +317,383 @@
 <span>  <span class="op">)</span>,</span>
 <span>  <span class="va">letters</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">]</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">fds</span></span>
-<span><span class="co">#&gt; 5 functional dependencies</span></span>
-<span><span class="co">#&gt; 6 attributes: a, b, c, d, e, f</span></span>
-<span><span class="co">#&gt;    a -&gt; b</span></span>
-<span><span class="co">#&gt;    a -&gt; c</span></span>
-<span><span class="co">#&gt;    b -&gt; d</span></span>
-<span><span class="co">#&gt;    c -&gt; e</span></span>
-<span><span class="co">#&gt; d, e -&gt; f</span></span></code></pre></div>
-</div>
-<p>Bernstein synthesis, and automatic foreign keys, give the following schema:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="downlit sourceCode r">
+<span><span class="va">fds</span></span></code></pre></div>
+<pre><code><span><span class="co">## 5 functional dependencies</span></span>
+<span><span class="co">## 6 attributes: a, b, c, d, e, f</span></span>
+<span><span class="co">##    a -&gt; b</span></span>
+<span><span class="co">##    a -&gt; c</span></span>
+<span><span class="co">##    b -&gt; d</span></span>
+<span><span class="co">##    c -&gt; e</span></span>
+<span><span class="co">## d, e -&gt; f</span></span></code></pre>
+<p>Bernstein synthesis, and automatic foreign keys, give the following
+schema:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="fu"><a href="../reference/normalise.html">normalise</a></span><span class="op">(</span><span class="va">fds</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="htmlwidget-48bd63040fef7261a1d9" style="width:100%;height:480px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-48bd63040fef7261a1d9">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"b\":TO_b;\n  \"a\":FROM_c -> \"c\":TO_c;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-36aa3d2a04d42bbc2145" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-36aa3d2a04d42bbc2145">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"b\":TO_b;\n  \"a\":FROM_c -> \"c\":TO_c;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>The schema is not connected: relation <code>d_e</code> is stranded,
+because no other relation contains its key, and vice versa. In terms of
+a series of decompositions, we could think of the original table being
+split into <code>{a,b,c,d,e}</code> and <code>{d,e,f}</code> first, with
+<code>\{d, e\}</code> forming a foreign key reference, and
+<code>d</code> and <code>e</code> being split apart later, destroying
+the reference.</p>
+<p>Similarly to the example for BCNF, this has undesirable consequences
+if we add more data after normalisation: because <code>d_e</code> is
+isolated, we can insert data into it that will be inconsistent with the
+other relations if we rejoin everything back together.</p>
 </div>
-</div>
-<p>The schema is not connected: relation <code>d_e</code> is stranded, because no other relation contains its key, and vice versa. In terms of a series of decompositions, we could think of the original table being split into <code>{a,b,c,d,e}</code> and <code>{d,e,f}</code> first, with <code>\{d, e\}</code> forming a foreign key reference, and <code>d</code> and <code>e</code> being split apart later, destroying the reference.</p>
-<p>Similarly to the example for BCNF, this has undesirable consequences if we add more data after normalisation: because <code>d_e</code> is isolated, we can insert data into it that will be inconsistent with the other relations if we rejoin everything back together.</p>
-</section><section class="level2"><h3 id="views-as-a-solution">Views as a solution<a class="anchor" aria-label="anchor" href="#views-as-a-solution"></a>
+<div class="section level3">
+<h3 id="views-as-a-solution">Views as a solution<a class="anchor" aria-label="anchor" href="#views-as-a-solution"></a>
 </h3>
-<p>Virtual relations, or views, are defined as the result of an operation on other relations (real or virtual). In real databases, this might be done as a convenient way to refer to the result of joining some other tables, or aggregating values in a non-trivial way, so that the code for these doesn’t need to be repeated. Virtual relations don’t store any data themselves: if they’re queried, they’re created from scratch, so they’re never inconsistent with the relations they’re defined by.</p>
-<p>Here, we use a more restricted version of views, that is defined as the join of other relations. Views always have at least one key, implied by the relations they’re joining. We extend this by letting them have their own non-implied keys, that are required to hold on the join result.</p>
-<p>Let’s see how this can solve the issue in the BCNF example, where normalising left the FD <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">\{a, b\} \rightarrow c</annotation></semantics></math> not represented in the schema:</p>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p>
-<figure class=""><p></p>
-<div>
-<svg width="672" height="480" viewbox="0.00 0.00 242.00 120.00" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none"><g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 116)"><polygon fill="white" stroke="transparent" points="-4,4 -4,-116 238,-116 238,4 -4,4"></polygon><!-- c --><g id="node1" class="node"><title>c</title>
-<polygon fill="none" stroke="black" points="194,-56 194,-82 220,-82 220,-56 194,-56"></polygon><text text-anchor="start" x="203.89" y="-64.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="none" stroke="black" points="194,-30 194,-56 210,-56 210,-30 194,-30"></polygon><text text-anchor="start" x="198.89" y="-38.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="black" stroke="transparent" points="210,-30 210,-56 220,-56 220,-30 210,-30"></polygon><polygon fill="none" stroke="black" points="210,-30 210,-56 220,-56 220,-30 210,-30"></polygon><polygon fill="none" stroke="black" points="194,-4 194,-30 210,-30 210,-4 194,-4"></polygon><text text-anchor="start" x="198.89" y="-12.4" font-family="Times,serif" font-size="14.00">a</text><polygon fill="none" stroke="black" points="210,-4 210,-30 220,-30 220,-4 210,-4"></polygon></g><!-- b_c --><g id="node2" class="node"><title>b_c</title>
-<polygon fill="none" stroke="black" points="102,-82 102,-108 132,-108 132,-82 102,-82"></polygon><text text-anchor="start" x="106.89" y="-90.4" font-family="Times,serif" font-size="14.00">b_c</text><polygon fill="none" stroke="black" points="102,-56 102,-82 120,-82 120,-56 102,-56"></polygon><text text-anchor="start" x="107.5" y="-64.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="black" stroke="transparent" points="120,-56 120,-82 132,-82 132,-56 120,-56"></polygon><polygon fill="none" stroke="black" points="120,-56 120,-82 132,-82 132,-56 120,-56"></polygon><polygon fill="none" stroke="black" points="102,-30 102,-56 120,-56 120,-30 102,-30"></polygon><text text-anchor="start" x="107.89" y="-38.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="black" stroke="transparent" points="120,-30 120,-56 132,-56 132,-30 120,-30"></polygon><polygon fill="none" stroke="black" points="120,-30 120,-56 132,-56 132,-30 120,-30"></polygon></g><!-- b_c&#45;&gt;c --><g id="edge1" class="edge"><title>b_c:FROM_c-&gt;c:TO_c</title>
-<path fill="none" stroke="black" d="M133,-43C155.92,-43 164.06,-43 182.83,-43"></path><polygon fill="black" stroke="black" points="183,-46.5 193,-43 183,-39.5 183,-46.5"></polygon></g><!-- view --><g id="node3" class="node"><title>view</title>
-<polygon fill="lightgrey" stroke="transparent" points="8.5,-4 8.5,-108 45.5,-108 45.5,-4 8.5,-4"></polygon><polygon fill="none" stroke="black" points="9,-82 9,-108 46,-108 46,-82 9,-82"></polygon><text text-anchor="start" x="13.89" y="-90.4" font-family="Times,serif" font-size="14.00">view</text><polygon fill="none" stroke="black" points="9,-56 9,-82 31,-82 31,-56 9,-56"></polygon><text text-anchor="start" x="16.89" y="-64.4" font-family="Times,serif" font-size="14.00">a</text><polygon fill="black" stroke="transparent" points="31,-56 31,-82 46,-82 46,-56 31,-56"></polygon><polygon fill="none" stroke="black" points="31,-56 31,-82 46,-82 46,-56 31,-56"></polygon><polygon fill="none" stroke="black" points="9,-30 9,-56 31,-56 31,-30 9,-30"></polygon><text text-anchor="start" x="16.5" y="-38.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="black" stroke="transparent" points="31,-30 31,-56 46,-56 46,-30 31,-30"></polygon><polygon fill="none" stroke="black" points="31,-30 31,-56 46,-56 46,-30 31,-30"></polygon><polygon fill="none" stroke="black" points="9,-4 9,-30 31,-30 31,-4 9,-4"></polygon><text text-anchor="start" x="16.89" y="-12.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="none" stroke="black" points="31,-4 31,-30 46,-30 46,-4 31,-4"></polygon></g><!-- view&#45;&gt;b_c --><g id="edge2" class="edge"><title>view:TITLE-&gt;b_c:TITLE</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M47,-95C67.25,-95 74.69,-95 90.93,-95"></path><polygon fill="none" stroke="black" points="91,-98.5 101,-95 91,-91.5 91,-98.5"></polygon></g></g></svg>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-<p>The view has a darker background, and points to the relations it’s calculated from using different arrows, to mark it out as different. Note that it only points to one relation here (<code>b_c</code>), with the implication that it first joins that table to all of its ancestors (<code>c</code>).</p>
-<p>The view has the implied key <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>b</mi><mo>,</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{b, c\}</annotation></semantics></math>, and we show the missing FD <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">\{a, b\} \rightarrow c</annotation></semantics></math> by giving <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{a, b\}</annotation></semantics></math> as an additional key.</p>
-<p>Note that the view contains both <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>. However, unlike the original schema, this is not a repeat occurrence of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">\{c\} \rightarrow a</annotation></semantics></math>, because the data is taken directly from its appearance in relation <code>c</code>.</p>
-<p>It’s also worth noting that, since the view is just the original 3NF solution, it is not in BCNF itself. Views do not need to be in as high a normal form as the database they’re in.</p>
+<p>Virtual relations, or views, are defined as the result of an
+operation on other relations (real or virtual). In real databases, this
+might be done as a convenient way to refer to the result of joining some
+other tables, or aggregating values in a non-trivial way, so that the
+code for these doesn’t need to be repeated. Virtual relations don’t
+store any data themselves: if they’re queried, they’re created from
+scratch, so they’re never inconsistent with the relations they’re
+defined by.</p>
+<p>Here, we use a more restricted version of views, that is defined as
+the join of other relations. Views always have at least one key, implied
+by the relations they’re joining. We extend this by letting them have
+their own non-implied keys, that are required to hold on the join
+result.</p>
+<p>Let’s see how this can solve the issue in the BCNF example, where
+normalising left the FD
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">\{a, b\} \rightarrow c</annotation></semantics></math>
+not represented in the schema:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span></span>
+<span><span class="st">'digraph {</span></span>
+<span><span class="st">  rankdir = "LR"</span></span>
+<span><span class="st">  node [shape=plaintext];</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  "c" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_a"&gt;a&lt;/TD&gt;&lt;TD PORT="FROM_a"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "b_c" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;b_c&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "view" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;a&lt;/TD&gt;&lt;TD BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;TD BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;TD&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  "b_c":FROM_c -&gt; "c":TO_c;</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  "view":TITLE -&gt; "b_c":TITLE [arrowhead="empty" style="dashed"];</span></span>
+<span><span class="st">}</span></span>
+<span><span class="st">'</span><span class="op">)</span></span></code></pre></div>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-febe03efa1a2d8d52a86" style="width:700px;height:432.632880098888px;"></div>
+<script type="application/json" data-for="htmlwidget-febe03efa1a2d8d52a86">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b_c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b_c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><TD BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD>b<\/TD><TD BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD>c<\/TD><TD><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"b_c\":FROM_c -> \"c\":TO_c;\n\n  \"view\":TITLE -> \"b_c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>The view has a darker background, and points to the relations it’s
+calculated from using different arrows, to mark it out as different.
+Note that it only points to one relation here (<code>b_c</code>), with
+the implication that it first joins that table to all of its ancestors
+(<code>c</code>).</p>
+<p>The view has the implied key
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>b</mi><mo>,</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{b, c\}</annotation></semantics></math>,
+and we show the missing FD
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">\{a, b\} \rightarrow c</annotation></semantics></math>
+by giving
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{a, b\}</annotation></semantics></math>
+as an additional key.</p>
+<p>Note that the view contains both
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>.
+However, unlike the original schema, this is not a repeat occurrence of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>c</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">\{c\} \rightarrow a</annotation></semantics></math>,
+because the data is taken directly from its appearance in relation
+<code>c</code>.</p>
+<p>It’s also worth noting that, since the view is just the original 3NF
+solution, it is not in BCNF itself. Views do not need to be in as high a
+normal form as the database they’re in.</p>
 <p>Here’s how views solve the issue in the 3NF example:</p>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p>
-<figure class=""><p></p>
-<div>
-<svg width="672" height="480" viewbox="0.00 0.00 242.00 276.00" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none"><g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 272)"><polygon fill="white" stroke="transparent" points="-4,4 -4,-272 238,-272 238,4 -4,4"></polygon><!-- a --><g id="node1" class="node"><title>a</title>
-<polygon fill="none" stroke="black" points="104,-225 104,-251 131,-251 131,-225 104,-225"></polygon><text text-anchor="start" x="114.39" y="-233.4" font-family="Times,serif" font-size="14.00">a</text><polygon fill="none" stroke="black" points="104,-199 104,-225 121,-225 121,-199 104,-199"></polygon><text text-anchor="start" x="109.39" y="-207.4" font-family="Times,serif" font-size="14.00">a</text><polygon fill="black" stroke="transparent" points="121,-199 121,-225 131,-225 131,-199 121,-199"></polygon><polygon fill="none" stroke="black" points="121,-199 121,-225 131,-225 131,-199 121,-199"></polygon><polygon fill="none" stroke="black" points="104,-173 104,-199 121,-199 121,-173 104,-173"></polygon><text text-anchor="start" x="109" y="-181.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="none" stroke="black" points="121,-173 121,-199 131,-199 131,-173 121,-173"></polygon><polygon fill="none" stroke="black" points="104,-147 104,-173 121,-173 121,-147 104,-147"></polygon><text text-anchor="start" x="109.39" y="-155.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="none" stroke="black" points="121,-147 121,-173 131,-173 131,-147 121,-147"></polygon></g><!-- b --><g id="node2" class="node"><title>b</title>
-<polygon fill="none" stroke="black" points="194,-238 194,-264 221,-264 221,-238 194,-238"></polygon><text text-anchor="start" x="204" y="-246.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="none" stroke="black" points="194,-212 194,-238 211,-238 211,-212 194,-212"></polygon><text text-anchor="start" x="199" y="-220.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="black" stroke="transparent" points="211,-212 211,-238 221,-238 221,-212 211,-212"></polygon><polygon fill="none" stroke="black" points="211,-212 211,-238 221,-238 221,-212 211,-212"></polygon><polygon fill="none" stroke="black" points="194,-186 194,-212 211,-212 211,-186 194,-186"></polygon><text text-anchor="start" x="199" y="-194.4" font-family="Times,serif" font-size="14.00">d</text><polygon fill="none" stroke="black" points="211,-186 211,-212 221,-212 221,-186 211,-186"></polygon></g><!-- a&#45;&gt;b --><g id="edge1" class="edge"><title>a:FROM_b-&gt;b:TO_b</title>
-<path fill="none" stroke="black" d="M132,-186C160.41,-186 161.12,-216.39 183.04,-223.52"></path><polygon fill="black" stroke="black" points="182.59,-226.99 193,-225 183.62,-220.07 182.59,-226.99"></polygon></g><!-- c --><g id="node3" class="node"><title>c</title>
-<polygon fill="none" stroke="black" points="194,-134 194,-160 220,-160 220,-134 194,-134"></polygon><text text-anchor="start" x="203.89" y="-142.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="none" stroke="black" points="194,-108 194,-134 210,-134 210,-108 194,-108"></polygon><text text-anchor="start" x="198.89" y="-116.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="black" stroke="transparent" points="210,-108 210,-134 220,-134 220,-108 210,-108"></polygon><polygon fill="none" stroke="black" points="210,-108 210,-134 220,-134 220,-108 210,-108"></polygon><polygon fill="none" stroke="black" points="194,-82 194,-108 210,-108 210,-82 194,-82"></polygon><text text-anchor="start" x="198.89" y="-90.4" font-family="Times,serif" font-size="14.00">e</text><polygon fill="none" stroke="black" points="210,-82 210,-108 220,-108 220,-82 210,-82"></polygon></g><!-- a&#45;&gt;c --><g id="edge2" class="edge"><title>a:FROM_c-&gt;c:TO_c</title>
-<path fill="none" stroke="black" d="M126,-146C126,-139.64 163.87,-127.43 183.04,-122.82"></path><polygon fill="black" stroke="black" points="183.79,-126.24 193,-121 182.53,-119.36 183.79,-126.24"></polygon></g><!-- d_e --><g id="node4" class="node"><title>d_e</title>
-<polygon fill="none" stroke="black" points="102,-95 102,-121 132,-121 132,-95 102,-95"></polygon><text text-anchor="start" x="106.89" y="-103.4" font-family="Times,serif" font-size="14.00">d_e</text><polygon fill="none" stroke="black" points="102,-69 102,-95 120,-95 120,-69 102,-69"></polygon><text text-anchor="start" x="107.5" y="-77.4" font-family="Times,serif" font-size="14.00">d</text><polygon fill="black" stroke="transparent" points="120,-69 120,-95 132,-95 132,-69 120,-69"></polygon><polygon fill="none" stroke="black" points="120,-69 120,-95 132,-95 132,-69 120,-69"></polygon><polygon fill="none" stroke="black" points="102,-43 102,-69 120,-69 120,-43 102,-43"></polygon><text text-anchor="start" x="107.89" y="-51.4" font-family="Times,serif" font-size="14.00">e</text><polygon fill="black" stroke="transparent" points="120,-43 120,-69 132,-69 132,-43 120,-43"></polygon><polygon fill="none" stroke="black" points="120,-43 120,-69 132,-69 132,-43 120,-43"></polygon><polygon fill="none" stroke="black" points="102,-17 102,-43 120,-43 120,-17 102,-17"></polygon><text text-anchor="start" x="108.67" y="-25.4" font-family="Times,serif" font-size="14.00">f</text><polygon fill="none" stroke="black" points="120,-17 120,-43 132,-43 132,-17 120,-17"></polygon></g><!-- view --><g id="node5" class="node"><title>view</title>
-<polygon fill="lightgrey" stroke="transparent" points="8.5,-4 8.5,-186 45.5,-186 45.5,-4 8.5,-4"></polygon><polygon fill="none" stroke="black" points="9,-160 9,-186 46,-186 46,-160 9,-160"></polygon><text text-anchor="start" x="13.89" y="-168.4" font-family="Times,serif" font-size="14.00">view</text><polygon fill="none" stroke="black" points="9,-134 9,-160 46,-160 46,-134 9,-134"></polygon><text text-anchor="start" x="24.39" y="-142.4" font-family="Times,serif" font-size="14.00">a</text><polygon fill="none" stroke="black" points="9,-108 9,-134 46,-134 46,-108 9,-108"></polygon><text text-anchor="start" x="24" y="-116.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="none" stroke="black" points="9,-82 9,-108 46,-108 46,-82 9,-82"></polygon><text text-anchor="start" x="24.39" y="-90.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="none" stroke="black" points="9,-56 9,-82 46,-82 46,-56 9,-56"></polygon><text text-anchor="start" x="24" y="-64.4" font-family="Times,serif" font-size="14.00">d</text><polygon fill="none" stroke="black" points="9,-30 9,-56 46,-56 46,-30 9,-30"></polygon><text text-anchor="start" x="24.39" y="-38.4" font-family="Times,serif" font-size="14.00">e</text><polygon fill="none" stroke="black" points="9,-4 9,-30 46,-30 46,-4 9,-4"></polygon><text text-anchor="start" x="25.17" y="-12.4" font-family="Times,serif" font-size="14.00">f</text></g><!-- view&#45;&gt;a --><g id="edge3" class="edge"><title>view:TITLE-&gt;a:TITLE</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M47,-173C81.26,-173 68.38,-225.47 93.07,-236.12"></path><polygon fill="none" stroke="black" points="92.52,-239.58 103,-238 93.82,-232.71 92.52,-239.58"></polygon></g><!-- view&#45;&gt;d_e --><g id="edge4" class="edge"><title>view:TITLE-&gt;d_e:TITLE</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M47,-173C80.6,-173 67.24,-120.99 90.94,-110.02"></path><polygon fill="none" stroke="black" points="91.88,-113.4 101,-108 90.51,-106.53 91.88,-113.4"></polygon></g></g></svg>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span></span>
+<span><span class="st">'digraph {</span></span>
+<span><span class="st">  rankdir = "LR"</span></span>
+<span><span class="st">  node [shape=plaintext];</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  "a" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_a"&gt;a&lt;/TD&gt;&lt;TD PORT="FROM_a" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "b" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_d"&gt;d&lt;/TD&gt;&lt;TD PORT="FROM_d"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "c" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_e"&gt;e&lt;/TD&gt;&lt;TD PORT="FROM_e"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "d_e" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;d_e&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_d"&gt;d&lt;/TD&gt;&lt;TD PORT="FROM_d" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_e"&gt;e&lt;/TD&gt;&lt;TD PORT="FROM_e" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_f"&gt;f&lt;/TD&gt;&lt;TD PORT="FROM_f"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "view" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="1"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;d&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;e&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;f&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  "a":FROM_b -&gt; "b":TO_b;</span></span>
+<span><span class="st">  "a":FROM_c -&gt; "c":TO_c;</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  "view":TITLE -&gt; "a":TITLE [arrowhead="empty" style="dashed"];</span></span>
+<span><span class="st">  "view":TITLE -&gt; "d_e":TITLE [arrowhead="empty" style="dashed"];</span></span>
+<span><span class="st">}</span></span>
+<span><span class="st">'</span><span class="op">)</span></span></code></pre></div>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-1fb4450895fe099f74a1" style="width:700px;height:432.632880098888px;"></div>
+<script type="application/json" data-for="htmlwidget-1fb4450895fe099f74a1">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <TR><TD>f<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"b\":TO_b;\n  \"a\":FROM_c -> \"c\":TO_c;\n\n  \"view\":TITLE -> \"a\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>Again, note that the view is not in 3NF itself, since it contains
+implied transitive dependencies.</p>
+<p>It might seem unnecessary to bring attribute <code>a</code> into the
+view, since we only need the attributes in relations <code>b</code> and
+<code>c</code> to connect to <code>d_e</code>. However, creating a view
+without <code>a</code> either doesn’t result in an acyclic schema,, or
+requires having a real relation have a foreign key reference to a
+view:</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span></span>
+<span><span class="st">'digraph {</span></span>
+<span><span class="st">  rankdir = "LR"</span></span>
+<span><span class="st">  node [shape=plaintext];</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  "a" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_a"&gt;a&lt;/TD&gt;&lt;TD PORT="FROM_a" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "b" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_d"&gt;d&lt;/TD&gt;&lt;TD PORT="FROM_d"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "c" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_e"&gt;e&lt;/TD&gt;&lt;TD PORT="FROM_e"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "d_e" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;d_e&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_d"&gt;d&lt;/TD&gt;&lt;TD PORT="FROM_d" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_e"&gt;e&lt;/TD&gt;&lt;TD PORT="FROM_e" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_f"&gt;f&lt;/TD&gt;&lt;TD PORT="FROM_f"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "view" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="1"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;d&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;e&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;f&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  "a":FROM_b -&gt; "b":TO_b;</span></span>
+<span><span class="st">  "a":FROM_c -&gt; "c":TO_c;</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  "view":TITLE -&gt; "b":TITLE [arrowhead="empty" style="dashed"];</span></span>
+<span><span class="st">  "view":TITLE -&gt; "c":TITLE [arrowhead="empty" style="dashed"];</span></span>
+<span><span class="st">  "view":TITLE -&gt; "d_e":TITLE [arrowhead="empty" style="dashed"];</span></span>
+<span><span class="st">}</span></span>
+<span><span class="st">'</span><span class="op">)</span></span></code></pre></div>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-10b3b7155e8045a1b2ad" style="width:700px;height:432.632880098888px;"></div>
+<script type="application/json" data-for="htmlwidget-10b3b7155e8045a1b2ad">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <TR><TD>f<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"b\":TO_b;\n  \"a\":FROM_c -> \"c\":TO_c;\n\n  \"view\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span></span>
+<span><span class="st">'digraph {</span></span>
+<span><span class="st">  rankdir = "LR"</span></span>
+<span><span class="st">  node [shape=plaintext];</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  "a" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_a"&gt;a&lt;/TD&gt;&lt;TD PORT="FROM_a" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "b" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_d"&gt;d&lt;/TD&gt;&lt;TD PORT="FROM_d"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "c" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_e"&gt;e&lt;/TD&gt;&lt;TD PORT="FROM_e"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "d_e" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;d_e&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_d"&gt;d&lt;/TD&gt;&lt;TD PORT="FROM_d" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_e"&gt;e&lt;/TD&gt;&lt;TD PORT="FROM_e" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_f"&gt;f&lt;/TD&gt;&lt;TD PORT="FROM_f"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "view" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="1"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;d&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;e&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;f&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  "a":FROM_b -&gt; "view":TO_b;</span></span>
+<span><span class="st">  "a":FROM_c -&gt; "view":TO_c;</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  "view":TITLE -&gt; "b":TITLE [arrowhead="empty" style="dashed"];</span></span>
+<span><span class="st">  "view":TITLE -&gt; "c":TITLE [arrowhead="empty" style="dashed"];</span></span>
+<span><span class="st">  "view":TITLE -&gt; "d_e":TITLE [arrowhead="empty" style="dashed"];</span></span>
+<span><span class="st">}</span></span>
+<span><span class="st">'</span><span class="op">)</span></span></code></pre></div>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-4018eef1a407a0df6b52" style="width:700px;height:432.632880098888px;"></div>
+<script type="application/json" data-for="htmlwidget-4018eef1a407a0df6b52">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <TR><TD>f<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"view\":TO_b;\n  \"a\":FROM_c -> \"view\":TO_c;\n\n  \"view\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>The latter isn’t wrong – referring a view really means referring to
+the relations it gets decomposed into – but it does take some getting
+used to, especially if, like above, the “key” being referred to isn’t
+shown, because it’s implied by the decomposition. It does also bring up
+that a “view” must be viewed as something that’s decomposed, not as the
+result of a Cartesian join of its components. The latter would result in
+the above view containing too many records.</p>
+<p>We could explicitly show <em>all</em> of the decomposition steps as
+views, but it’s not clear that it’s worth the bother:</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span></span>
+<span><span class="st">'digraph {</span></span>
+<span><span class="st">  rankdir = "LR"</span></span>
+<span><span class="st">  node [shape=plaintext];</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  "a" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_a"&gt;a&lt;/TD&gt;&lt;TD PORT="FROM_a" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "b" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_d"&gt;d&lt;/TD&gt;&lt;TD PORT="FROM_d"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "c" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_e"&gt;e&lt;/TD&gt;&lt;TD PORT="FROM_e"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "d_e" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;d_e&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_d"&gt;d&lt;/TD&gt;&lt;TD PORT="FROM_d" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_e"&gt;e&lt;/TD&gt;&lt;TD PORT="FROM_e" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_f"&gt;f&lt;/TD&gt;&lt;TD PORT="FROM_f"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "view" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="1"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;d&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;e&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;f&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "view2" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="1"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;d&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;e&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st">  "view3" [label = &lt;</span></span>
+<span><span class="st">    &lt;TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="1"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;TR&gt;&lt;TD&gt;d&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  "a":FROM_b -&gt; "b":TO_b;</span></span>
+<span><span class="st">  "a":FROM_c -&gt; "c":TO_c;</span></span>
+<span><span class="st"></span></span>
+<span><span class="st">  "view":TITLE -&gt; "view2":TITLE [arrowhead="empty" style="dashed"];</span></span>
+<span><span class="st">  "view":TITLE -&gt; "d_e":TITLE [arrowhead="empty" style="dashed"];</span></span>
+<span><span class="st">  "view2":TITLE -&gt; "view3":TITLE [arrowhead="empty" style="dashed"];</span></span>
+<span><span class="st">  "view2":TITLE -&gt; "c":TITLE [arrowhead="empty" style="dashed"];</span></span>
+<span><span class="st">  "view3":TITLE -&gt; "a":TITLE [arrowhead="empty" style="dashed"];</span></span>
+<span><span class="st">  "view3":TITLE -&gt; "b":TITLE [arrowhead="empty" style="dashed"];</span></span>
+<span><span class="st">}</span></span>
+<span><span class="st">'</span><span class="op">)</span></span></code></pre></div>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-5b1b2f4ad92281566982" style="width:700px;height:432.632880098888px;"></div>
+<script type="application/json" data-for="htmlwidget-5b1b2f4ad92281566982">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <TR><TD>f<\/TD><\/TR>\n    <\/TABLE>>];\n  \"view2\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <\/TABLE>>];\n  \"view3\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"b\":TO_b;\n  \"a\":FROM_c -> \"c\":TO_c;\n\n  \"view\":TITLE -> \"view2\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view2\":TITLE -> \"view3\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view2\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view3\":TITLE -> \"a\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view3\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
-<p></p></figure><p></p>
 </div>
-</div>
-</div>
-<p>Again, note that the view is not in 3NF itself, since it contains implied transitive dependencies.</p>
-<p>It might seem unnecessary to bring attribute <code>a</code> into the view, since we only need the attributes in relations <code>b</code> and <code>c</code> to connect to <code>d_e</code>. However, creating a view without <code>a</code> either doesn’t result in an acyclic schema,, or requires having a real relation have a foreign key reference to a view:</p>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p>
-<figure class=""><p></p>
-<div>
-<svg width="672" height="480" viewbox="0.00 0.00 152.00 328.00" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none"><g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 324)"><polygon fill="white" stroke="transparent" points="-4,4 -4,-324 148,-324 148,4 -4,4"></polygon><!-- a --><g id="node1" class="node"><title>a</title>
-<polygon fill="none" stroke="black" points="14,-108 14,-134 41,-134 41,-108 14,-108"></polygon><text text-anchor="start" x="24.39" y="-116.4" font-family="Times,serif" font-size="14.00">a</text><polygon fill="none" stroke="black" points="14,-82 14,-108 31,-108 31,-82 14,-82"></polygon><text text-anchor="start" x="19.39" y="-90.4" font-family="Times,serif" font-size="14.00">a</text><polygon fill="black" stroke="transparent" points="31,-82 31,-108 41,-108 41,-82 31,-82"></polygon><polygon fill="none" stroke="black" points="31,-82 31,-108 41,-108 41,-82 31,-82"></polygon><polygon fill="none" stroke="black" points="14,-56 14,-82 31,-82 31,-56 14,-56"></polygon><text text-anchor="start" x="19" y="-64.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="none" stroke="black" points="31,-56 31,-82 41,-82 41,-56 31,-56"></polygon><polygon fill="none" stroke="black" points="14,-30 14,-56 31,-56 31,-30 14,-30"></polygon><text text-anchor="start" x="19.39" y="-38.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="none" stroke="black" points="31,-30 31,-56 41,-56 41,-30 31,-30"></polygon></g><!-- b --><g id="node2" class="node"><title>b</title>
-<polygon fill="none" stroke="black" points="104,-160 104,-186 131,-186 131,-160 104,-160"></polygon><text text-anchor="start" x="114" y="-168.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="none" stroke="black" points="104,-134 104,-160 121,-160 121,-134 104,-134"></polygon><text text-anchor="start" x="109" y="-142.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="black" stroke="transparent" points="121,-134 121,-160 131,-160 131,-134 121,-134"></polygon><polygon fill="none" stroke="black" points="121,-134 121,-160 131,-160 131,-134 121,-134"></polygon><polygon fill="none" stroke="black" points="104,-108 104,-134 121,-134 121,-108 104,-108"></polygon><text text-anchor="start" x="109" y="-116.4" font-family="Times,serif" font-size="14.00">d</text><polygon fill="none" stroke="black" points="121,-108 121,-134 131,-134 131,-108 121,-108"></polygon></g><!-- a&#45;&gt;b --><g id="edge1" class="edge"><title>a:FROM_b-&gt;b:TO_b</title>
-<path fill="none" stroke="black" d="M42,-69C82.06,-69 63.27,-133.61 92.76,-145.22"></path><polygon fill="black" stroke="black" points="92.55,-148.74 103,-147 93.74,-141.84 92.55,-148.74"></polygon></g><!-- c --><g id="node3" class="node"><title>c</title>
-<polygon fill="none" stroke="black" points="104,-56 104,-82 130,-82 130,-56 104,-56"></polygon><text text-anchor="start" x="113.89" y="-64.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="none" stroke="black" points="104,-30 104,-56 120,-56 120,-30 104,-30"></polygon><text text-anchor="start" x="108.89" y="-38.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="black" stroke="transparent" points="120,-30 120,-56 130,-56 130,-30 120,-30"></polygon><polygon fill="none" stroke="black" points="120,-30 120,-56 130,-56 130,-30 120,-30"></polygon><polygon fill="none" stroke="black" points="104,-4 104,-30 120,-30 120,-4 104,-4"></polygon><text text-anchor="start" x="108.89" y="-12.4" font-family="Times,serif" font-size="14.00">e</text><polygon fill="none" stroke="black" points="120,-4 120,-30 130,-30 130,-4 120,-4"></polygon></g><!-- a&#45;&gt;c --><g id="edge2" class="edge"><title>a:FROM_c-&gt;c:TO_c</title>
-<path fill="none" stroke="black" d="M42,-43C65.4,-43 73.66,-43 92.92,-43"></path><polygon fill="black" stroke="black" points="93,-46.5 103,-43 93,-39.5 93,-46.5"></polygon></g><!-- d_e --><g id="node4" class="node"><title>d_e</title>
-<polygon fill="none" stroke="black" points="102,-290 102,-316 132,-316 132,-290 102,-290"></polygon><text text-anchor="start" x="106.89" y="-298.4" font-family="Times,serif" font-size="14.00">d_e</text><polygon fill="none" stroke="black" points="102,-264 102,-290 120,-290 120,-264 102,-264"></polygon><text text-anchor="start" x="107.5" y="-272.4" font-family="Times,serif" font-size="14.00">d</text><polygon fill="black" stroke="transparent" points="120,-264 120,-290 132,-290 132,-264 120,-264"></polygon><polygon fill="none" stroke="black" points="120,-264 120,-290 132,-290 132,-264 120,-264"></polygon><polygon fill="none" stroke="black" points="102,-238 102,-264 120,-264 120,-238 102,-238"></polygon><text text-anchor="start" x="107.89" y="-246.4" font-family="Times,serif" font-size="14.00">e</text><polygon fill="black" stroke="transparent" points="120,-238 120,-264 132,-264 132,-238 120,-238"></polygon><polygon fill="none" stroke="black" points="120,-238 120,-264 132,-264 132,-238 120,-238"></polygon><polygon fill="none" stroke="black" points="102,-212 102,-238 120,-238 120,-212 102,-212"></polygon><text text-anchor="start" x="108.67" y="-220.4" font-family="Times,serif" font-size="14.00">f</text><polygon fill="none" stroke="black" points="120,-212 120,-238 132,-238 132,-212 120,-212"></polygon></g><!-- view --><g id="node5" class="node"><title>view</title>
-<polygon fill="lightgrey" stroke="transparent" points="8.5,-160 8.5,-316 45.5,-316 45.5,-160 8.5,-160"></polygon><polygon fill="none" stroke="black" points="9,-290 9,-316 46,-316 46,-290 9,-290"></polygon><text text-anchor="start" x="13.89" y="-298.4" font-family="Times,serif" font-size="14.00">view</text><polygon fill="none" stroke="black" points="9,-264 9,-290 46,-290 46,-264 9,-264"></polygon><text text-anchor="start" x="24" y="-272.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="none" stroke="black" points="9,-238 9,-264 46,-264 46,-238 9,-238"></polygon><text text-anchor="start" x="24.39" y="-246.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="none" stroke="black" points="9,-212 9,-238 46,-238 46,-212 9,-212"></polygon><text text-anchor="start" x="24" y="-220.4" font-family="Times,serif" font-size="14.00">d</text><polygon fill="none" stroke="black" points="9,-186 9,-212 46,-212 46,-186 9,-186"></polygon><text text-anchor="start" x="24.39" y="-194.4" font-family="Times,serif" font-size="14.00">e</text><polygon fill="none" stroke="black" points="9,-160 9,-186 46,-186 46,-160 9,-160"></polygon><text text-anchor="start" x="25.17" y="-168.4" font-family="Times,serif" font-size="14.00">f</text></g><!-- view&#45;&gt;b --><g id="edge3" class="edge"><title>view:TITLE-&gt;b:TITLE</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M47,-303C106.1,-303 48.06,-188.27 92.97,-174.37"></path><polygon fill="none" stroke="black" points="93.57,-177.82 103,-173 92.62,-170.89 93.57,-177.82"></polygon></g><!-- view&#45;&gt;c --><g id="edge4" class="edge"><title>view:TITLE-&gt;c:TITLE</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M47,-303C141.4,-303 30.77,-168.51 90,-95 94.89,-88.93 103.49,-90.47 109.67,-89.97"></path><polygon fill="none" stroke="black" points="112.17,-92.43 117,-83 107.34,-87.36 112.17,-92.43"></polygon></g><!-- view&#45;&gt;d_e --><g id="edge5" class="edge"><title>view:TITLE-&gt;d_e:TITLE</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M47,-303C67.25,-303 74.69,-303 90.93,-303"></path><polygon fill="none" stroke="black" points="91,-306.5 101,-303 91,-299.5 91,-306.5"></polygon></g></g></svg>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p>
-<figure class=""><p></p>
-<div>
-<svg width="672" height="480" viewbox="0.00 0.00 242.00 328.00" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none"><g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 324)"><polygon fill="white" stroke="transparent" points="-4,4 -4,-324 238,-324 238,4 -4,4"></polygon><!-- a --><g id="node1" class="node"><title>a</title>
-<polygon fill="none" stroke="black" points="14,-212 14,-238 41,-238 41,-212 14,-212"></polygon><text text-anchor="start" x="24.39" y="-220.4" font-family="Times,serif" font-size="14.00">a</text><polygon fill="none" stroke="black" points="14,-186 14,-212 31,-212 31,-186 14,-186"></polygon><text text-anchor="start" x="19.39" y="-194.4" font-family="Times,serif" font-size="14.00">a</text><polygon fill="black" stroke="transparent" points="31,-186 31,-212 41,-212 41,-186 31,-186"></polygon><polygon fill="none" stroke="black" points="31,-186 31,-212 41,-212 41,-186 31,-186"></polygon><polygon fill="none" stroke="black" points="14,-160 14,-186 31,-186 31,-160 14,-160"></polygon><text text-anchor="start" x="19" y="-168.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="none" stroke="black" points="31,-160 31,-186 41,-186 41,-160 31,-160"></polygon><polygon fill="none" stroke="black" points="14,-134 14,-160 31,-160 31,-134 14,-134"></polygon><text text-anchor="start" x="19.39" y="-142.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="none" stroke="black" points="31,-134 31,-160 41,-160 41,-134 31,-134"></polygon></g><!-- view --><g id="node5" class="node"><title>view</title>
-<polygon fill="lightgrey" stroke="transparent" points="98.5,-56 98.5,-212 135.5,-212 135.5,-56 98.5,-56"></polygon><polygon fill="none" stroke="black" points="99,-186 99,-212 136,-212 136,-186 99,-186"></polygon><text text-anchor="start" x="103.89" y="-194.4" font-family="Times,serif" font-size="14.00">view</text><polygon fill="none" stroke="black" points="99,-160 99,-186 136,-186 136,-160 99,-160"></polygon><text text-anchor="start" x="114" y="-168.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="none" stroke="black" points="99,-134 99,-160 136,-160 136,-134 99,-134"></polygon><text text-anchor="start" x="114.39" y="-142.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="none" stroke="black" points="99,-108 99,-134 136,-134 136,-108 99,-108"></polygon><text text-anchor="start" x="114" y="-116.4" font-family="Times,serif" font-size="14.00">d</text><polygon fill="none" stroke="black" points="99,-82 99,-108 136,-108 136,-82 99,-82"></polygon><text text-anchor="start" x="114.39" y="-90.4" font-family="Times,serif" font-size="14.00">e</text><polygon fill="none" stroke="black" points="99,-56 99,-82 136,-82 136,-56 99,-56"></polygon><text text-anchor="start" x="115.17" y="-64.4" font-family="Times,serif" font-size="14.00">f</text></g><!-- a&#45;&gt;view --><g id="edge1" class="edge"><title>a:FROM_b-&gt;view:TO_b</title>
-<path fill="none" stroke="black" d="M42,-173C63,-173 70.71,-173 87.56,-173"></path><polygon fill="black" stroke="black" points="88,-176.5 98,-173 88,-169.5 88,-176.5"></polygon></g><!-- a&#45;&gt;view --><g id="edge2" class="edge"><title>a:FROM_c-&gt;view:TO_c</title>
-<path fill="none" stroke="black" d="M42,-147C63,-147 70.71,-147 87.56,-147"></path><polygon fill="black" stroke="black" points="88,-150.5 98,-147 88,-143.5 88,-150.5"></polygon></g><!-- b --><g id="node2" class="node"><title>b</title>
-<polygon fill="none" stroke="black" points="194,-290 194,-316 221,-316 221,-290 194,-290"></polygon><text text-anchor="start" x="204" y="-298.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="none" stroke="black" points="194,-264 194,-290 211,-290 211,-264 194,-264"></polygon><text text-anchor="start" x="199" y="-272.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="black" stroke="transparent" points="211,-264 211,-290 221,-290 221,-264 211,-264"></polygon><polygon fill="none" stroke="black" points="211,-264 211,-290 221,-290 221,-264 211,-264"></polygon><polygon fill="none" stroke="black" points="194,-238 194,-264 211,-264 211,-238 194,-238"></polygon><text text-anchor="start" x="199" y="-246.4" font-family="Times,serif" font-size="14.00">d</text><polygon fill="none" stroke="black" points="211,-238 211,-264 221,-264 221,-238 211,-238"></polygon></g><!-- c --><g id="node3" class="node"><title>c</title>
-<polygon fill="none" stroke="black" points="194,-186 194,-212 220,-212 220,-186 194,-186"></polygon><text text-anchor="start" x="203.89" y="-194.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="none" stroke="black" points="194,-160 194,-186 210,-186 210,-160 194,-160"></polygon><text text-anchor="start" x="198.89" y="-168.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="black" stroke="transparent" points="210,-160 210,-186 220,-186 220,-160 210,-160"></polygon><polygon fill="none" stroke="black" points="210,-160 210,-186 220,-186 220,-160 210,-160"></polygon><polygon fill="none" stroke="black" points="194,-134 194,-160 210,-160 210,-134 194,-134"></polygon><text text-anchor="start" x="198.89" y="-142.4" font-family="Times,serif" font-size="14.00">e</text><polygon fill="none" stroke="black" points="210,-134 210,-160 220,-160 220,-134 210,-134"></polygon></g><!-- d_e --><g id="node4" class="node"><title>d_e</title>
-<polygon fill="none" stroke="black" points="192,-82 192,-108 222,-108 222,-82 192,-82"></polygon><text text-anchor="start" x="196.89" y="-90.4" font-family="Times,serif" font-size="14.00">d_e</text><polygon fill="none" stroke="black" points="192,-56 192,-82 210,-82 210,-56 192,-56"></polygon><text text-anchor="start" x="197.5" y="-64.4" font-family="Times,serif" font-size="14.00">d</text><polygon fill="black" stroke="transparent" points="210,-56 210,-82 222,-82 222,-56 210,-56"></polygon><polygon fill="none" stroke="black" points="210,-56 210,-82 222,-82 222,-56 210,-56"></polygon><polygon fill="none" stroke="black" points="192,-30 192,-56 210,-56 210,-30 192,-30"></polygon><text text-anchor="start" x="197.89" y="-38.4" font-family="Times,serif" font-size="14.00">e</text><polygon fill="black" stroke="transparent" points="210,-30 210,-56 222,-56 222,-30 210,-30"></polygon><polygon fill="none" stroke="black" points="210,-30 210,-56 222,-56 222,-30 210,-30"></polygon><polygon fill="none" stroke="black" points="192,-4 192,-30 210,-30 210,-4 192,-4"></polygon><text text-anchor="start" x="198.67" y="-12.4" font-family="Times,serif" font-size="14.00">f</text><polygon fill="none" stroke="black" points="210,-4 210,-30 222,-30 222,-4 210,-4"></polygon></g><!-- view&#45;&gt;b --><g id="edge3" class="edge"><title>view:TITLE-&gt;b:TITLE</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M137,-199C185.6,-199 147.22,-288.14 182.91,-301.37"></path><polygon fill="none" stroke="black" points="182.57,-304.86 193,-303 183.69,-297.95 182.57,-304.86"></polygon></g><!-- view&#45;&gt;c --><g id="edge4" class="edge"><title>view:TITLE-&gt;c:TITLE</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M137,-199C158,-199 165.71,-199 182.56,-199"></path><polygon fill="none" stroke="black" points="183,-202.5 193,-199 183,-195.5 183,-202.5"></polygon></g><!-- view&#45;&gt;d_e --><g id="edge5" class="edge"><title>view:TITLE-&gt;d_e:TITLE</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M137,-199C185.22,-199 145.8,-109.86 181.01,-96.63"></path><polygon fill="none" stroke="black" points="181.7,-100.07 191,-95 180.57,-93.16 181.7,-100.07"></polygon></g></g></svg>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-<p>The latter isn’t wrong – referring a view really means referring to the relations it gets decomposed into – but it does take some getting used to, especially if, like above, the “key” being referred to isn’t shown, because it’s implied by the decomposition. It does also bring up that a “view” must be viewed as something that’s decomposed, not as the result of a Cartesian join of its components. The latter would result in the above view containing too many records.</p>
-<p>We could explicitly show <em>all</em> of the decomposition steps as views, but it’s not clear that it’s worth the bother:</p>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p>
-<figure class=""><p></p>
-<div>
-<svg width="672" height="480" viewbox="0.00 0.00 422.00 379.00" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none"><g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 375)"><polygon fill="white" stroke="transparent" points="-4,4 -4,-375 418,-375 418,4 -4,4"></polygon><!-- a --><g id="node1" class="node"><title>a</title>
-<polygon fill="none" stroke="black" points="284,-312 284,-338 311,-338 311,-312 284,-312"></polygon><text text-anchor="start" x="294.39" y="-320.4" font-family="Times,serif" font-size="14.00">a</text><polygon fill="none" stroke="black" points="284,-286 284,-312 301,-312 301,-286 284,-286"></polygon><text text-anchor="start" x="289.39" y="-294.4" font-family="Times,serif" font-size="14.00">a</text><polygon fill="black" stroke="transparent" points="301,-286 301,-312 311,-312 311,-286 301,-286"></polygon><polygon fill="none" stroke="black" points="301,-286 301,-312 311,-312 311,-286 301,-286"></polygon><polygon fill="none" stroke="black" points="284,-260 284,-286 301,-286 301,-260 284,-260"></polygon><text text-anchor="start" x="289" y="-268.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="none" stroke="black" points="301,-260 301,-286 311,-286 311,-260 301,-260"></polygon><polygon fill="none" stroke="black" points="284,-234 284,-260 301,-260 301,-234 284,-234"></polygon><text text-anchor="start" x="289.39" y="-242.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="none" stroke="black" points="301,-234 301,-260 311,-260 311,-234 301,-234"></polygon></g><!-- b --><g id="node2" class="node"><title>b</title>
-<polygon fill="none" stroke="black" points="374,-341 374,-367 401,-367 401,-341 374,-341"></polygon><text text-anchor="start" x="384" y="-349.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="none" stroke="black" points="374,-315 374,-341 391,-341 391,-315 374,-315"></polygon><text text-anchor="start" x="379" y="-323.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="black" stroke="transparent" points="391,-315 391,-341 401,-341 401,-315 391,-315"></polygon><polygon fill="none" stroke="black" points="391,-315 391,-341 401,-341 401,-315 391,-315"></polygon><polygon fill="none" stroke="black" points="374,-289 374,-315 391,-315 391,-289 374,-289"></polygon><text text-anchor="start" x="379" y="-297.4" font-family="Times,serif" font-size="14.00">d</text><polygon fill="none" stroke="black" points="391,-289 391,-315 401,-315 401,-289 391,-289"></polygon></g><!-- a&#45;&gt;b --><g id="edge1" class="edge"><title>a:FROM_b-&gt;b:TO_b</title>
-<path fill="none" stroke="black" d="M312,-273C344.65,-273 338.49,-317.01 362.95,-326.29"></path><polygon fill="black" stroke="black" points="362.56,-329.78 373,-328 363.73,-322.87 362.56,-329.78"></polygon></g><!-- c --><g id="node3" class="node"><title>c</title>
-<polygon fill="none" stroke="black" points="374,-205 374,-231 400,-231 400,-205 374,-205"></polygon><text text-anchor="start" x="383.89" y="-213.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="none" stroke="black" points="374,-179 374,-205 390,-205 390,-179 374,-179"></polygon><text text-anchor="start" x="378.89" y="-187.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="black" stroke="transparent" points="390,-179 390,-205 400,-205 400,-179 390,-179"></polygon><polygon fill="none" stroke="black" points="390,-179 390,-205 400,-205 400,-179 390,-179"></polygon><polygon fill="none" stroke="black" points="374,-153 374,-179 390,-179 390,-153 374,-153"></polygon><text text-anchor="start" x="378.89" y="-161.4" font-family="Times,serif" font-size="14.00">e</text><polygon fill="none" stroke="black" points="390,-153 390,-179 400,-179 400,-153 390,-153"></polygon></g><!-- a&#45;&gt;c --><g id="edge2" class="edge"><title>a:FROM_c-&gt;c:TO_c</title>
-<path fill="none" stroke="black" d="M306,-233C306,-225.94 344.1,-203.49 363.3,-195.16"></path><polygon fill="black" stroke="black" points="364.57,-198.42 373,-192 362.41,-191.77 364.57,-198.42"></polygon></g><!-- d_e --><g id="node4" class="node"><title>d_e</title>
-<polygon fill="none" stroke="black" points="102,-82 102,-108 132,-108 132,-82 102,-82"></polygon><text text-anchor="start" x="106.89" y="-90.4" font-family="Times,serif" font-size="14.00">d_e</text><polygon fill="none" stroke="black" points="102,-56 102,-82 120,-82 120,-56 102,-56"></polygon><text text-anchor="start" x="107.5" y="-64.4" font-family="Times,serif" font-size="14.00">d</text><polygon fill="black" stroke="transparent" points="120,-56 120,-82 132,-82 132,-56 120,-56"></polygon><polygon fill="none" stroke="black" points="120,-56 120,-82 132,-82 132,-56 120,-56"></polygon><polygon fill="none" stroke="black" points="102,-30 102,-56 120,-56 120,-30 102,-30"></polygon><text text-anchor="start" x="107.89" y="-38.4" font-family="Times,serif" font-size="14.00">e</text><polygon fill="black" stroke="transparent" points="120,-30 120,-56 132,-56 132,-30 120,-30"></polygon><polygon fill="none" stroke="black" points="120,-30 120,-56 132,-56 132,-30 120,-30"></polygon><polygon fill="none" stroke="black" points="102,-4 102,-30 120,-30 120,-4 102,-4"></polygon><text text-anchor="start" x="108.67" y="-12.4" font-family="Times,serif" font-size="14.00">f</text><polygon fill="none" stroke="black" points="120,-4 120,-30 132,-30 132,-4 120,-4"></polygon></g><!-- view --><g id="node5" class="node"><title>view</title>
-<polygon fill="lightgrey" stroke="transparent" points="8.5,-17 8.5,-199 45.5,-199 45.5,-17 8.5,-17"></polygon><polygon fill="none" stroke="black" points="9,-173 9,-199 46,-199 46,-173 9,-173"></polygon><text text-anchor="start" x="13.89" y="-181.4" font-family="Times,serif" font-size="14.00">view</text><polygon fill="none" stroke="black" points="9,-147 9,-173 46,-173 46,-147 9,-147"></polygon><text text-anchor="start" x="24.39" y="-155.4" font-family="Times,serif" font-size="14.00">a</text><polygon fill="none" stroke="black" points="9,-121 9,-147 46,-147 46,-121 9,-121"></polygon><text text-anchor="start" x="24" y="-129.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="none" stroke="black" points="9,-95 9,-121 46,-121 46,-95 9,-95"></polygon><text text-anchor="start" x="24.39" y="-103.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="none" stroke="black" points="9,-69 9,-95 46,-95 46,-69 9,-69"></polygon><text text-anchor="start" x="24" y="-77.4" font-family="Times,serif" font-size="14.00">d</text><polygon fill="none" stroke="black" points="9,-43 9,-69 46,-69 46,-43 9,-43"></polygon><text text-anchor="start" x="24.39" y="-51.4" font-family="Times,serif" font-size="14.00">e</text><polygon fill="none" stroke="black" points="9,-17 9,-43 46,-43 46,-17 9,-17"></polygon><text text-anchor="start" x="25.17" y="-25.4" font-family="Times,serif" font-size="14.00">f</text></g><!-- view&#45;&gt;d_e --><g id="edge4" class="edge"><title>view:TITLE-&gt;d_e:TITLE</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M47,-186C90.17,-186 59.96,-109.32 91.09,-96.74"></path><polygon fill="none" stroke="black" points="91.75,-100.17 101,-95 90.55,-93.28 91.75,-100.17"></polygon></g><!-- view2 --><g id="node6" class="node"><title>view2</title>
-<polygon fill="lightgrey" stroke="transparent" points="98.5,-134 98.5,-290 135.5,-290 135.5,-134 98.5,-134"></polygon><polygon fill="none" stroke="black" points="99,-264 99,-290 136,-290 136,-264 99,-264"></polygon><text text-anchor="start" x="103.89" y="-272.4" font-family="Times,serif" font-size="14.00">view</text><polygon fill="none" stroke="black" points="99,-238 99,-264 136,-264 136,-238 99,-238"></polygon><text text-anchor="start" x="114.39" y="-246.4" font-family="Times,serif" font-size="14.00">a</text><polygon fill="none" stroke="black" points="99,-212 99,-238 136,-238 136,-212 99,-212"></polygon><text text-anchor="start" x="114" y="-220.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="none" stroke="black" points="99,-186 99,-212 136,-212 136,-186 99,-186"></polygon><text text-anchor="start" x="114.39" y="-194.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="none" stroke="black" points="99,-160 99,-186 136,-186 136,-160 99,-160"></polygon><text text-anchor="start" x="114" y="-168.4" font-family="Times,serif" font-size="14.00">d</text><polygon fill="none" stroke="black" points="99,-134 99,-160 136,-160 136,-134 99,-134"></polygon><text text-anchor="start" x="114.39" y="-142.4" font-family="Times,serif" font-size="14.00">e</text></g><!-- view&#45;&gt;view2 --><g id="edge3" class="edge"><title>view:TITLE-&gt;view2:TITLE</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M47,-186C89.38,-186 58.16,-262.03 87.89,-275.1"></path><polygon fill="none" stroke="black" points="87.53,-278.59 98,-277 88.82,-271.71 87.53,-278.59"></polygon></g><!-- view2&#45;&gt;c --><g id="edge6" class="edge"><title>view2:TITLE-&gt;c:TITLE</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M137,-277C168.38,-277 151.96,-235.09 180,-221 253.51,-184.05 284.63,-215.21 362.72,-217.83"></path><polygon fill="none" stroke="black" points="362.94,-221.33 373,-218 363.06,-214.33 362.94,-221.33"></polygon></g><!-- view3 --><g id="node7" class="node"><title>view3</title>
-<polygon fill="lightgrey" stroke="transparent" points="188.5,-234 188.5,-364 225.5,-364 225.5,-234 188.5,-234"></polygon><polygon fill="none" stroke="black" points="189,-338 189,-364 226,-364 226,-338 189,-338"></polygon><text text-anchor="start" x="193.89" y="-346.4" font-family="Times,serif" font-size="14.00">view</text><polygon fill="none" stroke="black" points="189,-312 189,-338 226,-338 226,-312 189,-312"></polygon><text text-anchor="start" x="204.39" y="-320.4" font-family="Times,serif" font-size="14.00">a</text><polygon fill="none" stroke="black" points="189,-286 189,-312 226,-312 226,-286 189,-286"></polygon><text text-anchor="start" x="204" y="-294.4" font-family="Times,serif" font-size="14.00">b</text><polygon fill="none" stroke="black" points="189,-260 189,-286 226,-286 226,-260 189,-260"></polygon><text text-anchor="start" x="204.39" y="-268.4" font-family="Times,serif" font-size="14.00">c</text><polygon fill="none" stroke="black" points="189,-234 189,-260 226,-260 226,-234 189,-234"></polygon><text text-anchor="start" x="204" y="-242.4" font-family="Times,serif" font-size="14.00">d</text></g><!-- view2&#45;&gt;view3 --><g id="edge5" class="edge"><title>view2:TITLE-&gt;view3:TITLE</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M137,-277C173.04,-277 153.04,-337.25 178.14,-349.02"></path><polygon fill="none" stroke="black" points="177.51,-352.46 188,-351 178.88,-345.6 177.51,-352.46"></polygon></g><!-- view3&#45;&gt;a --><g id="edge7" class="edge"><title>view3:TITLE-&gt;a:TITLE</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M227,-351C250.58,-351 254.72,-331.8 272.84,-326.4"></path><polygon fill="none" stroke="black" points="273.57,-329.83 283,-325 272.62,-322.9 273.57,-329.83"></polygon></g><!-- view3&#45;&gt;b --><g id="edge8" class="edge"><title>view3:TITLE-&gt;b:TITLE</title>
-<path fill="none" stroke="black" stroke-dasharray="5,2" d="M227,-351C288.35,-351 306.18,-353.68 362.77,-353.97"></path><polygon fill="none" stroke="black" points="362.99,-357.47 373,-354 363.01,-350.47 362.99,-357.47"></polygon></g></g></svg>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
-</section></section><section class="section level2"><h2 id="proper-handling-of-nullable-data">Proper handling of nullable data<a class="anchor" aria-label="anchor" href="#proper-handling-of-nullable-data"></a>
+<div class="section level2">
+<h2 id="proper-handling-of-nullable-data">Proper handling of nullable data<a class="anchor" aria-label="anchor" href="#proper-handling-of-nullable-data"></a>
 </h2>
-<p>This addresses how to decompose data with <code>NA</code> values. See the <a href="null.html">Handling missing values</a> vignette (<code><a href="../articles/null.html">vignette("null", package = "autodb")</a></code>) for details on how to currently do this manually. The plan is to allow incorporating some of this process into the search, but this is a long way from being worked out fully.</p>
-</section><section class="section level2"><h2 id="handling-of-duplicate-records">Handling of duplicate records<a class="anchor" aria-label="anchor" href="#handling-of-duplicate-records"></a>
+<p>This addresses how to decompose data with <code>NA</code> values. See
+the <a href="null.html">Handling missing values</a> vignette
+(<code><a href="../articles/null.html">vignette("null", package = "autodb")</a></code>) for details on how
+to currently do this manually. The plan is to allow incorporating some
+of this process into the search, but this is a long way from being
+worked out fully.</p>
+</div>
+<div class="section level2">
+<h2 id="handling-of-duplicate-records">Handling of duplicate records<a class="anchor" aria-label="anchor" href="#handling-of-duplicate-records"></a>
 </h2>
-<p>Relational theory is based on data being given as relations, that cannot have duplicate records. However, it’s expected that an R user might pass in a data frame with duplicates: for example, R comes with some datasets, such as <code>iris</code>, that have duplicates if we don’t include the row names.</p>
-<p>At the moment, these duplicates are kept when searching for dependencies. This can affect results for approximate dependencies, since it changes how many records must be removed for a given dependency to be satisfied. However, the duplicates are still removed when the data frame is decomposed into a database. At the moment, I’m not certain on whether these duplicates are best handled by removing them before beginning the search, or by simply returning an error if there are duplicate records.</p>
-</section><script id="quarto-html-after-body" type="application/javascript">
-  window.document.addEventListener("DOMContentLoaded", function (event) {
-      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
-      var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp('/' + window.location.host + '/');
-      var isInternal = (href) => {
-          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
-      }
-      // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
-      for (var i=0; i<links.length; i++) {
-        const link = links[i];
-        if (!isInternal(link.href)) {
-          // undo the damage that might have been done by quarto-nav.js in the case of
-          // links that we want to consider external
-          if (link.dataset.originalHref !== undefined) {
-            link.href = link.dataset.originalHref;
-          }
-        }
-      }
-    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
-      const config = {
-        allowHTML: true,
-        maxWidth: 500,
-        delay: 100,
-        arrow: false,
-        appendTo: function(el) {
-            return el.parentElement;
-        },
-        interactive: true,
-        interactiveBorder: 10,
-        theme: 'light-border',
-        placement: 'bottom-start',
-      };
-      if (contentFn) {
-        config.content = contentFn;
-      }
-      if (onTriggerFn) {
-        config.onTrigger = onTriggerFn;
-      }
-      if (onUntriggerFn) {
-        config.onUntrigger = onUntriggerFn;
-      }
-      window.tippy(el, config);
-    }
-    const findCites = (el) => {
-      const parentEl = el.parentElement;
-      if (parentEl) {
-        const cites = parentEl.dataset.cites;
-        if (cites) {
-          return {
-            el,
-            cites: cites.split(' ')
-          };
-        } else {
-          return findCites(el.parentElement)
-        }
-      } else {
-        return undefined;
-      }
-    };
-    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
-    for (var i=0; i<bibliorefs.length; i++) {
-      const ref = bibliorefs[i];
-      const citeInfo = findCites(ref);
-      if (citeInfo) {
-        tippyHover(citeInfo.el, function() {
-          var popup = window.document.createElement('div');
-          citeInfo.cites.forEach(function(cite) {
-            var citeDiv = window.document.createElement('div');
-            citeDiv.classList.add('hanging-indent');
-            citeDiv.classList.add('csl-entry');
-            var biblioDiv = window.document.getElementById('ref-' + cite);
-            if (biblioDiv) {
-              citeDiv.innerHTML = biblioDiv.innerHTML;
-            }
-            popup.appendChild(citeDiv);
-          });
-          return popup.innerHTML;
-        });
-      }
-    }
-  });
-  </script></main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+<p>Relational theory is based on data being given as relations, that
+cannot have duplicate records. However, it’s expected that an R user
+might pass in a data frame with duplicates: for example, R comes with
+some datasets, such as <code>iris</code>, that have duplicates if we
+don’t include the row names.</p>
+<p>At the moment, these duplicates are kept when searching for
+dependencies. This can affect results for approximate dependencies,
+since it changes how many records must be removed for a given dependency
+to be satisfied. However, the duplicates are still removed when the data
+frame is decomposed into a database. At the moment, I’m not certain on
+whether these duplicates are best handled by removing them before
+beginning the search, or by simply returning an error if there are
+duplicate records.</p>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>
+
 
 
     <footer><div class="pkgdown-footer-left">

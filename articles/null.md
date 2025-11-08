@@ -2,12 +2,14 @@
 
 ``` r
 library(autodb)
-#> 
-#> Attaching package: 'autodb'
-#> The following object is masked from 'package:stats':
-#> 
-#>     decompose
 ```
+
+    ## 
+    ## Attaching package: 'autodb'
+
+    ## The following object is masked from 'package:stats':
+    ## 
+    ##     decompose
 
 ``` r
 if (requireNamespace("DiagrammeR", quietly = TRUE)) {

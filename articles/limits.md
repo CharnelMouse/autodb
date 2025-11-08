@@ -2,12 +2,14 @@
 
 ``` r
 library(autodb)
-#> 
-#> Attaching package: 'autodb'
-#> The following object is masked from 'package:stats':
-#> 
-#>     decompose
 ```
+
+    ## 
+    ## Attaching package: 'autodb'
+
+    ## The following object is masked from 'package:stats':
+    ## 
+    ##     decompose
 
 ``` r
 if (requireNamespace("DiagrammeR", quietly = TRUE)) {
@@ -327,9 +329,10 @@ knitr::kable(merge(
   df_badmerge_factor,
   df_badmerge_logical
 ))
-#> Warning in `[<-.factor`(`*tmp*`, ri, value = c(NA, FALSE, TRUE, NA, FALSE, :
-#> invalid factor level, NA generated
 ```
+
+    ## Warning in `[<-.factor`(`*tmp*`, ri, value = c(NA, FALSE, TRUE, NA, FALSE, :
+    ## invalid factor level, NA generated
 
 | a   | b     | row | row2 |
 |:----|:------|----:|-----:|
@@ -382,30 +385,32 @@ fds_redkey <- functional_dependency(
   letters[1:4]
 )
 fds_redkey
-#> 5 functional dependencies
-#> 4 attributes: a, b, c, d
-#>    a -> b
-#>    d -> c
-#> b, d -> a
-#>    a -> c
-#> b, c -> d
 ```
+
+    ## 5 functional dependencies
+    ## 4 attributes: a, b, c, d
+    ##    a -> b
+    ##    d -> c
+    ## b, d -> a
+    ##    a -> c
+    ## b, c -> d
 
 Normalising gives the following relations:
 
 ``` r
 normalise(fds_redkey, remove_avoidable = TRUE)
-#> database schema with 2 relation schemas
-#> 4 attributes: a, b, c, d
-#> schema a: a, b, c, d
-#>   key 1: a
-#>   key 2: b, c
-#>   key 3: b, d
-#> schema d: d, c
-#>   key 1: d
-#> references:
-#> a.{d} -> d.{d}
 ```
+
+    ## database schema with 2 relation schemas
+    ## 4 attributes: a, b, c, d
+    ## schema a: a, b, c, d
+    ##   key 1: a
+    ##   key 2: b, c
+    ##   key 3: b, d
+    ## schema d: d, c
+    ##   key 1: d
+    ## references:
+    ## a.{d} -> d.{d}
 
 ``` r
 show(normalise(fds_redkey, remove_avoidable = TRUE))
@@ -429,12 +434,16 @@ fds_redkey_fix <- functional_dependency(
   letters[1:4]
 )
 fds_redkey_fix
-#> 4 functional dependencies
-#> 4 attributes: a, b, c, d
-#>    a -> b
-#>    d -> c
-#> b, c -> a
-#>    a -> d
+```
+
+    ## 4 functional dependencies
+    ## 4 attributes: a, b, c, d
+    ##    a -> b
+    ##    d -> c
+    ## b, c -> a
+    ##    a -> d
+
+``` r
 schema_redkey_fix <- normalise(fds_redkey_fix, remove_avoidable = TRUE)
 ```
 
