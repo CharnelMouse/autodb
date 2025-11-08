@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">autodb</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -362,37 +362,6 @@ result.</p>
 normalising left the FD
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">}</mo><mo>→</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">\{a, b\} \rightarrow c</annotation></semantics></math>
 not represented in the schema:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span></span>
-<span><span class="st">'digraph {</span></span>
-<span><span class="st">  rankdir = "LR"</span></span>
-<span><span class="st">  node [shape=plaintext];</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  "c" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_a"&gt;a&lt;/TD&gt;&lt;TD PORT="FROM_a"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "b_c" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;b_c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "view" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;a&lt;/TD&gt;&lt;TD BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;TD BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;TD&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  "b_c":FROM_c -&gt; "c":TO_c;</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  "view":TITLE -&gt; "b_c":TITLE [arrowhead="empty" style="dashed"];</span></span>
-<span><span class="st">}</span></span>
-<span><span class="st">'</span><span class="op">)</span></span></code></pre></div>
 <div class="grViz html-widget html-fill-item" id="htmlwidget-febe03efa1a2d8d52a86" style="width:700px;height:432.632880098888px;"></div>
 <script type="application/json" data-for="htmlwidget-febe03efa1a2d8d52a86">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b_c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b_c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><TD BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD>b<\/TD><TD BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD>c<\/TD><TD><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"b_c\":FROM_c -> \"c\":TO_c;\n\n  \"view\":TITLE -> \"b_c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>The view has a darker background, and points to the relations it’s
 calculated from using different arrows, to mark it out as different.
@@ -418,56 +387,6 @@ because the data is taken directly from its appearance in relation
 solution, it is not in BCNF itself. Views do not need to be in as high a
 normal form as the database they’re in.</p>
 <p>Here’s how views solve the issue in the 3NF example:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span></span>
-<span><span class="st">'digraph {</span></span>
-<span><span class="st">  rankdir = "LR"</span></span>
-<span><span class="st">  node [shape=plaintext];</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  "a" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_a"&gt;a&lt;/TD&gt;&lt;TD PORT="FROM_a" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "b" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_d"&gt;d&lt;/TD&gt;&lt;TD PORT="FROM_d"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "c" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_e"&gt;e&lt;/TD&gt;&lt;TD PORT="FROM_e"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "d_e" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;d_e&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_d"&gt;d&lt;/TD&gt;&lt;TD PORT="FROM_d" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_e"&gt;e&lt;/TD&gt;&lt;TD PORT="FROM_e" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_f"&gt;f&lt;/TD&gt;&lt;TD PORT="FROM_f"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "view" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="1"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;d&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;e&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;f&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  "a":FROM_b -&gt; "b":TO_b;</span></span>
-<span><span class="st">  "a":FROM_c -&gt; "c":TO_c;</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  "view":TITLE -&gt; "a":TITLE [arrowhead="empty" style="dashed"];</span></span>
-<span><span class="st">  "view":TITLE -&gt; "d_e":TITLE [arrowhead="empty" style="dashed"];</span></span>
-<span><span class="st">}</span></span>
-<span><span class="st">'</span><span class="op">)</span></span></code></pre></div>
 <div class="grViz html-widget html-fill-item" id="htmlwidget-1fb4450895fe099f74a1" style="width:700px;height:432.632880098888px;"></div>
 <script type="application/json" data-for="htmlwidget-1fb4450895fe099f74a1">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <TR><TD>f<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"b\":TO_b;\n  \"a\":FROM_c -> \"c\":TO_c;\n\n  \"view\":TITLE -> \"a\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>Again, note that the view is not in 3NF itself, since it contains
 implied transitive dependencies.</p>
@@ -477,108 +396,8 @@ view, since we only need the attributes in relations <code>b</code> and
 without <code>a</code> either doesn’t result in an acyclic schema,, or
 requires having a real relation have a foreign key reference to a
 view:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span></span>
-<span><span class="st">'digraph {</span></span>
-<span><span class="st">  rankdir = "LR"</span></span>
-<span><span class="st">  node [shape=plaintext];</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  "a" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_a"&gt;a&lt;/TD&gt;&lt;TD PORT="FROM_a" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "b" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_d"&gt;d&lt;/TD&gt;&lt;TD PORT="FROM_d"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "c" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_e"&gt;e&lt;/TD&gt;&lt;TD PORT="FROM_e"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "d_e" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;d_e&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_d"&gt;d&lt;/TD&gt;&lt;TD PORT="FROM_d" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_e"&gt;e&lt;/TD&gt;&lt;TD PORT="FROM_e" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_f"&gt;f&lt;/TD&gt;&lt;TD PORT="FROM_f"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "view" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="1"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;d&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;e&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;f&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  "a":FROM_b -&gt; "b":TO_b;</span></span>
-<span><span class="st">  "a":FROM_c -&gt; "c":TO_c;</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  "view":TITLE -&gt; "b":TITLE [arrowhead="empty" style="dashed"];</span></span>
-<span><span class="st">  "view":TITLE -&gt; "c":TITLE [arrowhead="empty" style="dashed"];</span></span>
-<span><span class="st">  "view":TITLE -&gt; "d_e":TITLE [arrowhead="empty" style="dashed"];</span></span>
-<span><span class="st">}</span></span>
-<span><span class="st">'</span><span class="op">)</span></span></code></pre></div>
 <div class="grViz html-widget html-fill-item" id="htmlwidget-10b3b7155e8045a1b2ad" style="width:700px;height:432.632880098888px;"></div>
-<script type="application/json" data-for="htmlwidget-10b3b7155e8045a1b2ad">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <TR><TD>f<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"b\":TO_b;\n  \"a\":FROM_c -> \"c\":TO_c;\n\n  \"view\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span></span>
-<span><span class="st">'digraph {</span></span>
-<span><span class="st">  rankdir = "LR"</span></span>
-<span><span class="st">  node [shape=plaintext];</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  "a" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_a"&gt;a&lt;/TD&gt;&lt;TD PORT="FROM_a" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "b" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_d"&gt;d&lt;/TD&gt;&lt;TD PORT="FROM_d"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "c" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_e"&gt;e&lt;/TD&gt;&lt;TD PORT="FROM_e"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "d_e" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;d_e&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_d"&gt;d&lt;/TD&gt;&lt;TD PORT="FROM_d" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_e"&gt;e&lt;/TD&gt;&lt;TD PORT="FROM_e" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_f"&gt;f&lt;/TD&gt;&lt;TD PORT="FROM_f"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "view" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="1"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;d&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;e&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;f&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  "a":FROM_b -&gt; "view":TO_b;</span></span>
-<span><span class="st">  "a":FROM_c -&gt; "view":TO_c;</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  "view":TITLE -&gt; "b":TITLE [arrowhead="empty" style="dashed"];</span></span>
-<span><span class="st">  "view":TITLE -&gt; "c":TITLE [arrowhead="empty" style="dashed"];</span></span>
-<span><span class="st">  "view":TITLE -&gt; "d_e":TITLE [arrowhead="empty" style="dashed"];</span></span>
-<span><span class="st">}</span></span>
-<span><span class="st">'</span><span class="op">)</span></span></code></pre></div>
-<div class="grViz html-widget html-fill-item" id="htmlwidget-4018eef1a407a0df6b52" style="width:700px;height:432.632880098888px;"></div>
+<script type="application/json" data-for="htmlwidget-10b3b7155e8045a1b2ad">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <TR><TD>f<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"b\":TO_b;\n  \"a\":FROM_c -> \"c\":TO_c;\n\n  \"view\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><div class="grViz html-widget html-fill-item" id="htmlwidget-4018eef1a407a0df6b52" style="width:700px;height:432.632880098888px;"></div>
 <script type="application/json" data-for="htmlwidget-4018eef1a407a0df6b52">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <TR><TD>f<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"view\":TO_b;\n  \"a\":FROM_c -> \"view\":TO_c;\n\n  \"view\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>The latter isn’t wrong – referring a view really means referring to
 the relations it gets decomposed into – but it does take some getting
 used to, especially if, like above, the “key” being referred to isn’t
@@ -588,77 +407,6 @@ result of a Cartesian join of its components. The latter would result in
 the above view containing too many records.</p>
 <p>We could explicitly show <em>all</em> of the decomposition steps as
 views, but it’s not clear that it’s worth the bother:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span></span>
-<span><span class="st">'digraph {</span></span>
-<span><span class="st">  rankdir = "LR"</span></span>
-<span><span class="st">  node [shape=plaintext];</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  "a" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_a"&gt;a&lt;/TD&gt;&lt;TD PORT="FROM_a" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "b" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_b"&gt;b&lt;/TD&gt;&lt;TD PORT="FROM_b" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_d"&gt;d&lt;/TD&gt;&lt;TD PORT="FROM_d"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "c" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_c"&gt;c&lt;/TD&gt;&lt;TD PORT="FROM_c" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_e"&gt;e&lt;/TD&gt;&lt;TD PORT="FROM_e"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "d_e" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="2"&gt;d_e&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_d"&gt;d&lt;/TD&gt;&lt;TD PORT="FROM_d" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_e"&gt;e&lt;/TD&gt;&lt;TD PORT="FROM_e" BGCOLOR="black"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TO_f"&gt;f&lt;/TD&gt;&lt;TD PORT="FROM_f"&gt;&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "view" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="1"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;d&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;e&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;f&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "view2" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="1"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;d&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;e&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st">  "view3" [label = &lt;</span></span>
-<span><span class="st">    &lt;TABLE BGCOLOR="lightgrey" BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD PORT="TITLE" COLSPAN="1"&gt;view&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;a&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;b&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;c&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;TR&gt;&lt;TD&gt;d&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="st">    &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  "a":FROM_b -&gt; "b":TO_b;</span></span>
-<span><span class="st">  "a":FROM_c -&gt; "c":TO_c;</span></span>
-<span><span class="st"></span></span>
-<span><span class="st">  "view":TITLE -&gt; "view2":TITLE [arrowhead="empty" style="dashed"];</span></span>
-<span><span class="st">  "view":TITLE -&gt; "d_e":TITLE [arrowhead="empty" style="dashed"];</span></span>
-<span><span class="st">  "view2":TITLE -&gt; "view3":TITLE [arrowhead="empty" style="dashed"];</span></span>
-<span><span class="st">  "view2":TITLE -&gt; "c":TITLE [arrowhead="empty" style="dashed"];</span></span>
-<span><span class="st">  "view3":TITLE -&gt; "a":TITLE [arrowhead="empty" style="dashed"];</span></span>
-<span><span class="st">  "view3":TITLE -&gt; "b":TITLE [arrowhead="empty" style="dashed"];</span></span>
-<span><span class="st">}</span></span>
-<span><span class="st">'</span><span class="op">)</span></span></code></pre></div>
 <div class="grViz html-widget html-fill-item" id="htmlwidget-5b1b2f4ad92281566982" style="width:700px;height:432.632880098888px;"></div>
 <script type="application/json" data-for="htmlwidget-5b1b2f4ad92281566982">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"a\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">a<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">a<\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"b\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">b<\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">b<\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"c\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">c<\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">c<\/TD><TD PORT=\"FROM_c\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"d_e\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"2\">d_e<\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">d<\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">e<\/TD><TD PORT=\"FROM_e\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_f\">f<\/TD><TD PORT=\"FROM_f\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"view\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <TR><TD>f<\/TD><\/TR>\n    <\/TABLE>>];\n  \"view2\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <TR><TD>e<\/TD><\/TR>\n    <\/TABLE>>];\n  \"view3\" [label = <\n    <TABLE BGCOLOR=\"lightgrey\" BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD PORT=\"TITLE\" COLSPAN=\"1\">view<\/TD><\/TR>\n    <TR><TD>a<\/TD><\/TR>\n    <TR><TD>b<\/TD><\/TR>\n    <TR><TD>c<\/TD><\/TR>\n    <TR><TD>d<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"a\":FROM_b -> \"b\":TO_b;\n  \"a\":FROM_c -> \"c\":TO_c;\n\n  \"view\":TITLE -> \"view2\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view\":TITLE -> \"d_e\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view2\":TITLE -> \"view3\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view2\":TITLE -> \"c\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view3\":TITLE -> \"a\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n  \"view3\":TITLE -> \"b\":TITLE [arrowhead=\"empty\" style=\"dashed\"];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
