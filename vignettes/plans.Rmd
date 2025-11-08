@@ -147,7 +147,7 @@ Here, we use a more restricted version of views, that is defined as the join of 
 
 Let's see how this can solve the issue in the BCNF example, where normalising left the FD $\{a, b\} \rightarrow c$ not represented in the schema:
 
-```{r}
+```{r, echo=FALSE}
 if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz(
 'digraph {
   rankdir = "LR"
@@ -190,7 +190,7 @@ It's also worth noting that, since the view is just the original 3NF solution, i
 
 Here's how views solve the issue in the 3NF example:
 
-```{r}
+```{r, echo=FALSE}
 if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz(
 'digraph {
   rankdir = "LR"
@@ -246,7 +246,7 @@ Again, note that the view is not in 3NF itself, since it contains implied transi
 
 It might seem unnecessary to bring attribute `a` into the view, since we only need  the attributes in relations `b` and `c` to connect to `d_e`. However, creating a view without `a` either doesn't result in an acyclic schema,, or requires having a real relation have a foreign key reference to a view:
 
-```{r}
+```{r, echo=FALSE}
 if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz(
 'digraph {
   rankdir = "LR"
@@ -298,7 +298,7 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz(
 ')
 ```
 
-```{r}
+```{r, echo=FALSE}
 if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz(
 'digraph {
   rankdir = "LR"
@@ -354,7 +354,7 @@ The latter isn't wrong -- referring a view really means referring to the relatio
 
 We could explicitly show *all* of the decomposition steps as views, but it's not clear that it's worth the bother:
 
-```{r}
+```{r, echo=FALSE}
 if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz(
 'digraph {
   rankdir = "LR"
