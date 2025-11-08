@@ -100,7 +100,7 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) {
 }
 ```
 
-```{r, include = FALSE}
+```{r}
 show(chick_db)
 ```
 
