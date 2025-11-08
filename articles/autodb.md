@@ -203,6 +203,10 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) {
 }
 ```
 
+``` r
+show(chick_db)
+```
+
 In an interactive session, the simplest way to do this is to call
 [`DiagrammeR::grViz`](https://rich-iannone.github.io/DiagrammeR/reference/grViz.html)
 on the output from `gv`. In a Quarto file, we can write the output to a
