@@ -2,7 +2,7 @@
 title: "Planned improvements"
 vignette: >
   %\VignetteIndexEntry{Planned improvements}
-  %\VignetteEngine{quarto::html}
+  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 knitr:
   opts_chunk:
@@ -147,8 +147,9 @@ Here, we use a more restricted version of views, that is defined as the join of 
 
 Let's see how this can solve the issue in the BCNF example, where normalising left the FD $\{a, b\} \rightarrow c$ not represented in the schema:
 
-```{dot}
-digraph {
+```{r}
+if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz(
+'digraph {
   rankdir = "LR"
   node [shape=plaintext];
 
@@ -176,6 +177,7 @@ digraph {
 
   "view":TITLE -> "b_c":TITLE [arrowhead="empty" style="dashed"];
 }
+')
 ```
 
 The view has a darker background, and points to the relations it's calculated from using different arrows, to mark it out as different. Note that it only points to one relation here (`b_c`), with the implication that it first joins that table to all of its ancestors (`c`).
@@ -188,8 +190,9 @@ It's also worth noting that, since the view is just the original 3NF solution, i
 
 Here's how views solve the issue in the 3NF example:
 
-```{dot}
-digraph {
+```{r}
+if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz(
+'digraph {
   rankdir = "LR"
   node [shape=plaintext];
 
@@ -236,14 +239,16 @@ digraph {
   "view":TITLE -> "a":TITLE [arrowhead="empty" style="dashed"];
   "view":TITLE -> "d_e":TITLE [arrowhead="empty" style="dashed"];
 }
+')
 ```
 
 Again, note that the view is not in 3NF itself, since it contains implied transitive dependencies.
 
 It might seem unnecessary to bring attribute `a` into the view, since we only need  the attributes in relations `b` and `c` to connect to `d_e`. However, creating a view without `a` either doesn't result in an acyclic schema,, or requires having a real relation have a foreign key reference to a view:
 
-```{dot}
-digraph {
+```{r}
+if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz(
+'digraph {
   rankdir = "LR"
   node [shape=plaintext];
 
@@ -290,10 +295,12 @@ digraph {
   "view":TITLE -> "c":TITLE [arrowhead="empty" style="dashed"];
   "view":TITLE -> "d_e":TITLE [arrowhead="empty" style="dashed"];
 }
+')
 ```
 
-```{dot}
-digraph {
+```{r}
+if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz(
+'digraph {
   rankdir = "LR"
   node [shape=plaintext];
 
@@ -340,14 +347,16 @@ digraph {
   "view":TITLE -> "c":TITLE [arrowhead="empty" style="dashed"];
   "view":TITLE -> "d_e":TITLE [arrowhead="empty" style="dashed"];
 }
+')
 ```
 
 The latter isn't wrong -- referring a view really means referring to the relations it gets decomposed into -- but it does take some getting used to, especially if, like above, the "key" being referred to isn't shown, because it's implied by the decomposition. It does also bring up that a "view" must be viewed as something that's decomposed, not as the result of a Cartesian join of its components. The latter would result in the above view containing too many records.
 
 We could explicitly show *all* of the decomposition steps as views, but it's not clear that it's worth the bother:
 
-```{dot}
-digraph {
+```{r}
+if (requireNamespace("DiagrammeR", quietly = TRUE)) DiagrammeR::grViz(
+'digraph {
   rankdir = "LR"
   node [shape=plaintext];
 
@@ -415,6 +424,7 @@ digraph {
   "view3":TITLE -> "a":TITLE [arrowhead="empty" style="dashed"];
   "view3":TITLE -> "b":TITLE [arrowhead="empty" style="dashed"];
 }
+')
 ```
 
 # Proper handling of nullable data

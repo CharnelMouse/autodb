@@ -2,7 +2,7 @@
 title: "A larger example: the nudge dataset"
 vignette: >
   %\VignetteIndexEntry{A larger example: the nudge dataset}
-  %\VignetteEngine{quarto::html}
+  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 knitr:
   opts_chunk:

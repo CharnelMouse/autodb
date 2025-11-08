@@ -2,7 +2,7 @@
 title: "Using autodb"
 vignette: >
   %\VignetteIndexEntry{Using autodb}
-  %\VignetteEngine{quarto::html}
+  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 knitr:
   opts_chunk:
