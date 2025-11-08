@@ -1,3 +1,7 @@
+# autodb 3.2.3
+
+Minor improvements to documentation before submission.
+
 # autodb 3.2.2
 
 Some minor fixes to documentation to pass RHub checks.

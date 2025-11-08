@@ -1,6 +1,6 @@
 Package: autodb
 Title: Automatic Database Normalisation for Data Frames
-Version: 3.2.2
+Version: 3.2.3
 Authors@R: 
     person(
       "Mark",
