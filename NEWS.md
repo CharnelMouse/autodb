@@ -1,3 +1,7 @@
+# autodb 3.2.4
+
+Minor test fixes to work under latest version of testthat.
+
 # autodb 3.2.3
 
 Minor improvements to documentation before submission.
