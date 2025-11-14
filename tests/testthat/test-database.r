@@ -955,38 +955,34 @@ describe("database", {
     )
   })
   it("concatenates without losing attribute orderings, if consistent", {
-    empty_schema_from_attrs <- with_args(
+    empty_database_from_attrs <- with_args(
       relation,
       relations = setNames(list(), character())
     ) %>>%
       with_args(database, references = list())
-    concatenate_keeps_attribute_order <- function(attrs_lst) {
-      lst <- lapply(attrs_lst, empty_schema_from_attrs)
-      expect_silent(res <- do.call(c, lst))
-      for (index in seq_along(lst)) {
-        expect_identical(
-          attrs_order(lst[[!!index]]),
-          intersect(attrs_order(res), attrs_order(lst[[!!index]]))
-        )
-      }
-    }
 
     forall(
       gen.subsequence(letters[1:8]) |>
         gen.with(\(x) if (length(x) > 3) x[1:3] else x) |>
+        gen.with(empty_database_from_attrs) |>
         gen.list(from = 2, to = 5),
-      concatenate_keeps_attribute_order
+      concatenate_keeps_attribute_order,
+      curry = TRUE
     )
 
     # example where attributes aren't consistent, but are pairwise
-    expect_failure(concatenate_keeps_attribute_order(
-      list(c("a", "b"), c("b", "c"), c("c", "a"))
+    expect_failure(do.call(
+      concatenate_keeps_attribute_order,
+      list(c("a", "b"), c("b", "c"), c("c", "a")) |>
+        lapply(empty_database_from_attrs)
     ))
 
     forall(
       gen.subsequence(letters[1:6]) |>
+        gen.with(empty_database_from_attrs) |>
         gen.list(from = 2, to = 10),
-      concatenate_keeps_attribute_order
+      concatenate_keeps_attribute_order,
+      curry = TRUE
     )
   })
   it("concatenates without losing references", {

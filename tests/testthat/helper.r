@@ -1204,3 +1204,22 @@ apply_both <- function(fn1, fn2) function(x) {fn1(x); fn2(x)}
 dup <- function(x) list(x, x)
 onLeft <- function(f) function(x) list(f(x[[1]]), x[[2]])
 onRight <- function(f) function(x) list(x[[1]], f(x[[2]]))
+
+concatenate_keeps_attribute_order <- function(...) {
+  lst <- list(...)
+
+  # expect c(...) silent
+  res <- tryCatch(
+    c(...),
+    error = identity,
+    warning = identity,
+    message = identity
+  )
+  if (inherits(res, "condition"))
+    return(fail("concatenation was not silent"))
+  expect_all_true(mapply(
+    identical,
+    lapply(lst, attrs_order),
+    lapply(lst, \(x) intersect(attrs_order(res), attrs_order(x)))
+  ))
+}

@@ -248,17 +248,6 @@ describe("functional_dependency", {
     )
   })
   it("concatenates without losing attribute orderings, if consistent", {
-    concatenate_keeps_attribute_order <- function(...) {
-      lst <- list(...)
-      expect_silent(res <- c(...))
-      for (index in seq_along(lst)) {
-        expect_identical(
-          attrs_order(lst[[!!index]]),
-          intersect(attrs_order(res), attrs_order(lst[[!!index]]))
-        )
-      }
-    }
-
     forall(
       gen.sample(letters[1:8], gen.element(1:3)) |>
         gen.with(sort %>>% with_args(functional_dependency, FDs = list())) |>
