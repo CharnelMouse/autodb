@@ -36,6 +36,7 @@ POSIXct
 Papenbrock
 Proc
 R's
+RHub
 SQLite
 Schirneck
 Schulze
@@ -72,5 +73,6 @@ subrelations
 subschema
 subschemas
 superkey
+testthat
 tibbles
 wansink
