@@ -1217,9 +1217,9 @@ concatenate_keeps_attribute_order <- function(...) {
   )
   if (inherits(res, "condition"))
     return(fail("concatenation was not silent"))
-  expect_all_true(mapply(
+  expect_true(all(mapply(
     identical,
     lapply(lst, attrs_order),
     lapply(lst, \(x) intersect(attrs_order(res), attrs_order(x)))
-  ))
+  )))
 }
