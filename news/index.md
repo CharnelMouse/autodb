@@ -2,6 +2,8 @@
 
 ## autodb 3.2.4
 
+CRAN release: 2025-11-17
+
 Minor test fixes to work under latest version of testthat.
 
 ## autodb 3.2.3
