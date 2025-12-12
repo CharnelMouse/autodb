@@ -1,5 +1,7 @@
 # autodb (development version)
 
+* Added `rep` method for functional dependencies. This also allows the use of `outer`, e.g. for comparison with `==`.
+
 # autodb 3.2.4
 
 Minor test fixes to work under latest version of testthat.

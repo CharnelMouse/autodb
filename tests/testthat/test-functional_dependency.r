@@ -313,6 +313,16 @@ describe("functional_dependency", {
     expect_identical(tb$fd, fds)
   })
 
+  it("can be repeated", {
+    fds <- functional_dependency(
+      list(list(c("a", "b"), "c"), list("a", "d")),
+      letters[1:4]
+    )
+    expect_identical(rep(fds, 2), c(fds, fds, unique = FALSE))
+    expect_identical(rep(fds, c(2, 1)), fds[c(1, 1, 2)])
+    expect_identical(rep(fds, each = 2), fds[c(1, 1, 2, 2)])
+  })
+
   it("can have its attributes renamed", {
     forall(
       gen.fd(letters[1:6], 0, 8),
@@ -342,6 +352,13 @@ describe("functional_dependency", {
     expect_false(any(fds == rev(fds)))
     expect_true(all(fds != rev(fds)))
     expect_false(any(fds != fds))
+  })
+  it("can be compared in outer (requires rep)", {
+    fds <- functional_dependency(
+      list(list(c("a", "b"), "c"), list("a", "d")),
+      letters[1:4]
+    )
+    expect_identical(outer(fds, fds, "=="), diag(2) == 1)
   })
   it("ignores attrs_order/header when comparing for equality", {
     fds <- functional_dependency(

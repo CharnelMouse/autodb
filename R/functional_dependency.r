@@ -317,3 +317,8 @@ Ops.functional_dependency <- function(e1, e2) {
       dependant(e1) != dependant(e2)
   )
 }
+
+#' @exportS3Method
+rep.functional_dependency <- function(x, ...) {
+  functional_dependency(rep(unclass(x), ...), attrs_order(x), unique = FALSE)
+}
