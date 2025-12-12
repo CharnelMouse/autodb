@@ -72,6 +72,7 @@
 #' # (in)equality ignores header
 #' stopifnot(all(fds3 == fds))
 #' stopifnot(!any(fds != fds))
+#' stopifnot(all(fds <= fds))
 #' @export
 functional_dependency <- function(
   FDs,
@@ -302,7 +303,16 @@ as.data.frame.functional_dependency <- function(
 
 #' @exportS3Method
 Ops.functional_dependency <- function(e1, e2) {
-  ok <- switch(.Generic, `==` = , `!=` = TRUE, FALSE)
+  ok <- switch(
+    .Generic,
+    `==` = ,
+    `!=` = ,
+    `<` = ,
+    `<=` = ,
+    `>` = ,
+    `>=` = TRUE,
+    FALSE
+  )
   if (!ok) {
     stop(gettextf(
       "%s not meaningful for functional_dependency objects",
@@ -311,10 +321,20 @@ Ops.functional_dependency <- function(e1, e2) {
   }
   switch(
     .Generic,
-    `==` = mapply(setequal, detset(e1), detset(e2)) &
+    `==` = as.logical(mapply(setequal, detset(e1), detset(e2))) &
       dependant(e1) == dependant(e2),
-    `!=` = !mapply(setequal, detset(e1), detset(e2)) |
-      dependant(e1) != dependant(e2)
+    `!=` = !as.logical(mapply(setequal, detset(e1), detset(e2))) |
+      dependant(e1) != dependant(e2),
+    `<` = as.logical(mapply(
+      \(x, y) !setequal(x, y) & all(is.element(x, y)),
+      detset(e1),
+      detset(e2)
+    )) &
+      dependant(e1) == dependant(e2),
+    `<=` = as.logical(mapply(\(x, y) all(is.element(x, y)), detset(e1), detset(e2))) &
+      dependant(e1) == dependant(e2),
+    `>` = e2 < e1,
+    `>=` = e2 <= e1
   )
 }
 

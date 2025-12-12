@@ -1,6 +1,7 @@
 # autodb (development version)
 
 * Added `rep` method for functional dependencies. This also allows the use of `outer`, e.g. for comparison with `==`.
+* Added remaining inequality implementations for `functional_dependency` (`<`, `<=`, `>`, `>=`).
 
 # autodb 3.2.4
 
