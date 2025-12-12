@@ -30,22 +30,7 @@ is_valid_functional_dependency <- function(x) {
 is_valid_minimal_functional_dependency <- function(x) {
   is_valid_functional_dependency(x)
   grouped <- split(detset(x), dependant(x))
-  expect_true(!any(
-    vapply(
-      grouped,
-      \(detsets) anyDuplicated(detsets) ||
-        any(outer(
-          detsets,
-          detsets,
-          Vectorize(\(d1, d2) {
-            both <- intersect(d1, d2)
-            !setequal(d1, d2) &&
-              (setequal(both, d1) || setequal(both, d2))
-          })
-        )),
-      logical(1)
-    )
-  ))
+  expect_true(all(outer(x, x, "<=") == diag(length(x))))
 }
 
 is_valid_relation_schema <- function(x, unique = FALSE, single_empty_key = FALSE) {

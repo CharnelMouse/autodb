@@ -54,18 +54,7 @@ describe("discover", {
   }
   expect_det_subsets_kept <- function(deps1, deps2) {
     expect_identical(attrs_order(deps1), attrs_order(deps2))
-    expect_true(all(vapply(
-      deps1,
-      \(ds) any(
-        vapply(dependant(deps2), identical, logical(1), dependant(ds)) &
-          vapply(
-            detset(deps2),
-            \(detset) all(is.element(detset, detset(ds)[[1L]])),
-            logical(1)
-          )
-      ),
-      logical(1)
-    )))
+    expect_true(all(apply(outer(deps1, deps2, ">="), 1, any)))
   }
   terminates_then <- function(fn, accuracy, ...) {
     function(df) {
