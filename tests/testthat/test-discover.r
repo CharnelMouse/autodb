@@ -498,11 +498,9 @@ describe("discover", {
     gen_df_and_remove_col <- function(nrow, ncol, remove_dup_rows = FALSE) {
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.int(ncol(df)))) |>
-        gen.with(\(lst) {
-          df <- lst[[1]]
-          n <- lst[[2]]
+        gen.with(uncurry(\(df, n) {
           list(df, df[, -n, drop = FALSE])
-        })
+        }))
     }
     forall(
       gen_df_and_remove_col(4, 6),
@@ -524,11 +522,9 @@ describe("discover", {
     gen_df_and_remove_row <- function(nrow, ncol) {
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows = TRUE) |>
         gen.and_then(\(df) list(df, gen.element(seq_len(nrow(df))))) |>
-        gen.with(\(lst) {
-          df <- lst[[1]]
-          n <- lst[[2]]
+        gen.with(uncurry(\(df, n) {
           list(df, df[-n, , drop = FALSE])
-        })
+        }))
     }
     forall(
       gen_df_and_remove_row(4, 6),
@@ -550,11 +546,9 @@ describe("discover", {
     gen_df_and_name_change <- function(nrow, ncol, remove_dup_rows = FALSE) {
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.sample(LETTERS, ncol(df)))) |>
-        gen.with(\(lst) {
-          df <- lst[[1]]
-          new_names <- lst[[2]]
+        gen.with(uncurry(\(df, new_names) {
           list(df, stats::setNames(df, new_names))
-        })
+        }))
     }
     forall(
       gen_df_and_name_change(4, 6),
@@ -580,21 +574,22 @@ describe("discover", {
         gen.with(\(perm) perm[matches])
     }
     gen_df_and_value_perm <- function(
-    nrow,
-    ncol,
-    remove_dup_rows = FALSE
+      nrow,
+      ncol,
+      remove_dup_rows = FALSE
     ) {
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(gen.pure(df), gen.int(ncol(df)))) |>
-        gen.and_then(\(lst) c(lst, list(gen_perm(lst[[1]][[lst[[2]]]])))) |>
-        gen.with(\(lst) {
-          df <- lst[[1]]
-          attr <- lst[[2]]
-          permuted_attr <- lst[[3]]
+        gen.and_then(uncurry(\(df, attr) list(
+          gen.pure(df),
+          gen.pure(attr),
+          gen_perm(df[[attr]])
+        ))) |>
+        gen.with(uncurry(\(df, attr, permuted_attr) {
           permed <- df
           permed[[attr]] <- permuted_attr
           list(df, permed)
-        })
+        }))
     }
     forall(
       gen_df_and_value_perm(4, 6),
@@ -614,9 +609,9 @@ describe("discover", {
   })
   it("is invariant to an attribute's class being losslessly changed", {
     gen_df_and_type_change <- function(
-    nrow,
-    ncol,
-    remove_dup_rows = FALSE
+      nrow,
+      ncol,
+      remove_dup_rows = FALSE
     ) {
       classes <- c("logical", "integer", "numeric", "character")
       changes <- list(
@@ -659,17 +654,18 @@ describe("discover", {
   })
   it("is invariant to attributes being reordered, except for attrs_order", {
     gen_df_and_attr_perm <- function(
-    nrow,
-    ncol,
-    remove_dup_rows = FALSE
+      nrow,
+      ncol,
+      remove_dup_rows = FALSE
     ) {
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
-        gen.and_then(\(df) list(df, sample.int(ncol(df)))) |>
-        gen.with(\(lst) {
-          df <- lst[[1]]
-          perm <- lst[[2]]
+        gen.and_then(\(df) list(
+          gen.pure(df),
+          gen.sample(seq_along(df), size = ncol(df))
+        )) |>
+        gen.with(uncurry(\(df, perm) {
           list(df, df[, perm, drop = FALSE])
-        })
+        }))
     }
 
     forall(
@@ -692,13 +688,11 @@ describe("discover", {
     gen_df_and_accuracy_nrow <- function(nrow, ncol, remove_dup_rows = FALSE) {
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.int(nrow(df)))) |>
-        gen.with(\(lst) {
-          df <- lst[[1]]
-          n <- lst[[2]]
+        gen.with(uncurry(\(df, n) {
           prop <- n/nrow(df)
           low <- (n - 1)/nrow(df) + 1e-9
           list(df, low, prop)
-        })
+        }))
     }
     both_bounds_terminate_then <- function(fn, ...) {
       function(df, low, high) {
