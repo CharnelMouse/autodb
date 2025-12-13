@@ -29,7 +29,6 @@ is_valid_functional_dependency <- function(x) {
 
 is_valid_minimal_functional_dependency <- function(x) {
   is_valid_functional_dependency(x)
-  grouped <- split(detset(x), dependant(x))
   expect_true(all(outer(x, x, "<=") == diag(length(x))))
 }
 
