@@ -713,179 +713,105 @@ describe("discover", {
   })
   it(
     paste(
-      "for accuracy < 1, is invariant to:",
+      "is invariant to:",
       "- having a non-false keep_rownames vs. adding row names as first column",
+      "- method used (if accuracy = 1)",
       "- excluding a class vs. excluding attributes in that class",
       "- filtering by arguments (dependants/detset_limit) or by subsetting results",
       "- whether stripped partitions or their sizes are cached",
       "- whether partition is transferred between dependants",
-      "- whether bijections are skipped",
+      "- whether bijections are skipped (if accuracy = 1)",
       sep = "\n"
     ),
     {
+      expect_invariant_to_input_options <- function(
+        df,
+        accuracy,
+        keep_rownames,
+        dependants,
+        detset_limit
+      ) {
+        arglists <- expand.grid(
+          if (isFALSE(keep_rownames))
+            list(list(df = df, keep_rownames = FALSE))
+          else{
+            tmp <- if (isTRUE(keep_rownames)) "row" else keep_rownames
+            nms <- make.unique(c(names(df), tmp))
+            nm <- nms[[length(nms)]]
+            list(
+              list(df = df, keep_rownames = keep_rownames),
+              list(
+                df = cbind(setNames(data.frame(rownames(df)), nm), df),
+                keep_rownames = FALSE
+              )
+            )
+          },
+          list(list(accuracy = accuracy)),
+          c(
+            list(list(method = "DFD")),
+            if (accuracy == 1)
+              list(list(method = "FDHitsSep"), list(method = "FDHitsJoint"))
+          ),
+          list(
+            list(exclude_class = "logical"),
+            list(exclude = names(df)[vapply(df, is.logical, logical(1))])
+          ),
+          list(
+            list(),
+            list(dependants = dependants),
+            list(detset_limit = detset_limit),
+            list(dependants = dependants, detset_limit = detset_limit)
+          ),
+          list(
+            list(full_cache = FALSE),
+            list(full_cache = TRUE)
+          ),
+          list(
+            list(store_cache = FALSE),
+            list(store_cache = TRUE)
+          ),
+          c(
+            list(list(skip_bijections = FALSE)),
+            if (accuracy == 1) list(list(skip_bijections = TRUE))
+          )
+        ) |>
+          unname() |>
+          apply(1, \(x) do.call(c, x), simplify = FALSE)
+        results <- lapply(
+          arglists,
+          \(lst) {
+            base <- with_timeout(do.call(discover, lst))
+            if (is.null(base))
+              return(base)
+            if (is.null(lst$dependants))
+              base <- base[dependant(base) %in% dependants]
+            if (is.null(lst$detset_limit))
+              base <- base[lengths(detset(base)) <= detset_limit]
+            base
+          }
+        )
+        if (any(vapply(results, is.null, logical(1))))
+          return(fail("some argument lists time out"))
+        expect_true(all(vapply(results, fds_equivalent, logical(1), results[[1]])))
+      }
       forall(
         gen_df(4, 6) |>
           gen.and_then(\(x) {
             list(
               gen.pure(x),
-              gen.choice(gen.element(c(FALSE, TRUE)), gen_attr_name(9)),
+              gen.choice(gen.pure(1), gen.unif(0, 1), prob = c(80, 20)),
+              gen.choice(
+                gen.element(c(FALSE, TRUE)),
+                gen_attr_name(9) |>
+                  gen.with(\(nm) {
+                    make.unique(c(names(x), nm))[[ncol(x) + 1]]
+                  })
+              ),
               gen.sample_resampleable(names(x), from = 0, to = ncol(x)),
               gen.element(0:(ncol(x) - 1L))
             )
           }),
-        function(df, keep_rownames, dependants, detset_limit) {
-          arglists <- expand.grid(
-            if (isFALSE(keep_rownames))
-              list(list(df = df, accuracy = 3/4, keep_rownames = FALSE))
-            else{
-              tmp <- if (isTRUE(keep_rownames)) "row" else keep_rownames
-              nms <- make.unique(c(names(df), tmp))
-              nm <- nms[[length(nms)]]
-              list(
-                list(df = df, accuracy = 1, keep_rownames = keep_rownames),
-                list(
-                  df = cbind(setNames(data.frame(rownames(df)), nm), df),
-                  accuracy = 1,
-                  keep_rownames = FALSE
-                )
-              )
-            },
-            list(
-              list(method = "DFD")
-            ),
-            list(
-              list(exclude_class = "logical"),
-              list(exclude = names(df)[vapply(df, is.logical, logical(1))])
-            ),
-            list(
-              list(),
-              list(dependants = dependants),
-              list(detset_limit = detset_limit),
-              list(dependants = dependants, detset_limit = detset_limit)
-            ),
-            list(
-              list(full_cache = FALSE),
-              list(full_cache = TRUE)
-            ),
-            list(
-              list(store_cache = FALSE),
-              list(store_cache = TRUE)
-            ),
-            list(
-              list(skip_bijections = FALSE),
-              list(skip_bijections = TRUE)
-            )
-          ) |>
-            unname() |>
-            apply(1, \(x) do.call(c, x), simplify = FALSE)
-          results <- lapply(
-            arglists,
-            \(lst) {
-              base <- with_timeout(do.call(discover, lst))
-              if (is.null(base))
-                return(base)
-              if (is.null(lst$dependants))
-                base <- base[dependant(base) %in% dependants]
-              if (is.null(lst$detset_limit))
-                base <- base[lengths(detset(base)) <= detset_limit]
-              base
-            }
-          )
-          if (any(vapply(results, is.null, logical(1))))
-            return(fail("some argument lists time out"))
-          expect_true(all(vapply(results, fds_equivalent, logical(1), results[[1]])))
-        },
-        curry = TRUE
-      )
-    }
-  )
-  it(
-    paste(
-      "for accuracy = 1, is invariant to:",
-      "- having a non-false keep_rownames vs. adding row names as first column",
-      "- method used",
-      "- excluding a class vs. excluding attributes in that class",
-      "- filtering by arguments (dependants/detset_limit) or by subsetting results",
-      "- whether stripped partitions or their sizes are cached",
-      "- whether partition is transferred between dependants",
-      "- whether bijections are skipped",
-      sep = "\n"
-    ),
-    {
-      forall(
-        gen_df(4, 6) |>
-          gen.and_then(\(x) {
-            list(
-              gen.pure(x),
-              gen.choice(gen.element(c(FALSE, TRUE)), gen_attr_name(9)),
-              gen.sample_resampleable(names(x), from = 0, to = ncol(x)),
-              gen.element(0:(ncol(x) - 1L))
-            )
-          }),
-        function(df, keep_rownames, dependants, detset_limit) {
-          arglists <- expand.grid(
-            if (isFALSE(keep_rownames))
-              list(list(df = df, accuracy = 1, keep_rownames = FALSE))
-            else{
-              tmp <- if (isTRUE(keep_rownames)) "row" else keep_rownames
-              nms <- make.unique(c(names(df), tmp))
-              nm <- nms[[length(nms)]]
-              list(
-                list(df = df, accuracy = 1, keep_rownames = keep_rownames),
-                list(
-                  df = cbind(setNames(data.frame(rownames(df)), nm), df),
-                  accuracy = 1,
-                  keep_rownames = FALSE
-                )
-              )
-            },
-            list(
-              list(method = "DFD"),
-              list(method = "FDHitsSep"),
-              list(method = "FDHitsJoint")
-            ),
-            list(
-              list(exclude_class = "logical"),
-              list(exclude = names(df)[vapply(df, is.logical, logical(1))])
-            ),
-            list(
-              list(),
-              list(dependants = dependants),
-              list(detset_limit = detset_limit),
-              list(dependants = dependants, detset_limit = detset_limit)
-            ),
-            list(
-              list(full_cache = FALSE),
-              list(full_cache = TRUE)
-            ),
-            list(
-              list(store_cache = FALSE),
-              list(store_cache = TRUE)
-            ),
-            list(
-              list(skip_bijections = FALSE),
-              list(skip_bijections = TRUE)
-            )
-          ) |>
-            unname() |>
-            apply(1, \(x) do.call(c, x), simplify = FALSE)
-          results <- lapply(
-            arglists,
-            \(lst) {
-              base <- with_timeout(do.call(discover, lst))
-              if (is.null(base))
-                return(base)
-              if (is.null(lst$dependants))
-                base <- base[dependant(base) %in% dependants]
-              if (is.null(lst$detset_limit))
-                base <- base[lengths(detset(base)) <= detset_limit]
-              base
-            }
-          )
-          if (any(vapply(results, is.null, logical(1))))
-            return(fail("some argument lists time out"))
-          expect_true(all(vapply(results, fds_equivalent, logical(1), results[[1]])))
-        },
+        expect_invariant_to_input_options,
         curry = TRUE
       )
     }
