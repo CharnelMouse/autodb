@@ -852,3 +852,45 @@ describe("synthesised_fds", {
     )
   })
 })
+
+describe("remove_extraneous", {
+  it("removes dependencies implied by a single other one", {
+    fds <- functional_dependency(
+      list(list("a", "c"), list(c("a", "b"), "c")),
+      c("a", "b", "c")
+    )
+    expect_identical(remove_extraneous(fds), fds[1])
+  })
+  it("removes_dependencies implied by transitivity", {
+    fds <- functional_dependency(
+      list(list("a", "b"), list("b", "c"), list("a", "c")),
+      c("a", "b", "c")
+    )
+    expect_identical(remove_extraneous(fds), fds[1:2])
+  })
+  it("removes dependencies later in priority order if there is a choice", {
+    fds <- functional_dependency(
+      list(list("a", "b"), list("b", "a"), list("a", "c"), list("b", "c")),
+      c("a", "b", "c")
+    )
+    expect_true(setequal(remove_extraneous(fds), fds[1:3]))
+    expect_true(setequal(remove_extraneous(rev(fds)), fds[1:3]))
+  })
+  it("removes attributes if other dependencies show them as redundant", {
+    fds <- functional_dependency(
+      list(list("a", "b"), list(c("a", "b"), "c")),
+      c("a", "b", "c")
+    )
+    expect_true(setequal(
+      remove_extraneous(fds, reduce_attributes = FALSE),
+      fds
+    ))
+    expect_true(setequal(
+      remove_extraneous(fds),
+      functional_dependency(
+        list(list("a", "b"), list("a", "c")),
+        c("a", "b", "c")
+      )
+    ))
+  })
+})

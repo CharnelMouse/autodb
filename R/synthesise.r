@@ -67,10 +67,7 @@ synthesise <- function(
   report <- reporter(progress, progress_file)
 
   report("removing extraneous components")
-  inter <- if (reduce_attributes)
-    remove_extraneous(dependencies)
-  else
-    remove_extraneous_dependencies(dependencies)
+  inter <- remove_extraneous(dependencies, reduce_attributes)
   report("simplifying dependency format")
   inter <- convert_to_vectors(inter) |>
     convert_to_integer_attributes()
@@ -134,10 +131,34 @@ sort_key_contents <- function(vecs) {
   vecs
 }
 
-remove_extraneous <- function(deps) {
-  deps |>
-    remove_extraneous_attributes() |>
-    remove_extraneous_dependencies()
+#' Remove extraneous components from functional dependencies
+#'
+#' @param x a \code{\link{functional_dependency}} object.
+#' @inheritParams normalise
+#'
+#' @returns a minimal cover of the original dependencies, i.e. a subset where
+#'   those remaining are not implied by the others. If \code{remove_attributes}
+#'   is TRUE, dependencies in the determinant are removed if the other
+#'   dependencies show them to be redundant.
+#' @export
+#' @examples
+#' # a -> b and b -> c imply a -> c
+#' x <- functional_dependency(
+#'   list(list("a", "b"), list("b", "c"), list("a", "c")),
+#'   c("a", "b", "c")
+#' )
+#' remove_extraneous(x)
+#'
+#' # a -> b lets us remove b from {a, b} -> c
+#' x <- functional_dependency(
+#'   list(list("a", "b"), list(c("a", "b"), "c")),
+#'   c("a", "b", "c")
+#' )
+#' remove_extraneous(x)
+remove_extraneous <- function(x, reduce_attributes = TRUE) {
+  if (reduce_attributes)
+    x <- remove_extraneous_attributes(x)
+  remove_extraneous_dependencies(x)
 }
 
 remove_extraneous_attributes <- function(deps) {
