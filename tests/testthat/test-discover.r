@@ -2,6 +2,12 @@
 # weight on 1
 
 describe("discover", {
+  make.unique_after <- function(x, pre) {
+    if (length(pre) == 0)
+      return(x)
+    stopifnot(!anyDuplicated(pre))
+    make.unique(c(pre, x))[-seq_along(pre)]
+  }
   with_timeout <- function(expr, timeout = 5) {
     R.utils::withTimeout(
       expr,
@@ -736,10 +742,9 @@ describe("discover", {
             list(list(df = df, keep_rownames = FALSE))
           else{
             tmp <- if (isTRUE(keep_rownames)) "row" else keep_rownames
-            nms <- make.unique(c(names(df), tmp))
-            nm <- nms[[length(nms)]]
+            nm <- make.unique_after(tmp, names(df))
             list(
-              list(df = df, keep_rownames = keep_rownames),
+              list(df = df, keep_rownames = nm),
               list(
                 df = cbind(setNames(data.frame(rownames(df)), nm), df),
                 keep_rownames = FALSE
@@ -803,9 +808,7 @@ describe("discover", {
               gen.choice(
                 gen.element(c(FALSE, TRUE)),
                 gen_attr_name(9) |>
-                  gen.with(\(nm) {
-                    make.unique(c(names(x), nm))[[ncol(x) + 1]]
-                  })
+                  gen.with(\(nm) make.unique_after(nm, names(x)))
               ),
               gen.sample_resampleable(names(x), from = 0, to = ncol(x)),
               gen.element(0:(ncol(x) - 1L))
