@@ -378,6 +378,9 @@ uncov <- function(S, W, D) {
 }
 
 sample_minheur_joint <- function(set_bitsets, V_bitset, W_bitset) {
+  # minimise |E /\ V| + |W \ E|
+  # Per Bleifuss et al., this is based on the mu0 branch reducing W to W \ E,
+  # and each additional branch adding an element from E /\ V to S.
   if (length(set_bitsets) == 0)
     stop("can't sample edge from empty set")
   heuristics <- vapply(
@@ -389,8 +392,7 @@ sample_minheur_joint <- function(set_bitsets, V_bitset, W_bitset) {
 }
 
 sample_minheur_sep <- function(set_bitsets, V_bitset) {
-  # For FDHitsSep, |W| = 1 and W /\ E is empty, so second part
-  # of heuristic in sample_minheur_joint is redundant
+  # As for FDHitsJoint, but |W| = 1, so W \ E is always empty.
   if (length(set_bitsets) == 0)
     stop("can't sample edge from empty set")
   heuristics <- vapply(

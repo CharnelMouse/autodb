@@ -250,14 +250,8 @@ MMCS_visit <- function(
 }
 
 sample_minheur_MMCS <- function(set_bitsets, V_bitset) {
-  # For FDHitsSep, |W| = 1 and W /\ E is empty, so second part
-  # of heuristic in sample_minheur_joint is redundant
-  if (length(set_bitsets) == 0)
-    stop("can't sample edge from empty set")
-  heuristics <- vapply(
-    set_bitsets,
-    function(E) sum(as.logical(rawToBits(E & V_bitset))),
-    integer(1)
-  )
-  which.min(heuristics)
+  # As for FDHitsJoint, but we can ignore the |E \ W| term:
+  # W := ¬S, so E \ W = E /\ S, which is empty.
+  # We therefore have the same heuristic as for FDHitsSep.
+  sample_minheur_sep(set_bitsets, V_bitset)
 }
