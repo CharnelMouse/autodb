@@ -2,19 +2,6 @@
 # weight on 1
 
 describe("discover_keys", {
-  make.unique_after <- function(x, pre) {
-    if (length(pre) == 0)
-      return(x)
-    stopifnot(!anyDuplicated(pre))
-    make.unique(c(pre, x))[-seq_along(pre)]
-  }
-  with_timeout <- function(expr, timeout = 5) {
-    R.utils::withTimeout(
-      expr,
-      timeout = timeout,
-      onTimeout = "silent"
-    )
-  }
   keys_equivalent <- function(keys1, keys2) {
     setequal(keys1, keys2)
   }

@@ -2,19 +2,6 @@
 # weight on 1
 
 describe("discover", {
-  make.unique_after <- function(x, pre) {
-    if (length(pre) == 0)
-      return(x)
-    stopifnot(!anyDuplicated(pre))
-    make.unique(c(pre, x))[-seq_along(pre)]
-  }
-  with_timeout <- function(expr, timeout = 5) {
-    R.utils::withTimeout(
-      expr,
-      timeout = timeout,
-      onTimeout = "silent"
-    )
-  }
   fds_equivalent <- function(fds1, fds2) {
     setequal(attrs_order(fds1), attrs_order(fds2)) &&
       setequal(fds1, fds2)
