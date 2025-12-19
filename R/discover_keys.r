@@ -166,8 +166,7 @@ MMCS_main <- function(
     "\n",
     with_number(partition_handler$cache_size(), "partition", " cached", "s cached")
   ))
-  res <- lapply(res, \(x) attrs[as.logical(rawToBits(x))])
-  res
+  lapply(res, \(x) attrs[as.logical(rawToBits(x))])
 }
 
 MMCS_visit <- function(
@@ -193,8 +192,7 @@ MMCS_visit <- function(
         }
       )
       # Bs that would make C redundant WRT all A
-      res <- Reduce(`&`, commons, init = partition_handler$full_key)
-      res
+      Reduce(`&`, commons, init = partition_handler$full_key)
     }
   )
   # Bs that make some C redundant WRT all A

@@ -15,8 +15,8 @@ describe("discover_keys", {
       onTimeout = "silent"
     )
   }
-  keys_equivalent <- function(fds1, fds2) {
-    setequal(fds1, fds2)
+  keys_equivalent <- function(keys1, keys2) {
+    setequal(keys1, keys2)
   }
   expect_equiv_keys <- function(keys1, keys2) {
     expect_setequal(lapply(keys1, sort), lapply(keys2, sort))
