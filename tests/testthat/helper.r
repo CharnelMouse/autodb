@@ -32,6 +32,13 @@ is_valid_minimal_functional_dependency <- function(x) {
   expect_true(all(outer(x, x, "<=") == diag(length(x))))
 }
 
+is_valid_key_set <- function(x) {
+  expect_identical(class(x), "list")
+  expect_true(all(vapply(x, \(y) class(y)[[1]], character(1)) == "character"))
+  expect_gt(length(x), 0) # every relation has at least one key
+  expect_true(all(outer(x, x, Vectorize(\(y, z) all(is.element(y, z)))) == diag(length(x))))
+}
+
 is_valid_relation_schema <- function(x, unique = FALSE, single_empty_key = FALSE) {
   expect_s3_class(x, "relation_schema")
   expect_true(is.character(names(x)))
