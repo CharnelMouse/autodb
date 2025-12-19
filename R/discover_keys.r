@@ -249,9 +249,7 @@ MMCS_visit <- function(
   list(res, new_nodes)
 }
 
-sample_minheur_MMCS <- function(set_bitsets, V_bitset) {
-  # As for FDHitsJoint, but we can ignore the |E \ W| term:
-  # W := ¬S, so E \ W = E /\ S, which is empty.
-  # We therefore have the same heuristic as for FDHitsSep.
-  sample_minheur_sep(set_bitsets, V_bitset)
-}
+# Edge choice is as for FDHitsJoint, but we can ignore the |E \ W| term:
+# W := ¬S, so E \ W = E /\ S, which is empty.
+# We therefore have the same heuristic as for FDHitsSep.
+sample_minheur_MMCS <- sample_minheur_sep
