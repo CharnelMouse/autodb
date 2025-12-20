@@ -709,7 +709,7 @@ describe("discover", {
       "- having a non-false keep_rownames vs. adding row names as first column",
       "- method used (if accuracy = 1)",
       "- excluding a class vs. excluding attributes in that class vs. subsetting results",
-      "- filtering by arguments (dependants/detset_limit) or by subsetting results",
+      "- filtering by dependants/detset_limit vs. by subsetting results",
       "- whether stripped partitions or their sizes are cached",
       "- whether partition is transferred between dependants",
       "- whether bijections are skipped (if accuracy = 1)",
@@ -751,9 +751,11 @@ describe("discover", {
           ),
           list(
             list(),
-            list(dependants = dependants),
-            list(detset_limit = detset_limit),
-            list(dependants = dependants, detset_limit = detset_limit)
+            list(dependants = dependants)
+          ),
+          list(
+            list(),
+            list(detset_limit = detset_limit)
           ),
           list(
             list(full_cache = FALSE),

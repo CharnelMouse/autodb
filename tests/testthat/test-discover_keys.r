@@ -405,7 +405,8 @@ describe("discover_keys", {
       "is invariant to:",
       "- having a non-false keep_rownames vs. adding row names as first column",
       "- excluding a class vs. excluding attributes in that class vs. subsetting results",
-      "- filtering by arguments (dependants/size_limit) or by subsetting results",
+      "- filtering by dependants vs. by subsetting columns",
+      "- filtering by size_limit vs. by subsetting results",
       sep = "\n"
     ),
     {
@@ -437,9 +438,11 @@ describe("discover_keys", {
           ),
           list(
             list(),
-            list(dependants = dependants),
-            list(size_limit = size_limit),
-            list(dependants = dependants, size_limit = size_limit)
+            list(dependants = dependants)
+          ),
+          list(
+            list(),
+            list(size_limit = size_limit)
           )
         ) |>
           unname() |>
