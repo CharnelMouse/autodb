@@ -447,6 +447,12 @@ describe("discover_keys", {
         results <- lapply(
           arglists,
           \(lst) {
+            if (is.null(lst$dependants))
+              lst$df <- lst$df[
+                ,
+                union(names(lst$df), c(logical_cols, dependants)),
+                drop = FALSE
+              ]
             base <- with_timeout(do.call(discover_keys, lst))
             if (is.null(base))
               return(base)
