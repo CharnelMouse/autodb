@@ -405,7 +405,7 @@ describe("discover_keys", {
       "is invariant to:",
       "- having a non-false keep_rownames vs. adding row names as first column",
       "- excluding a class vs. excluding attributes in that class",
-      "- filtering by arguments (dependants/detset_limit) or by subsetting results",
+      "- filtering by arguments (dependants/size_limit) or by subsetting results",
       sep = "\n"
     ),
     {
@@ -413,7 +413,7 @@ describe("discover_keys", {
         df,
         keep_rownames,
         dependants,
-        detset_limit
+        size_limit
       ) {
         arglists <- expand.grid(
           if (isFALSE(keep_rownames))
@@ -436,8 +436,8 @@ describe("discover_keys", {
           list(
             list(),
             list(dependants = dependants),
-            list(detset_limit = detset_limit),
-            list(dependants = dependants, detset_limit = detset_limit)
+            list(size_limit = size_limit),
+            list(dependants = dependants, size_limit = size_limit)
           )
         ) |>
           unname() |>
@@ -448,8 +448,8 @@ describe("discover_keys", {
             base <- with_timeout(do.call(discover_keys, lst))
             if (is.null(base))
               return(base)
-            if (is.null(lst$detset_limit))
-              base <- base[lengths(base) <= detset_limit]
+            if (is.null(lst$size_limit))
+              base <- base[lengths(base) <= size_limit]
             base
           }
         )

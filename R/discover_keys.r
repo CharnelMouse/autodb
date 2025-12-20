@@ -5,7 +5,7 @@ discover_keys <- function(
   exclude = character(),
   exclude_class = character(),
   dependants = names(df),
-  detset_limit = ncol(df),
+  size_limit = ncol(df),
   progress = FALSE,
   progress_file = ""
 ) {
@@ -70,7 +70,7 @@ discover_keys <- function(
     df,
     determinants = valid_determinant_attrs_prefixing,
     dependants = dependants,
-    detset_limit = detset_limit,
+    size_limit = size_limit,
     report = report
   )
 }
@@ -79,7 +79,7 @@ MMCS <- function(
   lookup,
   determinants = seq_along(lookup),
   dependants = seq_along(lookup),
-  detset_limit = ncol(lookup),
+  size_limit = ncol(lookup),
   report = reporter(report = FALSE, con = "", new = TRUE)
 ) {
   if (ncol(lookup) == 0)
@@ -91,14 +91,14 @@ MMCS <- function(
     unlist(recursive = FALSE) |>
     unique()
   report(with_number(length(D), "initial diffset", "\n", "s\n"))
-  MMCS_main(lookup, determinants, dependants, detset_limit, D, report)
+  MMCS_main(lookup, determinants, dependants, size_limit, D, report)
 }
 
 MMCS_main <- function(
   lookup,
   determinants,
   dependants,
-  detset_limit,
+  size_limit,
   D,
   report
 ) {
@@ -151,7 +151,7 @@ MMCS_main <- function(
     return_stack <- c(
       new_nodes[vapply(
         new_nodes,
-        \(node) partition_handler$key_size(node$S) <= detset_limit,
+        \(node) partition_handler$key_size(node$S) <= size_limit,
         logical(1)
       )],
       return_stack
