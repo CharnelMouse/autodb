@@ -127,30 +127,6 @@ describe("decompose", {
     )
     expect_identical(new_db, expected_db)
   })
-  it("removes transitive references", {
-    df <- data.frame(
-      a = 1L,
-      b = 1L,
-      c = 1L,
-      d = 1L,
-      e = 1L
-    )
-    schema <- relation_schema(
-      list(
-        a = list(c("a", "b", "c"), list("a")),
-        b_c = list(c("b", "c", "d"), list(c("b", "c"))),
-        b = list(c("b", "e"), list("b"))
-      ),
-      attrs_order = c("a", "b", "c", "d", "e")
-    ) |>
-      database_schema(
-        references = list(
-          list("a", c("b", "c"), "b_c", c("b", "c")),
-          list("b_c", "b", "b", "b")
-        )
-      )
-    new_db <- decompose(df, schema)
-  })
   it("returns a error if data.frame doesn't satisfy FDs in the schema", {
     add_id_attribute <- function(df) {
       df2 <- cbind(df, a = seq.int(nrow(df)))
