@@ -241,27 +241,23 @@ as.character.functional_dependency <- function(
   switch(
     align_arrows,
     no = lpadding <- rpadding <- rep("", length(x)),
-    left = if (length(x) == 0) {
-      lpadding <- rpadding <- rep("", length(x))
-    }else{
-      det_nchar <- nchar(det_txt)
-      lpadding <- vapply(
-        max(det_nchar) - det_nchar,
-        \(n) paste(rep(" ", n), collapse = ""),
-        character(1)
-      )
+    left = {
       rpadding <- rep("", length(x))
+      lpadding <- if (length(x) == 0)
+        rep("", length(x))
+      else{
+        det_nchar <- nchar(det_txt)
+        strrep(" ", max(det_nchar) - det_nchar)
+      }
     },
-    right = if (length(x) == 0) {
-      lpadding <- rpadding <- rep("", length(x))
-    }else{
-      dep_nchar <- nchar(dep_txt)
-      rpadding <- vapply(
-        max(dep_nchar) - dep_nchar,
-        \(n) paste(rep(" ", n), collapse = ""),
-        character(1)
-      )
+    right = {
       lpadding <- rep("", length(x))
+      rpadding <- if (length(x) == 0)
+        rep("", length(x))
+      else{
+        dep_nchar <- nchar(dep_txt)
+        strrep(" ", max(dep_nchar) - dep_nchar)
+      }
     }
   )
   paste0(lpadding, det_txt, " -> ", dep_txt, rpadding, recycle0 = TRUE)
