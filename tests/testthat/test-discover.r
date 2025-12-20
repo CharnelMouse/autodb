@@ -427,7 +427,7 @@ describe("discover", {
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.element(names(df))))
     }
-    terminates_with_exclusion_then_no_trival <- function(accuracy, ...) {
+    terminates_with_exclusion_then_no_trivial <- function(accuracy, ...) {
       function(df, attr) {
         deps <- with_timeout(discover(df, accuracy = accuracy, exclude = attr, ...))
         if (is.null(deps))
@@ -438,17 +438,17 @@ describe("discover", {
     }
     forall(
       gen_df_and_exclude(4, 6),
-      terminates_with_exclusion_then_no_trival(1, method = "DFD"),
+      terminates_with_exclusion_then_no_trivial(1, method = "DFD"),
       curry = TRUE
     )
     forall(
       gen_df_and_exclude(4, 6),
-      terminates_with_exclusion_then_no_trival(1, method = "FDHitsSep"),
+      terminates_with_exclusion_then_no_trivial(1, method = "FDHitsSep"),
       curry = TRUE
     )
     forall(
       gen_df_and_exclude(4, 6),
-      terminates_with_exclusion_then_no_trival(1, method = "FDHitsJoint"),
+      terminates_with_exclusion_then_no_trivial(1, method = "FDHitsJoint"),
       curry = TRUE
     )
   })
