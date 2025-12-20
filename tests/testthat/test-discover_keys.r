@@ -404,7 +404,7 @@ describe("discover_keys", {
     paste(
       "is invariant to:",
       "- having a non-false keep_rownames vs. adding row names as first column",
-      "- excluding a class vs. excluding attributes in that class",
+      "- excluding a class vs. excluding attributes in that class vs. subsetting results",
       "- filtering by arguments (dependants/size_limit) or by subsetting results",
       sep = "\n"
     ),
@@ -415,6 +415,7 @@ describe("discover_keys", {
         dependants,
         size_limit
       ) {
+        logical_cols <- names(df)[vapply(df, is.logical, logical(1))]
         arglists <- expand.grid(
           if (isFALSE(keep_rownames))
             list(list(df = df, keep_rownames = FALSE))
@@ -430,8 +431,9 @@ describe("discover_keys", {
             )
           },
           list(
+            list(),
             list(exclude_class = "logical"),
-            list(exclude = names(df)[vapply(df, is.logical, logical(1))])
+            list(exclude = logical_cols)
           ),
           list(
             list(),
@@ -448,6 +450,13 @@ describe("discover_keys", {
             base <- with_timeout(do.call(discover_keys, lst))
             if (is.null(base))
               return(base)
+            if (is.null(lst$exclude) && is.null(lst$exclude_class))
+              base <- base[vapply(
+                base,
+                Negate(is.element %>>% any),
+                logical(1),
+                el = logical_cols
+              )]
             if (is.null(lst$size_limit))
               base <- base[lengths(base) <= size_limit]
             base
