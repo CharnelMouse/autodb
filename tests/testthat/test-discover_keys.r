@@ -37,7 +37,6 @@ describe("discover_keys", {
       res <- with_timeout(discover_keys(df, ...))
       if (is.null(res))
         return(fail("discover_keys() timed out"))
-      succeed() # dummy success, otherwise tests complain about no expectations
       fn(res)
     }
   }

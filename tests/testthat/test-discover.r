@@ -42,7 +42,6 @@ describe("discover", {
       res <- with_timeout(discover(df, accuracy = accuracy, ...))
       if (is.null(res))
         return(fail("discover() timed out"))
-      succeed() # dummy success, otherwise tests complain about no expectations
       fn(res)
     }
   }
