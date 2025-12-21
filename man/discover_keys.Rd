@@ -52,7 +52,7 @@ is non-zero, determines where the progress is written to, in the same way
 as the \code{file} argument for \code{\link[base]{cat}}.}
 }
 \value{
-A list of character vectors, containing the discovered keys in. The
+A list of character vectors, containing the discovered keys. The
 attributes within each key are given in the same order as in \code{df}.
 }
 \description{

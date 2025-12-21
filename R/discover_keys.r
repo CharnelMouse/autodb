@@ -26,7 +26,7 @@
 #'   By default, this is large enough to allow all attributes.
 #' @inheritParams discover
 #'
-#' @return A list of character vectors, containing the discovered keys in. The
+#' @return A list of character vectors, containing the discovered keys. The
 #'   attributes within each key are given in the same order as in \code{df}.
 #' @encoding UTF-8
 #' @references
