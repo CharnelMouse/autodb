@@ -405,7 +405,6 @@ describe("discover_keys", {
       "is invariant to:",
       "- having a non-false keep_rownames vs. adding row names as first column",
       "- excluding a class vs. excluding attributes in that class vs. subsetting results",
-      "- filtering by dependants vs. by subsetting columns",
       "- filtering by size_limit vs. by subsetting results",
       sep = "\n"
     ),
@@ -438,10 +437,6 @@ describe("discover_keys", {
           ),
           list(
             list(),
-            list(dependants = dependants)
-          ),
-          list(
-            list(),
             list(size_limit = size_limit)
           )
         ) |>
@@ -450,12 +445,6 @@ describe("discover_keys", {
         results <- lapply(
           arglists,
           \(lst) {
-            if (is.null(lst$dependants))
-              lst$df <- lst$df[
-                ,
-                union(names(lst$df), c(logical_cols, dependants)),
-                drop = FALSE
-              ]
             base <- with_timeout(do.call(discover_keys, lst))
             if (is.null(base))
               return(base)

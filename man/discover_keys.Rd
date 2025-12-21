@@ -11,7 +11,6 @@ discover_keys(
   digits = getOption("digits"),
   exclude = character(),
   exclude_class = character(),
-  dependants = names(df),
   size_limit = ncol(df),
   progress = FALSE,
   progress_file = ""
@@ -41,12 +40,6 @@ consider as members of keys. If names are given that aren't present in
 \item{exclude_class}{a character vector, indicating classes of attributes to
 not consider as members of keys. Attributes are excluded if they inherit
 from any given class.}
-
-\item{dependants}{a character vector, containing names of attributes that
-keys should determine. By default, this is all of the attribute names. A
-smaller set of attribute names reduces the amount of searching required, so
-can reduce the computation time if not all attributes need to be
-determined.}
 
 \item{size_limit}{an integer, indicating the largest key size to search for.
 By default, this is large enough to allow all attributes.}

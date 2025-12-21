@@ -22,11 +22,6 @@
 #' @param exclude_class a character vector, indicating classes of attributes to
 #'   not consider as members of keys. Attributes are excluded if they inherit
 #'   from any given class.
-#' @param dependants a character vector, containing names of attributes that
-#'   keys should determine. By default, this is all of the attribute names. A
-#'   smaller set of attribute names reduces the amount of searching required, so
-#'   can reduce the computation time if not all attributes need to be
-#'   determined.
 #' @param size_limit an integer, indicating the largest key size to search for.
 #'   By default, this is large enough to allow all attributes.
 #' @inheritParams discover
@@ -63,7 +58,6 @@ discover_keys <- function(
   digits = getOption("digits"),
   exclude = character(),
   exclude_class = character(),
-  dependants = names(df),
   size_limit = ncol(df),
   progress = FALSE,
   progress_file = ""
@@ -87,10 +81,6 @@ discover_keys <- function(
   }
   if (any(!is.element(exclude, attr_names)))
     warning("there are attribute names in exclude not present in df")
-  if (any(!is.element(dependants, attr_names)))
-    warning("there are attribute names in dependants not present in df")
-  dependants <- intersect(attr_names, dependants)
-  dependants <- match(dependants, attr_names)
 
   valid_determinant_name <- !is.element(attr_names, exclude)
   valid_determinant_class <- !vapply(
@@ -128,7 +118,6 @@ discover_keys <- function(
   MMCS(
     df,
     determinants = valid_determinant_attrs_prefixing,
-    dependants = dependants,
     size_limit = size_limit,
     report = report
   )
@@ -137,7 +126,6 @@ discover_keys <- function(
 MMCS <- function(
   lookup,
   determinants = seq_along(lookup),
-  dependants = seq_along(lookup),
   size_limit = ncol(lookup),
   report = reporter(report = FALSE, con = "", new = TRUE)
 ) {
@@ -150,13 +138,12 @@ MMCS <- function(
     unlist(recursive = FALSE) |>
     unique()
   report(with_number(length(D), "initial diffset", "\n", "s\n"))
-  MMCS_main(lookup, determinants, dependants, size_limit, D, report)
+  MMCS_main(lookup, determinants, size_limit, D, report)
 }
 
 MMCS_main <- function(
   lookup,
   determinants,
-  dependants,
   size_limit,
   D,
   report
