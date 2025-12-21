@@ -1,0 +1,323 @@
+# Planned improvements
+
+``` r
+library(autodb)
+```
+
+    ## 
+    ## Attaching package: 'autodb'
+
+    ## The following object is masked from 'package:stats':
+    ## 
+    ##     decompose
+
+``` r
+if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+  show <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
+  maybe_plot <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
+}else{
+  show <- print
+  maybe_plot <- function(x) invisible(NULL)
+}
+```
+
+## Views for BCNF and connected reference chains
+
+Two features that I’d like to add to `autodb` both have issues in the
+current implementation, that are both solved by allowing a restricted
+version of virtual relations, commonly known as views. I’ll show the
+issues first.
+
+### Boyes-Codd Normal Form
+
+`autodb` currently normalises data to third normal form (3NF).
+(Actually, it normalises to a slightly strong form called elementary key
+normal form, which has the same issue as presented below). Third normal
+form can be formally defined as follows:
+
+A database is in *third normal form* (3NF) if and only if all of its
+relations are in 3NF. A relation is in 3NF if all of the non-trivial
+functional dependencies $\left. X\rightarrow y \right.$ satisfied by its
+attributes satisfy one of the following:
+
+1.  $X$ is a superkey (i.e. contains one of the relation’s keys);
+2.  $y$ is a member of a key.
+
+A functional dependency (FD) $\left. X\rightarrow y \right.$ is
+*trivial* if $y$ is in $X$, i.e. it states that an attribute
+co-determines itself, which is trivially true.
+
+Boyes-Codd normal form (BCNF) strengthens this by dropping the second
+condition. (Conversely, second normal form weakens this by adding a
+third option: that $X$ is a subkey, i.e. is contained in one of the
+keys.)
+
+To see the difference between 3NF and BCNF, consider the following set
+of FDs, and the resulting schema given by `autodb`:
+
+``` r
+fds <- functional_dependency(
+  list(list(c("a", "b"), "c"), list("c", "a")),
+  letters[1:3]
+)
+fds
+```
+
+    ## 2 functional dependencies
+    ## 3 attributes: a, b, c
+    ## a, b -> c
+    ##    c -> a
+
+``` r
+schema <- normalise(fds)
+```
+
+``` r
+show(schema)
+```
+
+The above schema is in 3NF, but not BCNF:
+
+- Relation `c` contains one FD: $\left. \{ c\}\rightarrow a \right.$.
+  Since $\{ c\}$ is a key, relation `c` is in 3NF, and BCNF.
+- Relation `a_b` contains two FDs:
+  $\left. \{ a,b\}\rightarrow c \right.$ and
+  $\left. \{ c\}\rightarrow a \right.$. $\{ a,b\}$ is a key for `a_b`,
+  but $\{ c\}$ is not, so `a_b` is not in BCNF. However, $a$ is within
+  the key `\{a, b\}`, so relation `a_b` is in 3NF.
+
+In fact, `autodb` does more than is required here: the relation `a_b` by
+itself is in 3NF, and contains all of the attributes, so we don’t need
+relation `c`.
+
+This double appearance of $\left. \{ c\}\rightarrow a \right.$ results
+in some redundancy: we’re listing the resulting `(c, a)` pairs twice.
+Even worse, only one of them is enforced via a key: if, after
+normalising, we add more data to the two relations separately, then we
+can two sets of `(c, a)` pairs that aren’t mutually coherent :
+
+``` r
+db <- schema |>
+  create() |>
+  insert(data.frame(c = 1:2, a = 1:2), relations = "c") |>
+  insert(data.frame(a = 1:2, b = 1L, c = 2:1), relations = "a_b")
+rab <- records(db)$a_b
+rc <- records(db)$c
+knitr::kable(rab)
+```
+
+|   a |   b |   c |
+|----:|----:|----:|
+|   1 |   1 |   2 |
+|   2 |   1 |   1 |
+
+``` r
+knitr::kable(rc)
+```
+
+|   c |   a |
+|----:|----:|
+|   1 |   1 |
+|   2 |   2 |
+
+``` r
+knitr::kable(merge(rab, rc, by = "c", suffixes = c(".a_b", ".c")))
+```
+
+|   c | a.a_b |   b | a.c |
+|----:|------:|----:|----:|
+|   1 |     2 |   1 |   1 |
+|   2 |     1 |   1 |   2 |
+
+If we remove relation `c`, we still have the same problem, which is that
+relation `a_b` doesn’t enforce $\left. \{ c\}\rightarrow a \right.$ with
+a key, so we can easily insert data that violates it.
+
+The standard way to fix this schema to satisfy BCNF is by splitting
+relation `a_b` on the violated functional dependency, namely `c -> a`:
+
+``` r
+show(schema2)
+```
+
+This is now in BCNF: relation `c` is in BCNF for the same reasons as
+before, and relation `b_c` contains no FDs at all, but is required for
+the decomposition to be lossless.
+
+There is now a different issue: the FD `\{a, b\} \rightarrow c` isn’t
+represented anywhere, let alone enforced with a key! This is an example
+of how BCNF sometimes can’t be achieved using just (real) relations.
+
+We can keep the other FD by noting it somewhere, but this is not what
+I’d call a nice approach. It also raises questions about how to plot the
+schema nicely: we don’t want to just have a list of non-represented FDs
+sitting in a corner of the plot.
+
+When this problem with BCNF is introduced, it’s often added that this is
+a rare occurrence in practice, and that usually you can normalise to 3NF
+and get BCNF for free, without the above issue. All I would say is that,
+for almost every real dataset I’ve worked with, normalising it with
+`autodb` has demonstrated that a subsection of the data has exactly the
+three-attribute situation shown in the example above.
+
+### Reference chains
+
+As described above, Boyes-Codd normal form can not always be represented
+with just (real) relations. However, if we want desirable properties for
+the foreign key references, then we run into problems for third normal
+form too.
+
+When `autodb`, or `autoref`, generates foreign key references for
+relations decomposed from a single table, it naturally tends to a
+structure where there is a single low-level data relation on the left –
+or several if the original data has independent partitions – and
+higher-level relations are “downstream” with respect to references, with
+the number of records strictly decreasing as we follow references to
+higher-level data relations. This resulting database schema is acyclic.
+Acyclic database schemas have some nice properties, an important one
+being that, if we want to join together two relations with some common
+attributes, there is always a way to do so by joining along foreign key
+references.
+
+Similarly, it’s simple to reconstruct the original simple table: just
+join the relations back together by “telescoping” back along the foreign
+key references.
+
+Considering this rejoin plan in reverse, while the schema is created
+constructively, we can view it as a series of decompositions: start with
+the original table, split it up into two or more sub-tables, linked
+together by foreign key references, and repeat. Rejoining the database
+then undoes these decompositions, in the opposite order.
+
+Unfortunately, not every set of functional dependencies allows this,
+because the resulting schema might not be connected. Consider the
+following set of FDs:
+
+``` r
+fds <- functional_dependency(
+  list(
+    list("a", "b"),
+    list("a", "c"),
+    list("b", "d"),
+    list("c", "e"),
+    list(c("d", "e"), "f")
+  ),
+  letters[1:6]
+)
+fds
+```
+
+    ## 5 functional dependencies
+    ## 6 attributes: a, b, c, d, e, f
+    ##    a -> b
+    ##    a -> c
+    ##    b -> d
+    ##    c -> e
+    ## d, e -> f
+
+Bernstein synthesis, and automatic foreign keys, give the following
+schema:
+
+``` r
+show(normalise(fds))
+```
+
+The schema is not connected: relation `d_e` is stranded, because no
+other relation contains its key, and vice versa. In terms of a series of
+decompositions, we could think of the original table being split into
+`{a,b,c,d,e}` and `{d,e,f}` first, with `\{d, e\}` forming a foreign key
+reference, and `d` and `e` being split apart later, destroying the
+reference.
+
+Similarly to the example for BCNF, this has undesirable consequences if
+we add more data after normalisation: because `d_e` is isolated, we can
+insert data into it that will be inconsistent with the other relations
+if we rejoin everything back together.
+
+### Views as a solution
+
+Virtual relations, or views, are defined as the result of an operation
+on other relations (real or virtual). In real databases, this might be
+done as a convenient way to refer to the result of joining some other
+tables, or aggregating values in a non-trivial way, so that the code for
+these doesn’t need to be repeated. Virtual relations don’t store any
+data themselves: if they’re queried, they’re created from scratch, so
+they’re never inconsistent with the relations they’re defined by.
+
+Here, we use a more restricted version of views, that is defined as the
+join of other relations. Views always have at least one key, implied by
+the relations they’re joining. We extend this by letting them have their
+own non-implied keys, that are required to hold on the join result.
+
+Let’s see how this can solve the issue in the BCNF example, where
+normalising left the FD $\left. \{ a,b\}\rightarrow c \right.$ not
+represented in the schema:
+
+The view has a darker background, and points to the relations it’s
+calculated from using different arrows, to mark it out as different.
+Note that it only points to one relation here (`b_c`), with the
+implication that it first joins that table to all of its ancestors
+(`c`).
+
+The view has the implied key $\{ b,c\}$, and we show the missing FD
+$\left. \{ a,b\}\rightarrow c \right.$ by giving $\{ a,b\}$ as an
+additional key.
+
+Note that the view contains both $a$ and $c$. However, unlike the
+original schema, this is not a repeat occurrence of
+$\left. \{ c\}\rightarrow a \right.$, because the data is taken directly
+from its appearance in relation `c`.
+
+It’s also worth noting that, since the view is just the original 3NF
+solution, it is not in BCNF itself. Views do not need to be in as high a
+normal form as the database they’re in.
+
+Here’s how views solve the issue in the 3NF example:
+
+Again, note that the view is not in 3NF itself, since it contains
+implied transitive dependencies.
+
+It might seem unnecessary to bring attribute `a` into the view, since we
+only need the attributes in relations `b` and `c` to connect to `d_e`.
+However, creating a view without `a` either doesn’t result in an acyclic
+schema,, or requires having a real relation have a foreign key reference
+to a view:
+
+The latter isn’t wrong – referring a view really means referring to the
+relations it gets decomposed into – but it does take some getting used
+to, especially if, like above, the “key” being referred to isn’t shown,
+because it’s implied by the decomposition. It does also bring up that a
+“view” must be viewed as something that’s decomposed, not as the result
+of a Cartesian join of its components. The latter would result in the
+above view containing too many records.
+
+We could explicitly show *all* of the decomposition steps as views, but
+it’s not clear that it’s worth the bother:
+
+## Proper handling of nullable data
+
+This addresses how to decompose data with `NA` values. See the [Handling
+missing
+values](https://charnelmouse.github.io/autodb/dev/articles/null.md)
+vignette
+([`vignette("null", package = "autodb")`](https://charnelmouse.github.io/autodb/dev/articles/null.md))
+for details on how to currently do this manually. The plan is to allow
+incorporating some of this process into the search, but this is a long
+way from being worked out fully.
+
+## Handling of duplicate records
+
+Relational theory is based on data being given as relations, that cannot
+have duplicate records. However, it’s expected that an R user might pass
+in a data frame with duplicates: for example, R comes with some
+datasets, such as `iris`, that have duplicates if we don’t include the
+row names.
+
+At the moment, these duplicates are kept when searching for
+dependencies. This can affect results for approximate dependencies,
+since it changes how many records must be removed for a given dependency
+to be satisfied. However, the duplicates are still removed when the data
+frame is decomposed into a database. At the moment, I’m not certain on
+whether these duplicates are best handled by removing them before
+beginning the search, or by simply returning an error if there are
+duplicate records.

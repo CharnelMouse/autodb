@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">autodb</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">3.1.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">3.2.4.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -48,11 +48,34 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="autodb-development-version">autodb (development version)<a class="anchor" aria-label="anchor" href="#autodb-development-version"></a></h2>
+<ul><li>Added <code>discover_keys</code>, which searches for keys rather than functional dependencies. This scales better with column count than FD search.</li>
+<li>Added <code>rep</code> method for functional dependencies. This also allows the use of <code>outer</code>, e.g. for comparison with <code>==</code>.</li>
+<li>Added remaining inequality implementations for <code>functional_dependency</code> (<code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>).</li>
+<li>Added <code>remove_extraneous</code> to exported functions, for removing redundant dependencies or determinant attributes in a <code>functional_dependency</code> object. This is used as a step in <code>synthesise</code>, but is useful on its own.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="3.2.4" id="autodb-324">autodb 3.2.4<a class="anchor" aria-label="anchor" href="#autodb-324"></a></h2><p class="text-muted">CRAN release: 2025-11-17</p>
+<p>Minor test fixes to work under latest version of testthat.</p>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="3.2.3" id="autodb-323">autodb 3.2.3<a class="anchor" aria-label="anchor" href="#autodb-323"></a></h2>
+<p>Minor improvements to documentation before submission.</p>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="3.2.2" id="autodb-322">autodb 3.2.2<a class="anchor" aria-label="anchor" href="#autodb-322"></a></h2>
+<p>Some minor fixes to documentation to pass RHub checks.</p>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="3.2.1" id="autodb-321">autodb 3.2.1<a class="anchor" aria-label="anchor" href="#autodb-321"></a></h2>
+<p>Some minor fixes to documentation to pass RHub checks.</p>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="3.2.0" id="autodb-320">autodb 3.2.0<a class="anchor" aria-label="anchor" href="#autodb-320"></a></h2>
 <div class="section level3">
-<h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
+<h3 id="improvements-3-2-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-3-2-0"></a></h3>
 <ul><li>Added <code>d2</code>, a converter to the D2 plotting language, similar to <code>gv</code> for GraphViz.</li>
 <li>Removed some partial match warnings (thanks to Hadley Wickham for the pull request).</li>
-<li>There are now several smaller vignettes, instead of a single larger one, and they are hopefully a little easier to read.</li>
+<li>The vignette has been split into several smaller ones, and hopefully is easier to read.</li>
 </ul></div>
 </div>
     <div class="section level2">
@@ -269,7 +292,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

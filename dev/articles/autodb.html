@@ -10,10 +10,7 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="autodb_files/libs/quarto-html/popper.min.js"></script><script src="autodb_files/libs/quarto-html/tippy.umd.min.js"></script><link href="autodb_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="autodb_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<script src="autodb_files/libs/htmlwidgets-1.6.4/htmlwidgets.js"></script><script src="autodb_files/libs/viz-1.8.2/viz.js"></script><link href="autodb_files/libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet">
-<script src="autodb_files/libs/grViz-binding-1.0.11/grViz.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Using autodb">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Using autodb">
 <meta name="robots" content="noindex">
 </head>
 <body>
@@ -24,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">autodb</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">3.1.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">3.2.4.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,150 +61,194 @@
 
 
   </div>
-</nav><div class="container template-quarto">
-<div class="row">
+</nav><div class="container template-article">
+
+
+
+<script src="autodb_files/htmlwidgets-1.6.4/htmlwidgets.js"></script><script src="autodb_files/viz-1.8.2/viz.js"></script><link href="autodb_files/DiagrammeR-styles-0.2/styles.css" rel="stylesheet">
+<script src="autodb_files/grViz-binding-1.0.11/grViz.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Using autodb</h1>
-
-
-
-
-      <small class="dont-index">Source: <a href="https://github.com/CharnelMouse/autodb/blob/master/vignettes/autodb.qmd" class="external-link"><code>vignettes/autodb.qmd</code></a></small>
-      <div class="d-none name"><code></code></div>
+            
+      
+      <small class="dont-index">Source: <a href="https://github.com/CharnelMouse/autodb/blob/master/vignettes/autodb.Rmd" class="external-link"><code>vignettes/autodb.Rmd</code></a></small>
+      <div class="d-none name"><code>autodb.Rmd</code></div>
     </div>
 
-
-
-
-
-
-    <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://charnelmouse.github.io/autodb/">autodb</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: 'autodb'</span></span>
-<span><span class="co">#&gt; The following object is masked from 'package:stats':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     decompose</span></span></code></pre></div>
-</div>
-<section class="section level2"><h2 id="terminology">Terminology<a class="anchor" aria-label="anchor" href="#terminology"></a>
+    
+    
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://charnelmouse.github.io/autodb/">autodb</a></span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## </span></span>
+<span><span class="co">## Attaching package: 'autodb'</span></span></code></pre>
+<pre><code><span><span class="co">## The following object is masked from 'package:stats':</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##     decompose</span></span></code></pre>
+<div class="section level2">
+<h2 id="terminology">Terminology<a class="anchor" aria-label="anchor" href="#terminology"></a>
 </h2>
-<p>To avoid confusion, this vignette is consistent with terminology: a <em>data frame</em> (table) has <em>records</em> (rows) with the same <em>attributes</em> (columns/variables), and we split it up into a <em>database</em>, that consists of <em>relations</em> (data frames with key and foreign key constraints between them). This is in line with terms used in the relational model.</p>
-<p>When we talk about the type of values an attribute can take, we talk about a data <em>class</em>, as in the relational model and R, rather than a value type, as in many other programming languages.</p>
-</section><section class="section level2"><h2 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
+<p>To avoid confusion, this vignette is consistent with terminology: a
+<em>data frame</em> (table) has <em>records</em> (rows) with the same
+<em>attributes</em> (columns/variables), and we split it up into a
+<em>database</em>, that consists of <em>relations</em> (data frames with
+key and foreign key constraints between them). This is in line with
+terms used in the relational model.</p>
+<p>When we talk about the type of values an attribute can take, we talk
+about a data <em>class</em>, as in the relational model and R, rather
+than a value type, as in many other programming languages.</p>
+</div>
+<div class="section level2">
+<h2 id="motivation">Motivation<a class="anchor" aria-label="anchor" href="#motivation"></a>
 </h2>
 <p>Let’s expand on the package DESCRIPTION:</p>
 <blockquote>
-<p>Automatic normalisation of a data frame to third normal form, with the intention of easing the process of data cleaning. (Usage to design your actual database for you is not advised.)</p>
+<p>Automatic normalisation of a data frame to third normal form, with
+the intention of easing the process of data cleaning. (Usage to design
+your actual database for you is not advised.)</p>
 </blockquote>
-<section class="level2"><h3 id="database-normalisation">Database normalisation<a class="anchor" aria-label="anchor" href="#database-normalisation"></a>
+<div class="section level3">
+<h3 id="database-normalisation">Database normalisation<a class="anchor" aria-label="anchor" href="#database-normalisation"></a>
 </h3>
-<p>Database normalisation is, roughly, the idea of taking a dataset and splitting it up into several linked tables. This is useful, because it makes the structure of the data more explicit, and enforceable.</p>
-<p>As an example, let’s look at the <code>ChickWeight</code> dataset, included with base R.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">ChickWeight</span><span class="op">)</span></span>
-<span><span class="co">#&gt;      weight           Time           Chick     Diet   </span></span>
-<span><span class="co">#&gt;  Min.   : 35.0   Min.   : 0.00   13     : 12   1:220  </span></span>
-<span><span class="co">#&gt;  1st Qu.: 63.0   1st Qu.: 4.00   9      : 12   2:120  </span></span>
-<span><span class="co">#&gt;  Median :103.0   Median :10.00   20     : 12   3:120  </span></span>
-<span><span class="co">#&gt;  Mean   :121.8   Mean   :10.72   10     : 12   4:118  </span></span>
-<span><span class="co">#&gt;  3rd Qu.:163.8   3rd Qu.:16.00   17     : 12          </span></span>
-<span><span class="co">#&gt;  Max.   :373.0   Max.   :21.00   19     : 12          </span></span>
-<span><span class="co">#&gt;                                  (Other):506</span></span></code></pre></div>
-</div>
-<p>This is a simple dataset, but the flat table format obscures some information about the structure of the data. Specifically, chicks have their diet assigned at the beginning of the study, and it’s never changed. To make this more explicit, we could split the data into two separate tables:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="downlit sourceCode r">
+<p>Database normalisation is, roughly, the idea of taking a dataset and
+splitting it up into several linked tables. This is useful, because it
+makes the structure of the data more explicit, and enforceable.</p>
+<p>As an example, let’s look at the <code>ChickWeight</code> dataset,
+included with base R.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">ChickWeight</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##      weight           Time           Chick     Diet   </span></span>
+<span><span class="co">##  Min.   : 35.0   Min.   : 0.00   13     : 12   1:220  </span></span>
+<span><span class="co">##  1st Qu.: 63.0   1st Qu.: 4.00   9      : 12   2:120  </span></span>
+<span><span class="co">##  Median :103.0   Median :10.00   20     : 12   3:120  </span></span>
+<span><span class="co">##  Mean   :121.8   Mean   :10.72   10     : 12   4:118  </span></span>
+<span><span class="co">##  3rd Qu.:163.8   3rd Qu.:16.00   17     : 12          </span></span>
+<span><span class="co">##  Max.   :373.0   Max.   :21.00   19     : 12          </span></span>
+<span><span class="co">##                                  (Other):506</span></span></code></pre>
+<p>This is a simple dataset, but the flat table format obscures some
+information about the structure of the data. Specifically, chicks have
+their diet assigned at the beginning of the study, and it’s never
+changed. To make this more explicit, we could split the data into two
+separate tables:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">measurement</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">ChickWeight</span>, , <span class="op">-</span><span class="va">Diet</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">chick</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">ChickWeight</span>, , <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">Chick</span>, <span class="va">Diet</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">measurement</span><span class="op">)</span></span>
-<span><span class="co">#&gt;      weight           Time           Chick    </span></span>
-<span><span class="co">#&gt;  Min.   : 35.0   Min.   : 0.00   13     : 12  </span></span>
-<span><span class="co">#&gt;  1st Qu.: 63.0   1st Qu.: 4.00   9      : 12  </span></span>
-<span><span class="co">#&gt;  Median :103.0   Median :10.00   20     : 12  </span></span>
-<span><span class="co">#&gt;  Mean   :121.8   Mean   :10.72   10     : 12  </span></span>
-<span><span class="co">#&gt;  3rd Qu.:163.8   3rd Qu.:16.00   17     : 12  </span></span>
-<span><span class="co">#&gt;  Max.   :373.0   Max.   :21.00   19     : 12  </span></span>
-<span><span class="co">#&gt;                                  (Other):506</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">chick</span><span class="op">)</span></span>
-<span><span class="co">#&gt;      Chick    Diet  </span></span>
-<span><span class="co">#&gt;  18     : 1   1:20  </span></span>
-<span><span class="co">#&gt;  16     : 1   2:10  </span></span>
-<span><span class="co">#&gt;  15     : 1   3:10  </span></span>
-<span><span class="co">#&gt;  13     : 1   4:10  </span></span>
-<span><span class="co">#&gt;  9      : 1         </span></span>
-<span><span class="co">#&gt;  20     : 1         </span></span>
-<span><span class="co">#&gt;  (Other):44</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">measurement</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##      weight           Time           Chick    </span></span>
+<span><span class="co">##  Min.   : 35.0   Min.   : 0.00   13     : 12  </span></span>
+<span><span class="co">##  1st Qu.: 63.0   1st Qu.: 4.00   9      : 12  </span></span>
+<span><span class="co">##  Median :103.0   Median :10.00   20     : 12  </span></span>
+<span><span class="co">##  Mean   :121.8   Mean   :10.72   10     : 12  </span></span>
+<span><span class="co">##  3rd Qu.:163.8   3rd Qu.:16.00   17     : 12  </span></span>
+<span><span class="co">##  Max.   :373.0   Max.   :21.00   19     : 12  </span></span>
+<span><span class="co">##                                  (Other):506</span></span></code></pre>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">chick</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##      Chick    Diet  </span></span>
+<span><span class="co">##  18     : 1   1:20  </span></span>
+<span><span class="co">##  16     : 1   2:10  </span></span>
+<span><span class="co">##  15     : 1   3:10  </span></span>
+<span><span class="co">##  13     : 1   4:10  </span></span>
+<span><span class="co">##  9      : 1         </span></span>
+<span><span class="co">##  20     : 1         </span></span>
+<span><span class="co">##  (Other):44</span></span></code></pre>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">measurement</span>, <span class="va">chick</span>, sort <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">ChickWeight</span><span class="op">)</span><span class="op">]</span>,</span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">ChickWeight</span><span class="op">)</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">setequal</a></span><span class="op">(</span><span class="va">measurement</span><span class="op">$</span><span class="va">Chick</span>, <span class="va">chick</span><span class="op">$</span><span class="va">Chick</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-</div>
-<p>We can also add the restriction that each chick can only appear in the chick table once, and that each chick-time pair can only appear in the measurement table once.</p>
-<p>For data management, this is good because it prevents some common types of data error:</p>
+<p>We can also add the restriction that each chick can only appear in
+the chick table once, and that each chick-time pair can only appear in
+the measurement table once.</p>
+<p>For data management, this is good because it prevents some common
+types of data error:</p>
 <ul>
-<li>Consistency errors. In the flat table, we can accidentally add a row where a chick is on a different diet to before. In the split tables, the above restrictions mean that this is impossible.</li>
-<li>Insertion/deletion errors. Suppose we have a chick that’s been assigned a diet, but hasn’t been measured yet. In the flat table, this information can’t be added, unless we use a temporary row where the time and weight are missing, and hope we remember to remove it later. In the split tables, we can just add the chick to the chick table without issue. Conversely, if we removed all of a chick’s measurements in the flat table, we’d also lose the information about which diet it’s been assigned.</li>
-<li>Update errors. Suppose we notice that a chick is recorded under the wrong diet, and change values to correct it. In the flat table, a chick’s diet is recorded for every measurement, so we could only update some of them by mistake, resulting in inconsistency. In the split tables, the diet is only given once, so this can’t happen.</li>
+<li>Consistency errors. In the flat table, we can accidentally add a row
+where a chick is on a different diet to before. In the split tables, the
+above restrictions mean that this is impossible.</li>
+<li>Insertion/deletion errors. Suppose we have a chick that’s been
+assigned a diet, but hasn’t been measured yet. In the flat table, this
+information can’t be added, unless we use a temporary row where the time
+and weight are missing, and hope we remember to remove it later. In the
+split tables, we can just add the chick to the chick table without
+issue. Conversely, if we removed all of a chick’s measurements in the
+flat table, we’d also lose the information about which diet it’s been
+assigned.</li>
+<li>Update errors. Suppose we notice that a chick is recorded under the
+wrong diet, and change values to correct it. In the flat table, a
+chick’s diet is recorded for every measurement, so we could only update
+some of them by mistake, resulting in inconsistency. In the split
+tables, the diet is only given once, so this can’t happen.</li>
 </ul>
-<p>These all tie into the same idea: reducing data redundancy so that each fact is only stated in one place.</p>
-</section><section class="level2"><h3 id="for-data-cleaning">For data cleaning<a class="anchor" aria-label="anchor" href="#for-data-cleaning"></a>
+<p>These all tie into the same idea: reducing data redundancy so that
+each fact is only stated in one place.</p>
+</div>
+<div class="section level3">
+<h3 id="for-data-cleaning">For data cleaning<a class="anchor" aria-label="anchor" href="#for-data-cleaning"></a>
 </h3>
-<p>All of the above points are also useful for data exploration and validation, and that’s the emphasis of the package. Being able to make the data’s structure more explicit is valuable for making sure that we understand the problem domain before we try to model it. This is true even if we still use the original flat table for the analysis itself, since tools like R generally expect that format.</p>
-<p>I’ve often started data exploration under the following conditions:</p>
+<p>All of the above points are also useful for data exploration and
+validation, and that’s the emphasis of the package. Being able to make
+the data’s structure more explicit is valuable for making sure that we
+understand the problem domain before we try to model it. This is true
+even if we still use the original flat table for the analysis itself,
+since tools like R generally expect that format.</p>
+<p>I’ve often started data exploration under the following
+conditions:</p>
 <ul>
-<li>Little prior knowledge of the data, since it’s provided by a third party.</li>
-<li>One-off analyses, where the data is discard at the end, so it’s not worth the time to get the data into a proper database.</li>
+<li>Little prior knowledge of the data, since it’s provided by a third
+party.</li>
+<li>One-off analyses, where the data is discard at the end, so it’s not
+worth the time to get the data into a proper database.</li>
 <li>Limited, or unreliable, documentation.</li>
-<li>Data that fits in local memory, presenting less problems for automation.</li>
+<li>Data that fits in local memory, presenting less problems for
+automation.</li>
 </ul>
-<p>It’s in this context that I would usually have to do the normalisation by hand, and I would like to have a tool that does it semi-automatically. This package is intended to be that tool, using a minimal amount of additional libraries.</p>
-<p>For example, we can pass <code>ChickWeight</code> into the main function, <code>autodb</code>, and get the expected normalisation:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="downlit sourceCode r">
+<p>It’s in this context that I would usually have to do the
+normalisation by hand, and I would like to have a tool that does it
+semi-automatically. This package is intended to be that tool, using a
+minimal amount of additional libraries.</p>
+<p>For example, we can pass <code>ChickWeight</code> into the main
+function, <code>autodb</code>, and get the expected normalisation:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">chick_db</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/autodb.html">autodb</a></span><span class="op">(</span><span class="va">ChickWeight</span><span class="op">)</span></span>
-<span><span class="va">chick_db</span></span>
-<span><span class="co">#&gt; database with 2 relations</span></span>
-<span><span class="co">#&gt; 4 attributes: weight, Time, Chick, Diet</span></span>
-<span><span class="co">#&gt; relation Chick: Chick, Diet; 50 records</span></span>
-<span><span class="co">#&gt;   key 1: Chick</span></span>
-<span><span class="co">#&gt; relation Time_Chick: Time, Chick, weight; 578 records</span></span>
-<span><span class="co">#&gt;   key 1: Time, Chick</span></span>
-<span><span class="co">#&gt; references:</span></span>
-<span><span class="co">#&gt; Time_Chick.{Chick} -&gt; Chick.{Chick}</span></span></code></pre></div>
-</div>
-<p>We can also plot it, by using <code>gv</code> to turn the result into code for the Graphviz language, and then calling Graphviz however we prefer.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="../reference/gv.html">gv</a></span><span class="op">(</span><span class="va">chick_db</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; digraph {</span></span>
-<span><span class="co">#&gt;   rankdir = "LR"</span></span>
-<span><span class="co">#&gt;   node [shape=plaintext];</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   "Chick" [label = &lt;</span></span>
-<span><span class="co">#&gt;     &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="co">#&gt;     &lt;TR&gt;&lt;TD COLSPAN="3"&gt;Chick (50 records)&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="co">#&gt;     &lt;TR&gt;&lt;TD PORT="TO_chick"&gt;Chick&lt;/TD&gt;&lt;TD BGCOLOR="black"&gt;&lt;/TD&gt;&lt;TD PORT="FROM_chick"&gt;ordered&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="co">#&gt;     &lt;TR&gt;&lt;TD PORT="TO_diet"&gt;Diet&lt;/TD&gt;&lt;TD&gt;&lt;/TD&gt;&lt;TD PORT="FROM_diet"&gt;factor&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="co">#&gt;     &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="co">#&gt;   "Time_Chick" [label = &lt;</span></span>
-<span><span class="co">#&gt;     &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
-<span><span class="co">#&gt;     &lt;TR&gt;&lt;TD COLSPAN="3"&gt;Time_Chick (578 records)&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="co">#&gt;     &lt;TR&gt;&lt;TD PORT="TO_time"&gt;Time&lt;/TD&gt;&lt;TD BGCOLOR="black"&gt;&lt;/TD&gt;&lt;TD PORT="FROM_time"&gt;numeric&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="co">#&gt;     &lt;TR&gt;&lt;TD PORT="TO_chick"&gt;Chick&lt;/TD&gt;&lt;TD BGCOLOR="black"&gt;&lt;/TD&gt;&lt;TD PORT="FROM_chick"&gt;ordered&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="co">#&gt;     &lt;TR&gt;&lt;TD PORT="TO_weight"&gt;weight&lt;/TD&gt;&lt;TD&gt;&lt;/TD&gt;&lt;TD PORT="FROM_weight"&gt;numeric&lt;/TD&gt;&lt;/TR&gt;</span></span>
-<span><span class="co">#&gt;     &lt;/TABLE&gt;&gt;];</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   "Time_Chick":FROM_chick -&gt; "Chick":TO_chick;</span></span>
-<span><span class="co">#&gt; }</span></span></code></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="downlit sourceCode r">
+<span><span class="va">chick_db</span></span></code></pre></div>
+<pre><code><span><span class="co">## database with 2 relations</span></span>
+<span><span class="co">## 4 attributes: weight, Time, Chick, Diet</span></span>
+<span><span class="co">## relation Chick: Chick, Diet; 50 records</span></span>
+<span><span class="co">##   key 1: Chick</span></span>
+<span><span class="co">## relation Time_Chick: Time, Chick, weight; 578 records</span></span>
+<span><span class="co">##   key 1: Time, Chick</span></span>
+<span><span class="co">## references:</span></span>
+<span><span class="co">## Time_Chick.{Chick} -&gt; Chick.{Chick}</span></span></code></pre>
+<p>We can also plot it, by using <code>gv</code> to turn the result into
+code for the Graphviz language, and then calling Graphviz however we
+prefer.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="../reference/gv.html">gv</a></span><span class="op">(</span><span class="va">chick_db</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## digraph {</span></span>
+<span><span class="co">##   rankdir = "LR"</span></span>
+<span><span class="co">##   node [shape=plaintext];</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##   "Chick" [label = &lt;</span></span>
+<span><span class="co">##     &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="co">##     &lt;TR&gt;&lt;TD COLSPAN="3"&gt;Chick (50 records)&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="co">##     &lt;TR&gt;&lt;TD PORT="TO_chick"&gt;Chick&lt;/TD&gt;&lt;TD BGCOLOR="black"&gt;&lt;/TD&gt;&lt;TD PORT="FROM_chick"&gt;ordered&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="co">##     &lt;TR&gt;&lt;TD PORT="TO_diet"&gt;Diet&lt;/TD&gt;&lt;TD&gt;&lt;/TD&gt;&lt;TD PORT="FROM_diet"&gt;factor&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="co">##     &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="co">##   "Time_Chick" [label = &lt;</span></span>
+<span><span class="co">##     &lt;TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4"&gt;</span></span>
+<span><span class="co">##     &lt;TR&gt;&lt;TD COLSPAN="3"&gt;Time_Chick (578 records)&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="co">##     &lt;TR&gt;&lt;TD PORT="TO_time"&gt;Time&lt;/TD&gt;&lt;TD BGCOLOR="black"&gt;&lt;/TD&gt;&lt;TD PORT="FROM_time"&gt;numeric&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="co">##     &lt;TR&gt;&lt;TD PORT="TO_chick"&gt;Chick&lt;/TD&gt;&lt;TD BGCOLOR="black"&gt;&lt;/TD&gt;&lt;TD PORT="FROM_chick"&gt;ordered&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="co">##     &lt;TR&gt;&lt;TD PORT="TO_weight"&gt;weight&lt;/TD&gt;&lt;TD&gt;&lt;/TD&gt;&lt;TD PORT="FROM_weight"&gt;numeric&lt;/TD&gt;&lt;/TR&gt;</span></span>
+<span><span class="co">##     &lt;/TABLE&gt;&gt;];</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##   "Time_Chick":FROM_chick -&gt; "Chick":TO_chick;</span></span>
+<span><span class="co">## }</span></span></code></pre>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">show</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="fu"><a href="../reference/gv.html">gv</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, width <span class="op">=</span> <span class="st">"100%"</span><span class="op">)</span></span>
 <span>  <span class="va">maybe_plot</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="fu"><a href="../reference/gv.html">gv</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, width <span class="op">=</span> <span class="st">"100%"</span><span class="op">)</span></span>
@@ -215,480 +256,572 @@
 <span>  <span class="va">show</span> <span class="op">&lt;-</span> <span class="va">print</span></span>
 <span>  <span class="va">maybe_plot</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="va">chick_db</span><span class="op">)</span></span></code></pre></div>
+<div id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Chick (50 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">ordered<\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD><\/TD><TD PORT=\"FROM_diet\">factor<\/TD><\/TR>\n    <\/TABLE>>];\n  \"Time_Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Time_Chick (578 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_time\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">ordered<\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD><\/TD><TD PORT=\"FROM_weight\">numeric<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"Time_Chick\":FROM_chick -> \"Chick\":TO_chick;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>In an interactive session, the simplest way to do this is to call
+<code><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">DiagrammeR::grViz</a></code> on the output from <code>gv</code>. In a
+Quarto file, we can write the output to a file, and call that file from
+a <code>dot</code> code block. The advantage to the latter approach is
+that DiagrammeR creates an HTML widget, and the Quarto block does not,
+so we avoid needing to include about 2MB of Javascript.</p>
+<p>The plot represents each table/relation as a box: the top row gives
+the relation name and the number of records, and the other rows list the
+attributes and their classes.</p>
+<p>In the middle is a grid containing black cells: each column of black
+cells represents a <em>key</em>, or uniqueness constraint, for the
+relation. Keys are irreducible subsets of a relation’s attributes, that
+take a unique set of values in each record. They can be treated as a
+unique row identifier. For example, each chick has a unique
+<code>Chick</code> value, and each measurement has a unique
+<code>Time</code>-<code>Chick</code> pair.</p>
 </div>
-<p>In an interactive session, the simplest way to do this is to call <code><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">DiagrammeR::grViz</a></code> on the output from <code>gv</code>. In a Quarto file, we can write the output to a file, and call that file from a <code>dot</code> code block. The advantage to the latter approach is that DiagrammeR creates an HTML widget, and the Quarto block does not, so we avoid needing to include about 2MB of Javascript.</p>
-<p>The plot represents each table/relation as a box: the top row gives the relation name and the number of records, and the other rows list the attributes and their classes.</p>
-<p>In the middle is a grid containing black cells: each column of black cells represents a <em>key</em>, or uniqueness constraint, for the relation. Keys are irreducible subsets of a relation’s attributes, that take a unique set of values in each record. They can be treated as a unique row identifier. For example, each chick has a unique <code>Chick</code> value, and each measurement has a unique <code>Time</code>-<code>Chick</code> pair.</p>
-</section><section class="level2"><h3 id="not-for-database-design">Not for database design<a class="anchor" aria-label="anchor" href="#not-for-database-design"></a>
+<div class="section level3">
+<h3 id="not-for-database-design">Not for database design<a class="anchor" aria-label="anchor" href="#not-for-database-design"></a>
 </h3>
-<p>Good database design is a hard and involved process, which requires a strong grasp on the domain that the database will hold information on. Please don’t try to use this package to do it on autopilot. If you do, you’ll quickly find some shortcomings with the results:</p>
+<p>Good database design is a hard and involved process, which requires a
+strong grasp on the domain that the database will hold information on.
+Please don’t try to use this package to do it on autopilot. If you do,
+you’ll quickly find some shortcomings with the results:</p>
 <ul>
-<li>Since the package can only work with the data it’s got, the resulting database schema is specific to the given dataset, rather than data of that type in general. This is useful for data exploration, since it can give useful information about sampling issues, but not for designing a database.</li>
-<li>The resulting “databases” might not be something SQL etc. will accept as-is. For example, <code>autodb</code> needs to handle constant attributes, that have the same value in every record. This is done by making a relation with an empty key, which is allowed in the relation model, but SQL won’t let you do it. In a real database, we would either not store constants in the database at all, or place them with the expectation that they won’t stay constant when more data is added.</li>
-<li>It doesn’t introduce artificial keys, if you like using those, or single-attribute lookups, which are a relational database’s equivalent to factor levels.</li>
-<li>It doesn’t create “virtual relations”, also known as “views”, which are data-less relations defined in terms of manipulating real relations (usually to create aggregates).</li>
-<li>If a relation has multiple keys, it doesn’t choose one as a “primary key”. Primary keys are implementation details for databases, not part of the relational model, and they’re not especially relevant for data exploration. However, SQL etc. will ask for one.</li>
-<li>It can’t account for semantic knowledge, which a person would spot easily.</li>
+<li>Since the package can only work with the data it’s got, the
+resulting database schema is specific to the given dataset, rather than
+data of that type in general. This is useful for data exploration, since
+it can give useful information about sampling issues, but not for
+designing a database.</li>
+<li>The resulting “databases” might not be something SQL etc. will
+accept as-is. For example, <code>autodb</code> needs to handle constant
+attributes, that have the same value in every record. This is done by
+making a relation with an empty key, which is allowed in the relation
+model, but SQL won’t let you do it. In a real database, we would either
+not store constants in the database at all, or place them with the
+expectation that they won’t stay constant when more data is added.</li>
+<li>It doesn’t introduce artificial keys, if you like using those, or
+single-attribute lookups, which are a relational database’s equivalent
+to factor levels.</li>
+<li>It doesn’t create “virtual relations”, also known as “views”, which
+are data-less relations defined in terms of manipulating real relations
+(usually to create aggregates).</li>
+<li>If a relation has multiple keys, it doesn’t choose one as a “primary
+key”. Primary keys are implementation details for databases, not part of
+the relational model, and they’re not especially relevant for data
+exploration. However, SQL etc. will ask for one.</li>
+<li>It can’t account for semantic knowledge, which a person would spot
+easily.</li>
 </ul>
-<p>See the <a href="limits.html">Limitations</a> vignette (<code><a href="../articles/limits.html">vignette("limits", package = "autodb")</a></code>) for more details.</p>
-</section><section class="level2"><h3 id="to-third-normal-form">To third normal form<a class="anchor" aria-label="anchor" href="#to-third-normal-form"></a>
+<p>See the <a href="limits.html">Limitations</a> vignette
+(<code><a href="../articles/limits.html">vignette("limits", package = "autodb")</a></code>) for more
+details.</p>
+</div>
+<div class="section level3">
+<h3 id="to-third-normal-form">To third normal form<a class="anchor" aria-label="anchor" href="#to-third-normal-form"></a>
 </h3>
-<p><code>autodb</code> gets a given data frame to third normal form (3NF): every attribute depends on the whole key(s), and non-key attributes depend on nothing but the key(s). This was mostly chosen because there is an existing algorithm, Bernstein’s synthesis, for normalising to third normal form.</p>
-<p><code>autodb</code> works by searching for functional dependencies in the data, and the highest normal form attainable with functional dependencies is a higher form called Boyes-Codd normal form (BCNF). However, normalising to BCNF requires more complicated infrastructure, and <code>autodb</code> isn’t set up for that yet. This may change in the future.</p>
-<p>An additional enhancement to 3NF, called LTK form, is available as an option: see the section on avoidable attributes for more details.</p>
-</section></section><section class="section level2"><h2 id="individual-steps">Individual steps<a class="anchor" aria-label="anchor" href="#individual-steps"></a>
+<p><code>autodb</code> gets a given data frame to third normal form
+(3NF): every attribute depends on the whole key(s), and non-key
+attributes depend on nothing but the key(s). This was mostly chosen
+because there is an existing algorithm, Bernstein’s synthesis, for
+normalising to third normal form.</p>
+<p><code>autodb</code> works by searching for functional dependencies in
+the data, and the highest normal form attainable with functional
+dependencies is a higher form called Boyes-Codd normal form (BCNF).
+However, normalising to BCNF requires more complicated infrastructure,
+and <code>autodb</code> isn’t set up for that yet. This may change in
+the future.</p>
+<p>An additional enhancement to 3NF, called LTK form, is available as an
+option: see the section on avoidable attributes for more details.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="individual-steps">Individual steps<a class="anchor" aria-label="anchor" href="#individual-steps"></a>
 </h2>
-<section class="level2"><h3 id="finding-functional-dependencies">Finding functional dependencies<a class="anchor" aria-label="anchor" href="#finding-functional-dependencies"></a>
+<div class="section level3">
+<h3 id="finding-functional-dependencies">Finding functional dependencies<a class="anchor" aria-label="anchor" href="#finding-functional-dependencies"></a>
 </h3>
-<p>Having looked at the final result for <code>ChickWeight</code> first, we now look at the individual steps. The first step is to find the (non-trivial and minimal) dependencies present in the given data frame. There are various ways to do this; by default, the package uses FDHitsSep, a depth-first search algorithm. We run this by using the <code>discover</code> function, setting <code>progress</code> to <code>TRUE</code> to see the steps taken:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">deps</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/discover.html">discover</a></span><span class="op">(</span><span class="va">ChickWeight</span>, progress <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; formatting numerical/complex variables with 7 significant digits</span></span>
-<span><span class="co">#&gt; simplifying data types</span></span>
-<span><span class="co">#&gt; calculating single-attribute PLIs</span></span>
-<span><span class="co">#&gt; sampling difference sets</span></span>
-<span><span class="co">#&gt; 8 initial diffsets</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; dependant weight</span></span>
-<span><span class="co">#&gt; dependant Time</span></span>
-<span><span class="co">#&gt; dependant Chick</span></span>
-<span><span class="co">#&gt; dependant Diet</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; FDHitsSep complete</span></span>
-<span><span class="co">#&gt; 9 final diffsets</span></span>
-<span><span class="co">#&gt; 9 nodes visited</span></span>
-<span><span class="co">#&gt; 6 partitions cached</span></span>
-<span><span class="va">deps</span></span>
-<span><span class="co">#&gt; 2 functional dependencies</span></span>
-<span><span class="co">#&gt; 4 attributes: weight, Time, Chick, Diet</span></span>
-<span><span class="co">#&gt; Time, Chick -&gt; weight</span></span>
-<span><span class="co">#&gt;       Chick -&gt; Diet</span></span></code></pre></div>
-</div>
-<p>The result is a list of <em>functional dependencies</em>, in the format <code>determinant -&gt; dependant</code>, with an attribute named <code>attrs_order</code> that gives all the attribute names in their original order. Each of these three parts can be extracted:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/detset.html">detset</a></span><span class="op">(</span><span class="va">deps</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [[1]]</span></span>
-<span><span class="co">#&gt; [1] "Time"  "Chick"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; [[2]]</span></span>
-<span><span class="co">#&gt; [1] "Chick"</span></span>
-<span><span class="fu"><a href="../reference/dependant.html">dependant</a></span><span class="op">(</span><span class="va">deps</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "weight" "Diet"</span></span>
-<span><span class="fu"><a href="../reference/attrs_order.html">attrs_order</a></span><span class="op">(</span><span class="va">deps</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "weight" "Time"   "Chick"  "Diet"</span></span></code></pre></div>
-</div>
+<p>Having looked at the final result for <code>ChickWeight</code> first,
+we now look at the individual steps. The first step is to find the
+(non-trivial and minimal) dependencies present in the given data frame.
+There are various ways to do this; by default, the package uses
+FDHitsSep, a depth-first search algorithm. We run this by using the
+<code>discover</code> function, setting <code>progress</code> to
+<code>TRUE</code> to see the steps taken:</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">deps</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/discover.html">discover</a></span><span class="op">(</span><span class="va">ChickWeight</span>, progress <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## formatting numerical/complex variables with 7 significant digits</span></span>
+<span><span class="co">## simplifying data types</span></span>
+<span><span class="co">## calculating single-attribute PLIs</span></span>
+<span><span class="co">## sampling difference sets</span></span>
+<span><span class="co">## 7 initial diffsets</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## dependant weight</span></span>
+<span><span class="co">## dependant Time</span></span>
+<span><span class="co">## dependant Chick</span></span>
+<span><span class="co">## dependant Diet</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## FDHitsSep complete</span></span>
+<span><span class="co">## 9 final diffsets</span></span>
+<span><span class="co">## 10 nodes visited</span></span>
+<span><span class="co">## 7 partitions cached</span></span></code></pre>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">deps</span></span></code></pre></div>
+<pre><code><span><span class="co">## 2 functional dependencies</span></span>
+<span><span class="co">## 4 attributes: weight, Time, Chick, Diet</span></span>
+<span><span class="co">## Time, Chick -&gt; weight</span></span>
+<span><span class="co">##       Chick -&gt; Diet</span></span></code></pre>
+<p>The result is a list of <em>functional dependencies</em>, in the
+format <code>determinant -&gt; dependant</code>, with an attribute named
+<code>attrs_order</code> that gives all the attribute names in their
+original order. Each of these three parts can be extracted:</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/detset.html">detset</a></span><span class="op">(</span><span class="va">deps</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [[1]]</span></span>
+<span><span class="co">## [1] "Time"  "Chick"</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## [[2]]</span></span>
+<span><span class="co">## [1] "Chick"</span></span></code></pre>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/dependant.html">dependant</a></span><span class="op">(</span><span class="va">deps</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] "weight" "Diet"</span></span></code></pre>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/attrs_order.html">attrs_order</a></span><span class="op">(</span><span class="va">deps</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] "weight" "Time"   "Chick"  "Diet"</span></span></code></pre>
 <p>The former two are useful for filtering.</p>
-</section><section class="level2"><h3 id="normalisation">Normalisation<a class="anchor" aria-label="anchor" href="#normalisation"></a>
+</div>
+<div class="section level3">
+<h3 id="normalisation">Normalisation<a class="anchor" aria-label="anchor" href="#normalisation"></a>
 </h3>
-<p>Now that we have a list of discovered dependencies, we can construct a database schema, where the relation schemas are normalised to third normal form. This is done using Bernstein’s synthesis.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="downlit sourceCode r">
+<p>Now that we have a list of discovered dependencies, we can construct
+a database schema, where the relation schemas are normalised to third
+normal form. This is done using Bernstein’s synthesis.</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">schema</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/synthesise.html">synthesise</a></span><span class="op">(</span><span class="va">deps</span><span class="op">)</span></span>
-<span><span class="va">schema</span></span>
-<span><span class="co">#&gt; 2 relation schemas</span></span>
-<span><span class="co">#&gt; 4 attributes: weight, Time, Chick, Diet</span></span>
-<span><span class="co">#&gt; schema Chick: Chick, Diet</span></span>
-<span><span class="co">#&gt;   key 1: Chick</span></span>
-<span><span class="co">#&gt; schema Time_Chick: Time, Chick, weight</span></span>
-<span><span class="co">#&gt;   key 1: Time, Chick</span></span></code></pre></div>
-</div>
+<span><span class="va">schema</span></span></code></pre></div>
+<pre><code><span><span class="co">## 2 relation schemas</span></span>
+<span><span class="co">## 4 attributes: weight, Time, Chick, Diet</span></span>
+<span><span class="co">## schema Chick: Chick, Diet</span></span>
+<span><span class="co">##   key 1: Chick</span></span>
+<span><span class="co">## schema Time_Chick: Time, Chick, weight</span></span>
+<span><span class="co">##   key 1: Time, Chick</span></span></code></pre>
 <p>We can also plot this schema:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="va">schema</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="htmlwidget-2d3c7ade7c511903927d" style="width:100%;height:480px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-2d3c7ade7c511903927d">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">Chick<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD PORT=\"FROM_diet\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"Time_Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">Time_Chick<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD PORT=\"FROM_time\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD PORT=\"FROM_weight\"><\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-e5c8c404fe174e4c81bd" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-e5c8c404fe174e4c81bd">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">Chick<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD PORT=\"FROM_diet\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"Time_Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">Time_Chick<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD PORT=\"FROM_time\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD PORT=\"FROM_weight\"><\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>This is similar to the database plot given before, but there is some
+information not present, that requires the data frame itself: record
+counts, and data classes. We do have automatically-generated names for
+the individual relations, which are created using the keys.</p>
+<p>At this point, we have no references between the relation schemas,
+since Bernstein’s synthesis doesn’t supply information about foreign key
+references. We could use this database schema to build a database, but
+we’d rather add these foreign key references first.</p>
 </div>
-</div>
-<p>This is similar to the database plot given before, but there is some information not present, that requires the data frame itself: record counts, and data classes. We do have automatically-generated names for the individual relations, which are created using the keys.</p>
-<p>At this point, we have no references between the relation schemas, since Bernstein’s synthesis doesn’t supply information about foreign key references. We could use this database schema to build a database, but we’d rather add these foreign key references first.</p>
-</section><section class="level2"><h3 id="adding-foreign-key-references">Adding foreign key references<a class="anchor" aria-label="anchor" href="#adding-foreign-key-references"></a>
+<div class="section level3">
+<h3 id="adding-foreign-key-references">Adding foreign key references<a class="anchor" aria-label="anchor" href="#adding-foreign-key-references"></a>
 </h3>
-<p>Getting back to our <code>ChickWeight</code> example, we now have a database schema, consisting of a list of <code>relation</code> schemas. However, we have no information about how these relation schemas are linked to each other. In particular, we have no information about foreign keys. We can add this information using <code>autoref</code>:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="downlit sourceCode r">
+<p>Getting back to our <code>ChickWeight</code> example, we now have a
+database schema, consisting of a list of <code>relation</code> schemas.
+However, we have no information about how these relation schemas are
+linked to each other. In particular, we have no information about
+foreign keys. We can add this information using
+<code>autoref</code>:</p>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">linked_schema</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/autoref.html">autoref</a></span><span class="op">(</span><span class="va">schema</span><span class="op">)</span></span>
-<span><span class="va">linked_schema</span></span>
-<span><span class="co">#&gt; database schema with 2 relation schemas</span></span>
-<span><span class="co">#&gt; 4 attributes: weight, Time, Chick, Diet</span></span>
-<span><span class="co">#&gt; schema Chick: Chick, Diet</span></span>
-<span><span class="co">#&gt;   key 1: Chick</span></span>
-<span><span class="co">#&gt; schema Time_Chick: Time, Chick, weight</span></span>
-<span><span class="co">#&gt;   key 1: Time, Chick</span></span>
-<span><span class="co">#&gt; references:</span></span>
-<span><span class="co">#&gt; Time_Chick.{Chick} -&gt; Chick.{Chick}</span></span></code></pre></div>
-</div>
-<p>We could also have used <code>normalise</code>, instead of <code>synthesise</code> and <code>autoref</code> separately:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/normalise.html">normalise</a></span><span class="op">(</span><span class="va">deps</span><span class="op">)</span></span>
-<span><span class="co">#&gt; database schema with 2 relation schemas</span></span>
-<span><span class="co">#&gt; 4 attributes: weight, Time, Chick, Diet</span></span>
-<span><span class="co">#&gt; schema Chick: Chick, Diet</span></span>
-<span><span class="co">#&gt;   key 1: Chick</span></span>
-<span><span class="co">#&gt; schema Time_Chick: Time, Chick, weight</span></span>
-<span><span class="co">#&gt;   key 1: Time, Chick</span></span>
-<span><span class="co">#&gt; references:</span></span>
-<span><span class="co">#&gt; Time_Chick.{Chick} -&gt; Chick.{Chick}</span></span></code></pre></div>
-</div>
-<p>Plotting this updated database schema shows the same relation schemas as before, linked together by foreign key references:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="downlit sourceCode r">
+<span><span class="va">linked_schema</span></span></code></pre></div>
+<pre><code><span><span class="co">## database schema with 2 relation schemas</span></span>
+<span><span class="co">## 4 attributes: weight, Time, Chick, Diet</span></span>
+<span><span class="co">## schema Chick: Chick, Diet</span></span>
+<span><span class="co">##   key 1: Chick</span></span>
+<span><span class="co">## schema Time_Chick: Time, Chick, weight</span></span>
+<span><span class="co">##   key 1: Time, Chick</span></span>
+<span><span class="co">## references:</span></span>
+<span><span class="co">## Time_Chick.{Chick} -&gt; Chick.{Chick}</span></span></code></pre>
+<p>We could also have used <code>normalise</code>, instead of
+<code>synthesise</code> and <code>autoref</code> separately:</p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/normalise.html">normalise</a></span><span class="op">(</span><span class="va">deps</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## database schema with 2 relation schemas</span></span>
+<span><span class="co">## 4 attributes: weight, Time, Chick, Diet</span></span>
+<span><span class="co">## schema Chick: Chick, Diet</span></span>
+<span><span class="co">##   key 1: Chick</span></span>
+<span><span class="co">## schema Time_Chick: Time, Chick, weight</span></span>
+<span><span class="co">##   key 1: Time, Chick</span></span>
+<span><span class="co">## references:</span></span>
+<span><span class="co">## Time_Chick.{Chick} -&gt; Chick.{Chick}</span></span></code></pre>
+<p>Plotting this updated database schema shows the same relation schemas
+as before, linked together by foreign key references:</p>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="va">linked_schema</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="htmlwidget-a0e26a8e268e379eba07" style="width:100%;height:480px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-a0e26a8e268e379eba07">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">Chick<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD PORT=\"FROM_diet\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"Time_Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">Time_Chick<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD PORT=\"FROM_time\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD PORT=\"FROM_weight\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"Time_Chick\":FROM_chick -> \"Chick\":TO_chick;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-36aa3d2a04d42bbc2145" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-36aa3d2a04d42bbc2145">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">Chick<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD PORT=\"FROM_diet\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"Time_Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">Time_Chick<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD PORT=\"FROM_time\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD PORT=\"FROM_chick\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD PORT=\"FROM_weight\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"Time_Chick\":FROM_chick -> \"Chick\":TO_chick;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
-</div>
-</section><section class="level2"><h3 id="decomposing-the-original-relation">Decomposing the original relation<a class="anchor" aria-label="anchor" href="#decomposing-the-original-relation"></a>
+<div class="section level3">
+<h3 id="decomposing-the-original-relation">Decomposing the original relation<a class="anchor" aria-label="anchor" href="#decomposing-the-original-relation"></a>
 </h3>
-<p>Finally, once we have our normalised database schema, we can apply it to our original data frame, or a new one with the same structure. This results in a normalised database, as we got from using <code>autodb</code>:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="downlit sourceCode r">
+<p>Finally, once we have our normalised database schema, we can apply it
+to our original data frame, or a new one with the same structure. This
+results in a normalised database, as we got from using
+<code>autodb</code>:</p>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/decompose.html">decompose</a></span><span class="op">(</span><span class="va">ChickWeight</span>, <span class="va">linked_schema</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="va">db</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="htmlwidget-6fdde3c6cce01196d0e2" style="width:100%;height:480px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-6fdde3c6cce01196d0e2">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Chick (50 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">ordered<\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD><\/TD><TD PORT=\"FROM_diet\">factor<\/TD><\/TR>\n    <\/TABLE>>];\n  \"Time_Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Time_Chick (578 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_time\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">ordered<\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD><\/TD><TD PORT=\"FROM_weight\">numeric<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"Time_Chick\":FROM_chick -> \"Chick\":TO_chick;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-febe03efa1a2d8d52a86" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-febe03efa1a2d8d52a86">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Chick (50 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">ordered<\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD><\/TD><TD PORT=\"FROM_diet\">factor<\/TD><\/TR>\n    <\/TABLE>>];\n  \"Time_Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Time_Chick (578 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_time\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">ordered<\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD><\/TD><TD PORT=\"FROM_weight\">numeric<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"Time_Chick\":FROM_chick -> \"Chick\":TO_chick;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
-</div>
-</section><section class="level2"><h3 id="rejoining-a-database-back-into-a-data-frame">Rejoining a database back into a data frame<a class="anchor" aria-label="anchor" href="#rejoining-a-database-back-into-a-data-frame"></a>
+<div class="section level3">
+<h3 id="rejoining-a-database-back-into-a-data-frame">Rejoining a database back into a data frame<a class="anchor" aria-label="anchor" href="#rejoining-a-database-back-into-a-data-frame"></a>
 </h3>
-<p>We can reverse the process of turning a data frame into a database with the <code>rejoin</code> function. This may not be identical to <code>ChickWeight</code>, since the rows may have been rearranged. However, we can use the convenience function <code>df_equiv</code> to check for equivalence under row reordering:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="downlit sourceCode r">
+<p>We can reverse the process of turning a data frame into a database
+with the <code>rejoin</code> function. This may not be identical to
+<code>ChickWeight</code>, since the rows may have been rearranged.
+However, we can use the convenience function <code>df_equiv</code> to
+check for equivalence under row reordering:</p>
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rejoined</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rejoin.html">rejoin</a></span><span class="op">(</span><span class="va">db</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rejoined</span><span class="op">)</span></span>
-<span><span class="co">#&gt;      weight           Time           Chick     Diet   </span></span>
-<span><span class="co">#&gt;  Min.   : 35.0   Min.   : 0.00   13     : 12   1:220  </span></span>
-<span><span class="co">#&gt;  1st Qu.: 63.0   1st Qu.: 4.00   9      : 12   2:120  </span></span>
-<span><span class="co">#&gt;  Median :103.0   Median :10.00   20     : 12   3:120  </span></span>
-<span><span class="co">#&gt;  Mean   :121.8   Mean   :10.72   10     : 12   4:118  </span></span>
-<span><span class="co">#&gt;  3rd Qu.:163.8   3rd Qu.:16.00   17     : 12          </span></span>
-<span><span class="co">#&gt;  Max.   :373.0   Max.   :21.00   19     : 12          </span></span>
-<span><span class="co">#&gt;                                  (Other):506</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">rejoined</span>, <span class="va">ChickWeight</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] FALSE</span></span>
-<span><span class="fu"><a href="../reference/df_equiv.html">df_equiv</a></span><span class="op">(</span><span class="va">rejoined</span>, <span class="va">ChickWeight</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">rejoined</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##      weight           Time           Chick     Diet   </span></span>
+<span><span class="co">##  Min.   : 35.0   Min.   : 0.00   13     : 12   1:220  </span></span>
+<span><span class="co">##  1st Qu.: 63.0   1st Qu.: 4.00   9      : 12   2:120  </span></span>
+<span><span class="co">##  Median :103.0   Median :10.00   20     : 12   3:120  </span></span>
+<span><span class="co">##  Mean   :121.8   Mean   :10.72   10     : 12   4:118  </span></span>
+<span><span class="co">##  3rd Qu.:163.8   3rd Qu.:16.00   17     : 12          </span></span>
+<span><span class="co">##  Max.   :373.0   Max.   :21.00   19     : 12          </span></span>
+<span><span class="co">##                                  (Other):506</span></span></code></pre>
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">rejoined</span>, <span class="va">ChickWeight</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] FALSE</span></span></code></pre>
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/df_equiv.html">df_equiv</a></span><span class="op">(</span><span class="va">rejoined</span>, <span class="va">ChickWeight</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] TRUE</span></span></code></pre>
 </div>
-</section><section class="level2"><h3 id="tuning-detection-and-normalisation">Tuning detection and normalisation<a class="anchor" aria-label="anchor" href="#tuning-detection-and-normalisation"></a>
+<div class="section level3">
+<h3 id="tuning-detection-and-normalisation">Tuning detection and normalisation<a class="anchor" aria-label="anchor" href="#tuning-detection-and-normalisation"></a>
 </h3>
-<p>Let’s look at a different dataset for a moment, to look at some cases where we don’t want to use the dependencies as given. We’ll use the Titanic data set, also provided with base R. This data is in array form, so we first convert it to data frame form:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="downlit sourceCode r">
+<p>Let’s look at a different dataset for a moment, to look at some cases
+where we don’t want to use the dependencies as given. We’ll use the
+Titanic data set, also provided with base R. This data is in array form,
+so we first convert it to data frame form:</p>
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">Titanic</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<table class="table caption-top">
+<table class="table">
 <thead><tr class="header">
-<th style="text-align: left;">Class</th>
-<th style="text-align: left;">Sex</th>
-<th style="text-align: left;">Age</th>
-<th style="text-align: left;">Survived</th>
-<th style="text-align: right;">Freq</th>
+<th align="left">Class</th>
+<th align="left">Sex</th>
+<th align="left">Age</th>
+<th align="left">Survived</th>
+<th align="right">Freq</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">1st</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">Child</td>
-<td style="text-align: left;">No</td>
-<td style="text-align: right;">0</td>
+<td align="left">1st</td>
+<td align="left">Male</td>
+<td align="left">Child</td>
+<td align="left">No</td>
+<td align="right">0</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">2nd</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">Child</td>
-<td style="text-align: left;">No</td>
-<td style="text-align: right;">0</td>
+<td align="left">2nd</td>
+<td align="left">Male</td>
+<td align="left">Child</td>
+<td align="left">No</td>
+<td align="right">0</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">3rd</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">Child</td>
-<td style="text-align: left;">No</td>
-<td style="text-align: right;">35</td>
+<td align="left">3rd</td>
+<td align="left">Male</td>
+<td align="left">Child</td>
+<td align="left">No</td>
+<td align="right">35</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Crew</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">Child</td>
-<td style="text-align: left;">No</td>
-<td style="text-align: right;">0</td>
+<td align="left">Crew</td>
+<td align="left">Male</td>
+<td align="left">Child</td>
+<td align="left">No</td>
+<td align="right">0</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">1st</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">Child</td>
-<td style="text-align: left;">No</td>
-<td style="text-align: right;">0</td>
+<td align="left">1st</td>
+<td align="left">Female</td>
+<td align="left">Child</td>
+<td align="left">No</td>
+<td align="right">0</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">2nd</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">Child</td>
-<td style="text-align: left;">No</td>
-<td style="text-align: right;">0</td>
+<td align="left">2nd</td>
+<td align="left">Female</td>
+<td align="left">Child</td>
+<td align="left">No</td>
+<td align="right">0</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">3rd</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">Child</td>
-<td style="text-align: left;">No</td>
-<td style="text-align: right;">17</td>
+<td align="left">3rd</td>
+<td align="left">Female</td>
+<td align="left">Child</td>
+<td align="left">No</td>
+<td align="right">17</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Crew</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">Child</td>
-<td style="text-align: left;">No</td>
-<td style="text-align: right;">0</td>
+<td align="left">Crew</td>
+<td align="left">Female</td>
+<td align="left">Child</td>
+<td align="left">No</td>
+<td align="right">0</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">1st</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">Adult</td>
-<td style="text-align: left;">No</td>
-<td style="text-align: right;">118</td>
+<td align="left">1st</td>
+<td align="left">Male</td>
+<td align="left">Adult</td>
+<td align="left">No</td>
+<td align="right">118</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">2nd</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">Adult</td>
-<td style="text-align: left;">No</td>
-<td style="text-align: right;">154</td>
+<td align="left">2nd</td>
+<td align="left">Male</td>
+<td align="left">Adult</td>
+<td align="left">No</td>
+<td align="right">154</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">3rd</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">Adult</td>
-<td style="text-align: left;">No</td>
-<td style="text-align: right;">387</td>
+<td align="left">3rd</td>
+<td align="left">Male</td>
+<td align="left">Adult</td>
+<td align="left">No</td>
+<td align="right">387</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Crew</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">Adult</td>
-<td style="text-align: left;">No</td>
-<td style="text-align: right;">670</td>
+<td align="left">Crew</td>
+<td align="left">Male</td>
+<td align="left">Adult</td>
+<td align="left">No</td>
+<td align="right">670</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">1st</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">Adult</td>
-<td style="text-align: left;">No</td>
-<td style="text-align: right;">4</td>
+<td align="left">1st</td>
+<td align="left">Female</td>
+<td align="left">Adult</td>
+<td align="left">No</td>
+<td align="right">4</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">2nd</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">Adult</td>
-<td style="text-align: left;">No</td>
-<td style="text-align: right;">13</td>
+<td align="left">2nd</td>
+<td align="left">Female</td>
+<td align="left">Adult</td>
+<td align="left">No</td>
+<td align="right">13</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">3rd</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">Adult</td>
-<td style="text-align: left;">No</td>
-<td style="text-align: right;">89</td>
+<td align="left">3rd</td>
+<td align="left">Female</td>
+<td align="left">Adult</td>
+<td align="left">No</td>
+<td align="right">89</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Crew</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">Adult</td>
-<td style="text-align: left;">No</td>
-<td style="text-align: right;">3</td>
+<td align="left">Crew</td>
+<td align="left">Female</td>
+<td align="left">Adult</td>
+<td align="left">No</td>
+<td align="right">3</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">1st</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">Child</td>
-<td style="text-align: left;">Yes</td>
-<td style="text-align: right;">5</td>
+<td align="left">1st</td>
+<td align="left">Male</td>
+<td align="left">Child</td>
+<td align="left">Yes</td>
+<td align="right">5</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">2nd</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">Child</td>
-<td style="text-align: left;">Yes</td>
-<td style="text-align: right;">11</td>
+<td align="left">2nd</td>
+<td align="left">Male</td>
+<td align="left">Child</td>
+<td align="left">Yes</td>
+<td align="right">11</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">3rd</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">Child</td>
-<td style="text-align: left;">Yes</td>
-<td style="text-align: right;">13</td>
+<td align="left">3rd</td>
+<td align="left">Male</td>
+<td align="left">Child</td>
+<td align="left">Yes</td>
+<td align="right">13</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Crew</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">Child</td>
-<td style="text-align: left;">Yes</td>
-<td style="text-align: right;">0</td>
+<td align="left">Crew</td>
+<td align="left">Male</td>
+<td align="left">Child</td>
+<td align="left">Yes</td>
+<td align="right">0</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">1st</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">Child</td>
-<td style="text-align: left;">Yes</td>
-<td style="text-align: right;">1</td>
+<td align="left">1st</td>
+<td align="left">Female</td>
+<td align="left">Child</td>
+<td align="left">Yes</td>
+<td align="right">1</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">2nd</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">Child</td>
-<td style="text-align: left;">Yes</td>
-<td style="text-align: right;">13</td>
+<td align="left">2nd</td>
+<td align="left">Female</td>
+<td align="left">Child</td>
+<td align="left">Yes</td>
+<td align="right">13</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">3rd</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">Child</td>
-<td style="text-align: left;">Yes</td>
-<td style="text-align: right;">14</td>
+<td align="left">3rd</td>
+<td align="left">Female</td>
+<td align="left">Child</td>
+<td align="left">Yes</td>
+<td align="right">14</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Crew</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">Child</td>
-<td style="text-align: left;">Yes</td>
-<td style="text-align: right;">0</td>
+<td align="left">Crew</td>
+<td align="left">Female</td>
+<td align="left">Child</td>
+<td align="left">Yes</td>
+<td align="right">0</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">1st</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">Adult</td>
-<td style="text-align: left;">Yes</td>
-<td style="text-align: right;">57</td>
+<td align="left">1st</td>
+<td align="left">Male</td>
+<td align="left">Adult</td>
+<td align="left">Yes</td>
+<td align="right">57</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">2nd</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">Adult</td>
-<td style="text-align: left;">Yes</td>
-<td style="text-align: right;">14</td>
+<td align="left">2nd</td>
+<td align="left">Male</td>
+<td align="left">Adult</td>
+<td align="left">Yes</td>
+<td align="right">14</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">3rd</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">Adult</td>
-<td style="text-align: left;">Yes</td>
-<td style="text-align: right;">75</td>
+<td align="left">3rd</td>
+<td align="left">Male</td>
+<td align="left">Adult</td>
+<td align="left">Yes</td>
+<td align="right">75</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Crew</td>
-<td style="text-align: left;">Male</td>
-<td style="text-align: left;">Adult</td>
-<td style="text-align: left;">Yes</td>
-<td style="text-align: right;">192</td>
+<td align="left">Crew</td>
+<td align="left">Male</td>
+<td align="left">Adult</td>
+<td align="left">Yes</td>
+<td align="right">192</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">1st</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">Adult</td>
-<td style="text-align: left;">Yes</td>
-<td style="text-align: right;">140</td>
+<td align="left">1st</td>
+<td align="left">Female</td>
+<td align="left">Adult</td>
+<td align="left">Yes</td>
+<td align="right">140</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">2nd</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">Adult</td>
-<td style="text-align: left;">Yes</td>
-<td style="text-align: right;">80</td>
+<td align="left">2nd</td>
+<td align="left">Female</td>
+<td align="left">Adult</td>
+<td align="left">Yes</td>
+<td align="right">80</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">3rd</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">Adult</td>
-<td style="text-align: left;">Yes</td>
-<td style="text-align: right;">76</td>
+<td align="left">3rd</td>
+<td align="left">Female</td>
+<td align="left">Adult</td>
+<td align="left">Yes</td>
+<td align="right">76</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Crew</td>
-<td style="text-align: left;">Female</td>
-<td style="text-align: left;">Adult</td>
-<td style="text-align: left;">Yes</td>
-<td style="text-align: right;">20</td>
+<td align="left">Crew</td>
+<td align="left">Female</td>
+<td align="left">Adult</td>
+<td align="left">Yes</td>
+<td align="right">20</td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-<p>This is a simple set of data, with a single count observation, <code>Freq</code>, for each combination of the four determining attributes. In other words, the relation is already normalised, so we only expect one relation in the normalised database.</p>
-<p>If we use <code>autodb</code> again, we get the following database:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="downlit sourceCode r">
+<p>This is a simple set of data, with a single count observation,
+<code>Freq</code>, for each combination of the four determining
+attributes. In other words, the relation is already normalised, so we
+only expect one relation in the normalised database.</p>
+<p>If we use <code>autodb</code> again, we get the following
+database:</p>
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="fu"><a href="../reference/autodb.html">autodb</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">Titanic</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="htmlwidget-bd754d7283c919a1482b" style="width:100%;height:480px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-bd754d7283c919a1482b">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Class_Survived_Freq\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Class_Survived_Freq (28 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_class\">Class<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_class\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_survived\">Survived<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_survived\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_freq\">Freq<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_freq\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_age\">Age<\/TD><TD><\/TD><TD PORT=\"FROM_age\">factor<\/TD><\/TR>\n    <\/TABLE>>];\n  \"Sex_Survived_Freq\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Sex_Survived_Freq (28 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_sex\">Sex<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_sex\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_survived\">Survived<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_survived\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_freq\">Freq<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_freq\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_age\">Age<\/TD><TD><\/TD><TD PORT=\"FROM_age\">factor<\/TD><\/TR>\n    <\/TABLE>>];\n  \"Class_Sex_Age_Survived\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Class_Sex_Age_Survived (32 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_class\">Class<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_class\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_sex\">Sex<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_sex\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_age\">Age<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_age\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_survived\">Survived<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_survived\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_freq\">Freq<\/TD><TD><\/TD><TD PORT=\"FROM_freq\">numeric<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"Class_Sex_Age_Survived\":FROM_class -> \"Class_Survived_Freq\":TO_class;\n  \"Class_Sex_Age_Survived\":FROM_survived -> \"Class_Survived_Freq\":TO_survived;\n  \"Class_Sex_Age_Survived\":FROM_freq -> \"Class_Survived_Freq\":TO_freq;\n  \"Class_Sex_Age_Survived\":FROM_sex -> \"Sex_Survived_Freq\":TO_sex;\n  \"Class_Sex_Age_Survived\":FROM_survived -> \"Sex_Survived_Freq\":TO_survived;\n  \"Class_Sex_Age_Survived\":FROM_freq -> \"Sex_Survived_Freq\":TO_freq;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
-</div>
-</div>
-<p>Oops! The search found some functional dependencies where the count could be used to determine another attribute. These are clearly spurious: frequency count can’t causally determine age, for example.</p>
-<p>There are two ways we can remove these spurious dependencies: limiting the search to not check them in the first place, and removing them from the dependencies before using <code>synthesise</code>/<code>normalise</code>.</p>
-<p>To limit the search, we can set certain attributes to not be considered as members of determinants, or we can exclude attributes that inherit from certain classes. In this example, we could exclude <code>Freq</code> from being considered:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="downlit sourceCode r">
+<div id="htmlwidget-1fb4450895fe099f74a1" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-1fb4450895fe099f74a1">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Class_Survived_Freq\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Class_Survived_Freq (28 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_class\">Class<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_class\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_survived\">Survived<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_survived\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_freq\">Freq<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_freq\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_age\">Age<\/TD><TD><\/TD><TD PORT=\"FROM_age\">factor<\/TD><\/TR>\n    <\/TABLE>>];\n  \"Sex_Survived_Freq\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Sex_Survived_Freq (28 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_sex\">Sex<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_sex\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_survived\">Survived<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_survived\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_freq\">Freq<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_freq\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_age\">Age<\/TD><TD><\/TD><TD PORT=\"FROM_age\">factor<\/TD><\/TR>\n    <\/TABLE>>];\n  \"Class_Sex_Age_Survived\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Class_Sex_Age_Survived (32 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_class\">Class<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_class\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_sex\">Sex<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_sex\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_age\">Age<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_age\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_survived\">Survived<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_survived\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_freq\">Freq<\/TD><TD><\/TD><TD PORT=\"FROM_freq\">numeric<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"Class_Sex_Age_Survived\":FROM_class -> \"Class_Survived_Freq\":TO_class;\n  \"Class_Sex_Age_Survived\":FROM_survived -> \"Class_Survived_Freq\":TO_survived;\n  \"Class_Sex_Age_Survived\":FROM_freq -> \"Class_Survived_Freq\":TO_freq;\n  \"Class_Sex_Age_Survived\":FROM_sex -> \"Sex_Survived_Freq\":TO_sex;\n  \"Class_Sex_Age_Survived\":FROM_survived -> \"Sex_Survived_Freq\":TO_survived;\n  \"Class_Sex_Age_Survived\":FROM_freq -> \"Sex_Survived_Freq\":TO_freq;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>Oops! The search found some functional dependencies where the count
+could be used to determine another attribute. These are clearly
+spurious: frequency count can’t causally determine age, for example.</p>
+<p>There are two ways we can remove these spurious dependencies:
+limiting the search to not check them in the first place, and removing
+them from the dependencies before using
+<code>synthesise</code>/<code>normalise</code>.</p>
+<p>To limit the search, we can set certain attributes to not be
+considered as members of determinants, or we can exclude attributes that
+inherit from certain classes. In this example, we could exclude
+<code>Freq</code> from being considered:</p>
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">titanic_deps_freqonly</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/discover.html">discover</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">Titanic</span><span class="op">)</span>, exclude <span class="op">=</span> <span class="st">"Freq"</span><span class="op">)</span></span>
-<span><span class="va">titanic_deps_freqonly</span></span>
-<span><span class="co">#&gt; 1 functional dependency</span></span>
-<span><span class="co">#&gt; 5 attributes: Class, Sex, Age, Survived, Freq</span></span>
-<span><span class="co">#&gt; Class, Sex, Age, Survived -&gt; Freq</span></span></code></pre></div>
-</div>
-<p>Alternatively, we could exclude all attributes that inherit from “numeric”:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="downlit sourceCode r">
+<span><span class="va">titanic_deps_freqonly</span></span></code></pre></div>
+<pre><code><span><span class="co">## 1 functional dependency</span></span>
+<span><span class="co">## 5 attributes: Class, Sex, Age, Survived, Freq</span></span>
+<span><span class="co">## Class, Sex, Age, Survived -&gt; Freq</span></span></code></pre>
+<p>Alternatively, we could exclude all attributes that inherit from
+“numeric”:</p>
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">setequal</a></span><span class="op">(</span></span>
 <span>  <span class="va">titanic_deps_freqonly</span>,</span>
 <span>  <span class="fu"><a href="../reference/discover.html">discover</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">Titanic</span><span class="op">)</span>, exclude_class <span class="op">=</span> <span class="st">"numeric"</span><span class="op">)</span></span>
 <span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-</div>
 <p>We can also limit the search when using <code>autodb</code>:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="fu"><a href="../reference/autodb.html">autodb</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">Titanic</span><span class="op">)</span>, exclude <span class="op">=</span> <span class="st">"Freq"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="htmlwidget-dc78386595fd4530a0b2" style="width:100%;height:480px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-dc78386595fd4530a0b2">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Class_Sex_Age_Survived\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Class_Sex_Age_Survived (32 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_class\">Class<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_class\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_sex\">Sex<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_sex\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_age\">Age<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_age\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_survived\">Survived<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_survived\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_freq\">Freq<\/TD><TD><\/TD><TD PORT=\"FROM_freq\">numeric<\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
-</div>
-</div>
-<p>Excluding numeric attributes as determinants is often useful, because we expect non-integer numbers to be a measurement that doesn’t co-determine anything else. The main exception is when some attributes are summaries of others.</p>
-<p>Alternatively, we can remove the unwanted dependencies. Here are all the found dependencies, if we don’t exclude anything:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="downlit sourceCode r">
+<div id="htmlwidget-10b3b7155e8045a1b2ad" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-10b3b7155e8045a1b2ad">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Class_Sex_Age_Survived\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Class_Sex_Age_Survived (32 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_class\">Class<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_class\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_sex\">Sex<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_sex\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_age\">Age<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_age\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_survived\">Survived<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_survived\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_freq\">Freq<\/TD><TD><\/TD><TD PORT=\"FROM_freq\">numeric<\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>Excluding numeric attributes as determinants is often useful, because
+we expect non-integer numbers to be a measurement that doesn’t
+co-determine anything else. The main exception is when some attributes
+are summaries of others.</p>
+<p>Alternatively, we can remove the unwanted dependencies. Here are all
+the found dependencies, if we don’t exclude anything:</p>
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">titanic_deps</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/discover.html">discover</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">Titanic</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">titanic_deps</span></span>
-<span><span class="co">#&gt; 3 functional dependencies</span></span>
-<span><span class="co">#&gt; 5 attributes: Class, Sex, Age, Survived, Freq</span></span>
-<span><span class="co">#&gt;     Class, Survived, Freq -&gt; Age</span></span>
-<span><span class="co">#&gt;       Sex, Survived, Freq -&gt; Age</span></span>
-<span><span class="co">#&gt; Class, Sex, Age, Survived -&gt; Freq</span></span></code></pre></div>
+<span><span class="va">titanic_deps</span></span></code></pre></div>
+<pre><code><span><span class="co">## 3 functional dependencies</span></span>
+<span><span class="co">## 5 attributes: Class, Sex, Age, Survived, Freq</span></span>
+<span><span class="co">##       Sex, Survived, Freq -&gt; Age</span></span>
+<span><span class="co">##     Class, Survived, Freq -&gt; Age</span></span>
+<span><span class="co">## Class, Sex, Age, Survived -&gt; Freq</span></span></code></pre>
+<p>We can remove the unwanted dependencies, where <code>Age</code> is
+the dependant, using subsetting, <code>Filter</code>, etc.:</p>
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">titanic_deps</span><span class="op">[</span><span class="fu"><a href="../reference/dependant.html">dependant</a></span><span class="op">(</span><span class="va">titanic_deps</span><span class="op">)</span> <span class="op">==</span> <span class="st">"Age"</span><span class="op">]</span></span></code></pre></div>
+<pre><code><span><span class="co">## 2 functional dependencies</span></span>
+<span><span class="co">## 5 attributes: Class, Sex, Age, Survived, Freq</span></span>
+<span><span class="co">##   Sex, Survived, Freq -&gt; Age</span></span>
+<span><span class="co">## Class, Survived, Freq -&gt; Age</span></span></code></pre>
 </div>
-<p>We can remove the unwanted dependencies, where <code>Age</code> is the dependant, using subsetting, <code>Filter</code>, etc.:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">titanic_deps</span><span class="op">[</span><span class="fu"><a href="../reference/dependant.html">dependant</a></span><span class="op">(</span><span class="va">titanic_deps</span><span class="op">)</span> <span class="op">==</span> <span class="st">"Age"</span><span class="op">]</span></span>
-<span><span class="co">#&gt; 2 functional dependencies</span></span>
-<span><span class="co">#&gt; 5 attributes: Class, Sex, Age, Survived, Freq</span></span>
-<span><span class="co">#&gt; Class, Survived, Freq -&gt; Age</span></span>
-<span><span class="co">#&gt;   Sex, Survived, Freq -&gt; Age</span></span></code></pre></div>
 </div>
-</section></section><section class="section level2"><h2 id="avoidable-attributes">Avoidable attributes<a class="anchor" aria-label="anchor" href="#avoidable-attributes"></a>
+<div class="section level2">
+<h2 id="avoidable-attributes">Avoidable attributes<a class="anchor" aria-label="anchor" href="#avoidable-attributes"></a>
 </h2>
-<p>The next normal form after third normal form (3NF) is Boyes-Codd normal form (BCNF). Ensuring BCNF is enforced by the database is trickier: in some cases, it can’t be enforced with just relations and foreign key constraints.</p>
-<p>However, the package includes an option to convert to enhanced third normal form, also known as LTK form, which can be so enforced. This enhancement is tangential to BCNF, and could also be used to enhance schemas in BCNF.</p>
-<p>In brief, the standard normal forms only put constraints on the attributes present in the relations one relation at a time. The enhancement is a constraint on the attributes present in a relation, while considering their presence in other relations. If a attribute in a relation can be removed, and still be determined from that relation by joining it to others, then the attribute is “avoidable”, and can be removed. If the attribute is in any of the relation’s keys, they’ll be replaced by keys that use the attributes not being removed. This removes attributes from relations without removing any information from the database as a whole.</p>
-<p>For example, we can take this simple example from Chapter 6 of The Theory of Relational Databases, by David Maier:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="downlit sourceCode r">
+<p>The next normal form after third normal form (3NF) is Boyes-Codd
+normal form (BCNF). Ensuring BCNF is enforced by the database is
+trickier: in some cases, it can’t be enforced with just relations and
+foreign key constraints.</p>
+<p>However, the package includes an option to convert to enhanced third
+normal form, also known as LTK form, which can be so enforced. This
+enhancement is tangential to BCNF, and could also be used to enhance
+schemas in BCNF.</p>
+<p>In brief, the standard normal forms only put constraints on the
+attributes present in the relations one relation at a time. The
+enhancement is a constraint on the attributes present in a relation,
+while considering their presence in other relations. If a attribute in a
+relation can be removed, and still be determined from that relation by
+joining it to others, then the attribute is “avoidable”, and can be
+removed. If the attribute is in any of the relation’s keys, they’ll be
+replaced by keys that use the attributes not being removed. This removes
+attributes from relations without removing any information from the
+database as a whole.</p>
+<p>For example, we can take this simple example from Chapter 6 of The
+Theory of Relational Databases, by David Maier:</p>
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">avoid_deps</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/functional_dependency.html">functional_dependency</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span><span class="op">)</span>,</span>
@@ -699,136 +832,56 @@
 <span>  <span class="op">)</span>,</span>
 <span>  attrs_order <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>, <span class="st">"D"</span>, <span class="st">"E"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">avoid_deps</span></span>
-<span><span class="co">#&gt; 5 functional dependencies</span></span>
-<span><span class="co">#&gt; 5 attributes: A, B, C, D, E</span></span>
-<span><span class="co">#&gt;    A -&gt; B</span></span>
-<span><span class="co">#&gt;    B -&gt; A</span></span>
-<span><span class="co">#&gt; A, C -&gt; D</span></span>
-<span><span class="co">#&gt; A, C -&gt; E</span></span>
-<span><span class="co">#&gt; B, D -&gt; C</span></span>
-<span><span class="fu"><a href="../reference/normalise.html">normalise</a></span><span class="op">(</span><span class="va">avoid_deps</span><span class="op">)</span></span>
-<span><span class="co">#&gt; database schema with 2 relation schemas</span></span>
-<span><span class="co">#&gt; 5 attributes: A, B, C, D, E</span></span>
-<span><span class="co">#&gt; schema A: A, B</span></span>
-<span><span class="co">#&gt;   key 1: A</span></span>
-<span><span class="co">#&gt;   key 2: B</span></span>
-<span><span class="co">#&gt; schema A_C: A, C, B, D, E</span></span>
-<span><span class="co">#&gt;   key 1: A, C</span></span>
-<span><span class="co">#&gt;   key 2: B, D</span></span>
-<span><span class="co">#&gt; references:</span></span>
-<span><span class="co">#&gt; A_C.{A} -&gt; A.{A}</span></span>
-<span><span class="co">#&gt; A_C.{B} -&gt; A.{B}</span></span></code></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="downlit sourceCode r">
+<span><span class="va">avoid_deps</span></span></code></pre></div>
+<pre><code><span><span class="co">## 5 functional dependencies</span></span>
+<span><span class="co">## 5 attributes: A, B, C, D, E</span></span>
+<span><span class="co">##    A -&gt; B</span></span>
+<span><span class="co">##    B -&gt; A</span></span>
+<span><span class="co">## A, C -&gt; D</span></span>
+<span><span class="co">## A, C -&gt; E</span></span>
+<span><span class="co">## B, D -&gt; C</span></span></code></pre>
+<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/normalise.html">normalise</a></span><span class="op">(</span><span class="va">avoid_deps</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## database schema with 2 relation schemas</span></span>
+<span><span class="co">## 5 attributes: A, B, C, D, E</span></span>
+<span><span class="co">## schema A: A, B</span></span>
+<span><span class="co">##   key 1: A</span></span>
+<span><span class="co">##   key 2: B</span></span>
+<span><span class="co">## schema A_C: A, C, B, D, E</span></span>
+<span><span class="co">##   key 1: A, C</span></span>
+<span><span class="co">##   key 2: B, D</span></span>
+<span><span class="co">## references:</span></span>
+<span><span class="co">## A_C.{A} -&gt; A.{A}</span></span>
+<span><span class="co">## A_C.{B} -&gt; A.{B}</span></span></code></pre>
+<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="fu"><a href="../reference/normalise.html">normalise</a></span><span class="op">(</span><span class="va">avoid_deps</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="htmlwidget-e8ab491fadf1e41c5a05" style="width:100%;height:480px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-e8ab491fadf1e41c5a05">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"A\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">A<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">A<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">B<\/TD><TD><\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"A_C\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">A_C<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">A<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">C<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">B<\/TD><TD><\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">D<\/TD><TD><\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">E<\/TD><TD><\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"A_C\":FROM_a -> \"A\":TO_a;\n  \"A_C\":FROM_b -> \"A\":TO_b;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
-</div>
-</div>
-<p>Attributes <code>A</code> and <code>B</code> are equivalent, since relation <code>A</code> has them both as a key. In other words, relation <code>A</code> is a simple lookup relation. Because of this, we could remove <code>B</code> from relation <code>A_C</code>, and replace the key <code>B, D</code> with <code>A, D</code>, which is equivalent when accounting for relation <code>A</code>.</p>
-<p>We can have this removal of avoidable attributes done automatically, using the <code>remove_avoidable</code> flag for <code>normalise</code>:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb26"><pre class="downlit sourceCode r">
+<div id="htmlwidget-4018eef1a407a0df6b52" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-4018eef1a407a0df6b52">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"A\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">A<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">A<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">B<\/TD><TD><\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"A_C\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">A_C<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">A<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">C<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">B<\/TD><TD><\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">D<\/TD><TD><\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">E<\/TD><TD><\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"A_C\":FROM_a -> \"A\":TO_a;\n  \"A_C\":FROM_b -> \"A\":TO_b;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>Attributes <code>A</code> and <code>B</code> are equivalent, since
+relation <code>A</code> has them both as a key. In other words, relation
+<code>A</code> is a simple lookup relation. Because of this, we could
+remove <code>B</code> from relation <code>A_C</code>, and replace the
+key <code>B, D</code> with <code>A, D</code>, which is equivalent when
+accounting for relation <code>A</code>.</p>
+<p>We can have this removal of avoidable attributes done automatically,
+using the <code>remove_avoidable</code> flag for
+<code>normalise</code>:</p>
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/normalise.html">normalise</a></span><span class="op">(</span></span>
 <span>  <span class="va">avoid_deps</span>,</span>
 <span>  remove_avoidable <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">show</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="htmlwidget-a9097b977d75444ac7a9" style="width:100%;height:480px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-a9097b977d75444ac7a9">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"A\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">A<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">A<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">B<\/TD><TD><\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"A_C\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">A_C<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">A<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">C<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">D<\/TD><TD><\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">E<\/TD><TD><\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"A_C\":FROM_a -> \"A\":TO_a;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-5b1b2f4ad92281566982" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-5b1b2f4ad92281566982">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"A\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">A<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">A<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_a\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_b\">B<\/TD><TD><\/TD><TD PORT=\"FROM_b\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <\/TABLE>>];\n  \"A_C\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">A_C<\/TD><\/TR>\n    <TR><TD PORT=\"TO_a\">A<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_a\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_c\">C<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_c\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_d\">D<\/TD><TD><\/TD><TD PORT=\"FROM_d\" BGCOLOR=\"black\"><\/TD><\/TR>\n    <TR><TD PORT=\"TO_e\">E<\/TD><TD><\/TD><TD PORT=\"FROM_e\"><\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"A_C\":FROM_a -> \"A\":TO_a;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>This schema is now in LTK form, with no remaining avoidable
+attributes. We could have also removed <code>A</code> from relation
+<code>A_C</code> instead of <code>B</code>, so this process may not have
+a unique result. The package’s implementation prefers to remove
+attributes that appear later in the original relation.</p>
 </div>
-</div>
-<p>This schema is now in LTK form, with no remaining avoidable attributes. We could have also removed <code>A</code> from relation <code>A_C</code> instead of <code>B</code>, so this process may not have a unique result. The package’s implementation prefers to remove attributes that appear later in the original relation.</p>
-</section><script id="quarto-html-after-body" type="application/javascript">
-  window.document.addEventListener("DOMContentLoaded", function (event) {
-      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
-      var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp('/' + window.location.host + '/');
-      var isInternal = (href) => {
-          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
-      }
-      // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
-      for (var i=0; i<links.length; i++) {
-        const link = links[i];
-        if (!isInternal(link.href)) {
-          // undo the damage that might have been done by quarto-nav.js in the case of
-          // links that we want to consider external
-          if (link.dataset.originalHref !== undefined) {
-            link.href = link.dataset.originalHref;
-          }
-        }
-      }
-    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
-      const config = {
-        allowHTML: true,
-        maxWidth: 500,
-        delay: 100,
-        arrow: false,
-        appendTo: function(el) {
-            return el.parentElement;
-        },
-        interactive: true,
-        interactiveBorder: 10,
-        theme: 'light-border',
-        placement: 'bottom-start',
-      };
-      if (contentFn) {
-        config.content = contentFn;
-      }
-      if (onTriggerFn) {
-        config.onTrigger = onTriggerFn;
-      }
-      if (onUntriggerFn) {
-        config.onUntrigger = onUntriggerFn;
-      }
-      window.tippy(el, config);
-    }
-    const findCites = (el) => {
-      const parentEl = el.parentElement;
-      if (parentEl) {
-        const cites = parentEl.dataset.cites;
-        if (cites) {
-          return {
-            el,
-            cites: cites.split(' ')
-          };
-        } else {
-          return findCites(el.parentElement)
-        }
-      } else {
-        return undefined;
-      }
-    };
-    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
-    for (var i=0; i<bibliorefs.length; i++) {
-      const ref = bibliorefs[i];
-      const citeInfo = findCites(ref);
-      if (citeInfo) {
-        tippyHover(citeInfo.el, function() {
-          var popup = window.document.createElement('div');
-          citeInfo.cites.forEach(function(cite) {
-            var citeDiv = window.document.createElement('div');
-            citeDiv.classList.add('hanging-indent');
-            citeDiv.classList.add('csl-entry');
-            var biblioDiv = window.document.getElementById('ref-' + cite);
-            if (biblioDiv) {
-              citeDiv.innerHTML = biblioDiv.innerHTML;
-            }
-            popup.appendChild(citeDiv);
-          });
-          return popup.innerHTML;
-        });
-      }
-    }
-  });
-  </script></main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>
+
 
 
     <footer><div class="pkgdown-footer-left">
@@ -836,7 +889,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

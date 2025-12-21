@@ -10,10 +10,7 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="null_files/libs/quarto-html/popper.min.js"></script><script src="null_files/libs/quarto-html/tippy.umd.min.js"></script><link href="null_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="null_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<script src="null_files/libs/htmlwidgets-1.6.4/htmlwidgets.js"></script><script src="null_files/libs/viz-1.8.2/viz.js"></script><link href="null_files/libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet">
-<script src="null_files/libs/grViz-binding-1.0.11/grViz.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Handling missing values">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Handling missing values">
 <meta name="robots" content="noindex">
 </head>
 <body>
@@ -24,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">autodb</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">3.1.0.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">3.2.4.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,35 +61,31 @@
 
 
   </div>
-</nav><div class="container template-quarto">
-<div class="row">
+</nav><div class="container template-article">
+
+
+
+<script src="null_files/htmlwidgets-1.6.4/htmlwidgets.js"></script><script src="null_files/viz-1.8.2/viz.js"></script><link href="null_files/DiagrammeR-styles-0.2/styles.css" rel="stylesheet">
+<script src="null_files/grViz-binding-1.0.11/grViz.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Handling missing values</h1>
-
-
-
-
-      <small class="dont-index">Source: <a href="https://github.com/CharnelMouse/autodb/blob/master/vignettes/null.qmd" class="external-link"><code>vignettes/null.qmd</code></a></small>
-      <div class="d-none name"><code></code></div>
+            
+      
+      <small class="dont-index">Source: <a href="https://github.com/CharnelMouse/autodb/blob/master/vignettes/null.Rmd" class="external-link"><code>vignettes/null.Rmd</code></a></small>
+      <div class="d-none name"><code>null.Rmd</code></div>
     </div>
 
-
-
-
-
-
-    <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://charnelmouse.github.io/autodb/">autodb</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: 'autodb'</span></span>
-<span><span class="co">#&gt; The following object is masked from 'package:stats':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     decompose</span></span></code></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="downlit sourceCode r">
+    
+    
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://charnelmouse.github.io/autodb/">autodb</a></span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## </span></span>
+<span><span class="co">## Attaching package: 'autodb'</span></span></code></pre>
+<pre><code><span><span class="co">## The following object is masked from 'package:stats':</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##     decompose</span></span></code></pre>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"DiagrammeR"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">show</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="fu"><a href="../reference/gv.html">gv</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, width <span class="op">=</span> <span class="st">"100%"</span><span class="op">)</span></span>
 <span>  <span class="va">maybe_plot</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu">DiagrammeR</span><span class="fu">::</span><span class="fu"><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">grViz</a></span><span class="op">(</span><span class="fu"><a href="../reference/gv.html">gv</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, width <span class="op">=</span> <span class="st">"100%"</span><span class="op">)</span></span>
@@ -100,70 +93,94 @@
 <span>  <span class="va">show</span> <span class="op">&lt;-</span> <span class="va">print</span></span>
 <span>  <span class="va">maybe_plot</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
+<div class="section level2">
+<h2 id="missing-values">Missing values<a class="anchor" aria-label="anchor" href="#missing-values"></a>
+</h2>
+<p>A functional dependency
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>→</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">X \rightarrow y</annotation></semantics></math>
+is satisfied if, for any two records whose values in <code>X</code> are
+equal, their values in <code>y</code> are also equal. The result of the
+equality comparisons must be true or false, otherwise it’s unclear how
+to interpret them.</p>
+<p>This forbids the use of missing values (<code>NA</code> or
+<code>NaN</code>), which is a problem when so much data handled in R has
+them.</p>
+<p><code>autodb</code> uses what, I believe, is the standard fix:
+instead of searching for functional dependencies, it searches for a
+weaker variant, called a <em>literal</em> functional dependency (LFD),
+which treats missing values as equal to each other, and not equal to
+anything else.</p>
+<p>LFDs are more generic than standard FDs: since practically every
+class takes the identity operator, they make weak assumptions about the
+attribute classes present in a data set, and we can use them on just
+about anything.</p>
+<p>There are other FD variants that handle missing values, but LFDs are
+noteworthy for still satisfying Armstrong’s axioms. For example, they
+still respect transitivity: if
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>→</mo><mi>Y</mi></mrow><annotation encoding="application/x-tex">X \rightarrow Y</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>→</mo><mi>Z</mi></mrow><annotation encoding="application/x-tex">Y \rightarrow Z</annotation></semantics></math>
+literally, then
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>→</mo><mi>Z</mi></mrow><annotation encoding="application/x-tex">X \rightarrow Z</annotation></semantics></math>
+literally. This allows us to construct a database schema with Bernstein
+synthesis, using LFDs instead of FDs, and get something coherent.</p>
 </div>
-<section class="section level2"><h2 id="missing-values">Missing values<a class="anchor" aria-label="anchor" href="#missing-values"></a>
+<div class="section level2">
+<h2 id="decomposing-to-remove-missing-values">Decomposing to remove missing values<a class="anchor" aria-label="anchor" href="#decomposing-to-remove-missing-values"></a>
 </h2>
-<p>A functional dependency <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>→</mo><mi>y</mi></mrow><annotation encoding="application/x-tex">X \rightarrow y</annotation></semantics></math> is satisfied if, for any two records whose values in <code>X</code> are equal, their values in <code>y</code> are also equal. The result of the equality comparisons must be true or false, otherwise it’s unclear how to interpret them.</p>
-<p>This forbids the use of missing values (<code>NA</code> or <code>NaN</code>), which is a problem when so much data handled in R has them.</p>
-<p><code>autodb</code> uses what, I believe, is the standard fix: instead of searching for functional dependencies, it searches for a weaker variant, called a <em>literal</em> functional dependency (LFD), which treats missing values as equal to each other, and not equal to anything else.</p>
-<p>LFDs are more generic than standard FDs: since practically every class takes the identity operator, they make weak assumptions about the attribute classes present in a data set, and we can use them on just about anything.</p>
-<p>There are other FD variants that handle missing values, but LFDs are noteworthy for still satisfying Armstrong’s axioms. For example, they still respect transitivity: if <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>→</mo><mi>Y</mi></mrow><annotation encoding="application/x-tex">X \rightarrow Y</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>→</mo><mi>Z</mi></mrow><annotation encoding="application/x-tex">Y \rightarrow Z</annotation></semantics></math> literally, then <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>→</mo><mi>Z</mi></mrow><annotation encoding="application/x-tex">X \rightarrow Z</annotation></semantics></math> literally. This allows us to construct a database schema with Bernstein synthesis, using LFDs instead of FDs, and get something coherent.</p>
-</section><section class="section level2"><h2 id="decomposing-to-remove-missing-values">Decomposing to remove missing values<a class="anchor" aria-label="anchor" href="#decomposing-to-remove-missing-values"></a>
-</h2>
-<p>However, ignoring the special status of missing values in this way ignores important structural information. Ideally, we want to avoid missing values, because they raise awkward questions about how to handle missing comparison results when filtering or joining relations.</p>
+<p>However, ignoring the special status of missing values in this way
+ignores important structural information. Ideally, we want to avoid
+missing values, because they raise awkward questions about how to handle
+missing comparison results when filtering or joining relations.</p>
 <p>For example, take the following data frame:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_nas</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  patient <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">2L</span>, <span class="fl">3L</span>, <span class="fl">4L</span><span class="op">)</span>,</span>
 <span>  trial_entry_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2022/05/02"</span>, <span class="st">"2022/06/06"</span>, <span class="st">"2022/04/01"</span>, <span class="st">"2022/03/19"</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  trial_exit_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="cn">NA</span>, <span class="st">"2022/10/07"</span>, <span class="cn">NA</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">df_nas</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<table class="table caption-top">
+<table class="table">
 <thead><tr class="header">
-<th style="text-align: right;">patient</th>
-<th style="text-align: left;">trial_entry_date</th>
-<th style="text-align: left;">trial_exit_date</th>
+<th align="right">patient</th>
+<th align="left">trial_entry_date</th>
+<th align="left">trial_exit_date</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: right;">1</td>
-<td style="text-align: left;">2022-05-02</td>
-<td style="text-align: left;">NA</td>
+<td align="right">1</td>
+<td align="left">2022-05-02</td>
+<td align="left">NA</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">2</td>
-<td style="text-align: left;">2022-06-06</td>
-<td style="text-align: left;">NA</td>
+<td align="right">2</td>
+<td align="left">2022-06-06</td>
+<td align="left">NA</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">3</td>
-<td style="text-align: left;">2022-04-01</td>
-<td style="text-align: left;">2022-10-07</td>
+<td align="right">3</td>
+<td align="left">2022-04-01</td>
+<td align="left">2022-10-07</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">4</td>
-<td style="text-align: left;">2022-03-19</td>
-<td style="text-align: left;">NA</td>
+<td align="right">4</td>
+<td align="left">2022-03-19</td>
+<td align="left">NA</td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-<p><code>autodb</code> currently treats <code>NA</code> as just another value, so the data is all kept together in the database schema:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="downlit sourceCode r">
+<p><code>autodb</code> currently treats <code>NA</code> as just another
+value, so the data is all kept together in the database schema:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="fu"><a href="../reference/autodb.html">autodb</a></span><span class="op">(</span><span class="va">df_nas</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="htmlwidget-b5b0ff798189b732fd8b" style="width:100%;height:480px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-b5b0ff798189b732fd8b">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"patient\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"4\">patient (4 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_patient\">patient<\/TD><TD BGCOLOR=\"black\"><\/TD><TD><\/TD><TD PORT=\"FROM_patient\">integer<\/TD><\/TR>\n    <TR><TD PORT=\"TO_trial_entry_date\">trial_entry_date<\/TD><TD><\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_trial_entry_date\">Date<\/TD><\/TR>\n    <TR><TD PORT=\"TO_trial_exit_date\">trial_exit_date<\/TD><TD><\/TD><TD><\/TD><TD PORT=\"FROM_trial_exit_date\">Date<\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
-</div>
-</div>
-<p>In this case, a missing exit date represents no exit date: the patient is still in the trial. To make this difference explicit – and enforced – we move exit information to a separate relation, containing only patients with a exit date. This removes the need for missing values. This decomposition isn’t done by <code>autodb</code> itself, but we can do it manually:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="downlit sourceCode r">
+<div id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"patient\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"4\">patient (4 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_patient\">patient<\/TD><TD BGCOLOR=\"black\"><\/TD><TD><\/TD><TD PORT=\"FROM_patient\">integer<\/TD><\/TR>\n    <TR><TD PORT=\"TO_trial_entry_date\">trial_entry_date<\/TD><TD><\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_trial_entry_date\">Date<\/TD><\/TR>\n    <TR><TD PORT=\"TO_trial_exit_date\">trial_exit_date<\/TD><TD><\/TD><TD><\/TD><TD PORT=\"FROM_trial_exit_date\">Date<\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>In this case, a missing exit date represents no exit date: the
+patient is still in the trial. To make this difference explicit – and
+enforced – we move exit information to a separate relation, containing
+only patients with a exit date. This removes the need for missing
+values. This decomposition isn’t done by <code>autodb</code> itself, but
+we can do it manually:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ds_trial</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/database_schema.html">database_schema</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/relation_schema.html">relation_schema</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -188,25 +205,31 @@
 <span>  <span class="fu"><a href="../reference/insert.html">insert</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">df_nas</span>, <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">trial_exit_date</span><span class="op">)</span><span class="op">)</span>, relations <span class="op">=</span> <span class="st">"patient_exit"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">ideal_db2</span>, <span class="va">ideal_db</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="va">ideal_db</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="htmlwidget-47de44fdba3551b6eeea" style="width:100%;height:480px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-47de44fdba3551b6eeea">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"patient\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">patient (4 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_patient\">patient<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_patient\">integer<\/TD><\/TR>\n    <TR><TD PORT=\"TO_trial_entry_date\">trial_entry_date<\/TD><TD><\/TD><TD PORT=\"FROM_trial_entry_date\">Date<\/TD><\/TR>\n    <\/TABLE>>];\n  \"patient_exit\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">patient_exit (1 record)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_patient\">patient<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_patient\">integer<\/TD><\/TR>\n    <TR><TD PORT=\"TO_trial_exit_date\">trial_exit_date<\/TD><TD><\/TD><TD PORT=\"FROM_trial_exit_date\">Date<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"patient_exit\":FROM_patient -> \"patient\":TO_patient;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-e5c8c404fe174e4c81bd" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-e5c8c404fe174e4c81bd">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"patient\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">patient (4 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_patient\">patient<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_patient\">integer<\/TD><\/TR>\n    <TR><TD PORT=\"TO_trial_entry_date\">trial_entry_date<\/TD><TD><\/TD><TD PORT=\"FROM_trial_entry_date\">Date<\/TD><\/TR>\n    <\/TABLE>>];\n  \"patient_exit\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">patient_exit (1 record)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_patient\">patient<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_patient\">integer<\/TD><\/TR>\n    <TR><TD PORT=\"TO_trial_exit_date\">trial_exit_date<\/TD><TD><\/TD><TD PORT=\"FROM_trial_exit_date\">Date<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"patient_exit\":FROM_patient -> \"patient\":TO_patient;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
-</div>
-</section><section class="section level2"><h2 id="structure-conditional-on-value-presence">Structure conditional on value presence<a class="anchor" aria-label="anchor" href="#structure-conditional-on-value-presence"></a>
+<div class="section level2">
+<h2 id="structure-conditional-on-value-presence">Structure conditional on value presence<a class="anchor" aria-label="anchor" href="#structure-conditional-on-value-presence"></a>
 </h2>
-<p>The above case has simple conditions under which values can be missing, but missing values introduce other complications. For example, whether an attribute is missing can depend on whether other attributes are missing:</p>
+<p>The above case has simple conditions under which values can be
+missing, but missing values introduce other complications. For example,
+whether an attribute is missing can depend on whether other attributes
+are missing:</p>
 <ul>
 <li>Sets of attributes are missing or non-missing together.</li>
-<li>Two sets of attributes are mutually exclusive: exactly one is non-missing. These sets might not be disjoint. This is common when different records represent different types of entity, and so use different attributes. Ideally, these would be stored in separate relations instead, but they often aren’t.</li>
+<li>Two sets of attributes are mutually exclusive: exactly one is
+non-missing. These sets might not be disjoint. This is common when
+different records represent different types of entity, and so use
+different attributes. Ideally, these would be stored in separate
+relations instead, but they often aren’t.</li>
 </ul>
-<p>The data below records knowledge about values. This can either be known single values, or an interval with an associated distribution, which may have some distribution parameters. This format is common when listing model parameters.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="downlit sourceCode r">
+<p>The data below records knowledge about values. This can either be
+known single values, or an interval with an associated distribution,
+which may have some distribution parameters. This format is common when
+listing model parameters.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_options</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">20</span>,</span>
 <span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2.3</span>, <span class="fl">2.3</span>, <span class="fl">5.7</span>, <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span><span class="op">)</span>,</span>
@@ -217,436 +240,351 @@
 <span>  param2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="cn">NA</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">df_options</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<table class="table caption-top">
+<table class="table">
 <colgroup>
-<col style="width: 4%">
-<col style="width: 8%">
-<col style="width: 17%">
-<col style="width: 17%">
-<col style="width: 31%">
-<col style="width: 10%">
-<col style="width: 10%">
+<col width="4%">
+<col width="8%">
+<col width="17%">
+<col width="17%">
+<col width="31%">
+<col width="10%">
+<col width="10%">
 </colgroup>
 <thead><tr class="header">
-<th style="text-align: right;">id</th>
-<th style="text-align: right;">value</th>
-<th style="text-align: right;">lower_bound</th>
-<th style="text-align: right;">upper_bound</th>
-<th style="text-align: left;">interval_distribution</th>
-<th style="text-align: right;">param1</th>
-<th style="text-align: right;">param2</th>
+<th align="right">id</th>
+<th align="right">value</th>
+<th align="right">lower_bound</th>
+<th align="right">upper_bound</th>
+<th align="left">interval_distribution</th>
+<th align="right">param1</th>
+<th align="right">param2</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">2.3</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">NA</td>
+<td align="right">1</td>
+<td align="right">2.3</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="left">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">2.3</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">NA</td>
+<td align="right">2</td>
+<td align="right">2.3</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="left">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">3</td>
-<td style="text-align: right;">5.7</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">NA</td>
+<td align="right">3</td>
+<td align="right">5.7</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="left">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">4</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">2.4</td>
-<td style="text-align: right;">7.1</td>
-<td style="text-align: left;">uniform</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">NA</td>
+<td align="right">4</td>
+<td align="right">NA</td>
+<td align="right">2.4</td>
+<td align="right">7.1</td>
+<td align="left">uniform</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">5</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">0.0</td>
-<td style="text-align: right;">10.0</td>
-<td style="text-align: left;">uniform</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">NA</td>
+<td align="right">5</td>
+<td align="right">NA</td>
+<td align="right">0.0</td>
+<td align="right">10.0</td>
+<td align="left">uniform</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">6</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">1.0</td>
-<td style="text-align: right;">10.0</td>
-<td style="text-align: left;">uniform</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">NA</td>
+<td align="right">6</td>
+<td align="right">NA</td>
+<td align="right">1.0</td>
+<td align="right">10.0</td>
+<td align="left">uniform</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">7</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">0.0</td>
-<td style="text-align: right;">13.1</td>
-<td style="text-align: left;">uniform</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">NA</td>
+<td align="right">7</td>
+<td align="right">NA</td>
+<td align="right">0.0</td>
+<td align="right">13.1</td>
+<td align="left">uniform</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">8</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">5.6</td>
-<td style="text-align: right;">25.8</td>
-<td style="text-align: left;">uniform</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">NA</td>
+<td align="right">8</td>
+<td align="right">NA</td>
+<td align="right">5.6</td>
+<td align="right">25.8</td>
+<td align="left">uniform</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">9</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">2.4</td>
-<td style="text-align: right;">10.0</td>
-<td style="text-align: left;">Beta</td>
-<td style="text-align: right;">1.0</td>
-<td style="text-align: right;">1</td>
+<td align="right">9</td>
+<td align="right">NA</td>
+<td align="right">2.4</td>
+<td align="right">10.0</td>
+<td align="left">Beta</td>
+<td align="right">1.0</td>
+<td align="right">1</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">10</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">5.3</td>
-<td style="text-align: right;">13.1</td>
-<td style="text-align: left;">Beta</td>
-<td style="text-align: right;">1.0</td>
-<td style="text-align: right;">2</td>
+<td align="right">10</td>
+<td align="right">NA</td>
+<td align="right">5.3</td>
+<td align="right">13.1</td>
+<td align="left">Beta</td>
+<td align="right">1.0</td>
+<td align="right">2</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">11</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">5.3</td>
-<td style="text-align: right;">10.0</td>
-<td style="text-align: left;">Beta</td>
-<td style="text-align: right;">1.0</td>
-<td style="text-align: right;">2</td>
+<td align="right">11</td>
+<td align="right">NA</td>
+<td align="right">5.3</td>
+<td align="right">10.0</td>
+<td align="left">Beta</td>
+<td align="right">1.0</td>
+<td align="right">2</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">12</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">2.4</td>
-<td style="text-align: right;">25.8</td>
-<td style="text-align: left;">Beta</td>
-<td style="text-align: right;">2.0</td>
-<td style="text-align: right;">2</td>
+<td align="right">12</td>
+<td align="right">NA</td>
+<td align="right">2.4</td>
+<td align="right">25.8</td>
+<td align="left">Beta</td>
+<td align="right">2.0</td>
+<td align="right">2</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">13</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">2.4</td>
-<td style="text-align: right;">25.8</td>
-<td style="text-align: left;">Kumaraswamy</td>
-<td style="text-align: right;">2.0</td>
-<td style="text-align: right;">2</td>
+<td align="right">13</td>
+<td align="right">NA</td>
+<td align="right">2.4</td>
+<td align="right">25.8</td>
+<td align="left">Kumaraswamy</td>
+<td align="right">2.0</td>
+<td align="right">2</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">14</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">2.4</td>
-<td style="text-align: right;">25.8</td>
-<td style="text-align: left;">Kumaraswamy</td>
-<td style="text-align: right;">2.1</td>
-<td style="text-align: right;">1</td>
+<td align="right">14</td>
+<td align="right">NA</td>
+<td align="right">2.4</td>
+<td align="right">25.8</td>
+<td align="left">Kumaraswamy</td>
+<td align="right">2.1</td>
+<td align="right">1</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">15</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">2.4</td>
-<td style="text-align: right;">25.8</td>
-<td style="text-align: left;">Kumaraswamy</td>
-<td style="text-align: right;">2.0</td>
-<td style="text-align: right;">1</td>
+<td align="right">15</td>
+<td align="right">NA</td>
+<td align="right">2.4</td>
+<td align="right">25.8</td>
+<td align="left">Kumaraswamy</td>
+<td align="right">2.0</td>
+<td align="right">1</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">16</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">2.4</td>
-<td style="text-align: right;">13.1</td>
-<td style="text-align: left;">Kumaraswamy</td>
-<td style="text-align: right;">2.0</td>
-<td style="text-align: right;">1</td>
+<td align="right">16</td>
+<td align="right">NA</td>
+<td align="right">2.4</td>
+<td align="right">13.1</td>
+<td align="left">Kumaraswamy</td>
+<td align="right">2.0</td>
+<td align="right">1</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">2.4</td>
-<td style="text-align: right;">13.1</td>
-<td style="text-align: left;">PERT</td>
-<td style="text-align: right;">2.0</td>
-<td style="text-align: right;">NA</td>
+<td align="right">17</td>
+<td align="right">NA</td>
+<td align="right">2.4</td>
+<td align="right">13.1</td>
+<td align="left">PERT</td>
+<td align="right">2.0</td>
+<td align="right">NA</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">18</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">2.4</td>
-<td style="text-align: right;">25.8</td>
-<td style="text-align: left;">PERT</td>
-<td style="text-align: right;">1.0</td>
-<td style="text-align: right;">NA</td>
+<td align="right">18</td>
+<td align="right">NA</td>
+<td align="right">2.4</td>
+<td align="right">25.8</td>
+<td align="left">PERT</td>
+<td align="right">1.0</td>
+<td align="right">NA</td>
 </tr>
 <tr class="odd">
-<td style="text-align: right;">19</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">5.6</td>
-<td style="text-align: right;">25.8</td>
-<td style="text-align: left;">PERT</td>
-<td style="text-align: right;">2.0</td>
-<td style="text-align: right;">NA</td>
+<td align="right">19</td>
+<td align="right">NA</td>
+<td align="right">5.6</td>
+<td align="right">25.8</td>
+<td align="left">PERT</td>
+<td align="right">2.0</td>
+<td align="right">NA</td>
 </tr>
 <tr class="even">
-<td style="text-align: right;">20</td>
-<td style="text-align: right;">NA</td>
-<td style="text-align: right;">2.4</td>
-<td style="text-align: right;">25.8</td>
-<td style="text-align: left;">PERT</td>
-<td style="text-align: right;">2.0</td>
-<td style="text-align: right;">NA</td>
+<td align="right">20</td>
+<td align="right">NA</td>
+<td align="right">2.4</td>
+<td align="right">25.8</td>
+<td align="left">PERT</td>
+<td align="right">2.0</td>
+<td align="right">NA</td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-<p>Since <code>autodb</code> doesn’t treat missing values as a special case, it can not detect these relationships, so the resulting schema ignores them:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="downlit sourceCode r">
+<p>Since <code>autodb</code> doesn’t treat missing values as a special
+case, it can not detect these relationships, so the resulting schema
+ignores them:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">db_options</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/autodb.html">autodb</a></span><span class="op">(</span><span class="va">df_options</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="va">db_options</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="htmlwidget-a3af97bdf993eedce740" style="width:100%;height:480px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-a3af97bdf993eedce740">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"id\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">id (20 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_id\">id<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_id\">integer<\/TD><\/TR>\n    <TR><TD PORT=\"TO_value\">value<\/TD><TD><\/TD><TD PORT=\"FROM_value\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_lower_bound\">lower_bound<\/TD><TD><\/TD><TD PORT=\"FROM_lower_bound\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_upper_bound\">upper_bound<\/TD><TD><\/TD><TD PORT=\"FROM_upper_bound\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_interval_distribution\">interval_distribution<\/TD><TD><\/TD><TD PORT=\"FROM_interval_distribution\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param1\">param1<\/TD><TD><\/TD><TD PORT=\"FROM_param1\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param2\">param2<\/TD><TD><\/TD><TD PORT=\"FROM_param2\">numeric<\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
-</div>
-</div>
-<p>However, from looking at the data ourselves, we can see a clearly-implied structure:</p>
+<div id="htmlwidget-36aa3d2a04d42bbc2145" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-36aa3d2a04d42bbc2145">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"id\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">id (20 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_id\">id<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_id\">integer<\/TD><\/TR>\n    <TR><TD PORT=\"TO_value\">value<\/TD><TD><\/TD><TD PORT=\"FROM_value\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_lower_bound\">lower_bound<\/TD><TD><\/TD><TD PORT=\"FROM_lower_bound\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_upper_bound\">upper_bound<\/TD><TD><\/TD><TD PORT=\"FROM_upper_bound\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_interval_distribution\">interval_distribution<\/TD><TD><\/TD><TD PORT=\"FROM_interval_distribution\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param1\">param1<\/TD><TD><\/TD><TD PORT=\"FROM_param1\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param2\">param2<\/TD><TD><\/TD><TD PORT=\"FROM_param2\">numeric<\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>However, from looking at the data ourselves, we can see a
+clearly-implied structure:</p>
 <ul>
-<li>Records either have a perfectly-known value, or a distribution of what the value could be. These two options have separate attributes.</li>
-<li>Distribution information contains a lower and upper bound, and a distribution type. Different distributions have different numbers of distribution parameters, which are given in shared parameter attributes.</li>
-<li>Parameter attributes are ordered: there can only be a second parameter if there’s a first parameter.</li>
+<li>Records either have a perfectly-known value, or a distribution of
+what the value could be. These two options have separate
+attributes.</li>
+<li>Distribution information contains a lower and upper bound, and a
+distribution type. Different distributions have different numbers of
+distribution parameters, which are given in shared parameter
+attributes.</li>
+<li>Parameter attributes are ordered: there can only be a second
+parameter if there’s a first parameter.</li>
 </ul>
-<p>As a general hack for finding these sorts of relationships, I like taking each attribute with missing values, and adding a presence indicator attribute, that states whether its value is present or missing:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="downlit sourceCode r">
+<p>As a general hack for finding these sorts of relationships, I like
+taking each attribute with missing values, and adding a presence
+indicator attribute, that states whether its value is present or
+missing:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_options_presence</span> <span class="op">&lt;-</span> <span class="va">df_options</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">df_options</span>, <span class="va">anyNA</span>, <span class="fu"><a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="va">df_options_presence</span><span class="op">[</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">df_options_presence</span>, <span class="fu"><a href="https://rdrr.io/r/base/funprog.html" class="external-link">Negate</a></span><span class="op">(</span><span class="va">is.na</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">df_options_presence</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">df_options_presence</span><span class="op">)</span>, <span class="st">"_present"</span><span class="op">)</span></span>
 <span><span class="va">df_options_with_presence</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">df_options</span>, <span class="va">df_options_presence</span><span class="op">)</span></span></code></pre></div>
-</div>
-<p>This is not always practical, because adding columns rapidly increases the search time for the dependency search. In this case, search time is not an issue, and it makes the structure in the database schema more apparent:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="downlit sourceCode r">
+<p>This is not always practical, because adding columns rapidly
+increases the search time for the dependency search. In this case,
+search time is not an issue, and it makes the structure in the database
+schema more apparent:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">db_options_with_presence</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/autodb.html">autodb</a></span><span class="op">(</span><span class="va">df_options_with_presence</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">show</span><span class="op">(</span><span class="va">db_options_with_presence</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<div id="htmlwidget-9992463f61fb9d23fa9e" style="width:100%;height:480px;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-9992463f61fb9d23fa9e">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"id\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">id (20 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_id\">id<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_id\">integer<\/TD><\/TR>\n    <TR><TD PORT=\"TO_value\">value<\/TD><TD><\/TD><TD PORT=\"FROM_value\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_lower_bound\">lower_bound<\/TD><TD><\/TD><TD PORT=\"FROM_lower_bound\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_upper_bound\">upper_bound<\/TD><TD><\/TD><TD PORT=\"FROM_upper_bound\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_interval_distribution\">interval_distribution<\/TD><TD><\/TD><TD PORT=\"FROM_interval_distribution\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param1\">param1<\/TD><TD><\/TD><TD PORT=\"FROM_param1\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param2\">param2<\/TD><TD><\/TD><TD PORT=\"FROM_param2\">numeric<\/TD><\/TR>\n    <\/TABLE>>];\n  \"value\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">value (3 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_value\">value<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_value\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_value_present\">value_present<\/TD><TD><\/TD><TD PORT=\"FROM_value_present\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n  \"lower_bound\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">lower_bound (6 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_lower_bound\">lower_bound<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_lower_bound\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_value_present\">value_present<\/TD><TD><\/TD><TD PORT=\"FROM_value_present\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n  \"upper_bound\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">upper_bound (5 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_upper_bound\">upper_bound<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_upper_bound\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_value_present\">value_present<\/TD><TD><\/TD><TD PORT=\"FROM_value_present\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n  \"interval_distribution\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">interval_distribution (5 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_interval_distribution\">interval_distribution<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_interval_distribution\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_value_present\">value_present<\/TD><TD><\/TD><TD PORT=\"FROM_value_present\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param1_present\">param1_present<\/TD><TD><\/TD><TD PORT=\"FROM_param1_present\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param2_present\">param2_present<\/TD><TD><\/TD><TD PORT=\"FROM_param2_present\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n  \"param1\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">param1 (4 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param1\">param1<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_param1\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param1_present\">param1_present<\/TD><TD><\/TD><TD PORT=\"FROM_param1_present\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n  \"param2\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">param2 (3 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param2\">param2<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_param2\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param2_present\">param2_present<\/TD><TD><\/TD><TD PORT=\"FROM_param2_present\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n  \"value_present\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"6\">value_present (2 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_value_present\">value_present<\/TD><TD BGCOLOR=\"black\"><\/TD><TD><\/TD><TD><\/TD><TD><\/TD><TD PORT=\"FROM_value_present\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_lower_bound_present\">lower_bound_present<\/TD><TD><\/TD><TD BGCOLOR=\"black\"><\/TD><TD><\/TD><TD><\/TD><TD PORT=\"FROM_lower_bound_present\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_upper_bound_present\">upper_bound_present<\/TD><TD><\/TD><TD><\/TD><TD BGCOLOR=\"black\"><\/TD><TD><\/TD><TD PORT=\"FROM_upper_bound_present\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_interval_distribution_present\">interval_distribution_present<\/TD><TD><\/TD><TD><\/TD><TD><\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_interval_distribution_present\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"id\":FROM_value -> \"value\":TO_value;\n  \"id\":FROM_lower_bound -> \"lower_bound\":TO_lower_bound;\n  \"id\":FROM_upper_bound -> \"upper_bound\":TO_upper_bound;\n  \"id\":FROM_interval_distribution -> \"interval_distribution\":TO_interval_distribution;\n  \"id\":FROM_param1 -> \"param1\":TO_param1;\n  \"id\":FROM_param2 -> \"param2\":TO_param2;\n  \"value\":FROM_value_present -> \"value_present\":TO_value_present;\n  \"lower_bound\":FROM_value_present -> \"value_present\":TO_value_present;\n  \"upper_bound\":FROM_value_present -> \"value_present\":TO_value_present;\n  \"interval_distribution\":FROM_value_present -> \"value_present\":TO_value_present;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
-</div>
-</div>
-<p>Some of the new information is trivially true: attributes always determine their own presence. Of more interest is the <code>value_present</code> relation, which shows that the values, bounds, and interval distributions inform the presence of each other:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="downlit sourceCode r">
+<div id="htmlwidget-febe03efa1a2d8d52a86" style="width:100%;height:432.632880098888px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-febe03efa1a2d8d52a86">{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"id\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">id (20 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_id\">id<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_id\">integer<\/TD><\/TR>\n    <TR><TD PORT=\"TO_value\">value<\/TD><TD><\/TD><TD PORT=\"FROM_value\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_lower_bound\">lower_bound<\/TD><TD><\/TD><TD PORT=\"FROM_lower_bound\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_upper_bound\">upper_bound<\/TD><TD><\/TD><TD PORT=\"FROM_upper_bound\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_interval_distribution\">interval_distribution<\/TD><TD><\/TD><TD PORT=\"FROM_interval_distribution\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param1\">param1<\/TD><TD><\/TD><TD PORT=\"FROM_param1\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param2\">param2<\/TD><TD><\/TD><TD PORT=\"FROM_param2\">numeric<\/TD><\/TR>\n    <\/TABLE>>];\n  \"value\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">value (3 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_value\">value<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_value\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_value_present\">value_present<\/TD><TD><\/TD><TD PORT=\"FROM_value_present\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n  \"lower_bound\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">lower_bound (6 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_lower_bound\">lower_bound<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_lower_bound\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_value_present\">value_present<\/TD><TD><\/TD><TD PORT=\"FROM_value_present\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n  \"upper_bound\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">upper_bound (5 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_upper_bound\">upper_bound<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_upper_bound\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_value_present\">value_present<\/TD><TD><\/TD><TD PORT=\"FROM_value_present\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n  \"interval_distribution\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">interval_distribution (5 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_interval_distribution\">interval_distribution<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_interval_distribution\">factor<\/TD><\/TR>\n    <TR><TD PORT=\"TO_value_present\">value_present<\/TD><TD><\/TD><TD PORT=\"FROM_value_present\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param1_present\">param1_present<\/TD><TD><\/TD><TD PORT=\"FROM_param1_present\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param2_present\">param2_present<\/TD><TD><\/TD><TD PORT=\"FROM_param2_present\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n  \"param1\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">param1 (4 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param1\">param1<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_param1\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param1_present\">param1_present<\/TD><TD><\/TD><TD PORT=\"FROM_param1_present\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n  \"param2\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">param2 (3 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param2\">param2<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_param2\">numeric<\/TD><\/TR>\n    <TR><TD PORT=\"TO_param2_present\">param2_present<\/TD><TD><\/TD><TD PORT=\"FROM_param2_present\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n  \"value_present\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"6\">value_present (2 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_value_present\">value_present<\/TD><TD BGCOLOR=\"black\"><\/TD><TD><\/TD><TD><\/TD><TD><\/TD><TD PORT=\"FROM_value_present\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_lower_bound_present\">lower_bound_present<\/TD><TD><\/TD><TD BGCOLOR=\"black\"><\/TD><TD><\/TD><TD><\/TD><TD PORT=\"FROM_lower_bound_present\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_upper_bound_present\">upper_bound_present<\/TD><TD><\/TD><TD><\/TD><TD BGCOLOR=\"black\"><\/TD><TD><\/TD><TD PORT=\"FROM_upper_bound_present\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_interval_distribution_present\">interval_distribution_present<\/TD><TD><\/TD><TD><\/TD><TD><\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_interval_distribution_present\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n\n  \"id\":FROM_value -> \"value\":TO_value;\n  \"id\":FROM_lower_bound -> \"lower_bound\":TO_lower_bound;\n  \"id\":FROM_upper_bound -> \"upper_bound\":TO_upper_bound;\n  \"id\":FROM_interval_distribution -> \"interval_distribution\":TO_interval_distribution;\n  \"id\":FROM_param1 -> \"param1\":TO_param1;\n  \"id\":FROM_param2 -> \"param2\":TO_param2;\n  \"value\":FROM_value_present -> \"value_present\":TO_value_present;\n  \"lower_bound\":FROM_value_present -> \"value_present\":TO_value_present;\n  \"upper_bound\":FROM_value_present -> \"value_present\":TO_value_present;\n  \"interval_distribution\":FROM_value_present -> \"value_present\":TO_value_present;\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><p>Some of the new information is trivially true: attributes always
+determine their own presence. Of more interest is the
+<code>value_present</code> relation, which shows that the values,
+bounds, and interval distributions inform the presence of each
+other:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="fu"><a href="../reference/records.html">records</a></span><span class="op">(</span><span class="va">db_options_with_presence</span><span class="op">)</span><span class="op">$</span><span class="va">value_present</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<table class="table caption-top">
+<table class="table">
 <colgroup>
-<col style="width: 3%">
-<col style="width: 16%">
-<col style="width: 22%">
-<col style="width: 22%">
-<col style="width: 34%">
+<col width="3%">
+<col width="16%">
+<col width="22%">
+<col width="22%">
+<col width="34%">
 </colgroup>
 <thead><tr class="header">
-<th style="text-align: left;"></th>
-<th style="text-align: left;">value_present</th>
-<th style="text-align: left;">lower_bound_present</th>
-<th style="text-align: left;">upper_bound_present</th>
-<th style="text-align: left;">interval_distribution_present</th>
+<th align="left"></th>
+<th align="left">value_present</th>
+<th align="left">lower_bound_present</th>
+<th align="left">upper_bound_present</th>
+<th align="left">interval_distribution_present</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">FALSE</td>
-<td style="text-align: left;">FALSE</td>
-<td style="text-align: left;">FALSE</td>
+<td align="left">1</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">4</td>
-<td style="text-align: left;">FALSE</td>
-<td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">TRUE</td>
+<td align="left">4</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-<p>In the <code>interval_distribution</code> relation, we can also see how the interval distribution determines how many parameters are required:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="downlit sourceCode r">
+<p>In the <code>interval_distribution</code> relation, we can also see
+how the interval distribution determines how many parameters are
+required:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="fu"><a href="../reference/records.html">records</a></span><span class="op">(</span><span class="va">db_options_with_presence</span><span class="op">)</span><span class="op">$</span><span class="va">interval_distribution</span><span class="op">)</span></span></code></pre></div>
-<div class="cell-output-display">
-<table class="table caption-top" style="width:100%;">
+<table style="width:100%;" class="table">
 <colgroup>
-<col style="width: 4%">
-<col style="width: 31%">
-<col style="width: 20%">
-<col style="width: 21%">
-<col style="width: 21%">
+<col width="4%">
+<col width="31%">
+<col width="20%">
+<col width="21%">
+<col width="21%">
 </colgroup>
 <thead><tr class="header">
-<th style="text-align: left;"></th>
-<th style="text-align: left;">interval_distribution</th>
-<th style="text-align: left;">value_present</th>
-<th style="text-align: left;">param1_present</th>
-<th style="text-align: left;">param2_present</th>
+<th align="left"></th>
+<th align="left">interval_distribution</th>
+<th align="left">value_present</th>
+<th align="left">param1_present</th>
+<th align="left">param2_present</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">1</td>
-<td style="text-align: left;">NA</td>
-<td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">FALSE</td>
-<td style="text-align: left;">FALSE</td>
+<td align="left">1</td>
+<td align="left">NA</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">4</td>
-<td style="text-align: left;">uniform</td>
-<td style="text-align: left;">FALSE</td>
-<td style="text-align: left;">FALSE</td>
-<td style="text-align: left;">FALSE</td>
+<td align="left">4</td>
+<td align="left">uniform</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
+<td align="left">FALSE</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">9</td>
-<td style="text-align: left;">Beta</td>
-<td style="text-align: left;">FALSE</td>
-<td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">TRUE</td>
+<td align="left">9</td>
+<td align="left">Beta</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">13</td>
-<td style="text-align: left;">Kumaraswamy</td>
-<td style="text-align: left;">FALSE</td>
-<td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">TRUE</td>
+<td align="left">13</td>
+<td align="left">Kumaraswamy</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">TRUE</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">17</td>
-<td style="text-align: left;">PERT</td>
-<td style="text-align: left;">FALSE</td>
-<td style="text-align: left;">TRUE</td>
-<td style="text-align: left;">FALSE</td>
+<td align="left">17</td>
+<td align="left">PERT</td>
+<td align="left">FALSE</td>
+<td align="left">TRUE</td>
+<td align="left">FALSE</td>
 </tr>
 </tbody>
 </table>
+<p>We can use this enhanced database to decide how to manually split up
+the actual database.</p>
 </div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
-<p>We can use this enhanced database to decide how to manually split up the actual database.</p>
-</section><script id="quarto-html-after-body" type="application/javascript">
-  window.document.addEventListener("DOMContentLoaded", function (event) {
-      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
-      var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp('/' + window.location.host + '/');
-      var isInternal = (href) => {
-          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
-      }
-      // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
-      for (var i=0; i<links.length; i++) {
-        const link = links[i];
-        if (!isInternal(link.href)) {
-          // undo the damage that might have been done by quarto-nav.js in the case of
-          // links that we want to consider external
-          if (link.dataset.originalHref !== undefined) {
-            link.href = link.dataset.originalHref;
-          }
-        }
-      }
-    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
-      const config = {
-        allowHTML: true,
-        maxWidth: 500,
-        delay: 100,
-        arrow: false,
-        appendTo: function(el) {
-            return el.parentElement;
-        },
-        interactive: true,
-        interactiveBorder: 10,
-        theme: 'light-border',
-        placement: 'bottom-start',
-      };
-      if (contentFn) {
-        config.content = contentFn;
-      }
-      if (onTriggerFn) {
-        config.onTrigger = onTriggerFn;
-      }
-      if (onUntriggerFn) {
-        config.onUntrigger = onUntriggerFn;
-      }
-      window.tippy(el, config);
-    }
-    const findCites = (el) => {
-      const parentEl = el.parentElement;
-      if (parentEl) {
-        const cites = parentEl.dataset.cites;
-        if (cites) {
-          return {
-            el,
-            cites: cites.split(' ')
-          };
-        } else {
-          return findCites(el.parentElement)
-        }
-      } else {
-        return undefined;
-      }
-    };
-    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
-    for (var i=0; i<bibliorefs.length; i++) {
-      const ref = bibliorefs[i];
-      const citeInfo = findCites(ref);
-      if (citeInfo) {
-        tippyHover(citeInfo.el, function() {
-          var popup = window.document.createElement('div');
-          citeInfo.cites.forEach(function(cite) {
-            var citeDiv = window.document.createElement('div');
-            citeDiv.classList.add('hanging-indent');
-            citeDiv.classList.add('csl-entry');
-            var biblioDiv = window.document.getElementById('ref-' + cite);
-            if (biblioDiv) {
-              citeDiv.innerHTML = biblioDiv.innerHTML;
-            }
-            popup.appendChild(citeDiv);
-          });
-          return popup.innerHTML;
-        });
-      }
-    }
-  });
-  </script></main>
-</div>
+
 
 
     <footer><div class="pkgdown-footer-left">
@@ -654,7 +592,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

@@ -30,6 +30,7 @@
 <url><loc>https://charnelmouse.github.io/autodb/dev/reference/df_equiv.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/dev/reference/df_rbind.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/dev/reference/discover.html</loc></url>
+<url><loc>https://charnelmouse.github.io/autodb/dev/reference/discover_keys.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/dev/reference/functional_dependency.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/dev/reference/gv.data.frame.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/dev/reference/gv.database.html</loc></url>
@@ -52,6 +53,7 @@
 <url><loc>https://charnelmouse.github.io/autodb/dev/reference/rejoin.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/dev/reference/relation.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/dev/reference/relation_schema.html</loc></url>
+<url><loc>https://charnelmouse.github.io/autodb/dev/reference/remove_extraneous.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/dev/reference/rename_attrs.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/dev/reference/subrelations.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/dev/reference/subschemas.html</loc></url>
