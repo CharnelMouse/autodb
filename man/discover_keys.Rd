@@ -66,7 +66,7 @@ attributes within each key are given in the same order as in \code{df}.
 Finds all the keys for a data frame, ignoring duplicate rows.
 }
 \details{
-Column names for \code{\link{df}} must be unique.
+Column names for \code{df} must be unique.
 
 The search algorithm was adapted from the FDHits algorithm used for
 \code{\link{discover}}. It is likely to be an implementation of the HPIValid

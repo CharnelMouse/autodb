@@ -101,7 +101,7 @@ the attributes during normalisation.
 Finds all the minimal functional dependencies represented in a data frame.
 }
 \details{
-Column names for \code{\link{df}} must be unique.
+Column names for \code{df} must be unique.
 
 There are two search algorithms available for finding dependencies: DFD, and
 FDHits. These are described below.
