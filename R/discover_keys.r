@@ -1,3 +1,62 @@
+#' Key discovery with MCSS
+#'
+#' Finds all the keys for a data frame, ignoring duplicate rows.
+#'
+#' Column names for \code{\link{df}} must be unique.
+#'
+#' The search algorithm was adapted from the FDHits algorithm used for
+#' \code{\link{discover}}. It is likely to be an implementation of the HPIValid
+#' algorithm, although it wasn't used directly as a source. It has the same
+#' implications with respect to floating-point variables.
+#'
+#' @param digits a positive integer, indicating how many significant digits are
+#'   to be used for numeric and complex variables. A value of \code{NA} results
+#'   in no rounding. By default, this uses \code{getOption("digits")}, similarly
+#'   to \code{\link{format}}. See the "Floating-point variables" section for
+#'   \code{\link{discover}} for why this rounding is necessary for consistent
+#'   results across different machines. See the note in
+#'   \code{\link{print.default}} about \code{digits >= 16}.
+#' @param exclude a character vector, containing names of attributes to not
+#'   consider as members of keys. If names are given that aren't present in
+#'   \code{df}, the user is given a warning.
+#' @param exclude_class a character vector, indicating classes of attributes to
+#'   not consider as members of keys. Attributes are excluded if they inherit
+#'   from any given class.
+#' @param dependants a character vector, containing names of attributes that
+#'   keys should determine. By default, this is all of the attribute names. A
+#'   smaller set of attribute names reduces the amount of searching required, so
+#'   can reduce the computation time if not all attributes need to be
+#'   determined.
+#' @param size_limit an integer, indicating the largest key size to search for.
+#'   By default, this is large enough to allow all attributes.
+#' @inheritParams discover
+#'
+#' @return A list of character vectors, containing the discovered keys in. The
+#'   attributes within each key are given in the same order as in \code{df}.
+#' @encoding UTF-8
+#' @references
+#' FDHits: Bleifuss T., Papenbrock T., Bläsius T., Schirneck M, Naumann F.
+#' (2024) Discovering Functional Dependencies through Hitting Set Enumeration.
+#' *Proc. ACM Manag. Data*, **2, 1**, 43:1--24.
+#'
+#' HPIValid: Birnick J., Bläsius T., Friedrich T., Naumann F., Papenbrock T.,
+#' Schirneck M. (2020) Hitting set enumeration with partial information for
+#' unique column combination discovery. *Proceedings of the VLDB Endowment*,
+#' **13, 12**, 2270--2283.
+#' @examples
+#' # simple example
+#' discover_keys(ChickWeight)
+#'
+#' # example with spurious key
+#' discover_keys(CO2)
+#' # exclude attributes that can't be determinants.
+#' # in this case, the numeric attributes are now
+#' # not determined by anything, because of repeat measurements
+#' # with no variable to mark them as such.
+#' discover_keys(CO2, exclude_class = "numeric")
+#' # exclude keys spuriously using the measurement attribute
+#' discover_keys(CO2, exclude = "uptake")
+#' @export
 discover_keys <- function(
   df,
   keep_rownames = FALSE,
