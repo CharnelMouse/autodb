@@ -1,5 +1,6 @@
 # autodb (development version)
 
+* Added `discover_keys`, which searches for keys rather than functional dependencies. This scales better with column count than FD search.
 * Added `rep` method for functional dependencies. This also allows the use of `outer`, e.g. for comparison with `==`.
 * Added remaining inequality implementations for `functional_dependency` (`<`, `<=`, `>`, `>=`).
 * Added `remove_extraneous` to exported functions, for removing redundant dependencies or determinant attributes in a `functional_dependency` object. This is used as a step in `synthesise`, but is useful on its own.
