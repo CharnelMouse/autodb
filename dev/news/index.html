@@ -52,6 +52,9 @@
 <li>Added <code>rep</code> method for functional dependencies. This also allows the use of <code>outer</code>, e.g. for comparison with <code>==</code>.</li>
 <li>Added remaining inequality implementations for <code>functional_dependency</code> (<code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>).</li>
 <li>Added <code>remove_extraneous</code> to exported functions, for removing redundant dependencies or determinant attributes in a <code>functional_dependency</code> object. This is used as a step in <code>synthesise</code>, but is useful on its own.</li>
+<li>Added support for data with list columns. <code>duplicate</code>, <code>unique</code> etc. consider data frame rows different if they only differ by <code>NA</code> value classes in list columns. Previously, <code>discover</code> considered them to be equal, so a data frame with list columns could violate its own schema. This is now fixed, in exchange for a small performance hit when there are list columns.</li>
+<li>
+<code>rejoin</code> no longer sorts as it merges relations, since there might be list columns in the key, which aren’t sortable.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="3.2.4" id="autodb-324">autodb 3.2.4<a class="anchor" aria-label="anchor" href="#autodb-324"></a></h2><p class="text-muted">CRAN release: 2025-11-17</p>

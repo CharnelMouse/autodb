@@ -12,6 +12,14 @@
   redundant dependencies or determinant attributes in a
   `functional_dependency` object. This is used as a step in
   `synthesise`, but is useful on its own.
+- Added support for data with list columns. `duplicate`, `unique` etc.
+  consider data frame rows different if they only differ by `NA` value
+  classes in list columns. Previously, `discover` considered them to be
+  equal, so a data frame with list columns could violate its own schema.
+  This is now fixed, in exchange for a small performance hit when there
+  are list columns.
+- `rejoin` no longer sorts as it merges relations, since there might be
+  list columns in the key, which aren’t sortable.
 
 ## autodb 3.2.4
 
