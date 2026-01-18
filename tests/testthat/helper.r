@@ -326,7 +326,8 @@ gen_df <- function(
     "integer",
     "numeric",
     "character",
-    "factor"
+    "factor",
+    "list"
   )
   list(
     gen.element(seq.int(min(mincol, ncol), ncol)) |>
@@ -361,14 +362,26 @@ gen.df_fixed_ranges <- function(
     numeric = gen.numeric(),
     character = gen.element(c("FALSE", "TRUE", NA_character_)),
     factor = gen.element(c("FALSE", "TRUE", NA_character_)) |>
-      gen.with(with_args(factor, levels = c("FALSE", "TRUE")))
+      gen.with(with_args(factor, levels = c("FALSE", "TRUE"))),
+    list = gen.choice( # list where each element is NULL or one of the other types
+      gen.pure(NULL),
+      gen.element(c(FALSE, TRUE, NA)),
+      gen.element(c(-5:5, NA_integer_)),
+      gen.numeric(),
+      gen.element(c("FALSE", "TRUE", NA_character_)),
+      gen.element(c("FALSE", "TRUE", NA_character_)) |>
+        gen.with(with_args(factor, levels = c("FALSE", "TRUE")))
+    ) |>
+      gen.list(from = 0, to = 5) |>
+      gen.with(list) # wrap so values don't get concatenated into single list later
   )
   inits <- list(
     logical = logical(),
     integer = integer(),
     numeric = numeric(),
     character = character(),
-    factor = factor(character(), levels = c("FALSE", "TRUE"))
+    factor = factor(character(), levels = c("FALSE", "TRUE")),
+    list = list()
   )
   if (length(classes) == 0L)
     return(
@@ -395,12 +408,13 @@ gen.df_fixed_ranges <- function(
             gen.float_coincide(x, digits)
           else
             gen.pure(x)
-        })
+        }) |>
+        gen.with(as.data.frame.vector)
     }
   ) |>
     gen.with(
-      with_args(setNames, nm = nms) %>>%
-        with_args(as.data.frame, check.names = FALSE) %>>%
+      with_args(as.data.frame, check.names = FALSE) %>>%
+        with_args(setNames, nm = nms) %>>%
         (if (remove_dup_rows) unique else identity)
     ) |>
     gen.with(variant)

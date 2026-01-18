@@ -406,4 +406,13 @@ lookup_table <- function(df) {
     data.frame(check.names = FALSE)
 }
 
-lookup_indices <- function(x) match(x, x)
+lookup_indices <- function(x) {
+  # for atomic types match(x, x) work well,
+  # for nestable lists this gives the wrong answer
+  # because it ignores NA class
+  if (is.atomic(x))
+    return(match(x, x))
+  uniq <- unique(x)
+  indices <- rep(NA_integer_, length(x))
+  vapply(x, \(y) Position(\(u) identical(y, u), uniq), integer(1))
+}

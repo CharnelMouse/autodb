@@ -117,8 +117,7 @@ rejoin <- function(database) {
     main_relation <- unique(df_join(
       main_relation,
       mergee_df[, c(key, new_attrs), drop = FALSE],
-      by = key,
-      sort = FALSE
+      by = key
     ))
     stopifnot(identical(nrow(main_relation), old_nrow))
   }

@@ -644,15 +644,23 @@ describe("discover", {
         integer = c("numeric", "character"),
         numeric = c("character"),
         character = c("logical"),
-        factor = c("integer", "numeric", "character")
+        factor = c("integer", "numeric", "character"),
+        list = character()
       )
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.sample(ncol(df)))) |>
         gen.and_then(uncurry(\(df, attr) {
+          attr_class <- class(df[[attr]])[[1]]
+          change_set <- changes[[attr_class]]
+          if (is.null(change_set))
+            stop(paste("no change set for", attr_class, "class"))
           list(
             gen.pure(df),
             gen.pure(attr),
-            gen.element(changes[[class(df[[attr]])[[1]]]])
+            if (length(change_set) == 0)
+              gen.pure(attr_class)
+            else
+              gen.element(change_set)
           )
         })) |>
         gen.with(uncurry(\(df, attr, new_class) {
@@ -849,4 +857,18 @@ describe("discover", {
       )
     }
   )
+})
+
+describe("lookup_table", {
+  it("returns a data frame with same duplicated() output", {
+    forall(
+      gen_df(6, 7, mincol = 1),
+      expect_biidentical(duplicated, lookup_table %>>% duplicated)
+    )
+
+    # doesn't ignore NA class (like e.g. match)
+    df <- data.frame(a = rep(1:2, 2))
+    df$b <- list(NA_integer_, NA_integer_, NA_real_, NA_real_)
+    expect_true(!anyDuplicated(lookup_table(df)))
+  })
 })

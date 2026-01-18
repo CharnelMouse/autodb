@@ -5,8 +5,9 @@ describe("decompose", {
         gen_df(6, 7),
         gen.choice(gen.element(7:1), gen.pure(NA_integer_)),
         gen.element(c(FALSE, TRUE))
-      ),
-      \(x, digits, check) {
+      ) |>
+        gen.with(\(x) c(x[1], list(as.list(x[[1]])), x[2:3])),
+      \(x, x2, digits, check) {
         fds <- discover(x, digits = digits)
         schema <- normalise(fds)
         db <- decompose(x, schema, digits = digits, check = check)
