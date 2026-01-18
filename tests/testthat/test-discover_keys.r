@@ -448,14 +448,14 @@ describe("discover_keys", {
             base <- with_timeout(do.call(discover_keys, lst))
             if (is.null(base))
               return(base)
-            if (is.null(lst$exclude) && is.null(lst$exclude_class))
+            if (is.null(lst[["exclude"]]) && is.null(lst[["exclude_class"]]))
               base <- base[vapply(
                 base,
                 Negate(is.element %>>% any),
                 logical(1),
                 el = logical_cols
               )]
-            if (is.null(lst$size_limit))
+            if (is.null(lst[["size_limit"]]))
               base <- base[lengths(base) <= size_limit]
             base
           }

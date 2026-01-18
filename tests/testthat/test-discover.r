@@ -778,16 +778,16 @@ describe("discover", {
             base <- with_timeout(do.call(discover, lst))
             if (is.null(base))
               return(base)
-            if (is.null(lst$exclude) && is.null(lst$exclude_class))
+            if (is.null(lst[["exclude"]]) && is.null(lst[["exclude_class"]]))
               base <- base[vapply(
                 detset(base),
                 Negate(is.element %>>% any),
                 logical(1),
                 el = logical_cols
               )]
-            if (is.null(lst$dependants))
+            if (is.null(lst[["dependants"]]))
               base <- base[dependant(base) %in% dependants]
-            if (is.null(lst$detset_limit))
+            if (is.null(lst[["detset_limit"]]))
               base <- base[lengths(detset(base)) <= detset_limit]
             base
           }
