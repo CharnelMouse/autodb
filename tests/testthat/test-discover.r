@@ -45,6 +45,14 @@ describe("discover", {
       fn(res)
     }
   }
+  terminates_then_compare <- function(fn, ...) {
+    function(df) {
+      res <- with_timeout(discover(df, ...))
+      if (is.null(res))
+        return(fail("discover() timed out"))
+      fn(df, res)
+    }
+  }
   both_terminate_then <- function(fn, accuracy, ...) {
     function(df1, df2) {
       res1 <- with_timeout(discover(df1, accuracy = accuracy, ...))
@@ -482,6 +490,31 @@ describe("discover", {
     forall(
       gen_df(6, 7),
       terminates_then(is_valid_minimal_functional_dependency, 1, method = "FDHitsJoint")
+    )
+  })
+  it("gives satisfied functional dependencies", {
+    expect_satisfied <- function(data, fds) {
+      attrs <- Map(c, detset(fds), dependant(fds))
+      projections <- lapply(attrs, \(a) unique(data[, a, drop = FALSE]))
+      Map(
+        \(p, ds) !anyDuplicated(p[, ds, drop = FALSE]),
+        projections,
+        detset(fds)
+      ) |>
+        Reduce(f = `&&`, init = TRUE) |>
+        expect_true()
+    }
+    forall(
+      gen_df(6, 7),
+      terminates_then_compare(expect_satisfied, method = "DFD")
+    )
+    forall(
+      gen_df(6, 7),
+      terminates_then_compare(expect_satisfied, method = "FDHitsSep")
+    )
+    forall(
+      gen_df(6, 7),
+      terminates_then_compare(expect_satisfied, method = "FDHitsJoint")
     )
   })
 

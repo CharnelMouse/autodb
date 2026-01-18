@@ -242,7 +242,7 @@ describe("discover_keys", {
       terminates_then(is_valid_key_set)
     )
   })
-  it("gives sets with no duplicate values", {
+  it("gives superkeys for the given data", {
     forall(
       gen_df(6, 7),
       function(df) {
