@@ -321,7 +321,13 @@ gen_df <- function(
   digits = NA,
   variant = c("data.frame", "tibble")
 ) {
-  asable_classes <- c("logical", "integer", "numeric", "character", "factor")
+  asable_classes <- c(
+    "logical",
+    "integer",
+    "numeric",
+    "character",
+    "factor"
+  )
   list(
     gen.element(seq.int(min(mincol, ncol), ncol)) |>
       gen.and_then(\(n) list(
