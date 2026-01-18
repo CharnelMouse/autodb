@@ -190,7 +190,10 @@ FDHitsSep_visit <- function(
     # remove B from V if ∃ C∈S ∀ E∈critical(C,A,S): B∈E,
     # i.e. adding B to S would make some C in S redundant WRT A
     # does not check for B being redundant if added
-    common <- Reduce(`&`, crits) & V_bitset
+    common <- partition_handler$key_intersect(
+      Reduce(partition_handler$key_intersect, crits),
+      V_bitset
+    )
     V_bitset <- partition_handler$subkey_difference(V_bitset, common)
   }
   # validation at the leaves
@@ -221,7 +224,9 @@ FDHitsSep_visit <- function(
     stop("edge selection impossible at ", node_string)
   }
   E_bitset <- uncovered[[sample_minheur_sep(uncovered, V_bitset)]]
-  Bs_bitsets <- partition_handler$decompose_key(E_bitset & V_bitset)
+  Bs_bitsets <- partition_handler$decompose_key(
+    partition_handler$key_intersect(E_bitset, V_bitset)
+  )
   res <- list()
   # rev() differs from the description in the paper, but the authors gave it as
   # a fix in private correspondence; I'll add a reference when they've published
@@ -230,15 +235,15 @@ FDHitsSep_visit <- function(
     rev(seq_along(Bs_bitsets)),
     \(n) {
       b <- Bs_bitsets[[n]]
-      rem <- Reduce(`|`, Bs_bitsets[seq_len(n)])
+      rem <- Reduce(partition_handler$key_union, Bs_bitsets[seq_len(n)])
       list(
-        S = S_bitset | b,
-        V = V_bitset & !rem,
+        S = partition_handler$distinct_key_union(S_bitset, b),
+        V = partition_handler$subkey_difference(V_bitset, rem),
         W = A_bitset,
         depth = depth + 1L,
         oldS = S_bitset,
         addS = b,
-        remW = partition_handler$key(integer())
+        remW = partition_handler$empty_key
       )
     }
   )
@@ -280,18 +285,26 @@ FDHitsJoint_visit <- function(
         \(C) {
           # Bs that would make C redundant WRT A
           Reduce(
-            `&`,
+            partition_handler$key_intersect,
             partition_handler$fetch_critical_diffsets(C, A, S_bitset),
             init = partition_handler$full_key
           )
         }
       )
       # Bs that would make some C redundant WRT A
-      Reduce(`|`, commons, init = partition_handler$empty_key)
+      Reduce(
+        partition_handler$key_union,
+        commons,
+        init = partition_handler$empty_key
+      )
     }
   )
   # Bs that, for every A, make some C redundant
-  always_common <- Reduce(`&`, anywhere_common, init = V_bitset)
+  always_common <- Reduce(
+    partition_handler$key_intersect,
+    anywhere_common,
+    init = V_bitset
+  )
   V_bitset <- partition_handler$subkey_difference(V_bitset, always_common)
   # validation at the leaves
   uncovered_bitsets <- partition_handler$fetch_uncovered_keys(S_bitset, W_bitset)
@@ -321,35 +334,50 @@ FDHitsJoint_visit <- function(
     stop("edge selection impossible at ", node_string)
   }
   E_bitset <- sample_minheur_joint(uncovered_bitsets, V_bitset, W_bitset)
-  Bs_bitset <- E_bitset & V_bitset
+  Bs_bitset <- partition_handler$key_intersect(E_bitset, V_bitset)
   Bs_bitsets <- partition_handler$decompose_key(Bs_bitset)
   res <- list()
   # rev() differs from the description in the paper, but the authors gave it as
   # a fix in private correspondence; I'll add a reference when they've published
   # the new work
   new_nodes <- c(
-    if (any((W_bitset & E_bitset) != W_bitset))
+    if (any((partition_handler$key_intersect(W_bitset, E_bitset)) != W_bitset))
       list(list(
         S = S_bitset,
         V = V_bitset,
-        W = W_bitset & !E_bitset,
+        W = partition_handler$key_difference(W_bitset, E_bitset),
         depth = depth + 1L,
         oldS = S_bitset,
-        addS = partition_handler$key(integer()),
-        remW = partition_handler$subkey_difference(old_W, W_bitset & !E_bitset)
+        addS = partition_handler$empty_key,
+        remW = partition_handler$subkey_difference(
+          old_W,
+          partition_handler$key_difference(W_bitset, E_bitset)
+        )
       )), # mu_0
     lapply( # mu_i
       rev(seq_along(Bs_bitsets)),
       \(n) {
         B <- Bs_bitsets[[n]]
         list(
-          S = S_bitset | B,
-          V = V_bitset & !Reduce(`|`, Bs_bitsets[seq_len(n)]),
-          W = W_bitset & E_bitset & !B,
+          S = partition_handler$distinct_key_union(S_bitset, B),
+          V = partition_handler$subkey_difference(
+            V_bitset,
+            Reduce(partition_handler$key_union, Bs_bitsets[seq_len(n)])
+          ),
+          W = partition_handler$key_intersect(
+            W_bitset,
+            partition_handler$subkey_difference(E_bitset, B)
+          ),
           depth = depth + 1L,
           oldS = S_bitset,
           addS = B,
-          remW = partition_handler$subkey_difference(old_W, W_bitset & E_bitset & !B)
+          remW = partition_handler$subkey_difference(
+            old_W,
+            partition_handler$key_intersect(
+              W_bitset,
+              partition_handler$subkey_difference(E_bitset, B)
+            )
+          )
         )
       }
     )

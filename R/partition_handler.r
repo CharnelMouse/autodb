@@ -179,6 +179,11 @@ refineable_partition_handler <- function(lookup, key_class) {
     key_size = partitions_ui$key_size,
     decompose_key = partitions_ui$decompose_key,
     invert_key = partitions_ui$invert_key,
+    key_union = partitions_ui$key_union,
+    key_intersect = partitions_ui$key_intersect,
+    key_difference = partitions_ui$key_difference,
+    distinct_key_union = partitions_ui$distinct_key_union,
+    key_union = partitions_ui$key_union,
     subkey_difference = partitions_ui$subkey_difference,
     refine = function(rhs_key, lhs_key) {
       fetch_refined_partition(
@@ -309,6 +314,7 @@ partitions_ui <- function(lookup, key_class = c("bitset", "integer")) {
   # key_size: Key -> Int (equivalent to unkey >> length)
   # decompose_key: Key -> [Key] (per atomic element; unkey >> component_keys)
   # invert_key: Key -> Key (bitwise negation on the used bits only)
+  # key_intersect: Key -> Key -> Key
   # key_union: Key -> Key -> Key
   # distinct_key_union: Key -> Key -> Key (faster key_union for distinct keys)
   # key_difference: Key -> Key -> Key
@@ -355,6 +361,7 @@ bitset_partitions_ui <- function(lookup) {
     key_size = function(key) length(unkey(key)),
     decompose_key = decompose_key,
     invert_key = function(key) !key & full_key,
+    key_intersect = function(key1, key2) key1 & key2,
     key_union = function(key1, key2) key1 | key2,
     distinct_key_union = function(key1, key2) key1 | key2,
     key_difference = function(key1, key2) key1 & !key2,
@@ -393,6 +400,7 @@ integer_partitions_ui <- function(lookup) {
     key_size = function(key) length(unkey(key)),
     decompose_key = decompose_key,
     invert_key = function(key) bitwXor(key, full_key),
+    key_intersect = function(key1, key2) bitwAnd(key1, key2),
     key_union = function(key1, key2) bitwOr(key1, key2),
     distinct_key_union = function(key1, key2) key1 + key2,
     key_difference = function(key1, key2) bitwAnd(key1, bitwNot(key2)),
