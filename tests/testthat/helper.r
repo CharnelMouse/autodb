@@ -319,7 +319,8 @@ gen_df <- function(
   mincol = 0L,
   remove_dup_rows = FALSE,
   digits = NA,
-  variant = c("data.frame", "tibble")
+  variant = c("data.frame", "tibble"),
+  atomic = FALSE
 ) {
   asable_classes <- c(
     "logical",
@@ -327,7 +328,7 @@ gen_df <- function(
     "numeric",
     "character",
     "factor",
-    "list"
+    if (!atomic) "list"
   )
   list(
     gen.element(seq.int(min(mincol, ncol), ncol)) |>
