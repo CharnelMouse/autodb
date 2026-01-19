@@ -20,6 +20,9 @@
   are list columns.
 - `rejoin` no longer sorts as it merges relations, since there might be
   list columns in the key, which aren’t sortable.
+- Added nesting to `gv` and `d2` methods for classes containing data.
+  This allows giving more detail when a data column is a list where
+  elements have a common class or length.
 
 ## autodb 3.2.4
 
