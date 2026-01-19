@@ -349,7 +349,6 @@ describe("discover_keys", {
       ncol,
       remove_dup_rows = FALSE
     ) {
-      classes <- c("logical", "integer", "numeric", "character")
       changes <- list(
         logical = c("integer", "numeric", "character"),
         integer = c("numeric", "character"),

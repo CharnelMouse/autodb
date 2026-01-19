@@ -2,7 +2,11 @@ describe("df_join", {
   it("returns a table with unique rows if it joins it with itself (maybe re-ordered)", {
     forall(
       gen_df(4, 6, remove_dup_rows = TRUE),
-      expect_bi(with_args(df_equiv, digits = NA), identity, dup %>>% uncurry(df_join))
+      expect_bi(
+        with_args(df_equiv, digits = NA),
+        identity,
+        dup %>>% uncurry(df_join)
+      )
     )
   })
   it("merges simple tables with matching names/classes in the same way as merge()", {
@@ -25,7 +29,11 @@ describe("df_join", {
             gen.and_then(uncurry(gen.df_fixed_ranges)) |>
             gen.list(of = 2)
         })),
-      expect_bi(with_args(df_equiv, digits = NA), uncurry(df_join), uncurry(with_args(merge, sort = FALSE)))
+      expect_bi(
+        with_args(df_equiv, digits = NA),
+        uncurry(df_join),
+        uncurry(with_args(merge, sort = FALSE))
+      )
     )
   })
 })
