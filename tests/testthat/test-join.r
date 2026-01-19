@@ -10,7 +10,7 @@ describe("df_join", {
       gen.element(0:5) |>
         gen.and_then(\(n) {
           list(
-            gen.element(c("logical", "integer", "numeric", "character", "factor")) |>
+            gen.element(c("logical", "integer", "numeric", "character", "factor", "list")) |>
               gen.c(of = n),
             gen_attr_names(n, 9)
           )
@@ -25,7 +25,7 @@ describe("df_join", {
             gen.and_then(uncurry(gen.df_fixed_ranges)) |>
             gen.list(of = 2)
         })),
-      expect_bi(with_args(df_equiv, digits = NA), uncurry(df_join), uncurry(merge))
+      expect_bi(with_args(df_equiv, digits = NA), uncurry(df_join), uncurry(with_args(merge, sort = FALSE)))
     )
   })
 })
