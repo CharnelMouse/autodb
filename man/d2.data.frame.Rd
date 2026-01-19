@@ -4,7 +4,7 @@
 \alias{d2.data.frame}
 \title{Generate D2 input text to plot a data frame}
 \usage{
-\method{d2}{data.frame}(x, name = NA_character_, ...)
+\method{d2}{data.frame}(x, name = NA_character_, nest_level = Inf, ...)
 }
 \arguments{
 \item{x}{a data.frame.}
@@ -12,6 +12,10 @@
 \item{name}{a character scalar, giving the name of the record, if any. The
 name must be non-empty, since it is also used to name the single table in
 the plot. Defaults to \code{NA}: if left missing, it is set to "data".}
+
+\item{nest_level}{an integer, giving the amount of nesting allowed when
+giving the class of a list column. Since lists can hold anything in R, this
+allows showing common element classes and lengths.}
 
 \item{...}{further arguments passed to or from other methods.}
 }

@@ -4,7 +4,13 @@
 \alias{d2.database}
 \title{Generate D2 input text to plot databases}
 \usage{
-\method{d2}{database}(x, name = NA_character_, reference_level = c("attr", "relation"), ...)
+\method{d2}{database}(
+  x,
+  name = NA_character_,
+  reference_level = c("attr", "relation"),
+  nest_level = Inf,
+  ...
+)
 }
 \arguments{
 \item{x}{a \code{\link{database}}.}
@@ -14,6 +20,10 @@
 \item{reference_level}{a character scalar, indicating the format to use for
 foreign key references. "relation" only specifies the relations involved;
 "attr" also specifies the attributes involved, one pair at a time.}
+
+\item{nest_level}{an integer, giving the amount of nesting allowed when
+giving the class of a list column. Since lists can hold anything in R, this
+allows showing common element classes and lengths.}
 
 \item{...}{further arguments passed to or from other methods.}
 }

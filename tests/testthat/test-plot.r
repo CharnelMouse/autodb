@@ -575,6 +575,43 @@ describe("gv", {
         )
       )
     })
+    it("gives comment list element type, if approprate, up to given nesting level", {
+      x <- data.frame(a = 1:4)
+      x$b <- list(1L, 2:3, 4:6, 1L)
+      x$c <- list(1:2, 3:4, 5:6, 3:4)
+      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12))
+      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]))
+      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10))
+      db <- autodb(x, exclude = letters[2:6])
+      expected_text <- c(
+        "digraph {",
+        "  rankdir = \"LR\"",
+        "  node [shape=plaintext];",
+        "",
+        "  \"a\" [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD COLSPAN=\"3\">a (4 records)</TD></TR>",
+        "    <TR><TD PORT=\"TO_a\">a</TD><TD BGCOLOR=\"black\"></TD><TD PORT=\"FROM_a\">integer</TD></TR>",
+        "    <TR><TD PORT=\"TO_b\">b</TD><TD></TD><TD PORT=\"FROM_b\">list&lt;integer&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_c\">c</TD><TD></TD><TD PORT=\"FROM_c\">list&lt;integer[2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_d\">d</TD><TD></TD><TD PORT=\"FROM_d\">list&lt;list[2]&lt;integer[2]&gt;&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_e\">e</TD><TD></TD><TD PORT=\"FROM_e\">list&lt;[2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_f\">f</TD><TD></TD><TD PORT=\"FROM_f\">list&lt;list&lt;integer[2]&gt;&gt;</TD></TR>",
+        "    </TABLE>>];",
+        "}",
+        ""
+      )
+      expect_identical(gv(db), paste(expected_text, collapse = "\n"))
+      expected_text2 <- expected_text
+      expected_text2[c(11, 13)] <- c(
+        "    <TR><TD PORT=\"TO_d\">d</TD><TD></TD><TD PORT=\"FROM_d\">list&lt;list[2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_f\">f</TD><TD></TD><TD PORT=\"FROM_f\">list&lt;list&gt;</TD></TR>"
+      )
+      expect_identical(
+        gv(db, nest_level = 1),
+        paste(expected_text2, collapse = "\n")
+      )
+    })
   })
   describe("relation", {
     it("expects non-empty relation names", {
@@ -641,6 +678,45 @@ describe("gv", {
           "",
           sep = "\n"
         )
+      )
+    })
+    it("gives comment list element type, if approprate", {
+      x <- data.frame(a = 1:4)
+      x$b <- list(1L, 2:3, 4:6, 1L)
+      x$c <- list(1:2, 3:4, 5:6, 3:4)
+      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12))
+      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]))
+      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10))
+      rel <- synthesise(discover(x, exclude = letters[2:6])) |>
+        create() |>
+        insert(x)
+      expected_text <- c(
+        "digraph {",
+        "  rankdir = \"LR\"",
+        "  node [shape=plaintext];",
+        "",
+        "  \"a\" [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD COLSPAN=\"3\">a (4 records)</TD></TR>",
+        "    <TR><TD PORT=\"TO_a\">a</TD><TD BGCOLOR=\"black\"></TD><TD PORT=\"FROM_a\">integer</TD></TR>",
+        "    <TR><TD PORT=\"TO_b\">b</TD><TD></TD><TD PORT=\"FROM_b\">list&lt;integer&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_c\">c</TD><TD></TD><TD PORT=\"FROM_c\">list&lt;integer[2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_d\">d</TD><TD></TD><TD PORT=\"FROM_d\">list&lt;list[2]&lt;integer[2]&gt;&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_e\">e</TD><TD></TD><TD PORT=\"FROM_e\">list&lt;[2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_f\">f</TD><TD></TD><TD PORT=\"FROM_f\">list&lt;list&lt;integer[2]&gt;&gt;</TD></TR>",
+        "    </TABLE>>];",
+        "}",
+        ""
+      )
+      expect_identical(gv(rel), paste(expected_text, collapse = "\n"))
+      expected_text2 <- expected_text
+      expected_text2[c(11, 13)] <- c(
+        "    <TR><TD PORT=\"TO_d\">d</TD><TD></TD><TD PORT=\"FROM_d\">list&lt;list[2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_f\">f</TD><TD></TD><TD PORT=\"FROM_f\">list&lt;list&gt;</TD></TR>"
+      )
+      expect_identical(
+        gv(rel, nest_level = 1),
+        paste(expected_text2, collapse = "\n")
       )
     })
   })
@@ -1041,6 +1117,42 @@ describe("gv", {
         )
       )
     })
+    it("gives comment list element type, if approprate", {
+      x <- data.frame(a = 1:4)
+      x$b <- list(1L, 2:3, 4:6, 1L)
+      x$c <- list(1:2, 3:4, 5:6, 3:4)
+      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12))
+      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]))
+      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10))
+      expected_text <- c(
+        "digraph \"data\" {",
+        "  rankdir = \"LR\"",
+        "  node [shape=plaintext];",
+        "",
+        "  \"data\" [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD COLSPAN=\"2\">data (4 rows)</TD></TR>",
+        "    <TR><TD PORT=\"TO_a\">a</TD><TD PORT=\"FROM_a\">integer</TD></TR>",
+        "    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\">list&lt;integer&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\">list&lt;integer[2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\">list&lt;list[2]&lt;integer[2]&gt;&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\">list&lt;[2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_f\">f</TD><TD PORT=\"FROM_f\">list&lt;list&lt;integer[2]&gt;&gt;</TD></TR>",
+        "    </TABLE>>];",
+        "}",
+        ""
+      )
+      expect_identical(gv(x), paste(expected_text, collapse = "\n"))
+      expected_text2 <- expected_text
+      expected_text2[c(11, 13)] <- c(
+        "    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\">list&lt;list[2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_f\">f</TD><TD PORT=\"FROM_f\">list&lt;list&gt;</TD></TR>"
+      )
+      expect_identical(
+        gv(x, nest_level = 1),
+        paste(expected_text2, collapse = "\n")
+      )
+    })
   })
 })
 
@@ -1083,14 +1195,14 @@ describe("d2", {
       base_text <- c(
         "\"Measurement\": \"Measurement (0 records)\" {",
         "  shape: sql_table",
-        "  \"Chick\": logical {constraint: [PK; FK1]}",
-        "  \"Time\": logical {constraint: [PK]}",
-        "  \"weight\": logical",
+        "  \"Chick\": \"logical\" {constraint: [PK; FK1]}",
+        "  \"Time\": \"logical\" {constraint: [PK]}",
+        "  \"weight\": \"logical\"",
         "}",
         "\"Chick\": \"Chick (0 records)\" {",
         "  shape: sql_table",
-        "  \"Chick\": logical {constraint: [PK]}",
-        "  \"Diet\": logical",
+        "  \"Chick\": \"logical\" {constraint: [PK]}",
+        "  \"Diet\": \"logical\"",
         "}"
       )
       tableref_text <- "\"Measurement\" -> \"Chick\""
@@ -1170,8 +1282,8 @@ describe("d2", {
         "direction: right",
         "\"Genre ID\": \"Genre ID (0 records)\" {",
         "  shape: sql_table",
-        "  \"Genre ID\": logical {constraint: [PK]}",
-        "  \"Genre Name\": logical",
+        "  \"Genre ID\": \"logical\" {constraint: [PK]}",
+        "  \"Genre Name\": \"logical\"",
         "}",
         "",
         sep = "\n"
@@ -1194,8 +1306,8 @@ describe("d2", {
           "direction: right",
           '"<rel&1>": "<rel&1> (0 records)" {',
           "  shape: sql_table",
-          '  "a<1 & b>2": logical {constraint: [PK]}',
-          '  "d": logical',
+          '  "a<1 & b>2": \"logical\" {constraint: [PK]}',
+          '  "d": \"logical\"',
           "}",
           "",
           sep = "\n"
@@ -1218,9 +1330,9 @@ describe("d2", {
         "direction: right",
         "\"a + b = c\": \"a + b = c (0 records)\" {",
         "  shape: sql_table",
-        "  \"a\": logical {constraint: [PK; UNQ1]}",
-        "  \"b\": logical {constraint: [PK; UNQ2]}",
-        "  \"c\": logical {constraint: [UNQ1; UNQ2]}",
+        "  \"a\": \"logical\" {constraint: [PK; UNQ1]}",
+        "  \"b\": \"logical\" {constraint: [PK; UNQ2]}",
+        "  \"c\": \"logical\" {constraint: [UNQ1; UNQ2]}",
         "}",
         ""
       )
@@ -1265,9 +1377,9 @@ describe("d2", {
         "direction: right",
         "\"a + b = c\": \"a + b = c (0 records)\" {",
         "  shape: sql_table",
-        "  \"a\": logical {constraint: [PK; UNQ1]}",
-        "  \"b\": logical {constraint: [PK; UNQ2]}",
-        "  \"c\": logical {constraint: [UNQ1; UNQ2]}",
+        "  \"a\": \"logical\" {constraint: [PK; UNQ1]}",
+        "  \"b\": \"logical\" {constraint: [PK; UNQ2]}",
+        "  \"c\": \"logical\" {constraint: [UNQ1; UNQ2]}",
         "}",
         ""
       )
@@ -1295,15 +1407,15 @@ describe("d2", {
         "direction: right",
         "\"Measurement\": \"Measurement (0 records)\" {",
         "  shape: sql_table",
-        "  \"Chick\": logical {constraint: [PK; FK1]}",
-        "  \"Time\": logical {constraint: [PK; FK1]}",
-        "  \"weight\": logical",
+        "  \"Chick\": \"logical\" {constraint: [PK; FK1]}",
+        "  \"Time\": \"logical\" {constraint: [PK; FK1]}",
+        "  \"weight\": \"logical\"",
         "}",
         "\"Diet\": \"Diet (0 records)\" {",
         "  shape: sql_table",
-        "  \"Diet\": logical {constraint: [PK]}",
-        "  \"Chick\": logical {constraint: [UNQ1]}",
-        "  \"Time\": logical {constraint: [UNQ1]}",
+        "  \"Diet\": \"logical\" {constraint: [PK]}",
+        "  \"Chick\": \"logical\" {constraint: [UNQ1]}",
+        "  \"Time\": \"logical\" {constraint: [UNQ1]}",
         "}"
       )
       tableref_text <- c(
@@ -1344,14 +1456,14 @@ describe("d2", {
         "direction: right",
         "\"a_b\": \"a_b (0 records)\" {",
         "  shape: sql_table",
-        "  \"a\": logical {constraint: [PK; FK1]}",
-        "  \"b\": logical {constraint: [PK; FK2]}",
-        "  \"c\": logical {constraint: [FK1; FK2]}",
+        "  \"a\": \"logical\" {constraint: [PK; FK1]}",
+        "  \"b\": \"logical\" {constraint: [PK; FK2]}",
+        "  \"c\": \"logical\" {constraint: [FK1; FK2]}",
         "}",
         "\"d_e\": \"d_e (0 records)\" {",
         "  shape: sql_table",
-        "  \"d\": logical {constraint: [PK]}",
-        "  \"e\": logical {constraint: [PK]}",
+        "  \"d\": \"logical\" {constraint: [PK]}",
+        "  \"e\": \"logical\" {constraint: [PK]}",
         "}"
       )
       # no repeat a_b -> d_e
@@ -1373,6 +1485,38 @@ describe("d2", {
       expect_identical(
         d2(db, reference_level = "attr"),
         paste(c(main_text, attrref_text, ""), collapse = "\n")
+      )
+    })
+    it("gives comment list element type, if approprate", {
+      x <- data.frame(a = 1:4)
+      x$b <- list(1L, 2:3, 4:6, 1L)
+      x$c <- list(1:2, 3:4, 5:6, 3:4)
+      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12))
+      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]))
+      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10))
+      db <- autodb(x, exclude = letters[2:6])
+      expected_text <- c(
+        "direction: right",
+        "\"a\": \"a (4 records)\" {",
+        "  shape: sql_table",
+        "  \"a\": \"integer\" {constraint: [PK]}",
+        "  \"b\": \"list<integer>\"",
+        "  \"c\": \"list<integer[2]>\"",
+        "  \"d\": \"list<list[2]<integer[2]>>\"",
+        "  \"e\": \"list<[2]>\"",
+        "  \"f\": \"list<list<integer[2]>>\"",
+        "}",
+        ""
+      )
+      expect_identical(d2(db), paste(expected_text, collapse = "\n"))
+      expected_text2 <- expected_text
+      expected_text2[c(7, 9)] <- c(
+        "  \"d\": \"list<list[2]>\"",
+        "  \"f\": \"list<list>\""
+      )
+      expect_identical(
+        d2(db, nest_level = 1),
+        paste(expected_text2, collapse = "\n")
       )
     })
   })
@@ -1410,14 +1554,14 @@ describe("d2", {
       base_text <- c(
         "\"Measurement\": \"Measurement (0 records)\" {",
         "  shape: sql_table",
-        "  \"Chick\": logical {constraint: [PK]}",
-        "  \"Time\": logical {constraint: [PK]}",
-        "  \"weight\": logical",
+        "  \"Chick\": \"logical\" {constraint: [PK]}",
+        "  \"Time\": \"logical\" {constraint: [PK]}",
+        "  \"weight\": \"logical\"",
         "}",
         "\"Chick\": \"Chick (0 records)\" {",
         "  shape: sql_table",
-        "  \"Chick\": logical {constraint: [PK]}",
-        "  \"Diet\": logical",
+        "  \"Chick\": \"logical\" {constraint: [PK]}",
+        "  \"Diet\": \"logical\"",
         "}"
       )
       expect_identical(
@@ -1473,8 +1617,8 @@ describe("d2", {
         "direction: right",
         "\"Genre ID\": \"Genre ID (0 records)\" {",
         "  shape: sql_table",
-        "  \"Genre ID\": logical {constraint: [PK]}",
-        "  \"Genre Name\": logical",
+        "  \"Genre ID\": \"logical\" {constraint: [PK]}",
+        "  \"Genre Name\": \"logical\"",
         "}",
         "",
         sep = "\n"
@@ -1496,8 +1640,8 @@ describe("d2", {
           "direction: right",
           '"<rel&1>": "<rel&1> (0 records)" {',
           "  shape: sql_table",
-          '  "a<1 & b>2": logical {constraint: [PK]}',
-          '  "d": logical',
+          '  "a<1 & b>2": \"logical\" {constraint: [PK]}',
+          '  "d": \"logical\"',
           "}",
           "",
           sep = "\n"
@@ -1519,15 +1663,49 @@ describe("d2", {
         "direction: right",
         "\"a + b = c\": \"a + b = c (0 records)\" {",
         "  shape: sql_table",
-        "  \"a\": logical {constraint: [PK; UNQ1]}",
-        "  \"b\": logical {constraint: [PK; UNQ2]}",
-        "  \"c\": logical {constraint: [UNQ1; UNQ2]}",
+        "  \"a\": \"logical\" {constraint: [PK; UNQ1]}",
+        "  \"b\": \"logical\" {constraint: [PK; UNQ2]}",
+        "  \"c\": \"logical\" {constraint: [UNQ1; UNQ2]}",
         "}",
         ""
       )
       expect_identical(
         d2(rel),
         paste(text, collapse = "\n")
+      )
+    })
+    it("gives comment list element type and length, if approprate", {
+      x <- data.frame(a = 1:4)
+      x$b <- list(1L, 2:3, 4:6, 1L)
+      x$c <- list(1:2, 3:4, 5:6, 3:4)
+      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12))
+      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]))
+      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10))
+      rel <- synthesise(discover(x, exclude = letters[2:6])) |>
+        create() |>
+        insert(x)
+      expected_text <- c(
+        "direction: right",
+        "\"a\": \"a (4 records)\" {",
+        "  shape: sql_table",
+        "  \"a\": \"integer\" {constraint: [PK]}",
+        "  \"b\": \"list<integer>\"",
+        "  \"c\": \"list<integer[2]>\"",
+        "  \"d\": \"list<list[2]<integer[2]>>\"",
+        "  \"e\": \"list<[2]>\"",
+        "  \"f\": \"list<list<integer[2]>>\"",
+        "}",
+        ""
+      )
+      expect_identical(d2(rel), paste(expected_text, collapse = "\n"))
+      expected_text2 <- expected_text
+      expected_text2[c(7, 9)] <- c(
+        "  \"d\": \"list<list[2]>\"",
+        "  \"f\": \"list<list>\""
+      )
+      expect_identical(
+        d2(rel, nest_level = 1),
+        paste(expected_text2, collapse = "\n")
       )
     })
   })
@@ -1969,8 +2147,8 @@ describe("d2", {
           "direction: right",
           "\"table\": \"table (2 rows)\" {",
           "  shape: sql_table",
-          "  \"a\": integer",
-          "  \"b\": character",
+          "  \"a\": \"integer\"",
+          "  \"b\": \"character\"",
           "}",
           "",
           sep = "\n"
@@ -1988,8 +2166,8 @@ describe("d2", {
           "direction: right",
           "\"Table Test\": \"Table Test (2 rows)\" {",
           "  shape: sql_table",
-          "  \"A 1\": integer",
-          "  \"b.2\": character",
+          "  \"A 1\": \"integer\"",
+          "  \"b.2\": \"character\"",
           "}",
           "",
           sep = "\n"
@@ -2005,12 +2183,43 @@ describe("d2", {
           "direction: right",
           "\"Table Test\": \"Table Test (2 rows)\" {",
           "  shape: sql_table",
-          "  \"a\": integer",
-          "  \"b<2 & c>3\": character",
+          "  \"a\": \"integer\"",
+          "  \"b<2 & c>3\": \"character\"",
           "}",
           "",
           sep = "\n"
         )
+      )
+    })
+    it("gives comment list element type, if approprate", {
+      x <- data.frame(a = 1:4)
+      x$b <- list(1L, 2:3, 4:6, 1L)
+      x$c <- list(1:2, 3:4, 5:6, 3:4)
+      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12))
+      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]))
+      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10))
+      expected_text <- c(
+        "direction: right",
+        "\"data\": \"data (4 rows)\" {",
+        "  shape: sql_table",
+        "  \"a\": \"integer\"",
+        "  \"b\": \"list<integer>\"",
+        "  \"c\": \"list<integer[2]>\"",
+        "  \"d\": \"list<list[2]<integer[2]>>\"",
+        "  \"e\": \"list<[2]>\"",
+        "  \"f\": \"list<list<integer[2]>>\"",
+        "}",
+        ""
+      )
+      expect_identical(d2(x), paste(expected_text, collapse = "\n"))
+      expected_text2 <- expected_text
+      expected_text2[c(7, 9)] <- c(
+        "  \"d\": \"list<list[2]>\"",
+        "  \"f\": \"list<list>\""
+      )
+      expect_identical(
+        d2(x, nest_level = 1),
+        paste(expected_text2, collapse = "\n")
       )
     })
   })

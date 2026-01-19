@@ -4,7 +4,7 @@
 \alias{gv.database}
 \title{Generate Graphviz input text to plot databases}
 \usage{
-\method{gv}{database}(x, name = NA_character_, ...)
+\method{gv}{database}(x, name = NA_character_, nest_level = Inf, ...)
 }
 \arguments{
 \item{x}{a database, as returned by \code{\link{autoref}} or
@@ -13,6 +13,10 @@
 \item{name}{a scalar character, giving the name of the database, if any. This
 name is used for the resulting graph, to allow for easier combining of
 graphs into a single diagram if required.}
+
+\item{nest_level}{an integer, giving the amount of nesting allowed when
+giving the class of a list column. Since lists can hold anything in R, this
+allows showing common element classes and lengths.}
 
 \item{...}{further arguments passed to or from other methods.}
 }

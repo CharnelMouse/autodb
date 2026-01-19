@@ -4,12 +4,16 @@
 \alias{gv.relation}
 \title{Generate Graphviz input text to plot relations}
 \usage{
-\method{gv}{relation}(x, name = NA_character_, ...)
+\method{gv}{relation}(x, name = NA_character_, nest_level = Inf, ...)
 }
 \arguments{
 \item{x}{a \code{\link{relation}}.}
 
 \item{name}{a character scalar, giving the name of the schema, if any.}
+
+\item{nest_level}{an integer, giving the amount of nesting allowed when
+giving the class of a list column. Since lists can hold anything in R, this
+allows showing common element classes and lengths.}
 
 \item{...}{further arguments passed to or from other methods.}
 }

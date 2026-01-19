@@ -176,12 +176,15 @@ d2 <- function(x, ...) {
 #' @param name a scalar character, giving the name of the database, if any. This
 #'   name is used for the resulting graph, to allow for easier combining of
 #'   graphs into a single diagram if required.
+#' @param nest_level an integer, giving the amount of nesting allowed when
+#'   giving the class of a list column. Since lists can hold anything in R, this
+#'   allows showing common element classes and lengths.
 #' @inheritParams gv
 #'
 #' @return A scalar character, containing text input for Graphviz.
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
-gv.database <- function(x, name = NA_character_, ...) {
+gv.database <- function(x, name = NA_character_, nest_level = Inf, ...) {
   if (any(names(x) == ""))
     stop("relation names can not be zero characters in length")
   if (!is.character(name) || length(name) != 1)
@@ -198,7 +201,7 @@ gv.database <- function(x, name = NA_character_, ...) {
     label = names(x_labelled),
     classes = lapply(
       records(x_elemented),
-      \(df) vapply(df, \(a) class(a)[[1]], character(1))
+      \(df) vapply(df, column_class_string_gv, character(1), nest_level)
     ),
     nrow = lapply(records(x_elemented), nrow),
     row_name = "record"
@@ -243,6 +246,9 @@ gv.database <- function(x, name = NA_character_, ...) {
 #' @param reference_level a character scalar, indicating the format to use for
 #'   foreign key references. "relation" only specifies the relations involved;
 #'   "attr" also specifies the attributes involved, one pair at a time.
+#' @param nest_level an integer, giving the amount of nesting allowed when
+#'   giving the class of a list column. Since lists can hold anything in R, this
+#'   allows showing common element classes and lengths.
 #' @inheritParams d2
 #'
 #' @return A scalar character, containing text input for D2.
@@ -252,6 +258,7 @@ d2.database <- function(
   x,
   name = NA_character_,
   reference_level = c("attr", "relation"),
+  nest_level = Inf,
   ...
 ) {
   if (any(names(x) == ""))
@@ -271,7 +278,7 @@ d2.database <- function(
     label = names(x_labelled),
     classes = lapply(
       records(x_elemented),
-      \(df) vapply(df, \(a) class(a)[[1]], character(1))
+      \(df) vapply(df, column_class_string_d2, character(1), nest_level)
     ),
     nrow = lapply(records(x_elemented), nrow),
     references = lapply(
@@ -316,12 +323,15 @@ d2.database <- function(
 #'
 #' @param x a \code{\link{relation}}.
 #' @param name a character scalar, giving the name of the schema, if any.
+#' @param nest_level an integer, giving the amount of nesting allowed when
+#'   giving the class of a list column. Since lists can hold anything in R, this
+#'   allows showing common element classes and lengths.
 #' @inheritParams gv
 #'
 #' @return A scalar character, containing text input for Graphviz.
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
-gv.relation <- function(x, name = NA_character_, ...) {
+gv.relation <- function(x, name = NA_character_, nest_level = Inf, ...) {
   if (any(names(x) == ""))
     stop("relation names can not be zero characters in length")
   if (!is.character(name) || length(name) != 1)
@@ -338,7 +348,7 @@ gv.relation <- function(x, name = NA_character_, ...) {
     label = names(x_labelled),
     classes = lapply(
       records(x_elemented),
-      \(df) vapply(df, \(a) class(a)[[1]], character(1))
+      \(df) vapply(df, column_class_string_gv, character(1), nest_level)
     ),
     nrow = lapply(records(x_elemented), nrow)
   ) |>
@@ -366,12 +376,15 @@ gv.relation <- function(x, name = NA_character_, ...) {
 #'
 #' @param x a \code{\link{relation}}.
 #' @param name a character scalar, giving the name of the schema, if any.
+#' @param nest_level an integer, giving the amount of nesting allowed when
+#'   giving the class of a list column. Since lists can hold anything in R, this
+#'   allows showing common element classes and lengths.
 #' @inheritParams d2
 #'
 #' @return A scalar character, containing text input for D2.
 #' @seealso The generic \code{\link{d2}}.
 #' @exportS3Method
-d2.relation <- function(x, name = NA_character_, ...) {
+d2.relation <- function(x, name = NA_character_, nest_level = Inf, ...) {
   if (any(names(x) == ""))
     stop("relation names can not be zero characters in length")
   if (!is.character(name) || length(name) != 1)
@@ -388,7 +401,7 @@ d2.relation <- function(x, name = NA_character_, ...) {
     label = names(x_labelled),
     classes = lapply(
       records(x_elemented),
-      \(df) vapply(df, \(a) class(a)[[1]], character(1))
+      \(df) vapply(df, column_class_string_d2, character(1), nest_level)
     ),
     nrow = lapply(records(x_elemented), nrow),
     MoreArgs = list(references = list())
@@ -654,12 +667,15 @@ d2.relation_schema <- function(x, name = NA_character_, ...) {
 #' @param name a character scalar, giving the name of the record, if any. The
 #'   name must be non-empty, since it is also used to name the single table in
 #'   the plot. Defaults to `NA`: if left missing, it is set to "data".
+#' @param nest_level an integer, giving the amount of nesting allowed when
+#'   giving the class of a list column. Since lists can hold anything in R, this
+#'   allows showing common element classes and lengths.
 #' @inheritParams gv
 #'
 #' @return A scalar character, containing text input for Graphviz.
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
-gv.data.frame <- function(x, name = NA_character_, ...) {
+gv.data.frame <- function(x, name = NA_character_, nest_level = Inf, ...) {
   if (is.na(name))
     name <- "data"
   if (name == "")
@@ -677,7 +693,7 @@ gv.data.frame <- function(x, name = NA_character_, ...) {
     keys = list(),
     name = to_element_name(name),
     label = to_node_name(name),
-    classes = vapply(x, \(a) class(a)[[1]], character(1)),
+    classes = vapply(x, column_class_string_gv, character(1), nest_level),
     nrow = nrow(x),
     row_name = "row"
   )
@@ -705,12 +721,15 @@ gv.data.frame <- function(x, name = NA_character_, ...) {
 #' @param name a character scalar, giving the name of the record, if any. The
 #'   name must be non-empty, since it is also used to name the single table in
 #'   the plot. Defaults to `NA`: if left missing, it is set to "data".
+#' @param nest_level an integer, giving the amount of nesting allowed when
+#'   giving the class of a list column. Since lists can hold anything in R, this
+#'   allows showing common element classes and lengths.
 #' @inheritParams d2
 #'
 #' @return A scalar character, containing text input for Graphviz.
 #' @seealso The generic \code{\link{d2}}.
 #' @exportS3Method
-d2.data.frame <- function(x, name = NA_character_, ...) {
+d2.data.frame <- function(x, name = NA_character_, nest_level = Inf, ...) {
   if (is.na(name))
     name <- "data"
   if (name == "")
@@ -729,7 +748,7 @@ d2.data.frame <- function(x, name = NA_character_, ...) {
     keys = list(),
     name = name,
     label = to_quoted_name(name),
-    classes = vapply(x, \(a) class(a)[[1]], character(1)),
+    classes = vapply(x, column_class_string_d2, character(1), nest_level),
     nrow = nrow(x),
     references = list(),
     row_name = "row"
@@ -752,6 +771,88 @@ setup_string_gv <- function(df_name) {
     indent("rankdir = \"LR\""),
     indent("node [shape=plaintext];")
   )
+}
+
+column_class_string_gv <- function(a, nest_level) {
+  res <- class(a)[[1]]
+  if (res != "list" || length(a) == 0 || nest_level <= 0)
+    return(res)
+  sublist_info <- column_subclass_string_gv(a, nest_level)
+  if (nchar(sublist_info) == 0)
+    res
+  else
+    paste0(res, "&lt;", sublist_info, "&gt;")
+}
+
+column_subclass_string_gv <- function(a, nest_level) {
+  if (nest_level <= 0)
+    return("")
+  lens <- lengths(a)
+  same_length <- all(lens == lens[[1]])
+  element_classes <- vapply(a, \(x) class(x)[[1]], character(1))
+  same_class <- all(element_classes == element_classes[[1]])
+  if (!same_length && !same_class)
+    return("")
+
+  res <- paste0(
+    if (same_class) element_classes[[1]],
+    if (same_length && element_classes[[1]] != "NULL") paste0("[", lens[[1]], "]")
+  )
+  if (!same_class)
+    return(res)
+  if (element_classes[[1]] != "list" || nest_level <= 0)
+    return(res)
+  subelements <- unlist(a, recursive = FALSE)
+  if (length(subelements) == 0)
+    return(res)
+  substrings <- column_subclass_string_d2(
+    subelements,
+    nest_level - 1L
+  )
+  if (substrings[[1]] == "" || !all(substrings == substrings[[1]]))
+    return(res)
+  paste0(res, "&lt;", substrings[[1]], "&gt;")
+}
+
+column_class_string_d2 <- function(a, nest_level) {
+  res <- class(a)[[1]]
+  if (res != "list" || length(a) == 0)
+    return(res)
+  sublist_info <- column_subclass_string_d2(a, nest_level)
+  if (nchar(sublist_info) == 0)
+    res
+  else
+    paste0(res, "<", sublist_info, ">")
+}
+
+column_subclass_string_d2 <- function(a, nest_level) {
+  if (nest_level <= 0)
+    return("")
+  lens <- lengths(a)
+  same_length <- all(lens == lens[[1]])
+  element_classes <- vapply(a, \(x) class(x)[[1]], character(1))
+  same_class <- all(element_classes == element_classes[[1]])
+  if (!same_length && !same_class)
+    return("")
+
+  res <- paste0(
+    if (same_class) element_classes[[1]],
+    if (same_length && element_classes[[1]] != "NULL") paste0("[", lens[[1]], "]")
+  )
+  if (!same_class)
+    return(res)
+  if (element_classes[[1]] != "list" || nest_level <= 0)
+    return(res)
+  subelements <- unlist(a, recursive = FALSE)
+  if (length(subelements) == 0)
+    return(res)
+  substrings <- column_subclass_string_d2(
+    subelements,
+    nest_level - 1L
+  )
+  if (substrings[[1]] == "" || !all(substrings == substrings[[1]]))
+    return(res)
+  paste0(res, "<", substrings[[1]], ">")
 }
 
 relation_string_gv <- function(
@@ -912,8 +1013,9 @@ columns_string_gv <- function(col_names, col_labels, keys, col_classes) {
 columns_string_d2 <- function(col_names, col_labels, keys, col_classes, references) {
   column_typing_info <- paste0(
     col_names,
-    ": ",
+    ": \"",
     col_classes,
+    "\"",
     recycle0 = TRUE
   )
   key_matches <- lapply(
