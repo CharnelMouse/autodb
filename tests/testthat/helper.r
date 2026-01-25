@@ -328,7 +328,8 @@ gen_df <- function(
     "numeric",
     "character",
     "factor",
-    if (!atomic) "list"
+    if (!atomic) "list",
+    if (!atomic) "matrix"
   )
   list(
     gen.element(seq.int(min(mincol, ncol), ncol)) |>
@@ -374,7 +375,15 @@ gen.df_fixed_ranges <- function(
         gen.with(with_args(factor, levels = c("FALSE", "TRUE")))
     ) |>
       gen.list(from = 0, to = 5) |>
-      gen.with(list) # wrap so values don't get concatenated into single list later
+      gen.with(list), # wrap so values don't get concatenated into single list later
+    matrix = gen.choice(
+      gen.element(c(FALSE, TRUE, NA)),
+      gen.element(c(-5:5, NA_integer_)),
+      gen.numeric(),
+      gen.element(c("FALSE", "TRUE", NA_character_)),
+      gen.element(c("FALSE", "TRUE", NA_character_)) |>
+        gen.with(with_args(factor, levels = c("FALSE", "TRUE")))
+    )
   )
   inits <- list(
     logical = logical(),
@@ -382,7 +391,8 @@ gen.df_fixed_ranges <- function(
     numeric = numeric(),
     character = character(),
     factor = factor(character(), levels = c("FALSE", "TRUE")),
-    list = list()
+    list = list(),
+    matrix = matrix(logical(), nrow = n_records, ncol = 0)
   )
   if (length(classes) == 0L)
     return(
@@ -405,18 +415,25 @@ gen.df_fixed_ranges <- function(
           init = inits[[cl]]
         )) |>
         gen.and_then(\(x) {
-          if (cl %in% c("numeric", "complex"))
-            gen.float_coincide(x, digits)
-          else
-            gen.pure(x)
-        }) |>
-        gen.with(as.data.frame.vector)
+          switch(
+            cl,
+            numeric = gen.float_coincide(x, digits) |> gen.with(as.data.frame.vector),
+            complex = gen.float_coincide(x, digits) |> gen.with(as.data.frame.vector),
+            matrix = gen.with(x, \(x) {
+              mat <- matrix(x, nrow = n_records)
+              dat <- data.frame(a = seq_len(n_records))[, FALSE, drop = FALSE]
+              dat[[1]] <- mat
+              dat
+            }),
+            gen.pure(x) |> gen.with(as.data.frame.vector)
+          )
+        })
     }
   ) |>
     gen.with(
       with_args(as.data.frame, check.names = FALSE) %>>%
         with_args(setNames, nm = nms) %>>%
-        (if (remove_dup_rows) unique else identity)
+        (if (remove_dup_rows) df_unique else identity)
     ) |>
     gen.with(variant)
 }

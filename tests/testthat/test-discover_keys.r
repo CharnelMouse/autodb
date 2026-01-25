@@ -355,7 +355,8 @@ describe("discover_keys", {
         numeric = c("character"),
         character = c("logical"),
         factor = c("integer", "numeric", "character"),
-        list = character()
+        list = character(),
+        matrix = character()
       )
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.sample(ncol(df)))) |>
@@ -422,7 +423,7 @@ describe("discover_keys", {
         dependants,
         size_limit
       ) {
-        logical_cols <- names(df)[vapply(df, is.logical, logical(1))]
+        logical_cols <- names(df)[vapply(df, inherits, logical(1), "logical")]
         arglists <- expand.grid(
           if (isFALSE(keep_rownames))
             list(list(df = df, keep_rownames = FALSE))
@@ -469,7 +470,10 @@ describe("discover_keys", {
         )
         if (any(vapply(results, is.null, logical(1))))
           return(fail("some argument lists time out"))
-        expect_true(all(vapply(results, keys_equivalent, logical(1), results[[1]])))
+        expect_identical(
+          which(!vapply(results, keys_equivalent, logical(1), results[[1]])),
+          integer()
+        )
       }
       forall(
         gen_df(4, 6) |>

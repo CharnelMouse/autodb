@@ -5,11 +5,23 @@ describe("df_duplicated", {
     df2 <- df[FALSE, , drop = FALSE]
     expect_identical(df_duplicated(df2), logical())
   })
-  it("is the same as duplicated for data frames with at least one column", {
+  it("is the same as duplicated for data frames with at least one column...", {
     forall(
       gen_df(6, 7, mincol = 1),
-      expect_biidentical(df_duplicated, duplicated)
+      if_discard_else(
+        \(x) any(vapply(x, \(y) inherits(y, "array") && ncol(y) <= 1, logical(1))),
+        expect_biidentical(df_duplicated, duplicated)
+      )
     )
+  })
+  it("except for zero-or-one-column matrix columns, then it checks for duplicate rows", {
+    df <- data.frame(a = 1:6)[, FALSE, drop = FALSE]
+    df$a <- matrix(integer(), nrow = 6, ncol = 0)
+    expect_identical(df_duplicated(df), rep(c(FALSE, TRUE), c(1, 5)))
+
+    df2 <- data.frame(a = 1:6)[, FALSE, drop = FALSE]
+    df2$a <- matrix(1:3, nrow = 6, ncol = 1)
+    expect_identical(df_duplicated(df2), rep(c(FALSE, TRUE), c(3, 3)))
   })
 })
 
@@ -20,11 +32,23 @@ describe("df_unique", {
     df2 <- df[FALSE, , drop = FALSE]
     expect_identical(df_unique(df2), df2)
   })
-  it("is the same as unique for data frames with at least one column", {
+  it("is the same as unique for data frames with at least one column...", {
     forall(
       gen_df(6, 7, mincol = 1),
-      expect_biidentical(df_unique, unique)
+      if_discard_else(
+        \(x) any(vapply(x, \(y) inherits(y, "array") && ncol(y) <= 1, logical(1))),
+        expect_biidentical(df_unique, unique)
+      )
     )
+  })
+  it("except for zero-or-one-column matrix columns, then it checks for duplicate rows", {
+    df <- data.frame(a = 1:6)[, FALSE, drop = FALSE]
+    df$a <- matrix(integer(), nrow = 6, ncol = 0)
+    expect_identical(df_unique(df), df[1, , drop = FALSE])
+
+    df2 <- data.frame(a = 1:6)[, FALSE, drop = FALSE]
+    df2$a <- matrix(1:3, nrow = 6, ncol = 1)
+    expect_identical(df_unique(df2), df2[1:3, , drop = FALSE])
   })
 })
 
@@ -37,11 +61,23 @@ describe("df_anyDuplicated", {
     df3 <- df[FALSE, , drop = FALSE]
     expect_identical(df_anyDuplicated(df3), 0L)
   })
-  it("is the same as duplicated for data frames with at least one column", {
+  it("is the same as duplicated for data frames with at least one column...", {
     forall(
       gen_df(6, 7, mincol = 1),
-      expect_biidentical(df_anyDuplicated, anyDuplicated)
+      if_discard_else(
+        \(x) any(vapply(x, \(y) inherits(y, "array") && ncol(y) <= 1, logical(1))),
+        expect_biidentical(df_anyDuplicated, anyDuplicated)
+      )
     )
+  })
+  it("except for zero-or-one-column matrix columns, then it checks for duplicate rows", {
+    df <- data.frame(a = 1:6)[, FALSE, drop = FALSE]
+    df$a <- matrix(integer(), nrow = 6, ncol = 0)
+    expect_identical(df_anyDuplicated(df), 2L)
+
+    df2 <- data.frame(a = 1:6)[, FALSE, drop = FALSE]
+    df2$a <- matrix(1:3, nrow = 6, ncol = 1)
+    expect_identical(df_anyDuplicated(df2), 4L)
   })
 })
 

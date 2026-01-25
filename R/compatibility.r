@@ -11,6 +11,12 @@
 #' `duplicated`, such as \code{\link{unique}} and \code{\link{anyDuplicated}}.
 #' These functions add zero-column data frames as a special case.
 #'
+#' Additionally, if a data frame has one column, duplicated is called directly
+#' on that column instead. This causes issues if that one column is a matrix
+#' with zero columns, since it returns an empty matrix instead of an empty
+#' vector. These functions treat such a case by comparing the matrix rows
+#' instead.
+#'
 #' @param x a data frame.
 #' @inheritParams base::duplicated.data.frame
 #' @return For \code{df_duplicated}, a logical vector with one element for each
@@ -18,12 +24,21 @@
 #' @export
 #' @seealso \code{\link{df_rbind}}
 df_duplicated <- function(x, incomparables = FALSE, fromLast = FALSE, ...) {
-  if (ncol(x) == 0) {
-    ints <- rep(1L, nrow(x))
-    duplicated(ints, incomparables = incomparables, fromLast = fromLast, ...)
-  }else{
+  if (ncol(x) == 0)
+    return(duplicated(
+      rep(1L, nrow(x)),
+      incomparables = incomparables,
+      fromLast = fromLast,
+      ...
+    ))
+  if (ncol(x) == 1 && inherits(x[[1]], "array"))
+    arr_duplicated(x[[1]])
+  else
     duplicated(x, incomparables = incomparables, fromLast = fromLast, ...)
-  }
+}
+
+arr_duplicated <- function(x, incomparables = FALSE, fromLast = FALSE, ...) {
+  duplicated.default(asplit(x, 1))
 }
 
 #' @rdname df_duplicated
@@ -43,12 +58,21 @@ df_unique <- function(x, incomparables = FALSE, fromLast = FALSE, ...) {
 #'   0.
 #' @export
 df_anyDuplicated <- function(x, incomparables = FALSE, fromLast = FALSE, ...) {
-  if (ncol(x) == 0) {
-    ints <- rep(1L, nrow(x))
-    anyDuplicated(ints, incomparables = incomparables, fromLast = fromLast, ...)
-  }else{
+  if (ncol(x) == 0)
+    return(anyDuplicated(
+      rep(1L, nrow(x)),
+      incomparables = incomparables,
+      fromLast = fromLast,
+      ...
+    ))
+  if (ncol(x) == 1 && inherits(x[[1]], "array"))
+    arr_anyDuplicated(x[[1]])
+  else
     anyDuplicated(x, incomparables = incomparables, fromLast = fromLast, ...)
-  }
+}
+
+arr_anyDuplicated <- function(x, incomparables = FALSE, fromLast = FALSE, ...) {
+  anyDuplicated.default(asplit(x, 1))
 }
 
 #' Combine R Objects by Rows or Columns

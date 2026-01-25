@@ -410,9 +410,14 @@ lookup_indices <- function(x) {
   # for atomic types match(x, x) work well,
   # for nestable lists this gives the wrong answer
   # because it ignores NA class
-  if (is.atomic(x))
+  if (is.atomic(x) && length(dim(x)) == 0)
     return(match(x, x))
-  uniq <- unique(x)
+  if (inherits(x, "matrix"))
+    x <- apply(x, 1, identity, simplify = FALSE)
   indices <- rep(NA_integer_, length(x))
-  vapply(x, \(y) Position(\(u) identical(y, u), uniq), integer(1))
+  vapply(
+    x,
+    \(y) Position(\(u) identical(y, u), x),
+    integer(1)
+  )
 }

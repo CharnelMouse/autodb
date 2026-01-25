@@ -495,9 +495,9 @@ describe("discover", {
   it("gives satisfied functional dependencies", {
     expect_satisfied <- function(data, fds) {
       attrs <- Map(c, detset(fds), dependant(fds))
-      projections <- lapply(attrs, \(a) unique(data[, a, drop = FALSE]))
+      projections <- lapply(attrs, \(a) df_unique(data[, a, drop = FALSE]))
       Map(
-        \(p, ds) !anyDuplicated(p[, ds, drop = FALSE]),
+        \(p, ds) !df_anyDuplicated(p[, ds, drop = FALSE]),
         projections,
         detset(fds)
       ) |>
@@ -593,8 +593,9 @@ describe("discover", {
   })
   it("is invariant to an attribute's values being permuted", {
     gen_perm <- function(vals) {
-      uniq <- unique(vals)
-      matches <- match(vals, uniq)
+      matches <- lookup_indices(vals)
+      uniq <- unique(matches)
+      matches <- match(matches, uniq)
       gen.sample(uniq, length(uniq)) |>
         gen.with(\(perm) perm[matches])
     }
@@ -610,9 +611,9 @@ describe("discover", {
           gen.pure(attr),
           gen_perm(df[[attr]])
         ))) |>
-        gen.with(uncurry(\(df, attr, permuted_attr) {
+        gen.with(uncurry(\(df, attr, perm) {
           permed <- df
-          permed[[attr]] <- permuted_attr
+          permed[, attr] <- permed[perm, attr, drop = FALSE]
           list(df, permed)
         }))
     }
@@ -644,7 +645,8 @@ describe("discover", {
         numeric = c("character"),
         character = c("logical"),
         factor = c("integer", "numeric", "character"),
-        list = character()
+        list = character(),
+        matrix = character()
       )
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.sample(ncol(df)))) |>
@@ -763,7 +765,7 @@ describe("discover", {
         dependants,
         detset_limit
       ) {
-        logical_cols <- names(df)[vapply(df, is.logical, logical(1))]
+        logical_cols <- names(df)[vapply(df, inherits, logical(1), "logical")]
         arglists <- expand.grid(
           if (isFALSE(keep_rownames))
             list(list(df = df, keep_rownames = FALSE))
@@ -862,7 +864,7 @@ describe("lookup_table", {
   it("returns a data frame with same duplicated() output", {
     forall(
       gen_df(6, 7, mincol = 1),
-      expect_biidentical(duplicated, lookup_table %>>% duplicated)
+      expect_biidentical(lookup_table %>>% duplicated, df_duplicated)
     )
 
     # doesn't ignore NA class (like e.g. match)

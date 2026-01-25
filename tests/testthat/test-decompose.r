@@ -2,7 +2,7 @@ describe("decompose", {
   it("returns valid databases", {
     forall(
       list(
-        gen_df(6, 7),
+        gen_df(6, 7, variant = "tibble"),
         gen.choice(gen.element(7:1), gen.pure(NA_integer_)),
         gen.element(c(FALSE, TRUE))
       ) |>
