@@ -14,7 +14,7 @@ describe("df_join", {
       gen.element(0:5) |>
         gen.and_then(\(n) {
           list(
-            gen.element(c("logical", "integer", "numeric", "character", "factor", "list")) |>
+            gen.element(c("logical", "integer", "numeric", "character", "factor", "list", "matrix")) |>
               gen.c(of = n),
             gen_attr_names(n, 9)
           )
