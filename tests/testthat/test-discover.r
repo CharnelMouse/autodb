@@ -866,10 +866,14 @@ describe("lookup_table", {
       gen_df(6, 7, mincol = 1),
       expect_biidentical(lookup_table %>>% duplicated, df_duplicated)
     )
+  })
+  it("distinguishes between matchables in list columns", {
+    NA_example <- data.frame(a = rep(1:2, 2))
+    NA_example$b <- list(NA_integer_, NA_integer_, NA_real_, NA_real_)
+    expect_identical(anyDuplicated(lookup_table(NA_example)), 0L)
 
-    # doesn't ignore NA class (like e.g. match)
-    df <- data.frame(a = rep(1:2, 2))
-    df$b <- list(NA_integer_, NA_integer_, NA_real_, NA_real_)
-    expect_true(!anyDuplicated(lookup_table(df)))
+    number_example <- data.frame(a = rep(1:2, 2))
+    number_example$b <- list(1L, 2L, 1, 2)
+    expect_identical(anyDuplicated(lookup_table(number_example)), 0L)
   })
 })
