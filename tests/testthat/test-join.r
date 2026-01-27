@@ -36,4 +36,48 @@ describe("df_join", {
       )
     )
   })
+  it("merges correctly by compound keys containing matrix columns", {
+    df <- data.frame(1:3)[, FALSE, drop = FALSE]
+    df$a <- matrix(c(1:6, 1:3), nrow = 3, byrow = TRUE)
+
+    # merging compound keys with matrix columns works
+    df2 <- cbind(df, b = c(1L, 2L, 1L))
+    expect_identical(nrow(df_join(df2, df2, by = c("a", "b"))), 5L)
+    expect_identical(nrow(df_join(df2, df2, by = c("b", "a"))), 5L)
+
+    # merging compound keys with only matrix columns works
+    df3 <- df2
+    df3$c <- df$a
+    expect_identical(nrow(df_join(df3, df3, by = c("a", "c"))), 5L)
+    expect_identical(nrow(df_join(df3, df3, by = c("c", "a"))), 5L)
+  })
+  it("gives no error if given a simple list key (since doesn't sort)", {
+    x <- data.frame(a = 1:2)[, FALSE, drop = FALSE]
+    x$a <- list(NA_integer_, NA_real_)
+    expect_error(merge(x, x))
+    expect_no_error(df_join(x, x))
+  })
+
+  # Tests below are examples of why having matrix/list columns means
+  # that rejoin might not work, unless we re-implement merge (as done in vctrs).
+
+  it("gives an error if given a simple matrix key", {
+    df <- data.frame(1:3)[, FALSE, drop = FALSE]
+    df$a <- matrix(c(1:6, 1:3), nrow = 3, byrow = TRUE)
+    expect_identical(nrow(unique(df)), 2L)
+    expect_identical(nrow(df_unique(df)), 2L)
+    expect_error(df_join(df, df))
+  })
+  it("matches NAs of different classes in list columns", {
+    x <- data.frame(a = 1:2)[, FALSE, drop = FALSE]
+    x$a <- list(NA_integer_, NA_real_)
+    expect_identical(df_anyDuplicated(x), 0L)
+    expect_false(!df_anyDuplicated(df_join(x, x)))
+  })
+  it("matches numbers of different classes in list columns", {
+    x <- data.frame(a = 1:2)[, FALSE, drop = FALSE]
+    x$a <- list(1.0, 1L)
+    expect_identical(df_anyDuplicated(x), 0L)
+    expect_false(!df_anyDuplicated(df_join(x, x)))
+  })
 })
