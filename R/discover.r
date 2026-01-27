@@ -408,12 +408,16 @@ lookup_table <- function(df) {
 
 lookup_indices <- function(x) {
   # for atomic types match(x, x) work well,
-  # for nestable lists this gives the wrong answer
-  # because it ignores NA class
   if (is.atomic(x) && length(dim(x)) == 0)
     return(match(x, x))
   if (inherits(x, "matrix"))
     x <- apply(x, 1, identity, simplify = FALSE)
+  # for nestable lists match() gives the wrong answer,
+  # because it disagrees with identical()/duplicated().
+  # match() logic is used in merge(), so we still have
+  # difficulties in rejoin(), but using identical() logic
+  # here at least means we can always call autodb() without
+  # a data frame violating its own schema.
   indices <- rep(NA_integer_, length(x))
   vapply(
     x,
