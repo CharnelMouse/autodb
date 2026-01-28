@@ -57,27 +57,26 @@ describe("df_join", {
     expect_error(merge(x, x))
     expect_no_error(df_join(x, x))
   })
-
-  # Tests below are examples of why having matrix/list columns means
-  # that rejoin might not work, unless we re-implement merge (as done in vctrs).
-
-  it("gives an error if given a simple matrix key", {
+  it("merges correctly if given a simple matrix key", {
     df <- data.frame(1:3)[, FALSE, drop = FALSE]
     df$a <- matrix(c(1:6, 1:3), nrow = 3, byrow = TRUE)
     expect_identical(nrow(unique(df)), 2L)
     expect_identical(nrow(df_unique(df)), 2L)
-    expect_error(df_join(df, df))
+    expect_identical(
+      df_join(df, df),
+      `rownames<-`(df[rep(1:2, c(4, 1)), , drop = FALSE], NULL)
+    )
   })
-  it("matches NAs of different classes in list columns", {
+  it("doesn't match NAs of different classes in list columns", {
     x <- data.frame(a = 1:2)[, FALSE, drop = FALSE]
     x$a <- list(NA_integer_, NA_real_)
-    expect_identical(df_anyDuplicated(x), 0L)
-    expect_false(!df_anyDuplicated(df_join(x, x)))
+    expect_true(!df_anyDuplicated(x))
+    expect_true(!df_anyDuplicated(df_join(x, x)))
   })
-  it("matches numbers of different classes in list columns", {
+  it("doesn't match numbers of different classes in list columns", {
     x <- data.frame(a = 1:2)[, FALSE, drop = FALSE]
     x$a <- list(1.0, 1L)
-    expect_identical(df_anyDuplicated(x), 0L)
-    expect_false(!df_anyDuplicated(df_join(x, x)))
+    expect_true(!df_anyDuplicated(x))
+    expect_true(!df_anyDuplicated(df_join(x, x)))
   })
 })

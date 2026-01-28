@@ -13,6 +13,12 @@ describe("rejoin", {
     table_dee <- data.frame(a = 1)[, -1, drop = FALSE]
     autodb_inverted_by_rejoin(digits = NA)(table_dum)
     autodb_inverted_by_rejoin(digits = NA)(table_dee)
+
+    # can rejoin on matrix as simple foreign key
+    x <- data.frame(a = 1:4, b = 1:2)
+    x$c <- rbind(matrix(1:6, nrow = 2), matrix(c(1L, 4L, 3L, 8L, 5L, 12L), nrow = 2))
+    autodb_inverted_by_rejoin(digits = NA)(x)
+
     # 6 columns allows for interesting cases, such as a table containing two
     # independent ones, or a reference involving several attributes
     forall(
