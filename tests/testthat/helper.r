@@ -1275,6 +1275,9 @@ rel2df <- function(rel, relations) {
 # functional utility functions for tests
 `%>>%` <- function(fn1, fn2) function(...) fn2(fn1(...))
 biapply <- function(fn1, fn2) function(x) list(fn1(x), fn2(x))
+bi <- function(fn, fn1, fn2) {
+  function(x) fn(fn1(x), fn2(x))
+}
 expect_bi <- function(logical_fn, fn1, fn2) {
   function(x) expect_true(logical_fn(fn1(x), fn2(x)))
 }
@@ -1294,6 +1297,7 @@ apply_both <- function(fn1, fn2) function(x) {fn1(x); fn2(x)}
 dup <- function(x) list(x, x)
 onLeft <- function(f) function(x) list(f(x[[1]]), x[[2]])
 onRight <- function(f) function(x) list(x[[1]], f(x[[2]]))
+fand <- function(f, g) function(...) f(...) & g(...)
 
 concatenate_keeps_attribute_order <- function(...) {
   lst <- list(...)
