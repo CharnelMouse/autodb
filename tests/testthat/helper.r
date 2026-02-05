@@ -1058,6 +1058,67 @@ remove_insertion_reference_violations <- function(df, database) {
   df
 }
 
+gen_fk_reduction_for_df <- function(df) {
+  true_dbs <- normalise(discover(df))
+  true_fks <- references(true_dbs)
+  true_fk_key_switch <- lapply(
+    true_fks,
+    \(fk) {
+      len <- length(fk[[2]])
+      new_tbs <- vapply(
+        keys(true_dbs),
+        \(ks) match(len, lengths(ks)),
+        integer(1)
+      )
+      valid_new_tbs <- new_tbs[
+        !is.na(new_tbs) &
+          names(new_tbs) != fk[[1]] &
+          names(new_tbs) != fk[[3]]
+      ]
+      new_fks <- Map(
+        \(new_key_index, new_parent) {
+          new_fk <- c(
+            fk[1:2],
+            list(new_parent, keys(true_dbs)[[new_parent]][[new_key_index]])
+          )
+          stopifnot(length(new_fk) == 4)
+          if (!is.element(list(new_fk[[4]]), keys(true_dbs)[[new_fk[[3]]]]))
+            stop("argh")
+          new_fk
+        },
+        valid_new_tbs,
+        names(valid_new_tbs)
+      ) |>
+        Filter(f = \(fk) !is.element(list(fk), true_fks)) |>
+        Filter(f = \(fk) {
+          length(remove_violated_references(
+            list(fk),
+            decompose(df, true_dbs)
+          )) == 0
+        })
+      new_fks
+    }
+  )
+  if (all(lengths(true_fk_key_switch) == 0))
+    return(gen.pure(list(df, NULL)))
+  gen.element(which(lengths(true_fk_key_switch) > 0)) |>
+    gen.and_then(\(index) list(
+      gen.pure(df),
+      gen.element(true_fk_key_switch[[index]]) |>
+        gen.with(\(new_fk) {
+          dbs <- true_dbs
+          references(dbs)[[index]] <- new_fk
+          dbs
+        })
+    ))
+}
+
+fac2char <- function(df) {
+  facs <- vapply(df, is.factor, logical(1))
+  df[, facs] <- lapply(df[, facs, drop = FALSE], as.character)
+  df
+}
+
 # naively inserting data into a database can give reference errors,
 # which sets of relations are legal to insert into?
 minimal_legal_insertion_sets <- function(db, df) {
