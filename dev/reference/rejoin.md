@@ -56,7 +56,7 @@ db <- autodb(ChickWeight)
 rj <- rejoin(db)
 rj <- rj[order(as.integer(rownames(rj))), ]
 all(rj == ChickWeight) # TRUE
-#> [1] TRUE
+#> [1] FALSE
 
 # showing rejoin() doesn't check for inconsistency:
 # add another Chick table with the diets swapped
@@ -65,5 +65,5 @@ records(db2)[[3]]$Diet <- rev(records(db2)[[3]]$Diet)
 rj2 <- rejoin(db2)
 rj2 <- rj2[order(as.integer(rownames(rj2))), ]
 all(rj2 == ChickWeight) # TRUE
-#> [1] TRUE
+#> [1] FALSE
 ```

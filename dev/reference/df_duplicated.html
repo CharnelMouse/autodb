@@ -136,6 +136,14 @@ returning incorrect results for zero-column data frames in older versions
 of R.</p>
     </div>
     <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Additionally, if a data frame has one column, duplicated is called directly
+on that column instead. This causes issues if that one column is a matrix
+with zero columns, since it returns an empty matrix instead of an empty
+vector. These functions treat such a case by comparing the matrix rows
+instead.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="df_rbind.html">df_rbind</a></code></p></div>
     </div>

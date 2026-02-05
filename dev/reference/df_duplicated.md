@@ -75,6 +75,14 @@ handling, this step returns an empty list. This was the cause for
 [`duplicated`](https://rdrr.io/r/base/duplicated.html) returning
 incorrect results for zero-column data frames in older versions of R.
 
+## Details
+
+Additionally, if a data frame has one column, duplicated is called
+directly on that column instead. This causes issues if that one column
+is a matrix with zero columns, since it returns an empty matrix instead
+of an empty vector. These functions treat such a case by comparing the
+matrix rows instead.
+
 ## See also
 
 [`df_rbind`](https://charnelmouse.github.io/autodb/dev/reference/df_rbind.md)

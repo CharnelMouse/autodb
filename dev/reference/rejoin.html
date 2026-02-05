@@ -102,7 +102,7 @@ sources of data, since rejoining results in inappropriate merges.</p>
 <span class="r-in"><span><span class="va">rj</span> <span class="op">&lt;-</span> <span class="fu">rejoin</span><span class="op">(</span><span class="va">db</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rj</span> <span class="op">&lt;-</span> <span class="va">rj</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">rj</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, <span class="op">]</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">rj</span> <span class="op">==</span> <span class="va">ChickWeight</span><span class="op">)</span> <span class="co"># TRUE</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># showing rejoin() doesn't check for inconsistency:</span></span></span>
 <span class="r-in"><span><span class="co"># add another Chick table with the diets swapped</span></span></span>
@@ -111,7 +111,7 @@ sources of data, since rejoining results in inappropriate merges.</p>
 <span class="r-in"><span><span class="va">rj2</span> <span class="op">&lt;-</span> <span class="fu">rejoin</span><span class="op">(</span><span class="va">db2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rj2</span> <span class="op">&lt;-</span> <span class="va">rj2</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">rj2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, <span class="op">]</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">rj2</span> <span class="op">==</span> <span class="va">ChickWeight</span><span class="op">)</span> <span class="co"># TRUE</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
