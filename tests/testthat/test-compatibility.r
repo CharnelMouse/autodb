@@ -23,6 +23,15 @@ describe("df_duplicated", {
     df2$a <- matrix(1:3, nrow = 6, ncol = 1)
     expect_identical(df_duplicated(df2), rep(c(FALSE, TRUE), c(3, 3)))
   })
+  it("is invariant to calling lookup_table first", {
+    forall(
+      gen_df(6, 7),
+      expect_biidentical(
+        df_duplicated,
+        lookup_table %>>% df_duplicated
+      )
+    )
+  })
 })
 
 describe("df_unique", {
@@ -49,6 +58,15 @@ describe("df_unique", {
     df2 <- data.frame(a = 1:6)[, FALSE, drop = FALSE]
     df2$a <- matrix(1:3, nrow = 6, ncol = 1)
     expect_identical(df_unique(df2), df2[1:3, , drop = FALSE])
+  })
+  it("gives result with lookup table invariant to calling lookup_table first", {
+    forall(
+      gen_df(6, 7),
+      expect_biidentical(
+        df_unique %>>% lookup_table,
+        lookup_table %>>% df_unique %>>% lookup_table
+      )
+    )
   })
 })
 
