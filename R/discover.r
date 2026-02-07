@@ -402,6 +402,8 @@ format_if_float <- function(x, digits) {
 }
 
 lookup_table <- function(df) {
+  if (ncol(df) == 0)
+    return(df)
   lapply(df, lookup_indices) |>
     data.frame(check.names = FALSE)
 }

@@ -863,7 +863,7 @@ describe("discover", {
 describe("lookup_table", {
   it("returns a data frame with same duplicated() output", {
     forall(
-      gen_df(6, 7, mincol = 1),
+      gen_df(6, 7),
       expect_biidentical(lookup_table %>>% duplicated, df_duplicated)
     )
   })

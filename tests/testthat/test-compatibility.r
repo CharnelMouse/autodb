@@ -79,6 +79,15 @@ describe("df_anyDuplicated", {
     df2$a <- matrix(1:3, nrow = 6, ncol = 1)
     expect_identical(df_anyDuplicated(df2), 4L)
   })
+  it("is invariant to calling lookup_table first", {
+    forall(
+      gen_df(6, 7),
+      expect_biidentical(
+        df_anyDuplicated,
+        lookup_table %>>% df_anyDuplicated
+      )
+    )
+  })
 })
 
 describe("df_rbind", {
