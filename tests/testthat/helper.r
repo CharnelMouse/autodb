@@ -359,12 +359,26 @@ gen.df_fixed_ranges <- function(
     tibble = with_args(tibble::as_tibble, .name_repair = "minimal")
   )
   as_fns <- list(
-    logical = gen.element(c(FALSE, TRUE, NA)),
-    integer = gen.element(c(-5:5, NA_integer_)),
-    numeric = gen.numeric(),
-    character = gen.element(c("FALSE", "TRUE", NA_character_)),
+    logical = gen.element(c(FALSE, TRUE, NA)) |>
+      gen.c(of = n_records) |>
+      gen.with(as.logical),
+    integer = gen.element(c(-5:5, NA_integer_)) |>
+      gen.c(of = n_records) |>
+      gen.with(as.integer) |>
+      gen.with(as.data.frame.vector),
+    numeric = gen.numeric() |>
+      gen.c(of = n_records) |>
+      gen.with(as.numeric) |>
+      gen.and_then(with_args(gen.float_coincide, digits = digits)) |>
+      gen.with(as.data.frame.vector),
+    character = gen.element(c("FALSE", "TRUE", NA_character_)) |>
+      gen.c(of = n_records) |>
+      gen.with(as.character) |>
+      gen.with(as.data.frame.vector),
     factor = gen.element(c("FALSE", "TRUE", NA_character_)) |>
-      gen.with(with_args(factor, levels = c("FALSE", "TRUE"))),
+      gen.c(of = n_records) |>
+      gen.with(with_args(factor, levels = c("FALSE", "TRUE"))) |>
+      gen.with(as.data.frame.vector),
     list = gen.choice( # list where each element is NULL or one of the other types
       gen.pure(NULL),
       gen.element(c(FALSE, TRUE, NA)),
@@ -375,24 +389,36 @@ gen.df_fixed_ranges <- function(
         gen.with(with_args(factor, levels = c("FALSE", "TRUE")))
     ) |>
       gen.list(from = 0, to = 5) |>
-      gen.with(list), # wrap so values don't get concatenated into single list later
-    matrix = gen.choice(
-      gen.element(c(FALSE, TRUE, NA)),
-      gen.element(c(-5:5, NA_integer_)),
-      gen.numeric(),
-      gen.element(c("FALSE", "TRUE", NA_character_)),
-      gen.element(c("FALSE", "TRUE", NA_character_)) |>
-        gen.with(with_args(factor, levels = c("FALSE", "TRUE")))
-    )
-  )
-  inits <- list(
-    logical = logical(),
-    integer = integer(),
-    numeric = numeric(),
-    character = character(),
-    factor = factor(character(), levels = c("FALSE", "TRUE")),
-    list = list(),
-    matrix = matrix(logical(), nrow = n_records, ncol = 0)
+      gen.with(list) |> # wrap so values don't get concatenated into single list later
+      gen.list(of = n_records) |>
+      gen.with(with_args(fn = Reduce, f = c, init = list())) |>
+      gen.with(as.data.frame.vector),
+    matrix = gen.int(1) |>
+      gen.and_then(\(n) {
+        gen.choice(
+          gen.element(c(FALSE, TRUE, NA)) |>
+            gen.c(of = n*n_records) |>
+            gen.with(as.logical),
+          gen.element(c(-5:5, NA_integer_)) |>
+            gen.c(of = n*n_records) |>
+            gen.with(as.integer),
+          gen.numeric() |>
+            gen.c(of = n*n_records) |>
+            gen.with(as.numeric),
+          gen.element(c("FALSE", "TRUE", NA_character_)) |>
+            gen.c(of = n*n_records) |>
+            gen.with(as.character),
+          gen.element(c("FALSE", "TRUE", NA_character_)) |>
+            gen.c(of = n*n_records) |>
+            gen.with(with_args(factor, levels = c("FALSE", "TRUE")))
+        )
+      }) |>
+      gen.with(with_args(matrix, nrow = n_records)) |>
+      gen.with(\(x) {
+        dat <- data.frame(seq_len(n_records))[, FALSE, drop = FALSE]
+        dat[[1]] <- x
+        dat
+      })
   )
   if (length(classes) == 0L)
     return(
@@ -407,27 +433,7 @@ gen.df_fixed_ranges <- function(
       # gen.sample only shrinks by reordering,
       # and gen.c incorrectly returns NULL when size = 0,
       # so we need to unlist "manually"
-      as_fns[[cl]] |>
-        gen.list(of = n_records) |>
-        gen.with(\(x) Reduce(
-          c,
-          x,
-          init = inits[[cl]]
-        )) |>
-        gen.and_then(\(x) {
-          switch(
-            cl,
-            numeric = gen.float_coincide(x, digits) |> gen.with(as.data.frame.vector),
-            complex = gen.float_coincide(x, digits) |> gen.with(as.data.frame.vector),
-            matrix = gen.with(x, \(x) {
-              mat <- matrix(x, nrow = n_records)
-              dat <- data.frame(a = seq_len(n_records))[, FALSE, drop = FALSE]
-              dat[[1]] <- mat
-              dat
-            }),
-            gen.pure(x) |> gen.with(as.data.frame.vector)
-          )
-        })
+      as_fns[[cl]]
     }
   ) |>
     gen.with(
