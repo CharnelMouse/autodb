@@ -381,11 +381,16 @@ gen.df_fixed_ranges <- function(
       gen.with(as.data.frame.vector),
     list = gen.choice( # list where each element is NULL or one of the other types
       gen.pure(NULL),
-      gen.element(c(FALSE, TRUE, NA)),
-      gen.element(c(-5:5, NA_integer_)),
-      gen.numeric(),
-      gen.element(c("FALSE", "TRUE", NA_character_)),
+      gen.element(c(FALSE, TRUE, NA)) |>
+        gen.c(from = 0, to = 2),
+      gen.element(c(-5:5, NA_integer_)) |>
+        gen.c(from = 0, to = 2),
+      gen.numeric() |>
+        gen.c(from = 0, to = 2),
       gen.element(c("FALSE", "TRUE", NA_character_)) |>
+        gen.c(from = 0, to = 2),
+      gen.element(c("FALSE", "TRUE", NA_character_)) |>
+        gen.c(from = 0, to = 2) |>
         gen.with(with_args(factor, levels = c("FALSE", "TRUE")))
     ) |>
       gen.list(from = 0, to = 5) |>
