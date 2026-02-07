@@ -362,7 +362,14 @@ gen.df_fixed_ranges <- function(
     logical = gen.element(c(FALSE, TRUE, NA)) |>
       gen.c(of = n_records) |>
       gen.with(as.logical),
-    integer = gen.element(c(-5:5, NA_integer_)) |>
+    integer = gen.choice(
+      gen.shrink(
+        function(x) as.integer(shrink.towards(0L)(x)),
+        gen.element(-5:5)
+      ),
+      gen.pure(NA_integer_),
+      prob = c(10, 1)
+    ) |>
       gen.c(of = n_records) |>
       gen.with(as.integer) |>
       gen.with(as.data.frame.vector),
