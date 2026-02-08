@@ -796,7 +796,7 @@ column_subclass_string_gv <- function(a, nest_level) {
 
   res <- paste0(
     if (same_class) element_classes[[1]],
-    if (same_length && element_classes[[1]] != "NULL") paste0("[", lens[[1]], "]")
+    if (same_length && any(element_classes != "NULL")) paste0("[", lens[[1]], "]")
   )
   if (!same_class)
     return(res)
@@ -805,10 +805,19 @@ column_subclass_string_gv <- function(a, nest_level) {
   subelements <- unlist(a, recursive = FALSE)
   if (length(subelements) == 0)
     return(res)
-  substrings <- column_subclass_string_d2(
+  substrings <- column_subclass_string_gv(
     subelements,
     nest_level - 1L
   )
+  if (length(substrings) == 0)
+    stop(paste0(
+      "empty substrings from ",
+      length(subelements),
+      " subelements at nest level ",
+      nest_level,
+      ":\n",
+      paste(subelements, collapse = "\n")
+    ))
   if (substrings[[1]] == "" || !all(substrings == substrings[[1]]))
     return(res)
   paste0(res, "&lt;", substrings[[1]], "&gt;")
@@ -837,7 +846,7 @@ column_subclass_string_d2 <- function(a, nest_level) {
 
   res <- paste0(
     if (same_class) element_classes[[1]],
-    if (same_length && element_classes[[1]] != "NULL") paste0("[", lens[[1]], "]")
+    if (same_length && any(element_classes != "NULL")) paste0("[", lens[[1]], "]")
   )
   if (!same_class)
     return(res)
@@ -850,6 +859,15 @@ column_subclass_string_d2 <- function(a, nest_level) {
     subelements,
     nest_level - 1L
   )
+  if (length(substrings) == 0)
+    stop(paste0(
+      "empty substrings from ",
+      length(subelements),
+      " subelements at nest level ",
+      nest_level,
+      ":\n",
+      paste(subelements, collapse = "\n")
+    ))
   if (substrings[[1]] == "" || !all(substrings == substrings[[1]]))
     return(res)
   paste0(res, "<", substrings[[1]], ">")

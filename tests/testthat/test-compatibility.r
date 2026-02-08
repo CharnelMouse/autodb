@@ -10,7 +10,7 @@ describe("df_duplicated", {
       gen_df(6, 7, mincol = 1),
       if_discard_else(
         \(x) any(vapply(x, \(y) inherits(y, "array") && ncol(y) <= 1, logical(1))),
-        expect_biidentical(df_duplicated, duplicated)
+        expect_biidentical(df_duplicated, duplicated %>>% as.logical)
       )
     )
   })
@@ -117,18 +117,48 @@ describe("df_rbind", {
       data.frame(a = 1:8)[, -1, drop = FALSE]
     )
   })
-  it("is the same as rbind >> as.data.frame for data frames with at least one column", {
+  it("is the same as rbind >> as.data.frame for data frames with at least one row and column, if the latter works", {
+    # minrow = 1 since rbind() ignores empty tables
     forall(
-      gen.int(7) |>
+      gen.int(5) |>
         gen.and_then(with_args(gen_attr_names, len = 9)) |>
         gen.and_then(\(nms) {
-          gen_df(6, length(nms), mincol = length(nms)) |>
+          gen_df(4, length(nms), minrow = 1, mincol = length(nms), atomic = TRUE) |>
             gen.with(with_args(setNames, nm = nms)) |>
-            gen.list(of = 2)
+            gen.list(from = 0, to = 3)
         }),
       expect_biidentical(
         uncurry(df_rbind),
         uncurry(rbind %>>% as.data.frame)
+      )
+    )
+  })
+  it("can rbind vectors with matrices (converted to lists if different ncols, or vectors if ncol = 1)", {
+    x <- data.frame(a = 1:3, b = 1:3)
+    y <- data.frame(a = 4:6)
+    y$b <- matrix(4:9, ncol = 2)
+    z <- x
+    z$b <- as.matrix(x$b)
+
+    res <- data.frame(a = 1:6)
+    res$b <- list(1L, 2L, 3L, c(4L, 7L), c(5L, 8L), c(6L, 9L))
+    expect_identical(df_rbind(x, y), res)
+
+    res2 <- data.frame(a = rep(4:6, 2))
+    res2$b <- rbind(y$b, y$b)
+    expect_identical(df_rbind(y, y), res2)
+
+    expect_identical(df_rbind(x, z), rbind(x, x))
+  })
+})
+
+describe("df_records", {
+  it("returns as many records as are in the table", {
+    forall(
+      gen_df(4, 5),
+      expect_biidentical(
+        df_records %>>% length,
+        nrow
       )
     )
   })

@@ -248,7 +248,11 @@ describe("discover_keys", {
       function(df) {
         terminates_then(\(keys) expect_true(all(vapply(
           keys,
-          \(key) !anyDuplicated(unique(df)[key]),
+          \(key) !df_anyDuplicated(df[
+            !df_duplicated(df[, key, drop = FALSE]),
+            ,
+            drop = FALSE
+          ]),
           logical(1)
         ))))(df)
       }
@@ -314,8 +318,9 @@ describe("discover_keys", {
   })
   it("is invariant to an attribute's values being permuted", {
     gen_perm <- function(vals) {
-      uniq <- unique(vals)
-      matches <- match(vals, uniq)
+      indices <- lookup_indices(vals)
+      uniq <- unique(indices)
+      matches <- match(indices, uniq)
       gen.sample(uniq, length(uniq)) |>
         gen.with(\(perm) perm[matches])
     }

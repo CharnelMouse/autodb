@@ -2,7 +2,7 @@ describe("decompose", {
   it("returns valid databases", {
     forall(
       list(
-        gen_df(6, 7, variant = "tibble"),
+        gen_df(6, 7),
         gen.choice(gen.element(7:1), gen.pure(NA_integer_)),
         gen.element(c(FALSE, TRUE))
       ) |>
@@ -227,7 +227,7 @@ describe("decompose", {
     forall(
       gen_df_and_fk_reduction(6, 7),
       expect_fk_error,
-      discard.limit = 200,
+      discard.limit = 2*getOption("hedgehog.tests", 100),
       curry = TRUE
     )
   })

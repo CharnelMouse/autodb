@@ -90,8 +90,99 @@ arr_anyDuplicated <- function(x, incomparables = FALSE, fromLast = FALSE, ...) {
 #' @seealso \code{\link{df_duplicated}}
 df_rbind <- function(...) {
   dfs <- list(...)
+  if (length(dfs) == 0)
+    return(data.frame())
+  nr <- vapply(dfs, nrow, integer(1))
+  nc <- vapply(dfs, ncol, integer(1))
+  nms <- lapply(dfs, names)
+  if (any(nc != nc[[1]]))
+    stop("numbers of columns of arguments do not match")
+  if (any(!vapply(nms, identical, logical(1), nms[[1]])))
+    stop("numbers of columns of arguments do not match")
+
+  matrices <- lapply(
+    dfs,
+    \(x) vapply(x, \(y) is.matrix(y) && ncol(y) != 1, logical(1))
+  ) |>
+    Reduce(f = `|`) |>
+    which()
+  if (length(matrices) > 0) {
+    for (n in matrices) {
+      for (m in seq_along(dfs)) {
+      if (!is.matrix(dfs[[m]][[n]]))
+        dfs[[m]][[n]] <- as.matrix(dfs[[m]][[n]])
+      }
+    }
+    ncol_mismatch <- vapply(
+      matrices,
+      \(n) {
+        cols <- vapply(dfs, \(x) NCOL(x[[n]]), integer(1))
+        any(cols != cols[[1]])
+      },
+      logical(1)
+    )
+    for (m in seq_along(dfs)) {
+      dfs[[m]][, matrices[ncol_mismatch]] <- lapply(
+        dfs[[m]][, matrices[ncol_mismatch], drop = FALSE],
+        apply,
+        1,
+        identity,
+        simplify = FALSE
+      )
+    }
+    matrices <- matrices[!ncol_mismatch]
+    vals_mat <- do.call(
+      rbind,
+      c(
+        lapply(dfs, \(x) x[, matrices, drop = FALSE]),
+        list(make.row.names = FALSE)
+      )
+    )
+    vals_mat <- lapply(vals_mat, as.matrix) # undoing coercion by rbind
+    vals_mat[] <- lapply(vals_mat, \(x) `dimnames<-`(x, NULL))
+    stopifnot(all(vapply(vals_mat, is.matrix, logical(1))))
+    vals_vec <- lapply(vals_mat, apply, 1, identity, simplify = FALSE)
+    indices_vec <- lapply(vals_vec, lookup_indices) |>
+      as.data.frame()
+    for (m in seq_along(dfs))
+      dfs[[m]][, matrices] <- indices_vec[
+        sum(nr[seq_len(m - 1)]) + seq_len(nr[[m]]),
+        ,
+        drop = FALSE
+      ]
+  }
+
+  lists <- lapply(dfs, \(x) vapply(x, is.list, logical(1))) |>
+    Reduce(f = `|`) |>
+    which()
+  if (length(lists) > 0) {
+    vals_list <- do.call(
+      rbind,
+      c(
+        lapply(dfs, \(x) x[, lists, drop = FALSE]),
+        list(make.row.names = FALSE)
+      )
+    )
+    for (n in lists) {
+      vals <- Reduce(c, lapply(dfs, \(x) x[[n]]))
+      inds <- lookup_indices(vals)
+      for (m in seq_along(dfs))
+        dfs[[m]][[n]] <- inds[sum(nr[seq_len(m - 1)]) + seq_len(nr[[m]])]
+    }
+  }
+
   dfs <- lapply(dfs, \(df) cbind(df, dummy = seq_len(nrow(df))))
   res <- do.call(rbind, dfs)
+
+  if (length(matrices) > 0)
+    res[, matrices] <- Map(
+      \(v, r) v[r, , drop = FALSE],
+      vals_mat,
+      res[, matrices, drop = FALSE]
+    )
+  if (length(lists) > 0)
+    res[, lists] <- Map(`[`, vals_list, res[, lists, drop = FALSE])
+
   res[, -ncol(res), drop = FALSE]
 }
 
@@ -117,6 +208,7 @@ df_rbind <- function(...) {
 df_records <- function(x, use_rownames = FALSE, use_colnames = FALSE) {
   if (ncol(x) == 0)
     return(rep(list(list()), nrow(x)))
+  x[] <- lapply(x, \(y) if (length(dim(y)) == 0) y else asplit(y, 1))
   args <- c(list, x)
   if (!use_colnames)
     names(args) <- NULL

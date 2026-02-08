@@ -21,6 +21,21 @@ df_join <- function(x, y, by = intersect(names(x), names(y)), by.x = by, by.y = 
       \(n) NCOL(vx[[n]]) != NCOL(vy[[n]]),
       logical(1)
     )
+    vx[, matrices[ncol_mismatch]] <- lapply(
+      vx[, matrices[ncol_mismatch], drop = FALSE],
+      apply,
+      1,
+      identity,
+      simplify = FALSE
+    )
+    vy[, matrices[ncol_mismatch]] <- lapply(
+      vy[, matrices[ncol_mismatch], drop = FALSE],
+      apply,
+      1,
+      identity,
+      simplify = FALSE
+    )
+    matrices <- matrices[!ncol_mismatch]
     vals_mat <- rbind(
       vx[, matrices, drop = FALSE],
       stats::setNames(vy[, matrices, drop = FALSE], names(vx)[matrices]),

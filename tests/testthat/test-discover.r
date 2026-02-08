@@ -593,9 +593,9 @@ describe("discover", {
   })
   it("is invariant to an attribute's values being permuted", {
     gen_perm <- function(vals) {
-      matches <- lookup_indices(vals)
-      uniq <- unique(matches)
-      matches <- match(matches, uniq)
+      indices <- lookup_indices(vals)
+      uniq <- unique(indices)
+      matches <- match(indices, uniq)
       gen.sample(uniq, length(uniq)) |>
         gen.with(\(perm) perm[matches])
     }
