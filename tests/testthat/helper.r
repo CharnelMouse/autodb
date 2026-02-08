@@ -386,24 +386,8 @@ gen.df_fixed_ranges <- function(
       gen.c(of = n_records) |>
       gen.with(with_args(factor, levels = c("FALSE", "TRUE"))) |>
       gen.with(as.data.frame.vector),
-    list = gen.choice( # list where each element is NULL or one of the other types
-      gen.pure(NULL),
-      gen.element(c(FALSE, TRUE, NA)) |>
-        gen.c(from = 0, to = 2),
-      gen.element(c(-5:5, NA_integer_)) |>
-        gen.c(from = 0, to = 2),
-      gen.numeric() |>
-        gen.c(from = 0, to = 2),
-      gen.element(c("FALSE", "TRUE", NA_character_)) |>
-        gen.c(from = 0, to = 2),
-      gen.element(c("FALSE", "TRUE", NA_character_)) |>
-        gen.c(from = 0, to = 2) |>
-        gen.with(with_args(factor, levels = c("FALSE", "TRUE")))
-    ) |>
-      gen.list(from = 0, to = 5) |>
-      gen.with(list) |> # wrap so values don't get concatenated into single list later
+    list = gen.list_element() |>
       gen.list(of = n_records) |>
-      gen.with(with_args(fn = Reduce, f = c, init = list())) |>
       gen.with(as.data.frame.vector),
     matrix = gen.element(0:2) |>
       gen.and_then(\(n) {
@@ -454,6 +438,26 @@ gen.df_fixed_ranges <- function(
         (if (remove_dup_rows) df_unique else identity)
     ) |>
     gen.with(variant)
+}
+
+
+gen.list_element <- function() {
+  gen.choice( # list where each element is NULL or one of the other types
+    gen.pure(NULL),
+    gen.element(c(FALSE, TRUE, NA)) |>
+      gen.c(from = 0, to = 2),
+    gen.element(c(-5:5, NA_integer_)) |>
+      gen.c(from = 0, to = 2),
+    gen.numeric() |>
+      gen.c(from = 0, to = 2),
+    gen.element(c("FALSE", "TRUE", NA_character_)) |>
+      gen.c(from = 0, to = 2),
+    gen.element(c("FALSE", "TRUE", NA_character_)) |>
+      gen.c(from = 0, to = 2) |>
+      gen.with(with_args(factor, levels = c("FALSE", "TRUE"))),
+    gen.list_element() |>
+      gen.list(from = 0, to = 2)
+  )
 }
 
 gen.float_coincide <- function(x, digits) {
