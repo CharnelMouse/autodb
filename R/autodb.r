@@ -99,7 +99,8 @@ autodb <- function(
 }
 
 df_coarsen <- function(x, digits) {
-  x[] <- lapply(x, coarsen_if_float, digits)
+  for (n in seq_along(x))
+    x[[n]] <- coarsen_if_float(x[[n]], digits)
   x
 }
 

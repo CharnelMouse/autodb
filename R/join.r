@@ -79,12 +79,16 @@ df_join <- function(x, y, by = intersect(names(x), names(y)), by.x = by, by.y = 
   x[, by.x[lists]] <- vx[, lists, drop = FALSE]
   y[, by.y[lists]] <- vy[, lists, drop = FALSE]
   res <- merge(x, y, by = by, by.x = by.x, by.y = by.y, ...)
-  if (length(matrices) > 0)
-    res[, by.x[matrices]] <- Map(
-      \(v, r) v[r, , drop = FALSE],
-      vals_mat,
-      res[, by.x[matrices], drop = FALSE]
-    )
+  class(res) <- class(x)
+  if (length(matrices) > 0) {
+    for (n in seq_along(vals_mat)) {
+      res[[by.x[[matrices[[n]]]]]] <- vals_mat[[n]][
+        res[[by.x[[matrices[[n]]]]]],
+        ,
+        drop = FALSE
+      ]
+    }
+  }
   if (length(lists) > 0)
     res[, by.x[lists]] <- Map(`[`, vals_list, res[, by.x[lists], drop = FALSE])
   res

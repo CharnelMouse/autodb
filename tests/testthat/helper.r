@@ -405,7 +405,7 @@ gen.df_fixed_ranges <- function(
       gen.list(of = n_records) |>
       gen.with(with_args(fn = Reduce, f = c, init = list())) |>
       gen.with(as.data.frame.vector),
-    matrix = gen.int(2) |>
+    matrix = gen.element(0:2) |>
       gen.and_then(\(n) {
         gen.choice(
           gen.element(c(FALSE, TRUE, NA)) |>
