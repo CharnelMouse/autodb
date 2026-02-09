@@ -18,7 +18,9 @@
   equal, so a data frame with list columns could violate its own schema.
   This is now fixed, in exchange for a small performance hit when there
   are list columns.
-- Added support for data with matrix columns.
+- Added support for data with matrix columns. Similarly to lists,
+  `duplicate` etc. account for matrices properly, rather than trying to
+  treat them as vectors.
 - `rejoin` no longer sorts as it merges relations, since there might be
   list columns in the key, which aren’t sortable.
 - Added nesting to `gv` and `d2` methods for classes containing data.
