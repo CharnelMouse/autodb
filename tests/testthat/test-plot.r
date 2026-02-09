@@ -576,13 +576,15 @@ describe("gv", {
       )
     })
     it("gives comment list element type, if approprate, up to given nesting level", {
-      x <- data.frame(a = 1:4)
-      x$b <- list(1L, 2:3, 4:6, 1L)
-      x$c <- list(1:2, 3:4, 5:6, 3:4)
-      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12))
-      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]))
-      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10))
-      db <- autodb(x, exclude = letters[2:6])
+      x <- data.frame(a = 1:5)
+      x$b <- list(1L, 2:3, 4:6, 1L, 2:3)
+      x$c <- list(1:2, 3:4, 5:6, 3:4, 3:4)
+      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12), list(9:10, 11:12))
+      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]), list("a", letters[2:3]))
+      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10), list(9:10))
+      x$g <- matrix(1:2, nrow = 5, ncol = 2)
+      x$h <- matrix(as.list(c(1L, 2L, 1L, 3L, 2L, 1L, 2L, 1L, 3L, 2L)), nrow = 5, ncol = 2)
+      db <- autodb(x, exclude = setdiff(names(x), "a"))
       expected_text <- c(
         "digraph {",
         "  rankdir = \"LR\"",
@@ -590,22 +592,25 @@ describe("gv", {
         "",
         "  \"a\" [label = <",
         "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
-        "    <TR><TD COLSPAN=\"3\">a (4 records)</TD></TR>",
+        "    <TR><TD COLSPAN=\"3\">a (5 records)</TD></TR>",
         "    <TR><TD PORT=\"TO_a\">a</TD><TD BGCOLOR=\"black\"></TD><TD PORT=\"FROM_a\">integer</TD></TR>",
         "    <TR><TD PORT=\"TO_b\">b</TD><TD></TD><TD PORT=\"FROM_b\">list&lt;integer&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_c\">c</TD><TD></TD><TD PORT=\"FROM_c\">list&lt;integer[2]&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_d\">d</TD><TD></TD><TD PORT=\"FROM_d\">list&lt;list[2]&lt;integer[2]&gt;&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_e\">e</TD><TD></TD><TD PORT=\"FROM_e\">list&lt;[2]&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_f\">f</TD><TD></TD><TD PORT=\"FROM_f\">list&lt;list&lt;integer[2]&gt;&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_g\">g</TD><TD></TD><TD PORT=\"FROM_g\">matrix&lt;integer[2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_h\">h</TD><TD></TD><TD PORT=\"FROM_h\">matrix&lt;list[2]&lt;integer[1]&gt;&gt;</TD></TR>",
         "    </TABLE>>];",
         "}",
         ""
       )
       expect_identical(gv(db), paste(expected_text, collapse = "\n"))
       expected_text2 <- expected_text
-      expected_text2[c(11, 13)] <- c(
+      expected_text2[c(11, 13, 15)] <- c(
         "    <TR><TD PORT=\"TO_d\">d</TD><TD></TD><TD PORT=\"FROM_d\">list&lt;list[2]&gt;</TD></TR>",
-        "    <TR><TD PORT=\"TO_f\">f</TD><TD></TD><TD PORT=\"FROM_f\">list&lt;list&gt;</TD></TR>"
+        "    <TR><TD PORT=\"TO_f\">f</TD><TD></TD><TD PORT=\"FROM_f\">list&lt;list&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_h\">h</TD><TD></TD><TD PORT=\"FROM_h\">matrix&lt;list[2]&gt;</TD></TR>"
       )
       expect_identical(
         gv(db, nest_level = 1),
@@ -681,13 +686,15 @@ describe("gv", {
       )
     })
     it("gives comment list element type, if approprate", {
-      x <- data.frame(a = 1:4)
-      x$b <- list(1L, 2:3, 4:6, 1L)
-      x$c <- list(1:2, 3:4, 5:6, 3:4)
-      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12))
-      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]))
-      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10))
-      rel <- synthesise(discover(x, exclude = letters[2:6])) |>
+      x <- data.frame(a = 1:5)
+      x$b <- list(1L, 2:3, 4:6, 1L, 2:3)
+      x$c <- list(1:2, 3:4, 5:6, 3:4, 3:4)
+      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12), list(9:10, 11:12))
+      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]), list("a", letters[2:3]))
+      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10), list(9:10))
+      x$g <- matrix(1:2, nrow = 5, ncol = 2)
+      x$h <- matrix(as.list(c(1L, 2L, 1L, 3L, 2L, 1L, 2L, 1L, 3L, 2L)), nrow = 5, ncol = 2)
+      rel <- synthesise(discover(x, exclude = setdiff(names(x), "a"))) |>
         create() |>
         insert(x)
       expected_text <- c(
@@ -697,22 +704,25 @@ describe("gv", {
         "",
         "  \"a\" [label = <",
         "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
-        "    <TR><TD COLSPAN=\"3\">a (4 records)</TD></TR>",
+        "    <TR><TD COLSPAN=\"3\">a (5 records)</TD></TR>",
         "    <TR><TD PORT=\"TO_a\">a</TD><TD BGCOLOR=\"black\"></TD><TD PORT=\"FROM_a\">integer</TD></TR>",
         "    <TR><TD PORT=\"TO_b\">b</TD><TD></TD><TD PORT=\"FROM_b\">list&lt;integer&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_c\">c</TD><TD></TD><TD PORT=\"FROM_c\">list&lt;integer[2]&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_d\">d</TD><TD></TD><TD PORT=\"FROM_d\">list&lt;list[2]&lt;integer[2]&gt;&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_e\">e</TD><TD></TD><TD PORT=\"FROM_e\">list&lt;[2]&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_f\">f</TD><TD></TD><TD PORT=\"FROM_f\">list&lt;list&lt;integer[2]&gt;&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_g\">g</TD><TD></TD><TD PORT=\"FROM_g\">matrix&lt;integer[2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_h\">h</TD><TD></TD><TD PORT=\"FROM_h\">matrix&lt;list[2]&lt;integer[1]&gt;&gt;</TD></TR>",
         "    </TABLE>>];",
         "}",
         ""
       )
       expect_identical(gv(rel), paste(expected_text, collapse = "\n"))
       expected_text2 <- expected_text
-      expected_text2[c(11, 13)] <- c(
+      expected_text2[c(11, 13, 15)] <- c(
         "    <TR><TD PORT=\"TO_d\">d</TD><TD></TD><TD PORT=\"FROM_d\">list&lt;list[2]&gt;</TD></TR>",
-        "    <TR><TD PORT=\"TO_f\">f</TD><TD></TD><TD PORT=\"FROM_f\">list&lt;list&gt;</TD></TR>"
+        "    <TR><TD PORT=\"TO_f\">f</TD><TD></TD><TD PORT=\"FROM_f\">list&lt;list&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_h\">h</TD><TD></TD><TD PORT=\"FROM_h\">matrix&lt;list[2]&gt;</TD></TR>"
       )
       expect_identical(
         gv(rel, nest_level = 1),
@@ -1118,12 +1128,14 @@ describe("gv", {
       )
     })
     it("gives comment list element type, if approprate", {
-      x <- data.frame(a = 1:4)
-      x$b <- list(1L, 2:3, 4:6, 1L)
-      x$c <- list(1:2, 3:4, 5:6, 3:4)
-      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12))
-      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]))
-      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10))
+      x <- data.frame(a = 1:5)
+      x$b <- list(1L, 2:3, 4:6, 1L, 2:3)
+      x$c <- list(1:2, 3:4, 5:6, 3:4, 3:4)
+      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12), list(9:10, 11:12))
+      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]), list("a", letters[2:3]))
+      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10), list(9:10))
+      x$g <- matrix(1:2, nrow = 5, ncol = 2)
+      x$h <- matrix(as.list(c(1L, 2L, 1L, 3L, 2L, 1L, 2L, 1L, 3L, 2L)), nrow = 5, ncol = 2)
       expected_text <- c(
         "digraph \"data\" {",
         "  rankdir = \"LR\"",
@@ -1131,22 +1143,25 @@ describe("gv", {
         "",
         "  \"data\" [label = <",
         "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
-        "    <TR><TD COLSPAN=\"2\">data (4 rows)</TD></TR>",
+        "    <TR><TD COLSPAN=\"2\">data (5 rows)</TD></TR>",
         "    <TR><TD PORT=\"TO_a\">a</TD><TD PORT=\"FROM_a\">integer</TD></TR>",
         "    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\">list&lt;integer&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\">list&lt;integer[2]&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\">list&lt;list[2]&lt;integer[2]&gt;&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\">list&lt;[2]&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_f\">f</TD><TD PORT=\"FROM_f\">list&lt;list&lt;integer[2]&gt;&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_g\">g</TD><TD PORT=\"FROM_g\">matrix&lt;integer[2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_h\">h</TD><TD PORT=\"FROM_h\">matrix&lt;list[2]&lt;integer[1]&gt;&gt;</TD></TR>",
         "    </TABLE>>];",
         "}",
         ""
       )
       expect_identical(gv(x), paste(expected_text, collapse = "\n"))
       expected_text2 <- expected_text
-      expected_text2[c(11, 13)] <- c(
+      expected_text2[c(11, 13, 15)] <- c(
         "    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\">list&lt;list[2]&gt;</TD></TR>",
-        "    <TR><TD PORT=\"TO_f\">f</TD><TD PORT=\"FROM_f\">list&lt;list&gt;</TD></TR>"
+        "    <TR><TD PORT=\"TO_f\">f</TD><TD PORT=\"FROM_f\">list&lt;list&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_h\">h</TD><TD PORT=\"FROM_h\">matrix&lt;list[2]&gt;</TD></TR>"
       )
       expect_identical(
         gv(x, nest_level = 1),
@@ -1488,16 +1503,18 @@ describe("d2", {
       )
     })
     it("gives comment list element type, if approprate", {
-      x <- data.frame(a = 1:4)
-      x$b <- list(1L, 2:3, 4:6, 1L)
-      x$c <- list(1:2, 3:4, 5:6, 3:4)
-      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12))
-      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]))
-      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10))
-      db <- autodb(x, exclude = letters[2:6])
+      x <- data.frame(a = 1:5)
+      x$b <- list(1L, 2:3, 4:6, 1L, 2:3)
+      x$c <- list(1:2, 3:4, 5:6, 3:4, 3:4)
+      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12), list(9:10, 11:12))
+      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]), list("a", letters[2:3]))
+      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10), list(9:10))
+      x$g <- matrix(1:2, nrow = 5, ncol = 2)
+      x$h <- matrix(as.list(c(1L, 2L, 1L, 3L, 2L, 1L, 2L, 1L, 3L, 2L)), nrow = 5, ncol = 2)
+      db <- autodb(x, exclude = setdiff(names(x), "a"))
       expected_text <- c(
         "direction: right",
-        "\"a\": \"a (4 records)\" {",
+        "\"a\": \"a (5 records)\" {",
         "  shape: sql_table",
         "  \"a\": \"integer\" {constraint: [PK]}",
         "  \"b\": \"list<integer>\"",
@@ -1505,14 +1522,17 @@ describe("d2", {
         "  \"d\": \"list<list[2]<integer[2]>>\"",
         "  \"e\": \"list<[2]>\"",
         "  \"f\": \"list<list<integer[2]>>\"",
+        "  \"g\": \"matrix<integer[2]>\"",
+        "  \"h\": \"matrix<list[2]<integer[1]>>\"",
         "}",
         ""
       )
       expect_identical(d2(db), paste(expected_text, collapse = "\n"))
       expected_text2 <- expected_text
-      expected_text2[c(7, 9)] <- c(
+      expected_text2[c(7, 9, 11)] <- c(
         "  \"d\": \"list<list[2]>\"",
-        "  \"f\": \"list<list>\""
+        "  \"f\": \"list<list>\"",
+        "  \"h\": \"matrix<list[2]>\""
       )
       expect_identical(
         d2(db, nest_level = 1),
@@ -1675,18 +1695,20 @@ describe("d2", {
       )
     })
     it("gives comment list element type and length, if approprate", {
-      x <- data.frame(a = 1:4)
-      x$b <- list(1L, 2:3, 4:6, 1L)
-      x$c <- list(1:2, 3:4, 5:6, 3:4)
-      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12))
-      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]))
-      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10))
-      rel <- synthesise(discover(x, exclude = letters[2:6])) |>
+      x <- data.frame(a = 1:5)
+      x$b <- list(1L, 2:3, 4:6, 1L, 2:3)
+      x$c <- list(1:2, 3:4, 5:6, 3:4, 3:4)
+      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12), list(9:10, 11:12))
+      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]), list("a", letters[2:3]))
+      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10), list(9:10))
+      x$g <- matrix(1:2, nrow = 5, ncol = 2)
+      x$h <- matrix(as.list(c(1L, 2L, 1L, 3L, 2L, 1L, 2L, 1L, 3L, 2L)), nrow = 5, ncol = 2)
+      rel <- synthesise(discover(x, exclude = setdiff(names(x), "a"))) |>
         create() |>
         insert(x)
       expected_text <- c(
         "direction: right",
-        "\"a\": \"a (4 records)\" {",
+        "\"a\": \"a (5 records)\" {",
         "  shape: sql_table",
         "  \"a\": \"integer\" {constraint: [PK]}",
         "  \"b\": \"list<integer>\"",
@@ -1694,14 +1716,17 @@ describe("d2", {
         "  \"d\": \"list<list[2]<integer[2]>>\"",
         "  \"e\": \"list<[2]>\"",
         "  \"f\": \"list<list<integer[2]>>\"",
+        "  \"g\": \"matrix<integer[2]>\"",
+        "  \"h\": \"matrix<list[2]<integer[1]>>\"",
         "}",
         ""
       )
       expect_identical(d2(rel), paste(expected_text, collapse = "\n"))
       expected_text2 <- expected_text
-      expected_text2[c(7, 9)] <- c(
+      expected_text2[c(7, 9, 11)] <- c(
         "  \"d\": \"list<list[2]>\"",
-        "  \"f\": \"list<list>\""
+        "  \"f\": \"list<list>\"",
+        "  \"h\": \"matrix<list[2]>\""
       )
       expect_identical(
         d2(rel, nest_level = 1),
@@ -2192,15 +2217,17 @@ describe("d2", {
       )
     })
     it("gives comment list element type, if approprate", {
-      x <- data.frame(a = 1:4)
-      x$b <- list(1L, 2:3, 4:6, 1L)
-      x$c <- list(1:2, 3:4, 5:6, 3:4)
-      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12))
-      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]))
-      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10))
+      x <- data.frame(a = 1:5)
+      x$b <- list(1L, 2:3, 4:6, 1L, 2:3)
+      x$c <- list(1:2, 3:4, 5:6, 3:4, 3:4)
+      x$d <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10, 11:12), list(9:10, 11:12))
+      x$e <- list(1:2, c(1, 2), letters[1:2], list("a", letters[2:3]), list("a", letters[2:3]))
+      x$f <- list(list(1:2, 3:4), list(5:6, 7:8), list(9:10, 11:12), list(9:10), list(9:10))
+      x$g <- matrix(1:2, nrow = 5, ncol = 2)
+      x$h <- matrix(as.list(c(1L, 2L, 1L, 3L, 2L, 1L, 2L, 1L, 3L, 2L)), nrow = 5, ncol = 2)
       expected_text <- c(
         "direction: right",
-        "\"data\": \"data (4 rows)\" {",
+        "\"data\": \"data (5 rows)\" {",
         "  shape: sql_table",
         "  \"a\": \"integer\"",
         "  \"b\": \"list<integer>\"",
@@ -2208,14 +2235,17 @@ describe("d2", {
         "  \"d\": \"list<list[2]<integer[2]>>\"",
         "  \"e\": \"list<[2]>\"",
         "  \"f\": \"list<list<integer[2]>>\"",
+        "  \"g\": \"matrix<integer[2]>\"",
+        "  \"h\": \"matrix<list[2]<integer[1]>>\"",
         "}",
         ""
       )
       expect_identical(d2(x), paste(expected_text, collapse = "\n"))
       expected_text2 <- expected_text
-      expected_text2[c(7, 9)] <- c(
+      expected_text2[c(7, 9, 11)] <- c(
         "  \"d\": \"list<list[2]>\"",
-        "  \"f\": \"list<list>\""
+        "  \"f\": \"list<list>\"",
+        "  \"h\": \"matrix<list[2]>\""
       )
       expect_identical(
         d2(x, nest_level = 1),

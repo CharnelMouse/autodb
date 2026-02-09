@@ -775,7 +775,7 @@ setup_string_gv <- function(df_name) {
 
 column_class_string_gv <- function(a, nest_level) {
   res <- class(a)[[1]]
-  if (res != "list" || length(a) == 0 || nest_level <= 0)
+  if (!is.element(res, c("list", "matrix")) || length(a) == 0 || nest_level <= 0)
     return(res)
   sublist_info <- column_subclass_string_gv(a, nest_level)
   if (nchar(sublist_info) == 0)
@@ -787,6 +787,22 @@ column_class_string_gv <- function(a, nest_level) {
 column_subclass_string_gv <- function(a, nest_level) {
   if (nest_level <= 0)
     return("")
+  UseMethod("column_subclass_string_gv")
+}
+
+column_subclass_string_gv.matrix <- function(a, nest_level) {
+  b <- a[TRUE, drop = TRUE]
+  cl <- class(b)[[1]]
+  if (cl != "list")
+    return(paste0(cl, "[", ncol(a), "]"))
+  sublist_info <- column_subclass_string_gv(b, nest_level - 1L)
+  if (nchar(sublist_info) == 0)
+    paste0(cl, "[", ncol(a), "]")
+  else
+    paste0(cl, "[", ncol(a), "]&lt;", sublist_info, "&gt;")
+}
+
+column_subclass_string_gv.list <- function(a, nest_level) {
   lens <- lengths(a)
   same_length <- all(lens == lens[[1]])
   element_classes <- vapply(a, \(x) class(x)[[1]], character(1))
@@ -825,7 +841,7 @@ column_subclass_string_gv <- function(a, nest_level) {
 
 column_class_string_d2 <- function(a, nest_level) {
   res <- class(a)[[1]]
-  if (res != "list" || length(a) == 0)
+  if (!is.element(res, c("list", "matrix")) || length(a) == 0)
     return(res)
   sublist_info <- column_subclass_string_d2(a, nest_level)
   if (nchar(sublist_info) == 0)
@@ -837,6 +853,22 @@ column_class_string_d2 <- function(a, nest_level) {
 column_subclass_string_d2 <- function(a, nest_level) {
   if (nest_level <= 0)
     return("")
+  UseMethod("column_subclass_string_d2")
+}
+
+column_subclass_string_d2.matrix <- function(a, nest_level) {
+  b <- a[TRUE, drop = TRUE]
+  cl <- class(b)[[1]]
+  if (cl != "list")
+    return(paste0(cl, "[", ncol(a), "]"))
+  sublist_info <- column_subclass_string_d2(b, nest_level - 1L)
+  if (nchar(sublist_info) == 0)
+    paste0(cl, "[", ncol(a), "]")
+  else
+    paste0(cl, "[", ncol(a), "]<", sublist_info, ">")
+}
+
+column_subclass_string_d2.list <- function(a, nest_level) {
   lens <- lengths(a)
   same_length <- all(lens == lens[[1]])
   element_classes <- vapply(a, \(x) class(x)[[1]], character(1))
