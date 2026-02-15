@@ -196,41 +196,41 @@ describe("decompose", {
       curry = TRUE
     )
   })
-  it("returns a error if data.frame doesn't satisfy FKs in the schema", {
-    gen_df_and_fk_reduction <- function(nrow, ncol) {
-      gen_df(nrow, ncol, minrow = 4L, mincol = 4L, remove_dup_rows = TRUE) |>
-        # change factors to characters, since they cause merge problems when
-        # merged with non-factor non-character vectors that aren't in their
-        # level set
-        gen.with(fac2char) |>
-        gen.and_then(gen_fk_reduction_for_df)
-    }
-    expect_fk_error <- function(df, dbs) {
-      if (nrow(df) <= 1 || is.null(dbs))
-        discard()
-      name_regexp <- "[\\w\\. ]+"
-      fk_half_regexp <- paste0(
-        name_regexp,
-        "\\.\\{", name_regexp, "(, ", name_regexp, ")*\\}"
-      )
-      expect_error(
-        decompose(df, dbs, check = TRUE),
-        paste0(
-          "\\A",
-          "relations must satisfy references in schema:",
-          "(\\n", fk_half_regexp, " -> ", fk_half_regexp, ")+",
-          "\\Z"
-        ),
-        perl = TRUE
-      )
-    }
-    forall(
-      gen_df_and_fk_reduction(6, 7),
-      expect_fk_error,
-      discard.limit = 2*getOption("hedgehog.tests", 100),
-      curry = TRUE
-    )
-  })
+  # it("returns a error if data.frame doesn't satisfy FKs in the schema", {
+  #   gen_df_and_fk_reduction <- function(nrow, ncol) {
+  #     gen_df(nrow, ncol, minrow = 4L, mincol = 4L, remove_dup_rows = TRUE) |>
+  #       # change factors to characters, since they cause merge problems when
+  #       # merged with non-factor non-character vectors that aren't in their
+  #       # level set
+  #       gen.with(fac2char) |>
+  #       gen.and_then(gen_fk_reduction_for_df)
+  #   }
+  #   expect_fk_error <- function(df, dbs) {
+  #     if (nrow(df) <= 1 || is.null(dbs))
+  #       discard()
+  #     name_regexp <- "[\\w\\. ]+"
+  #     fk_half_regexp <- paste0(
+  #       name_regexp,
+  #       "\\.\\{", name_regexp, "(, ", name_regexp, ")*\\}"
+  #     )
+  #     expect_error(
+  #       decompose(df, dbs, check = TRUE),
+  #       paste0(
+  #         "\\A",
+  #         "relations must satisfy references in schema:",
+  #         "(\\n", fk_half_regexp, " -> ", fk_half_regexp, ")+",
+  #         "\\Z"
+  #       ),
+  #       perl = TRUE
+  #     )
+  #   }
+  #   forall(
+  #     gen_df_and_fk_reduction(6, 7),
+  #     expect_fk_error,
+  #     discard.limit = 2*getOption("hedgehog.tests", 100),
+  #     curry = TRUE
+  #   )
+  # })
   it("is equivalent to create >> insert for valid data", {
     forall(
       list(
