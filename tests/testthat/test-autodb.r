@@ -243,4 +243,11 @@ describe("autodb", {
       )
     )
   })
+  it("can take columns that are lists, matrices, or data frames (e.g. jsonlite output)", {
+    x <- data.frame(a = 1:4)
+    x$b <- list(1:2, 3:5, 6:9, 1:2)
+    x$c <- matrix(1:3, nrow = 4, ncol = 3)
+    x$d <- data.frame(b = rep(1:2, 2), c = letters[c(1:3, 1)])
+    expect_no_error(discover(x))
+  })
 })

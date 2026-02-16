@@ -646,7 +646,8 @@ describe("discover", {
         character = c("logical"),
         factor = c("integer", "numeric", "character"),
         list = character(),
-        matrix = character()
+        matrix = character(),
+        data.frame = character()
       )
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.sample(ncol(df)))) |>
@@ -861,6 +862,12 @@ describe("discover", {
 })
 
 describe("lookup_table", {
+  it("works", {
+    forall(
+      gen_df(6, 7),
+      lookup_table %>>% expect_no_error
+    )
+  })
   it("returns a data frame with same duplicated() output", {
     forall(
       gen_df(6, 7),

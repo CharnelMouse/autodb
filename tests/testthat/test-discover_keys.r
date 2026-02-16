@@ -361,7 +361,8 @@ describe("discover_keys", {
         character = c("logical"),
         factor = c("integer", "numeric", "character"),
         list = character(),
-        matrix = character()
+        matrix = character(),
+        data.frame = character()
       )
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.sample(ncol(df)))) |>

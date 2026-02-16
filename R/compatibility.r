@@ -32,9 +32,12 @@ df_duplicated <- function(x, incomparables = FALSE, fromLast = FALSE, ...) {
       ...
     ))
   if (ncol(x) == 1 && inherits(x[[1]], "array"))
-    arr_duplicated(x[[1]])
-  else
-    duplicated(x, incomparables = incomparables, fromLast = fromLast, ...)
+    return(arr_duplicated(x[[1]]))
+  if (ncol(x) == 1 && inherits(x[[1]], "data.frame"))
+    return(df_duplicated(x[[1]]))
+  dfs <- vapply(x, is.data.frame, logical(1))
+  x[dfs] <- lapply(x[dfs], df_records)
+  duplicated(x, incomparables = incomparables, fromLast = fromLast, ...)
 }
 
 arr_duplicated <- function(x, incomparables = FALSE, fromLast = FALSE, ...) {
@@ -66,9 +69,12 @@ df_anyDuplicated <- function(x, incomparables = FALSE, fromLast = FALSE, ...) {
       ...
     ))
   if (ncol(x) == 1 && inherits(x[[1]], "array"))
-    arr_anyDuplicated(x[[1]])
-  else
-    anyDuplicated(x, incomparables = incomparables, fromLast = fromLast, ...)
+    return(arr_anyDuplicated(x[[1]]))
+  if (ncol(x) == 1 && inherits(x[[1]], "data.frame"))
+    return(df_anyDuplicated(x[[1]]))
+  dfs <- vapply(x, is.data.frame, logical(1))
+  x[dfs] <- lapply(x[dfs], df_records)
+  anyDuplicated(x, incomparables = incomparables, fromLast = fromLast, ...)
 }
 
 arr_anyDuplicated <- function(x, incomparables = FALSE, fromLast = FALSE, ...) {
@@ -101,6 +107,47 @@ df_rbind <- function(...) {
     stop("column names do not match")
   nc <- nc[[1]]
   nms <- nms[[1]]
+
+  df_els <- vapply(dfs, vapply, logical(nc), is.data.frame, logical(1)) |>
+    (\(x) matrix(x, nrow = nc))()
+  any_dfs <- apply(df_els, 1, any)
+  all_dfs <- apply(df_els, 1, all)
+  if (any(any_dfs & !all_dfs))
+    stop("non-compatible elements")
+  df_els <- which(all_dfs)
+  if (length(df_els) > 0) {
+    ncol_mismatch <- vapply(
+      df_els,
+      \(n) {
+        cols <- vapply(dfs, \(x) NCOL(x[[n]]), integer(1))
+        any(cols != cols[[1]])
+      },
+      logical(1)
+    )
+    name_mismatch <- vapply(
+      df_els,
+      \(n) {
+        cols <- lapply(dfs, \(x) names(x[[n]]))
+        any(!vapply(cols, identical, logical(1), cols[[1]]))
+      },
+      logical(1)
+    )
+    if (any(ncol_mismatch | name_mismatch))
+      stop("non-compatible elements")
+    vals_df <- lapply(
+      df_els,
+      \(n) do.call(df_rbind, lapply(dfs, \(x) x[[n]]))
+    )
+    stopifnot(all(vapply(vals_df, is.data.frame, logical(1))))
+    indices_vec <- lapply(vals_df, lookup_indices) |>
+      as.data.frame()
+    for (m in seq_along(dfs))
+      for (n in df_els) {
+        dfs[[m]][[n]] <- indices_vec[[match(n, df_els)]][
+          sum(nr[seq_len(m - 1)]) + seq_len(nr[[m]])
+        ]
+      }
+  }
 
   matrices <- vapply(
     dfs,
@@ -191,6 +238,10 @@ df_rbind <- function(...) {
   dfs <- lapply(dfs, \(df) cbind(df, dummy = seq_len(nrow(df))))
   res <- do.call(rbind, dfs)
 
+  if (length(df_els) > 0) {
+    for (n in df_els)
+      res[[n]] <- vals_df[[match(n, df_els)]][res[[n]], , drop = FALSE]
+  }
   if (length(matrices) > 0)
     res[, matrices] <- Map(
       \(v, r) v[r, , drop = FALSE],

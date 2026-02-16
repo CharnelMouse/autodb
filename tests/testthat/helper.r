@@ -329,7 +329,8 @@ gen_df <- function(
     "character",
     "factor",
     if (!atomic) "list",
-    if (!atomic) "matrix"
+    if (!atomic) "matrix",
+    if (!atomic) "data.frame"
   )
   list(
     gen.element(seq.int(min(mincol, ncol), ncol)) |>
@@ -371,24 +372,19 @@ gen.df_fixed_ranges <- function(
       prob = c(10, 1)
     ) |>
       gen.c(of = n_records) |>
-      gen.with(as.integer) |>
-      gen.with(as.data.frame.vector),
+      gen.with(as.integer),
     numeric = gen.numeric() |>
       gen.c(of = n_records) |>
       gen.with(as.numeric) |>
-      gen.and_then(with_args(gen.float_coincide, digits = digits)) |>
-      gen.with(as.data.frame.vector),
+      gen.and_then(with_args(gen.float_coincide, digits = digits)),
     character = gen.element(c("FALSE", "TRUE", NA_character_)) |>
       gen.c(of = n_records) |>
-      gen.with(as.character) |>
-      gen.with(as.data.frame.vector),
+      gen.with(as.character),
     factor = gen.element(c("FALSE", "TRUE", NA_character_)) |>
       gen.c(of = n_records) |>
-      gen.with(with_args(factor, levels = c("FALSE", "TRUE"))) |>
-      gen.with(as.data.frame.vector),
+      gen.with(with_args(factor, levels = c("FALSE", "TRUE"))),
     list = gen.list_element() |>
-      gen.list(of = n_records) |>
-      gen.with(as.data.frame.vector),
+      gen.list(of = n_records),
     matrix = gen.element(0:2) |>
       gen.and_then(\(n) {
         gen.choice(
@@ -409,12 +405,15 @@ gen.df_fixed_ranges <- function(
             gen.with(with_args(factor, levels = c("FALSE", "TRUE")))
         )
       }) |>
-      gen.with(with_args(matrix, nrow = n_records)) |>
-      gen.with(\(x) {
-        dat <- data.frame(seq_len(n_records))[, FALSE, drop = FALSE]
-        dat[[1]] <- x
-        dat
-      })
+      gen.with(with_args(matrix, nrow = n_records)),
+    data.frame = gen_df(
+      nrow = n_records,
+      ncol = 3,
+      minrow = n_records,
+      mincol = 0,
+      variant = "data.frame",
+      atomic = TRUE
+    )
   )
   if (length(classes) == 0L)
     return(
@@ -433,13 +432,21 @@ gen.df_fixed_ranges <- function(
     }
   ) |>
     gen.with(
-      with_args(as.data.frame, check.names = FALSE) %>>%
+      with_args(as.general.df, len = n_records) %>>%
         with_args(setNames, nm = nms) %>>%
         (if (remove_dup_rows) df_unique else identity)
     ) |>
     gen.with(variant)
 }
 
+as.general.df <- function(len, cols) {
+  res <- data.frame(seq_len(len))[, FALSE, drop = FALSE]
+  for (n in seq_along(cols)) {
+    res[[n]] <- cols[[n]]
+  }
+  names(res) <- names(cols)
+  res
+}
 
 gen.list_element <- function() {
   gen.choice( # list where each element is NULL or one of the other types

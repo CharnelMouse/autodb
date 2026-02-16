@@ -414,6 +414,8 @@ lookup_indices <- function(x) {
     return(match(x, x))
   if (inherits(x, "matrix"))
     x <- apply(x, 1, identity, simplify = FALSE)
+  if (inherits(x, "data.frame"))
+    x <- df_records(x)
   # for nestable lists match() gives the wrong answer,
   # because it disagrees with identical()/duplicated().
   # match() logic is used in merge(), so we still have
@@ -424,6 +426,7 @@ lookup_indices <- function(x) {
   vapply(
     x,
     \(y) Position(\(u) identical(y, u), x),
-    integer(1)
+    integer(1),
+    USE.NAMES = FALSE
   )
 }
