@@ -826,14 +826,18 @@ remove_violated_references <- function(references, relation) {
       child <- recs[[rel[[1]]]][, rel[[2]], drop = FALSE]
       parent <- recs[[rel[[3]]]][, rel[[4]], drop = FALSE]
       identical(
-        nrow(child),
-        nrow(df_join(
-          child,
-          parent,
-          by.x = rel[[2]],
-          by.y = rel[[4]]
-        ))
-      )
+        vapply(child, \(x) class(x)[[1]], character(1)),
+        vapply(parent, \(x) class(x)[[1]], character(1))
+      ) &&
+        identical(
+          nrow(child),
+          nrow(df_join(
+            child,
+            parent,
+            by.x = rel[[2]],
+            by.y = rel[[4]]
+          ))
+        )
     },
     logical(1)
   )]
@@ -1087,11 +1091,13 @@ gen_fk_reduction_for_df <- function(df) {
     true_fks,
     \(fk) {
       len <- length(fk[[2]])
+      # first key of correct length in each relation...
       new_tbs <- vapply(
         keys(true_dbs),
         \(ks) match(len, lengths(ks)),
         integer(1)
       )
+      # ... that's not in the original FK
       valid_new_tbs <- new_tbs[
         !is.na(new_tbs) &
           names(new_tbs) != fk[[1]] &

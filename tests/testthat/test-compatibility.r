@@ -133,22 +133,30 @@ describe("df_rbind", {
       )
     )
   })
-  it("can rbind vectors with matrices (converted to lists if different ncols, or vectors if ncol = 1)", {
+  it("doesn't rbind vectors with matrices if the latter have a single column", {
     x <- data.frame(a = 1:3, b = 1:3)
     y <- data.frame(a = 4:6)
     y$b <- matrix(4:9, ncol = 2)
     z <- x
     z$b <- as.matrix(x$b)
 
-    res <- data.frame(a = 1:6)
-    res$b <- list(1L, 2L, 3L, c(4L, 7L), c(5L, 8L), c(6L, 9L))
-    expect_identical(df_rbind(x, y), res)
+    expect_error(df_rbind(x, y))
+    expect_error(df_rbind(x, z))
 
-    res2 <- data.frame(a = rep(4:6, 2))
-    res2$b <- rbind(y$b, y$b)
-    expect_identical(df_rbind(y, y), res2)
+    res <- data.frame(a = rep(4:6, 2))
+    res$b <- rbind(y$b, y$b)
+    expect_identical(df_rbind(y, y), res)
+  })
+  it("can rbind matrices with each other if they have the same column count", {
+    x <- data.frame(a = 1:3)
+    x$b <- matrix(4:9, ncol = 2)
+    res <- rbind(x, x)
+    res$b <- rbind(x$b, x$b)
+    expect_identical(df_rbind(x, x), res)
 
-    expect_identical(df_rbind(x, z), rbind(x, x))
+    y <- data.frame(a = 1:3)
+    y$b <- matrix(4:6, ncol = 1)
+    expect_error(df_rbind(x, y))
   })
 })
 

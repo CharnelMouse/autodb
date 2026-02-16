@@ -12,15 +12,17 @@ df_join <- function(x, y, by = intersect(names(x), names(y)), by.x = by, by.y = 
   if (length(matrices) > 0) {
     for (n in matrices) {
       if (!is.matrix(vx[[n]]))
-        vx[[n]] <- as.matrix(vx[[n]])
+        stop("non-compatible elements")
       if (!is.matrix(vy[[n]]))
-        vy[[n]] <- as.matrix(vy[[n]])
+        stop("non-compatible elements")
     }
     ncol_mismatch <- vapply(
       matrices,
       \(n) NCOL(vx[[n]]) != NCOL(vy[[n]]),
       logical(1)
     )
+    if (any(ncol_mismatch))
+      stop("non-compatible elements")
     vx[, matrices[ncol_mismatch]] <- lapply(
       vx[, matrices[ncol_mismatch], drop = FALSE],
       apply,
@@ -61,6 +63,12 @@ df_join <- function(x, y, by = intersect(names(x), names(y)), by.x = by, by.y = 
   y_lists <- vapply(vy, is.list, logical(1))
   lists <- which(x_lists | y_lists)
   if (length(lists) > 0) {
+    for (n in lists) {
+      if (!is.list(vx[[n]]))
+        stop("non-compatible elements")
+      if (!is.list(vy[[n]]))
+        stop("non-compatible elements")
+    }
     vals_list <- rbind(
       vx[, lists, drop = FALSE],
       stats::setNames(vy[, lists, drop = FALSE], names(vx)[lists]),

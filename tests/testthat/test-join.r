@@ -90,10 +90,14 @@ describe("df_join", {
     expect_true(!df_anyDuplicated(x))
     expect_true(!df_anyDuplicated(df_join(x, x)))
   })
-  it("correctly merges a matrix against a non-matrix", {
+  it("matches a matrix with a vector if it has a single column", {
     x <- data.frame(a = 1:3)
     x$b <- matrix(1:6, nrow = 3)
-    expect_true(nrow(df_join(x, x, by.x = "b", by.y = "a")) == 0)
-    expect_true(nrow(df_join(x, x, by.x = "a", by.y = "b")) == 0)
+    expect_error(df_join(x, x, by.x = "b", by.y = "a"))
+    expect_error(df_join(x, x, by.x = "a", by.y = "b"))
+
+    y <- data.frame(a = 1:3)
+    y$b <- matrix(1:3, nrow = 3)
+    expect_error(df_join(y, y, by.x = "a", by.y = "b"))
   })
 })
