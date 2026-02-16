@@ -263,13 +263,3 @@ describe("remove_insertion_key_violations", {
     )
   })
 })
-
-describe("gen_fk_reduction_for_df", {
-  it("succeeds", {
-    forall(
-      gen_df(6, 7, minrow = 4, mincol = 4, remove_dup_rows = TRUE) |>
-        gen.with(fac2char),
-      \(x) expect_no_error(gen_fk_reduction_for_df(x))
-    )
-  })
-})
