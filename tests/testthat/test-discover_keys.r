@@ -349,46 +349,6 @@ describe("discover_keys", {
     )
   })
   it("is invariant to an attribute's class being losslessly changed", {
-    gen_df_and_type_change <- function(
-      nrow,
-      ncol,
-      remove_dup_rows = FALSE
-    ) {
-      changes <- list(
-        logical = c("integer", "numeric", "character"),
-        integer = c("numeric", "character"),
-        numeric = c("character"),
-        character = c("logical"),
-        factor = c("integer", "numeric", "character"),
-        list = character(),
-        matrix = character(),
-        data.frame = character()
-      )
-      gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
-        gen.and_then(\(df) list(df, gen.sample(ncol(df)))) |>
-        gen.and_then(uncurry(\(df, attr) {
-          change_sets <- match(names(changes), class(df[[attr]]))
-          attr_class <- class(df[[attr]])[[1]]
-          if (all(is.na(change_sets)))
-            stop(paste("no change set for", attr_class, "class"))
-          change_ind <- which.min(change_sets)
-          stopifnot(length(change_ind) == 1, !is.na(change_ind))
-          change_set <- changes[[change_ind]]
-          list(
-            gen.pure(df),
-            gen.pure(attr),
-            if (length(change_set) == 0)
-              gen.pure(attr_class)
-            else
-              gen.element(change_set)
-          )
-        })) |>
-        gen.with(uncurry(\(df, attr, new_class) {
-          permed <- df
-          permed[[attr]] <- as(permed[[attr]], new_class)
-          list(df, permed)
-        }))
-    }
     forall(
       gen_df_and_type_change(4, 6),
       both_terminate_then(expect_equiv_keys),
