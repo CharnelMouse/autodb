@@ -601,8 +601,8 @@ describe("gv", {
         "    <TR><TD PORT=\"TO_d\">d</TD><TD></TD><TD PORT=\"FROM_d\">list&lt;list[2]&lt;integer[2]&gt;&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_e\">e</TD><TD></TD><TD PORT=\"FROM_e\">list&lt;[2]&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_f\">f</TD><TD></TD><TD PORT=\"FROM_f\">list&lt;list&lt;integer[2]&gt;&gt;</TD></TR>",
-        "    <TR><TD PORT=\"TO_g\">g</TD><TD></TD><TD PORT=\"FROM_g\">matrix&lt;integer[2]&gt;</TD></TR>",
-        "    <TR><TD PORT=\"TO_h\">h</TD><TD></TD><TD PORT=\"FROM_h\">matrix&lt;list[2]&lt;integer[1]&gt;&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_g\">g</TD><TD></TD><TD PORT=\"FROM_g\">matrix[2]&lt;integer&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_h\">h</TD><TD></TD><TD PORT=\"FROM_h\">matrix[2]&lt;list&lt;integer[1]&gt;&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_i\">i</TD><TD></TD><TD PORT=\"FROM_i\">data.frame[2]</TD></TR>",
         "    <TR><TD PORT=\"TO_j\">j</TD><TD></TD><TD PORT=\"FROM_j\">tbl_df[2]</TD></TR>",
         "    </TABLE>>];",
@@ -614,7 +614,7 @@ describe("gv", {
       expected_text2[c(11, 13, 15)] <- c(
         "    <TR><TD PORT=\"TO_d\">d</TD><TD></TD><TD PORT=\"FROM_d\">list&lt;list[2]&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_f\">f</TD><TD></TD><TD PORT=\"FROM_f\">list&lt;list&gt;</TD></TR>",
-        "    <TR><TD PORT=\"TO_h\">h</TD><TD></TD><TD PORT=\"FROM_h\">matrix&lt;list[2]&gt;</TD></TR>"
+        "    <TR><TD PORT=\"TO_h\">h</TD><TD></TD><TD PORT=\"FROM_h\">matrix[2]&lt;list&gt;</TD></TR>"
       )
       expect_identical(
         gv(db, nest_level = 1),
@@ -717,8 +717,8 @@ describe("gv", {
         "    <TR><TD PORT=\"TO_d\">d</TD><TD></TD><TD PORT=\"FROM_d\">list&lt;list[2]&lt;integer[2]&gt;&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_e\">e</TD><TD></TD><TD PORT=\"FROM_e\">list&lt;[2]&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_f\">f</TD><TD></TD><TD PORT=\"FROM_f\">list&lt;list&lt;integer[2]&gt;&gt;</TD></TR>",
-        "    <TR><TD PORT=\"TO_g\">g</TD><TD></TD><TD PORT=\"FROM_g\">matrix&lt;integer[2]&gt;</TD></TR>",
-        "    <TR><TD PORT=\"TO_h\">h</TD><TD></TD><TD PORT=\"FROM_h\">matrix&lt;list[2]&lt;integer[1]&gt;&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_g\">g</TD><TD></TD><TD PORT=\"FROM_g\">matrix[2]&lt;integer&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_h\">h</TD><TD></TD><TD PORT=\"FROM_h\">matrix[2]&lt;list&lt;integer[1]&gt;&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_i\">i</TD><TD></TD><TD PORT=\"FROM_i\">data.frame[2]</TD></TR>",
         "    <TR><TD PORT=\"TO_j\">j</TD><TD></TD><TD PORT=\"FROM_j\">tbl_df[2]</TD></TR>",
         "    </TABLE>>];",
@@ -730,7 +730,7 @@ describe("gv", {
       expected_text2[c(11, 13, 15)] <- c(
         "    <TR><TD PORT=\"TO_d\">d</TD><TD></TD><TD PORT=\"FROM_d\">list&lt;list[2]&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_f\">f</TD><TD></TD><TD PORT=\"FROM_f\">list&lt;list&gt;</TD></TR>",
-        "    <TR><TD PORT=\"TO_h\">h</TD><TD></TD><TD PORT=\"FROM_h\">matrix&lt;list[2]&gt;</TD></TR>"
+        "    <TR><TD PORT=\"TO_h\">h</TD><TD></TD><TD PORT=\"FROM_h\">matrix[2]&lt;list&gt;</TD></TR>"
       )
       expect_identical(
         gv(rel, nest_level = 1),
@@ -1160,8 +1160,8 @@ describe("gv", {
         "    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\">list&lt;list[2]&lt;integer[2]&gt;&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_e\">e</TD><TD PORT=\"FROM_e\">list&lt;[2]&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_f\">f</TD><TD PORT=\"FROM_f\">list&lt;list&lt;integer[2]&gt;&gt;</TD></TR>",
-        "    <TR><TD PORT=\"TO_g\">g</TD><TD PORT=\"FROM_g\">matrix&lt;integer[2]&gt;</TD></TR>",
-        "    <TR><TD PORT=\"TO_h\">h</TD><TD PORT=\"FROM_h\">matrix&lt;list[2]&lt;integer[1]&gt;&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_g\">g</TD><TD PORT=\"FROM_g\">matrix[2]&lt;integer&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_h\">h</TD><TD PORT=\"FROM_h\">matrix[2]&lt;list&lt;integer[1]&gt;&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_i\">i</TD><TD PORT=\"FROM_i\">data.frame[2]</TD></TR>",
         "    <TR><TD PORT=\"TO_j\">j</TD><TD PORT=\"FROM_j\">tbl_df[2]</TD></TR>",
         "    </TABLE>>];",
@@ -1173,7 +1173,7 @@ describe("gv", {
       expected_text2[c(11, 13, 15)] <- c(
         "    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\">list&lt;list[2]&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_f\">f</TD><TD PORT=\"FROM_f\">list&lt;list&gt;</TD></TR>",
-        "    <TR><TD PORT=\"TO_h\">h</TD><TD PORT=\"FROM_h\">matrix&lt;list[2]&gt;</TD></TR>"
+        "    <TR><TD PORT=\"TO_h\">h</TD><TD PORT=\"FROM_h\">matrix[2]&lt;list&gt;</TD></TR>"
       )
       expect_identical(
         gv(x, nest_level = 1),
@@ -1536,8 +1536,8 @@ describe("d2", {
         "  \"d\": \"list<list[2]<integer[2]>>\"",
         "  \"e\": \"list<[2]>\"",
         "  \"f\": \"list<list<integer[2]>>\"",
-        "  \"g\": \"matrix<integer[2]>\"",
-        "  \"h\": \"matrix<list[2]<integer[1]>>\"",
+        "  \"g\": \"matrix[2]<integer>\"",
+        "  \"h\": \"matrix[2]<list<integer[1]>>\"",
         "  \"i\": \"data.frame[2]\"",
         "  \"j\": \"tbl_df[2]\"",
         "}",
@@ -1548,7 +1548,7 @@ describe("d2", {
       expected_text2[c(7, 9, 11)] <- c(
         "  \"d\": \"list<list[2]>\"",
         "  \"f\": \"list<list>\"",
-        "  \"h\": \"matrix<list[2]>\""
+        "  \"h\": \"matrix[2]<list>\""
       )
       expect_identical(
         d2(db, nest_level = 1),
@@ -1734,8 +1734,8 @@ describe("d2", {
         "  \"d\": \"list<list[2]<integer[2]>>\"",
         "  \"e\": \"list<[2]>\"",
         "  \"f\": \"list<list<integer[2]>>\"",
-        "  \"g\": \"matrix<integer[2]>\"",
-        "  \"h\": \"matrix<list[2]<integer[1]>>\"",
+        "  \"g\": \"matrix[2]<integer>\"",
+        "  \"h\": \"matrix[2]<list<integer[1]>>\"",
         "  \"i\": \"data.frame[2]\"",
         "  \"j\": \"tbl_df[2]\"",
         "}",
@@ -1746,7 +1746,7 @@ describe("d2", {
       expected_text2[c(7, 9, 11)] <- c(
         "  \"d\": \"list<list[2]>\"",
         "  \"f\": \"list<list>\"",
-        "  \"h\": \"matrix<list[2]>\""
+        "  \"h\": \"matrix[2]<list>\""
       )
       expect_identical(
         d2(rel, nest_level = 1),
@@ -2257,8 +2257,8 @@ describe("d2", {
         "  \"d\": \"list<list[2]<integer[2]>>\"",
         "  \"e\": \"list<[2]>\"",
         "  \"f\": \"list<list<integer[2]>>\"",
-        "  \"g\": \"matrix<integer[2]>\"",
-        "  \"h\": \"matrix<list[2]<integer[1]>>\"",
+        "  \"g\": \"matrix[2]<integer>\"",
+        "  \"h\": \"matrix[2]<list<integer[1]>>\"",
         "  \"i\": \"data.frame[2]\"",
         "  \"j\": \"tbl_df[2]\"",
         "}",
@@ -2269,7 +2269,7 @@ describe("d2", {
       expected_text2[c(7, 9, 11)] <- c(
         "  \"d\": \"list<list[2]>\"",
         "  \"f\": \"list<list>\"",
-        "  \"h\": \"matrix<list[2]>\""
+        "  \"h\": \"matrix[2]<list>\""
       )
       expect_identical(
         d2(x, nest_level = 1),

@@ -787,10 +787,19 @@ column_class_string_gv <- function(a, nest_level) {
 }
 
 column_size_string_gv <- function(a) {
-  if (inherits(a, "data.frame"))
-    as.character(ncol(a))
-  else
-    ""
+  UseMethod("column_size_string_gv")
+}
+
+column_size_string_gv.default <- function(a) {
+  ""
+}
+
+column_size_string_gv.matrix <- function(a) {
+  as.character(ncol(a))
+}
+
+column_size_string_gv.data.frame <- function(a) {
+  as.character(ncol(a))
 }
 
 column_subclass_string_gv <- function(a, nest_level) {
@@ -807,12 +816,12 @@ column_subclass_string_gv.matrix <- function(a, nest_level) {
   b <- a[TRUE, drop = TRUE]
   cl <- class(b)[[1]]
   if (cl != "list")
-    return(paste0(cl, "[", ncol(a), "]"))
+    return(cl)
   sublist_info <- column_subclass_string_gv(b, nest_level - 1L)
   if (nchar(sublist_info) == 0)
-    paste0(cl, "[", ncol(a), "]")
+    cl
   else
-    paste0(cl, "[", ncol(a), "]&lt;", sublist_info, "&gt;")
+    paste0(cl, "&lt;", sublist_info, "&gt;")
 }
 
 column_subclass_string_gv.list <- function(a, nest_level) {
@@ -868,10 +877,19 @@ column_class_string_d2 <- function(a, nest_level) {
 }
 
 column_size_string_d2 <- function(a) {
-  if (inherits(a, "data.frame"))
-    as.character(ncol(a))
-  else
-    ""
+  UseMethod("column_size_string_d2")
+}
+
+column_size_string_d2.default <- function(a) {
+  ""
+}
+
+column_size_string_d2.matrix <- function(a) {
+  as.character(ncol(a))
+}
+
+column_size_string_d2.data.frame <- function(a) {
+  as.character(ncol(a))
 }
 
 column_subclass_string_d2 <- function(a, nest_level) {
@@ -888,12 +906,12 @@ column_subclass_string_d2.matrix <- function(a, nest_level) {
   b <- a[TRUE, drop = TRUE]
   cl <- class(b)[[1]]
   if (cl != "list")
-    return(paste0(cl, "[", ncol(a), "]"))
+    return(cl)
   sublist_info <- column_subclass_string_d2(b, nest_level - 1L)
   if (nchar(sublist_info) == 0)
-    paste0(cl, "[", ncol(a), "]")
+    cl
   else
-    paste0(cl, "[", ncol(a), "]<", sublist_info, ">")
+    paste0(cl, "<", sublist_info, ">")
 }
 
 column_subclass_string_d2.list <- function(a, nest_level) {
