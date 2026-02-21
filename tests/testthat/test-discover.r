@@ -652,10 +652,13 @@ describe("discover", {
       gen_df(nrow, ncol, minrow = 1L, mincol = 1L, remove_dup_rows) |>
         gen.and_then(\(df) list(df, gen.sample(ncol(df)))) |>
         gen.and_then(uncurry(\(df, attr) {
+          change_sets <- match(names(changes), class(df[[attr]]))
           attr_class <- class(df[[attr]])[[1]]
-          change_set <- changes[[attr_class]]
-          if (is.null(change_set))
+          if (all(is.na(change_sets)))
             stop(paste("no change set for", attr_class, "class"))
+          change_ind <- which.min(change_sets)
+          stopifnot(length(change_ind) == 1, !is.na(change_ind))
+          change_set <- changes[[change_ind]]
           list(
             gen.pure(df),
             gen.pure(attr),

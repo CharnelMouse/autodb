@@ -410,9 +410,7 @@ gen.df_fixed_ranges <- function(
       nrow = n_records,
       ncol = 3,
       minrow = n_records,
-      mincol = 0,
-      variant = "data.frame",
-      atomic = TRUE
+      mincol = 0
     )
   )
   if (length(classes) == 0L)

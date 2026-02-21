@@ -1,8 +1,8 @@
 df_join <- function(x, y, by = intersect(names(x), names(y)), by.x = by, by.y = by, ...) {
   # edge cases are for single-column bys
   # if (length(by.x) != 1 || length(by.y) != 1)
-    # fails if there are list by columns, do the below for any relevant ones instead
-    # return(merge(x, y, by = by, by.x = by.x, by.y = by.y, ...))
+  # fails if there are list by columns, do the below for any relevant ones instead
+  # return(merge(x, y, by = by, by.x = by.x, by.y = by.y, ...))
   vx <- x[, by.x, drop = FALSE]
   vy <- y[, by.y, drop = FALSE]
 

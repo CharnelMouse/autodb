@@ -163,8 +163,8 @@ df_rbind <- function(...) {
       stop("non-compatible elements")
     for (n in matrices) {
       for (m in seq_along(dfs)) {
-      if (!is.matrix(dfs[[m]][[n]]))
-        dfs[[m]][[n]] <- as.matrix(dfs[[m]][[n]])
+        if (!is.matrix(dfs[[m]][[n]]))
+          dfs[[m]][[n]] <- as.matrix(dfs[[m]][[n]])
       }
     }
     ncol_mismatch <- vapply(
@@ -243,11 +243,9 @@ df_rbind <- function(...) {
       res[[n]] <- vals_df[[match(n, df_els)]][res[[n]], , drop = FALSE]
   }
   if (length(matrices) > 0)
-    res[, matrices] <- Map(
-      \(v, r) v[r, , drop = FALSE],
-      vals_mat,
-      res[, matrices, drop = FALSE]
-    )
+    for (n in seq_along(matrices)) {
+      res[[matrices[[n]]]] <- vals_mat[[n]][res[[matrices[[n]]]], , drop = FALSE]
+    }
   if (length(lists) > 0)
     res[, lists] <- Map(`[`, vals_list, res[, lists, drop = FALSE])
 
@@ -276,7 +274,16 @@ df_rbind <- function(...) {
 df_records <- function(x, use_rownames = FALSE, use_colnames = FALSE) {
   if (ncol(x) == 0)
     return(rep(list(list()), nrow(x)))
-  x[] <- lapply(x, \(y) if (length(dim(y)) == 0) y else asplit(y, 1))
+  x[] <- lapply(
+    x,
+    \(y) {
+      if (length(dim(y)) == 0)
+        return(y)
+      if (is.data.frame(y))
+        return(df_records(y))
+      asplit(y, 1)
+    }
+  )
   args <- c(list, x)
   if (!use_colnames)
     names(args) <- NULL
