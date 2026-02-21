@@ -775,19 +775,32 @@ setup_string_gv <- function(df_name) {
 
 column_class_string_gv <- function(a, nest_level) {
   res <- class(a)[[1]]
-  if (!is.element(res, c("list", "matrix")) || length(a) == 0 || nest_level <= 0)
-    return(res)
+  size_info <- column_size_string_gv(a)
   sublist_info <- column_subclass_string_gv(a, nest_level)
-  if (nchar(sublist_info) == 0)
-    res
+  paste0(
+    res,
+    if (nchar(size_info) > 0)
+      paste0("[", size_info, "]"),
+    if (nchar(sublist_info) > 0)
+      paste0("&lt;", sublist_info, "&gt;")
+  )
+}
+
+column_size_string_gv <- function(a) {
+  if (inherits(a, "data.frame"))
+    as.character(ncol(a))
   else
-    paste0(res, "&lt;", sublist_info, "&gt;")
+    ""
 }
 
 column_subclass_string_gv <- function(a, nest_level) {
   if (nest_level <= 0)
     return("")
   UseMethod("column_subclass_string_gv")
+}
+
+column_subclass_string_gv.default <- function(a, nest_level) {
+  ""
 }
 
 column_subclass_string_gv.matrix <- function(a, nest_level) {
@@ -803,6 +816,8 @@ column_subclass_string_gv.matrix <- function(a, nest_level) {
 }
 
 column_subclass_string_gv.list <- function(a, nest_level) {
+  if (length(a) == 0)
+    return("")
   lens <- lengths(a)
   same_length <- all(lens == lens[[1]])
   element_classes <- vapply(a, \(x) class(x)[[1]], character(1))
@@ -841,19 +856,32 @@ column_subclass_string_gv.list <- function(a, nest_level) {
 
 column_class_string_d2 <- function(a, nest_level) {
   res <- class(a)[[1]]
-  if (!is.element(res, c("list", "matrix")) || length(a) == 0)
-    return(res)
+  size_info <- column_size_string_d2(a)
   sublist_info <- column_subclass_string_d2(a, nest_level)
-  if (nchar(sublist_info) == 0)
-    res
+  paste0(
+    res,
+    if (nchar(size_info) > 0)
+      paste0("[", size_info, "]"),
+    if (nchar(sublist_info) > 0)
+      paste0("<", sublist_info, ">")
+  )
+}
+
+column_size_string_d2 <- function(a) {
+  if (inherits(a, "data.frame"))
+    as.character(ncol(a))
   else
-    paste0(res, "<", sublist_info, ">")
+    ""
 }
 
 column_subclass_string_d2 <- function(a, nest_level) {
   if (nest_level <= 0)
     return("")
   UseMethod("column_subclass_string_d2")
+}
+
+column_subclass_string_d2.default <- function(a, nest_level) {
+  ""
 }
 
 column_subclass_string_d2.matrix <- function(a, nest_level) {
@@ -869,6 +897,8 @@ column_subclass_string_d2.matrix <- function(a, nest_level) {
 }
 
 column_subclass_string_d2.list <- function(a, nest_level) {
+  if (length(a) == 0)
+    return("")
   lens <- lengths(a)
   same_length <- all(lens == lens[[1]])
   element_classes <- vapply(a, \(x) class(x)[[1]], character(1))
