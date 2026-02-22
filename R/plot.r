@@ -748,34 +748,15 @@ setup_string_gv <- function(df_name) {
 
 column_class_string_gv <- function(a, nest_level) {
   res <- class(a)[[1]]
-  size_info <- column_size_string_gv(a)
+  size_info <- column_size_plot_info(a)
   sublist_info <- column_subclass_string_gv(a, nest_level)
   paste0(
     res,
-    if (nchar(size_info) > 0)
+    if (length(size_info) > 0)
       paste0("[", size_info, "]"),
     if (nchar(sublist_info) > 0)
       paste0("&lt;", sublist_info, "&gt;")
   )
-}
-
-column_size_string_gv <- function(a) {
-  UseMethod("column_size_string_gv")
-}
-
-#' @exportS3Method
-column_size_string_gv.default <- function(a) {
-  ""
-}
-
-#' @exportS3Method
-column_size_string_gv.matrix <- function(a) {
-  as.character(ncol(a))
-}
-
-#' @exportS3Method
-column_size_string_gv.data.frame <- function(a) {
-  as.character(ncol(a))
 }
 
 column_subclass_string_gv <- function(a, nest_level) {
@@ -844,34 +825,34 @@ column_subclass_string_gv.list <- function(a, nest_level) {
 
 column_class_string_d2 <- function(a, nest_level) {
   res <- class(a)[[1]]
-  size_info <- column_size_string_d2(a)
+  size_info <- column_size_plot_info(a)
   sublist_info <- column_subclass_string_d2(a, nest_level)
   paste0(
     res,
-    if (nchar(size_info) > 0)
+    if (length(size_info) > 0)
       paste0("[", size_info, "]"),
     if (nchar(sublist_info) > 0)
       paste0("<", sublist_info, ">")
   )
 }
 
-column_size_string_d2 <- function(a) {
-  UseMethod("column_size_string_d2")
+column_size_plot_info <- function(a) {
+  UseMethod("column_size_plot_info")
 }
 
 #' @exportS3Method
-column_size_string_d2.default <- function(a) {
-  ""
+column_size_plot_info.default <- function(a) {
+  integer()
 }
 
 #' @exportS3Method
-column_size_string_d2.matrix <- function(a) {
-  as.character(ncol(a))
+column_size_plot_info.matrix <- function(a) {
+  ncol(a)
 }
 
 #' @exportS3Method
-column_size_string_d2.data.frame <- function(a) {
-  as.character(ncol(a))
+column_size_plot_info.data.frame <- function(a) {
+  ncol(a)
 }
 
 column_subclass_string_d2 <- function(a, nest_level) {
