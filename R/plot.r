@@ -790,14 +790,17 @@ column_size_string_gv <- function(a) {
   UseMethod("column_size_string_gv")
 }
 
+#' @exportS3Method
 column_size_string_gv.default <- function(a) {
   ""
 }
 
+#' @exportS3Method
 column_size_string_gv.matrix <- function(a) {
   as.character(ncol(a))
 }
 
+#' @exportS3Method
 column_size_string_gv.data.frame <- function(a) {
   as.character(ncol(a))
 }
@@ -808,10 +811,12 @@ column_subclass_string_gv <- function(a, nest_level) {
   UseMethod("column_subclass_string_gv")
 }
 
+#' @exportS3Method
 column_subclass_string_gv.default <- function(a, nest_level) {
   ""
 }
 
+#' @exportS3Method
 column_subclass_string_gv.matrix <- function(a, nest_level) {
   b <- a[TRUE, drop = TRUE]
   cl <- class(b)[[1]]
@@ -824,6 +829,7 @@ column_subclass_string_gv.matrix <- function(a, nest_level) {
     paste0(cl, "&lt;", sublist_info, "&gt;")
 }
 
+#' @exportS3Method
 column_subclass_string_gv.list <- function(a, nest_level) {
   if (length(a) == 0)
     return("")
@@ -880,14 +886,17 @@ column_size_string_d2 <- function(a) {
   UseMethod("column_size_string_d2")
 }
 
+#' @exportS3Method
 column_size_string_d2.default <- function(a) {
   ""
 }
 
+#' @exportS3Method
 column_size_string_d2.matrix <- function(a) {
   as.character(ncol(a))
 }
 
+#' @exportS3Method
 column_size_string_d2.data.frame <- function(a) {
   as.character(ncol(a))
 }
@@ -898,10 +907,12 @@ column_subclass_string_d2 <- function(a, nest_level) {
   UseMethod("column_subclass_string_d2")
 }
 
+#' @exportS3Method
 column_subclass_string_d2.default <- function(a, nest_level) {
   ""
 }
 
+#' @exportS3Method
 column_subclass_string_d2.matrix <- function(a, nest_level) {
   b <- a[TRUE, drop = TRUE]
   cl <- class(b)[[1]]
@@ -914,6 +925,7 @@ column_subclass_string_d2.matrix <- function(a, nest_level) {
     paste0(cl, "<", sublist_info, ">")
 }
 
+#' @exportS3Method
 column_subclass_string_d2.list <- function(a, nest_level) {
   if (length(a) == 0)
     return("")
