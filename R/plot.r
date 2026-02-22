@@ -683,24 +683,11 @@ gv.data.frame <- function(x, name = NA_character_, nest_level = Inf, ...) {
   if (!is.character(name) || length(name) != 1)
     stop("name must be a length-one character")
   setup_string <- setup_string_gv(name)
-  x_labelled <- x
-  names(x_labelled) <- to_attr_name(names(x))
-  x_elemented <- x
-  names(x_elemented) <- to_element_name(names(x))
-  table_string <- relation_string_gv(
-    attrs = names(x_elemented),
-    attr_labels = names(x_labelled),
-    keys = list(),
-    name = to_element_name(name),
-    label = to_node_name(name),
-    classes = vapply(x, column_class_string_gv, character(1), nest_level),
-    nrow = nrow(x),
-    row_name = "row"
-  )
+  table_string <- df_string_gv(x, name, nest_level)
   teardown_string <- c("}", "")
   paste(
     c(
-      setup_string,
+      setup_string_gv(name),
       "",
       indent(table_string),
       teardown_string
@@ -737,22 +724,8 @@ d2.data.frame <- function(x, name = NA_character_, nest_level = Inf, ...) {
   if (!is.character(name) || length(name) != 1)
     stop("name must be a length-one character")
 
-  x_labelled <- x
-  names(x_labelled) <- to_quoted_name(names(x))
-  x_elemented <- x
-  names(x_elemented) <- to_quoted_name(names(x))
   setup_string <- "direction: right"
-  table_string <- relation_string_d2(
-    attrs = names(x_elemented),
-    attr_labels = names(x_labelled),
-    keys = list(),
-    name = name,
-    label = to_quoted_name(name),
-    classes = vapply(x, column_class_string_d2, character(1), nest_level),
-    nrow = nrow(x),
-    references = list(),
-    row_name = "row"
-  )
+  table_string <- df_string_d2(x, name, nest_level)
   teardown_string <- ""
   paste(
     c(setup_string, table_string, teardown_string),
@@ -963,6 +936,43 @@ column_subclass_string_d2.list <- function(a, nest_level) {
   if (substrings[[1]] == "" || !all(substrings == substrings[[1]]))
     return(res)
   paste0(res, "<", substrings[[1]], ">")
+}
+
+df_string_gv <- function(
+  x,
+  name,
+  nest_level
+) {
+  nms <- names(x)
+  relation_string_gv(
+    attrs = to_element_name(nms),
+    attr_labels = to_attr_name(nms),
+    keys = list(),
+    name = to_element_name(name),
+    label = to_node_name(name),
+    classes = vapply(x, column_class_string_gv, character(1), nest_level),
+    nrow = nrow(x),
+    row_name = "row"
+  )
+}
+
+df_string_d2 <- function(
+  x,
+  name,
+  nest_level
+) {
+  nms <- names(x)
+  relation_string_d2(
+    attrs = to_quoted_name(nms),
+    attr_labels = to_quoted_name(nms),
+    keys = list(),
+    name = name,
+    label = to_quoted_name(name),
+    classes = vapply(x, column_class_string_d2, character(1), nest_level),
+    nrow = nrow(x),
+    references = list(),
+    row_name = "row"
+  )
 }
 
 relation_string_gv <- function(
