@@ -759,14 +759,38 @@ column_class_string_gv <- function(a, nest_level) {
   )
 }
 
+column_class_string_d2 <- function(a, nest_level) {
+  res <- class(a)[[1]]
+  size_info <- column_size_plot_info(a)
+  sublist_info <- column_subclass_string_d2(a, nest_level)
+  paste0(
+    res,
+    if (length(size_info) > 0)
+      paste0("[", size_info, "]"),
+    if (nchar(sublist_info) > 0)
+      paste0("<", sublist_info, ">")
+  )
+}
+
 column_subclass_string_gv <- function(a, nest_level) {
   if (nest_level <= 0)
     return("")
   UseMethod("column_subclass_string_gv")
 }
 
+column_subclass_string_d2 <- function(a, nest_level) {
+  if (nest_level <= 0)
+    return("")
+  UseMethod("column_subclass_string_d2")
+}
+
 #' @exportS3Method
 column_subclass_string_gv.default <- function(a, nest_level) {
+  ""
+}
+
+#' @exportS3Method
+column_subclass_string_d2.default <- function(a, nest_level) {
   ""
 }
 
@@ -781,6 +805,19 @@ column_subclass_string_gv.matrix <- function(a, nest_level) {
     cl
   else
     paste0(cl, "&lt;", sublist_info, "&gt;")
+}
+
+#' @exportS3Method
+column_subclass_string_d2.matrix <- function(a, nest_level) {
+  b <- a[TRUE, drop = TRUE]
+  cl <- class(b)[[1]]
+  if (cl != "list")
+    return(cl)
+  sublist_info <- column_subclass_string_d2(b, nest_level - 1L)
+  if (nchar(sublist_info) == 0)
+    cl
+  else
+    paste0(cl, "<", sublist_info, ">")
 }
 
 #' @exportS3Method
@@ -823,62 +860,6 @@ column_subclass_string_gv.list <- function(a, nest_level) {
   paste0(res, "&lt;", substrings[[1]], "&gt;")
 }
 
-column_class_string_d2 <- function(a, nest_level) {
-  res <- class(a)[[1]]
-  size_info <- column_size_plot_info(a)
-  sublist_info <- column_subclass_string_d2(a, nest_level)
-  paste0(
-    res,
-    if (length(size_info) > 0)
-      paste0("[", size_info, "]"),
-    if (nchar(sublist_info) > 0)
-      paste0("<", sublist_info, ">")
-  )
-}
-
-column_size_plot_info <- function(a) {
-  UseMethod("column_size_plot_info")
-}
-
-#' @exportS3Method
-column_size_plot_info.default <- function(a) {
-  integer()
-}
-
-#' @exportS3Method
-column_size_plot_info.matrix <- function(a) {
-  ncol(a)
-}
-
-#' @exportS3Method
-column_size_plot_info.data.frame <- function(a) {
-  ncol(a)
-}
-
-column_subclass_string_d2 <- function(a, nest_level) {
-  if (nest_level <= 0)
-    return("")
-  UseMethod("column_subclass_string_d2")
-}
-
-#' @exportS3Method
-column_subclass_string_d2.default <- function(a, nest_level) {
-  ""
-}
-
-#' @exportS3Method
-column_subclass_string_d2.matrix <- function(a, nest_level) {
-  b <- a[TRUE, drop = TRUE]
-  cl <- class(b)[[1]]
-  if (cl != "list")
-    return(cl)
-  sublist_info <- column_subclass_string_d2(b, nest_level - 1L)
-  if (nchar(sublist_info) == 0)
-    cl
-  else
-    paste0(cl, "<", sublist_info, ">")
-}
-
 #' @exportS3Method
 column_subclass_string_d2.list <- function(a, nest_level) {
   if (length(a) == 0)
@@ -917,6 +898,25 @@ column_subclass_string_d2.list <- function(a, nest_level) {
   if (substrings[[1]] == "" || !all(substrings == substrings[[1]]))
     return(res)
   paste0(res, "<", substrings[[1]], ">")
+}
+
+column_size_plot_info <- function(a) {
+  UseMethod("column_size_plot_info")
+}
+
+#' @exportS3Method
+column_size_plot_info.default <- function(a) {
+  integer()
+}
+
+#' @exportS3Method
+column_size_plot_info.matrix <- function(a) {
+  ncol(a)
+}
+
+#' @exportS3Method
+column_size_plot_info.data.frame <- function(a) {
+  ncol(a)
 }
 
 df_string_gv <- function(
