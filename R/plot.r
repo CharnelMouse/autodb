@@ -749,91 +749,87 @@ setup_string_gv <- function(df_name) {
 column_class_string_gv <- function(a, nest_level) {
   res <- class(a)[[1]]
   size_info <- column_size_plot_info(a)
-  sublist_info <- column_subclass_string_gv(a, nest_level)
+  sublist_info <- column_subclass_plot_info(a, nest_level)
   paste0(
     res,
     if (length(size_info) > 0)
       paste0("[", size_info, "]"),
-    if (nchar(sublist_info) > 0)
-      paste0("&lt;", sublist_info, "&gt;")
+    if (length(sublist_info) > 0)
+      paste0("&lt;", column_subclass_2gv(sublist_info), "&gt;")
   )
 }
 
 column_class_string_d2 <- function(a, nest_level) {
   res <- class(a)[[1]]
   size_info <- column_size_plot_info(a)
-  sublist_info <- column_subclass_string_d2(a, nest_level)
+  sublist_info <- column_subclass_plot_info(a, nest_level)
   paste0(
     res,
     if (length(size_info) > 0)
       paste0("[", size_info, "]"),
-    if (nchar(sublist_info) > 0)
-      paste0("<", sublist_info, ">")
+    if (length(sublist_info) > 0)
+      paste0("<", column_subclass_2d2(sublist_info), ">")
   )
 }
 
-column_subclass_string_gv <- function(a, nest_level) {
+column_subclass_2gv <- function(plot_info) {
+  if (length(plot_info) == 0)
+    return(character())
+  paste0(
+    plot_info$class,
+    paste0("[", plot_info$length, "]", recycle0 = TRUE),
+    paste0("&lt;", column_subclass_2gv(plot_info$element), "&gt;", recycle0 = TRUE)
+  )
+}
+
+column_subclass_2d2 <- function(plot_info) {
+  if (length(plot_info) == 0)
+    return(character())
+  paste0(
+    plot_info$class,
+    paste0("[", plot_info$length, "]", recycle0 = TRUE),
+    paste0("<", column_subclass_2d2(plot_info$element), ">", recycle0 = TRUE)
+  )
+}
+
+column_subclass_plot_info <- function(a, nest_level) {
   if (nest_level <= 0)
-    return("")
-  UseMethod("column_subclass_string_gv")
-}
-
-column_subclass_string_d2 <- function(a, nest_level) {
-  if (nest_level <= 0)
-    return("")
-  UseMethod("column_subclass_string_d2")
+    return(list())
+  UseMethod("column_subclass_plot_info")
 }
 
 #' @exportS3Method
-column_subclass_string_gv.default <- function(a, nest_level) {
-  ""
+column_subclass_plot_info.default <- function(a, nest_level) {
+  list()
 }
 
 #' @exportS3Method
-column_subclass_string_d2.default <- function(a, nest_level) {
-  ""
-}
-
-#' @exportS3Method
-column_subclass_string_gv.matrix <- function(a, nest_level) {
+column_subclass_plot_info.matrix <- function(a, nest_level) {
   b <- a[TRUE, drop = TRUE]
   cl <- class(b)[[1]]
   if (cl != "list")
-    return(cl)
-  sublist_info <- column_subclass_string_gv(b, nest_level - 1L)
-  if (nchar(sublist_info) == 0)
-    cl
+    return(list(class = cl))
+  sublist_info <- column_subclass_plot_info(b, nest_level - 1L)
+  if (length(sublist_info) == 0)
+    list(class = cl)
   else
-    paste0(cl, "&lt;", sublist_info, "&gt;")
+    list(class = cl, element = sublist_info)
 }
 
 #' @exportS3Method
-column_subclass_string_d2.matrix <- function(a, nest_level) {
-  b <- a[TRUE, drop = TRUE]
-  cl <- class(b)[[1]]
-  if (cl != "list")
-    return(cl)
-  sublist_info <- column_subclass_string_d2(b, nest_level - 1L)
-  if (nchar(sublist_info) == 0)
-    cl
-  else
-    paste0(cl, "<", sublist_info, ">")
-}
-
-#' @exportS3Method
-column_subclass_string_gv.list <- function(a, nest_level) {
+column_subclass_plot_info.list <- function(a, nest_level) {
   if (length(a) == 0)
-    return("")
+    return(list())
   lens <- lengths(a)
   same_length <- all(lens == lens[[1]])
   element_classes <- vapply(a, \(x) class(x)[[1]], character(1))
   same_class <- all(element_classes == element_classes[[1]])
   if (!same_length && !same_class)
-    return("")
+    return(list())
 
-  res <- paste0(
-    if (same_class) element_classes[[1]],
-    if (same_length && any(element_classes != "NULL")) paste0("[", lens[[1]], "]")
+  res <- c(
+    if (same_class) list(class = element_classes[[1]]),
+    if (same_length && any(element_classes != "NULL")) list(length = lens[[1]])
   )
   if (!same_class)
     return(res)
@@ -842,62 +838,13 @@ column_subclass_string_gv.list <- function(a, nest_level) {
   subelements <- unlist(a, recursive = FALSE)
   if (length(subelements) == 0)
     return(res)
-  substrings <- column_subclass_string_gv(
+  substrings <- column_subclass_plot_info(
     subelements,
     nest_level - 1L
   )
   if (length(substrings) == 0)
-    stop(paste0(
-      "empty substrings from ",
-      length(subelements),
-      " subelements at nest level ",
-      nest_level,
-      ":\n",
-      paste(subelements, collapse = "\n")
-    ))
-  if (substrings[[1]] == "" || !all(substrings == substrings[[1]]))
     return(res)
-  paste0(res, "&lt;", substrings[[1]], "&gt;")
-}
-
-#' @exportS3Method
-column_subclass_string_d2.list <- function(a, nest_level) {
-  if (length(a) == 0)
-    return("")
-  lens <- lengths(a)
-  same_length <- all(lens == lens[[1]])
-  element_classes <- vapply(a, \(x) class(x)[[1]], character(1))
-  same_class <- all(element_classes == element_classes[[1]])
-  if (!same_length && !same_class)
-    return("")
-
-  res <- paste0(
-    if (same_class) element_classes[[1]],
-    if (same_length && any(element_classes != "NULL")) paste0("[", lens[[1]], "]")
-  )
-  if (!same_class)
-    return(res)
-  if (element_classes[[1]] != "list" || nest_level <= 0)
-    return(res)
-  subelements <- unlist(a, recursive = FALSE)
-  if (length(subelements) == 0)
-    return(res)
-  substrings <- column_subclass_string_d2(
-    subelements,
-    nest_level - 1L
-  )
-  if (length(substrings) == 0)
-    stop(paste0(
-      "empty substrings from ",
-      length(subelements),
-      " subelements at nest level ",
-      nest_level,
-      ":\n",
-      paste(subelements, collapse = "\n")
-    ))
-  if (substrings[[1]] == "" || !all(substrings == substrings[[1]]))
-    return(res)
-  paste0(res, "<", substrings[[1]], ">")
+  c(res, list(element = substrings))
 }
 
 column_size_plot_info <- function(a) {
