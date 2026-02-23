@@ -747,28 +747,22 @@ setup_string_gv <- function(df_name) {
 }
 
 column_class_string_gv <- function(a, nest_level) {
-  res <- class(a)[[1]]
-  size_info <- column_size_plot_info(a)
-  sublist_info <- column_subclass_plot_info(a, nest_level)
-  paste0(
-    res,
-    if (length(size_info) > 0)
-      paste0("[", size_info, "]"),
-    if (length(sublist_info) > 0)
-      paste0("&lt;", column_subclass_2gv(sublist_info), "&gt;")
-  )
+  column_subclass_2gv(column_class_list_info(a, nest_level))
 }
 
 column_class_string_d2 <- function(a, nest_level) {
-  res <- class(a)[[1]]
+  column_subclass_2d2(column_class_list_info(a, nest_level))
+}
+
+column_class_list_info <- function(a, nest_level) {
   size_info <- column_size_plot_info(a)
   sublist_info <- column_subclass_plot_info(a, nest_level)
-  paste0(
-    res,
+  c(
+    list(class = class(a)[[1]]),
     if (length(size_info) > 0)
-      paste0("[", size_info, "]"),
+      list(length = size_info),
     if (length(sublist_info) > 0)
-      paste0("<", column_subclass_2d2(sublist_info), ">")
+      list(element = sublist_info)
   )
 }
 
