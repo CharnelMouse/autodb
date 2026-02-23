@@ -747,14 +747,14 @@ setup_string_gv <- function(df_name) {
 }
 
 column_class_string_gv <- function(a, nest_level) {
-  column_subclass_2gv(column_class_list_info(a, nest_level))
+  column_class_2gv(column_class_plot_info(a, nest_level))
 }
 
 column_class_string_d2 <- function(a, nest_level) {
-  column_subclass_2d2(column_class_list_info(a, nest_level))
+  column_class_2d2(column_class_plot_info(a, nest_level))
 }
 
-column_class_list_info <- function(a, nest_level) {
+column_class_plot_info <- function(a, nest_level) {
   size_info <- column_size_plot_info(a)
   sublist_info <- column_subclass_plot_info(a, nest_level)
   c(
@@ -766,23 +766,23 @@ column_class_list_info <- function(a, nest_level) {
   )
 }
 
-column_subclass_2gv <- function(plot_info) {
+column_class_2gv <- function(plot_info) {
   if (length(plot_info) == 0)
     return(character())
   paste0(
     plot_info$class,
     paste0("[", plot_info$length, "]", recycle0 = TRUE),
-    paste0("&lt;", column_subclass_2gv(plot_info$element), "&gt;", recycle0 = TRUE)
+    paste0("&lt;", column_class_2gv(plot_info$element), "&gt;", recycle0 = TRUE)
   )
 }
 
-column_subclass_2d2 <- function(plot_info) {
+column_class_2d2 <- function(plot_info) {
   if (length(plot_info) == 0)
     return(character())
   paste0(
     plot_info$class,
     paste0("[", plot_info$length, "]", recycle0 = TRUE),
-    paste0("<", column_subclass_2d2(plot_info$element), ">", recycle0 = TRUE)
+    paste0("<", column_class_2d2(plot_info$element), ">", recycle0 = TRUE)
   )
 }
 
