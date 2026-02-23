@@ -708,13 +708,6 @@ d2.relation_schema <- function(x, name = NA_character_, ...) {
 #' @seealso The generic \code{\link{gv}}.
 #' @exportS3Method
 gv.data.frame <- function(x, name = NA_character_, nest_level = Inf, ...) {
-  if (is.na(name))
-    name <- "data"
-  if (name == "")
-    stop("name must be non-empty")
-  if (!is.character(name) || length(name) != 1)
-    stop("name must be a length-one character")
-
   plot_info <- df_plot_info(x, name, nest_level)
   setup_string <- setup_string_gv(plot_info$name)
   table_string <- df_string_gv(plot_info)
@@ -751,13 +744,6 @@ gv.data.frame <- function(x, name = NA_character_, nest_level = Inf, ...) {
 #' @seealso The generic \code{\link{d2}}.
 #' @exportS3Method
 d2.data.frame <- function(x, name = NA_character_, nest_level = Inf, ...) {
-  if (is.na(name))
-    name <- "data"
-  if (name == "")
-    stop("name must be non-empty")
-  if (!is.character(name) || length(name) != 1)
-    stop("name must be a length-one character")
-
   plot_info <- df_plot_info(x, name, nest_level)
   setup_string <- "direction: right"
   table_string <- df_string_d2(plot_info)
@@ -915,7 +901,13 @@ df_string_d2 <- function(plot_info) {
 }
 
 df_plot_info <- function(x, name, nest_level) {
-  nms <- names(x)
+  if (is.na(name))
+    name <- "data"
+  if (name == "")
+    stop("name must be non-empty")
+  if (!is.character(name) || length(name) != 1)
+    stop("name must be a length-one character")
+
   classes_info <- lapply(x, column_class_plot_info, nest_level)
   list(name = name, names = names(x), length = nrow(x), classes = classes_info)
 }
