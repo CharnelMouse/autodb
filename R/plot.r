@@ -714,8 +714,10 @@ gv.data.frame <- function(x, name = NA_character_, nest_level = Inf, ...) {
     stop("name must be non-empty")
   if (!is.character(name) || length(name) != 1)
     stop("name must be a length-one character")
+
+  plot_info <- df_plot_info(x, name, nest_level)
   setup_string <- setup_string_gv(name)
-  table_string <- df_string_gv(x, name, nest_level)
+  table_string <- df_string_gv(plot_info)
   teardown_string <- c("}", "")
   paste(
     c(
@@ -756,8 +758,9 @@ d2.data.frame <- function(x, name = NA_character_, nest_level = Inf, ...) {
   if (!is.character(name) || length(name) != 1)
     stop("name must be a length-one character")
 
+  plot_info <- df_plot_info(x, name, nest_level)
   setup_string <- "direction: right"
-  table_string <- df_string_d2(x, name, nest_level)
+  table_string <- df_string_d2(plot_info)
   teardown_string <- ""
   paste(
     c(setup_string, table_string, teardown_string),
@@ -884,43 +887,37 @@ column_size_plot_info.data.frame <- function(a) {
   ncol(a)
 }
 
-df_string_gv <- function(
-  x,
-  name,
-  nest_level
-) {
-  nms <- names(x)
-  classes_info <- lapply(x, column_class_plot_info, nest_level)
+df_string_gv <- function(plot_info) {
   relation_string_gv(
-    attrs = to_element_name(nms),
-    attr_labels = to_attr_name(nms),
+    attrs = to_element_name(plot_info$names),
+    attr_labels = to_attr_name(plot_info$names),
     keys = list(),
-    name = to_element_name(name),
-    label = to_node_name(name),
-    classes = vapply(classes_info, column_class_2gv, character(1)),
-    nrow = nrow(x),
+    name = to_element_name(plot_info$name),
+    label = to_node_name(plot_info$name),
+    classes = vapply(plot_info$classes, column_class_2gv, character(1)),
+    nrow = plot_info$length,
     row_name = "row"
   )
 }
 
-df_string_d2 <- function(
-  x,
-  name,
-  nest_level
-) {
-  nms <- names(x)
-  classes_info <- lapply(x, column_class_plot_info, nest_level)
+df_string_d2 <- function(plot_info) {
   relation_string_d2(
-    attrs = to_quoted_name(nms),
-    attr_labels = to_quoted_name(nms),
+    attrs = to_quoted_name(plot_info$names),
+    attr_labels = to_quoted_name(plot_info$names),
     keys = list(),
-    name = name,
-    label = to_quoted_name(name),
-    classes = vapply(classes_info, column_class_2d2, character(1)),
-    nrow = nrow(x),
+    name = plot_info$name,
+    label = to_quoted_name(plot_info$name),
+    classes = vapply(plot_info$classes, column_class_2d2, character(1)),
+    nrow = plot_info$length,
     references = list(),
     row_name = "row"
   )
+}
+
+df_plot_info <- function(x, name, nest_level) {
+  nms <- names(x)
+  classes_info <- lapply(x, column_class_plot_info, nest_level)
+  list(name = name, names = names(x), length = nrow(x), classes = classes_info)
 }
 
 relation_string_gv <- function(
