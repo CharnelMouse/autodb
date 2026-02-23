@@ -1102,39 +1102,41 @@ columns_string_d2 <- function(col_names, col_labels, keys, col_classes, referenc
 }
 
 columns_schema_string_gv <- function(col_names, col_labels, keys) {
-  key_membership_strings <- vapply(
+  stopifnot(length(keys) > 0)
+
+  key_membership <- outer(
     col_names,
-    \(nm) paste(
-      vapply(
-        seq_along(keys),
-        \(n) {
-          preamble <- if (n == length(keys))
-            paste0("<TD PORT=\"FROM_", col_labels[[match(nm, col_names)]], "\"")
-          else
-            "<TD"
-          cell <- if (is.element(nm, keys[[n]]))
-            " BGCOLOR=\"black\"></TD>"
-          else
-            "></TD>"
-          paste0(preamble, cell)
-        },
-        character(1)
-      ),
-      collapse = ""
-    ),
-    character(1)
+    keys,
+    \(cns, ks) mapply(is.element, cns, ks)
   )
-  column_typing_info <- paste0(
-    "<TR><TD PORT=\"TO_",
+  key_membership_mat <- matrix(
+    "",
+    nrow = length(col_names),
+    ncol = length(keys)
+  )
+  key_membership_mat[, length(keys)] <- paste0(
+    key_membership_mat[, length(keys)],
+    " PORT=\"FROM_",
     col_labels,
-    "\">",
-    col_names,
-    "</TD>",
-    key_membership_strings,
+    "\""
+  )
+  key_membership_mat[] <- paste0(
+    key_membership_mat,
+    ifelse(key_membership, " BGCOLOR=\"black\"", "")
+  )
+  key_membership_mat[] <- paste0(
+    "<TD",
+    key_membership_mat,
+    "></TD>"
+  )
+
+  paste0(
+    "<TR>",
+    "<TD PORT=\"TO_", col_labels, "\">", col_names, "</TD>",
+    apply(key_membership_mat, 1, paste, collapse = ""),
     "</TR>",
     recycle0 = TRUE
   )
-  column_typing_info
 }
 
 columns_schema_string_d2 <- function(col_names, col_labels, keys, references) {
