@@ -716,12 +716,12 @@ gv.data.frame <- function(x, name = NA_character_, nest_level = Inf, ...) {
     stop("name must be a length-one character")
 
   plot_info <- df_plot_info(x, name, nest_level)
-  setup_string <- setup_string_gv(name)
+  setup_string <- setup_string_gv(plot_info$name)
   table_string <- df_string_gv(plot_info)
   teardown_string <- c("}", "")
   paste(
     c(
-      setup_string_gv(name),
+      setup_string,
       "",
       indent(table_string),
       teardown_string
