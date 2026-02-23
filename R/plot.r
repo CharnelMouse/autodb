@@ -192,6 +192,12 @@ gv.database <- function(x, name = NA_character_, nest_level = Inf, ...) {
   x_labelled <- to_labelled(x)
   x_elemented <- to_elemented(x)
   setup_string <- setup_string_gv(name)
+  classes_info <- lapply(
+    records(x_elemented),
+    lapply,
+    column_class_plot_info,
+    nest_level
+  )
   df_strings <- Map(
     relation_string_gv,
     attrs = attrs(x_elemented),
@@ -200,8 +206,10 @@ gv.database <- function(x, name = NA_character_, nest_level = Inf, ...) {
     name = names(x_elemented),
     label = names(x_labelled),
     classes = lapply(
-      records(x_elemented),
-      \(df) vapply(df, column_class_string_gv, character(1), nest_level)
+      classes_info,
+      vapply,
+      column_class_2gv,
+      character(1)
     ),
     nrow = lapply(records(x_elemented), nrow),
     row_name = "record"
@@ -269,6 +277,12 @@ d2.database <- function(
   x_labelled <- to_quoted(x)
   x_elemented <- to_quoted(x)
   setup_string <- "direction: right"
+  classes_info <- lapply(
+    records(x_elemented),
+    lapply,
+    column_class_plot_info,
+    nest_level
+  )
   df_strings <- Map(
     relation_string_d2,
     attrs = attrs(x_elemented),
@@ -277,8 +291,10 @@ d2.database <- function(
     name = names(x),
     label = names(x_labelled),
     classes = lapply(
-      records(x_elemented),
-      \(df) vapply(df, column_class_string_d2, character(1), nest_level)
+      classes_info,
+      vapply,
+      column_class_2d2,
+      character(1)
     ),
     nrow = lapply(records(x_elemented), nrow),
     references = lapply(
@@ -339,6 +355,12 @@ gv.relation <- function(x, name = NA_character_, nest_level = Inf, ...) {
   x_labelled <- to_labelled(x)
   x_elemented <- to_elemented(x)
   setup_string <- setup_string_gv(name)
+  classes_info <- lapply(
+    records(x_elemented),
+    lapply,
+    column_class_plot_info,
+    nest_level
+  )
   df_strings <- Map(
     relation_string_gv,
     attrs = attrs(x_elemented),
@@ -347,8 +369,10 @@ gv.relation <- function(x, name = NA_character_, nest_level = Inf, ...) {
     name = names(x_elemented),
     label = names(x_labelled),
     classes = lapply(
-      records(x_elemented),
-      \(df) vapply(df, column_class_string_gv, character(1), nest_level)
+      classes_info,
+      vapply,
+      column_class_2gv,
+      character(1)
     ),
     nrow = lapply(records(x_elemented), nrow)
   ) |>
@@ -392,6 +416,12 @@ d2.relation <- function(x, name = NA_character_, nest_level = Inf, ...) {
   x_labelled <- to_quoted(x)
   x_elemented <- to_quoted(x)
   setup_string <- "direction: right"
+  classes_info <- lapply(
+    records(x_elemented),
+    lapply,
+    column_class_plot_info,
+    nest_level
+  )
   df_strings <- Map(
     relation_string_d2,
     attrs = attrs(x_elemented),
@@ -400,8 +430,10 @@ d2.relation <- function(x, name = NA_character_, nest_level = Inf, ...) {
     name = names(x),
     label = names(x_labelled),
     classes = lapply(
-      records(x_elemented),
-      \(df) vapply(df, column_class_string_d2, character(1), nest_level)
+      classes_info,
+      vapply,
+      column_class_2d2,
+      character(1)
     ),
     nrow = lapply(records(x_elemented), nrow),
     MoreArgs = list(references = list())
@@ -746,14 +778,6 @@ setup_string_gv <- function(df_name) {
   )
 }
 
-column_class_string_gv <- function(a, nest_level) {
-  column_class_2gv(column_class_plot_info(a, nest_level))
-}
-
-column_class_string_d2 <- function(a, nest_level) {
-  column_class_2d2(column_class_plot_info(a, nest_level))
-}
-
 column_class_plot_info <- function(a, nest_level) {
   size_info <- column_size_plot_info(a)
   sublist_info <- column_subclass_plot_info(a, nest_level)
@@ -866,13 +890,14 @@ df_string_gv <- function(
   nest_level
 ) {
   nms <- names(x)
+  classes_info <- lapply(x, column_class_plot_info, nest_level)
   relation_string_gv(
     attrs = to_element_name(nms),
     attr_labels = to_attr_name(nms),
     keys = list(),
     name = to_element_name(name),
     label = to_node_name(name),
-    classes = vapply(x, column_class_string_gv, character(1), nest_level),
+    classes = vapply(classes_info, column_class_2gv, character(1)),
     nrow = nrow(x),
     row_name = "row"
   )
@@ -884,13 +909,14 @@ df_string_d2 <- function(
   nest_level
 ) {
   nms <- names(x)
+  classes_info <- lapply(x, column_class_plot_info, nest_level)
   relation_string_d2(
     attrs = to_quoted_name(nms),
     attr_labels = to_quoted_name(nms),
     keys = list(),
     name = name,
     label = to_quoted_name(name),
-    classes = vapply(x, column_class_string_d2, character(1), nest_level),
+    classes = vapply(classes_info, column_class_2d2, character(1)),
     nrow = nrow(x),
     references = list(),
     row_name = "row"
