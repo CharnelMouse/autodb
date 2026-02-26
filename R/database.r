@@ -443,7 +443,7 @@ c.database <- function(...) {
   joined_references <- do.call(c, new_references)
 
   result_lst <- list(joined_rels, joined_references)
-  do.call(database, result_lst)
+  do.call(database_nocheck, result_lst)
 }
 
 #' @exportS3Method

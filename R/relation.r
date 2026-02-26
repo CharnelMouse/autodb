@@ -477,7 +477,7 @@ c.relation <- function(...) {
   attrs_order_list <- lapply(lst, attrs_order)
   joined_attrs_order <- do.call(merge_attribute_orderings, attrs_order_list)
 
-  relation(joined_rels, joined_attrs_order)
+  relation_nocheck(joined_rels, joined_attrs_order)
 }
 
 #' @exportS3Method
