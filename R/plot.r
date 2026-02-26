@@ -991,7 +991,8 @@ relation_schema_string <- function(
   name,
   label
 ) {
-  columns_string <- columns_schema_string_gv(attrs, attr_labels, keys)
+  key_membership <- column_schema_keys_plot_info(attrs, keys)
+  columns_string <- columns_schema_string_gv(attrs, attr_labels, key_membership)
   columns_label <- c(
     paste0(
       "<TR><TD COLSPAN=\"", length(keys) + 1, "\">",
@@ -1022,11 +1023,13 @@ relation_schema_string_d2 <- function(
   label,
   references
 ) {
+  key_matches <- column_schema_keys_plot_info(attrs, keys)
+  column_schema_ref_matches <- column_schema_references_plot_info(attrs, references)
   columns_string <- columns_schema_string_d2(
     attrs,
     attr_labels,
-    keys,
-    references
+    key_matches,
+    column_schema_ref_matches
   )
   columns_label <- columns_string
   c(
@@ -1101,21 +1104,20 @@ columns_string_d2 <- function(col_names, col_labels, keys, col_classes, referenc
   paste0(column_typing_info, constraint_strings)
 }
 
-columns_schema_string_gv <- function(col_names, col_labels, keys) {
-  stopifnot(length(keys) > 0)
-
-  key_membership <- outer(
-    col_names,
-    keys,
-    \(cns, ks) mapply(is.element, cns, ks)
-  )
+columns_schema_string_gv <- function(
+  col_names,
+  col_labels,
+  key_membership
+) {
+  nkeys <- ncol(key_membership)
+  stopifnot(nkeys > 0)
   key_membership_mat <- matrix(
     "",
     nrow = length(col_names),
-    ncol = length(keys)
+    ncol = nkeys
   )
-  key_membership_mat[, length(keys)] <- paste0(
-    key_membership_mat[, length(keys)],
+  key_membership_mat[, nkeys] <- paste0(
+    key_membership_mat[, nkeys],
     " PORT=\"FROM_",
     col_labels,
     "\""
@@ -1139,22 +1141,21 @@ columns_schema_string_gv <- function(col_names, col_labels, keys) {
   )
 }
 
-columns_schema_string_d2 <- function(col_names, col_labels, keys, references) {
-  key_matches <- lapply(keys, \(k) is.element(col_labels, k)) |>
-    do.call(what = cbind)
-  key_labels <- paste0("UNQ", seq_along(keys) - 1)
-  if (length(keys) >= 1)
-    key_labels[[1]] <- "PK"
-  key_constraints <- apply(key_matches, 1, \(x) key_labels[x], simplify = FALSE)
-  ref_constraints <- lapply(
-    col_labels,
-    \(cl) vapply(references, \(ref) is.element(cl, ref[[2]]), logical(1))
-  ) |>
-    sapply(\(x) paste0("FK", which(x), recycle0 = TRUE))
+columns_schema_string_d2 <- function(
+  col_names,
+  col_labels,
+  key_matches,
+  ref_matches
+) {
+  nkeys <- ncol(key_matches)
+  stopifnot(nkeys > 0)
+  nrefs <- ncol(ref_matches)
+  key_labels <- c("PK", paste0("UNQ", seq_len(nkeys - 1), recycle0 = TRUE))
+  fk_labels <- paste0("FK", seq_len(nrefs), recycle0 = TRUE)
   all_constraints <- mapply(
     \(x, y) paste(c(x, y), collapse = "; "),
-    key_constraints,
-    ref_constraints
+    apply(key_matches, 1, \(x) key_labels[x], simplify = FALSE),
+    apply(ref_matches, 1, \(x) fk_labels[x], simplify = FALSE)
   )
   constraint_strings <- ifelse(
     nchar(all_constraints) == 0,
@@ -1166,6 +1167,22 @@ columns_schema_string_d2 <- function(col_names, col_labels, keys, references) {
     col_names,
     constraint_strings,
     recycle0 = TRUE
+  )
+}
+
+column_schema_keys_plot_info <- function(col_names, keys) {
+  outer(
+    col_names,
+    keys,
+    \(cls, ks) as.logical(mapply(is.element, cls, ks))
+  )
+}
+
+column_schema_references_plot_info <- function(col_names, references) {
+  outer(
+    col_names,
+    references,
+    \(cls, refs) as.logical(mapply(is.element, cls, lapply(refs, `[[`, 2)))
   )
 }
 
