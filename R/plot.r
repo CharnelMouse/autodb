@@ -784,7 +784,8 @@ column_class_2gv <- function(plot_info) {
     return(character())
   paste0(
     plot_info$class,
-    paste0("[", plot_info$length, "]", recycle0 = TRUE),
+    if (!is.null(plot_info$length))
+      paste0("[", toString(ifelse(is.na(plot_info$length), "", plot_info$length)), "]", recycle0 = TRUE),
     paste0("&lt;", column_class_2gv(plot_info$element), "&gt;", recycle0 = TRUE)
   )
 }
@@ -794,7 +795,8 @@ column_class_2d2 <- function(plot_info) {
     return(character())
   paste0(
     plot_info$class,
-    paste0("[", plot_info$length, "]", recycle0 = TRUE),
+    if (!is.null(plot_info$length))
+      paste0("[", toString(ifelse(is.na(plot_info$length), "", plot_info$length)), "]", recycle0 = TRUE),
     paste0("<", column_class_2d2(plot_info$element), ">", recycle0 = TRUE)
   )
 }
@@ -814,6 +816,7 @@ column_subclass_plot_info.default <- function(a, nest_level) {
 column_subclass_plot_info.matrix <- function(a, nest_level) {
   b <- a[TRUE, drop = TRUE]
   cl <- class(b)[[1]]
+  size_info <- lapply(b, column_subsize_plot_info)
   if (cl != "list")
     return(list(class = cl))
   sublist_info <- column_subclass_plot_info(b, nest_level - 1L)
@@ -827,16 +830,17 @@ column_subclass_plot_info.matrix <- function(a, nest_level) {
 column_subclass_plot_info.list <- function(a, nest_level) {
   if (length(a) == 0)
     return(list())
-  lens <- lengths(a)
-  same_length <- all(lens == lens[[1]])
+  size_info <- lapply(a, column_subsize_plot_info)
+  size_agreement <- if (all(lengths(size_info) == length(size_info[[1]])))
+    Reduce(\(x, y) ifelse(x == y, x, NA_integer_), size_info)
+  else
+    integer()
   element_classes <- vapply(a, \(x) class(x)[[1]], character(1))
   same_class <- all(element_classes == element_classes[[1]])
-  if (!same_length && !same_class)
-    return(list())
 
   res <- c(
     if (same_class) list(class = element_classes[[1]]),
-    if (same_length && any(element_classes != "NULL")) list(length = lens[[1]])
+    if (any(!is.na(size_agreement)) && any(element_classes != "NULL")) list(length = size_agreement)
   )
   if (!same_class)
     return(res)
@@ -852,6 +856,25 @@ column_subclass_plot_info.list <- function(a, nest_level) {
   if (length(substrings) == 0)
     return(res)
   c(res, list(element = substrings))
+}
+
+column_subsize_plot_info <- function(a) {
+  UseMethod("column_subsize_plot_info")
+}
+
+#' @exportS3Method
+column_subsize_plot_info.default <- function(a) {
+  NROW(a)
+}
+
+#' @exportS3Method
+column_subsize_plot_info.matrix <- function(a) {
+  dim(a)
+}
+
+#' @exportS3Method
+column_subsize_plot_info.data.frame <- function(a) {
+  dim(a)
 }
 
 column_size_plot_info <- function(a) {

@@ -586,6 +586,10 @@ describe("gv", {
       x$h <- matrix(as.list(c(1L, 2L, 1L, 3L, 2L, 1L, 2L, 1L, 3L, 2L)), nrow = 5, ncol = 2)
       x$i <- data.frame(i.1 = 1:5, i.2 = letters[1:5])
       x$j <- tibble::tibble(i.1 = 1:5, i.2 = letters[1:5])
+      x$k <- rep(list(matrix(1:6, ncol = 2), matrix(1:10, ncol = 2)), c(3, 2))
+      x$l <- rep(list(matrix(1:6, ncol = 2), matrix(7:12, ncol = 2)), c(3, 2))
+      x$m <- rep(list(data.frame(a = 1:3, b = 4:6), data.frame(c = 1:5, d = 6:10)), c(3, 2))
+      x$n <- rep(list(data.frame(a = 1:3, b = 4:6), data.frame(c = 7:9, d = 10:12)), c(3, 2))
       db <- autodb(x, exclude = setdiff(names(x), "a"))
       expected_text <- c(
         "digraph {",
@@ -605,6 +609,10 @@ describe("gv", {
         "    <TR><TD PORT=\"TO_h\">h</TD><TD></TD><TD PORT=\"FROM_h\">matrix[2]&lt;list&lt;integer[1]&gt;&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_i\">i</TD><TD></TD><TD PORT=\"FROM_i\">data.frame[2]</TD></TR>",
         "    <TR><TD PORT=\"TO_j\">j</TD><TD></TD><TD PORT=\"FROM_j\">tbl_df[2]</TD></TR>",
+        "    <TR><TD PORT=\"TO_k\">k</TD><TD></TD><TD PORT=\"FROM_k\">list&lt;matrix[, 2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_l\">l</TD><TD></TD><TD PORT=\"FROM_l\">list&lt;matrix[3, 2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_m\">m</TD><TD></TD><TD PORT=\"FROM_m\">list&lt;data.frame[, 2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_n\">n</TD><TD></TD><TD PORT=\"FROM_n\">list&lt;data.frame[3, 2]&gt;</TD></TR>",
         "    </TABLE>>];",
         "}",
         ""
@@ -700,6 +708,10 @@ describe("gv", {
       x$h <- matrix(as.list(c(1L, 2L, 1L, 3L, 2L, 1L, 2L, 1L, 3L, 2L)), nrow = 5, ncol = 2)
       x$i <- data.frame(i.1 = 1:5, i.2 = letters[1:5])
       x$j <- tibble::tibble(i.1 = 1:5, i.2 = letters[1:5])
+      x$k <- rep(list(matrix(1:6, ncol = 2), matrix(1:10, ncol = 2)), c(3, 2))
+      x$l <- rep(list(matrix(1:6, ncol = 2), matrix(7:12, ncol = 2)), c(3, 2))
+      x$m <- rep(list(data.frame(a = 1:3, b = 4:6), data.frame(c = 1:5, d = 6:10)), c(3, 2))
+      x$n <- rep(list(data.frame(a = 1:3, b = 4:6), data.frame(c = 7:9, d = 10:12)), c(3, 2))
       rel <- synthesise(discover(x, exclude = setdiff(names(x), "a"))) |>
         create() |>
         insert(x)
@@ -721,6 +733,10 @@ describe("gv", {
         "    <TR><TD PORT=\"TO_h\">h</TD><TD></TD><TD PORT=\"FROM_h\">matrix[2]&lt;list&lt;integer[1]&gt;&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_i\">i</TD><TD></TD><TD PORT=\"FROM_i\">data.frame[2]</TD></TR>",
         "    <TR><TD PORT=\"TO_j\">j</TD><TD></TD><TD PORT=\"FROM_j\">tbl_df[2]</TD></TR>",
+        "    <TR><TD PORT=\"TO_k\">k</TD><TD></TD><TD PORT=\"FROM_k\">list&lt;matrix[, 2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_l\">l</TD><TD></TD><TD PORT=\"FROM_l\">list&lt;matrix[3, 2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_m\">m</TD><TD></TD><TD PORT=\"FROM_m\">list&lt;data.frame[, 2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_n\">n</TD><TD></TD><TD PORT=\"FROM_n\">list&lt;data.frame[3, 2]&gt;</TD></TR>",
         "    </TABLE>>];",
         "}",
         ""
@@ -1146,6 +1162,10 @@ describe("gv", {
       x$h <- matrix(as.list(c(1L, 2L, 1L, 3L, 2L, 1L, 2L, 1L, 3L, 2L)), nrow = 5, ncol = 2)
       x$i <- data.frame(i.1 = 1:5, i.2 = letters[1:5])
       x$j <- tibble::tibble(i.1 = 1:5, i.2 = letters[1:5])
+      x$k <- rep(list(matrix(1:6, ncol = 2), matrix(1:10, ncol = 2)), c(3, 2))
+      x$l <- rep(list(matrix(1:6, ncol = 2), matrix(7:12, ncol = 2)), c(3, 2))
+      x$m <- rep(list(data.frame(a = 1:3, b = 4:6), data.frame(c = 1:5, d = 6:10)), c(3, 2))
+      x$n <- rep(list(data.frame(a = 1:3, b = 4:6), data.frame(c = 7:9, d = 10:12)), c(3, 2))
       expected_text <- c(
         "digraph \"data\" {",
         "  rankdir = \"LR\"",
@@ -1164,6 +1184,10 @@ describe("gv", {
         "    <TR><TD PORT=\"TO_h\">h</TD><TD PORT=\"FROM_h\">matrix[2]&lt;list&lt;integer[1]&gt;&gt;</TD></TR>",
         "    <TR><TD PORT=\"TO_i\">i</TD><TD PORT=\"FROM_i\">data.frame[2]</TD></TR>",
         "    <TR><TD PORT=\"TO_j\">j</TD><TD PORT=\"FROM_j\">tbl_df[2]</TD></TR>",
+        "    <TR><TD PORT=\"TO_k\">k</TD><TD PORT=\"FROM_k\">list&lt;matrix[, 2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_l\">l</TD><TD PORT=\"FROM_l\">list&lt;matrix[3, 2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_m\">m</TD><TD PORT=\"FROM_m\">list&lt;data.frame[, 2]&gt;</TD></TR>",
+        "    <TR><TD PORT=\"TO_n\">n</TD><TD PORT=\"FROM_n\">list&lt;data.frame[3, 2]&gt;</TD></TR>",
         "    </TABLE>>];",
         "}",
         ""
@@ -1525,6 +1549,10 @@ describe("d2", {
       x$h <- matrix(as.list(c(1L, 2L, 1L, 3L, 2L, 1L, 2L, 1L, 3L, 2L)), nrow = 5, ncol = 2)
       x$i <- data.frame(i.1 = 1:5, i.2 = letters[1:5])
       x$j <- tibble::tibble(i.1 = 1:5, i.2 = letters[1:5])
+      x$k <- rep(list(matrix(1:6, ncol = 2), matrix(1:10, ncol = 2)), c(3, 2))
+      x$l <- rep(list(matrix(1:6, ncol = 2), matrix(7:12, ncol = 2)), c(3, 2))
+      x$m <- rep(list(data.frame(a = 1:3, b = 4:6), data.frame(c = 1:5, d = 6:10)), c(3, 2))
+      x$n <- rep(list(data.frame(a = 1:3, b = 4:6), data.frame(c = 7:9, d = 10:12)), c(3, 2))
       db <- autodb(x, exclude = setdiff(names(x), "a"))
       expected_text <- c(
         "direction: right",
@@ -1540,6 +1568,10 @@ describe("d2", {
         "  \"h\": \"matrix[2]<list<integer[1]>>\"",
         "  \"i\": \"data.frame[2]\"",
         "  \"j\": \"tbl_df[2]\"",
+        "  \"k\": \"list<matrix[, 2]>\"",
+        "  \"l\": \"list<matrix[3, 2]>\"",
+        "  \"m\": \"list<data.frame[, 2]>\"",
+        "  \"n\": \"list<data.frame[3, 2]>\"",
         "}",
         ""
       )
@@ -1721,6 +1753,10 @@ describe("d2", {
       x$h <- matrix(as.list(c(1L, 2L, 1L, 3L, 2L, 1L, 2L, 1L, 3L, 2L)), nrow = 5, ncol = 2)
       x$i <- data.frame(i.1 = 1:5, i.2 = letters[1:5])
       x$j <- tibble::tibble(i.1 = 1:5, i.2 = letters[1:5])
+      x$k <- rep(list(matrix(1:6, ncol = 2), matrix(1:10, ncol = 2)), c(3, 2))
+      x$l <- rep(list(matrix(1:6, ncol = 2), matrix(7:12, ncol = 2)), c(3, 2))
+      x$m <- rep(list(data.frame(a = 1:3, b = 4:6), data.frame(c = 1:5, d = 6:10)), c(3, 2))
+      x$n <- rep(list(data.frame(a = 1:3, b = 4:6), data.frame(c = 7:9, d = 10:12)), c(3, 2))
       rel <- synthesise(discover(x, exclude = setdiff(names(x), "a"))) |>
         create() |>
         insert(x)
@@ -1738,6 +1774,10 @@ describe("d2", {
         "  \"h\": \"matrix[2]<list<integer[1]>>\"",
         "  \"i\": \"data.frame[2]\"",
         "  \"j\": \"tbl_df[2]\"",
+        "  \"k\": \"list<matrix[, 2]>\"",
+        "  \"l\": \"list<matrix[3, 2]>\"",
+        "  \"m\": \"list<data.frame[, 2]>\"",
+        "  \"n\": \"list<data.frame[3, 2]>\"",
         "}",
         ""
       )
@@ -2247,6 +2287,10 @@ describe("d2", {
       x$h <- matrix(as.list(c(1L, 2L, 1L, 3L, 2L, 1L, 2L, 1L, 3L, 2L)), nrow = 5, ncol = 2)
       x$i <- data.frame(i.1 = 1:5, i.2 = letters[1:5])
       x$j <- tibble::tibble(i.1 = 1:5, i.2 = letters[1:5])
+      x$k <- rep(list(matrix(1:6, ncol = 2), matrix(1:10, ncol = 2)), c(3, 2))
+      x$l <- rep(list(matrix(1:6, ncol = 2), matrix(7:12, ncol = 2)), c(3, 2))
+      x$m <- rep(list(data.frame(a = 1:3, b = 4:6), data.frame(c = 1:5, d = 6:10)), c(3, 2))
+      x$n <- rep(list(data.frame(a = 1:3, b = 4:6), data.frame(c = 7:9, d = 10:12)), c(3, 2))
       expected_text <- c(
         "direction: right",
         "\"data\": \"data (5 rows)\" {",
@@ -2261,6 +2305,10 @@ describe("d2", {
         "  \"h\": \"matrix[2]<list<integer[1]>>\"",
         "  \"i\": \"data.frame[2]\"",
         "  \"j\": \"tbl_df[2]\"",
+        "  \"k\": \"list<matrix[, 2]>\"",
+        "  \"l\": \"list<matrix[3, 2]>\"",
+        "  \"m\": \"list<data.frame[, 2]>\"",
+        "  \"n\": \"list<data.frame[3, 2]>\"",
         "}",
         ""
       )
