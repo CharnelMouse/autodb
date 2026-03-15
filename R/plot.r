@@ -1064,22 +1064,15 @@ relation_schema_string_d2 <- function(
 }
 
 columns_string_gv <- function(col_names, col_labels, keys, col_classes) {
-  key_membership_strings <- vapply(
-    col_names,
-    \(nm) paste(
-      vapply(
-        keys,
-        \(key) if (is.element(nm, key))
-          "<TD BGCOLOR=\"black\"></TD>"
-        else
-          "<TD></TD>",
-        character(1)
-      ),
-      collapse = ""
-    ),
-    character(1)
+  keymembs <- outer(col_names, keys, Vectorize(is.element))
+  keymembs[] <- paste0(
+    "<TD",
+    ifelse(keymembs, " BGCOLOR=\"black\"", ""),
+    "></TD>",
+    recycle0 = TRUE
   )
-  column_typing_info <- paste0(
+  key_membership_strings <- apply(keymembs, 1, paste, collapse = "")
+  paste0(
     "<TR><TD PORT=\"TO_",
     col_labels,
     "\">",
@@ -1090,7 +1083,6 @@ columns_string_gv <- function(col_names, col_labels, keys, col_classes) {
     "</TR>",
     recycle0 = TRUE
   )
-  column_typing_info
 }
 
 columns_string_d2 <- function(col_names, col_labels, keys, col_classes, references) {
