@@ -744,7 +744,7 @@ gen.relation <- function(
     gen.element(variant)
   ) |>
     gen.and_then(uncurry(
-      \(rs, var) gen.relation_from_schema(rs, rows_from, rows_to, var)
+      \(rs, var) gen.relation_from_schema(rs, rows_from, rows_to, variant = var)
     ))
 }
 
@@ -1053,7 +1053,7 @@ gen.database <- function(
     gen.element(variant)
   ) |>
     gen.and_then(uncurry(\(ds, var) {
-      gen.relation_from_schema(ds, rows_from, rows_to, var) |>
+      gen.relation_from_schema(ds, rows_from, rows_to, variant = var) |>
         gen.with(
           with_args(
             remove_reference_violations,
