@@ -21,11 +21,18 @@
 - Added support for data with matrix columns. Similarly to lists,
   `duplicate` etc. account for matrices properly, rather than trying to
   treat them as vectors.
+- Added support for data with data.frame columns. Similarly to lists,
+  `duplicate` etc. account for data.frames properly, rather than trying
+  to treat them as vectors.
 - `rejoin` no longer sorts as it merges relations, since there might be
   list columns in the key, which aren’t sortable.
 - Added nesting to `gv` and `d2` methods for classes containing data.
   This allows giving more detail when a data column is a list where
   elements have a common class or length.
+- Remove integrity checks for concatenating relations or databases
+  together, for performance: since the only change is some renaming,
+  concatenating valid relations/databases shouldn’t result in any
+  violations anyway.
 
 ## autodb 3.2.4
 

@@ -5,6 +5,8 @@
 - [Using
   autodb](https://charnelmouse.github.io/autodb/dev/articles/autodb.md):
 - [Limitations](https://charnelmouse.github.io/autodb/dev/articles/limits.md):
+- [Nested
+  data](https://charnelmouse.github.io/autodb/dev/articles/nest.md):
 - [A larger example: the nudge
   dataset](https://charnelmouse.github.io/autodb/dev/articles/nudge.md):
 - [Handling missing
