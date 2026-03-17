@@ -363,6 +363,20 @@ gen_df <- function(
   variant = c("data.frame", "tibble"),
   atomic = FALSE
 ) {
+  list(
+    gen.element(seq.int(min(mincol, ncol), ncol)) |>
+      gen.and_then(\(n) list(
+        classes = gen.df_colclass(atomic) |> gen.c(of = n),
+        nms = gen_attr_names(n, 9)
+      )),
+    n_records = gen.element(seq.int(min(minrow, nrow), nrow)),
+    variant = gen.element(variant)
+  ) |>
+    gen.with(\(lst) c(lst[[1]], lst[2], list(remove_dup_rows = remove_dup_rows), lst[3])) |>
+    gen.and_then(uncurry(with_args(gen.df_fixed_ranges, digits = digits)))
+}
+
+gen.df_colclass <- function(atomic) {
   asable_classes <- c(
     "logical",
     "integer",
@@ -373,17 +387,7 @@ gen_df <- function(
     if (!atomic) "matrix",
     if (!atomic) "data.frame"
   )
-  list(
-    gen.element(seq.int(min(mincol, ncol), ncol)) |>
-      gen.and_then(\(n) list(
-        classes = gen.element(asable_classes) |> gen.c(of = n),
-        nms = gen_attr_names(n, 9)
-      )),
-    n_records = gen.element(seq.int(min(minrow, nrow), nrow)),
-    variant = gen.element(variant)
-  ) |>
-    gen.with(\(lst) c(lst[[1]], lst[2], list(remove_dup_rows = remove_dup_rows), lst[3])) |>
-    gen.and_then(uncurry(with_args(gen.df_fixed_ranges, digits = digits)))
+  gen.element(asable_classes)
 }
 
 gen.df_fixed_ranges <- function(
