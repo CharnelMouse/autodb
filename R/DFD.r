@@ -127,17 +127,11 @@ DFD <- function(
         (n_dependant_only > 0 && is.element(rhs, valid_determinant_nonfixed_indices))
       stopifnot(n_lhs_attrs == expected_n_lhs_attrs)
       bijection_candidate_nonfixed_indices <- if (skip_bijections)
-        match(
-          names(dependencies)[
-            vapply(
-              dependencies,
-              \(x) any(vapply(x, identical, logical(1), attr_names[nonfixed][[rhs]])),
-              logical(1)
-            )
-          ],
-          attr_names[nonfixed]
-        ) |>
-        intersect(lhs_nonfixed_indices)
+        lhs_nonfixed_indices[vapply(
+          dependencies[lhs_nonfixed_indices],
+          \(x) any(vapply(x, identical, logical(1), attr_names[nonfixed][[rhs]])),
+          logical(1)
+        )]
       else
         integer()
       if (n_lhs_attrs > 0) {
