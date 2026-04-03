@@ -144,62 +144,62 @@ DFD <- function(
           )]
         }
       }
-      if (n_lhs_attrs > 0) {
-        if (n_lhs_attrs %in% names(all_powersets))
-          nodes <- all_powersets[[as.character(n_lhs_attrs)]]
+      if (n_lhs_attrs == 0)
+        next
+      if (n_lhs_attrs %in% names(all_powersets))
+        nodes <- all_powersets[[as.character(n_lhs_attrs)]]
+      else{
+        nodes <- reduce_powerset(powerset, n_lhs_attrs)
+        all_powersets[[as.character(n_lhs_attrs)]] <- nodes
+      }
+      report("determinants available, starting search")
+      lhss <- if (length(bijection_candidate_nonfixed_indices) > 0)
+        list(bijection_candidate_nonfixed_indices[[1]], TRUE)
+      else
+        find_LHSs_dfd(
+          rhs,
+          lhs_nonfixed_indices,
+          nodes,
+          n_lhs_attrs,
+          partition_handler,
+          bijection_candidate_nonfixed_indices,
+          detset_limit
+        )
+      if (!store_cache)
+        partition_handler$reset()
+      if (lhss[[2]]) {
+        stopifnot(
+          is.element(lhss[[1]], bijection_candidate_nonfixed_indices),
+          lhss[[1]] < rhs
+        )
+        bij_ind <- match(lhss[[1]], names(bijections))
+        if (is.na(bij_ind))
+          bijections <- c(
+            bijections,
+            stats::setNames(list(c(lhss[[1]], rhs)), lhss[[1]])
+          )
         else{
-          nodes <- reduce_powerset(powerset, n_lhs_attrs)
-          all_powersets[[as.character(n_lhs_attrs)]] <- nodes
-        }
-        report("determinants available, starting search")
-        lhss <- if (length(bijection_candidate_nonfixed_indices) > 0)
-          list(bijection_candidate_nonfixed_indices[[1]], TRUE)
-        else
-          find_LHSs_dfd(
-            rhs,
-            lhs_nonfixed_indices,
-            nodes,
-            n_lhs_attrs,
-            partition_handler,
-            bijection_candidate_nonfixed_indices,
-            detset_limit
-          )
-        if (!store_cache)
-          partition_handler$reset()
-        if (lhss[[2]]) {
-          stopifnot(
-            is.element(lhss[[1]], bijection_candidate_nonfixed_indices),
-            lhss[[1]] < rhs
-          )
-          bij_ind <- match(lhss[[1]], names(bijections))
-          if (is.na(bij_ind))
-            bijections <- c(
-              bijections,
-              stats::setNames(list(c(lhss[[1]], rhs)), lhss[[1]])
-            )
-          else{
-            bijections[[bij_ind]] <- c(
-              bijections[[bij_ind]],
-              rhs
-            )
-          }
-          valid_determinant_nonfixed_indices <- setdiff(
-            valid_determinant_nonfixed_indices,
+          bijections[[bij_ind]] <- c(
+            bijections[[bij_ind]],
             rhs
           )
-          max_n_lhs_attrs <- max_n_lhs_attrs - 1L
-          if (max_n_lhs_attrs %in% names(all_powersets))
-            powerset <- all_powersets[[as.character(max_n_lhs_attrs)]]
-          else{
-            powerset <- reduce_powerset(powerset, max_n_lhs_attrs)
-            all_powersets[[as.character(max_n_lhs_attrs)]] <- powerset
-          }
-        }else
-          dependencies[[attr_names[nonfixed][rhs]]] <- c(
-            dependencies[[attr_names[nonfixed][rhs]]],
-            lapply(lhss[[1]], \(x) attr_names[nonfixed][x])
-          )
-      }
+        }
+        valid_determinant_nonfixed_indices <- setdiff(
+          valid_determinant_nonfixed_indices,
+          rhs
+        )
+        max_n_lhs_attrs <- max_n_lhs_attrs - 1L
+        if (max_n_lhs_attrs %in% names(all_powersets))
+          powerset <- all_powersets[[as.character(max_n_lhs_attrs)]]
+        else{
+          powerset <- reduce_powerset(powerset, max_n_lhs_attrs)
+          all_powersets[[as.character(max_n_lhs_attrs)]] <- powerset
+        }
+      }else
+        dependencies[[attr_names[nonfixed][rhs]]] <- c(
+          dependencies[[attr_names[nonfixed][rhs]]],
+          lapply(lhss[[1]], \(x) attr_names[nonfixed][x])
+        )
     }
   }
 
