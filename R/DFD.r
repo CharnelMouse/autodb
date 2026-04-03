@@ -186,15 +186,13 @@ DFD <- function(
           nodes,
           n_lhs_attrs,
           partition_handler,
-          bijection_candidate_nonfixed_indices,
           detset_limit
         )
         if (!store_cache)
           partition_handler$reset()
-        stopifnot(!lhss[[2]])
         dependencies[[attr_names[nonfixed][rhs]]] <- c(
           dependencies[[attr_names[nonfixed][rhs]]],
-          lapply(lhss[[1]], \(x) attr_names[nonfixed][x])
+          lapply(lhss, \(x) attr_names[nonfixed][x])
         )
       }
     }
@@ -237,7 +235,6 @@ find_LHSs_dfd <- function(
   nodes,
   n_lhs_attrs,
   partition_handler,
-  bijection_candidate_nonfixed_indices,
   detset_limit
 ) {
   # The original library "names" nodes with their attribute set,
@@ -274,13 +271,6 @@ find_LHSs_dfd <- function(
   min_deps <- integer()
   max_non_deps <- integer()
   trace <- integer()
-  bijection_nodes <- to_nodes(
-    match(
-      bijection_candidate_nonfixed_indices,
-      lhs_nonfixed_indices
-    ),
-    nodes
-  )
 
   while (length(seeds) != 0) {
     node <- seeds[sample.int(length(seeds), 1)]
@@ -291,14 +281,6 @@ find_LHSs_dfd <- function(
           if (isTRUE(min_infer)) {
             nodes$category[node] <- 2L
             min_deps <- c(min_deps, node)
-            if (is.element(node, bijection_nodes)) {
-              lhs_index <- lhs_nonfixed_indices[nodes$bits[[node]]]
-              stopifnot(is.element(
-                lhs_index,
-                bijection_candidate_nonfixed_indices
-              ))
-              return(list(lhs_index, TRUE))
-            }
           }
           if (isFALSE(min_infer))
             nodes$category[node] <- 1L
@@ -337,14 +319,6 @@ find_LHSs_dfd <- function(
             if (isTRUE(min_infer)) {
               min_deps <- c(min_deps, node)
               nodes$category[node] <- 2L
-              if (is.element(node, bijection_nodes)) {
-                lhs_index <- lhs_nonfixed_indices[nodes$bits[[node]]]
-                stopifnot(is.element(
-                  lhs_index,
-                  bijection_candidate_nonfixed_indices
-                ))
-                return(list(lhs_index, TRUE))
-              }
             }
             if (is.na(min_infer))
               nodes$category[node] <- 3L
@@ -384,10 +358,7 @@ find_LHSs_dfd <- function(
       detset_limit
     )
   }
-  list(
-    lapply(min_deps, \(md) lhs_nonfixed_indices[nodes$bits[[md]]]),
-    FALSE
-  )
+  lapply(min_deps, \(md) lhs_nonfixed_indices[nodes$bits[[md]]])
 }
 
 pick_next_node <- function(node, nodes, trace, min_deps, max_non_deps) {
