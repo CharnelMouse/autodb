@@ -152,26 +152,9 @@ DFD <- function(
         nodes <- reduce_powerset(powerset, n_lhs_attrs)
         all_powersets[[as.character(n_lhs_attrs)]] <- nodes
       }
-      report("determinants available, starting search")
-      lhss <- if (length(bijection_candidate_nonfixed_indices) > 0)
-        list(bijection_candidate_nonfixed_indices[[1]], TRUE)
-      else
-        find_LHSs_dfd(
-          rhs,
-          lhs_nonfixed_indices,
-          nodes,
-          n_lhs_attrs,
-          partition_handler,
-          bijection_candidate_nonfixed_indices,
-          detset_limit
-        )
-      if (!store_cache)
-        partition_handler$reset()
-      if (lhss[[2]]) {
-        stopifnot(
-          is.element(lhss[[1]], bijection_candidate_nonfixed_indices),
-          lhss[[1]] < rhs
-        )
+      if (length(bijection_candidate_nonfixed_indices) > 0) {
+        lhss <- bijection_candidate_nonfixed_indices[[1]]
+        report(paste("equivalent to", attr_names[nonfixed][lhss]))
         bij_ind <- match(lhss[[1]], names(bijections))
         if (is.na(bij_ind))
           bijections <- c(
@@ -195,11 +178,25 @@ DFD <- function(
           powerset <- reduce_powerset(powerset, max_n_lhs_attrs)
           all_powersets[[as.character(max_n_lhs_attrs)]] <- powerset
         }
-      }else
+      }else{
+        report("determinants available, starting search")
+        lhss <- find_LHSs_dfd(
+          rhs,
+          lhs_nonfixed_indices,
+          nodes,
+          n_lhs_attrs,
+          partition_handler,
+          bijection_candidate_nonfixed_indices,
+          detset_limit
+        )
+        if (!store_cache)
+          partition_handler$reset()
+        stopifnot(!lhss[[2]])
         dependencies[[attr_names[nonfixed][rhs]]] <- c(
           dependencies[[attr_names[nonfixed][rhs]]],
           lapply(lhss[[1]], \(x) attr_names[nonfixed][x])
         )
+      }
     }
   }
 
