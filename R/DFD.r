@@ -126,6 +126,8 @@ DFD <- function(
       expected_n_lhs_attrs <- max_n_lhs_attrs -
         (n_dependant_only > 0 && is.element(rhs, valid_determinant_nonfixed_indices))
       stopifnot(n_lhs_attrs == expected_n_lhs_attrs)
+      if (n_lhs_attrs == 0)
+        next
       bijection_candidate_nonfixed_indices <- if (!skip_bijections)
         integer()
       else{
@@ -144,8 +146,6 @@ DFD <- function(
           )]
         }
       }
-      if (n_lhs_attrs == 0)
-        next
       if (n_lhs_attrs %in% names(all_powersets))
         nodes <- all_powersets[[as.character(n_lhs_attrs)]]
       else{
