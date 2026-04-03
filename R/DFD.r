@@ -152,15 +152,18 @@ DFD <- function(
           all_powersets[[as.character(n_lhs_attrs)]] <- nodes
         }
         report("determinants available, starting search")
-        lhss <- find_LHSs_dfd(
-          rhs,
-          lhs_nonfixed_indices,
-          nodes,
-          n_lhs_attrs,
-          partition_handler,
-          bijection_candidate_nonfixed_indices,
-          detset_limit
-        )
+        lhss <- if (length(bijection_candidate_nonfixed_indices) > 0)
+          list(bijection_candidate_nonfixed_indices[[1]], TRUE)
+        else
+          find_LHSs_dfd(
+            rhs,
+            lhs_nonfixed_indices,
+            nodes,
+            n_lhs_attrs,
+            partition_handler,
+            bijection_candidate_nonfixed_indices,
+            detset_limit
+          )
         if (!store_cache)
           partition_handler$reset()
         if (lhss[[2]]) {
