@@ -126,14 +126,24 @@ DFD <- function(
       expected_n_lhs_attrs <- max_n_lhs_attrs -
         (n_dependant_only > 0 && is.element(rhs, valid_determinant_nonfixed_indices))
       stopifnot(n_lhs_attrs == expected_n_lhs_attrs)
-      bijection_candidate_nonfixed_indices <- if (skip_bijections)
-        lhs_nonfixed_indices[vapply(
-          dependencies[lhs_nonfixed_indices],
-          \(x) any(vapply(x, identical, logical(1), attr_names[nonfixed][[rhs]])),
-          logical(1)
-        )]
-      else
+      bijection_candidate_nonfixed_indices <- if (!skip_bijections)
         integer()
+      else{
+        if (detset_limit == 0)
+          integer()
+        else{
+          lhs_bijection_candidates <- intersect(
+            lhs_nonfixed_indices[lhs_nonfixed_indices < rhs],
+            which(nonfixed %in% valid_dependant_attrs)
+          )
+          lhs_bijection_candidates[vapply(
+            lookup[nonfixed][lhs_bijection_candidates],
+            identical,
+            logical(1),
+            lookup[nonfixed][[rhs]]
+          )]
+        }
+      }
       if (n_lhs_attrs > 0) {
         if (n_lhs_attrs %in% names(all_powersets))
           nodes <- all_powersets[[as.character(n_lhs_attrs)]]
