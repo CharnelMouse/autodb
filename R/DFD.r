@@ -124,7 +124,11 @@ DFD <- function(
       rhs_nonfixed_indices,
       \(rhs) {
         lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
-        if (!skip_bijections || detset_limit == 0)
+        if (
+          !skip_bijections ||
+          detset_limit == 0 ||
+          !is.element(rhs, valid_determinant_nonfixed_indices)
+        )
           return(NA_integer_)
         lhs_bijection_candidates <- intersect(
           lhs_nonfixed_indices[lhs_nonfixed_indices < rhs],
