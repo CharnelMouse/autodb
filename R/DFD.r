@@ -143,62 +143,62 @@ DFD <- function(
       },
       integer(1)
     )
-    for (rhs in rhs_nonfixed_indices) {
+    for (rhs in rhs_nonfixed_indices[!is.na(bijection_nonfixed_indices)]) {
+      report(paste("dependant", attr_names[nonfixed][rhs]))
+      bijection_candidate_nonfixed_index <- bijection_nonfixed_indices[[
+        match(rhs, rhs_nonfixed_indices)
+      ]]
+      report(paste(
+        "equivalent to",
+        attr_names[nonfixed][bijection_candidate_nonfixed_index]
+      ))
+      bij_ind <- match(bijection_candidate_nonfixed_index, names(bijections))
+      if (is.na(bij_ind))
+        bijections <- c(
+          bijections,
+          stats::setNames(
+            list(c(bijection_candidate_nonfixed_index, rhs)),
+            bijection_candidate_nonfixed_index
+          )
+        )
+      else{
+        bijections[[bij_ind]] <- c(
+          bijections[[bij_ind]],
+          rhs
+        )
+      }
+      valid_determinant_nonfixed_indices <- setdiff(
+        valid_determinant_nonfixed_indices,
+        rhs
+      )
+    }
+    for (rhs in rhs_nonfixed_indices[is.na(bijection_nonfixed_indices)]) {
       report(paste("dependant", attr_names[nonfixed][rhs]))
       lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
       n_lhs_attrs <- length(lhs_nonfixed_indices)
       if (n_lhs_attrs == 0)
         next
-      bijection_candidate_nonfixed_index <- bijection_nonfixed_indices[[
-        match(rhs, rhs_nonfixed_indices)
-      ]]
       if (n_lhs_attrs %in% names(all_powersets))
         nodes <- all_powersets[[as.character(n_lhs_attrs)]]
       else{
         nodes <- reduce_powerset(powerset, n_lhs_attrs)
         all_powersets[[as.character(n_lhs_attrs)]] <- nodes
       }
-      if (!is.na(bijection_candidate_nonfixed_index)) {
-        report(paste(
-          "equivalent to",
-          attr_names[nonfixed][bijection_candidate_nonfixed_index]
-        ))
-        bij_ind <- match(bijection_candidate_nonfixed_index, names(bijections))
-        if (is.na(bij_ind))
-          bijections <- c(
-            bijections,
-            stats::setNames(
-              list(c(bijection_candidate_nonfixed_index, rhs)),
-              bijection_candidate_nonfixed_index
-            )
-          )
-        else{
-          bijections[[bij_ind]] <- c(
-            bijections[[bij_ind]],
-            rhs
-          )
-        }
-        valid_determinant_nonfixed_indices <- setdiff(
-          valid_determinant_nonfixed_indices,
-          rhs
-        )
-      }else{
-        report("determinants available, starting search")
-        lhss <- find_LHSs_dfd(
-          rhs,
-          lhs_nonfixed_indices,
-          nodes,
-          n_lhs_attrs,
-          partition_handler,
-          detset_limit
-        )
-        if (!store_cache)
-          partition_handler$reset()
-        dependencies[[attr_names[nonfixed][rhs]]] <- c(
-          dependencies[[attr_names[nonfixed][rhs]]],
-          lapply(lhss, \(x) attr_names[nonfixed][x])
-        )
-      }
+      report("determinants available, starting search")
+      lhss <- find_LHSs_dfd(
+        rhs,
+        lhs_nonfixed_indices,
+        nodes,
+        n_lhs_attrs,
+        partition_handler,
+        detset_limit
+      )
+      if (!store_cache)
+        partition_handler$reset()
+      dependencies[[attr_names[nonfixed][rhs]]] <- c(
+        dependencies[[attr_names[nonfixed][rhs]]],
+        lapply(lhss, \(x) attr_names[nonfixed][x])
+      )
     }
   }
 
@@ -544,6 +544,10 @@ add_deps_implied_by_bijections <- function(
   for (b in bijections) {
     first_index <- nonfixed[[b[[1]]]]
     # add the bijection
+    dependencies[[first_index]] <- c(
+      dependencies[[first_index]],
+      nonfixed[b[-1]]
+    )
     for (nonfixed_index in b[-1]) {
       replacement <- nonfixed[[nonfixed_index]]
       dependencies[[replacement]] <- c(
@@ -553,20 +557,16 @@ add_deps_implied_by_bijections <- function(
       stopifnot(!anyDuplicated(dependencies[[nonfixed_index]]))
     }
     # add dependencies implied by the bijection
-    # only needed when bijection attribute is earlier than dependant, since
-    # later ones were added before the bijection was known
     for (rhs in setdiff(seq_along(dependencies), match(nonfixed[b], column_names))) {
       for (nonfixed_index in b[-1]) {
         replacement <- nonfixed[[nonfixed_index]]
-        if (match(replacement, column_names) < rhs) {
-          dependencies[[rhs]] <- union(
-            dependencies[[rhs]],
-            lapply(
-              Filter(\(d) is.element(first_index, d), dependencies[[rhs]]),
-              \(d) c(setdiff(d, first_index), replacement)
-            )
+        dependencies[[rhs]] <- union(
+          dependencies[[rhs]],
+          lapply(
+            Filter(\(d) is.element(first_index, d), dependencies[[rhs]]),
+            \(d) c(setdiff(d, first_index), replacement)
           )
-        }
+        )
         stopifnot(!anyDuplicated(dependencies[[rhs]]))
       }
     }
