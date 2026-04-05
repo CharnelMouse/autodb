@@ -155,13 +155,18 @@ DFD <- function(
         all_powersets[[as.character(n_lhs_attrs)]] <- nodes
       }
       if (!is.na(bijection_candidate_nonfixed_index)) {
-        lhss <- bijection_candidate_nonfixed_index
-        report(paste("equivalent to", attr_names[nonfixed][lhss]))
-        bij_ind <- match(lhss[[1]], names(bijections))
+        report(paste(
+          "equivalent to",
+          attr_names[nonfixed][bijection_candidate_nonfixed_index]
+        ))
+        bij_ind <- match(bijection_candidate_nonfixed_index, names(bijections))
         if (is.na(bij_ind))
           bijections <- c(
             bijections,
-            stats::setNames(list(c(lhss[[1]], rhs)), lhss[[1]])
+            stats::setNames(
+              list(c(bijection_candidate_nonfixed_index, rhs)),
+              bijection_candidate_nonfixed_index
+            )
           )
         else{
           bijections[[bij_ind]] <- c(
