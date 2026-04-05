@@ -119,28 +119,29 @@ DFD <- function(
       accuracy = accuracy,
       full_cache = full_cache
     )
-    for (rhs in which(nonfixed %in% valid_dependant_attrs)) {
+    rhs_nonfixed_indices <- which(nonfixed %in% valid_dependant_attrs)
+    for (rhs in rhs_nonfixed_indices) {
       report(paste("dependant", attr_names[nonfixed][rhs]))
       lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
       n_lhs_attrs <- length(lhs_nonfixed_indices)
       if (n_lhs_attrs == 0)
         next
-      bijection_candidate_nonfixed_indices <- if (!skip_bijections)
-        integer()
+      bijection_candidate_nonfixed_index <- if (!skip_bijections)
+        NA_integer_
       else{
         if (detset_limit == 0)
-          integer()
+          NA_integer_
         else{
           lhs_bijection_candidates <- intersect(
             lhs_nonfixed_indices[lhs_nonfixed_indices < rhs],
-            which(nonfixed %in% valid_dependant_attrs)
+            rhs_nonfixed_indices
           )
           lhs_bijection_candidates[vapply(
             lookup[nonfixed][lhs_bijection_candidates],
             identical,
             logical(1),
             lookup[nonfixed][[rhs]]
-          )]
+          )][1]
         }
       }
       if (n_lhs_attrs %in% names(all_powersets))
@@ -149,8 +150,8 @@ DFD <- function(
         nodes <- reduce_powerset(powerset, n_lhs_attrs)
         all_powersets[[as.character(n_lhs_attrs)]] <- nodes
       }
-      if (length(bijection_candidate_nonfixed_indices) > 0) {
-        lhss <- bijection_candidate_nonfixed_indices[[1]]
+      if (!is.na(bijection_candidate_nonfixed_index)) {
+        lhss <- bijection_candidate_nonfixed_index
         report(paste("equivalent to", attr_names[nonfixed][lhss]))
         bij_ind <- match(lhss[[1]], names(bijections))
         if (is.na(bij_ind))
