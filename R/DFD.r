@@ -123,9 +123,6 @@ DFD <- function(
       report(paste("dependant", attr_names[nonfixed][rhs]))
       lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
       n_lhs_attrs <- length(lhs_nonfixed_indices)
-      expected_n_lhs_attrs <- max_n_lhs_attrs -
-        (n_dependant_only > 0 && is.element(rhs, valid_determinant_nonfixed_indices))
-      stopifnot(n_lhs_attrs == expected_n_lhs_attrs)
       if (n_lhs_attrs == 0)
         next
       bijection_candidate_nonfixed_indices <- if (!skip_bijections)
@@ -171,13 +168,6 @@ DFD <- function(
           valid_determinant_nonfixed_indices,
           rhs
         )
-        max_n_lhs_attrs <- max_n_lhs_attrs - 1L
-        if (max_n_lhs_attrs %in% names(all_powersets))
-          powerset <- all_powersets[[as.character(max_n_lhs_attrs)]]
-        else{
-          powerset <- reduce_powerset(powerset, max_n_lhs_attrs)
-          all_powersets[[as.character(max_n_lhs_attrs)]] <- powerset
-        }
       }else{
         report("determinants available, starting search")
         lhss <- find_LHSs_dfd(
