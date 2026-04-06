@@ -101,108 +101,108 @@ DFD <- function(
       lhs_attrs_limit,
       "columns possible in a determinant set currently supported"
     ))
-  bijections <- list()
 
-  # main search
-  if (max_n_lhs_attrs > 0) {
-    rhs_nonfixed_indices <- which(nonfixed %in% valid_dependant_attrs)
-    bijection_nonfixed_indices <- vapply(
-      rhs_nonfixed_indices,
-      \(rhs) {
-        lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
-        if (
-          !skip_bijections ||
-          detset_limit == 0 ||
-          !is.element(rhs, valid_determinant_nonfixed_indices)
+  # look for single-attribute bijections
+  bijections <- list()
+  rhs_nonfixed_indices <- which(nonfixed %in% valid_dependant_attrs)
+  bijection_nonfixed_indices <- vapply(
+    rhs_nonfixed_indices,
+    \(rhs) {
+      lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
+      if (
+        !skip_bijections ||
+        detset_limit == 0 ||
+        !is.element(rhs, valid_determinant_nonfixed_indices)
+      )
+        return(NA_integer_)
+      lhs_bijection_candidates <- intersect(
+        lhs_nonfixed_indices[lhs_nonfixed_indices < rhs],
+        rhs_nonfixed_indices
+      )
+      lhs_bijection_candidates[vapply(
+        lookup[nonfixed][lhs_bijection_candidates],
+        identical,
+        logical(1),
+        lookup[nonfixed][[rhs]]
+      )][1]
+    },
+    integer(1)
+  )
+  for (rhs in rhs_nonfixed_indices[!is.na(bijection_nonfixed_indices)]) {
+    report(paste("dependant", attr_names[nonfixed][rhs]))
+    bijection_candidate_nonfixed_index <- bijection_nonfixed_indices[[
+      match(rhs, rhs_nonfixed_indices)
+    ]]
+    report(paste(
+      "equivalent to",
+      attr_names[nonfixed][bijection_candidate_nonfixed_index]
+    ))
+    bij_ind <- match(bijection_candidate_nonfixed_index, names(bijections))
+    if (is.na(bij_ind))
+      bijections <- c(
+        bijections,
+        stats::setNames(
+          list(c(bijection_candidate_nonfixed_index, rhs)),
+          bijection_candidate_nonfixed_index
         )
-          return(NA_integer_)
-        lhs_bijection_candidates <- intersect(
-          lhs_nonfixed_indices[lhs_nonfixed_indices < rhs],
-          rhs_nonfixed_indices
-        )
-        lhs_bijection_candidates[vapply(
-          lookup[nonfixed][lhs_bijection_candidates],
-          identical,
-          logical(1),
-          lookup[nonfixed][[rhs]]
-        )][1]
-      },
-      integer(1)
-    )
-    for (rhs in rhs_nonfixed_indices[!is.na(bijection_nonfixed_indices)]) {
-      report(paste("dependant", attr_names[nonfixed][rhs]))
-      bijection_candidate_nonfixed_index <- bijection_nonfixed_indices[[
-        match(rhs, rhs_nonfixed_indices)
-      ]]
-      report(paste(
-        "equivalent to",
-        attr_names[nonfixed][bijection_candidate_nonfixed_index]
-      ))
-      bij_ind <- match(bijection_candidate_nonfixed_index, names(bijections))
-      if (is.na(bij_ind))
-        bijections <- c(
-          bijections,
-          stats::setNames(
-            list(c(bijection_candidate_nonfixed_index, rhs)),
-            bijection_candidate_nonfixed_index
-          )
-        )
-      else{
-        bijections[[bij_ind]] <- c(
-          bijections[[bij_ind]],
-          rhs
-        )
-      }
-      valid_determinant_nonfixed_indices <- setdiff(
-        valid_determinant_nonfixed_indices,
+      )
+    else{
+      bijections[[bij_ind]] <- c(
+        bijections[[bij_ind]],
         rhs
       )
     }
-    max_n_lhs_attrs <- max_n_lhs_attrs - sum(!is.na(bijection_nonfixed_indices))
-    if (max_n_lhs_attrs > 0) {
-      report("constructing powerset")
-      powerset <- nonempty_powerset(
-        max_n_lhs_attrs,
-        use_visited = TRUE
-      )
-      # cache generated powerset and reductions, otherwise we spend a lot
-      # of time duplicating reduction work
-      all_powersets <- stats::setNames(list(powerset), max_n_lhs_attrs)
-      partition_handler <- checkable_partition_handler(
-        unname(lookup[, nonfixed, drop = FALSE]),
-        key_class = "integer",
-        accuracy = accuracy,
-        full_cache = full_cache
-      )
-      for (rhs in rhs_nonfixed_indices[is.na(bijection_nonfixed_indices)]) {
-        report(paste("dependant", attr_names[nonfixed][rhs]))
-        lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
-        n_lhs_attrs <- length(lhs_nonfixed_indices)
-        stopifnot(n_lhs_attrs <= max_n_lhs_attrs)
-        if (n_lhs_attrs == 0)
-          next
-        if (n_lhs_attrs %in% names(all_powersets))
-          nodes <- all_powersets[[as.character(n_lhs_attrs)]]
-        else{
-          nodes <- reduce_powerset(powerset, n_lhs_attrs)
-          all_powersets[[as.character(n_lhs_attrs)]] <- nodes
-        }
-        report("determinants available, starting search")
-        lhss <- find_LHSs_dfd(
-          rhs,
-          lhs_nonfixed_indices,
-          nodes,
-          n_lhs_attrs,
-          partition_handler,
-          detset_limit
-        )
-        if (!store_cache)
-          partition_handler$reset()
-        dependencies[[attr_names[nonfixed][rhs]]] <- c(
-          dependencies[[attr_names[nonfixed][rhs]]],
-          lapply(lhss, \(x) attr_names[nonfixed][x])
-        )
+    valid_determinant_nonfixed_indices <- setdiff(
+      valid_determinant_nonfixed_indices,
+      rhs
+    )
+  }
+  max_n_lhs_attrs <- max_n_lhs_attrs - sum(!is.na(bijection_nonfixed_indices))
+
+  # main search
+  if (max_n_lhs_attrs > 0) {
+    report("constructing powerset")
+    powerset <- nonempty_powerset(
+      max_n_lhs_attrs,
+      use_visited = TRUE
+    )
+    # cache generated powerset and reductions, otherwise we spend a lot
+    # of time duplicating reduction work
+    all_powersets <- stats::setNames(list(powerset), max_n_lhs_attrs)
+    partition_handler <- checkable_partition_handler(
+      unname(lookup[, nonfixed, drop = FALSE]),
+      key_class = "integer",
+      accuracy = accuracy,
+      full_cache = full_cache
+    )
+    for (rhs in rhs_nonfixed_indices[is.na(bijection_nonfixed_indices)]) {
+      report(paste("dependant", attr_names[nonfixed][rhs]))
+      lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
+      n_lhs_attrs <- length(lhs_nonfixed_indices)
+      stopifnot(n_lhs_attrs <= max_n_lhs_attrs)
+      if (n_lhs_attrs == 0)
+        next
+      if (n_lhs_attrs %in% names(all_powersets))
+        nodes <- all_powersets[[as.character(n_lhs_attrs)]]
+      else{
+        nodes <- reduce_powerset(powerset, n_lhs_attrs)
+        all_powersets[[as.character(n_lhs_attrs)]] <- nodes
       }
+      report("determinants available, starting search")
+      lhss <- find_LHSs_dfd(
+        rhs,
+        lhs_nonfixed_indices,
+        nodes,
+        n_lhs_attrs,
+        partition_handler,
+        detset_limit
+      )
+      if (!store_cache)
+        partition_handler$reset()
+      dependencies[[attr_names[nonfixed][rhs]]] <- c(
+        dependencies[[attr_names[nonfixed][rhs]]],
+        lapply(lhss, \(x) attr_names[nonfixed][x])
+      )
     }
   }
 
