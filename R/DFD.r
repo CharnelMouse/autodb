@@ -128,14 +128,12 @@ DFD <- function(
     },
     integer(1)
   )
-  for (rhs in rhs_nonfixed_indices[!is.na(bijection_nonfixed_indices)]) {
-    report(paste("dependant", attr_names[nonfixed][rhs]))
-    bijection_candidate_nonfixed_index <- bijection_nonfixed_indices[[
-      match(rhs, rhs_nonfixed_indices)
-    ]]
+  for (n in which(!is.na(bijection_nonfixed_indices))) {
+    rhs <- rhs_nonfixed_indices[[n]]
+    bijection_candidate_nonfixed_index <- bijection_nonfixed_indices[[n]]
     report(paste(
-      "equivalent to",
-      attr_names[nonfixed][bijection_candidate_nonfixed_index]
+      attr_names[nonfixed][c(rhs, bijection_candidate_nonfixed_index)],
+      collapse = " equivalent to "
     ))
     bij_ind <- match(bijection_candidate_nonfixed_index, names(bijections))
     if (is.na(bij_ind))
