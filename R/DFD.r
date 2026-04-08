@@ -152,11 +152,11 @@ DFD <- function(
         rhs
       )
     }
-    valid_determinant_nonfixed_indices <- setdiff(
-      valid_determinant_nonfixed_indices,
-      rhs
-    )
   }
+  valid_determinant_nonfixed_indices <- setdiff(
+    valid_determinant_nonfixed_indices,
+    rhs_nonfixed_indices[!is.na(bijection_nonfixed_indices)]
+  )
   max_n_lhs_attrs <- max_n_lhs_attrs - sum(!is.na(bijection_nonfixed_indices))
 
   # main search
