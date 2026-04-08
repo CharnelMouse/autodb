@@ -85,23 +85,6 @@ DFD <- function(
   }
   valid_determinant_nonfixed_indices <- match(valid_determinant_attrs, nonfixed)
 
-  # Maximum size of determinant set for a dependant is number
-  # of other valid determinants.
-  # If there are dependants that aren't valid determinants,
-  # this is number of valid determinant attributes. If there
-  # aren't, subtract one.
-  n_dependant_only <- length(setdiff(valid_dependant_attrs, valid_determinant_attrs))
-  max_n_lhs_attrs <- length(valid_determinant_attrs) -
-    as.integer(n_dependant_only == 0)
-  # using 0 would allow for one more column, but makes indexing a pain
-  lhs_attrs_limit <- floor(log(.Machine$integer.max, 2))
-  if (max_n_lhs_attrs > lhs_attrs_limit)
-    stop(paste(
-      "only data.frames with up to",
-      lhs_attrs_limit,
-      "columns possible in a determinant set currently supported"
-    ))
-
   # look for single-attribute bijections
   bijections <- list()
   rhs_nonfixed_indices <- which(nonfixed %in% valid_dependant_attrs)
@@ -155,7 +138,24 @@ DFD <- function(
     valid_determinant_nonfixed_indices,
     rhs_nonfixed_indices[!is.na(bijection_nonfixed_indices)]
   )
-  max_n_lhs_attrs <- max_n_lhs_attrs - sum(!is.na(bijection_nonfixed_indices))
+  valid_determinant_attrs <- nonfixed[valid_determinant_nonfixed_indices]
+
+  # Maximum size of determinant set for a dependant is number
+  # of other valid determinants.
+  # If there are dependants that aren't valid determinants,
+  # this is number of valid determinant attributes. If there
+  # aren't, subtract one.
+  n_dependant_only <- length(setdiff(valid_dependant_attrs, valid_determinant_attrs))
+  max_n_lhs_attrs <- length(valid_determinant_attrs) -
+    as.integer(n_dependant_only == 0)
+  # using 0 would allow for one more column, but makes indexing a pain
+  lhs_attrs_limit <- floor(log(.Machine$integer.max, 2))
+  if (max_n_lhs_attrs > lhs_attrs_limit)
+    stop(paste(
+      "only data.frames with up to",
+      lhs_attrs_limit,
+      "columns possible in a determinant set currently supported"
+    ))
 
   # main search
   if (max_n_lhs_attrs > 0) {
