@@ -75,14 +75,6 @@ DFD <- function(
     }
   }
 
-  if (length(valid_determinant_attrs) < n_cols) {
-    report(
-      paste(
-        "attributes not considered as determinants:",
-        toString(attr_names[-valid_determinant_attrs])
-      )
-    )
-  }
   valid_determinant_nonfixed_indices <- match(valid_determinant_attrs, nonfixed)
 
   # look for single-attribute bijections
@@ -139,6 +131,19 @@ DFD <- function(
     rhs_nonfixed_indices[!is.na(bijection_nonfixed_indices)]
   )
   valid_determinant_attrs <- nonfixed[valid_determinant_nonfixed_indices]
+
+  report(
+    paste(
+      with_number(length(valid_determinant_attrs), "attribute", "", "s"),
+      "considered as determinants"
+    )
+  )
+  report(
+    paste(
+      with_number(length(valid_dependant_attrs), "attribute", "", "s"),
+      "considered as non-fixed dependants"
+    )
+  )
 
   # Maximum size of determinant set for a dependant is number
   # of other valid determinants.
