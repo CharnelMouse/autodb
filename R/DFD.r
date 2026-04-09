@@ -7,144 +7,22 @@ DFD <- function(
   determinants = seq_along(lookup),
   dependants = seq_along(lookup),
   detset_limit = ncol(lookup) - 1L,
-  report = reporter(report = FALSE, con = "", new = TRUE)
+  report = reporter(report = FALSE, con = "", new = TRUE),
+  attrs,
+  attr_names,
+  n_cols,
+  dependencies,
+  fixed,
+  nonfixed,
+  valid_dependant_attrs,
+  valid_determinant_attrs,
+  dependant_keys,
+  determinant_keys,
+  valid_determinant_nonfixed_indices,
+  rhs_nonfixed_indices,
+  bijection_nonfixed_indices,
+  bijections
 ) {
-  attrs <- seq_along(lookup)
-  attr_names <- names(lookup)
-  n_cols <- length(attrs)
-
-  dependencies <- stats::setNames(rep(list(list()), n_cols), attr_names)
-
-  # check for constant-value columns, because if columns are fixed we can
-  # ignore them for the rest of the search
-  fixed <- integer()
-  for (attr in attrs) {
-    if (all(lookup[[attr]] == 1L)) {
-      report(paste(attr_names[[attr]], "is fixed"))
-      fixed <- c(fixed, attr)
-      if (attr %in% dependants)
-        dependencies[[attr]] <- list(character())
-    }
-  }
-  nonfixed <- setdiff(attrs, fixed)
-
-  valid_dependant_attrs <- intersect(dependants, nonfixed)
-  # check for zero dependants before removing simple keys, otherwise
-  # returning early would leave out the simple-key results
-  if (
-    length(valid_dependant_attrs) == 0 ||
-    detset_limit < 1
-  ) {
-    report("no valid dependants, or detset_limit < 1, skipping search")
-    return(flatten(
-      filter_nonflat_dependencies(dependencies, detset_limit),
-      attr_names
-    ))
-  }
-
-  # For non-fixed non-key attributes, all can be dependants,
-  # but might not all be valid determinants.
-  valid_determinant_attrs_prekeys <- intersect(
-    nonfixed,
-    determinants
-  )
-
-  # Non-fixed attributes might be single-attribute keys: we can list them as
-  # determining all other non-fixed attributes, use them in the main search only
-  # as dependants. If there are several single-attribute keys, and we're
-  # skipping bijections, then we can also remove all but one of them as
-  # dependants.
-  valid_determinant_attrs <- valid_determinant_attrs_prekeys
-  # Can't just check column values are seq_len(nrow(df)),
-  # because df can have duplicate rows, and we can't remove
-  # the duplicate rows in df, because it changes the behaviour
-  # for accuracy < 1.
-  df_uniq <- df_unique(lookup[nonfixed])
-  simple_keys <- nonfixed[vapply(
-    df_uniq,
-    Negate(anyDuplicated),
-    logical(1)
-  )]
-  determinant_keys <- intersect(simple_keys, valid_determinant_attrs_prekeys)
-  dependant_keys <- intersect(simple_keys, valid_dependant_attrs)
-  if (length(simple_keys) > 0) {
-    report(paste("single-attribute keys:", toString(attr_names[simple_keys])))
-    valid_determinant_attrs <- setdiff(valid_determinant_attrs, simple_keys)
-    if (skip_bijections) {
-      valid_dependant_attrs <- setdiff(valid_dependant_attrs, dependant_keys[-1])
-    }
-  }
-
-  valid_determinant_nonfixed_indices <- match(valid_determinant_attrs, nonfixed)
-
-  # look for single-attribute bijections
-  bijections <- list()
-  rhs_nonfixed_indices <- which(nonfixed %in% valid_dependant_attrs)
-  bijection_nonfixed_indices <- vapply(
-    rhs_nonfixed_indices,
-    \(rhs) {
-      lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
-      if (
-        !skip_bijections ||
-        detset_limit == 0 ||
-        !is.element(rhs, valid_determinant_nonfixed_indices)
-      )
-        return(NA_integer_)
-      lhs_bijection_candidates <- intersect(
-        lhs_nonfixed_indices[lhs_nonfixed_indices < rhs],
-        rhs_nonfixed_indices
-      )
-      lhs_bijection_candidates[vapply(
-        lookup[nonfixed][lhs_bijection_candidates],
-        identical,
-        logical(1),
-        lookup[nonfixed][[rhs]]
-      )][1]
-    },
-    integer(1)
-  )
-  for (n in which(!is.na(bijection_nonfixed_indices))) {
-    rhs <- rhs_nonfixed_indices[[n]]
-    bijection_candidate_nonfixed_index <- bijection_nonfixed_indices[[n]]
-    report(paste(
-      attr_names[nonfixed][c(rhs, bijection_candidate_nonfixed_index)],
-      collapse = " equivalent to "
-    ))
-    bij_ind <- match(bijection_candidate_nonfixed_index, names(bijections))
-    if (is.na(bij_ind))
-      bijections <- c(
-        bijections,
-        stats::setNames(
-          list(c(bijection_candidate_nonfixed_index, rhs)),
-          bijection_candidate_nonfixed_index
-        )
-      )
-    else{
-      bijections[[bij_ind]] <- c(
-        bijections[[bij_ind]],
-        rhs
-      )
-    }
-  }
-  valid_determinant_nonfixed_indices <- setdiff(
-    valid_determinant_nonfixed_indices,
-    rhs_nonfixed_indices[!is.na(bijection_nonfixed_indices)]
-  )
-  valid_determinant_attrs <- nonfixed[valid_determinant_nonfixed_indices]
-
-  report(
-    paste(
-      with_number(length(valid_determinant_attrs), "attribute", "", "s"),
-      "considered as determinants"
-    )
-  )
-  report(
-    paste(
-      with_number(length(valid_dependant_attrs), "attribute", "", "s"),
-      "considered as non-fixed dependants"
-    )
-  )
-
   # Maximum size of determinant set for a dependant is number
   # of other valid determinants.
   # If there are dependants that aren't valid determinants,
@@ -214,30 +92,7 @@ DFD <- function(
     "\n",
     with_number(partition_handler$cache_size(), "partition", " cached", "s cached")
   ))
-  dependencies <- add_simple_key_deps(
-    dependencies,
-    attr_names[determinant_keys],
-    attr_names[dependant_keys],
-    attr_names[valid_dependant_attrs]
-  )
-  if (skip_bijections) {
-    dependencies <- add_deps_implied_by_bijections(
-      dependencies,
-      bijections,
-      attr_names[nonfixed],
-      attr_names
-    )
-    dependencies <- add_deps_implied_by_simple_keys(
-      dependencies,
-      attr_names[determinant_keys],
-      attr_names[dependant_keys],
-      attr_names[valid_dependant_attrs]
-    )
-  }
-  flatten(
-    filter_nonflat_dependencies(dependencies, detset_limit),
-    attr_names
-  )
+  dependencies
 }
 
 find_LHSs_dfd <- function(
