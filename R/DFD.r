@@ -59,9 +59,9 @@ DFD <- function(
   # because df can have duplicate rows, and we can't remove
   # the duplicate rows in df, because it changes the behaviour
   # for accuracy < 1.
-  df_uniq <- df_unique(lookup)
+  df_uniq <- df_unique(lookup[nonfixed])
   simple_keys <- nonfixed[vapply(
-    df_uniq[nonfixed],
+    df_uniq,
     Negate(anyDuplicated),
     logical(1)
   )]
