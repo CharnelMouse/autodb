@@ -495,28 +495,19 @@ discover <- function(
       )
       dependencies <- DFD(
         lookup,
+        valid_dependant_attrs = valid_dependant_attrs,
+        valid_determinant_attrs = valid_determinant_attrs,
+        valid_determinant_nonfixed_indices = valid_determinant_nonfixed_indices,
+        attr_names = attr_names,
+        dependencies = dependencies,
+        nonfixed = nonfixed,
+        rhs_nonfixed_indices = rhs_nonfixed_indices,
+        bijection_nonfixed_indices = bijection_nonfixed_indices,
         accuracy = accuracy,
         full_cache  = full_cache,
         store_cache = store_cache,
-        skip_bijections = skip_bijections,
-        determinants = valid_determinant_attrs_prefixing,
-        dependants = dependants,
         detset_limit = detset_limit,
-        report = report,
-        attrs = attrs,
-        attr_names = attr_names,
-        n_cols = n_cols,
-        dependencies = dependencies,
-        fixed = fixed,
-        nonfixed = nonfixed,
-        valid_dependant_attrs = valid_dependant_attrs,
-        valid_determinant_attrs = valid_determinant_attrs,
-        dependant_keys = dependant_keys,
-        determinant_keys = determinant_keys,
-        valid_determinant_nonfixed_indices = valid_determinant_nonfixed_indices,
-        rhs_nonfixed_indices = rhs_nonfixed_indices,
-        bijection_nonfixed_indices = bijection_nonfixed_indices,
-        bijections = bijections
+        report = report
       )
       dependencies <- add_simple_key_deps(
         dependencies,

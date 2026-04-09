@@ -1,27 +1,18 @@
 DFD <- function(
   lookup,
+  valid_dependant_attrs,
+  valid_determinant_attrs,
+  valid_determinant_nonfixed_indices,
+  attr_names,
+  dependencies,
+  nonfixed,
+  rhs_nonfixed_indices,
+  bijection_nonfixed_indices,
   accuracy = 1,
   full_cache = TRUE,
   store_cache = TRUE,
-  skip_bijections = FALSE,
-  determinants = seq_along(lookup),
-  dependants = seq_along(lookup),
   detset_limit = ncol(lookup) - 1L,
-  report = reporter(report = FALSE, con = "", new = TRUE),
-  attrs,
-  attr_names,
-  n_cols,
-  dependencies,
-  fixed,
-  nonfixed,
-  valid_dependant_attrs,
-  valid_determinant_attrs,
-  dependant_keys,
-  determinant_keys,
-  valid_determinant_nonfixed_indices,
-  rhs_nonfixed_indices,
-  bijection_nonfixed_indices,
-  bijections
+  report = reporter(report = FALSE, con = "", new = TRUE)
 ) {
   # Maximum size of determinant set for a dependant is number
   # of other valid determinants.
