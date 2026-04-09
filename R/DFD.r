@@ -5,9 +5,7 @@ DFD <- function(
   valid_determinant_nonfixed_indices,
   attr_names,
   dependencies,
-  nonfixed,
   rhs_nonfixed_indices,
-  bijection_nonfixed_indices,
   accuracy = 1,
   full_cache = TRUE,
   store_cache = TRUE,
@@ -42,13 +40,13 @@ DFD <- function(
     # of time duplicating reduction work
     all_powersets <- stats::setNames(list(powerset), max_n_lhs_attrs)
     partition_handler <- checkable_partition_handler(
-      unname(lookup[, nonfixed, drop = FALSE]),
+      unname(lookup),
       key_class = "integer",
       accuracy = accuracy,
       full_cache = full_cache
     )
-    for (rhs in rhs_nonfixed_indices[is.na(bijection_nonfixed_indices)]) {
-      report(paste("dependant", attr_names[nonfixed][rhs]))
+    for (rhs in rhs_nonfixed_indices) {
+      report(paste("dependant", attr_names[rhs]))
       lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
       n_lhs_attrs <- length(lhs_nonfixed_indices)
       stopifnot(n_lhs_attrs <= max_n_lhs_attrs)
@@ -71,9 +69,9 @@ DFD <- function(
       )
       if (!store_cache)
         partition_handler$reset()
-      dependencies[[attr_names[nonfixed][rhs]]] <- c(
-        dependencies[[attr_names[nonfixed][rhs]]],
-        lapply(lhss, \(x) attr_names[nonfixed][x])
+      dependencies[[attr_names[rhs]]] <- c(
+        dependencies[[attr_names[rhs]]],
+        lapply(lhss, \(x) attr_names[x])
       )
     }
   }

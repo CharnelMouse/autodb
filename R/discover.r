@@ -494,15 +494,13 @@ discover <- function(
         )
       )
       dependencies <- DFD(
-        lookup,
+        lookup[nonfixed],
         valid_dependant_attrs = valid_dependant_attrs,
         valid_determinant_attrs = valid_determinant_attrs,
         valid_determinant_nonfixed_indices = valid_determinant_nonfixed_indices,
-        attr_names = attr_names,
+        attr_names = attr_names[nonfixed],
         dependencies = dependencies,
-        nonfixed = nonfixed,
-        rhs_nonfixed_indices = rhs_nonfixed_indices,
-        bijection_nonfixed_indices = bijection_nonfixed_indices,
+        rhs_nonfixed_indices = rhs_nonfixed_indices[is.na(bijection_nonfixed_indices)],
         accuracy = accuracy,
         full_cache  = full_cache,
         store_cache = store_cache,
