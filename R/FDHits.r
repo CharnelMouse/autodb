@@ -16,12 +16,11 @@ FDHits <- function(
     unlist(recursive = FALSE) |>
     unique()
   report(with_number(length(D), "initial diffset", "\n", "s\n"))
-  dependencies <- switch(
+  switch(
     method,
     Sep = FDHitsSep(lookup, determinants, dependants, detset_limit, D, report),
     Joint = FDHitsJoint(lookup, determinants, dependants, detset_limit, D, report)
   )
-  functional_dependency(dependencies, names(lookup))
 }
 
 FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report) {

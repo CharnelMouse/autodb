@@ -465,7 +465,7 @@ add_deps_implied_by_simple_keys <- function(
   dependencies
 }
 
-flatten <- function(dependencies, attributes) {
+flatten <- function(dependencies) {
   result <- list()
   for (i in seq_along(dependencies)) {
     rhs <- names(dependencies)[i]
@@ -474,7 +474,7 @@ flatten <- function(dependencies, attributes) {
       lapply(dependencies[[i]], \(lhs) list(lhs, rhs))
     )
   }
-  functional_dependency(result, attributes)
+  result
 }
 
 filter_nonflat_dependencies <- function(

@@ -390,8 +390,8 @@ discover <- function(
         detset_limit < 1
       ) {
         report("no valid dependants, or detset_limit < 1, skipping search")
-        return(flatten(
-          filter_nonflat_dependencies(dependencies, detset_limit),
+        return(functional_dependency(
+          flatten(filter_nonflat_dependencies(dependencies, detset_limit)),
           attr_names
         ))
       }
@@ -527,10 +527,8 @@ discover <- function(
           attr_names[valid_dependant_attrs]
         )
       }
-      flatten(
-        filter_nonflat_dependencies(dependencies, detset_limit),
-        attr_names
-      )
+      flatten(filter_nonflat_dependencies(dependencies, detset_limit)) |>
+        functional_dependency(attr_names)
     },
     FDHitsSep = FDHits(
       lookup,
@@ -539,7 +537,8 @@ discover <- function(
       dependants = dependants,
       detset_limit = detset_limit,
       report = report
-    ),
+    ) |>
+      functional_dependency(names(lookup)),
     FDHitsJoint = FDHits(
       lookup,
       method = "Joint",
@@ -547,7 +546,8 @@ discover <- function(
       dependants = dependants,
       detset_limit = detset_limit,
       report = report
-    )
+    ) |>
+      functional_dependency(names(lookup))
   )
 }
 
