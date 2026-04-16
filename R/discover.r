@@ -362,38 +362,38 @@ discover <- function(
   report("simplifying data types")
   lookup <- lookup_table(df)
 
+  attrs <- seq_along(lookup)
+  dependencies <- stats::setNames(rep(list(list()), n_cols), attr_names)
+  # trim down the attributes to use (migrated from DFD, need to tidy)
+  # check for constant-value columns, because if columns are fixed we can
+  # ignore them for the rest of the search
+  fixed <- which(vapply(lookup, \(x) all(x == 1L), logical(1)))
+  fixed_dependants <- intersect(fixed, dependants)
+  dependencies[fixed_dependants] <- replicate(
+    length(fixed_dependants),
+    list(character()),
+    simplify = FALSE
+  )
+  if (length(fixed) > 0)
+    report(paste(attr_names[fixed], "is fixed", collapse = "\n"))
+  nonfixed <- setdiff(attrs, fixed)
+  valid_dependant_attrs <- intersect(dependants, nonfixed)
+  # check for zero dependants before removing simple keys, otherwise
+  # returning early would leave out the simple-key results
+  if (
+    length(valid_dependant_attrs) == 0 ||
+    detset_limit < 1
+  ) {
+    report("no valid dependants, or detset_limit < 1, skipping search")
+    return(functional_dependency(
+      flatten(filter_nonflat_dependencies(dependencies, detset_limit)),
+      attr_names
+    ))
+  }
+
   switch(
     method,
     DFD = {
-      # trim down the attributes to use (migrated from DFD, need to tidy)
-      attrs <- seq_along(lookup)
-      n_cols <- length(attrs)
-      dependencies <- stats::setNames(rep(list(list()), n_cols), attr_names)
-      # check for constant-value columns, because if columns are fixed we can
-      # ignore them for the rest of the search
-      fixed <- which(vapply(lookup, \(x) all(x == 1L), logical(1)))
-      fixed_dependants <- intersect(fixed, dependants)
-      dependencies[fixed_dependants] <- replicate(
-        length(fixed_dependants),
-        list(character()),
-        simplify = FALSE
-      )
-      if (length(fixed) > 0)
-        report(paste(attr_names[fixed], "is fixed", collapse = "\n"))
-      nonfixed <- setdiff(attrs, fixed)
-      valid_dependant_attrs <- intersect(dependants, nonfixed)
-      # check for zero dependants before removing simple keys, otherwise
-      # returning early would leave out the simple-key results
-      if (
-        length(valid_dependant_attrs) == 0 ||
-        detset_limit < 1
-      ) {
-        report("no valid dependants, or detset_limit < 1, skipping search")
-        return(functional_dependency(
-          flatten(filter_nonflat_dependencies(dependencies, detset_limit)),
-          attr_names
-        ))
-      }
       # For non-fixed non-key attributes, all can be dependants,
       # but might not all be valid determinants.
       valid_determinant_attrs_prekeys <- intersect(
