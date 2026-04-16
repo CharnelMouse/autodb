@@ -390,16 +390,16 @@ discover <- function(
       attr_names
     ))
   }
+  # For non-fixed non-key attributes, all can be dependants,
+  # but might not all be valid determinants.
+  valid_determinant_attrs_prekeys <- intersect(
+    nonfixed,
+    valid_determinant_attrs_prefixing
+  )
 
   switch(
     method,
     DFD = {
-      # For non-fixed non-key attributes, all can be dependants,
-      # but might not all be valid determinants.
-      valid_determinant_attrs_prekeys <- intersect(
-        nonfixed,
-        valid_determinant_attrs_prefixing
-      )
       # Non-fixed attributes might be single-attribute keys: we can list them as
       # determining all other non-fixed attributes, use them in the main search only
       # as dependants. If there are several single-attribute keys, and we're
@@ -528,24 +528,36 @@ discover <- function(
       }
       flatten(filter_nonflat_dependencies(dependencies, detset_limit))
     },
-    FDHitsSep = FDHits(
-      lookup,
-      method = "Sep",
-      determinants = valid_determinant_attrs_prefixing,
-      dependants = dependants,
-      detset_limit = detset_limit,
-      report = report
+    FDHitsSep = c(
+      lapply(
+        attr_names[fixed_dependants],
+        \(nm) list(character(), nm)
+      ),
+      FDHits(
+        lookup,
+        method = "Sep",
+        determinants = valid_determinant_attrs_prekeys,
+        dependants = valid_dependant_attrs,
+        detset_limit = detset_limit,
+        report = report
+      )
     ),
-    FDHitsJoint = FDHits(
-      lookup,
-      method = "Joint",
-      determinants = valid_determinant_attrs_prefixing,
-      dependants = dependants,
-      detset_limit = detset_limit,
-      report = report
+    FDHitsJoint = c(
+      lapply(
+        attr_names[fixed_dependants],
+        \(nm) list(character(), nm)
+      ),
+      FDHits(
+        lookup,
+        method = "Joint",
+        determinants = valid_determinant_attrs_prekeys,
+        dependants = valid_dependant_attrs,
+        detset_limit = detset_limit,
+        report = report
+      )
     )
   ) |>
-    functional_dependency(attr_names)
+      functional_dependency(attr_names)
 }
 
 format_if_float <- function(x, digits) {
