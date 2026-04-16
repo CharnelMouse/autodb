@@ -16,11 +16,12 @@ FDHits <- function(
     unlist(recursive = FALSE) |>
     unique()
   report(with_number(length(D), "initial diffset", "\n", "s\n"))
-  switch(
+  dependencies <- switch(
     method,
     Sep = FDHitsSep(lookup, determinants, dependants, detset_limit, D, report),
     Joint = FDHitsJoint(lookup, determinants, dependants, detset_limit, D, report)
   )
+  functional_dependency(dependencies, names(lookup))
 }
 
 FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report) {
@@ -91,8 +92,7 @@ FDHitsSep <- function(lookup, determinants, dependants, detset_limit, D, report)
     "\n",
     with_number(partition_handler$cache_size(), "partition", " cached", "s cached")
   ))
-  res <- lapply(res, lapply, \(x) attrs[as.logical(rawToBits(x))])
-  functional_dependency(res, attrs)
+  lapply(res, lapply, \(x) attrs[as.logical(rawToBits(x))])
 }
 
 FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, report) {
@@ -163,9 +163,8 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
   ))
   res <- lapply(res, lapply, \(x) attrs[as.logical(rawToBits(x))])
   # split up into one-dependant FDs
-  res <- lapply(res, \(x) lapply(x[[2]], \(dependant) list(x[[1]], dependant))) |>
+  lapply(res, \(x) lapply(x[[2]], \(dependant) list(x[[1]], dependant))) |>
     unlist(recursive = FALSE)
-  functional_dependency(res, attrs)
 }
 
 FDHitsSep_visit <- function(
