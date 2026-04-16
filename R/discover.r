@@ -371,15 +371,15 @@ discover <- function(
       dependencies <- stats::setNames(rep(list(list()), n_cols), attr_names)
       # check for constant-value columns, because if columns are fixed we can
       # ignore them for the rest of the search
-      fixed <- integer()
-      for (attr in attrs) {
-        if (all(lookup[[attr]] == 1L)) {
-          report(paste(attr_names[[attr]], "is fixed"))
-          fixed <- c(fixed, attr)
-          if (attr %in% dependants)
-            dependencies[[attr]] <- list(character())
-        }
-      }
+      fixed <- which(vapply(lookup, \(x) all(x == 1L), logical(1)))
+      fixed_dependants <- intersect(fixed, dependants)
+      dependencies[fixed_dependants] <- replicate(
+        length(fixed_dependants),
+        list(character()),
+        simplify = FALSE
+      )
+      if (length(fixed) > 0)
+        report(paste(attr_names[fixed], "is fixed", collapse = "\n"))
       nonfixed <- setdiff(attrs, fixed)
       valid_dependant_attrs <- intersect(dependants, nonfixed)
       # check for zero dependants before removing simple keys, otherwise
