@@ -367,7 +367,6 @@ discover <- function(
     DFD = {
       # trim down the attributes to use (migrated from DFD, need to tidy)
       attrs <- seq_along(lookup)
-      attr_names <- names(lookup)
       n_cols <- length(attrs)
       dependencies <- stats::setNames(rep(list(list()), n_cols), attr_names)
       # check for constant-value columns, because if columns are fixed we can
@@ -527,8 +526,7 @@ discover <- function(
           attr_names[valid_dependant_attrs]
         )
       }
-      flatten(filter_nonflat_dependencies(dependencies, detset_limit)) |>
-        functional_dependency(attr_names)
+      flatten(filter_nonflat_dependencies(dependencies, detset_limit))
     },
     FDHitsSep = FDHits(
       lookup,
@@ -537,8 +535,7 @@ discover <- function(
       dependants = dependants,
       detset_limit = detset_limit,
       report = report
-    ) |>
-      functional_dependency(names(lookup)),
+    ),
     FDHitsJoint = FDHits(
       lookup,
       method = "Joint",
@@ -546,9 +543,9 @@ discover <- function(
       dependants = dependants,
       detset_limit = detset_limit,
       report = report
-    ) |>
-      functional_dependency(names(lookup))
-  )
+    )
+  ) |>
+    functional_dependency(attr_names)
 }
 
 format_if_float <- function(x, digits) {
