@@ -396,35 +396,35 @@ discover <- function(
     nonfixed,
     valid_determinant_attrs_prefixing
   )
+  # Non-fixed attributes might be single-attribute keys: we can list them as
+  # determining all other non-fixed attributes, use them in the main search only
+  # as dependants. If there are several single-attribute keys, and we're
+  # skipping bijections, then we can also remove all but one of them as
+  # dependants.
+  valid_determinant_attrs <- valid_determinant_attrs_prekeys
+  # Can't just check column values are seq_len(nrow(df)),
+  # because df can have duplicate rows, and we can't remove
+  # the duplicate rows in df, because it changes the behaviour
+  # for accuracy < 1.
+  df_uniq <- df_unique(lookup[nonfixed])
+  simple_keys <- nonfixed[vapply(
+    df_uniq,
+    Negate(anyDuplicated),
+    logical(1)
+  )]
+  determinant_keys <- intersect(simple_keys, valid_determinant_attrs_prekeys)
+  dependant_keys <- intersect(simple_keys, valid_dependant_attrs)
+  if (length(simple_keys) > 0) {
+    report(paste("single-attribute keys:", toString(attr_names[simple_keys])))
+    valid_determinant_attrs <- setdiff(valid_determinant_attrs, simple_keys)
+    if (skip_bijections && method == "DFD") {
+      valid_dependant_attrs <- setdiff(valid_dependant_attrs, dependant_keys[-1])
+    }
+  }
 
   switch(
     method,
     DFD = {
-      # Non-fixed attributes might be single-attribute keys: we can list them as
-      # determining all other non-fixed attributes, use them in the main search only
-      # as dependants. If there are several single-attribute keys, and we're
-      # skipping bijections, then we can also remove all but one of them as
-      # dependants.
-      valid_determinant_attrs <- valid_determinant_attrs_prekeys
-      # Can't just check column values are seq_len(nrow(df)),
-      # because df can have duplicate rows, and we can't remove
-      # the duplicate rows in df, because it changes the behaviour
-      # for accuracy < 1.
-      df_uniq <- df_unique(lookup[nonfixed])
-      simple_keys <- nonfixed[vapply(
-        df_uniq,
-        Negate(anyDuplicated),
-        logical(1)
-      )]
-      determinant_keys <- intersect(simple_keys, valid_determinant_attrs_prekeys)
-      dependant_keys <- intersect(simple_keys, valid_dependant_attrs)
-      if (length(simple_keys) > 0) {
-        report(paste("single-attribute keys:", toString(attr_names[simple_keys])))
-        valid_determinant_attrs <- setdiff(valid_determinant_attrs, simple_keys)
-        if (skip_bijections) {
-          valid_dependant_attrs <- setdiff(valid_dependant_attrs, dependant_keys[-1])
-        }
-      }
       valid_determinant_nonfixed_indices <- match(valid_determinant_attrs, nonfixed)
       # look for single-attribute bijections
       bijections <- list()
@@ -533,10 +533,21 @@ discover <- function(
         attr_names[fixed_dependants],
         \(nm) list(character(), nm)
       ),
+      Reduce(
+        c,
+        lapply(
+          attr_names[determinant_keys],
+          \(det) lapply(
+            setdiff(attr_names[valid_dependant_attrs], det),
+            \(dep) list(det, dep)
+          )
+        ),
+        init = list()
+      ),
       FDHits(
         lookup,
         method = "Sep",
-        determinants = valid_determinant_attrs_prekeys,
+        determinants = valid_determinant_attrs,
         dependants = valid_dependant_attrs,
         detset_limit = detset_limit,
         report = report
@@ -547,10 +558,21 @@ discover <- function(
         attr_names[fixed_dependants],
         \(nm) list(character(), nm)
       ),
+      Reduce(
+        c,
+        lapply(
+          attr_names[determinant_keys],
+          \(det) lapply(
+            setdiff(attr_names[valid_dependant_attrs], det),
+            \(dep) list(det, dep)
+          )
+        ),
+        init = list()
+      ),
       FDHits(
         lookup,
         method = "Joint",
-        determinants = valid_determinant_attrs_prekeys,
+        determinants = valid_determinant_attrs,
         dependants = valid_dependant_attrs,
         detset_limit = detset_limit,
         report = report
