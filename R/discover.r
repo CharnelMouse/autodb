@@ -421,77 +421,78 @@ discover <- function(
       valid_dependant_attrs <- setdiff(valid_dependant_attrs, dependant_keys[-1])
     }
   }
+  valid_determinant_nonfixed_indices <- match(valid_determinant_attrs, nonfixed)
+  # look for single-attribute bijections
+  bijections <- list()
+  rhs_nonfixed_indices <- which(nonfixed %in% valid_dependant_attrs)
+  bijection_nonfixed_indices <- vapply(
+    rhs_nonfixed_indices,
+    \(rhs) {
+      lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
+      if (
+        !(skip_bijections && method == "DFD") ||
+        detset_limit == 0 ||
+        !is.element(rhs, valid_determinant_nonfixed_indices)
+      )
+        return(NA_integer_)
+      lhs_bijection_candidates <- intersect(
+        lhs_nonfixed_indices[lhs_nonfixed_indices < rhs],
+        rhs_nonfixed_indices
+      )
+      lhs_bijection_candidates[vapply(
+        lookup[nonfixed][lhs_bijection_candidates],
+        identical,
+        logical(1),
+        lookup[nonfixed][[rhs]]
+      )][1]
+    },
+    integer(1)
+  )
+  for (n in which(!is.na(bijection_nonfixed_indices))) {
+    rhs <- rhs_nonfixed_indices[[n]]
+    bijection_candidate_nonfixed_index <- bijection_nonfixed_indices[[n]]
+    report(paste(
+      attr_names[nonfixed][c(rhs, bijection_candidate_nonfixed_index)],
+      collapse = " equivalent to "
+    ))
+    bij_ind <- match(bijection_candidate_nonfixed_index, names(bijections))
+    if (is.na(bij_ind))
+      bijections <- c(
+        bijections,
+        stats::setNames(
+          list(c(bijection_candidate_nonfixed_index, rhs)),
+          bijection_candidate_nonfixed_index
+        )
+      )
+    else{
+      bijections[[bij_ind]] <- c(
+        bijections[[bij_ind]],
+        rhs
+      )
+    }
+  }
+  valid_determinant_nonfixed_indices <- setdiff(
+    valid_determinant_nonfixed_indices,
+    rhs_nonfixed_indices[!is.na(bijection_nonfixed_indices)]
+  )
+  valid_determinant_attrs <- nonfixed[valid_determinant_nonfixed_indices]
+
+  report(
+    paste(
+      with_number(length(valid_determinant_attrs), "attribute", "", "s"),
+      "considered as determinants"
+    )
+  )
+  report(
+    paste(
+      with_number(length(valid_dependant_attrs), "attribute", "", "s"),
+      "considered as non-fixed dependants"
+    )
+  )
 
   switch(
     method,
     DFD = {
-      valid_determinant_nonfixed_indices <- match(valid_determinant_attrs, nonfixed)
-      # look for single-attribute bijections
-      bijections <- list()
-      rhs_nonfixed_indices <- which(nonfixed %in% valid_dependant_attrs)
-      bijection_nonfixed_indices <- vapply(
-        rhs_nonfixed_indices,
-        \(rhs) {
-          lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
-          if (
-            !skip_bijections ||
-            detset_limit == 0 ||
-            !is.element(rhs, valid_determinant_nonfixed_indices)
-          )
-            return(NA_integer_)
-          lhs_bijection_candidates <- intersect(
-            lhs_nonfixed_indices[lhs_nonfixed_indices < rhs],
-            rhs_nonfixed_indices
-          )
-          lhs_bijection_candidates[vapply(
-            lookup[nonfixed][lhs_bijection_candidates],
-            identical,
-            logical(1),
-            lookup[nonfixed][[rhs]]
-          )][1]
-        },
-        integer(1)
-      )
-      for (n in which(!is.na(bijection_nonfixed_indices))) {
-        rhs <- rhs_nonfixed_indices[[n]]
-        bijection_candidate_nonfixed_index <- bijection_nonfixed_indices[[n]]
-        report(paste(
-          attr_names[nonfixed][c(rhs, bijection_candidate_nonfixed_index)],
-          collapse = " equivalent to "
-        ))
-        bij_ind <- match(bijection_candidate_nonfixed_index, names(bijections))
-        if (is.na(bij_ind))
-          bijections <- c(
-            bijections,
-            stats::setNames(
-              list(c(bijection_candidate_nonfixed_index, rhs)),
-              bijection_candidate_nonfixed_index
-            )
-          )
-        else{
-          bijections[[bij_ind]] <- c(
-            bijections[[bij_ind]],
-            rhs
-          )
-        }
-      }
-      valid_determinant_nonfixed_indices <- setdiff(
-        valid_determinant_nonfixed_indices,
-        rhs_nonfixed_indices[!is.na(bijection_nonfixed_indices)]
-      )
-      valid_determinant_attrs <- nonfixed[valid_determinant_nonfixed_indices]
-      report(
-        paste(
-          with_number(length(valid_determinant_attrs), "attribute", "", "s"),
-          "considered as determinants"
-        )
-      )
-      report(
-        paste(
-          with_number(length(valid_dependant_attrs), "attribute", "", "s"),
-          "considered as non-fixed dependants"
-        )
-      )
       dependencies <- DFD(
         lookup[nonfixed],
         valid_dependant_attrs = valid_dependant_attrs,
@@ -528,56 +529,62 @@ discover <- function(
       }
       flatten(filter_nonflat_dependencies(dependencies, detset_limit))
     },
-    FDHitsSep = c(
-      lapply(
-        attr_names[fixed_dependants],
-        \(nm) list(character(), nm)
-      ),
-      Reduce(
-        c,
+    FDHitsSep = {
+      res <- c(
         lapply(
-          attr_names[determinant_keys],
-          \(det) lapply(
-            setdiff(attr_names[valid_dependant_attrs], det),
-            \(dep) list(det, dep)
-          )
+          attr_names[fixed_dependants],
+          \(nm) list(character(), nm)
         ),
-        init = list()
-      ),
-      FDHits(
-        lookup,
-        method = "Sep",
-        determinants = valid_determinant_attrs,
-        dependants = valid_dependant_attrs,
-        detset_limit = detset_limit,
-        report = report
+        Reduce(
+          c,
+          lapply(
+            attr_names[determinant_keys],
+            \(det) lapply(
+              setdiff(attr_names[valid_dependant_attrs], det),
+              \(dep) list(det, dep)
+            )
+          ),
+          init = list()
+        ),
+        FDHits(
+          lookup,
+          method = "Sep",
+          determinants = valid_determinant_attrs,
+          dependants = valid_dependant_attrs,
+          detset_limit = detset_limit,
+          report = report
+        )
       )
-    ),
-    FDHitsJoint = c(
-      lapply(
-        attr_names[fixed_dependants],
-        \(nm) list(character(), nm)
-      ),
-      Reduce(
-        c,
+      res
+    },
+    FDHitsJoint = {
+      res <- c(
         lapply(
-          attr_names[determinant_keys],
-          \(det) lapply(
-            setdiff(attr_names[valid_dependant_attrs], det),
-            \(dep) list(det, dep)
-          )
+          attr_names[fixed_dependants],
+          \(nm) list(character(), nm)
         ),
-        init = list()
-      ),
-      FDHits(
-        lookup,
-        method = "Joint",
-        determinants = valid_determinant_attrs,
-        dependants = valid_dependant_attrs,
-        detset_limit = detset_limit,
-        report = report
+        Reduce(
+          c,
+          lapply(
+            attr_names[determinant_keys],
+            \(det) lapply(
+              setdiff(attr_names[valid_dependant_attrs], det),
+              \(dep) list(det, dep)
+            )
+          ),
+          init = list()
+        ),
+        FDHits(
+          lookup,
+          method = "Joint",
+          determinants = valid_determinant_attrs,
+          dependants = valid_dependant_attrs,
+          detset_limit = detset_limit,
+          report = report
+        )
       )
-    )
+      res
+    }
   ) |>
       functional_dependency(attr_names)
 }
