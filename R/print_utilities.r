@@ -1,9 +1,9 @@
 with_number <- function(n, prefix, suffix_1, suffix_else) {
-  paste0(n, " ", by_number(n, prefix, suffix_1, suffix_else))
+  paste0(n, " ", by_number(n, prefix, suffix_1, suffix_else), recycle0 = TRUE)
 }
 
 by_number <- function(n, prefix, suffix_1, suffix_else) {
-  paste0(prefix, if (n == 1L) suffix_1 else suffix_else)
+  paste0(prefix, ifelse(n == 1L, suffix_1, suffix_else), recycle0 = TRUE)
 }
 
 stop_with_elements_if <- function(
