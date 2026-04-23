@@ -198,6 +198,7 @@ gv.database <- function(x, name = NA_character_, nest_level = Inf, ...) {
     column_class_plot_info,
     nest_level
   )
+  NAs_info <- lapply(records(x_elemented), vapply, NAs_plot_info, integer(1))
   df_strings <- Map(
     relation_string_gv,
     attrs = attrs(x_elemented),
@@ -212,6 +213,7 @@ gv.database <- function(x, name = NA_character_, nest_level = Inf, ...) {
       character(1)
     ),
     nrow = lapply(records(x_elemented), nrow),
+    n_NAs = NAs_info,
     row_name = "record"
   ) |>
     Reduce(f = c, init = character())
@@ -283,6 +285,7 @@ d2.database <- function(
     column_class_plot_info,
     nest_level
   )
+  NAs_info <- lapply(records(x_elemented), vapply, NAs_plot_info, integer(1))
   df_strings <- Map(
     relation_string_d2,
     attrs = attrs(x_elemented),
@@ -297,6 +300,7 @@ d2.database <- function(
       character(1)
     ),
     nrow = lapply(records(x_elemented), nrow),
+    n_NAs = NAs_info,
     references = lapply(
       names(x_labelled),
       \(label) Filter(\(ref) ref[[1]] == label, references(x_labelled))
@@ -361,6 +365,7 @@ gv.relation <- function(x, name = NA_character_, nest_level = Inf, ...) {
     column_class_plot_info,
     nest_level
   )
+  NAs_info <- lapply(records(x_elemented), vapply, NAs_plot_info, integer(1))
   df_strings <- Map(
     relation_string_gv,
     attrs = attrs(x_elemented),
@@ -374,7 +379,8 @@ gv.relation <- function(x, name = NA_character_, nest_level = Inf, ...) {
       column_class_2gv,
       character(1)
     ),
-    nrow = lapply(records(x_elemented), nrow)
+    nrow = lapply(records(x_elemented), nrow),
+    n_NAs = NAs_info
   ) |>
     Reduce(f = c, init = character())
   teardown_string <- c("}", "")
@@ -422,6 +428,7 @@ d2.relation <- function(x, name = NA_character_, nest_level = Inf, ...) {
     column_class_plot_info,
     nest_level
   )
+  NAs_info <- lapply(records(x_elemented), vapply, NAs_plot_info, integer(1))
   df_strings <- Map(
     relation_string_d2,
     attrs = attrs(x_elemented),
@@ -436,6 +443,7 @@ d2.relation <- function(x, name = NA_character_, nest_level = Inf, ...) {
       character(1)
     ),
     nrow = lapply(records(x_elemented), nrow),
+    n_NAs = NAs_info,
     MoreArgs = list(references = list())
   ) |>
     Reduce(f = c, init = character())
@@ -767,6 +775,30 @@ setup_string_gv <- function(df_name) {
   )
 }
 
+NAs_plot_info <- function(a) {
+  UseMethod("NAs_plot_info")
+}
+
+#' @exportS3Method
+NAs_plot_info.matrix <- function(a) {
+  sum(apply(is.na(a), 1, all))
+}
+
+#' @exportS3Method
+NAs_plot_info.data.frame <- function(a) {
+  0L
+}
+
+#' @exportS3Method
+NAs_plot_info.list <- function(a) {
+  0L
+}
+
+#' @exportS3Method
+NAs_plot_info.default <- function(a) {
+  sum(is.na(a))
+}
+
 column_class_plot_info <- function(a, nest_level) {
   size_info <- column_size_plot_info(a)
   sublist_info <- column_subclass_plot_info(a, nest_level)
@@ -905,6 +937,7 @@ df_string_gv <- function(plot_info) {
     label = to_node_name(plot_info$name),
     classes = vapply(plot_info$classes, column_class_2gv, character(1)),
     nrow = plot_info$length,
+    n_NAs = plot_info$n_NAs,
     row_name = "row"
   )
 }
@@ -918,6 +951,7 @@ df_string_d2 <- function(plot_info) {
     label = to_quoted_name(plot_info$name),
     classes = vapply(plot_info$classes, column_class_2d2, character(1)),
     nrow = plot_info$length,
+    n_NAs = plot_info$n_NAs,
     references = list(),
     row_name = "row"
   )
@@ -932,7 +966,14 @@ df_plot_info <- function(x, name, nest_level) {
     stop("name must be a length-one character")
 
   classes_info <- lapply(x, column_class_plot_info, nest_level)
-  list(name = name, names = names(x), length = nrow(x), classes = classes_info)
+  NAs_info <- vapply(x, NAs_plot_info, integer(1))
+  list(
+    name = name,
+    names = names(x),
+    length = nrow(x),
+    classes = classes_info,
+    n_NAs = NAs_info
+  )
 }
 
 relation_string_gv <- function(
@@ -943,6 +984,7 @@ relation_string_gv <- function(
   label,
   classes,
   nrow,
+  n_NAs,
   row_name = c("record", "row")
 ) {
   row_name <- match.arg(row_name)
@@ -951,7 +993,8 @@ relation_string_gv <- function(
     attrs,
     attr_labels,
     keys,
-    classes
+    classes,
+    n_NAs
   )
   columns_label <- c(
     paste0(
@@ -986,6 +1029,7 @@ relation_string_d2 <- function(
   label,
   classes,
   nrow,
+  n_NAs,
   references,
   row_name = c("record", "row")
 ) {
@@ -996,6 +1040,7 @@ relation_string_d2 <- function(
     attr_labels,
     keys,
     classes,
+    n_NAs,
     references
   )
   columns_label <- columns_string
@@ -1063,7 +1108,7 @@ relation_schema_string_d2 <- function(
   )
 }
 
-columns_string_gv <- function(col_names, col_labels, keys, col_classes) {
+columns_string_gv <- function(col_names, col_labels, keys, col_classes, n_NAs) {
   keymembs <- outer(col_names, keys, Vectorize(is.element))
   keymembs[] <- paste0(
     "<TD",
@@ -1079,17 +1124,18 @@ columns_string_gv <- function(col_names, col_labels, keys, col_classes) {
     col_names,
     "</TD>",
     key_membership_strings,
-    "<TD PORT=\"FROM_", col_labels, "\">", col_classes, "</TD>",
+    "<TD PORT=\"FROM_", col_labels, "\">", col_classes, ifelse(n_NAs == 0, "", paste0(" (", with_number(n_NAs, "NA", "", "s"), ")")), "</TD>",
     "</TR>",
     recycle0 = TRUE
   )
 }
 
-columns_string_d2 <- function(col_names, col_labels, keys, col_classes, references) {
+columns_string_d2 <- function(col_names, col_labels, keys, col_classes, n_NAs, references) {
   column_typing_info <- paste0(
     col_names,
     ": \"",
     col_classes,
+    ifelse(n_NAs == 0, "", paste0(" (", with_number(n_NAs, "NA", "", "s"), ")")),
     "\"",
     recycle0 = TRUE
   )

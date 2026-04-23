@@ -629,6 +629,56 @@ describe("gv", {
         paste(expected_text2, collapse = "\n")
       )
     })
+    it("gives NA counts for attributes if non-zero", {
+      db <- relation(
+        list(a = list(df = data.frame(a = 1:4, b = c(1:2, NA, NA), c = c(1:3, NA)), keys = list("a"))),
+        letters[1:3]
+      ) |>
+        database(list())
+      expected_text <- c(
+        "digraph {",
+        "  rankdir = \"LR\"",
+        "  node [shape=plaintext];",
+        "",
+        "  \"a\" [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD COLSPAN=\"3\">a (4 records)</TD></TR>",
+        "    <TR><TD PORT=\"TO_a\">a</TD><TD BGCOLOR=\"black\"></TD><TD PORT=\"FROM_a\">integer</TD></TR>",
+        "    <TR><TD PORT=\"TO_b\">b</TD><TD></TD><TD PORT=\"FROM_b\">integer (2 NAs)</TD></TR>",
+        "    <TR><TD PORT=\"TO_c\">c</TD><TD></TD><TD PORT=\"FROM_c\">integer (1 NA)</TD></TR>",
+        "    </TABLE>>];",
+        "}",
+        ""
+      )
+      expect_identical(gv(db), paste(expected_text, collapse = "\n"))
+    })
+    it("gives NA counts non-atomics: fully-NA rows for matrices, zero for lists and data frames", {
+      df <- data.frame(a = 1:4)
+      df$b <- matrix(1:16, nrow = 4)
+      df$b[2, 2] <- NA
+      df$b[3,] <- NA
+      df$c <- list(1L, 2L, NA, NULL)
+      df$d <- data.frame(d1 = c(1:3, NA), d2 = c(1:2, NA, NA))
+      rel <- relation(list(a = list(df = df, keys = list("a"))), letters[1:4])
+      db <- database(rel, list())
+      expected_text <- c(
+        "digraph {",
+        "  rankdir = \"LR\"",
+        "  node [shape=plaintext];",
+        "",
+        "  \"a\" [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD COLSPAN=\"3\">a (4 records)</TD></TR>",
+        "    <TR><TD PORT=\"TO_a\">a</TD><TD BGCOLOR=\"black\"></TD><TD PORT=\"FROM_a\">integer</TD></TR>",
+        "    <TR><TD PORT=\"TO_b\">b</TD><TD></TD><TD PORT=\"FROM_b\">matrix[4]&lt;integer&gt; (1 NA)</TD></TR>",
+        "    <TR><TD PORT=\"TO_c\">c</TD><TD></TD><TD PORT=\"FROM_c\">list</TD></TR>",
+        "    <TR><TD PORT=\"TO_d\">d</TD><TD></TD><TD PORT=\"FROM_d\">data.frame[2]</TD></TR>",
+        "    </TABLE>>];",
+        "}",
+        ""
+      )
+      expect_identical(gv(db), paste(expected_text, collapse = "\n"))
+    })
   })
   describe("relation", {
     it("expects non-empty relation names", {
@@ -752,6 +802,54 @@ describe("gv", {
         gv(rel, nest_level = 1),
         paste(expected_text2, collapse = "\n")
       )
+    })
+    it("gives NA counts for attributes if non-zero", {
+      rel <- relation(
+        list(a = list(df = data.frame(a = 1:4, b = c(1:2, NA, NA), c = c(1:3, NA)), keys = list("a"))),
+        letters[1:3]
+      )
+      expected_text <- c(
+        "digraph {",
+        "  rankdir = \"LR\"",
+        "  node [shape=plaintext];",
+        "",
+        "  \"a\" [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD COLSPAN=\"3\">a (4 records)</TD></TR>",
+        "    <TR><TD PORT=\"TO_a\">a</TD><TD BGCOLOR=\"black\"></TD><TD PORT=\"FROM_a\">integer</TD></TR>",
+        "    <TR><TD PORT=\"TO_b\">b</TD><TD></TD><TD PORT=\"FROM_b\">integer (2 NAs)</TD></TR>",
+        "    <TR><TD PORT=\"TO_c\">c</TD><TD></TD><TD PORT=\"FROM_c\">integer (1 NA)</TD></TR>",
+        "    </TABLE>>];",
+        "}",
+        ""
+      )
+      expect_identical(gv(rel), paste(expected_text, collapse = "\n"))
+    })
+    it("gives NA counts non-atomics: fully-NA rows for matrices, zero for lists and data frames", {
+      df <- data.frame(a = 1:4)
+      df$b <- matrix(1:16, nrow = 4)
+      df$b[2, 2] <- NA
+      df$b[3,] <- NA
+      df$c <- list(1L, 2L, NA, NULL)
+      df$d <- data.frame(d1 = c(1:3, NA), d2 = c(1:2, NA, NA))
+      rel <- relation(list(a = list(df = df, keys = list("a"))), letters[1:4])
+      expected_text <- c(
+        "digraph {",
+        "  rankdir = \"LR\"",
+        "  node [shape=plaintext];",
+        "",
+        "  \"a\" [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD COLSPAN=\"3\">a (4 records)</TD></TR>",
+        "    <TR><TD PORT=\"TO_a\">a</TD><TD BGCOLOR=\"black\"></TD><TD PORT=\"FROM_a\">integer</TD></TR>",
+        "    <TR><TD PORT=\"TO_b\">b</TD><TD></TD><TD PORT=\"FROM_b\">matrix[4]&lt;integer&gt; (1 NA)</TD></TR>",
+        "    <TR><TD PORT=\"TO_c\">c</TD><TD></TD><TD PORT=\"FROM_c\">list</TD></TR>",
+        "    <TR><TD PORT=\"TO_d\">d</TD><TD></TD><TD PORT=\"FROM_d\">data.frame[2]</TD></TR>",
+        "    </TABLE>>];",
+        "}",
+        ""
+      )
+      expect_identical(gv(rel), paste(expected_text, collapse = "\n"))
     })
   })
   describe("database_schema", {
@@ -1204,6 +1302,50 @@ describe("gv", {
         paste(expected_text2, collapse = "\n")
       )
     })
+    it("gives NA counts for attributes if non-zero", {
+      df <- data.frame(a = 1:4, b = c(1:2, NA, NA), c = c(1:3, NA))
+      expected_text <- c(
+        "digraph \"data\" {",
+        "  rankdir = \"LR\"",
+        "  node [shape=plaintext];",
+        "",
+        "  \"data\" [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD COLSPAN=\"2\">data (4 rows)</TD></TR>",
+        "    <TR><TD PORT=\"TO_a\">a</TD><TD PORT=\"FROM_a\">integer</TD></TR>",
+        "    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\">integer (2 NAs)</TD></TR>",
+        "    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\">integer (1 NA)</TD></TR>",
+        "    </TABLE>>];",
+        "}",
+        ""
+      )
+      expect_identical(gv(df), paste(expected_text, collapse = "\n"))
+    })
+    it("gives NA counts non-atomics: fully-NA rows for matrices, zero for lists and data frames", {
+      df <- data.frame(a = 1:4)
+      df$b <- matrix(1:16, nrow = 4)
+      df$b[2, 2] <- NA
+      df$b[3,] <- NA
+      df$c <- list(1L, 2L, NA, NULL)
+      df$d <- data.frame(d1 = c(1:3, NA), d2 = c(1:2, NA, NA))
+      expected_text <- c(
+        "digraph \"data\" {",
+        "  rankdir = \"LR\"",
+        "  node [shape=plaintext];",
+        "",
+        "  \"data\" [label = <",
+        "    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">",
+        "    <TR><TD COLSPAN=\"2\">data (4 rows)</TD></TR>",
+        "    <TR><TD PORT=\"TO_a\">a</TD><TD PORT=\"FROM_a\">integer</TD></TR>",
+        "    <TR><TD PORT=\"TO_b\">b</TD><TD PORT=\"FROM_b\">matrix[4]&lt;integer&gt; (1 NA)</TD></TR>",
+        "    <TR><TD PORT=\"TO_c\">c</TD><TD PORT=\"FROM_c\">list</TD></TR>",
+        "    <TR><TD PORT=\"TO_d\">d</TD><TD PORT=\"FROM_d\">data.frame[2]</TD></TR>",
+        "    </TABLE>>];",
+        "}",
+        ""
+      )
+      expect_identical(gv(df), paste(expected_text, collapse = "\n"))
+    })
   })
 })
 
@@ -1587,6 +1729,46 @@ describe("d2", {
         paste(expected_text2, collapse = "\n")
       )
     })
+    it("gives NA counts for attributes if non-zero", {
+      db <- relation(
+        list(a = list(df = data.frame(a = 1:4, b = c(1:2, NA, NA), c = c(1:3, NA)), keys = list("a"))),
+        letters[1:3]
+      ) |>
+        database(list())
+      expected_text <- c(
+        "direction: right",
+        "\"a\": \"a (4 records)\" {",
+        "  shape: sql_table",
+        "  \"a\": \"integer\" {constraint: [PK]}",
+        "  \"b\": \"integer (2 NAs)\"",
+        "  \"c\": \"integer (1 NA)\"",
+        "}",
+        ""
+      )
+      expect_identical(d2(db), paste(expected_text, collapse = "\n"))
+    })
+    it("gives NA counts non-atomics: fully-NA rows for matrices, zero for lists and data frames", {
+      df <- data.frame(a = 1:4)
+      df$b <- matrix(1:16, nrow = 4)
+      df$b[2, 2] <- NA
+      df$b[3,] <- NA
+      df$c <- list(1L, 2L, NA, NULL)
+      df$d <- data.frame(d1 = c(1:3, NA), d2 = c(1:2, NA, NA))
+      rel <- relation(list(a = list(df = df, keys = list("a"))), letters[1:4])
+      db <- database(rel, list())
+      expected_text <- c(
+        "direction: right",
+        "\"a\": \"a (4 records)\" {",
+        "  shape: sql_table",
+        "  \"a\": \"integer\" {constraint: [PK]}",
+        "  \"b\": \"matrix[4]<integer> (1 NA)\"",
+        "  \"c\": \"list\"",
+        "  \"d\": \"data.frame[2]\"",
+        "}",
+        ""
+      )
+      expect_identical(d2(db), paste(expected_text, collapse = "\n"))
+    })
   })
   describe("relation", {
     it("expects non-empty relation names", {
@@ -1792,6 +1974,44 @@ describe("d2", {
         d2(rel, nest_level = 1),
         paste(expected_text2, collapse = "\n")
       )
+    })
+    it("gives NA counts for attributes if non-zero", {
+      rel <- relation(
+        list(a = list(df = data.frame(a = 1:4, b = c(1:2, NA, NA), c = c(1:3, NA)), keys = list("a"))),
+        letters[1:3]
+      )
+      expected_text <- c(
+        "direction: right",
+        "\"a\": \"a (4 records)\" {",
+        "  shape: sql_table",
+        "  \"a\": \"integer\" {constraint: [PK]}",
+        "  \"b\": \"integer (2 NAs)\"",
+        "  \"c\": \"integer (1 NA)\"",
+        "}",
+        ""
+      )
+      expect_identical(d2(rel), paste(expected_text, collapse = "\n"))
+    })
+    it("gives NA counts non-atomics: fully-NA rows for matrices, zero for lists and data frames", {
+      df <- data.frame(a = 1:4)
+      df$b <- matrix(1:16, nrow = 4)
+      df$b[2, 2] <- NA
+      df$b[3,] <- NA
+      df$c <- list(1L, 2L, NA, NULL)
+      df$d <- data.frame(d1 = c(1:3, NA), d2 = c(1:2, NA, NA))
+      rel <- relation(list(a = list(df = df, keys = list("a"))), letters[1:4])
+      expected_text <- c(
+        "direction: right",
+        "\"a\": \"a (4 records)\" {",
+        "  shape: sql_table",
+        "  \"a\": \"integer\" {constraint: [PK]}",
+        "  \"b\": \"matrix[4]<integer> (1 NA)\"",
+        "  \"c\": \"list\"",
+        "  \"d\": \"data.frame[2]\"",
+        "}",
+        ""
+      )
+      expect_identical(d2(rel), paste(expected_text, collapse = "\n"))
     })
   })
   describe("database_schema", {
@@ -2323,6 +2543,40 @@ describe("d2", {
         d2(x, nest_level = 1),
         paste(expected_text2, collapse = "\n")
       )
+    })
+    it("gives NA counts for attributes if non-zero", {
+      df <- data.frame(a = 1:4, b = c(1:2, NA, NA), c = c(1:3, NA))
+      expected_text <- c(
+        "direction: right",
+        "\"data\": \"data (4 rows)\" {",
+        "  shape: sql_table",
+        "  \"a\": \"integer\"",
+        "  \"b\": \"integer (2 NAs)\"",
+        "  \"c\": \"integer (1 NA)\"",
+        "}",
+        ""
+      )
+      expect_identical(d2(df), paste(expected_text, collapse = "\n"))
+    })
+    it("gives NA counts non-atomics: fully-NA rows for matrices, zero for lists and data frames", {
+      df <- data.frame(a = 1:4)
+      df$b <- matrix(1:16, nrow = 4)
+      df$b[2, 2] <- NA
+      df$b[3,] <- NA
+      df$c <- list(1L, 2L, NA, NULL)
+      df$d <- data.frame(d1 = c(1:3, NA), d2 = c(1:2, NA, NA))
+      expected_text <- c(
+        "direction: right",
+        "\"data\": \"data (4 rows)\" {",
+        "  shape: sql_table",
+        "  \"a\": \"integer\"",
+        "  \"b\": \"matrix[4]<integer> (1 NA)\"",
+        "  \"c\": \"list\"",
+        "  \"d\": \"data.frame[2]\"",
+        "}",
+        ""
+      )
+      expect_identical(d2(df), paste(expected_text, collapse = "\n"))
     })
   })
 })
