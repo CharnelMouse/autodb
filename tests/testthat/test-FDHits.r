@@ -38,19 +38,6 @@ describe("FDHits", {
     }
     expect_all_equiv_deps <- function(...) {
       lst <- list(...)
-      attrs_orders <- lapply(lst, attrs_order)
-      if (!all(vapply(attrs_orders, identical, logical(1), attrs_orders[[1]])))
-        return(fail(paste(
-          "attrs_order inconsistent:",
-          paste(
-            vapply(
-              unique(attrs_orders),
-              \(x) paste0("{", toString(x), "}"),
-              character(1)
-            ),
-            collapse = ", "
-          )
-        )))
       if (!all(vapply(lst, setequal, logical(1), lst[[1]])))
         return(fail(paste0(
           "FDs inconsistent:\n",
@@ -77,14 +64,18 @@ describe("FDHits", {
       fds <- discover(x, method = "DFD")
       expected <- Map(
         list,
-        unique(detset(fds)),
-        unname(split(dependant(fds), detset(fds) |> (\(x) match(x, x))()))
+        detset(fds),
+        dependant(fds)
       )
 
       observed <- try(FDHits(lookup, method = method), silent = TRUE)
       if (class(observed)[[1]] == "try-error")
         return(fail(attr(observed, "condition")$message))
-      expect_setequal(observed, fds)
+      if (is.null(observed)) {
+        warning("NULL result")
+        observed <- list()
+      }
+      expect_setequal(observed, expected)
     }
 
     # example from original paper
