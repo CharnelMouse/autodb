@@ -32,7 +32,11 @@
 #'     first. In the future, this will be changed to always give the primary key
 #'     first.
 #'     \item optionally, the attribute types: specifically, the first element
-#'     when passing the attribute's values into \code{\link{class}}.
+#'     when passing the attribute's values into \code{\link{class}}. If the type
+#'     is a container, such as a list or matrix, this can also include dimension
+#'     information, and information about the contained type.
+#'     \item optionally, a count of missing values. See Examples for how this
+#'     interacts with container types.
 #'   }
 #' }
 #'
@@ -86,6 +90,28 @@
 #' if (requireNamespace("DiagrammeR", quietly = TRUE)) {
 #'   DiagrammeR::grViz(txt_rel)
 #' }
+#' # container types and missing values
+#' nested <- data.frame(key = 1:4, nullable = c(1:3, NA))
+#' ## matrices are reported with their column count and contained type
+#' ## matrix rows only count as missing if the entire row is missing
+#' nested$matrix <- matrix(c(1:2, NA, NA, 5:7, NA, 9:11, NA), ncol = 3)
+#' ## lists aren't checked for missing values, because it's unclear what should count
+#' nested$list <- list(1L, 2:3, NULL, NA)
+#' ## lists are reported with any common element length/type
+#' nested$uniform_list <- list(1:2, 3:4, 5:6, 7:8)
+#' ## container type information can be nested
+#' nested$matrix_list <- list(
+#'   matrix(1:4, ncol = 2),
+#'   matrix(5:8, ncol = 2),
+#'   matrix(9:12, ncol = 2),
+#'   matrix(13:16, ncol = 2)
+#' )
+#' nested$nested_list <- replicate(4, list(1:2, 3:4, 5:6), simplify = FALSE)
+#' txt_nested <- gv(nested)
+#' cat(txt_nested)
+#' if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+#'   DiagrammeR::grViz(txt_nested)
+#' }
 #' @export
 gv <- function(x, name = NA_character_, ...) {
   UseMethod("gv", x)
@@ -130,7 +156,12 @@ gv <- function(x, name = NA_character_, ...) {
 #'     first. In the future, this will be changed to always give the primary key
 #'     first.
 #'     \item optionally, the attribute types: specifically, the first element
-#'     when passing the attribute's values into \code{\link{class}}.
+#'     when passing the attribute's values into \code{\link{class}}. If the type
+#'     is a container, such as a list or matrix, this can also include dimension
+#'     information, and information about the contained type.
+#'     \item optionally, a count of missing values.
+#'     \item optionally, a count of missing values. See Examples for how this
+#'     interacts with container types.
 #'   }
 #' }
 #'
@@ -158,6 +189,36 @@ gv <- function(x, name = NA_character_, ...) {
 #' @examples
 #' # simple data.frame example
 #' cat(d2(ChickWeight, "chick"))
+#' # simple database example
+#' db <- autodb(ChickWeight)
+#' cat(d2(db))
+#' # simple relation schemas
+#' rschema <- synthesise(discover(ChickWeight))
+#' cat(d2(rschema))
+#' # simple database schema
+#' dschema <- normalise(discover(ChickWeight))
+#' cat(d2(dschema))
+#' # simple relations
+#' rel <- create(synthesise(discover(ChickWeight)))
+#' cat(d2(rel))
+#' # container types and missing values
+#' nested <- data.frame(key = 1:4, nullable = c(1:3, NA))
+#' ## matrices are reported with their column count and contained type
+#' ## matrix rows only count as missing if the entire row is missing
+#' nested$matrix <- matrix(c(1:2, NA, NA, 5:7, NA, 9:11, NA), ncol = 3)
+#' ## lists aren't checked for missing values, because it's unclear what should count
+#' nested$list <- list(1L, 2:3, NULL, NA)
+#' ## lists are reported with any common element length/type
+#' nested$uniform_list <- list(1:2, 3:4, 5:6, 7:8)
+#' ## container type information can be nested
+#' nested$matrix_list <- list(
+#'   matrix(1:4, ncol = 2),
+#'   matrix(5:8, ncol = 2),
+#'   matrix(9:12, ncol = 2),
+#'   matrix(13:16, ncol = 2)
+#' )
+#' nested$nested_list <- replicate(4, list(1:2, 3:4, 5:6), simplify = FALSE)
+#' cat(d2(nested))
 #' @export
 d2 <- function(x, ...) {
   UseMethod("d2", x)
