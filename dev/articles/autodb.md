@@ -298,6 +298,8 @@ deps <- discover(ChickWeight, progress = TRUE)
 
     ## formatting numerical/complex variables with 7 significant digits
     ## simplifying data types
+    ## 4 attributes considered as determinants
+    ## 4 attributes considered as non-fixed dependants
     ## calculating single-attribute PLIs
     ## sampling difference sets
     ## 7 initial diffsets

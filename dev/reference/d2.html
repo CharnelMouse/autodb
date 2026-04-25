@@ -102,7 +102,12 @@ output from other package functions will thus have the primary key given
 first. In the future, this will be changed to always give the primary key
 first.</p></li>
 <li><p>optionally, the attribute types: specifically, the first element
-when passing the attribute's values into <code><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></code>.</p></li>
+when passing the attribute's values into <code><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></code>. If the type
+is a container, such as a list or matrix, this can also include dimension
+information, and information about the contained type.</p></li>
+<li><p>optionally, a count of missing values.</p></li>
+<li><p>optionally, a count of missing values. See Examples for how this
+interacts with container types.</p></li>
 </ul></li>
 </ul><p>Any foreign key references between relations are represented by one-way arrows,
 one per attribute in the foreign key.</p>
@@ -132,6 +137,99 @@ the generated board, to make use of D2's composition features.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   "Time": "numeric"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   "Chick": "ordered"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   "Diet": "factor"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
+<span class="r-in"><span><span class="co"># simple database example</span></span></span>
+<span class="r-in"><span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="autodb.html">autodb</a></span><span class="op">(</span><span class="va">ChickWeight</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu">d2</span><span class="op">(</span><span class="va">db</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> direction: right</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "Chick": "Chick (50 records)" {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   shape: sql_table</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Chick": "ordered" {constraint: [PK]}</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Diet": "factor"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "Time_Chick": "Time_Chick (578 records)" {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   shape: sql_table</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Time": "numeric" {constraint: [PK]}</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Chick": "ordered" {constraint: [PK; FK1]}</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "weight": "numeric"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "Time_Chick"."Chick" -&gt; "Chick"."Chick"</span>
+<span class="r-in"><span><span class="co"># simple relation schemas</span></span></span>
+<span class="r-in"><span><span class="va">rschema</span> <span class="op">&lt;-</span> <span class="fu"><a href="synthesise.html">synthesise</a></span><span class="op">(</span><span class="fu"><a href="discover.html">discover</a></span><span class="op">(</span><span class="va">ChickWeight</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu">d2</span><span class="op">(</span><span class="va">rschema</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> direction: right</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "Chick": {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   shape: sql_table</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Chick": {constraint: [PK]}</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Diet"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "Time_Chick": {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   shape: sql_table</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Time": {constraint: [PK]}</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Chick": {constraint: [PK]}</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "weight"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
+<span class="r-in"><span><span class="co"># simple database schema</span></span></span>
+<span class="r-in"><span><span class="va">dschema</span> <span class="op">&lt;-</span> <span class="fu"><a href="normalise.html">normalise</a></span><span class="op">(</span><span class="fu"><a href="discover.html">discover</a></span><span class="op">(</span><span class="va">ChickWeight</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu">d2</span><span class="op">(</span><span class="va">dschema</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> direction: right</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "Chick": {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   shape: sql_table</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Chick": {constraint: [PK]}</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Diet"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "Time_Chick": {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   shape: sql_table</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Time": {constraint: [PK]}</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Chick": {constraint: [PK; FK1]}</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "weight"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "Time_Chick"."Chick" -&gt; "Chick"."Chick"</span>
+<span class="r-in"><span><span class="co"># simple relations</span></span></span>
+<span class="r-in"><span><span class="va">rel</span> <span class="op">&lt;-</span> <span class="fu"><a href="create.html">create</a></span><span class="op">(</span><span class="fu"><a href="synthesise.html">synthesise</a></span><span class="op">(</span><span class="fu"><a href="discover.html">discover</a></span><span class="op">(</span><span class="va">ChickWeight</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu">d2</span><span class="op">(</span><span class="va">rel</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> direction: right</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "Chick": "Chick (0 records)" {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   shape: sql_table</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Chick": "logical" {constraint: [PK]}</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Diet": "logical"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "Time_Chick": "Time_Chick (0 records)" {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   shape: sql_table</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Time": "logical" {constraint: [PK]}</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "Chick": "logical" {constraint: [PK]}</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "weight": "logical"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
+<span class="r-in"><span><span class="co"># container types and missing values</span></span></span>
+<span class="r-in"><span><span class="va">nested</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>key <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, nullable <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="cn">NA</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co">## matrices are reported with their column count and contained type</span></span></span>
+<span class="r-in"><span><span class="co">## matrix rows only count as missing if the entire row is missing</span></span></span>
+<span class="r-in"><span><span class="va">nested</span><span class="op">$</span><span class="va">matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, <span class="cn">NA</span>, <span class="cn">NA</span>, <span class="fl">5</span><span class="op">:</span><span class="fl">7</span>, <span class="cn">NA</span>, <span class="fl">9</span><span class="op">:</span><span class="fl">11</span>, <span class="cn">NA</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co">## lists aren't checked for missing values, because it's unclear what should count</span></span></span>
+<span class="r-in"><span><span class="va">nested</span><span class="op">$</span><span class="va">list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">2</span><span class="op">:</span><span class="fl">3</span>, <span class="cn">NULL</span>, <span class="cn">NA</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co">## lists are reported with any common element length/type</span></span></span>
+<span class="r-in"><span><span class="va">nested</span><span class="op">$</span><span class="va">uniform_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">:</span><span class="fl">4</span>, <span class="fl">5</span><span class="op">:</span><span class="fl">6</span>, <span class="fl">7</span><span class="op">:</span><span class="fl">8</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co">## container type information can be nested</span></span></span>
+<span class="r-in"><span><span class="va">nested</span><span class="op">$</span><span class="va">matrix_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">5</span><span class="op">:</span><span class="fl">8</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">9</span><span class="op">:</span><span class="fl">12</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">13</span><span class="op">:</span><span class="fl">16</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">nested</span><span class="op">$</span><span class="va">nested_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">replicate</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">:</span><span class="fl">4</span>, <span class="fl">5</span><span class="op">:</span><span class="fl">6</span><span class="op">)</span>, simplify <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu">d2</span><span class="op">(</span><span class="va">nested</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> direction: right</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "data": "data (4 rows)" {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   shape: sql_table</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "key": "integer"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "nullable": "integer (1 NA)"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "matrix": "matrix[3]&lt;integer&gt; (1 NA)"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "list": "list"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "uniform_list": "list&lt;integer[2]&gt;"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "matrix_list": "list&lt;matrix[2, 2]&gt;"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "nested_list": "list&lt;list[3]&lt;integer[2]&gt;&gt;"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
 </code></pre></div>
     </div>

@@ -66,7 +66,12 @@ elements:
 
   - optionally, the attribute types: specifically, the first element
     when passing the attribute's values into
-    [`class`](https://rdrr.io/r/base/class.html).
+    [`class`](https://rdrr.io/r/base/class.html). If the type is a
+    container, such as a list or matrix, this can also include dimension
+    information, and information about the contained type.
+
+  - optionally, a count of missing values. See Examples for how this
+    interacts with container types.
 
 Any foreign key references between relations are represented by one-way
 arrows, one per attribute in the foreign key.
@@ -214,5 +219,44 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) {
   DiagrammeR::grViz(txt_rel)
 }
 
-{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Chick (0 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD><\/TD><TD PORT=\"FROM_diet\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n  \"Time_Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Time_Chick (0 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_time\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD><\/TD><TD PORT=\"FROM_weight\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}
+{"x":{"diagram":"digraph {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Chick (0 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_diet\">Diet<\/TD><TD><\/TD><TD PORT=\"FROM_diet\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n  \"Time_Chick\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"3\">Time_Chick (0 records)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_time\">Time<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_time\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_chick\">Chick<\/TD><TD BGCOLOR=\"black\"><\/TD><TD PORT=\"FROM_chick\">logical<\/TD><\/TR>\n    <TR><TD PORT=\"TO_weight\">weight<\/TD><TD><\/TD><TD PORT=\"FROM_weight\">logical<\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}# container types and missing values
+nested <- data.frame(key = 1:4, nullable = c(1:3, NA))
+## matrices are reported with their column count and contained type
+## matrix rows only count as missing if the entire row is missing
+nested$matrix <- matrix(c(1:2, NA, NA, 5:7, NA, 9:11, NA), ncol = 3)
+## lists aren't checked for missing values, because it's unclear what should count
+nested$list <- list(1L, 2:3, NULL, NA)
+## lists are reported with any common element length/type
+nested$uniform_list <- list(1:2, 3:4, 5:6, 7:8)
+## container type information can be nested
+nested$matrix_list <- list(
+  matrix(1:4, ncol = 2),
+  matrix(5:8, ncol = 2),
+  matrix(9:12, ncol = 2),
+  matrix(13:16, ncol = 2)
+)
+nested$nested_list <- replicate(4, list(1:2, 3:4, 5:6), simplify = FALSE)
+txt_nested <- gv(nested)
+cat(txt_nested)
+#> digraph "data" {
+#>   rankdir = "LR"
+#>   node [shape=plaintext];
+#> 
+#>   "data" [label = <
+#>     <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+#>     <TR><TD COLSPAN="2">data (4 rows)</TD></TR>
+#>     <TR><TD PORT="TO_key">key</TD><TD PORT="FROM_key">integer</TD></TR>
+#>     <TR><TD PORT="TO_nullable">nullable</TD><TD PORT="FROM_nullable">integer (1 NA)</TD></TR>
+#>     <TR><TD PORT="TO_matrix">matrix</TD><TD PORT="FROM_matrix">matrix[3]&lt;integer&gt; (1 NA)</TD></TR>
+#>     <TR><TD PORT="TO_list">list</TD><TD PORT="FROM_list">list</TD></TR>
+#>     <TR><TD PORT="TO_uniform_list">uniform_list</TD><TD PORT="FROM_uniform_list">list&lt;integer[2]&gt;</TD></TR>
+#>     <TR><TD PORT="TO_matrix_list">matrix_list</TD><TD PORT="FROM_matrix_list">list&lt;matrix[2, 2]&gt;</TD></TR>
+#>     <TR><TD PORT="TO_nested_list">nested_list</TD><TD PORT="FROM_nested_list">list&lt;list[3]&lt;integer[2]&gt;&gt;</TD></TR>
+#>     </TABLE>>];
+#> }
+if (requireNamespace("DiagrammeR", quietly = TRUE)) {
+  DiagrammeR::grViz(txt_nested)
+}
+
+{"x":{"diagram":"digraph \"data\" {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"data\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">data (4 rows)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_key\">key<\/TD><TD PORT=\"FROM_key\">integer<\/TD><\/TR>\n    <TR><TD PORT=\"TO_nullable\">nullable<\/TD><TD PORT=\"FROM_nullable\">integer (1 NA)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_matrix\">matrix<\/TD><TD PORT=\"FROM_matrix\">matrix[3]&lt;integer&gt; (1 NA)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_list\">list<\/TD><TD PORT=\"FROM_list\">list<\/TD><\/TR>\n    <TR><TD PORT=\"TO_uniform_list\">uniform_list<\/TD><TD PORT=\"FROM_uniform_list\">list&lt;integer[2]&gt;<\/TD><\/TR>\n    <TR><TD PORT=\"TO_matrix_list\">matrix_list<\/TD><TD PORT=\"FROM_matrix_list\">list&lt;matrix[2, 2]&gt;<\/TD><\/TR>\n    <TR><TD PORT=\"TO_nested_list\">nested_list<\/TD><TD PORT=\"FROM_nested_list\">list&lt;list[3]&lt;integer[2]&gt;&gt;<\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}
 ```
