@@ -163,7 +163,7 @@ FDHitsJoint <- function(lookup, determinants, dependants, detset_limit, D, repor
   res <- lapply(res, lapply, \(x) attrs[as.logical(rawToBits(x))])
   # split up into one-dependant FDs
   lapply(res, \(x) lapply(x[[2]], \(dependant) list(x[[1]], dependant))) |>
-    unlist(recursive = FALSE)
+    Reduce(f = c, init = list())
 }
 
 FDHitsSep_visit <- function(

@@ -71,10 +71,6 @@ describe("FDHits", {
       observed <- try(FDHits(lookup, method = method), silent = TRUE)
       if (class(observed)[[1]] == "try-error")
         return(fail(attr(observed, "condition")$message))
-      if (is.null(observed)) {
-        warning("NULL result")
-        observed <- list()
-      }
       expect_setequal(observed, expected)
     }
 
