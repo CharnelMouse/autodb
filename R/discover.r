@@ -530,60 +530,58 @@ discover <- function(
       flatten(filter_nonflat_dependencies(dependencies, detset_limit))
     },
     FDHitsSep = {
-      res <- c(
-        lapply(
-          attr_names[fixed_dependants],
-          \(nm) list(character(), nm)
-        ),
-        Reduce(
-          c,
-          lapply(
-            attr_names[determinant_keys],
-            \(det) lapply(
-              setdiff(attr_names[valid_dependant_attrs], det),
-              \(dep) list(det, dep)
-            )
-          ),
-          init = list()
-        ),
-        FDHits(
-          lookup,
-          method = "Sep",
-          determinants = valid_determinant_attrs,
-          dependants = valid_dependant_attrs,
-          detset_limit = detset_limit,
-          report = report
-        )
+      dependencies <- FDHits(
+        lookup,
+        method = "Sep",
+        determinants = valid_determinant_attrs,
+        dependants = valid_dependant_attrs,
+        detset_limit = detset_limit,
+        report = report
       )
-      res
+      fixed_fds <- lapply(
+        attr_names[fixed_dependants],
+        \(nm) list(character(), nm)
+      )
+      simple_key_fds <- Reduce(
+        c,
+        lapply(
+          attr_names[determinant_keys],
+          \(det) lapply(
+            setdiff(attr_names[valid_dependant_attrs], det),
+            \(dep) list(det, dep)
+          )
+        ),
+        init = list()
+      )
+      dependencies <- c(dependencies, fixed_fds, simple_key_fds)
+      dependencies
     },
     FDHitsJoint = {
-      res <- c(
-        lapply(
-          attr_names[fixed_dependants],
-          \(nm) list(character(), nm)
-        ),
-        Reduce(
-          c,
-          lapply(
-            attr_names[determinant_keys],
-            \(det) lapply(
-              setdiff(attr_names[valid_dependant_attrs], det),
-              \(dep) list(det, dep)
-            )
-          ),
-          init = list()
-        ),
-        FDHits(
-          lookup,
-          method = "Joint",
-          determinants = valid_determinant_attrs,
-          dependants = valid_dependant_attrs,
-          detset_limit = detset_limit,
-          report = report
-        )
+      dependencies <- FDHits(
+        lookup,
+        method = "Joint",
+        determinants = valid_determinant_attrs,
+        dependants = valid_dependant_attrs,
+        detset_limit = detset_limit,
+        report = report
       )
-      res
+      fixed_fds <- lapply(
+        attr_names[fixed_dependants],
+        \(nm) list(character(), nm)
+      )
+      simple_key_fds <- Reduce(
+        c,
+        lapply(
+          attr_names[determinant_keys],
+          \(det) lapply(
+            setdiff(attr_names[valid_dependant_attrs], det),
+            \(dep) list(det, dep)
+          )
+        ),
+        init = list()
+      )
+      dependencies <- c(dependencies, fixed_fds, simple_key_fds)
+      dependencies
     }
   ) |>
       functional_dependency(attr_names)
