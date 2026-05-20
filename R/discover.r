@@ -417,7 +417,7 @@ discover <- function(
   if (length(simple_keys) > 0) {
     report(paste("single-attribute keys:", toString(attr_names[simple_keys])))
     valid_determinant_attrs <- setdiff(valid_determinant_attrs, simple_keys)
-    if (skip_bijections && method == "DFD") {
+    if (skip_bijections) {
       valid_dependant_attrs <- setdiff(valid_dependant_attrs, dependant_keys[-1])
     }
   }
@@ -430,7 +430,7 @@ discover <- function(
     \(rhs) {
       lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
       if (
-        !(skip_bijections && method == "DFD") ||
+        !skip_bijections ||
         detset_limit == 0 ||
         !is.element(rhs, valid_determinant_nonfixed_indices)
       )
@@ -554,6 +554,22 @@ discover <- function(
         init = list()
       )
       dependencies <- c(dependencies, fixed_fds, simple_key_fds)
+      if (skip_bijections) {
+        dependencies <- unflatten(dependencies, attr_names)
+        dependencies <- add_deps_implied_by_bijections(
+          dependencies,
+          bijections,
+          attr_names[nonfixed],
+          attr_names
+        )
+        dependencies <- add_deps_implied_by_simple_keys(
+          dependencies,
+          attr_names[determinant_keys],
+          attr_names[dependant_keys],
+          attr_names[valid_dependant_attrs]
+        )
+        dependencies <- flatten(dependencies)
+      }
       dependencies
     },
     FDHitsJoint = {
@@ -581,6 +597,22 @@ discover <- function(
         init = list()
       )
       dependencies <- c(dependencies, fixed_fds, simple_key_fds)
+      if (skip_bijections) {
+        dependencies <- unflatten(dependencies, attr_names)
+        dependencies <- add_deps_implied_by_bijections(
+          dependencies,
+          bijections,
+          attr_names[nonfixed],
+          attr_names
+        )
+        dependencies <- add_deps_implied_by_simple_keys(
+          dependencies,
+          attr_names[determinant_keys],
+          attr_names[dependant_keys],
+          attr_names[valid_dependant_attrs]
+        )
+        dependencies <- flatten(dependencies)
+      }
       dependencies
     }
   ) |>

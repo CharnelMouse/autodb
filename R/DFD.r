@@ -477,6 +477,16 @@ flatten <- function(dependencies) {
   result
 }
 
+unflatten <- function(flattened, attrs_order) {
+  split(
+    lapply(flattened, `[[`, 1),
+    factor(
+      vapply(flattened, `[[`, character(1), 2),
+      attrs_order
+    )
+  )
+}
+
 filter_nonflat_dependencies <- function(
   dependencies,
   detset_limit
