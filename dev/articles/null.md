@@ -1,6 +1,7 @@
 # Handling missing values
 
 ``` r
+
 library(autodb)
 ```
 
@@ -12,6 +13,7 @@ library(autodb)
     ##     decompose
 
 ``` r
+
 if (requireNamespace("DiagrammeR", quietly = TRUE)) {
   show <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
   maybe_plot <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
@@ -23,10 +25,10 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) {
 
 ## Missing values
 
-A functional dependency $\left. X\rightarrow y \right.$ is satisfied if,
-for any two records whose values in `X` are equal, their values in `y`
-are also equal. The result of the equality comparisons must be true or
-false, otherwise it’s unclear how to interpret them.
+A functional dependency $`X \rightarrow y`$ is satisfied if, for any two
+records whose values in `X` are equal, their values in `y` are also
+equal. The result of the equality comparisons must be true or false,
+otherwise it’s unclear how to interpret them.
 
 This forbids the use of missing values (`NA` or `NaN`), which is a
 problem when so much data handled in R has them.
@@ -43,11 +45,10 @@ about anything.
 
 There are other FD variants that handle missing values, but LFDs are
 noteworthy for still satisfying Armstrong’s axioms. For example, they
-still respect transitivity: if $\left. X\rightarrow Y \right.$ and
-$\left. Y\rightarrow Z \right.$ literally, then
-$\left. X\rightarrow Z \right.$ literally. This allows us to construct a
-database schema with Bernstein synthesis, using LFDs instead of FDs, and
-get something coherent.
+still respect transitivity: if $`X \rightarrow Y`$ and
+$`Y \rightarrow Z`$ literally, then $`X \rightarrow Z`$ literally. This
+allows us to construct a database schema with Bernstein synthesis, using
+LFDs instead of FDs, and get something coherent.
 
 ## Decomposing to remove missing values
 
@@ -59,6 +60,7 @@ missing comparison results when filtering or joining relations.
 For example, take the following data frame:
 
 ``` r
+
 df_nas <- data.frame(
   patient = c(1L, 2L, 3L, 4L),
   trial_entry_date = as.Date(c("2022/05/02", "2022/06/06", "2022/04/01", "2022/03/19")),
@@ -78,6 +80,7 @@ knitr::kable(df_nas)
 kept together in the database schema:
 
 ``` r
+
 show(autodb(df_nas))
 ```
 
@@ -89,6 +92,7 @@ This decomposition isn’t done by `autodb` itself, but we can do it
 manually:
 
 ``` r
+
 ds_trial <- database_schema(
   relation_schema(
     list(
@@ -116,6 +120,7 @@ stopifnot(identical(ideal_db2, ideal_db))
 ```
 
 ``` r
+
 show(ideal_db)
 ```
 
@@ -139,6 +144,7 @@ have some distribution parameters. This format is common when listing
 model parameters.
 
 ``` r
+
 df_options <- data.frame(
   id = 1:20,
   value = c(2.3, 2.3, 5.7, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_, NA_real_),
@@ -178,10 +184,12 @@ Since `autodb` doesn’t treat missing values as a special case, it can
 not detect these relationships, so the resulting schema ignores them:
 
 ``` r
+
 db_options <- autodb(df_options)
 ```
 
 ``` r
+
 show(db_options)
 ```
 
@@ -203,6 +211,7 @@ indicator attribute, that states whether its value is present or
 missing:
 
 ``` r
+
 df_options_presence <- df_options[vapply(df_options, anyNA, logical(1))]
 df_options_presence[] <- lapply(df_options_presence, Negate(is.na))
 names(df_options_presence) <- paste0(names(df_options_presence), "_present")
@@ -215,10 +224,12 @@ not an issue, and it makes the structure in the database schema more
 apparent:
 
 ``` r
+
 db_options_with_presence <- autodb(df_options_with_presence)
 ```
 
 ``` r
+
 show(db_options_with_presence)
 ```
 
@@ -228,18 +239,20 @@ relation, which shows that the values, bounds, and interval
 distributions inform the presence of each other:
 
 ``` r
+
 knitr::kable(records(db_options_with_presence)$value_present)
 ```
 
-|     | value_present | lower_bound_present | upper_bound_present | interval_distribution_present |
-|:----|:--------------|:--------------------|:--------------------|:------------------------------|
-| 1   | TRUE          | FALSE               | FALSE               | FALSE                         |
-| 4   | FALSE         | TRUE                | TRUE                | TRUE                          |
+|  | value_present | lower_bound_present | upper_bound_present | interval_distribution_present |
+|:---|:---|:---|:---|:---|
+| 1 | TRUE | FALSE | FALSE | FALSE |
+| 4 | FALSE | TRUE | TRUE | TRUE |
 
 In the `interval_distribution` relation, we can also see how the
 interval distribution determines how many parameters are required:
 
 ``` r
+
 knitr::kable(records(db_options_with_presence)$interval_distribution)
 ```
 

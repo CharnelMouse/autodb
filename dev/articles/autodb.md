@@ -1,6 +1,7 @@
 # Using autodb
 
 ``` r
+
 library(autodb)
 ```
 
@@ -41,6 +42,7 @@ As an example, let’s look at the `ChickWeight` dataset, included with
 base R.
 
 ``` r
+
 summary(ChickWeight)
 ```
 
@@ -60,6 +62,7 @@ changed. To make this more explicit, we could split the data into two
 separate tables:
 
 ``` r
+
 measurement <- unique(subset(ChickWeight, , -Diet))
 chick <- unique(subset(ChickWeight, , c(Chick, Diet)))
 summary(measurement)
@@ -75,6 +78,7 @@ summary(measurement)
     ##                                  (Other):506
 
 ``` r
+
 summary(chick)
 ```
 
@@ -88,6 +92,7 @@ summary(chick)
     ##  (Other):44
 
 ``` r
+
 stopifnot(
   identical(
     merge(measurement, chick, sort = FALSE)[names(ChickWeight)],
@@ -152,6 +157,7 @@ For example, we can pass `ChickWeight` into the main function, `autodb`,
 and get the expected normalisation:
 
 ``` r
+
 chick_db <- autodb(ChickWeight)
 chick_db
 ```
@@ -169,6 +175,7 @@ We can also plot it, by using `gv` to turn the result into code for the
 Graphviz language, and then calling Graphviz however we prefer.
 
 ``` r
+
 cat(gv(chick_db))
 ```
 
@@ -194,6 +201,7 @@ cat(gv(chick_db))
     ## }
 
 ``` r
+
 if (requireNamespace("DiagrammeR", quietly = TRUE)) {
   show <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
   maybe_plot <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
@@ -204,6 +212,7 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) {
 ```
 
 ``` r
+
 show(chick_db)
 ```
 
@@ -293,6 +302,7 @@ search algorithm. We run this by using the `discover` function, setting
 `progress` to `TRUE` to see the steps taken:
 
 ``` r
+
 deps <- discover(ChickWeight, progress = TRUE)
 ```
 
@@ -315,6 +325,7 @@ deps <- discover(ChickWeight, progress = TRUE)
     ## 7 partitions cached
 
 ``` r
+
 deps
 ```
 
@@ -329,6 +340,7 @@ gives all the attribute names in their original order. Each of these
 three parts can be extracted:
 
 ``` r
+
 detset(deps)
 ```
 
@@ -339,12 +351,14 @@ detset(deps)
     ## [1] "Chick"
 
 ``` r
+
 dependant(deps)
 ```
 
     ## [1] "weight" "Diet"
 
 ``` r
+
 attrs_order(deps)
 ```
 
@@ -359,6 +373,7 @@ database schema, where the relation schemas are normalised to third
 normal form. This is done using Bernstein’s synthesis.
 
 ``` r
+
 schema <- synthesise(deps)
 schema
 ```
@@ -373,6 +388,7 @@ schema
 We can also plot this schema:
 
 ``` r
+
 show(schema)
 ```
 
@@ -395,6 +411,7 @@ In particular, we have no information about foreign keys. We can add
 this information using `autoref`:
 
 ``` r
+
 linked_schema <- autoref(schema)
 linked_schema
 ```
@@ -412,6 +429,7 @@ We could also have used `normalise`, instead of `synthesise` and
 `autoref` separately:
 
 ``` r
+
 normalise(deps)
 ```
 
@@ -428,6 +446,7 @@ Plotting this updated database schema shows the same relation schemas as
 before, linked together by foreign key references:
 
 ``` r
+
 show(linked_schema)
 ```
 
@@ -438,10 +457,12 @@ our original data frame, or a new one with the same structure. This
 results in a normalised database, as we got from using `autodb`:
 
 ``` r
+
 db <- decompose(ChickWeight, linked_schema)
 ```
 
 ``` r
+
 show(db)
 ```
 
@@ -453,6 +474,7 @@ the rows may have been rearranged. However, we can use the convenience
 function `df_equiv` to check for equivalence under row reordering:
 
 ``` r
+
 rejoined <- rejoin(db)
 summary(rejoined)
 ```
@@ -467,12 +489,14 @@ summary(rejoined)
     ##                                  (Other):506
 
 ``` r
+
 identical(rejoined, ChickWeight)
 ```
 
     ## [1] FALSE
 
 ``` r
+
 df_equiv(rejoined, ChickWeight)
 ```
 
@@ -486,6 +510,7 @@ Titanic data set, also provided with base R. This data is in array form,
 so we first convert it to data frame form:
 
 ``` r
+
 knitr::kable(as.data.frame(Titanic))
 ```
 
@@ -532,6 +557,7 @@ the normalised database.
 If we use `autodb` again, we get the following database:
 
 ``` r
+
 show(autodb(as.data.frame(Titanic)))
 ```
 
@@ -549,6 +575,7 @@ from certain classes. In this example, we could exclude `Freq` from
 being considered:
 
 ``` r
+
 titanic_deps_freqonly <- discover(as.data.frame(Titanic), exclude = "Freq")
 titanic_deps_freqonly
 ```
@@ -561,6 +588,7 @@ Alternatively, we could exclude all attributes that inherit from
 “numeric”:
 
 ``` r
+
 stopifnot(setequal(
   titanic_deps_freqonly,
   discover(as.data.frame(Titanic), exclude_class = "numeric")
@@ -570,6 +598,7 @@ stopifnot(setequal(
 We can also limit the search when using `autodb`:
 
 ``` r
+
 show(autodb(as.data.frame(Titanic), exclude = "Freq"))
 ```
 
@@ -582,6 +611,7 @@ Alternatively, we can remove the unwanted dependencies. Here are all the
 found dependencies, if we don’t exclude anything:
 
 ``` r
+
 titanic_deps <- discover(as.data.frame(Titanic))
 titanic_deps
 ```
@@ -596,6 +626,7 @@ We can remove the unwanted dependencies, where `Age` is the dependant,
 using subsetting, `Filter`, etc.:
 
 ``` r
+
 titanic_deps[dependant(titanic_deps) == "Age"]
 ```
 
@@ -631,6 +662,7 @@ For example, we can take this simple example from Chapter 6 of The
 Theory of Relational Databases, by David Maier:
 
 ``` r
+
 avoid_deps <- functional_dependency(
   list(
     list("A", "B"),
@@ -653,6 +685,7 @@ avoid_deps
     ## B, D -> C
 
 ``` r
+
 normalise(avoid_deps)
 ```
 
@@ -669,6 +702,7 @@ normalise(avoid_deps)
     ## A_C.{B} -> A.{B}
 
 ``` r
+
 show(normalise(avoid_deps))
 ```
 
@@ -682,6 +716,7 @@ We can have this removal of avoidable attributes done automatically,
 using the `remove_avoidable` flag for `normalise`:
 
 ``` r
+
 normalise(
   avoid_deps,
   remove_avoidable = TRUE

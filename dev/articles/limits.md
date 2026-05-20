@@ -1,6 +1,7 @@
 # Limitations
 
 ``` r
+
 library(autodb)
 ```
 
@@ -12,6 +13,7 @@ library(autodb)
     ##     decompose
 
 ``` r
+
 if (requireNamespace("DiagrammeR", quietly = TRUE)) {
   show <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
   maybe_plot <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
@@ -58,6 +60,7 @@ both publications. The resulting database given by `autodb` has the
 following schema, after giving the relations appropriate names:
 
 ``` r
+
 relation_schema(
   list(
     citation = list(c("citer_id", "citee_id"), list(c("citer_id", "citee_id"))),
@@ -82,6 +85,7 @@ Of course, citers and citees are both publications of the same type, so
 they shouldn’t have separate relations:
 
 ``` r
+
 database_schema(
   relation_schema(
     list(
@@ -152,6 +156,7 @@ not unexpected, it’s just how coercing on factors works in R.
 For example, we can define these data frames:
 
 ``` r
+
 df_badmerge_int <- cbind(
   expand.grid(
     a = c(NA, 0L, 1L),
@@ -177,6 +182,7 @@ knitr::kable(df_badmerge_int)
 |   1 | TRUE  |   9 |
 
 ``` r
+
 df_badmerge_logical <- df_badmerge_int
 df_badmerge_logical$a <- as.logical(df_badmerge_logical$a)
 names(df_badmerge_logical)[[3]] <- "row2"
@@ -205,6 +211,7 @@ regardless of merge order. For the integer version, the logical values
 are coerced to integers:
 
 ``` r
+
 knitr::kable(merge(
   df_badmerge_int[, c("a", "row")],
   df_badmerge_logical[, c("a", "row2")]
@@ -242,6 +249,7 @@ knitr::kable(merge(
 |  NA |   4 |    4 |
 
 ``` r
+
 knitr::kable(merge(
   df_badmerge_logical[, c("a", "row2")],
   df_badmerge_int[, c("a", "row")]
@@ -282,6 +290,7 @@ For the factor version, the logical values are coerced to factors, but
 they don’t match any of the given levels, so they all become `NA`:
 
 ``` r
+
 knitr::kable(merge(
   df_badmerge_factor[, c("a", "row")],
   df_badmerge_logical[, c("a", "row2")]
@@ -301,6 +310,7 @@ knitr::kable(merge(
 | NA  |   1 |    1 |
 
 ``` r
+
 knitr::kable(merge(
   df_badmerge_logical[, c("a", "row2")],
   df_badmerge_factor[, c("a", "row")]
@@ -325,6 +335,7 @@ input order. With the factor version first, the result is similar to
 before:
 
 ``` r
+
 knitr::kable(merge(
   df_badmerge_factor,
   df_badmerge_logical
@@ -350,6 +361,7 @@ With the logical version first, however, only the logical `a` values
 that are `NA` before coercion are kept, rather than all of them:
 
 ``` r
+
 knitr::kable(merge(
   df_badmerge_logical,
   df_badmerge_factor
@@ -374,6 +386,7 @@ relations. However, there can still be redundant keys. For example, we
 can take the following set of functional dependencies:
 
 ``` r
+
 fds_redkey <- functional_dependency(
   list(
     list("a", "b"),
@@ -398,6 +411,7 @@ fds_redkey
 Normalising gives the following relations:
 
 ``` r
+
 normalise(fds_redkey, remove_avoidable = TRUE)
 ```
 
@@ -413,6 +427,7 @@ normalise(fds_redkey, remove_avoidable = TRUE)
     ## a.{d} -> d.{d}
 
 ``` r
+
 show(normalise(fds_redkey, remove_avoidable = TRUE))
 ```
 
@@ -424,6 +439,7 @@ is resolved if we instead use this set of functional dependencies, which
 is equivalent to the previous set:
 
 ``` r
+
 fds_redkey_fix <- functional_dependency(
   list(
     list("a", "b"),
@@ -444,10 +460,12 @@ fds_redkey_fix
     ##    a -> d
 
 ``` r
+
 schema_redkey_fix <- normalise(fds_redkey_fix, remove_avoidable = TRUE)
 ```
 
 ``` r
+
 show(schema_redkey_fix)
 ```
 
@@ -465,10 +483,12 @@ For example, take this database schema, whose relation schemas are in
 third normal form:
 
 ``` r
+
 dup_db <- autodb(ChickWeight)
 ```
 
 ``` r
+
 show(dup_db)
 ```
 
@@ -478,6 +498,7 @@ third normal form, and so we’d say this database is also in third normal
 form:
 
 ``` r
+
 show(dup_db[c(1, 1, 2, 2, 2)])
 ```
 

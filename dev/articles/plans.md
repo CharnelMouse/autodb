@@ -1,6 +1,7 @@
 # Planned improvements
 
 ``` r
+
 library(autodb)
 ```
 
@@ -12,6 +13,7 @@ library(autodb)
     ##     decompose
 
 ``` r
+
 if (requireNamespace("DiagrammeR", quietly = TRUE)) {
   show <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
   maybe_plot <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
@@ -37,25 +39,26 @@ form can be formally defined as follows:
 
 A database is in *third normal form* (3NF) if and only if all of its
 relations are in 3NF. A relation is in 3NF if all of the non-trivial
-functional dependencies $\left. X\rightarrow y \right.$ satisfied by its
-attributes satisfy one of the following:
+functional dependencies $`X \rightarrow y`$ satisfied by its attributes
+satisfy one of the following:
 
-1.  $X$ is a superkey (i.e. contains one of the relation’s keys);
-2.  $y$ is a member of a key.
+1.  $`X`$ is a superkey (i.e. contains one of the relation’s keys);
+2.  $`y`$ is a member of a key.
 
-A functional dependency (FD) $\left. X\rightarrow y \right.$ is
-*trivial* if $y$ is in $X$, i.e. it states that an attribute
-co-determines itself, which is trivially true.
+A functional dependency (FD) $`X \rightarrow y`$ is *trivial* if $`y`$
+is in $`X`$, i.e. it states that an attribute co-determines itself,
+which is trivially true.
 
 Boyes-Codd normal form (BCNF) strengthens this by dropping the second
 condition. (Conversely, second normal form weakens this by adding a
-third option: that $X$ is a subkey, i.e. is contained in one of the
+third option: that $`X`$ is a subkey, i.e. is contained in one of the
 keys.)
 
 To see the difference between 3NF and BCNF, consider the following set
 of FDs, and the resulting schema given by `autodb`:
 
 ``` r
+
 fds <- functional_dependency(
   list(list(c("a", "b"), "c"), list("c", "a")),
   letters[1:3]
@@ -69,34 +72,36 @@ fds
     ##    c -> a
 
 ``` r
+
 schema <- normalise(fds)
 ```
 
 ``` r
+
 show(schema)
 ```
 
 The above schema is in 3NF, but not BCNF:
 
-- Relation `c` contains one FD: $\left. \{ c\}\rightarrow a \right.$.
-  Since $\{ c\}$ is a key, relation `c` is in 3NF, and BCNF.
-- Relation `a_b` contains two FDs:
-  $\left. \{ a,b\}\rightarrow c \right.$ and
-  $\left. \{ c\}\rightarrow a \right.$. $\{ a,b\}$ is a key for `a_b`,
-  but $\{ c\}$ is not, so `a_b` is not in BCNF. However, $a$ is within
+- Relation `c` contains one FD: $`\{c\} \rightarrow a`$. Since $`\{c\}`$
+  is a key, relation `c` is in 3NF, and BCNF.
+- Relation `a_b` contains two FDs: $`\{a, b\} \rightarrow c`$ and
+  $`\{c\} \rightarrow a`$. $`\{a, b\}`$ is a key for `a_b`, but
+  $`\{c\}`$ is not, so `a_b` is not in BCNF. However, $`a`$ is within
   the key `\{a, b\}`, so relation `a_b` is in 3NF.
 
 In fact, `autodb` does more than is required here: the relation `a_b` by
 itself is in 3NF, and contains all of the attributes, so we don’t need
 relation `c`.
 
-This double appearance of $\left. \{ c\}\rightarrow a \right.$ results
-in some redundancy: we’re listing the resulting `(c, a)` pairs twice.
-Even worse, only one of them is enforced via a key: if, after
-normalising, we add more data to the two relations separately, then we
-can two sets of `(c, a)` pairs that aren’t mutually coherent :
+This double appearance of $`\{c\} \rightarrow a`$ results in some
+redundancy: we’re listing the resulting `(c, a)` pairs twice. Even
+worse, only one of them is enforced via a key: if, after normalising, we
+add more data to the two relations separately, then we can two sets of
+`(c, a)` pairs that aren’t mutually coherent :
 
 ``` r
+
 db <- schema |>
   create() |>
   insert(data.frame(c = 1:2, a = 1:2), relations = "c") |>
@@ -112,6 +117,7 @@ knitr::kable(rab)
 |   2 |   1 |   1 |
 
 ``` r
+
 knitr::kable(rc)
 ```
 
@@ -121,6 +127,7 @@ knitr::kable(rc)
 |   2 |   2 |
 
 ``` r
+
 knitr::kable(merge(rab, rc, by = "c", suffixes = c(".a_b", ".c")))
 ```
 
@@ -130,13 +137,14 @@ knitr::kable(merge(rab, rc, by = "c", suffixes = c(".a_b", ".c")))
 |   2 |     1 |   1 |   2 |
 
 If we remove relation `c`, we still have the same problem, which is that
-relation `a_b` doesn’t enforce $\left. \{ c\}\rightarrow a \right.$ with
-a key, so we can easily insert data that violates it.
+relation `a_b` doesn’t enforce $`\{c\} \rightarrow a`$ with a key, so we
+can easily insert data that violates it.
 
 The standard way to fix this schema to satisfy BCNF is by splitting
 relation `a_b` on the violated functional dependency, namely `c -> a`:
 
 ``` r
+
 show(schema2)
 ```
 
@@ -194,6 +202,7 @@ because the resulting schema might not be connected. Consider the
 following set of FDs:
 
 ``` r
+
 fds <- functional_dependency(
   list(
     list("a", "b"),
@@ -219,6 +228,7 @@ Bernstein synthesis, and automatic foreign keys, give the following
 schema:
 
 ``` r
+
 show(normalise(fds))
 ```
 
@@ -250,8 +260,8 @@ the relations they’re joining. We extend this by letting them have their
 own non-implied keys, that are required to hold on the join result.
 
 Let’s see how this can solve the issue in the BCNF example, where
-normalising left the FD $\left. \{ a,b\}\rightarrow c \right.$ not
-represented in the schema:
+normalising left the FD $`\{a, b\} \rightarrow c`$ not represented in
+the schema:
 
 The view has a darker background, and points to the relations it’s
 calculated from using different arrows, to mark it out as different.
@@ -259,14 +269,13 @@ Note that it only points to one relation here (`b_c`), with the
 implication that it first joins that table to all of its ancestors
 (`c`).
 
-The view has the implied key $\{ b,c\}$, and we show the missing FD
-$\left. \{ a,b\}\rightarrow c \right.$ by giving $\{ a,b\}$ as an
-additional key.
+The view has the implied key $`\{b, c\}`$, and we show the missing FD
+$`\{a, b\} \rightarrow c`$ by giving $`\{a, b\}`$ as an additional key.
 
-Note that the view contains both $a$ and $c$. However, unlike the
+Note that the view contains both $`a`$ and $`c`$. However, unlike the
 original schema, this is not a repeat occurrence of
-$\left. \{ c\}\rightarrow a \right.$, because the data is taken directly
-from its appearance in relation `c`.
+$`\{c\} \rightarrow a`$, because the data is taken directly from its
+appearance in relation `c`.
 
 It’s also worth noting that, since the view is just the original 3NF
 solution, it is not in BCNF itself. Views do not need to be in as high a

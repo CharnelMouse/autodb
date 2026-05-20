@@ -1,6 +1,7 @@
 # Nested data
 
 ``` r
+
 library(autodb)
 ```
 
@@ -12,6 +13,7 @@ library(autodb)
     ##     decompose
 
 ``` r
+
 if (requireNamespace("DiagrammeR", quietly = TRUE)) {
   show <- function(x, ...) DiagrammeR::grViz(gv(x, ...), width = "100%")
 }else{
@@ -350,6 +352,7 @@ R hides a lot of class details when printing; printing as a tibble hides
 less.
 
 ``` r
+
 x <- jsonlite::fromJSON(js)
 x
 ```
@@ -374,6 +377,7 @@ x
     ## 5 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 7, 8, 9, 10, 11, 12
 
 ``` r
+
 print(tibble::as_tibble(x), width = Inf)
 ```
 
@@ -407,6 +411,7 @@ angle brackets (`<>`), and common dimensions are given within square
 brackets (`[]`):
 
 ``` r
+
 show(x)
 ```
 
@@ -419,12 +424,14 @@ information only gives its column count.
 information can be:
 
 ``` r
+
 show(x, nest_level = 0)
 ```
 
 Dependency discovery and decomposition work as expected:
 
 ``` r
+
 db <- autodb(x)
 show(db)
 ```
@@ -433,6 +440,7 @@ Also as expected, rejoining the resulting database into a single data
 frame gives back the original:
 
 ``` r
+
 y <- rejoin(db)
 df_equiv(y, x)
 ```
@@ -440,6 +448,7 @@ df_equiv(y, x)
     ## [1] TRUE
 
 ``` r
+
 y
 ```
 
