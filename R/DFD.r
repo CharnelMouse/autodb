@@ -4,7 +4,6 @@ DFD <- function(
   valid_determinant_attrs,
   valid_determinant_nonfixed_indices,
   attr_names,
-  dependencies,
   rhs_nonfixed_indices,
   accuracy = 1,
   full_cache = TRUE,
@@ -29,6 +28,7 @@ DFD <- function(
       "columns possible in a determinant set currently supported"
     ))
 
+  dependencies <- unflatten(list(), attr_names)
   # main search
   if (max_n_lhs_attrs > 0) {
     report("constructing powerset")

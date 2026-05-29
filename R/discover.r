@@ -363,16 +363,14 @@ discover <- function(
   lookup <- lookup_table(df)
 
   attrs <- seq_along(lookup)
-  dependencies <- stats::setNames(rep(list(list()), n_cols), attr_names)
   # trim down the attributes to use (migrated from DFD, need to tidy)
   # check for constant-value columns, because if columns are fixed we can
   # ignore them for the rest of the search
   fixed <- which(vapply(lookup, \(x) all(x == 1L), logical(1)))
   fixed_dependants <- intersect(fixed, dependants)
-  dependencies[fixed_dependants] <- replicate(
-    length(fixed_dependants),
-    list(character()),
-    simplify = FALSE
+  fixed_fds <- lapply(
+    attr_names[fixed_dependants],
+    \(nm) list(character(), nm)
   )
   if (length(fixed) > 0)
     report(paste(attr_names[fixed], "is fixed", collapse = "\n"))
@@ -385,10 +383,7 @@ discover <- function(
     detset_limit < 1
   ) {
     report("no valid dependants, or detset_limit < 1, skipping search")
-    return(functional_dependency(
-      flatten(filter_nonflat_dependencies(dependencies, detset_limit)),
-      attr_names
-    ))
+    return(functional_dependency(fixed_fds, attr_names))
   }
   # For non-fixed non-key attributes, all can be dependants,
   # but might not all be valid determinants.
@@ -493,20 +488,20 @@ discover <- function(
   switch(
     method,
     DFD = {
-      dependencies <- DFD(
+      dependencies <- flatten(DFD(
         lookup[nonfixed],
         valid_dependant_attrs = valid_dependant_attrs,
         valid_determinant_attrs = valid_determinant_attrs,
         valid_determinant_nonfixed_indices = valid_determinant_nonfixed_indices,
         attr_names = attr_names[nonfixed],
-        dependencies = dependencies,
         rhs_nonfixed_indices = rhs_nonfixed_indices[is.na(bijection_nonfixed_indices)],
         accuracy = accuracy,
         full_cache  = full_cache,
         store_cache = store_cache,
         detset_limit = detset_limit,
         report = report
-      )
+      ))
+      dependencies <- unflatten(c(fixed_fds, dependencies), attr_names)
       dependencies <- add_simple_key_deps(
         dependencies,
         attr_names[determinant_keys],
@@ -537,10 +532,6 @@ discover <- function(
         dependants = valid_dependant_attrs,
         detset_limit = detset_limit,
         report = report
-      )
-      fixed_fds <- lapply(
-        attr_names[fixed_dependants],
-        \(nm) list(character(), nm)
       )
       simple_key_fds <- Reduce(
         c,
@@ -580,10 +571,6 @@ discover <- function(
         dependants = valid_dependant_attrs,
         detset_limit = detset_limit,
         report = report
-      )
-      fixed_fds <- lapply(
-        attr_names[fixed_dependants],
-        \(nm) list(character(), nm)
       )
       simple_key_fds <- Reduce(
         c,
