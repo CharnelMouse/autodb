@@ -79,7 +79,12 @@ DFD <- function(
   report(paste0(
     "DFD complete",
     "\n",
-    with_number(partition_handler$cache_size(), "partition", " cached", "s cached")
+    with_number(
+      if (max_n_lhs_attrs == 0) 0L else partition_handler$cache_size(),
+      "partition",
+      " cached",
+      "s cached"
+    )
   ))
   dependencies
 }
