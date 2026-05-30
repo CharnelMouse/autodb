@@ -373,26 +373,6 @@ minimise_seeds <- function(seeds, bitsets) {
   unique_seeds[include]
 }
 
-add_simple_key_deps <- function(
-  dependencies,
-  determinant_keys,
-  dependant_keys,
-  valid_dependant_attrs
-) {
-  nonkey_dependants <- setdiff(valid_dependant_attrs, dependant_keys)
-  # non-keys are determined by all keys
-  dependencies[nonkey_dependants] <- lapply(
-    dependencies[nonkey_dependants],
-    \(dets) c(as.list(determinant_keys), dets)
-  )
-  # keys are determined by each other
-  dependencies[dependant_keys] <- lapply(
-    dependant_keys,
-    \(key) c(as.list(setdiff(determinant_keys, key)), dependencies[[key]])
-  )
-  dependencies
-}
-
 add_deps_implied_by_bijections <- function(
   dependencies,
   bijections,

@@ -485,10 +485,22 @@ discover <- function(
     )
   )
 
+  # simple keys determine everything else
+  simple_key_fds <- Reduce(
+    c,
+    lapply(
+      attr_names[determinant_keys],
+      \(det) lapply(
+        setdiff(attr_names[valid_dependant_attrs], det),
+        \(dep) list(det, dep)
+      )
+    ),
+    init = list()
+  )
   switch(
     method,
     DFD = {
-      dependencies <- flatten(DFD(
+      dependencies <- DFD(
         lookup[nonfixed],
         valid_dependant_attrs = valid_dependant_attrs,
         valid_determinant_attrs = valid_determinant_attrs,
@@ -500,15 +512,12 @@ discover <- function(
         store_cache = store_cache,
         detset_limit = detset_limit,
         report = report
-      ))
-      dependencies <- unflatten(c(fixed_fds, dependencies), attr_names)
-      dependencies <- add_simple_key_deps(
-        dependencies,
-        attr_names[determinant_keys],
-        attr_names[dependant_keys],
-        attr_names[valid_dependant_attrs]
       )
+      dependencies <- filter_nonflat_dependencies(dependencies, detset_limit)
+      dependencies <- flatten(dependencies)
+      dependencies <- c(fixed_fds, simple_key_fds, dependencies)
       if (skip_bijections) {
+        dependencies <- unflatten(dependencies, attr_names)
         dependencies <- add_deps_implied_by_bijections(
           dependencies,
           bijections,
@@ -521,8 +530,9 @@ discover <- function(
           attr_names[dependant_keys],
           attr_names[valid_dependant_attrs]
         )
+        dependencies <- flatten(dependencies)
       }
-      flatten(filter_nonflat_dependencies(dependencies, detset_limit))
+      dependencies
     },
     FDHitsSep = {
       dependencies <- FDHits(
@@ -532,17 +542,6 @@ discover <- function(
         dependants = valid_dependant_attrs,
         detset_limit = detset_limit,
         report = report
-      )
-      simple_key_fds <- Reduce(
-        c,
-        lapply(
-          attr_names[determinant_keys],
-          \(det) lapply(
-            setdiff(attr_names[valid_dependant_attrs], det),
-            \(dep) list(det, dep)
-          )
-        ),
-        init = list()
       )
       dependencies <- c(dependencies, fixed_fds, simple_key_fds)
       if (skip_bijections) {
@@ -571,17 +570,6 @@ discover <- function(
         dependants = valid_dependant_attrs,
         detset_limit = detset_limit,
         report = report
-      )
-      simple_key_fds <- Reduce(
-        c,
-        lapply(
-          attr_names[determinant_keys],
-          \(det) lapply(
-            setdiff(attr_names[valid_dependant_attrs], det),
-            \(dep) list(det, dep)
-          )
-        ),
-        init = list()
       )
       dependencies <- c(dependencies, fixed_fds, simple_key_fds)
       if (skip_bijections) {
