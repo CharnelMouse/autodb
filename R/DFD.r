@@ -380,10 +380,12 @@ add_simple_key_deps <- function(
   valid_dependant_attrs
 ) {
   nonkey_dependants <- setdiff(valid_dependant_attrs, dependant_keys)
+  # non-keys are determined by all keys
   dependencies[nonkey_dependants] <- lapply(
     dependencies[nonkey_dependants],
     \(dets) c(as.list(determinant_keys), dets)
   )
+  # keys are determined by each other
   dependencies[dependant_keys] <- lapply(
     dependant_keys,
     \(key) c(as.list(setdiff(determinant_keys, key)), dependencies[[key]])
@@ -398,12 +400,14 @@ add_deps_implied_by_bijections <- function(
   column_names
 ) {
   for (b in bijections) {
+    # first is the one used in discovery
     first_index <- nonfixed[[b[[1]]]]
-    # add the bijection
+    # first determined by others
     dependencies[[first_index]] <- c(
       dependencies[[first_index]],
       nonfixed[b[-1]]
     )
+    # non-first determined by first and each other
     for (nonfixed_index in b[-1]) {
       replacement <- nonfixed[[nonfixed_index]]
       dependencies[[replacement]] <- c(
@@ -412,7 +416,7 @@ add_deps_implied_by_bijections <- function(
       )
       stopifnot(!anyDuplicated(dependencies[[nonfixed_index]]))
     }
-    # add dependencies implied by the bijection
+    # non-first can substitute for first in determinants
     for (rhs in setdiff(seq_along(dependencies), match(nonfixed[b], column_names))) {
       for (nonfixed_index in b[-1]) {
         replacement <- nonfixed[[nonfixed_index]]
@@ -436,7 +440,7 @@ add_deps_implied_by_simple_keys <- function(
   dependant_keys,
   valid_dependant_attrs
 ) {
-  # transfer determinants of kept dependant key to others
+  # non-first keys have same non-key determinants as first, plus other keys
   if (length(dependant_keys) > 0) {
     first_dep <- dependant_keys[[1]]
     deps <- setdiff(dependencies[[first_dep]], as.list(determinant_keys))
@@ -447,7 +451,7 @@ add_deps_implied_by_simple_keys <- function(
     }
   }
 
-  # swap determinant keys around in compound determinants
+  # non-first can substitute for first in compound determinants
   if (length(determinant_keys) > 0) {
     first_det <- determinant_keys[[1]]
     for (rhs in setdiff(valid_dependant_attrs, dependant_keys)) {
