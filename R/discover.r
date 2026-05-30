@@ -579,10 +579,9 @@ add_deps_implied_by_bijections <- function(
         Filter(\(d) is.element(first_index, d), dependencies[[rhs]]),
         \(d) d[d != first_index]
       )
-      dependencies[[rhs]] <- Reduce(
-        \(deps, replacement) c(deps, lapply(without_first, c, replacement)),
-        b[-1],
-        init = dependencies[[rhs]]
+      dependencies[[rhs]] <- c(
+        dependencies[[rhs]],
+        outer(without_first, b[-1], Map, f = c)
       )
       stopifnot(!anyDuplicated(dependencies[[rhs]]))
     }
@@ -616,10 +615,9 @@ add_deps_implied_by_simple_keys <- function(
         dependencies[[rhs]]
       ) |>
         lapply(\(d) d[d != first_det])
-      dependencies[[rhs]] <- Reduce(
-        \(deps, replacement) c(deps, lapply(without_first, c, replacement)),
-        determinant_keys[-1],
-        init = dependencies[[rhs]]
+      dependencies[[rhs]] <- c(
+        dependencies[[rhs]],
+        outer(without_first, determinant_keys[-1], Map, f = c)
       )
       stopifnot(!anyDuplicated(dependencies[[rhs]]))
     }
