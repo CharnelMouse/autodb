@@ -35,6 +35,9 @@
   together, for performance: since the only change is some renaming,
   concatenating valid relations/databases shouldn’t result in any
   violations anyway.
+- Added support for skipping simple keys, and bijections if
+  `skip_bijections = TRUE` in `discover`, for all methods, rather than
+  just DFD.
 
 ## autodb 3.2.4
 
