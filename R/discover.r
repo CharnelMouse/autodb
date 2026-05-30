@@ -497,101 +497,58 @@ discover <- function(
     ),
     init = list()
   )
-  switch(
+  dependencies <- switch(
     method,
-    DFD = {
-      dependencies <- DFD(
-        lookup[nonfixed],
-        valid_dependant_attrs = valid_dependant_attrs,
-        valid_determinant_attrs = valid_determinant_attrs,
-        valid_determinant_nonfixed_indices = valid_determinant_nonfixed_indices,
-        attr_names = attr_names[nonfixed],
-        rhs_nonfixed_indices = rhs_nonfixed_indices[is.na(bijection_nonfixed_indices)],
-        accuracy = accuracy,
-        full_cache  = full_cache,
-        store_cache = store_cache,
-        detset_limit = detset_limit,
-        report = report
-      )
-      dependencies <- filter_nonflat_dependencies(dependencies, detset_limit)
-      dependencies <- flatten(dependencies)
-      dependencies <- c(fixed_fds, simple_key_fds, dependencies)
-      if (skip_bijections) {
-        dependencies <- unflatten(dependencies, attr_names)
-        dependencies <- add_deps_implied_by_bijections(
-          dependencies,
-          bijections,
-          attr_names[nonfixed],
-          attr_names
-        )
-        dependencies <- add_deps_implied_by_simple_keys(
-          dependencies,
-          attr_names[determinant_keys],
-          attr_names[dependant_keys],
-          attr_names[valid_dependant_attrs]
-        )
-        dependencies <- flatten(dependencies)
-      }
-      dependencies
-    },
-    FDHitsSep = {
-      dependencies <- FDHits(
-        lookup,
-        method = "Sep",
-        determinants = valid_determinant_attrs,
-        dependants = valid_dependant_attrs,
-        detset_limit = detset_limit,
-        report = report
-      )
-      dependencies <- c(dependencies, fixed_fds, simple_key_fds)
-      if (skip_bijections) {
-        dependencies <- unflatten(dependencies, attr_names)
-        dependencies <- add_deps_implied_by_bijections(
-          dependencies,
-          bijections,
-          attr_names[nonfixed],
-          attr_names
-        )
-        dependencies <- add_deps_implied_by_simple_keys(
-          dependencies,
-          attr_names[determinant_keys],
-          attr_names[dependant_keys],
-          attr_names[valid_dependant_attrs]
-        )
-        dependencies <- flatten(dependencies)
-      }
-      dependencies
-    },
-    FDHitsJoint = {
-      dependencies <- FDHits(
-        lookup,
-        method = "Joint",
-        determinants = valid_determinant_attrs,
-        dependants = valid_dependant_attrs,
-        detset_limit = detset_limit,
-        report = report
-      )
-      dependencies <- c(dependencies, fixed_fds, simple_key_fds)
-      if (skip_bijections) {
-        dependencies <- unflatten(dependencies, attr_names)
-        dependencies <- add_deps_implied_by_bijections(
-          dependencies,
-          bijections,
-          attr_names[nonfixed],
-          attr_names
-        )
-        dependencies <- add_deps_implied_by_simple_keys(
-          dependencies,
-          attr_names[determinant_keys],
-          attr_names[dependant_keys],
-          attr_names[valid_dependant_attrs]
-        )
-        dependencies <- flatten(dependencies)
-      }
-      dependencies
-    }
-  ) |>
-      functional_dependency(attr_names)
+    DFD = DFD(
+      lookup[nonfixed],
+      valid_dependant_attrs = valid_dependant_attrs,
+      valid_determinant_attrs = valid_determinant_attrs,
+      valid_determinant_nonfixed_indices = valid_determinant_nonfixed_indices,
+      attr_names = attr_names[nonfixed],
+      rhs_nonfixed_indices = rhs_nonfixed_indices[is.na(bijection_nonfixed_indices)],
+      accuracy = accuracy,
+      full_cache  = full_cache,
+      store_cache = store_cache,
+      detset_limit = detset_limit,
+      report = report
+    ) |>
+      filter_nonflat_dependencies(detset_limit) |>
+      flatten(),
+    FDHitsSep = FDHits(
+      lookup,
+      method = "Sep",
+      determinants = valid_determinant_attrs,
+      dependants = valid_dependant_attrs,
+      detset_limit = detset_limit,
+      report = report
+    ),
+    FDHitsJoint = FDHits(
+      lookup,
+      method = "Joint",
+      determinants = valid_determinant_attrs,
+      dependants = valid_dependant_attrs,
+      detset_limit = detset_limit,
+      report = report
+    )
+  )
+  dependencies <- c(fixed_fds, simple_key_fds, dependencies)
+  if (skip_bijections) {
+    dependencies <- unflatten(dependencies, attr_names)
+    dependencies <- add_deps_implied_by_bijections(
+      dependencies,
+      bijections,
+      attr_names[nonfixed],
+      attr_names
+    )
+    dependencies <- add_deps_implied_by_simple_keys(
+      dependencies,
+      attr_names[determinant_keys],
+      attr_names[dependant_keys],
+      attr_names[valid_dependant_attrs]
+    )
+    dependencies <- flatten(dependencies)
+  }
+  functional_dependency(dependencies, attr_names)
 }
 
 format_if_float <- function(x, digits) {
