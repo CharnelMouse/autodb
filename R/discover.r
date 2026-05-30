@@ -418,20 +418,29 @@ discover <- function(
   }
   valid_determinant_nonfixed_indices <- match(valid_determinant_attrs, nonfixed)
   # look for single-attribute bijections
+  # these are cheaper to check than the general FD case, because we can use
+  # identical()
+  # record bijection A <-> B if A and B are in both dependants and determinants,
+  # with A earlier
+  # this is not strictly necessary: we can still make use of a bijection group
+  # if there are multiple determinants or multiple dependants, even if these
+  # don't overlap. allowing for this is a TODO.
   bijections <- list()
   rhs_nonfixed_indices <- which(nonfixed %in% valid_dependant_attrs)
   bijection_nonfixed_indices <- vapply(
     rhs_nonfixed_indices,
     \(rhs) {
-      lhs_nonfixed_indices <- setdiff(valid_determinant_nonfixed_indices, rhs)
       if (
         !skip_bijections ||
         detset_limit == 0 ||
         !is.element(rhs, valid_determinant_nonfixed_indices)
       )
         return(NA_integer_)
+      lhs_nonfixed_indices <- valid_determinant_nonfixed_indices[
+        valid_determinant_nonfixed_indices < rhs
+      ]
       lhs_bijection_candidates <- intersect(
-        lhs_nonfixed_indices[lhs_nonfixed_indices < rhs],
+        lhs_nonfixed_indices,
         rhs_nonfixed_indices
       )
       lhs_bijection_candidates[vapply(
@@ -471,6 +480,9 @@ discover <- function(
     rhs_nonfixed_indices[!is.na(bijection_nonfixed_indices)]
   )
   valid_determinant_attrs <- nonfixed[valid_determinant_nonfixed_indices]
+  # should trim dependants here too
+  # this needs some rewriting for the case where a bijection's first
+  # attribute isn't both determinant and dependant
 
   report(
     paste(
