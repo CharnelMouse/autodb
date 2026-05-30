@@ -557,36 +557,34 @@ add_deps_implied_by_bijections <- function(
   nonfixed,
   column_names
 ) {
-  for (b in bijections) {
+  for (b in lapply(bijections, \(x) nonfixed[x])) {
     # first is the one used in discovery
-    first_index <- nonfixed[[b[[1]]]]
+    first_index <- b[[1]]
     # first determined by others
     dependencies[[first_index]] <- c(
       dependencies[[first_index]],
-      nonfixed[b[-1]]
+      b[-1]
     )
     # non-first determined by first and each other
-    for (nonfixed_index in b[-1]) {
-      replacement <- nonfixed[[nonfixed_index]]
+    for (replacement in b[-1]) {
       dependencies[[replacement]] <- c(
         first_index,
         setdiff(dependencies[[first_index]], replacement)
       )
-      stopifnot(!anyDuplicated(dependencies[[nonfixed_index]]))
+      stopifnot(!anyDuplicated(dependencies[[replacement]]))
     }
     # non-first can substitute for first in determinants
-    for (rhs in setdiff(seq_along(dependencies), match(nonfixed[b], column_names))) {
-      for (nonfixed_index in b[-1]) {
-        replacement <- nonfixed[[nonfixed_index]]
-        dependencies[[rhs]] <- union(
-          dependencies[[rhs]],
-          lapply(
-            Filter(\(d) is.element(first_index, d), dependencies[[rhs]]),
-            \(d) c(setdiff(d, first_index), replacement)
-          )
-        )
-        stopifnot(!anyDuplicated(dependencies[[rhs]]))
-      }
+    for (rhs in setdiff(seq_along(dependencies), match(b, column_names))) {
+      without_first <- lapply(
+        Filter(\(d) is.element(first_index, d), dependencies[[rhs]]),
+        \(d) d[d != first_index]
+      )
+      dependencies[[rhs]] <- Reduce(
+        \(deps, replacement) c(deps, lapply(without_first, c, replacement)),
+        b[-1],
+        init = dependencies[[rhs]]
+      )
+      stopifnot(!anyDuplicated(dependencies[[rhs]]))
     }
   }
   dependencies
@@ -613,19 +611,17 @@ add_deps_implied_by_simple_keys <- function(
   if (length(determinant_keys) > 0) {
     first_det <- determinant_keys[[1]]
     for (rhs in setdiff(valid_dependant_attrs, dependant_keys)) {
-      for (replacement in determinant_keys[-1]) {
-        dependencies[[rhs]] <- c(
-          dependencies[[rhs]],
-          lapply(
-            Filter(
-              \(d) is.element(first_det, d) && length(d) > 1,
-              dependencies[[rhs]]
-            ),
-            \(d) c(setdiff(d, first_det), replacement)
-          )
-        )
-        stopifnot(!anyDuplicated(dependencies[[rhs]]))
-      }
+      without_first <- Filter(
+        \(d) is.element(first_det, d) && length(d) > 1,
+        dependencies[[rhs]]
+      ) |>
+        lapply(\(d) d[d != first_det])
+      dependencies[[rhs]] <- Reduce(
+        \(deps, replacement) c(deps, lapply(without_first, c, replacement)),
+        determinant_keys[-1],
+        init = dependencies[[rhs]]
+      )
+      stopifnot(!anyDuplicated(dependencies[[rhs]]))
     }
   }
 
