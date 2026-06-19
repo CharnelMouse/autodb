@@ -363,9 +363,8 @@ discover <- function(
   lookup <- lookup_table(df)
 
   attrs <- seq_along(lookup)
-  # trim down the attributes to use (migrated from DFD, need to tidy)
-  # check for constant-value columns, because if columns are fixed we can
-  # ignore them for the rest of the search
+  # trim down the attributes to use check for constant-value columns,
+  # because if columns are fixed we can ignore them for the rest of the search
   fixed <- which(vapply(lookup, \(x) all(x == 1L), logical(1)))
   fixed_dependants <- intersect(fixed, dependants)
   fixed_fds <- lapply(
