@@ -12,6 +12,7 @@
 * Added missing value counts to `gv` and `d2` methods for classes containing data.
 * Remove integrity checks for concatenating relations or databases together, for performance: since the only change is some renaming, concatenating valid relations/databases shouldn't result in any violations anyway.
 * Added support for skipping simple keys, and bijections if `skip_bijections = TRUE` in `discover`, for all methods, rather than just DFD.
+* Added support for skipping fixed attributes, simple keys, and bijections if `skip_bijections = TRUE` in `discover`, for `discover_keys`.
 
 # autodb 3.2.4
 
