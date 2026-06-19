@@ -309,8 +309,7 @@ discover <- function(
     df <- cbind(stats::setNames(data.frame(rownames(df)), nm), df)
   }
 
-  n_cols <- ncol(df)
-  if (n_cols == 0)
+  if (ncol(df) == 0)
     return(functional_dependency(
       stats::setNames(list(), character()),
       attrs_order = character()

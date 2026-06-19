@@ -74,8 +74,7 @@ discover_keys <- function(
     df <- cbind(stats::setNames(data.frame(rownames(df)), nm), df)
   }
 
-  n_cols <- ncol(df)
-  if (n_cols == 0 || nrow(df) <= 1)
+  if (ncol(df) == 0 || nrow(df) <= 1)
     return(list(character()))
   attr_names <- colnames(df)
   duplicates <- which(duplicated(attr_names))
