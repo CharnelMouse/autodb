@@ -471,20 +471,19 @@ discover <- function(
   )
   dependencies <- c(fixed_fds, simple_key_fds, dependencies)
   if (skip_bijections) {
-    dependencies <- unflatten(dependencies, attr_names)
-    dependencies <- add_deps_implied_by_bijections(
-      dependencies,
-      bijection_info$bijections,
-      attr_names[nonfixed_info$nonfixed],
-      attr_names
-    )
-    dependencies <- add_deps_implied_by_simple_keys(
-      dependencies,
-      attr_names[simple_key_info$determinant_keys],
-      attr_names[simple_key_info$dependant_keys],
-      attr_names[simple_key_info$valid_dependant_attrs]
-    )
-    dependencies <- flatten(dependencies)
+    dependencies <- dependencies |>
+      unflatten(attr_names) |>
+      add_deps_implied_by_bijections(
+        bijection_info$bijections,
+        attr_names[nonfixed_info$nonfixed],
+        attr_names
+      ) |>
+      add_deps_implied_by_simple_keys(
+        attr_names[simple_key_info$determinant_keys],
+        attr_names[simple_key_info$dependant_keys],
+        attr_names[simple_key_info$valid_dependant_attrs]
+      ) |>
+      flatten()
   }
   functional_dependency(dependencies, attr_names)
 }
