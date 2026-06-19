@@ -382,33 +382,8 @@ discover <- function(
     return(functional_dependency(fixed_fds, attr_names))
   }
 
-  # Non-fixed attributes might be single-attribute keys: we can list them as
-  # determining all other non-fixed attributes, use them in the main search only
-  # as dependants. If there are several single-attribute keys, and we're
-  # skipping bijections, then we can also remove all but one of them as
-  # dependants.
-  valid_determinant_attrs <- nonfixed_info$nonfixed_determinants
-  # Can't just check column values are seq_len(nrow(df)),
-  # because df can have duplicate rows, and we can't remove
-  # the duplicate rows in df, because it changes the behaviour
-  # for accuracy < 1.
-  df_uniq <- df_unique(lookup[nonfixed_info$nonfixed])
-  simple_keys <- nonfixed_info$nonfixed[vapply(
-    df_uniq,
-    Negate(anyDuplicated),
-    logical(1)
-  )]
-  determinant_keys <- intersect(simple_keys, nonfixed_info$nonfixed_determinants)
-  dependant_keys <- intersect(simple_keys, nonfixed_info$nonfixed_dependants)
-  valid_dependant_attrs <- nonfixed_info$nonfixed_dependants
-  if (length(simple_keys) > 0) {
-    report(paste("single-attribute keys:", toString(attr_names[simple_keys])))
-    valid_determinant_attrs <- setdiff(valid_determinant_attrs, simple_keys)
-    if (skip_bijections) {
-      valid_dependant_attrs <- setdiff(nonfixed_info$nonfixed_dependants, dependant_keys[-1])
-    }
-  }
-  valid_determinant_nonfixed_indices <- match(valid_determinant_attrs, nonfixed_info$nonfixed)
+  simple_key_info <- extract_simple_keys(nonfixed_info, lookup, skip_bijections, report)
+
   # look for single-attribute bijections
   # these are cheaper to check than the general FD case, because we can use
   # identical()
@@ -418,18 +393,18 @@ discover <- function(
   # if there are multiple determinants or multiple dependants, even if these
   # don't overlap. allowing for this is a TODO.
   bijections <- list()
-  rhs_nonfixed_indices <- which(nonfixed_info$nonfixed %in% valid_dependant_attrs)
+  rhs_nonfixed_indices <- which(nonfixed_info$nonfixed %in% simple_key_info$valid_dependant_attrs)
   bijection_nonfixed_indices <- vapply(
     rhs_nonfixed_indices,
     \(rhs) {
       if (
         !skip_bijections ||
         detset_limit == 0 ||
-        !is.element(rhs, valid_determinant_nonfixed_indices)
+        !is.element(rhs, simple_key_info$valid_determinant_nonfixed_indices)
       )
         return(NA_integer_)
-      lhs_nonfixed_indices <- valid_determinant_nonfixed_indices[
-        valid_determinant_nonfixed_indices < rhs
+      lhs_nonfixed_indices <- simple_key_info$valid_determinant_nonfixed_indices[
+        simple_key_info$valid_determinant_nonfixed_indices < rhs
       ]
       lhs_bijection_candidates <- intersect(
         lhs_nonfixed_indices,
@@ -468,7 +443,7 @@ discover <- function(
     }
   }
   valid_determinant_nonfixed_indices <- setdiff(
-    valid_determinant_nonfixed_indices,
+    simple_key_info$valid_determinant_nonfixed_indices,
     rhs_nonfixed_indices[!is.na(bijection_nonfixed_indices)]
   )
   valid_determinant_attrs <- nonfixed_info$nonfixed[valid_determinant_nonfixed_indices]
@@ -484,7 +459,7 @@ discover <- function(
   )
   report(
     paste(
-      with_number(length(valid_dependant_attrs), "attribute", "", "s"),
+      with_number(length(simple_key_info$valid_dependant_attrs), "attribute", "", "s"),
       "considered as non-fixed dependants"
     )
   )
@@ -493,9 +468,9 @@ discover <- function(
   simple_key_fds <- Reduce(
     c,
     lapply(
-      attr_names[determinant_keys],
+      attr_names[simple_key_info$determinant_keys],
       \(det) lapply(
-        setdiff(attr_names[valid_dependant_attrs], det),
+        setdiff(attr_names[simple_key_info$valid_dependant_attrs], det),
         \(dep) list(det, dep)
       )
     ),
@@ -505,7 +480,7 @@ discover <- function(
     method,
     DFD = DFD(
       lookup[nonfixed_info$nonfixed],
-      valid_dependant_attrs = valid_dependant_attrs,
+      valid_dependant_attrs = simple_key_info$valid_dependant_attrs,
       valid_determinant_attrs = valid_determinant_attrs,
       valid_determinant_nonfixed_indices = valid_determinant_nonfixed_indices,
       attr_names = attr_names[nonfixed_info$nonfixed],
@@ -522,7 +497,7 @@ discover <- function(
       lookup,
       method = "Sep",
       determinants = valid_determinant_attrs,
-      dependants = valid_dependant_attrs,
+      dependants = simple_key_info$valid_dependant_attrs,
       detset_limit = detset_limit,
       report = report
     ),
@@ -530,7 +505,7 @@ discover <- function(
       lookup,
       method = "Joint",
       determinants = valid_determinant_attrs,
-      dependants = valid_dependant_attrs,
+      dependants = simple_key_info$valid_dependant_attrs,
       detset_limit = detset_limit,
       report = report
     )
@@ -546,9 +521,9 @@ discover <- function(
     )
     dependencies <- add_deps_implied_by_simple_keys(
       dependencies,
-      attr_names[determinant_keys],
-      attr_names[dependant_keys],
-      attr_names[valid_dependant_attrs]
+      attr_names[simple_key_info$determinant_keys],
+      attr_names[simple_key_info$dependant_keys],
+      attr_names[simple_key_info$valid_dependant_attrs]
     )
     dependencies <- flatten(dependencies)
   }
@@ -569,6 +544,47 @@ extract_fixed_attributes <- function(lookup, determinants, dependants, report) {
     nonfixed = nonfixed,
     nonfixed_determinants = intersect(determinants, nonfixed),
     nonfixed_dependants = intersect(dependants, nonfixed)
+  )
+}
+
+extract_simple_keys <- function(nonfixed_info, lookup, skip_bijections, report) {
+  attr_names <- names(lookup)
+  # Non-fixed attributes might be single-attribute keys: we can list them as
+  # determining all other non-fixed attributes, use them in the main search only
+  # as dependants. If there are several single-attribute keys, and we're
+  # skipping bijections, then we can also remove all but one of them as
+  # dependants.
+  valid_determinant_attrs <- nonfixed_info$nonfixed_determinants
+  # Can't just check column values are seq_len(nrow(df)),
+  # because df can have duplicate rows, and we can't remove
+  # the duplicate rows in df, because it changes the behaviour
+  # for accuracy < 1.
+  simple_keys <- nonfixed_info$nonfixed[vapply(
+    df_unique(lookup[nonfixed_info$nonfixed]),
+    Negate(anyDuplicated),
+    logical(1)
+  )]
+  determinant_keys <- intersect(simple_keys, nonfixed_info$nonfixed_determinants)
+  dependant_keys <- intersect(simple_keys, nonfixed_info$nonfixed_dependants)
+  valid_dependant_attrs <- nonfixed_info$nonfixed_dependants
+  if (length(simple_keys) > 0) {
+    report(paste("single-attribute keys:", toString(attr_names[simple_keys])))
+    valid_determinant_attrs <- setdiff(valid_determinant_attrs, simple_keys)
+    if (skip_bijections) {
+      valid_dependant_attrs <- setdiff(
+        nonfixed_info$nonfixed_dependants,
+        dependant_keys[-1]
+      )
+    }
+  }
+  list(
+    determinant_keys = determinant_keys,
+    dependant_keys = dependant_keys,
+    valid_dependant_attrs = valid_dependant_attrs,
+    valid_determinant_nonfixed_indices = match(
+      valid_determinant_attrs,
+      nonfixed_info$nonfixed
+    )
   )
 }
 
