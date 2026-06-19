@@ -507,7 +507,7 @@ extract_fixed_attributes <- function(
     fixed_dependants = intersect(fixed, dependants),
     nonfixed = nonfixed,
     nonfixed_determinants = intersect(determinants, nonfixed),
-    nonfixed_dependants = intersect(dependants, nonfixed),
+    nonfixed_dependants = intersect(dependants, nonfixed)
   )
 }
 
