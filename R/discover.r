@@ -790,7 +790,6 @@ lookup_indices <- function(x) {
   # difficulties in rejoin(), but using identical() logic
   # here at least means we can always call autodb() without
   # a data frame violating its own schema.
-  indices <- rep(NA_integer_, length(x))
   vapply(
     x,
     \(y) Position(\(u) identical(y, u), x),

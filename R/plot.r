@@ -909,7 +909,6 @@ column_subclass_plot_info.default <- function(a, nest_level) {
 column_subclass_plot_info.matrix <- function(a, nest_level) {
   b <- a[TRUE, drop = TRUE]
   cl <- class(b)[[1]]
-  size_info <- lapply(b, column_subsize_plot_info)
   if (cl != "list")
     return(list(class = cl))
   sublist_info <- column_subclass_plot_info(b, nest_level - 1L)
