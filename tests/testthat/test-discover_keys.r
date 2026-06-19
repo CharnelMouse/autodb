@@ -415,6 +415,10 @@ describe("discover_keys", {
           list(
             list(),
             list(size_limit = size_limit)
+          ),
+          list(
+            list(skip_bijections = FALSE),
+            list(skip_bijections = TRUE)
           )
         ) |>
           unname() |>

@@ -13,7 +13,8 @@ discover_keys(
   exclude_class = character(),
   size_limit = ncol(df),
   progress = FALSE,
-  progress_file = ""
+  progress_file = "",
+  skip_bijections = FALSE
 )
 }
 \arguments{
@@ -50,6 +51,11 @@ dependency search in \code{\link{discover}}.}
 \item{progress_file}{a scalar character or a connection. If \code{progress}
 is non-zero, determines where the progress is written to, in the same way
 as the \code{file} argument for \code{\link[base]{cat}}.}
+
+\item{skip_bijections}{a logical, indicating whether to skip some key
+searches that are made redundant by discovered bijections between
+attributes. This can significantly speed up the search. See Details in the
+documentation for \code{\link{discover}} for more information.}
 }
 \value{
 A list of character vectors, containing the discovered keys. The

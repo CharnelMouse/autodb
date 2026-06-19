@@ -24,6 +24,10 @@
 #'   from any given class.
 #' @param size_limit an integer, indicating the largest key size to search for.
 #'   By default, this is large enough to allow all attributes.
+#' @param skip_bijections a logical, indicating whether to skip some key
+#'   searches that are made redundant by discovered bijections between
+#'   attributes. This can significantly speed up the search. See Details in the
+#'   documentation for \code{\link{discover}} for more information.
 #' @inheritParams discover
 #'
 #' @return A list of character vectors, containing the discovered keys. The
@@ -60,7 +64,8 @@ discover_keys <- function(
   exclude_class = character(),
   size_limit = ncol(df),
   progress = FALSE,
-  progress_file = ""
+  progress_file = "",
+  skip_bijections = FALSE
 ) {
   report <- reporter(progress, progress_file, new = TRUE)
 
@@ -135,7 +140,7 @@ discover_keys <- function(
   simple_key_info <- extract_simple_keys(
     nonfixed_info,
     lookup,
-    skip_bijections = FALSE,
+    skip_bijections,
     report
   )
   bijection_info <- extract_bijections(
@@ -143,7 +148,7 @@ discover_keys <- function(
     simple_key_info,
     lookup,
     attr_names,
-    skip_bijections = FALSE,
+    skip_bijections,
     detset_limit = ncol(lookup),
     report
   )
@@ -159,7 +164,22 @@ discover_keys <- function(
     size_limit = size_limit,
     report = report
   )
-  c(simple_keys, keys)
+  keys <- c(simple_keys, keys)
+  if (skip_bijections) {
+    keys <- lapply(keys, match, attr_names) |>
+      add_keys_implied_by_bijections(
+        bijection_info$bijections,
+        nonfixed_info$nonfixed,
+        attr_names
+      ) |>
+      add_keys_implied_by_simple_keys(
+        simple_key_info$determinant_keys,
+        simple_key_info$dependant_keys,
+        simple_key_info$valid_dependant_attrs
+      ) |>
+      lapply(\(x) attr_names[x])
+  }
+  keys
 }
 
 MMCS <- function(
@@ -336,3 +356,56 @@ MMCS_visit <- function(
 # W := ¬S, so E \ W = E /\ S, which is empty.
 # We therefore have the same heuristic as for FDHitsSep.
 sample_minheur_MMCS <- sample_minheur_sep
+
+add_keys_implied_by_bijections <- function(
+  keys,
+  bijections,
+  nonfixed,
+  column_names
+) {
+  for (b in lapply(bijections, \(x) nonfixed[x])) {
+    # first is the one used in discovery
+    first_index <- b[[1]]
+    # non-first can substitute for first in keys
+    without_first <- Filter(
+      \(d) is.element(first_index, d),
+      keys
+    ) |>
+      lapply(\(d) d[d != first_index])
+    keys <- c(
+      keys,
+      outer(
+        without_first,
+        b[-1],
+        Map,
+        f = \(k, x) sort(c(k, x))
+      )
+    )
+    stopifnot(!anyDuplicated(keys))
+  }
+  keys
+}
+
+add_keys_implied_by_simple_keys <- function(
+  keys,
+  determinant_keys,
+  dependant_keys,
+  valid_dependant_attrs
+) {
+  # non-first can substitute for first in compound keys
+  if (length(determinant_keys) > 0) {
+    first_det <- determinant_keys[[1]]
+    without_first <- Filter(
+      \(d) is.element(first_det, d) && length(d) > 1,
+      keys
+    ) |>
+      lapply(\(d) d[d != first_det])
+    keys <- c(
+      keys,
+      outer(without_first, determinant_keys[-1], Map, f = \(k, x) sort(c(k, x)))
+    )
+    stopifnot(!anyDuplicated(keys))
+  }
+
+  keys
+}
