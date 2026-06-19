@@ -113,14 +113,53 @@ discover_keys <- function(
     df[] <- lapply(df, format_if_float, digits = digits)
   }
   report("simplifying data types")
-  df <- lookup_table(df)
+  lookup <- lookup_table(df)
 
-  MMCS(
-    df,
-    determinants = valid_determinant_attrs_prefixing,
+  nonfixed_info <- extract_fixed_attributes(
+    lookup,
+    valid_determinant_attrs_prefixing,
+    seq_along(lookup),
+    report
+  )
+  # check for zero dependants before removing simple keys, otherwise
+  # returning early would leave out the simple-key results
+  if (length(nonfixed_info$nonfixed_dependants) == 0) {
+    report("no nonfixed dependants, skipping search")
+    return(list(character()))
+  }
+  if (size_limit < 1) {
+    report("size_limit < 1 with nonfixed attributes, skipping search")
+    return(list())
+  }
+
+  simple_key_info <- extract_simple_keys(
+    nonfixed_info,
+    lookup,
+    skip_bijections = FALSE,
+    report
+  )
+  bijection_info <- extract_bijections(
+    nonfixed_info,
+    simple_key_info,
+    lookup,
+    attr_names,
+    skip_bijections = FALSE,
+    detset_limit = ncol(lookup),
+    report
+  )
+
+  simple_keys <- as.list(attr_names[simple_key_info$determinant_keys])
+  if (size_limit == 1) {
+    report("size_limit == 1, skipping search")
+    return(simple_keys)
+  }
+  keys <- MMCS(
+    lookup[nonfixed_info$nonfixed],
+    determinants = bijection_info$valid_determinant_nonfixed_indices,
     size_limit = size_limit,
     report = report
   )
+  c(simple_keys, keys)
 }
 
 MMCS <- function(
