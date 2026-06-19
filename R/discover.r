@@ -383,77 +383,19 @@ discover <- function(
   }
 
   simple_key_info <- extract_simple_keys(nonfixed_info, lookup, skip_bijections, report)
-
-  # look for single-attribute bijections
-  # these are cheaper to check than the general FD case, because we can use
-  # identical()
-  # record bijection A <-> B if A and B are in both dependants and determinants,
-  # with A earlier
-  # this is not strictly necessary: we can still make use of a bijection group
-  # if there are multiple determinants or multiple dependants, even if these
-  # don't overlap. allowing for this is a TODO.
-  bijections <- list()
-  rhs_nonfixed_indices <- which(nonfixed_info$nonfixed %in% simple_key_info$valid_dependant_attrs)
-  bijection_nonfixed_indices <- vapply(
-    rhs_nonfixed_indices,
-    \(rhs) {
-      if (
-        !skip_bijections ||
-        detset_limit == 0 ||
-        !is.element(rhs, simple_key_info$valid_determinant_nonfixed_indices)
-      )
-        return(NA_integer_)
-      lhs_nonfixed_indices <- simple_key_info$valid_determinant_nonfixed_indices[
-        simple_key_info$valid_determinant_nonfixed_indices < rhs
-      ]
-      lhs_bijection_candidates <- intersect(
-        lhs_nonfixed_indices,
-        rhs_nonfixed_indices
-      )
-      lhs_bijection_candidates[vapply(
-        lookup[nonfixed_info$nonfixed][lhs_bijection_candidates],
-        identical,
-        logical(1),
-        lookup[nonfixed_info$nonfixed][[rhs]]
-      )][1]
-    },
-    integer(1)
+  bijection_info <- extract_bijections(
+    nonfixed_info,
+    simple_key_info,
+    lookup,
+    attr_names,
+    skip_bijections,
+    detset_limit,
+    report
   )
-  for (n in which(!is.na(bijection_nonfixed_indices))) {
-    rhs <- rhs_nonfixed_indices[[n]]
-    bijection_candidate_nonfixed_index <- bijection_nonfixed_indices[[n]]
-    report(paste(
-      attr_names[nonfixed_info$nonfixed][c(rhs, bijection_candidate_nonfixed_index)],
-      collapse = " equivalent to "
-    ))
-    bij_ind <- match(bijection_candidate_nonfixed_index, names(bijections))
-    if (is.na(bij_ind))
-      bijections <- c(
-        bijections,
-        stats::setNames(
-          list(c(bijection_candidate_nonfixed_index, rhs)),
-          bijection_candidate_nonfixed_index
-        )
-      )
-    else{
-      bijections[[bij_ind]] <- c(
-        bijections[[bij_ind]],
-        rhs
-      )
-    }
-  }
-  valid_determinant_nonfixed_indices <- setdiff(
-    simple_key_info$valid_determinant_nonfixed_indices,
-    rhs_nonfixed_indices[!is.na(bijection_nonfixed_indices)]
-  )
-  valid_determinant_attrs <- nonfixed_info$nonfixed[valid_determinant_nonfixed_indices]
-  # should trim dependants here too
-  # this needs some rewriting for the case where a bijection's first
-  # attribute isn't both determinant and dependant
 
   report(
     paste(
-      with_number(length(valid_determinant_attrs), "attribute", "", "s"),
+      with_number(length(bijection_info$valid_determinant_attrs), "attribute", "", "s"),
       "considered as determinants"
     )
   )
@@ -481,10 +423,11 @@ discover <- function(
     DFD = DFD(
       lookup[nonfixed_info$nonfixed],
       valid_dependant_attrs = simple_key_info$valid_dependant_attrs,
-      valid_determinant_attrs = valid_determinant_attrs,
-      valid_determinant_nonfixed_indices = valid_determinant_nonfixed_indices,
+      valid_determinant_attrs = bijection_info$valid_determinant_attrs,
+      valid_determinant_nonfixed_indices =
+        bijection_info$valid_determinant_nonfixed_indices,
       attr_names = attr_names[nonfixed_info$nonfixed],
-      rhs_nonfixed_indices = rhs_nonfixed_indices[is.na(bijection_nonfixed_indices)],
+      rhs_nonfixed_indices = bijection_info$rhs_nonfixed_indices,
       accuracy = accuracy,
       full_cache  = full_cache,
       store_cache = store_cache,
@@ -496,7 +439,7 @@ discover <- function(
     FDHitsSep = FDHits(
       lookup,
       method = "Sep",
-      determinants = valid_determinant_attrs,
+      determinants = bijection_info$valid_determinant_attrs,
       dependants = simple_key_info$valid_dependant_attrs,
       detset_limit = detset_limit,
       report = report
@@ -504,7 +447,7 @@ discover <- function(
     FDHitsJoint = FDHits(
       lookup,
       method = "Joint",
-      determinants = valid_determinant_attrs,
+      determinants = bijection_info$valid_determinant_attrs,
       dependants = simple_key_info$valid_dependant_attrs,
       detset_limit = detset_limit,
       report = report
@@ -515,7 +458,7 @@ discover <- function(
     dependencies <- unflatten(dependencies, attr_names)
     dependencies <- add_deps_implied_by_bijections(
       dependencies,
-      bijections,
+      bijection_info$bijections,
       attr_names[nonfixed_info$nonfixed],
       attr_names
     )
@@ -585,6 +528,93 @@ extract_simple_keys <- function(nonfixed_info, lookup, skip_bijections, report) 
       valid_determinant_attrs,
       nonfixed_info$nonfixed
     )
+  )
+}
+
+extract_bijections <- function(
+  nonfixed_info,
+  simple_key_info,
+  lookup,
+  attr_names,
+  skip_bijections,
+  detset_limit,
+  report
+) {
+  # look for single-attribute bijections
+  # these are cheaper to check than the general FD case, because we can use
+  # identical()
+  # record bijection A <-> B if A and B are in both dependants and determinants,
+  # with A earlier
+  # this is not strictly necessary: we can still make use of a bijection group
+  # if there are multiple determinants or multiple dependants, even if these
+  # don't overlap. allowing for this is a TODO.
+  nonfixed_lookup <- lookup[nonfixed_info$nonfixed]
+  bijections <- list()
+  rhs_nonfixed_indices <- which(nonfixed_info$nonfixed %in% simple_key_info$valid_dependant_attrs)
+  bijection_nonfixed_indices <- vapply(
+    rhs_nonfixed_indices,
+    \(rhs) {
+      if (
+        !skip_bijections ||
+        detset_limit == 0 ||
+        !is.element(rhs, simple_key_info$valid_determinant_nonfixed_indices)
+      )
+        return(NA_integer_)
+      lhs_nonfixed_indices <- simple_key_info$valid_determinant_nonfixed_indices[
+        simple_key_info$valid_determinant_nonfixed_indices < rhs
+      ]
+      lhs_bijection_candidates <- intersect(
+        lhs_nonfixed_indices,
+        rhs_nonfixed_indices
+      )
+      lhs_bijection_candidates[vapply(
+        nonfixed_lookup[lhs_bijection_candidates],
+        identical,
+        logical(1),
+        nonfixed_lookup[[rhs]]
+      )][1]
+    },
+    integer(1)
+  )
+  for (n in which(!is.na(bijection_nonfixed_indices))) {
+    rhs <- rhs_nonfixed_indices[[n]]
+    bijection_candidate_nonfixed_index <- bijection_nonfixed_indices[[n]]
+    report(paste(
+      attr_names[nonfixed_info$nonfixed][c(rhs, bijection_candidate_nonfixed_index)],
+      collapse = " equivalent to "
+    ))
+    bij_ind <- match(bijection_candidate_nonfixed_index, names(bijections))
+    if (is.na(bij_ind))
+      bijections <- c(
+        bijections,
+        stats::setNames(
+          list(c(bijection_candidate_nonfixed_index, rhs)),
+          bijection_candidate_nonfixed_index
+        )
+      )
+    else{
+      bijections[[bij_ind]] <- c(
+        bijections[[bij_ind]],
+        rhs
+      )
+    }
+  }
+  valid_determinant_nonfixed_indices <- setdiff(
+    simple_key_info$valid_determinant_nonfixed_indices,
+    rhs_nonfixed_indices[!is.na(bijection_nonfixed_indices)]
+  )
+  # should trim dependants here too
+  # this needs some rewriting for the case where a bijection's first
+  # attribute isn't both determinant and dependant
+  list(
+    bijections = bijections,
+    rhs_nonfixed_indices = rhs_nonfixed_indices[
+      is.na(bijection_nonfixed_indices)
+    ],
+    valid_determinant_nonfixed_indices = valid_determinant_nonfixed_indices,
+    valid_determinant_attrs = nonfixed_info$nonfixed[
+      valid_determinant_nonfixed_indices
+    ]
   )
 }
 
