@@ -87,7 +87,7 @@ decompose <- function(
     database(references(schema), check = check)
 }
 
-create_insert <- function(df, schema, digits = getOption("digits")) {
+create_insert <- function(df, schema, digits = getOption("digits"), check = TRUE) {
   if (!is.na(digits))
     df <- df_coarsen(df, digits)
   relations <- stats::setNames(
@@ -103,7 +103,10 @@ create_insert <- function(df, schema, digits = getOption("digits")) {
     ),
     names(schema)
   )
-  relation(relations, attrs_order(schema))
+  if (check)
+    relation(relations, attrs_order(schema))
+  else
+    relation_nocheck(relations, attrs_order(schema))
 }
 
 drop_primary_dups <- function(df, prim_key) {
