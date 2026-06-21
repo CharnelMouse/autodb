@@ -78,5 +78,6 @@ subschema
 subschemas
 superkey
 testthat
+tibble
 tibbles
 wansink
