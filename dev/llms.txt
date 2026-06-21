@@ -127,6 +127,8 @@ See the vignette for more details.
   : Relational data attribute order
 - [`autodb()`](https://charnelmouse.github.io/autodb/dev/reference/autodb.md)
   : Create a normalised database from a data frame
+- [`autokey()`](https://charnelmouse.github.io/autodb/dev/reference/autokey.md)
+  : Create a relation from a data frame
 - [`autoref()`](https://charnelmouse.github.io/autodb/dev/reference/autoref.md)
   : Add foreign key references to a normalised database
 - [`create()`](https://charnelmouse.github.io/autodb/dev/reference/create.md)

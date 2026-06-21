@@ -62,7 +62,8 @@
 <span>  exclude_class <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  size_limit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span>,</span>
 <span>  progress <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  progress_file <span class="op">=</span> <span class="st">""</span></span>
+<span>  progress_file <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  skip_bijections <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -118,6 +119,13 @@ dependency search in <code><a href="discover.html">discover</a></code>.</p></dd>
 <dd><p>a scalar character or a connection. If <code>progress</code>
 is non-zero, determines where the progress is written to, in the same way
 as the <code>file</code> argument for <code><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></code>.</p></dd>
+
+
+<dt id="arg-skip-bijections">skip_bijections<a class="anchor" aria-label="anchor" href="#arg-skip-bijections"></a></dt>
+<dd><p>a logical, indicating whether to skip some key
+searches that are made redundant by discovered bijections between
+attributes. This can significantly speed up the search. See Details in the
+documentation for <code><a href="discover.html">discover</a></code> for more information.</p></dd>
 
 </dl></div>
     <div class="section level2">

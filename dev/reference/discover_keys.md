@@ -13,7 +13,8 @@ discover_keys(
   exclude_class = character(),
   size_limit = ncol(df),
   progress = FALSE,
-  progress_file = ""
+  progress_file = "",
+  skip_bijections = FALSE
 )
 ```
 
@@ -72,6 +73,15 @@ discover_keys(
   a scalar character or a connection. If `progress` is non-zero,
   determines where the progress is written to, in the same way as the
   `file` argument for [`cat`](https://rdrr.io/r/base/cat.html).
+
+- skip_bijections:
+
+  a logical, indicating whether to skip some key searches that are made
+  redundant by discovered bijections between attributes. This can
+  significantly speed up the search. See Details in the documentation
+  for
+  [`discover`](https://charnelmouse.github.io/autodb/dev/reference/discover.md)
+  for more information.
 
 ## Value
 

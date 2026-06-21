@@ -62,6 +62,8 @@
 <li>Added missing value counts to <code>gv</code> and <code>d2</code> methods for classes containing data.</li>
 <li>Remove integrity checks for concatenating relations or databases together, for performance: since the only change is some renaming, concatenating valid relations/databases shouldn’t result in any violations anyway.</li>
 <li>Added support for skipping simple keys, and bijections if <code>skip_bijections = TRUE</code> in <code>discover</code>, for all methods, rather than just DFD.</li>
+<li>Added support for skipping fixed attributes, simple keys, and bijections if <code>skip_bijections = TRUE</code> in <code>discover</code>, for <code>discover_keys</code>.</li>
+<li>Added <code>autokey</code> to add keys to a given data frame. This is to <code>discover_keys</code> as <code>autodb</code> is to <code>discover</code>.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="3.2.4" id="autodb-324">autodb 3.2.4<a class="anchor" aria-label="anchor" href="#autodb-324"></a></h2><p class="text-muted">CRAN release: 2025-11-17</p>
