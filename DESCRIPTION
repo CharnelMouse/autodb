@@ -33,6 +33,7 @@ Suggests:
     R.utils (>= 2.11.0),
     hedgehog (>= 0.1),
     tibble (>= 3.2.1),
+    jsonlite(>= 2.0.0),
     knitr,
     rmarkdown
 Config/testthat/edition: 3
