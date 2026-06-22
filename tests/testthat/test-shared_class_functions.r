@@ -1405,70 +1405,70 @@ describe("add_lookup", {
       sep = "\n"
     ),
     {
-    forall(
-      list(
-        gen.choice(
-          gen.relation_schema(letters[1:8], 0, 10),
-          gen.database_schema(letters[1:8], 0, 10),
-          gen.relation(letters[1:8], 0, 10),
-          gen.database(letters[1:8], 0, 10)
+      forall(
+        list(
+          gen.choice(
+            gen.relation_schema(letters[1:8], 0, 10),
+            gen.database_schema(letters[1:8], 0, 10),
+            gen.relation(letters[1:8], 0, 10),
+            gen.database(letters[1:8], 0, 10)
+          ),
+          gen.sample_resampleable(letters[1:8], to = 10)
         ),
-        gen.sample_resampleable(letters[1:8], to = 10)
-      ),
-      function(x, as) {
-        as <- unique(as)
-        y <- add_lookup(x, as)
-        if (!identical(y[names(x)], x))
-          return(fail("original relations affected"))
-        ks <- Reduce(c, keys(x), init = list())
-        key_present <- vapply(
-          as,
-          \(a) any(vapply(ks, identical, logical(1), a)),
-          logical(1)
-        )
-        if (all(key_present))
-          return(expect_identical(y, x))
-        as <- as[!key_present]
-        if (identical(y, x))
-          return(fail(paste0(toString(as), "are not keys, but object not changed")))
-        extra <- setdiff(names(y), c(names(x), as))
-        if (length(extra) > 0)
-          return(fail(paste0(
-            "unexpected relation ",
-            with_number(length(extra), "name", "", "s"),
-            ": ",
-            toString(extra)
-          )))
-        if (!inherits(x, c("database_schema", "database")))
-          return(succeed())
-        new_refs <- setdiff(references(y), references(x))
-        if (!all(vapply(
-          new_refs,
-          \(ref) all(vapply(ref[2:4], is.element, logical(1), as)),
-          logical(1)
-        ))) {
-          return(fail("there are new references not referring to the new lookups"))
-        }
-        orphans <- vapply(
-          as,
-          \(a) {
-            attr_rels <- names(x)[vapply(attrs(x), is.element, logical(1), el = a)]
-            !all(vapply(
-              attr_rels,
-              \(nm) any(vapply(
-                references(y),
-                \(ref) ref[[1]] == nm && is.element(a, ref[[2]]),
+        function(x, as) {
+          as <- unique(as)
+          y <- add_lookup(x, as)
+          if (!identical(y[names(x)], x))
+            return(fail("original relations affected"))
+          ks <- Reduce(c, keys(x), init = list())
+          key_present <- vapply(
+            as,
+            \(a) any(vapply(ks, identical, logical(1), a)),
+            logical(1)
+          )
+          if (all(key_present))
+            return(expect_identical(y, x))
+          as <- as[!key_present]
+          if (identical(y, x))
+            return(fail(paste0(toString(as), "are not keys, but object not changed")))
+          extra <- setdiff(names(y), c(names(x), as))
+          if (length(extra) > 0)
+            return(fail(paste0(
+              "unexpected relation ",
+              with_number(length(extra), "name", "", "s"),
+              ": ",
+              toString(extra)
+            )))
+          if (!inherits(x, c("database_schema", "database")))
+            return(succeed())
+          new_refs <- setdiff(references(y), references(x))
+          if (!all(vapply(
+            new_refs,
+            \(ref) all(vapply(ref[2:4], is.element, logical(1), as)),
+            logical(1)
+          ))) {
+            return(fail("there are new references not referring to the new lookups"))
+          }
+          orphans <- vapply(
+            as,
+            \(a) {
+              attr_rels <- names(x)[vapply(attrs(x), is.element, logical(1), el = a)]
+              !all(vapply(
+                attr_rels,
+                \(nm) any(vapply(
+                  references(y),
+                  \(ref) ref[[1]] == nm && is.element(a, ref[[2]]),
+                  logical(1)
+                )),
                 logical(1)
-              )),
-              logical(1)
-            ))
-          },
-          logical(1)
-        )
-        if (any(orphans))
-          return(fail("there are original relations with a lookup attribute not in a foreign key"))
-        succeed()
-      }
-    )
-  })
+              ))
+            },
+            logical(1)
+          )
+          if (any(orphans))
+            return(fail("there are original relations with a lookup attribute not in a foreign key"))
+          succeed()
+        }
+      )
+    })
 })
