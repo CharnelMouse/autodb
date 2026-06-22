@@ -1361,3 +1361,101 @@ describe("merge_relations", {
     )
   })
 })
+
+describe("add_lookup", {
+  it("expects a single existing column name (WRT attrs_order)", {
+    rs <- relation_schema(
+      list(ab = list(c("a", "b"), list(c("a", "b")))),
+      c("a", "b", "c")
+    )
+    ds <- database_schema(rs, list())
+    rel <- create(rs)
+    db <- create(ds)
+    expect_no_error(add_lookup(rs, "c"))
+    expect_no_error(add_lookup(ds, "c"))
+    expect_no_error(add_lookup(rel, "c"))
+    expect_no_error(add_lookup(db, "c"))
+    expect_error(
+      add_lookup(rs, "d"),
+      "^attribute d does not exist in x$"
+    )
+    expect_error(
+      add_lookup(ds, "d"),
+      "^attribute d does not exist in x$"
+    )
+    expect_error(
+      add_lookup(rel, "d"),
+      "^attribute d does not exist in x$"
+    )
+    expect_error(
+      add_lookup(db, "d"),
+      "^attribute d does not exist in x$"
+    )
+  })
+  it(
+    paste(
+      "satisfies the following:",
+      "- leaves the original relation schemas / relations and references unchanged",
+      "- does nothing iff attr is a key",
+      "- adds a new attr-only relation (schema) if it's not a key",
+      "- adds non-transitive references to new schema if object has references",
+      "- keeps any original references",
+      "- may add new references with new lookup as the parent",
+      "- has no original relation with attr and no outgoing reference using attr",
+      sep = "\n"
+    ),
+    {
+    forall(
+      list(
+        gen.choice(
+          gen.relation_schema(letters[1:8], 0, 10),
+          gen.database_schema(letters[1:8], 0, 10),
+          gen.relation(letters[1:8], 0, 10),
+          gen.database(letters[1:8], 0, 10)
+        ),
+        gen.element(letters[1:8])
+      ),
+      function(x, attr) {
+        y <- add_lookup(x, attr)
+        if (!identical(y[names(x)], x))
+          return(fail("original relations affected"))
+        ks <- Reduce(c, keys(x), init = list())
+        if (any(vapply(ks, identical, logical(1), attr)))
+          return(expect_identical(y, x))
+        if (identical(y, x))
+          return(fail(paste(attr, "is not a key, but object not changed")))
+        extra <- setdiff(names(y), c(names(x), attr))
+        if (length(extra) > 0)
+          return(fail(paste0(
+            "unexpected relation ",
+            with_number(length(extra), "name", "", "s"),
+            ": ",
+            toString(extra)
+          )))
+        if (!inherits(x, c("database_schema", "database")))
+          return(succeed())
+        new_refs <- setdiff(references(y), references(x))
+        if (!all(vapply(
+          new_refs,
+          \(ref) all(vapply(ref[2:4], identical, logical(1), attr)),
+          logical(1)
+        ))) {
+          return(fail("there are new references not referring to the new lookup"))
+        }
+        attr_rels <- names(x)[vapply(attrs(x), is.element, logical(1), el = attr)]
+        if (!all(vapply(
+          attr_rels,
+          \(nm) any(vapply(
+            references(y),
+            \(ref) ref[[1]] == nm && is.element(attr, ref[[2]]),
+            logical(1)
+          )),
+          logical(1)
+        )))
+          return(fail("there are original relations with attr not in a foreign key"))
+
+        succeed()
+      }
+    )
+  })
+})

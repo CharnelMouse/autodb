@@ -708,3 +708,35 @@ as.data.frame.relation <- function(
     names(res) <- nm
   res
 }
+
+#' @exportS3Method
+add_lookup.relation <- function(x, attr) {
+  if (!is.element(attr, attrs_order(x)))
+    stop(paste("attribute", attr, "does not exist in x"))
+  ks <- Reduce(c, keys(x), init = list())
+  if (any(vapply(ks, identical, logical(1), attr)))
+    return(x)
+  res <- c(
+    x,
+    relation(
+      stats::setNames(
+        list(list(
+          df = stats::setNames(data.frame(logical()), attr),
+          keys = list(attr)
+        )),
+        attr
+      ),
+      attrs_order(x)
+    )
+  )
+  attr_rels <- names(x)[vapply(
+    attrs(x),
+    is.element,
+    logical(1),
+    el = attr
+  )]
+  for (nm in attr_rels) {
+    res <- insert(res, records(x)[[nm]], relations = attr)
+  }
+  res
+}

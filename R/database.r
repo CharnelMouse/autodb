@@ -535,3 +535,24 @@ print.database <- function(x, max = 10, ...) {
   print(subrelations(x), max = max, ...)
   print_references(references(x), max)
 }
+
+#' @exportS3Method
+add_lookup.database <- function(x, attr) {
+  new_rel <- add_lookup(subrelations(x), attr)
+  if (length(new_rel) == length(x))
+    return(database(new_rel, references(x)))
+  attr_rels <- names(x)[vapply(
+    attrs(x),
+    is.element,
+    logical(1),
+    el = attr
+  )]
+  attr_children <- Filter(\(ref) is.element(attr, ref[[2]]), references(x)) |>
+    vapply(\(ref) ref[[1]], character(1))
+  attr_orphans <- setdiff(attr_rels, attr_children)
+  new_refs <- c(
+    references(x),
+    lapply(attr_orphans, \(nm) list(nm, attr, attr, attr))
+  )
+  database(new_rel, new_refs)
+}

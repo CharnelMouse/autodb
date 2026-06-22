@@ -462,3 +462,19 @@ as.data.frame.relation_schema <- function(
     names(res) <- nm
   res
 }
+
+#' @exportS3Method
+add_lookup.relation_schema <- function(x, attr) {
+  if (!is.element(attr, attrs_order(x)))
+    stop(paste("attribute", attr, "does not exist in x"))
+  ks <- Reduce(c, keys(x), init = list())
+  if (any(vapply(ks, identical, logical(1), attr)))
+    return(x)
+  c(
+    x,
+    relation_schema(
+      stats::setNames(list(list(attr, list(attr))), attr),
+      attrs_order(x)
+    )
+  )
+}

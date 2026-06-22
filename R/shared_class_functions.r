@@ -474,3 +474,7 @@ check_reassignment_same_class <- function(value, x) {
   if (!identical(class(value), class(x)))
     stop("value must also be a ", class(x)[[1]], " object")
 }
+
+add_lookup <- function(x, attr) {
+  UseMethod("add_lookup")
+}
