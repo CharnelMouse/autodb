@@ -475,6 +475,29 @@ check_reassignment_same_class <- function(value, x) {
     stop("value must also be a ", class(x)[[1]], " object")
 }
 
-add_lookup <- function(x, attr) {
+#' Add attribute lookup relations
+#'
+#' Create single-attribute relations for each of a given set of attributes. If
+#' the original object also contains references, then the new lookup relations are
+#' connected to other appearances of their attribute by chains of references.
+#'
+#' If an attribute in \code{as} already appears as a key in a relation, then it
+#' does not have a lookup relation added, and values from other relations are
+#' not added to the relations where it is a key.
+#'
+#' @param x a relational schema object, such as a \code{\link{relation_schema}}
+#'   or \code{\link{database_schema}} object, or a relational data object, such
+#'   as a \code{\link{relation}} or \code{\link{database}} object.
+#' @param as a character vector of elements from \code{\link{attrs_order}(x)},
+#'   indicating which attributes to create lookup tables for.
+#'
+#' @return an object of the same class as \code{x}.
+#' @export
+#' @examples
+#' db <- autodb(ChickWeight)
+#' db
+#' add_lookup(db, "Time")
+#' add_lookup(db, "Chick") # Chick is already a key, so this does nothing
+add_lookup <- function(x, as) {
   UseMethod("add_lookup")
 }
