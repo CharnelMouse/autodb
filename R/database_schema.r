@@ -411,22 +411,23 @@ print.database_schema <- function(x, max = 10, ...) {
 }
 
 #' @exportS3Method
-add_lookup.database_schema <- function(x, attr) {
-  new_rs <- add_lookup(subschemas(x), attr)
+add_lookup.database_schema <- function(x, as) {
+  new_rs <- add_lookup(subschemas(x), as)
   if (length(new_rs) == length(x))
     return(database_schema(new_rs, references(x)))
-  attr_rels <- names(x)[vapply(
-    attrs(x),
-    is.element,
-    logical(1),
-    el = attr
-  )]
-  attr_children <- Filter(\(ref) is.element(attr, ref[[2]]), references(x)) |>
-    vapply(\(ref) ref[[1]], character(1))
-  attr_orphans <- setdiff(attr_rels, attr_children)
-  new_refs <- c(
-    references(x),
-    lapply(attr_orphans, \(nm) list(nm, attr, attr, attr))
-  )
+  used_as <- setdiff(names(new_rs), names(x))
+  new_refs <- lapply(
+    names(x),
+    \(nm) {
+      rel_as <- used_as[is.element(used_as, attrs(x)[[nm]])]
+      ref_attrs <- references(x) |>
+        Filter(f = \(ref) ref[[1]] == nm) |>
+        lapply(\(ref) ref[[2]]) |>
+        Reduce(f = c, init = character())
+      orphans <- setdiff(rel_as, ref_attrs)
+      lapply(orphans, \(a) list(nm, a, a, a))
+    }
+  ) |>
+    Reduce(f = c, init = references(x))
   database_schema(new_rs, new_refs)
 }
