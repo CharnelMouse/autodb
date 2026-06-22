@@ -1396,6 +1396,7 @@ describe("add_lookup", {
     paste(
       "satisfies the following for each attribute:",
       "- leaves the original relation schemas / relations and references unchanged",
+      "- is idempotent",
       "- does nothing iff attr is a key",
       "- adds a new attr-only relation (schema) if it's not a key",
       "- adds non-transitive references to new schema if object has references",
@@ -1418,6 +1419,9 @@ describe("add_lookup", {
         function(x, as) {
           as <- unique(as)
           y <- add_lookup(x, as)
+          # idempotent: equivalence fine, but identical means no extra work
+          if (!identical(add_lookup(y, as), y))
+            return(fail("not idempotent"))
           if (!identical(y[names(x)], x))
             return(fail("original relations affected"))
           ks <- Reduce(c, keys(x), init = list())
