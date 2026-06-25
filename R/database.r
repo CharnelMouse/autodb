@@ -539,21 +539,75 @@ print.database <- function(x, max = 10, ...) {
 #' @exportS3Method
 add_lookup.database <- function(x, as) {
   new_rel <- add_lookup(subrelations(x), as)
-  if (length(new_rel) == length(x))
-    return(database(new_rel, references(x)))
-  used_as <- setdiff(names(new_rel), names(x))
+  added_relnames <- setdiff(names(new_rel), names(x))
+  nonadded_lookup_attrs <- setdiff(
+    as,
+    vapply(keys(new_rel[added_relnames]), `[[`, character(1), 1)
+  )
+  nonadded_keysets <- lapply(keys(x), intersect, nonadded_lookup_attrs) |>
+    lapply(Reduce, f = c, init = character())
+  nonadded_keyrels <- lapply(
+    nonadded_lookup_attrs,
+    \(a) names(nonadded_keysets[vapply(nonadded_keysets, is.element, logical(1), el = a)])
+  )
+
+  nonadded_value_sets <- value_sets(x, nonadded_lookup_attrs)
+  nonadded_values <- lapply(nonadded_value_sets, \(x) unique(Reduce(c, x, init = character())))
+  nonadded_key_value_sets <- Map(
+    \(vs, rels) vs[rels],
+    nonadded_value_sets,
+    nonadded_keyrels
+  )
+  nonadded_lookup_candidates <- Map(
+    \(vs, vals) names(vs)[vapply(vs, setequal, logical(1), vals)],
+    nonadded_key_value_sets,
+    nonadded_values
+  )
+
+  nonadded_ncand <- lengths(nonadded_lookup_candidates)
+  stopifnot(all(nonadded_ncand > 0)) # if zero, .relation added lookup
+  if (any(nonadded_ncand > 1))
+    stop(paste(
+      by_number(sum(nonadded_ncand > 1), "attribute", "", "s"),
+      toString(nonadded_lookup_attrs[nonadded_ncand > 1]),
+      by_number(sum(nonadded_ncand > 1), "ha", "s", "ve"),
+      "multiple lookup candidates"
+    ))
+  lookups <- as.character(nonadded_lookup_candidates)
   new_refs <- lapply(
-    names(x),
+    setdiff(names(x), lookups),
     \(nm) {
-      rel_as <- used_as[is.element(used_as, attrs(x)[[nm]])]
+      in_rel <- is.element(nonadded_lookup_attrs, attrs(x)[[nm]])
+      rel_as <- nonadded_lookup_attrs[in_rel]
       ref_attrs <- references(x) |>
         Filter(f = \(ref) ref[[1]] == nm) |>
         lapply(\(ref) ref[[2]]) |>
         Reduce(f = c, init = character())
       orphans <- setdiff(rel_as, ref_attrs)
-      lapply(orphans, \(a) list(nm, a, a, a))
+      Map(\(a, p) list(nm, a, p, a), orphans, lookups[match(orphans, rel_as)])
     }
   ) |>
-    Reduce(f = c, init = references(x))
+    Reduce(f = c, init = references(x)) |>
+    unname()
+
+  # add FKs for added lookups
+  used_nms <- setdiff(names(new_rel), names(x))
+  used_as <- vapply(keys(new_rel[used_nms]), `[[`, character(1), 1)
+  new_refs <- lapply(
+    names(x),
+    \(nm) {
+      in_rel <- is.element(used_as, attrs(x)[[nm]])
+      rel_as <- used_as[in_rel]
+      lookups <- used_nms[in_rel]
+      ref_attrs <- references(x) |>
+        Filter(f = \(ref) ref[[1]] == nm) |>
+        lapply(\(ref) ref[[2]]) |>
+        Reduce(f = c, init = character())
+      orphans <- setdiff(rel_as, ref_attrs)
+      Map(\(a, p) list(nm, a, p, a), orphans, lookups[match(orphans, rel_as)])
+    }
+  ) |>
+    Reduce(f = c, init = new_refs) |>
+    unname()
   database(new_rel, new_refs)
 }

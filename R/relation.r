@@ -720,12 +720,12 @@ add_lookup.relation <- function(x, as) {
       by_number(n_absent, "do", "es", ""),
       "not exist in x")
     )
-  ks <- Reduce(c, keys(x), init = list())
-  key_present <- vapply(
-    as,
-    \(a) any(vapply(ks, identical, logical(1), a)),
-    logical(1)
-  )
+
+  value_sets <- value_sets(x, as)
+  values <- lapply(value_sets, \(x) unique(Reduce(c, x, init = logical())))
+
+  is_key <- lapply(as, \(a) vapply(keys(x), \(ks) any(vapply(ks, identical, logical(1), a)), logical(1)))
+  key_present <- mapply(\(vs, v, ik) any(lengths(vs[names(ik)[ik]]) == length(v)), value_sets, values, is_key)
   if (all(key_present))
     return(x)
   nonkey_attrs <- as[!key_present]
@@ -739,16 +739,19 @@ add_lookup.relation <- function(x, as) {
       attrs_order(x)
     )
   )
-  for (a in nonkey_attrs) {
-    attr_rels <- names(x)[vapply(
-      attrs(x),
-      is.element,
-      logical(1),
-      el = a
-    )]
-    for (nm in attr_rels) {
-      res <- insert(res, records(x)[[nm]], relations = a)
-    }
+  new_nms <- names(res)[setdiff(seq_along(res), seq_along(x))]
+  stopifnot(length(new_nms) == sum(!key_present))
+  for (nk in which(!key_present)) {
+    res <- insert(res, stats::setNames(data.frame(values[[nk]]), as[[nk]]), relations = new_nms[[match(nk, which(!key_present))]])
   }
   res
+}
+
+value_sets <- function(x, as) {
+  present <- outer(attrs(x), as, Map, f = \(x, y) is.element(y, x))
+  value_sets <- lapply(
+    stats::setNames(seq_along(as), as),
+    \(n) lapply(records(x)[as.logical(unlist(present[, n]))], \(dat) unique(dat[[as[[n]]]]))
+  )
+  value_sets
 }

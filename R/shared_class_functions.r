@@ -483,7 +483,9 @@ check_reassignment_same_class <- function(value, x) {
 #'
 #' If an attribute in \code{as} already appears as a key in a relation, then it
 #' does not have a lookup relation added, and values from other relations are
-#' not added to the relations where it is a key.
+#' not added to the relations where it is a key. The exception is if \code{x} is
+#' a relational data object, and no such relation contains all of the given
+#' values for that attribute.
 #'
 #' @param x a relational schema object, such as a \code{\link{relation_schema}}
 #'   or \code{\link{database_schema}} object, or a relational data object, such

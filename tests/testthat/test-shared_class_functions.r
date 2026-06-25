@@ -1395,83 +1395,327 @@ describe("add_lookup", {
   it(
     paste(
       "satisfies the following for each attribute:",
-      "- leaves the original relation schemas / relations and references unchanged",
+      "- leaves the original relations and references unchanged",
       "- is idempotent",
-      "- does nothing iff attr is a key",
-      "- adds a new attr-only relation (schema) if it's not a key",
-      "- adds non-transitive references to new schema if object has references",
-      "- keeps any original references",
-      "- may add new references with new lookup as the parent",
-      "- has no original relation with attr and no outgoing reference using attr",
+      "- if object has data:",
+      "  - each attr is a key for a relation with all of its observed values",
+      "- if object has references:",
+      "  - adds non-transitive references referring to new lookups",
+      "  - results in a unique final-reference stop for each attribute",
+      "  - has no original relation with attr and no outgoing reference using attr",
+      "- adds no relations iff all attrs are keys",
+      "- can add relations only for given attributes",
       sep = "\n"
     ),
     {
       forall(
         list(
+          gen.sample(letters[1:8], gen.int(10), replace = TRUE) |>
+            gen.shrink(shrinker = shrink.list),
           gen.choice(
             gen.relation_schema(letters[1:8], 0, 10),
             gen.database_schema(letters[1:8], 0, 10),
             gen.relation(letters[1:8], 0, 10),
             gen.database(letters[1:8], 0, 10)
-          ),
-          gen.sample_resampleable(letters[1:8], to = 10)
+          )
         ),
-        function(x, as) {
+        function(as, x) {
+          has_data <- inherits(x, c("relation", "database"))
+          has_refs <- inherits(x, c("database_schema", "database"))
+          same_relsch <- function(x, y) {
+            identical(attrs(y[names(x)]), attrs(x)) &&
+              identical(keys(y[names(x)]), keys(x))
+          }
+          same_rels <- function(x, y) {
+            identical(records(y[names(x)]), records(x)) &&
+              identical(keys(y[names(x)]), keys(x))
+          }
+          nondata_has_final <- function(y, nonkey_as) {
+            vapply(
+              nonkey_as,
+              \(a) {
+                has_a <- vapply(attrs(y), is.element, logical(1), el = a)
+                refs_a <- references(y) |>
+                  Filter(f = \(ref) is.element(a, ref[[2]])) |>
+                  vapply(
+                    \(ref) match(c(ref[[1]], ref[[3]]), names(y)[has_a]),
+                    integer(2)
+                  )
+                mat_a <- matrix(FALSE, nrow = sum(has_a), ncol = sum(has_a))
+                diag(mat_a) <- TRUE
+                for (r in seq_len(ncol(refs_a)))
+                  mat_a[refs_a[[1, r]], refs_a[[2, r]]] <- TRUE
+                old <- mat_a
+                new <- mat_a %*% mat_a
+                new <- matrix(as.logical(new), nrow = nrow(mat_a), ncol = ncol(mat_a))
+                while (!identical(new, old)) {
+                  old <- new
+                  new <- new %*% mat_a
+                  new <- matrix(as.logical(new), nrow = nrow(mat_a), ncol = ncol(mat_a))
+                }
+                all(apply(new, 1, any))
+              },
+              logical(1)
+            )
+          }
+          data_has_final <- function(y, as) {
+            vapply(
+              as,
+              \(a) {
+                has_a <- vapply(attrs(y), is.element, logical(1), el = a)
+                refs_a <- references(y) |>
+                  Filter(f = \(ref) is.element(a, ref[[2]])) |>
+                  vapply(
+                    \(ref) match(c(ref[[1]], ref[[3]]), names(y)[has_a]),
+                    integer(2)
+                  )
+                mat_a <- matrix(FALSE, nrow = sum(has_a), ncol = sum(has_a))
+                diag(mat_a) <- TRUE
+                for (r in seq_len(ncol(refs_a)))
+                  mat_a[refs_a[[1, r]], refs_a[[2, r]]] <- TRUE
+                old <- mat_a
+                new <- mat_a %*% mat_a
+                new <- matrix(as.logical(new), nrow = nrow(mat_a), ncol = ncol(mat_a))
+                while (!identical(new, old)) {
+                  old <- new
+                  new <- new %*% mat_a
+                  new <- matrix(as.logical(new), nrow = nrow(mat_a), ncol = ncol(mat_a))
+                }
+                all(apply(new, 1, any))
+              },
+              logical(1)
+            )
+          }
+          nondata_orphans <- function(x, y, nonkey_as) {
+            vapply(
+              nonkey_as,
+              \(a) {
+                attr_rels <- names(x)[vapply(attrs(x), is.element, logical(1), el = a)]
+                !all(vapply(
+                  attr_rels,
+                  \(nm) any(vapply(
+                    references(y),
+                    \(ref) ref[[1]] == nm && is.element(a, ref[[2]]),
+                    logical(1)
+                  )),
+                  logical(1)
+                ))
+              },
+              logical(1)
+            )
+          }
+          data_orphans <- function(x, y, nonkey_as) {
+            vapply(
+              nonkey_as,
+              \(a) {
+                orig_rels <- names(x)[vapply(attrs(x), is.element, logical(1), el = a)]
+                all_rels <- names(y)[vapply(attrs(y), is.element, logical(1), el = a)]
+                # if no new rels for a, then one rel is a lookup, else none are
+                child <- vapply(
+                  orig_rels,
+                  \(nm) any(vapply(
+                    references(y),
+                    \(ref) ref[[1]] == nm && is.element(a, ref[[2]]),
+                    logical(1)
+                  )),
+                  logical(1)
+                )
+                # if no new lookup, exactly one rel should have no parents
+                sum(!child) != (length(all_rels) == length(orig_rels))
+              },
+              logical(1)
+            )
+          }
+
+          msg <- character()
+
           as <- unique(as)
-          y <- add_lookup(x, as)
-          # idempotent: equivalence fine, but identical means no extra work
-          if (!identical(add_lookup(y, as), y))
-            return(fail("not idempotent"))
-          if (!identical(y[names(x)], x))
-            return(fail("original relations affected"))
+          y <- try(add_lookup(x, as), silent = TRUE)
+          if (class(y)[[1]] == "try-error") {
+            if (inherits(x, "database"))
+              discard()
+            else
+              return(fail(paste(
+                "unexpected error:",
+                attr(y, "condition")$message
+              )))
+          }
           ks <- Reduce(c, keys(x), init = list())
           key_present <- vapply(
             as,
             \(a) any(vapply(ks, identical, logical(1), a)),
             logical(1)
           )
-          if (all(key_present))
-            return(expect_identical(y, x))
-          as <- as[!key_present]
-          if (identical(y, x))
-            return(fail(paste0(toString(as), "are not keys, but object not changed")))
-          extra <- setdiff(names(y), c(names(x), as))
-          if (length(extra) > 0)
-            return(fail(paste0(
-              "unexpected relation ",
-              with_number(length(extra), "name", "", "s"),
-              ": ",
-              toString(extra)
-            )))
-          if (!inherits(x, c("database_schema", "database")))
-            return(succeed())
-          new_refs <- setdiff(references(y), references(x))
-          if (!all(vapply(
-            new_refs,
-            \(ref) all(vapply(ref[2:4], is.element, logical(1), as)),
-            logical(1)
-          ))) {
-            return(fail("there are new references not referring to the new lookups"))
-          }
-          orphans <- vapply(
-            as,
-            \(a) {
-              attr_rels <- names(x)[vapply(attrs(x), is.element, logical(1), el = a)]
-              !all(vapply(
-                attr_rels,
-                \(nm) any(vapply(
-                  references(y),
-                  \(ref) ref[[1]] == nm && is.element(a, ref[[2]]),
-                  logical(1)
-                )),
-                logical(1)
-              ))
-            },
-            logical(1)
+          nonkey_as <- as[!key_present]
+
+          # leaves original relations/references unchanged
+          if (!has_data && !same_relsch(x, y))
+            msg <- c(msg, "original relations affected")
+          if (has_data && !same_rels(x, y))
+            msg <- c(msg, "original relations affected")
+          if (
+            has_refs &&
+            any(!is.element(references(x), references(y[names(x)])))
           )
-          if (any(orphans))
-            return(fail("there are original relations with a lookup attribute not in a foreign key"))
-          succeed()
+            msg <- c(msg, "original references affected")
+
+          # idempotent: equivalence fine, but identical means no extra work
+          if (!identical(add_lookup(y, as), y))
+            msg <- c(msg, "not idempotent")
+
+          # if object has data...
+          if (has_data) {
+            ## each attr is a key for a relation with all of its observed values
+            key_cover <- vapply(
+              as[key_present],
+              \(a) {
+                value_rels <- vapply(attrs(y), is.element, logical(1), el = a)
+                key_rels <- vapply(
+                  keys(y),
+                  \(ks) any(vapply(ks, identical, logical(1), a)),
+                  logical(1)
+                )
+                value_sets <- records(y)[value_rels] |>
+                  lapply(\(x) unique(x[[a]]))
+                values <- unique(Reduce(c, value_sets, init = logical()))
+                any(lengths(value_sets) == length(values))
+              },
+              logical(1)
+            )
+            if (any(!key_cover))
+              msg <- c(
+                msg,
+                paste(
+                  by_number(sum(!key_cover), "attribute", "", "s"),
+                  toString(as[!key_cover]),
+                  by_number(sum(!key_cover), "ha", "s", "ve"),
+                  "no all-values key relation"
+                )
+              )
+          }
+
+          # if object has references:
+          # - adds non-transitive references referring to new lookups
+          if (has_refs && !has_data) {
+            ## for database_schema, don't choose which existing key relation
+            ## to use as a lookup, so references only have new relations
+            ## as parents
+            new_refs <- setdiff(references(y), references(x))
+            if (!all(vapply(
+              new_refs,
+              \(ref) all(vapply(ref[2:4], is.element, logical(1), make.unique_after(as, names(x)))),
+              logical(1)
+            )))
+              msg <- c(msg, "there are new references not referring to the new lookups")
+          }
+          if (has_refs && has_data) {
+            ## for database, existing key relations can be lookups, but
+            ## new references should only refer to one relation per attribute,
+            ## and that relation is new when one is available
+            new_refs <- setdiff(references(y), references(x))
+            new_attrs <- vapply(new_refs, `[[`, character(1), 2)
+            new_parents <- vapply(new_refs, `[[`, character(1), 3)
+            if (any(!is.element(new_attrs, as)))
+              msg <- c(msg, "there are new references for attributes not in as")
+            new_groups <- split(new_parents, new_attrs)[intersect(new_attrs, as)] |>
+              lapply(unique)
+            new_multirel <- lengths(new_groups) > 1
+            if (any(new_multirel))
+              msg <- c(
+                msg,
+                paste(
+                  by_number(sum(new_multirel), "attribute", "", "s"),
+                  toString(names(new_groups)[new_multirel]),
+                  by_number(sum(new_multirel), "ha", "s", "ve"),
+                  "multiple parents in new references"
+                )
+              )
+          }
+
+          # - results in a unique final-reference stop for each attribute
+          if (has_refs && !has_data) {
+            has_final <- nondata_has_final(y, nonkey_as)
+            if (any(!has_final))
+              msg <- c(
+                msg,
+                paste(
+                  by_number(sum(!has_final), "non-key attribute", "", "s"),
+                  toString(as[!has_final]),
+                  by_number(sum(!has_final), "ha", "s", "ve"),
+                  "no universal lookup table"
+                )
+              )
+          }
+          if (has_data && has_refs) {
+            has_final <- data_has_final(y, as)
+            if (any(!has_final))
+              msg <- c(
+                msg,
+                paste(
+                  by_number(sum(!has_final), "attribute", "", "s"),
+                  toString(as[!has_final]),
+                  by_number(sum(!has_final), "ha", "s", "ve"),
+                  "no universal lookup table"
+                )
+              )
+          }
+
+          # - has no original non-lookup relation with attr and no outgoing reference using attr
+          if (has_refs && !has_data) {
+            orphans <- nondata_orphans(x, y, nonkey_as)
+            if (any(orphans))
+              msg <- c(
+                msg,
+                paste(
+                  "non-key",
+                  by_number(sum(orphans), "attribute", "", "s"),
+                  toString(nonkey_as[orphans]),
+                  by_number(sum(orphans), "ha", "s", "ve"),
+                  "original relations with no outgoing reference"
+                )
+              )
+          }
+          if (has_data && has_refs) {
+            orphans <- data_orphans(x, y, nonkey_as)
+            if (any(orphans))
+              msg <- c(
+                msg,
+                paste(
+                  by_number(sum(orphans), "attribute", "", "s"),
+                  toString(nonkey_as[orphans]),
+                  by_number(sum(orphans), "ha", "s", "ve"),
+                  "original non-lookup relations with no outgoing reference"
+                )
+              )
+          }
+
+          # adds no relations iff all attrs are keys
+          if (all(key_present)) {
+            if (!has_data && !same_relsch(x, y))
+              msg <- c(msg, "all attrs already have keys, but relations changed")
+            if (has_data && !same_rels(x, y))
+              msg <- c(msg, "all attrs already have keys, but relations changed")
+          }
+          if (!all(key_present) && identical(y, x))
+            msg <- c(msg, paste(toString(nonkey_as), "are not keys, but object not changed"))
+
+          # can add relations only for given attributes
+          extra <- setdiff(names(y), make.unique(c(names(x), as)))
+          if (length(extra) > 0)
+            msg <- c(
+              msg,
+              paste0(
+                "unexpected relation ",
+                by_number(length(extra), "name", "", "s"),
+                ": ",
+                toString(extra)
+              )
+            )
+
+          if (length(msg) == 0)
+            succeed()
+          else
+            fail(paste(msg, collapse = "\n"))
         }
       )
     })

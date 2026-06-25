@@ -25,7 +25,9 @@ connected to other appearances of their attribute by chains of references.
 \details{
 If an attribute in \code{as} already appears as a key in a relation, then it
 does not have a lookup relation added, and values from other relations are
-not added to the relations where it is a key.
+not added to the relations where it is a key. The exception is if \code{x} is
+a relational data object, and no such relation contains all of the given
+values for that attribute.
 }
 \examples{
 db <- autodb(ChickWeight)
