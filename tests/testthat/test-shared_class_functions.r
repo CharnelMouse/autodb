@@ -1634,12 +1634,12 @@ describe("add_lookup", {
 
           # - results in a unique final-reference stop for each attribute
           if (has_refs && !has_data) {
-            has_final <- nondata_has_final(y, nonkey_as)
+            has_final <- nondata_has_final(y, as)
             if (any(!has_final))
               msg <- c(
                 msg,
                 paste(
-                  by_number(sum(!has_final), "non-key attribute", "", "s"),
+                  by_number(sum(!has_final), "attribute", "", "s"),
                   toString(as[!has_final]),
                   by_number(sum(!has_final), "ha", "s", "ve"),
                   "no universal lookup table"
