@@ -481,11 +481,15 @@ check_reassignment_same_class <- function(value, x) {
 #' the original object also contains references, then the new lookup relations are
 #' connected to other appearances of their attribute by chains of references.
 #'
-#' If an attribute in \code{as} already appears as a key in a relation, then it
-#' does not have a lookup relation added, and values from other relations are
-#' not added to the relations where it is a key. The exception is if \code{x} is
-#' a relational data object, and no such relation contains all of the given
-#' values for that attribute.
+#' Whether an attribute in \code{as} gets a new key relation depends on the
+#' relations already present. An existing relation is considered to be a lookup
+#' if the following hold:
+#'
+#' - The attribute is a simple key for the relation;
+#' - If \code{x} is a relation data object, then the relation contains all given values for that attribute.
+#'
+#' If several relations could be a lookup for the attribute, then
+#' \code{add_lookup} fails.
 #'
 #' @param x a relational schema object, such as a \code{\link{relation_schema}}
 #'   or \code{\link{database_schema}} object, or a relational data object, such
@@ -500,6 +504,7 @@ check_reassignment_same_class <- function(value, x) {
 #' db
 #' add_lookup(db, "Time")
 #' add_lookup(db, "Chick") # Chick is already a key, so this does nothing
+#' \dontrun{add_lookup(c(db, db), "Chick") # fails: two lookup candidates}
 add_lookup <- function(x, as) {
   UseMethod("add_lookup")
 }
