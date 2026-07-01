@@ -19,8 +19,9 @@ an object of the same class as \code{x}.
 }
 \description{
 Create single-attribute relations for each of a given set of attributes. If
-the original object also contains references, then the new lookup relations are
-connected to other appearances of their attribute by chains of references.
+the original object also contains references, then the new lookup relations
+are connected to other appearances of their attribute by chains of
+references.
 }
 \details{
 Whether an attribute in \code{as} gets a new key relation depends on the
@@ -28,7 +29,8 @@ relations already present. An existing relation is considered to be a lookup
 if the following hold:
 \itemize{
 \item The attribute is a simple key for the relation;
-\item If \code{x} is a relation data object, then the relation contains all given values for that attribute.
+\item If \code{x} is a relation data object, then the relation contains all
+given values for that attribute.
 }
 
 If several relations could be a lookup for the attribute, then

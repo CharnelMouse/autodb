@@ -478,15 +478,18 @@ check_reassignment_same_class <- function(value, x) {
 #' Add attribute lookup relations
 #'
 #' Create single-attribute relations for each of a given set of attributes. If
-#' the original object also contains references, then the new lookup relations are
-#' connected to other appearances of their attribute by chains of references.
+#' the original object also contains references, then the new lookup relations
+#' are connected to other appearances of their attribute by chains of
+#' references.
 #'
 #' Whether an attribute in \code{as} gets a new key relation depends on the
 #' relations already present. An existing relation is considered to be a lookup
 #' if the following hold:
-#'
-#' - The attribute is a simple key for the relation;
-#' - If \code{x} is a relation data object, then the relation contains all given values for that attribute.
+#' \itemize{
+#'   \item The attribute is a simple key for the relation;
+#'   \item If \code{x} is a relation data object, then the relation contains all
+#'     given values for that attribute.
+#' }
 #'
 #' If several relations could be a lookup for the attribute, then
 #' \code{add_lookup} fails.
