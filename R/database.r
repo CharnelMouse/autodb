@@ -564,6 +564,7 @@ add_lookup.database <- function(x, as) {
     nonadded_values
   )
 
+  # add FKs for existing relations deemed as lookups
   nonadded_ncand <- lengths(nonadded_lookup_candidates)
   stopifnot(all(nonadded_ncand > 0)) # if zero, .relation added lookup
   if (any(nonadded_ncand > 1))
@@ -574,7 +575,7 @@ add_lookup.database <- function(x, as) {
       "multiple lookup candidates"
     ))
   lookups <- as.character(nonadded_lookup_candidates)
-  new_refs <- lapply(
+  existing_lookup_refs <- lapply(
     setdiff(names(x), lookups),
     \(nm) {
       in_rel <- is.element(nonadded_lookup_attrs, attrs(x)[[nm]])
@@ -586,14 +587,12 @@ add_lookup.database <- function(x, as) {
       orphans <- setdiff(rel_as, ref_attrs)
       Map(\(a, p) list(nm, a, p, a), orphans, lookups[match(orphans, rel_as)])
     }
-  ) |>
-    Reduce(f = c, init = references(x)) |>
-    unname()
+  )
 
   # add FKs for added lookups
   used_nms <- setdiff(names(new_rel), names(x))
   used_as <- vapply(keys(new_rel[used_nms]), `[[`, character(1), 1)
-  new_refs <- lapply(
+  new_lookup_refs <- lapply(
     names(x),
     \(nm) {
       in_rel <- is.element(used_as, attrs(x)[[nm]])
@@ -606,8 +605,13 @@ add_lookup.database <- function(x, as) {
       orphans <- setdiff(rel_as, ref_attrs)
       Map(\(a, p) list(nm, a, p, a), orphans, lookups[match(orphans, rel_as)])
     }
+  )
+
+  new_refs <- Reduce(
+    c,
+    c(existing_lookup_refs, new_lookup_refs),
+    init = references(x)
   ) |>
-    Reduce(f = c, init = new_refs) |>
     unname()
   database(new_rel, new_refs)
 }
