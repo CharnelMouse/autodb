@@ -14,6 +14,7 @@
 * Added support for skipping simple keys, and bijections if `skip_bijections = TRUE` in `discover`, for all methods, rather than just DFD.
 * Added support for skipping fixed attributes, simple keys, and bijections if `skip_bijections = TRUE` in `discover`, for `discover_keys`.
 * Added `autokey` to add keys to a given data frame. This is to `discover_keys` as `autodb` is to `discover`.
+* Added `add_lookup` to easily add a lookup relation for attributes that don't have one.
 
 # autodb 3.2.4
 
