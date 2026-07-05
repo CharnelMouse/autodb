@@ -399,8 +399,8 @@ discover(CO2, method = "DFD", accuracy = 0.8)
 #> 7 functional dependencies
 #> 5 attributes: Plant, Type, Treatment, conc, uptake
 #>      uptake -> Plant
-#>      uptake -> Type
 #>       Plant -> Type
+#>      uptake -> Type
 #>       Plant -> Treatment
 #>      uptake -> Treatment
 #>      uptake -> conc

@@ -2,6 +2,8 @@
 
 ## All functions
 
+- [`add_lookup()`](https://charnelmouse.github.io/autodb/dev/reference/add_lookup.md)
+  : Add attribute lookup relations
 - [`attrs()`](https://charnelmouse.github.io/autodb/dev/reference/attrs.md)
   [`` `attrs<-`() ``](https://charnelmouse.github.io/autodb/dev/reference/attrs.md)
   : Relational data attributes
