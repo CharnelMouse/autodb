@@ -4,7 +4,7 @@
 \alias{add_lookup}
 \title{Add attribute lookup relations}
 \usage{
-add_lookup(x, as)
+add_lookup(x, as, ...)
 }
 \arguments{
 \item{x}{a relational schema object, such as a \code{\link{relation_schema}}
@@ -13,6 +13,8 @@ as a \code{\link{relation}} or \code{\link{database}} object.}
 
 \item{as}{a character vector of elements from \code{\link{attrs_order}(x)},
 indicating which attributes to create lookup tables for.}
+
+\item{...}{further arguments pass on to methods.}
 }
 \value{
 an object of the same class as \code{x}.
@@ -41,5 +43,7 @@ db <- autodb(ChickWeight)
 db
 add_lookup(db, "Time")
 add_lookup(db, "Chick") # Chick is already a key, so this does nothing
+# data objects round numeric and complex values before checking given values
+add_lookup(db, "weight", digits = 3)
 \dontrun{add_lookup(c(db, db), "Chick") # fails: two lookup candidates}
 }

@@ -499,6 +499,7 @@ check_reassignment_same_class <- function(value, x) {
 #'   as a \code{\link{relation}} or \code{\link{database}} object.
 #' @param as a character vector of elements from \code{\link{attrs_order}(x)},
 #'   indicating which attributes to create lookup tables for.
+#' @param ... further arguments pass on to methods.
 #'
 #' @return an object of the same class as \code{x}.
 #' @export
@@ -507,7 +508,9 @@ check_reassignment_same_class <- function(value, x) {
 #' db
 #' add_lookup(db, "Time")
 #' add_lookup(db, "Chick") # Chick is already a key, so this does nothing
+#' # data objects round numeric and complex values before checking given values
+#' add_lookup(db, "weight", digits = 3)
 #' \dontrun{add_lookup(c(db, db), "Chick") # fails: two lookup candidates}
-add_lookup <- function(x, as) {
+add_lookup <- function(x, as, ...) {
   UseMethod("add_lookup")
 }

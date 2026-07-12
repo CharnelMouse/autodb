@@ -411,7 +411,7 @@ print.database_schema <- function(x, max = 10, ...) {
 }
 
 #' @exportS3Method
-add_lookup.database_schema <- function(x, as) {
+add_lookup.database_schema <- function(x, as, ...) {
   new_rs <- add_lookup(subschemas(x), as)
   if (length(new_rs) == length(x))
     return(database_schema(new_rs, references(x)))

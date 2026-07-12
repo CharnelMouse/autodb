@@ -760,20 +760,37 @@ gen.relation_from_schema <- function(
   variant = c("data.frame", "tibble")
 ) {
   variant <- match.arg(variant)
-  gen.pure(create(rs)) |>
-    gen.and_then(\(empty_rel) {
-      r_attrs <- attrs(empty_rel)
+  atomic <- TRUE
+  asable_classes <- c(
+    "logical",
+    "integer",
+    "numeric",
+    "character",
+    "factor",
+    if (!atomic) "list",
+    if (!atomic) "matrix",
+    if (!atomic) "data.frame"
+  )
+  used_classes <- gen.element(asable_classes) |>
+    gen.c(of = length(attrs_order(rs))) |>
+    gen.with(as.character) |>
+    gen.with(with_args(stats::setNames, nm = (attrs_order(rs))))
+  used_classes |>
+    gen.and_then(\(classes) {
+      r_attrs <- attrs(rs)
       r_ncols <- lengths(r_attrs)
-      r_keys <- keys(empty_rel)
+      r_keys <- keys(rs)
       lapply(
-        setNames(seq_along(empty_rel), names(empty_rel)),
+        setNames(seq_along(rs), names(rs)),
         \(n) {
           ks <- r_keys[[n]]
+          as <- r_attrs[[n]]
+          cls <- classes[as]
           gen.element(rows_from:rows_to) |>
             gen.and_then(with_args(
               gen.df_fixed_ranges,
-              classes = rep("logical", r_ncols[[n]]),
-              nms = r_attrs[[n]],
+              classes = cls,
+              nms = as,
               remove_dup_rows = TRUE,
               digits = digits,
               variant = variant
@@ -784,7 +801,10 @@ gen.relation_from_schema <- function(
             ))
         }
       ) |>
-        gen.with(with_args(relation_nocheck, attrs_order = attrs_order(empty_rel)))
+        gen.with(\(rels) {
+          empty_rel <- create(rs)
+          relation_nocheck(rels, attrs_order = attrs_order(empty_rel))
+        })
     })
 }
 

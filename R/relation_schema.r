@@ -464,7 +464,7 @@ as.data.frame.relation_schema <- function(
 }
 
 #' @exportS3Method
-add_lookup.relation_schema <- function(x, as) {
+add_lookup.relation_schema <- function(x, as, ...) {
   as <- unique(as)
   n_absent <- length(setdiff(as, attrs_order(x)))
   if (n_absent > 0)

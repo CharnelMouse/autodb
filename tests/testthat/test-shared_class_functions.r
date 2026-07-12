@@ -783,6 +783,33 @@ describe("insert", {
     )
   })
   it("does nothing when inserting nothing into nonempty relations, replaces into empty", {
+    expect_identical_dataclass <- function(x, relnames, ...) {
+      expect_biidentical(
+        with_args(
+          insert,
+          vals = data.frame(setNames(
+            lapply(attrs_order(x), \(x) logical()),
+            attrs_order(x)
+          )),
+          relations = relnames
+        ),
+        with_args(
+          rel2df %>>%
+            \(rels) {
+              nr <- vapply(records(rels)[relnames], nrow, integer(1))
+              records(rels)[relnames][nr == 0] <- lapply(
+                records(rels)[relnames][nr == 0],
+                \(rel) {
+                  rel[] <- lapply(rel, as.logical)
+                  rel
+                }
+              )
+              rels
+            },
+          relations = relnames
+        )
+      )(x)
+    }
     forall(
       gen.relation(letters[1:4], 0L, 6L, rows_from = 1L) |>
         gen.and_then(\(rel) {
@@ -791,19 +818,7 @@ describe("insert", {
             gen.subsequence(names(rel))
           )
         }),
-      \(r, relnames) {
-        expect_biidentical(
-          with_args(rel2df, relations = relnames),
-          with_args(
-            insert,
-            vals = data.frame(setNames(
-              lapply(attrs_order(r), \(x) logical()),
-              attrs_order(r)
-            )),
-            relations = relnames
-          )
-        )(r)
-      },
+      expect_identical_dataclass,
       curry = TRUE
     )
     forall(
@@ -838,20 +853,11 @@ describe("insert", {
         gen.and_then(\(db) {
           list(
             gen.pure(db),
-            gen.subsequence(names(db))
+            gen.subsequence(names(db)),
+            records(db)
           )
         }),
-      \(db, relnames) expect_biidentical(
-        with_args(rel2df, relations = relnames),
-        with_args(
-          insert,
-          vals = data.frame(setNames(
-            lapply(attrs_order(db), \(x) logical()),
-            attrs_order(db)
-          )),
-          relations = relnames
-        )
-      )(db),
+      expect_identical_dataclass,
       curry = TRUE
     )
     forall(
@@ -1363,7 +1369,7 @@ describe("merge_relations", {
 })
 
 describe("add_lookup", {
-  it("expects a single existing column name (WRT attrs_order)", {
+  it("expects a single existing column name (WRT attrs_order and appearance)", {
     rs <- relation_schema(
       list(ab = list(c("a", "b"), list(c("a", "b")))),
       c("a", "b", "c")
@@ -1371,6 +1377,10 @@ describe("add_lookup", {
     ds <- database_schema(rs, list())
     rel <- create(rs)
     db <- create(ds)
+    expect_no_error(add_lookup(rs, c("a", "b")))
+    expect_no_error(add_lookup(ds, c("a", "b")))
+    expect_no_error(add_lookup(rel, c("a", "b")))
+    expect_no_error(add_lookup(db, c("a", "b")))
     expect_no_error(add_lookup(rs, "c"))
     expect_no_error(add_lookup(ds, "c"))
     expect_no_error(add_lookup(rel, "c"))
@@ -1399,6 +1409,7 @@ describe("add_lookup", {
       "- is idempotent",
       "- if object has data:",
       "  - each attr is a key for a relation with all of its observed values",
+      "  - value class is preserved if identical everywhere in input",
       "- if object has references:",
       "  - adds non-transitive references referring to new lookups",
       "  - results in a unique final-reference stop for each attribute",
@@ -1408,18 +1419,38 @@ describe("add_lookup", {
       sep = "\n"
     ),
     {
+      x <- gen.choice(
+        gen.relation_schema(letters[1:8], 0, 10),
+        gen.database_schema(letters[1:8], 0, 10),
+        gen.relation(letters[1:8], 0, 10),
+        gen.database(letters[1:8], 0, 10)
+      )
       forall(
         list(
           gen.sample(letters[1:8], gen.int(10), replace = TRUE) |>
             gen.shrink(shrinker = shrink.list),
-          gen.choice(
-            gen.relation_schema(letters[1:8], 0, 10),
-            gen.database_schema(letters[1:8], 0, 10),
-            gen.relation(letters[1:8], 0, 10),
-            gen.database(letters[1:8], 0, 10)
+          gen.with(
+            x,
+            \(x) list(
+              x,
+              if (inherits(x, c("relation", "database")))
+                lapply(
+                  records(x),
+                  \(y) lapply(
+                    y,
+                    \(z) {
+                      if (inherits(z, "numeric"))
+                        format(z, digits = 21)
+                      else
+                        z
+                    }
+                  )
+                )
+            )
           )
         ),
         function(as, x) {
+          x <- x[[1]]
           has_data <- inherits(x, c("relation", "database"))
           has_refs <- inherits(x, c("database_schema", "database"))
           same_relsch <- function(x, y) {
@@ -1560,8 +1591,37 @@ describe("add_lookup", {
             msg <- c(msg, "original references affected")
 
           # idempotent: equivalence fine, but identical means no extra work
-          if (!identical(add_lookup(y, as), y))
-            msg <- c(msg, "not idempotent")
+          z <- try(add_lookup(y, as), silent = TRUE)
+          if (class(z)[[1]] == "try-error") {
+            return(fail(paste(
+              "unexpected error on second application:",
+              attr(z, "condition")$message
+            )))
+          }
+          if (!identical(z, y))
+            msg <- c(
+              msg,
+              paste(
+                "not idempotent:\n",
+                records(z)[setdiff(names(z), names(y))] |>
+                  vapply(
+                    \(w) paste0(
+                      "- ",
+                      names(w)[[1]],
+                      " = {",
+                      toString(
+                        if (inherits(w[[1]], "numeric"))
+                          format(w[[1]], digits = 15)
+                        else
+                          w[[1]]
+                      ),
+                      "}"
+                    ),
+                    character(1)
+                  ) |>
+                  paste(collapse = "\n")
+              )
+            )
 
           # if object has data...
           if (has_data) {
@@ -1576,8 +1636,9 @@ describe("add_lookup", {
                   logical(1)
                 )
                 value_sets <- records(y)[value_rels] |>
-                  lapply(\(x) unique(x[[a]]))
-                values <- unique(Reduce(c, value_sets, init = logical()))
+                  lapply(\(x) unique(coarsen_if_float(x[[a]], getOption("digits"))))
+                values <- Reduce(c, value_sets, init = logical()) |>
+                  unique()
                 any(lengths(value_sets) == length(values))
               },
               logical(1)
@@ -1590,6 +1651,37 @@ describe("add_lookup", {
                   toString(as[!key_cover]),
                   by_number(sum(!key_cover), "ha", "s", "ve"),
                   "no all-values key relation"
+                )
+              )
+
+            ## preserves class if unique original class vector
+            original_classes <- lapply(
+              as,
+              \(a) {
+                value_rels <- vapply(attrs(x), is.element, logical(1), el = a)
+                value_classes <- records(x)[value_rels] |>
+                  lapply(\(x) class(x[[a]])) |>
+                  unique()
+              }
+            )
+            classes <- lapply(
+              as,
+              \(a) {
+                value_rels <- vapply(attrs(y), is.element, logical(1), el = a)
+                value_classes <- records(y)[value_rels] |>
+                  lapply(\(x) class(x[[a]])) |>
+                  unique()
+              }
+            )
+            new_class <- lengths(classes)[lengths(original_classes) == 1] != 1
+            if (any(new_class))
+              msg <- c(
+                msg,
+                paste(
+                  by_number(sum(new_class), "attribute", "", "s"),
+                  toString(as[new_class]),
+                  by_number(sum(new_class), "ha", "s", "ve"),
+                  "lookup with different value class"
                 )
               )
           }

@@ -223,12 +223,20 @@ describe("remove_insertion_key_violations", {
     forall(
       gen.relation(letters[1:4], 0, 6) |>
         gen.and_then(\(r) {
+          used_attrs <- attrs_order(r) %in% Reduce(c, attrs(r), init = character())
+          used_classes <- vapply(
+            rejoin(`attrs_order<-`(r, value = attrs_order(r)[used_attrs])),
+            \(x) class(x)[[1]],
+            character(1)
+          )
+          cls <- rep("logical", length(attrs_order(r)))
+          cls[used_attrs] <- used_classes
           list(
             gen.pure(r),
             gen.int(10) |>
               gen.and_then(with_args(
                 gen.df_fixed_ranges,
-                classes = rep("logical", length(attrs_order(r))),
+                classes = cls,
                 nms = attrs_order(r),
                 remove_dup_rows = TRUE
               ))

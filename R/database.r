@@ -537,8 +537,8 @@ print.database <- function(x, max = 10, ...) {
 }
 
 #' @exportS3Method
-add_lookup.database <- function(x, as) {
-  new_rel <- add_lookup(subrelations(x), as)
+add_lookup.database <- function(x, as, digits = getOption("digits"), ...) {
+  new_rel <- add_lookup(subrelations(x), as, digits = digits, ...)
   added_relnames <- setdiff(names(new_rel), names(x))
   nonadded_lookup_attrs <- setdiff(
     as,
@@ -552,7 +552,17 @@ add_lookup.database <- function(x, as) {
   )
 
   nonadded_value_sets <- value_sets(x, nonadded_lookup_attrs)
-  nonadded_values <- lapply(nonadded_value_sets, \(x) unique(Reduce(c, x, init = character())))
+  empty_nonadded_value_set <- lengths(nonadded_value_sets) == 0
+  nonadded_values <- lapply(
+    nonadded_value_sets,
+    \(x) Reduce(c, x) |>
+      coarsen_if_float(digits = digits) |>
+      unique()
+  )
+  nonadded_values[empty_nonadded_value_set] <- rep(
+    list(logical()),
+    sum(empty_nonadded_value_set)
+  )
   nonadded_key_value_sets <- Map(
     \(vs, rels) vs[rels],
     nonadded_value_sets,
