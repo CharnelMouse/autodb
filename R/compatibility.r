@@ -113,7 +113,10 @@ df_rbind <- function(...) {
   any_dfs <- apply(df_els, 1, any)
   all_dfs <- apply(df_els, 1, all)
   if (any(any_dfs & !all_dfs))
-    stop("non-compatible elements")
+    stop(paste(
+      "non-compatible elements (data.frame and non-data.frame values)",
+      nms[any_dfs & !all_dfs]
+    ))
   df_els <- which(all_dfs)
   if (length(df_els) > 0) {
     ncol_mismatch <- vapply(
@@ -133,7 +136,7 @@ df_rbind <- function(...) {
       logical(1)
     )
     if (any(ncol_mismatch | name_mismatch))
-      stop("non-compatible elements")
+      stop("non-compatible elements (data.frame element ncols)")
     vals_df <- lapply(
       df_els,
       \(n) do.call(df_rbind, lapply(dfs, \(x) x[[n]]))
@@ -160,7 +163,7 @@ df_rbind <- function(...) {
   matrices <- which(any_matrices)
   if (length(matrices) > 0) {
     if (!all(all_matrices[any_matrices]))
-      stop("non-compatible elements")
+      stop("non-compatible elements (matrix and non-matrix values)")
     for (n in matrices) {
       for (m in seq_along(dfs)) {
         if (!is.matrix(dfs[[m]][[n]]))
@@ -176,7 +179,7 @@ df_rbind <- function(...) {
       logical(1)
     )
     if (any(ncol_mismatch))
-      stop("non-compatible elements")
+      stop("non-compatible elements (matrix element ncols)")
     for (m in seq_along(dfs)) {
       dfs[[m]][, matrices[ncol_mismatch]] <- lapply(
         dfs[[m]][, matrices[ncol_mismatch], drop = FALSE],
@@ -219,7 +222,7 @@ df_rbind <- function(...) {
   lists <- which(any_lists)
   if (length(lists) > 0) {
     if (!all(all_lists[any_lists]))
-      stop("non-compatible elements")
+      stop("non-compatible elements (list and non-list values)")
     vals_list <- do.call(
       rbind,
       c(
