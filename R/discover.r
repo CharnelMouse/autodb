@@ -302,6 +302,9 @@ discover <- function(
   if (skip_bijections && accuracy < 1)
     warning("skipping bijections when accuracy < 1 can result in incorrect output")
 
+  # round down
+  detset_limit <- as.integer(detset_limit)
+
   report <- reporter(progress, progress_file, new = TRUE)
 
   if (!isFALSE(keep_rownames)) {
