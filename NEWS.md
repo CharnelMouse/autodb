@@ -16,6 +16,7 @@
 * Added `autokey` to add keys to a given data frame. This is to `discover_keys` as `autodb` is to `discover`.
 * Added `add_lookup` to easily add a lookup relation for attributes that don't have one.
 * `insert.database` only does violation checks for affected references.
+* `functional_dependency` objects are now printed with the determinant in braces, to match similar printing functions.
 
 # autodb 3.2.4
 

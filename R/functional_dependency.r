@@ -236,7 +236,7 @@ as.character.functional_dependency <- function(
   ...
 ) {
   align_arrows <- match.arg(align_arrows)
-  det_txt <- vapply(detset(x), toString, character(1))
+  det_txt <- paste0("{", vapply(detset(x), toString, character(1)), "}")
   dep_txt <- dependant(x)
   switch(
     align_arrows,

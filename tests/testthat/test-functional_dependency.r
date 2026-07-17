@@ -78,7 +78,7 @@ describe("functional_dependency", {
     )
     expect_output(
       print(functional_dependency(list(list("a", "b")), c("a", "b"))),
-      "\\A1 functional dependency\\n2 attributes: a, b\\na -> b\\Z",
+      "\\A1 functional dependency\\n2 attributes: a, b\\n{a} -> b\\Z",
       perl = TRUE
     )
   })
