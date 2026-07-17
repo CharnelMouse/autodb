@@ -17,6 +17,7 @@
 * Added `add_lookup` to easily add a lookup relation for attributes that don't have one.
 * `insert.database` only does violation checks for affected references.
 * `functional_dependency` objects are now printed with the determinant in braces, to match similar printing functions.
+* Functional dependency violations in `decompose` are now reported with the same formatting as `functional_dependency` print
 
 # autodb 3.2.4
 

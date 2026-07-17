@@ -165,7 +165,7 @@ describe("decompose", {
         paste0(
           "\\A",
           "df doesn't satisfy functional dependencies in schema:",
-          "(\\n\\{.*\\} -> .*)+",
+          "(\\n *\\{.*\\} -> .*)+",
           "\\Z"
         ),
         perl = TRUE

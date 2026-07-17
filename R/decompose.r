@@ -69,16 +69,14 @@ decompose <- function(
     )
     if (!all(fds_satisfied)) {
       stop(paste(
-        "df doesn't satisfy functional dependencies in schema:",
-        paste(
-          vapply(
-            inferred_fds[!fds_satisfied],
-            \(fd) paste0("{", toString(fd[[1]]), "} -> ", fd[[2]]),
-            character(1)
-          ),
-          collapse = "\n"
+        c(
+          "df doesn't satisfy functional dependencies in schema:",
+          as.character(
+            functional_dependency(inferred_fds[!fds_satisfied], attrs_order(schema)),
+            align_arrows = "left"
+          )
         ),
-        sep = "\n"
+        collapse = "\n"
       ))
     }
   }
