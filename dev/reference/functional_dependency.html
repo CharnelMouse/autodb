@@ -112,8 +112,8 @@ for renaming the attributes in <code>attrs_order</code>.</p></div>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fds</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 functional dependencies</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 attributes: a, b, c, d</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> a, b -&gt; c</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      -&gt; d</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> {a, b} -&gt; c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     {} -&gt; d</span>
 <span class="r-in"><span><span class="fu"><a href="detset.html">detset</a></span><span class="op">(</span><span class="va">fds</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "a" "b"</span>
@@ -131,26 +131,26 @@ for renaming the attributes in <code>attrs_order</code>.</p></div>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fds</span>, <span class="va">fds2</span><span class="op">)</span> <span class="co"># attrs_order attributes are merged</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3 functional dependencies</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5 attributes: a, b, c, d, e</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> a, b -&gt; c</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      -&gt; d</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    e -&gt; a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> {a, b} -&gt; c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     {} -&gt; d</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    {e} -&gt; a</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fds</span>, <span class="va">fds</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 functional dependencies</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 attributes: a, b, c, d</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> a, b -&gt; c</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      -&gt; d</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> {a, b} -&gt; c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     {} -&gt; d</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># subsetting</span></span></span>
 <span class="r-in"><span><span class="va">fds</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 functional dependency</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 attributes: a, b, c, d</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> a, b -&gt; c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> {a, b} -&gt; c</span>
 <span class="r-in"><span><span class="va">fds</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3 functional dependencies</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 attributes: a, b, c, d</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> a, b -&gt; c</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      -&gt; d</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> a, b -&gt; c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> {a, b} -&gt; c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     {} -&gt; d</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> {a, b} -&gt; c</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">fds</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span>, <span class="va">fds</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># reassignment</span></span></span>
@@ -159,8 +159,8 @@ for renaming the attributes in <code>attrs_order</code>.</p></div>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fds3</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 functional dependencies</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 attributes: a, b, c, d</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> a, b -&gt; c</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    a -&gt; c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> {a, b} -&gt; c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    {a} -&gt; c</span>
 <span class="r-in"><span><span class="fu"><a href="detset.html">detset</a></span><span class="op">(</span><span class="va">fds3</span><span class="op">)</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="dependant.html">dependant</a></span><span class="op">(</span><span class="va">fds3</span><span class="op">)</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="st">"d"</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">fds3</span>, <span class="va">fds</span><span class="op">)</span><span class="op">)</span></span></span>
@@ -169,8 +169,8 @@ for renaming the attributes in <code>attrs_order</code>.</p></div>
 <span class="r-in"><span><span class="va">fds3</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 functional dependencies</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 attributes: d, c, b, a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> b, a -&gt; c</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      -&gt; d</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> {b, a} -&gt; c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     {} -&gt; d</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># reconstructing from components</span></span></span>
 <span class="r-in"><span><span class="va">fds_recon</span> <span class="op">&lt;-</span> <span class="fu">functional_dependency</span><span class="op">(</span></span></span>
@@ -181,9 +181,9 @@ for renaming the attributes in <code>attrs_order</code>.</p></div>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># can be a data frame column</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, fd <span class="op">=</span> <span class="va">fds</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   id        fd</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 a, b -&gt; c</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2      -&gt; d</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   id          fd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  1 {a, b} -&gt; c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  2     {} -&gt; d</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># (in)equality ignores header</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">fds3</span> <span class="op">==</span> <span class="va">fds</span><span class="op">)</span><span class="op">)</span></span></span>
@@ -200,7 +200,7 @@ for renaming the attributes in <code>attrs_order</code>.</p></div>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

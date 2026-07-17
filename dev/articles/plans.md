@@ -68,8 +68,8 @@ fds
 
     ## 2 functional dependencies
     ## 3 attributes: a, b, c
-    ## a, b -> c
-    ##    c -> a
+    ## {a, b} -> c
+    ##    {c} -> a
 
 ``` r
 
@@ -218,11 +218,11 @@ fds
 
     ## 5 functional dependencies
     ## 6 attributes: a, b, c, d, e, f
-    ##    a -> b
-    ##    a -> c
-    ##    b -> d
-    ##    c -> e
-    ## d, e -> f
+    ##    {a} -> b
+    ##    {a} -> c
+    ##    {b} -> d
+    ##    {c} -> e
+    ## {d, e} -> f
 
 Bernstein synthesis, and automatic foreign keys, give the following
 schema:

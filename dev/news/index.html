@@ -49,23 +49,52 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="autodb-development-version">autodb (development version)<a class="anchor" aria-label="anchor" href="#autodb-development-version"></a></h2>
-<ul><li>Added <code>discover_keys</code>, which searches for keys rather than functional dependencies. This scales better with column count than FD search.</li>
-<li>Added <code>rep</code> method for functional dependencies. This also allows the use of <code>outer</code>, e.g. for comparison with <code>==</code>.</li>
-<li>Added remaining inequality implementations for <code>functional_dependency</code> (<code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>).</li>
-<li>Added <code>remove_extraneous</code> to exported functions, for removing redundant dependencies or determinant attributes in a <code>functional_dependency</code> object. This is used as a step in <code>synthesise</code>, but is useful on its own.</li>
-<li>Added support for data with list columns. <code>duplicate</code>, <code>unique</code> etc. consider data frame rows different if they only differ by <code>NA</code> value classes in list columns. Previously, <code>discover</code> considered them to be equal, so a data frame with list columns could violate its own schema. This is now fixed, in exchange for a small performance hit when there are list columns.</li>
-<li>Added support for data with matrix columns. Similarly to lists, <code>duplicate</code> etc. account for matrices properly, rather than trying to treat them as vectors.</li>
-<li>Added support for data with data.frame columns. Similarly to lists, <code>duplicate</code> etc. account for data.frames properly, rather than trying to treat them as vectors.</li>
+<div class="section level3">
+<h3 id="new-functions-development-version">New functions<a class="anchor" aria-label="anchor" href="#new-functions-development-version"></a></h3>
+<ul><li>Added functions for key discovery:
+<ul><li>
+<code>discover_keys</code> is like <code>discover</code>, but searches for keys rather than functional dependencies. This scales better with column count than FD search.</li>
 <li>
-<code>rejoin</code> no longer sorts as it merges relations, since there might be list columns in the key, which aren’t sortable.</li>
-<li>Added nesting to <code>gv</code> and <code>d2</code> methods for classes containing data. This allows giving more detail when a data column is a list where elements have a common class or length.</li>
-<li>Added missing value counts to <code>gv</code> and <code>d2</code> methods for classes containing data.</li>
-<li>Remove integrity checks for concatenating relations or databases together, for performance: since the only change is some renaming, concatenating valid relations/databases shouldn’t result in any violations anyway.</li>
-<li>Added support for skipping simple keys, and bijections if <code>skip_bijections = TRUE</code> in <code>discover</code>, for all methods, rather than just DFD.</li>
-<li>Added support for skipping fixed attributes, simple keys, and bijections if <code>skip_bijections = TRUE</code> in <code>discover</code>, for <code>discover_keys</code>.</li>
-<li>Added <code>autokey</code> to add keys to a given data frame. This is to <code>discover_keys</code> as <code>autodb</code> is to <code>discover</code>.</li>
+<code>autokey</code> is like <code>autodb</code>, but just adds keys to the data frame (returning a length-one <code>relation</code> object).</li>
+</ul></li>
+<li>Added methods for <code>functional_dependency</code> objects:
+<ul><li>There is now a <code>rep</code> method. This also allows the use of <code>outer</code>, e.g. for comparison with <code>==</code>.</li>
+<li>Remaining inequality implementations (<code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>).</li>
+<li>
+<code>remove_extraneous</code> removes redundant dependencies and redundant determinant attributes. This is used as a step in <code>synthesise</code>, but is useful on its own.</li>
+</ul></li>
 <li>Added <code>add_lookup</code> to easily add a lookup relation for attributes that don’t have one.</li>
 </ul></div>
+<div class="section level3">
+<h3 id="functionality-improvements-development-version">Functionality improvements<a class="anchor" aria-label="anchor" href="#functionality-improvements-development-version"></a></h3>
+<ul><li>Added support for some non-primitive columns to allow usage of output from the jsonlite package:
+<ul><li>Added support for data with list columns. <code>duplicate</code>, <code>unique</code> etc. consider data frame rows different if they only differ by <code>NA</code> value classes in list columns. Previously, <code>discover</code> considered them to be equal, so a data frame with list columns could violate its own schema. This is now fixed, in exchange for a small performance hit when there are list columns.</li>
+<li>Added support for data with matrix columns. Similarly to lists, <code>duplicate</code> etc. account for matrices properly, rather than trying to treat them as vectors.</li>
+<li>Added support for data with data.frame columns. Similarly to lists, <code>duplicate</code> etc. account for data.frames properly, rather than trying to treat them as vectors.</li>
+</ul></li>
+<li>Improved data class presentation in <code>gv</code> and <code>d2</code> methods for classes containing data:
+<ul><li>Data classes are supplemented by non-zero missing value counts.</li>
+<li>Non-primitive columns, as listed above, can have nested information when elements have common size or element class.</li>
+</ul></li>
+<li>Functional dependencies are printed more consistently:
+<ul><li>
+<code>print.functional_dependency</code> and <code>as.character.functional_dependency</code> print the determinant in braces, to match printing for references.</li>
+<li>Functional dependency violations in <code>decompose</code> are reported with the same arrow alignment as <code>print.functional_dependency</code> and <code>as.character.functional_dependency</code>.</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
+<h3 id="performance-improvements-development-version">Performance improvements<a class="anchor" aria-label="anchor" href="#performance-improvements-development-version"></a></h3>
+<ul><li>
+<code>insert.database</code> only does reference violation checks for affected references.</li>
+<li>Removed integrity checks for concatenating relations or databases together, for performance: since the only change is some renaming, concatenating valid relations/databases shouldn’t result in any violations anyway.</li>
+<li>The <code>skip_bijections</code> argument for <code>discover</code> now works for all methods, rather than just DFD. It is also present in the new <code>discover_keys</code> function.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="other-changes-development-version">Other changes<a class="anchor" aria-label="anchor" href="#other-changes-development-version"></a></h3>
+<ul><li>
+<code>rejoin</code> no longer sorts the rows after merging, since some non-primitive column types are now supported, and these are not generically sortable.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="3.2.4" id="autodb-324">autodb 3.2.4<a class="anchor" aria-label="anchor" href="#autodb-324"></a></h2><p class="text-muted">CRAN release: 2025-11-17</p>
 <p>Minor test fixes to work under latest version of testthat.</p>
@@ -305,7 +334,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

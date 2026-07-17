@@ -402,11 +402,11 @@ fds_redkey
 
     ## 5 functional dependencies
     ## 4 attributes: a, b, c, d
-    ##    a -> b
-    ##    d -> c
-    ## b, d -> a
-    ##    a -> c
-    ## b, c -> d
+    ##    {a} -> b
+    ##    {d} -> c
+    ## {b, d} -> a
+    ##    {a} -> c
+    ## {b, c} -> d
 
 Normalising gives the following relations:
 
@@ -454,10 +454,10 @@ fds_redkey_fix
 
     ## 4 functional dependencies
     ## 4 attributes: a, b, c, d
-    ##    a -> b
-    ##    d -> c
-    ## b, c -> a
-    ##    a -> d
+    ##    {a} -> b
+    ##    {d} -> c
+    ## {b, c} -> a
+    ##    {a} -> d
 
 ``` r
 

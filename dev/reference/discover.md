@@ -366,18 +366,18 @@ Enumeration. *Proc. ACM Manag. Data*, **2, 1**, 43:1–24.
 discover(ChickWeight)
 #> 2 functional dependencies
 #> 4 attributes: weight, Time, Chick, Diet
-#> Time, Chick -> weight
-#>       Chick -> Diet
+#> {Time, Chick} -> weight
+#>       {Chick} -> Diet
 
 # example with spurious dependencies
 discover(CO2)
 #> 5 functional dependencies
 #> 5 attributes: Plant, Type, Treatment, conc, uptake
-#> Treatment, conc, uptake -> Plant
-#>            conc, uptake -> Type
-#>                   Plant -> Type
-#>                   Plant -> Treatment
-#>             Plant, conc -> uptake
+#> {Treatment, conc, uptake} -> Plant
+#>            {conc, uptake} -> Type
+#>                   {Plant} -> Type
+#>                   {Plant} -> Treatment
+#>             {Plant, conc} -> uptake
 # exclude attributes that can't be determinants.
 # in this case, the numeric attributes are now
 # not determined by anything, because of repeat measurements
@@ -385,24 +385,24 @@ discover(CO2)
 discover(CO2, exclude_class = "numeric")
 #> 2 functional dependencies
 #> 5 attributes: Plant, Type, Treatment, conc, uptake
-#> Plant -> Type
-#> Plant -> Treatment
+#> {Plant} -> Type
+#> {Plant} -> Treatment
 # include only dependencies with dependants of interest.
 discover(CO2, dependants = c("Treatment", "uptake"))
 #> 2 functional dependencies
 #> 5 attributes: Plant, Type, Treatment, conc, uptake
-#>       Plant -> Treatment
-#> Plant, conc -> uptake
+#>       {Plant} -> Treatment
+#> {Plant, conc} -> uptake
 # approximate dependencies, that hold if we remove up to 20% of the rows
 # (these need not agree on which rows are removed)
 discover(CO2, method = "DFD", accuracy = 0.8)
 #> 7 functional dependencies
 #> 5 attributes: Plant, Type, Treatment, conc, uptake
-#>      uptake -> Plant
-#>       Plant -> Type
-#>      uptake -> Type
-#>       Plant -> Treatment
-#>      uptake -> Treatment
-#>      uptake -> conc
-#> Plant, conc -> uptake
+#>      {uptake} -> Plant
+#>       {Plant} -> Type
+#>      {uptake} -> Type
+#>       {Plant} -> Treatment
+#>      {uptake} -> Treatment
+#>      {uptake} -> conc
+#> {Plant, conc} -> uptake
 ```

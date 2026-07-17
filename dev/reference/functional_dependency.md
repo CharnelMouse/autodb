@@ -64,8 +64,8 @@ fds <- functional_dependency(
 print(fds)
 #> 2 functional dependencies
 #> 4 attributes: a, b, c, d
-#> a, b -> c
-#>      -> d
+#> {a, b} -> c
+#>     {} -> d
 detset(fds)
 #> [[1]]
 #> [1] "a" "b"
@@ -83,26 +83,26 @@ fds2 <- functional_dependency(list(list("e", "a")), c("a", "e"))
 c(fds, fds2) # attrs_order attributes are merged
 #> 3 functional dependencies
 #> 5 attributes: a, b, c, d, e
-#> a, b -> c
-#>      -> d
-#>    e -> a
+#> {a, b} -> c
+#>     {} -> d
+#>    {e} -> a
 unique(c(fds, fds))
 #> 2 functional dependencies
 #> 4 attributes: a, b, c, d
-#> a, b -> c
-#>      -> d
+#> {a, b} -> c
+#>     {} -> d
 
 # subsetting
 fds[1]
 #> 1 functional dependency
 #> 4 attributes: a, b, c, d
-#> a, b -> c
+#> {a, b} -> c
 fds[c(1, 2, 1)]
 #> 3 functional dependencies
 #> 4 attributes: a, b, c, d
-#> a, b -> c
-#>      -> d
-#> a, b -> c
+#> {a, b} -> c
+#>     {} -> d
+#> {a, b} -> c
 stopifnot(identical(fds[[2]], fds[2]))
 
 # reassignment
@@ -111,8 +111,8 @@ fds3[2] <- functional_dependency(list(list("a", "c")), attrs_order(fds3))
 print(fds3)
 #> 2 functional dependencies
 #> 4 attributes: a, b, c, d
-#> a, b -> c
-#>    a -> c
+#> {a, b} -> c
+#>    {a} -> c
 detset(fds3)[[2]] <- character()
 dependant(fds3)[[2]] <- "d"
 stopifnot(identical(fds3, fds))
@@ -121,8 +121,8 @@ attrs_order(fds3) <- rev(attrs_order(fds3))
 fds3
 #> 2 functional dependencies
 #> 4 attributes: d, c, b, a
-#> b, a -> c
-#>      -> d
+#> {b, a} -> c
+#>     {} -> d
 
 # reconstructing from components
 fds_recon <- functional_dependency(
@@ -133,9 +133,9 @@ stopifnot(identical(fds_recon, fds))
 
 # can be a data frame column
 data.frame(id = 1:2, fd = fds)
-#>   id        fd
-#> 1  1 a, b -> c
-#> 2  2      -> d
+#>   id          fd
+#> 1  1 {a, b} -> c
+#> 2  2     {} -> d
 
 # (in)equality ignores header
 stopifnot(all(fds3 == fds))

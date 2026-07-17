@@ -2,49 +2,70 @@
 
 ## autodb (development version)
 
-- Added `discover_keys`, which searches for keys rather than functional
-  dependencies. This scales better with column count than FD search.
-- Added `rep` method for functional dependencies. This also allows the
-  use of `outer`, e.g. for comparison with `==`.
-- Added remaining inequality implementations for `functional_dependency`
-  (`<`, `<=`, `>`, `>=`).
-- Added `remove_extraneous` to exported functions, for removing
-  redundant dependencies or determinant attributes in a
-  `functional_dependency` object. This is used as a step in
-  `synthesise`, but is useful on its own.
-- Added support for data with list columns. `duplicate`, `unique` etc.
-  consider data frame rows different if they only differ by `NA` value
-  classes in list columns. Previously, `discover` considered them to be
-  equal, so a data frame with list columns could violate its own schema.
-  This is now fixed, in exchange for a small performance hit when there
-  are list columns.
-- Added support for data with matrix columns. Similarly to lists,
-  `duplicate` etc. account for matrices properly, rather than trying to
-  treat them as vectors.
-- Added support for data with data.frame columns. Similarly to lists,
-  `duplicate` etc. account for data.frames properly, rather than trying
-  to treat them as vectors.
-- `rejoin` no longer sorts as it merges relations, since there might be
-  list columns in the key, which aren’t sortable.
-- Added nesting to `gv` and `d2` methods for classes containing data.
-  This allows giving more detail when a data column is a list where
-  elements have a common class or length.
-- Added missing value counts to `gv` and `d2` methods for classes
-  containing data.
-- Remove integrity checks for concatenating relations or databases
+### New functions
+
+- Added functions for key discovery:
+  - `discover_keys` is like `discover`, but searches for keys rather
+    than functional dependencies. This scales better with column count
+    than FD search.
+  - `autokey` is like `autodb`, but just adds keys to the data frame
+    (returning a length-one `relation` object).
+- Added methods for `functional_dependency` objects:
+  - There is now a `rep` method. This also allows the use of `outer`,
+    e.g. for comparison with `==`.
+  - Remaining inequality implementations (`<`, `<=`, `>`, `>=`).
+  - `remove_extraneous` removes redundant dependencies and redundant
+    determinant attributes. This is used as a step in `synthesise`, but
+    is useful on its own.
+- Added `add_lookup` to easily add a lookup relation for attributes that
+  don’t have one.
+
+### Functionality improvements
+
+- Added support for some non-primitive columns to allow usage of output
+  from the jsonlite package:
+  - Added support for data with list columns. `duplicate`, `unique` etc.
+    consider data frame rows different if they only differ by `NA` value
+    classes in list columns. Previously, `discover` considered them to
+    be equal, so a data frame with list columns could violate its own
+    schema. This is now fixed, in exchange for a small performance hit
+    when there are list columns.
+  - Added support for data with matrix columns. Similarly to lists,
+    `duplicate` etc. account for matrices properly, rather than trying
+    to treat them as vectors.
+  - Added support for data with data.frame columns. Similarly to lists,
+    `duplicate` etc. account for data.frames properly, rather than
+    trying to treat them as vectors.
+- Improved data class presentation in `gv` and `d2` methods for classes
+  containing data:
+  - Data classes are supplemented by non-zero missing value counts.
+  - Non-primitive columns, as listed above, can have nested information
+    when elements have common size or element class.
+- Functional dependencies are printed more consistently:
+  - `print.functional_dependency` and
+    `as.character.functional_dependency` print the determinant in
+    braces, to match printing for references.
+  - Functional dependency violations in `decompose` are reported with
+    the same arrow alignment as `print.functional_dependency` and
+    `as.character.functional_dependency`.
+
+### Performance improvements
+
+- `insert.database` only does reference violation checks for affected
+  references.
+- Removed integrity checks for concatenating relations or databases
   together, for performance: since the only change is some renaming,
   concatenating valid relations/databases shouldn’t result in any
   violations anyway.
-- Added support for skipping simple keys, and bijections if
-  `skip_bijections = TRUE` in `discover`, for all methods, rather than
-  just DFD.
-- Added support for skipping fixed attributes, simple keys, and
-  bijections if `skip_bijections = TRUE` in `discover`, for
-  `discover_keys`.
-- Added `autokey` to add keys to a given data frame. This is to
-  `discover_keys` as `autodb` is to `discover`.
-- Added `add_lookup` to easily add a lookup relation for attributes that
-  don’t have one.
+- The `skip_bijections` argument for `discover` now works for all
+  methods, rather than just DFD. It is also present in the new
+  `discover_keys` function.
+
+### Other changes
+
+- `rejoin` no longer sorts the rows after merging, since some
+  non-primitive column types are now supported, and these are not
+  generically sortable.
 
 ## autodb 3.2.4
 

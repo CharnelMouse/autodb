@@ -368,8 +368,8 @@ FDHitsSep, a depth-first search algorithm. We run this by using the
 <code class="sourceCode R"><span><span class="va">deps</span></span></code></pre></div>
 <pre><code><span><span class="co">## 2 functional dependencies</span></span>
 <span><span class="co">## 4 attributes: weight, Time, Chick, Diet</span></span>
-<span><span class="co">## Time, Chick -&gt; weight</span></span>
-<span><span class="co">##       Chick -&gt; Diet</span></span></code></pre>
+<span><span class="co">## {Time, Chick} -&gt; weight</span></span>
+<span><span class="co">##       {Chick} -&gt; Diet</span></span></code></pre>
 <p>The result is a list of <em>functional dependencies</em>, in the
 format <code>determinant -&gt; dependant</code>, with an attribute named
 <code>attrs_order</code> that gives all the attribute names in their
@@ -765,7 +765,7 @@ inherit from certain classes. In this example, we could exclude
 <span><span class="va">titanic_deps_freqonly</span></span></code></pre></div>
 <pre><code><span><span class="co">## 1 functional dependency</span></span>
 <span><span class="co">## 5 attributes: Class, Sex, Age, Survived, Freq</span></span>
-<span><span class="co">## Class, Sex, Age, Survived -&gt; Freq</span></span></code></pre>
+<span><span class="co">## {Class, Sex, Age, Survived} -&gt; Freq</span></span></code></pre>
 <p>Alternatively, we could exclude all attributes that inherit from
 “numeric”:</p>
 <div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
@@ -788,17 +788,17 @@ the found dependencies, if we don’t exclude anything:</p>
 <span><span class="va">titanic_deps</span></span></code></pre></div>
 <pre><code><span><span class="co">## 3 functional dependencies</span></span>
 <span><span class="co">## 5 attributes: Class, Sex, Age, Survived, Freq</span></span>
-<span><span class="co">##       Sex, Survived, Freq -&gt; Age</span></span>
-<span><span class="co">##     Class, Survived, Freq -&gt; Age</span></span>
-<span><span class="co">## Class, Sex, Age, Survived -&gt; Freq</span></span></code></pre>
+<span><span class="co">##       {Sex, Survived, Freq} -&gt; Age</span></span>
+<span><span class="co">##     {Class, Survived, Freq} -&gt; Age</span></span>
+<span><span class="co">## {Class, Sex, Age, Survived} -&gt; Freq</span></span></code></pre>
 <p>We can remove the unwanted dependencies, where <code>Age</code> is
 the dependant, using subsetting, <code>Filter</code>, etc.:</p>
 <div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">titanic_deps</span><span class="op">[</span><span class="fu"><a href="../reference/dependant.html">dependant</a></span><span class="op">(</span><span class="va">titanic_deps</span><span class="op">)</span> <span class="op">==</span> <span class="st">"Age"</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">## 2 functional dependencies</span></span>
 <span><span class="co">## 5 attributes: Class, Sex, Age, Survived, Freq</span></span>
-<span><span class="co">##   Sex, Survived, Freq -&gt; Age</span></span>
-<span><span class="co">## Class, Survived, Freq -&gt; Age</span></span></code></pre>
+<span><span class="co">##   {Sex, Survived, Freq} -&gt; Age</span></span>
+<span><span class="co">## {Class, Survived, Freq} -&gt; Age</span></span></code></pre>
 </div>
 </div>
 <div class="section level2">
@@ -838,11 +838,11 @@ Theory of Relational Databases, by David Maier:</p>
 <span><span class="va">avoid_deps</span></span></code></pre></div>
 <pre><code><span><span class="co">## 5 functional dependencies</span></span>
 <span><span class="co">## 5 attributes: A, B, C, D, E</span></span>
-<span><span class="co">##    A -&gt; B</span></span>
-<span><span class="co">##    B -&gt; A</span></span>
-<span><span class="co">## A, C -&gt; D</span></span>
-<span><span class="co">## A, C -&gt; E</span></span>
-<span><span class="co">## B, D -&gt; C</span></span></code></pre>
+<span><span class="co">##    {A} -&gt; B</span></span>
+<span><span class="co">##    {B} -&gt; A</span></span>
+<span><span class="co">## {A, C} -&gt; D</span></span>
+<span><span class="co">## {A, C} -&gt; E</span></span>
+<span><span class="co">## {B, D} -&gt; C</span></span></code></pre>
 <div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/normalise.html">normalise</a></span><span class="op">(</span><span class="va">avoid_deps</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## database schema with 2 relation schemas</span></span>
@@ -892,7 +892,7 @@ attributes that appear later in the original relation.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

@@ -145,8 +145,8 @@ set of FDs, and the resulting schema given by <code>autodb</code>:</p>
 <span><span class="va">fds</span></span></code></pre></div>
 <pre><code><span><span class="co">## 2 functional dependencies</span></span>
 <span><span class="co">## 3 attributes: a, b, c</span></span>
-<span><span class="co">## a, b -&gt; c</span></span>
-<span><span class="co">##    c -&gt; a</span></span></code></pre>
+<span><span class="co">## {a, b} -&gt; c</span></span>
+<span><span class="co">##    {c} -&gt; a</span></span></code></pre>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">schema</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/normalise.html">normalise</a></span><span class="op">(</span><span class="va">fds</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -322,11 +322,11 @@ following set of FDs:</p>
 <span><span class="va">fds</span></span></code></pre></div>
 <pre><code><span><span class="co">## 5 functional dependencies</span></span>
 <span><span class="co">## 6 attributes: a, b, c, d, e, f</span></span>
-<span><span class="co">##    a -&gt; b</span></span>
-<span><span class="co">##    a -&gt; c</span></span>
-<span><span class="co">##    b -&gt; d</span></span>
-<span><span class="co">##    c -&gt; e</span></span>
-<span><span class="co">## d, e -&gt; f</span></span></code></pre>
+<span><span class="co">##    {a} -&gt; b</span></span>
+<span><span class="co">##    {a} -&gt; c</span></span>
+<span><span class="co">##    {b} -&gt; d</span></span>
+<span><span class="co">##    {c} -&gt; e</span></span>
+<span><span class="co">## {d, e} -&gt; f</span></span></code></pre>
 <p>Bernstein synthesis, and automatic foreign keys, give the following
 schema:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
@@ -451,7 +451,7 @@ duplicate records.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

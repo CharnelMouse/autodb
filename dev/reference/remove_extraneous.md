@@ -41,8 +41,8 @@ x <- functional_dependency(
 remove_extraneous(x)
 #> 2 functional dependencies
 #> 3 attributes: a, b, c
-#> a -> b
-#> b -> c
+#> {a} -> b
+#> {b} -> c
 
 # a -> b lets us remove b from {a, b} -> c
 x <- functional_dependency(
@@ -52,6 +52,6 @@ x <- functional_dependency(
 remove_extraneous(x)
 #> 2 functional dependencies
 #> 3 attributes: a, b, c
-#> a -> b
-#> a -> c
+#> {a} -> b
+#> {a} -> c
 ```

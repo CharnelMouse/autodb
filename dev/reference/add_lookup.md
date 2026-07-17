@@ -8,7 +8,7 @@ chains of references.
 ## Usage
 
 ``` r
-add_lookup(x, as)
+add_lookup(x, as, ...)
 ```
 
 ## Arguments
@@ -30,6 +30,10 @@ add_lookup(x, as)
   a character vector of elements from
   [`attrs_order`](https://charnelmouse.github.io/autodb/dev/reference/attrs_order.md)`(x)`,
   indicating which attributes to create lookup tables for.
+
+- ...:
+
+  further arguments pass on to methods.
 
 ## Value
 
@@ -83,5 +87,18 @@ add_lookup(db, "Chick") # Chick is already a key, so this does nothing
 #>   key 1: Time, Chick
 #> references:
 #> Time_Chick.{Chick} -> Chick.{Chick}
+# data objects round numeric and complex values before checking given values
+add_lookup(db, "weight", digits = 3)
+#> database with 3 relations
+#> 4 attributes: weight, Time, Chick, Diet
+#> relation Chick: Chick, Diet; 50 records
+#>   key 1: Chick
+#> relation Time_Chick: Time, Chick, weight; 578 records
+#>   key 1: Time, Chick
+#> relation weight: weight; 212 records
+#>   key 1: weight
+#> references:
+#> Time_Chick.{Chick} -> Chick.{Chick}
+#> Time_Chick.{weight} -> weight.{weight}
 if (FALSE) add_lookup(c(db, db), "Chick") # fails: two lookup candidates # \dontrun{}
 ```

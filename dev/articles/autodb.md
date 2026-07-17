@@ -331,8 +331,8 @@ deps
 
     ## 2 functional dependencies
     ## 4 attributes: weight, Time, Chick, Diet
-    ## Time, Chick -> weight
-    ##       Chick -> Diet
+    ## {Time, Chick} -> weight
+    ##       {Chick} -> Diet
 
 The result is a list of *functional dependencies*, in the format
 `determinant -> dependant`, with an attribute named `attrs_order` that
@@ -582,7 +582,7 @@ titanic_deps_freqonly
 
     ## 1 functional dependency
     ## 5 attributes: Class, Sex, Age, Survived, Freq
-    ## Class, Sex, Age, Survived -> Freq
+    ## {Class, Sex, Age, Survived} -> Freq
 
 Alternatively, we could exclude all attributes that inherit from
 “numeric”:
@@ -618,9 +618,9 @@ titanic_deps
 
     ## 3 functional dependencies
     ## 5 attributes: Class, Sex, Age, Survived, Freq
-    ##       Sex, Survived, Freq -> Age
-    ##     Class, Survived, Freq -> Age
-    ## Class, Sex, Age, Survived -> Freq
+    ##       {Sex, Survived, Freq} -> Age
+    ##     {Class, Survived, Freq} -> Age
+    ## {Class, Sex, Age, Survived} -> Freq
 
 We can remove the unwanted dependencies, where `Age` is the dependant,
 using subsetting, `Filter`, etc.:
@@ -632,8 +632,8 @@ titanic_deps[dependant(titanic_deps) == "Age"]
 
     ## 2 functional dependencies
     ## 5 attributes: Class, Sex, Age, Survived, Freq
-    ##   Sex, Survived, Freq -> Age
-    ## Class, Survived, Freq -> Age
+    ##   {Sex, Survived, Freq} -> Age
+    ## {Class, Survived, Freq} -> Age
 
 ## Avoidable attributes
 
@@ -678,11 +678,11 @@ avoid_deps
 
     ## 5 functional dependencies
     ## 5 attributes: A, B, C, D, E
-    ##    A -> B
-    ##    B -> A
-    ## A, C -> D
-    ## A, C -> E
-    ## B, D -> C
+    ##    {A} -> B
+    ##    {B} -> A
+    ## {A, C} -> D
+    ## {A, C} -> E
+    ## {B, D} -> C
 
 ``` r
 
