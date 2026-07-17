@@ -470,9 +470,9 @@ insert.database <- function(
     \(as) all(is.element(as, names(vals))),
     logical(1)
   )
-  dfs <- records(new_subrelations)[insertable]
+  dfs <- records(new_subrelations)
   affected_refs <- Filter(
-    \(ref) ref[[1]] %in% insertable,
+    \(ref) ref[[1]] %in% names(insertable)[insertable],
     references(x)
   )
   reference_checks <- reference_errors(dfs, affected_refs)
