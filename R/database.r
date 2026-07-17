@@ -465,8 +465,17 @@ insert.database <- function(
     digits = digits,
     ...
   )
-  dfs <- records(new_subrelations)
-  reference_checks <- reference_errors(dfs, references(x))
+  insertable <- vapply(
+    attrs(x)[relations],
+    \(as) all(is.element(as, names(vals))),
+    logical(1)
+  )
+  dfs <- records(new_subrelations)[insertable]
+  affected_refs <- Filter(
+    \(ref) ref[[1]] %in% insertable,
+    references(x)
+  )
+  reference_checks <- reference_errors(dfs, affected_refs)
   if (length(reference_checks)) {
     error_strings <- vapply(
       reference_checks,
