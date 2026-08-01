@@ -35,8 +35,10 @@ if the following hold:
 given values for that attribute.
 }
 
-If several relations could be a lookup for the attribute, then
-\code{add_lookup} fails.
+If the original object includes references, then references are added to
+connected each attribute's appearances to its lookup. If several relations
+could be a lookup for the attribute, then \code{add_lookup} fails due to the
+desired result being ambiguous.
 }
 \examples{
 db <- autodb(ChickWeight)
@@ -46,4 +48,7 @@ add_lookup(db, "Chick") # Chick is already a key, so this does nothing
 # data objects round numeric and complex values before checking given values
 add_lookup(db, "weight", digits = 3)
 \dontrun{add_lookup(c(db, db), "Chick") # fails: two lookup candidates}
+# two lookups without references is fine
+rels <- subrelations(db)
+add_lookup(c(rels, rels), "Chick")
 }

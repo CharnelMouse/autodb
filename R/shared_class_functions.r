@@ -491,8 +491,10 @@ check_reassignment_same_class <- function(value, x) {
 #'     given values for that attribute.
 #' }
 #'
-#' If several relations could be a lookup for the attribute, then
-#' \code{add_lookup} fails.
+#' If the original object includes references, then references are added to
+#' connected each attribute's appearances to its lookup. If several relations
+#' could be a lookup for the attribute, then \code{add_lookup} fails due to the
+#' desired result being ambiguous.
 #'
 #' @param x a relational schema object, such as a \code{\link{relation_schema}}
 #'   or \code{\link{database_schema}} object, or a relational data object, such
@@ -511,6 +513,9 @@ check_reassignment_same_class <- function(value, x) {
 #' # data objects round numeric and complex values before checking given values
 #' add_lookup(db, "weight", digits = 3)
 #' \dontrun{add_lookup(c(db, db), "Chick") # fails: two lookup candidates}
+#' # two lookups without references is fine
+#' rels <- subrelations(db)
+#' add_lookup(c(rels, rels), "Chick")
 add_lookup <- function(x, as, ...) {
   UseMethod("add_lookup")
 }
