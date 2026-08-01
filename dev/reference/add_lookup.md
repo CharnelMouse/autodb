@@ -50,8 +50,10 @@ lookup if the following hold:
 - If `x` is a relation data object, then the relation contains all given
   values for that attribute.
 
-If several relations could be a lookup for the attribute, then
-`add_lookup` fails.
+If the original object includes references, then references are added to
+connected each attribute's appearances to its lookup. If several
+relations could be a lookup for the attribute, then `add_lookup` fails
+due to the desired result being ambiguous.
 
 ## Examples
 
@@ -101,4 +103,17 @@ add_lookup(db, "weight", digits = 3)
 #> Time_Chick.{Chick} -> Chick.{Chick}
 #> Time_Chick.{weight} -> weight.{weight}
 if (FALSE) add_lookup(c(db, db), "Chick") # fails: two lookup candidates # \dontrun{}
+# two lookups without references is fine
+rels <- subrelations(db)
+add_lookup(c(rels, rels), "Chick")
+#> 4 relations
+#> 4 attributes: weight, Time, Chick, Diet
+#> relation Chick: Chick, Diet; 50 records
+#>   key 1: Chick
+#> relation Time_Chick: Time, Chick, weight; 578 records
+#>   key 1: Time, Chick
+#> relation Chick.1: Chick, Diet; 50 records
+#>   key 1: Chick
+#> relation Time_Chick.1: Time, Chick, weight; 578 records
+#>   key 1: Time, Chick
 ```
