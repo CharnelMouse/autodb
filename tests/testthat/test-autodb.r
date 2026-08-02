@@ -3,8 +3,8 @@ describe("autodb", {
     forall(
       gen_df(6, 7),
       apply_both(
-        autodb %>>% is_valid_database,
-        with_args(autodb, remove_avoidable = TRUE) %>>% is_valid_database
+        autodb %>>% expect_valid_database,
+        with_args(autodb, remove_avoidable = TRUE) %>>% expect_valid_database
       )
     )
   })

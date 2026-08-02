@@ -239,7 +239,7 @@ describe("discover_keys", {
   it("gives a valid set of keys", {
     forall(
       gen_df(6, 7),
-      terminates_then(is_valid_key_set)
+      terminates_then(expect_valid_key_set)
     )
   })
   it("gives superkeys for the given data", {

@@ -731,11 +731,11 @@ describe("create", {
   it("creates a valid structure", {
     forall(
       gen.relation_schema(letters[1:6], 0, 10),
-      create %>>% is_valid_relation
+      create %>>% expect_valid_relation
     )
     forall(
       gen.database_schema(letters[1:6], 0, 10),
-      create %>>% is_valid_database
+      create %>>% expect_valid_database
     )
   })
   it("is commutative with adding foreign key constraints", {
@@ -1035,7 +1035,7 @@ describe("insert", {
             gen.subsequence(names(r))
           )
         }),
-      insert %>>% is_valid_relation,
+      insert %>>% expect_valid_relation,
       curry = TRUE
     )
     forall(
@@ -1066,7 +1066,7 @@ describe("insert", {
               gen.with(\(x) if (length(x) == 0) character() else x)
           )
         }),
-      insert %>>% is_valid_database,
+      insert %>>% expect_valid_database,
       curry = TRUE
     )
   })
@@ -1154,8 +1154,8 @@ describe("insert", {
       gen.and_then(uncurry(add.gen.insertees))
     expect_both_valid_db_then <- function(fn) {
       function(x, y) {
-        is_valid_database(x)
-        is_valid_database(y)
+        expect_valid_database(x)
+        expect_valid_database(y)
         fn(x, y)
       }
     }
@@ -1215,7 +1215,7 @@ describe("subrelations", {
   it("returns a valid relation for database", {
     forall(
       gen.database(letters[1:6], 0, 6),
-      subrelations %>>% is_valid_relation
+      subrelations %>>% expect_valid_relation
     )
   })
   it("returns a valid relation_schema for database_schema", {
@@ -1227,7 +1227,7 @@ describe("subrelations", {
           from = 0,
           to = 6
         )),
-      subschemas %>>% is_valid_relation_schema
+      subschemas %>>% expect_valid_relation_schema
     )
   })
 })

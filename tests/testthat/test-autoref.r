@@ -4,7 +4,7 @@ describe("autoref", {
       gen.relation_schema(letters[1:6], 0, 6),
       autoref %>>%
         with_args(
-          is_valid_database_schema,
+          expect_valid_database_schema,
           unique = FALSE,
           single_empty_key = FALSE,
           same_attr_name = TRUE,
@@ -15,7 +15,7 @@ describe("autoref", {
       gen.relation_schema(letters[1:6], 0, 6),
       with_args(autoref, single_ref = TRUE) %>>%
         with_args(
-          is_valid_database_schema,
+          expect_valid_database_schema,
           unique = FALSE,
           single_empty_key = FALSE,
           same_attr_name = TRUE,
@@ -27,7 +27,7 @@ describe("autoref", {
     forall(
       gen.relation_schema(letters[1:4], 0, 6),
       autoref %>>%
-        with_args(is_valid_database_schema, same_attr_name = TRUE)
+        with_args(expect_valid_database_schema, same_attr_name = TRUE)
     )
   })
   it("returns references", {

@@ -137,7 +137,7 @@ describe("relation_schema", {
   it("returns a valid relation schema", {
     forall(
       gen.relation_schema(letters[1:2], 2, 20),
-      is_valid_relation_schema
+      expect_valid_relation_schema
     )
   })
   it("orders key attributes with respect to order in attrs_order", {
@@ -189,19 +189,19 @@ describe("relation_schema", {
           gen.sample_resampleable(c(FALSE, TRUE), of = length(rs))
         )),
       \(rs, i) {
-        is_valid_relation_schema(rs[i])
+        expect_valid_relation_schema(rs[i])
 
         inum <- which(i)
-        is_valid_relation_schema(rs[inum])
+        expect_valid_relation_schema(rs[inum])
         expect_identical(rs[i], rs[inum])
 
         ineg <- -setdiff(seq_along(rs), inum)
         if (!all(i)) {
-          is_valid_relation_schema(rs[ineg])
+          expect_valid_relation_schema(rs[ineg])
           expect_identical(rs[i], rs[ineg])
         }
 
-        is_valid_relation_schema(rs[names(rs)[i]])
+        expect_valid_relation_schema(rs[names(rs)[i]])
         expect_identical(rs[i], rs[names(rs)[i]])
 
         expect_length(rs[i], sum(i))
@@ -220,19 +220,19 @@ describe("relation_schema", {
           gen.element(seq_along(rs))
         )),
       \(rs, inum) {
-        is_valid_relation_schema(rs[[inum]])
+        expect_valid_relation_schema(rs[[inum]])
         expect_identical(rs[inum], rs[[inum]])
 
         ineg <- -setdiff(seq_along(rs), inum)
         if (length(ineg) == 1) {
-          is_valid_relation_schema(rs[[ineg]])
+          expect_valid_relation_schema(rs[[ineg]])
           expect_identical(rs[inum], rs[[ineg]])
         }
 
-        is_valid_relation_schema(rs[[names(rs)[[inum]]]])
+        expect_valid_relation_schema(rs[[names(rs)[[inum]]]])
         expect_identical(rs[inum], rs[[names(rs)[[inum]]]])
 
-        is_valid_relation_schema(eval(rlang::expr(`$`(rs, !!names(rs)[[inum]]))))
+        expect_valid_relation_schema(eval(rlang::expr(`$`(rs, !!names(rs)[[inum]]))))
         expect_identical(rs[inum], eval(rlang::expr(`$`(rs, !!names(rs)[[inum]]))))
 
         ints <- stats::setNames(seq_along(rs), names(rs))
@@ -262,7 +262,7 @@ describe("relation_schema", {
           )
         )),
       \(rs, indices) {
-        is_valid_relation_schema(rs[indices])
+        expect_valid_relation_schema(rs[indices])
       },
       curry = TRUE
     )
@@ -326,7 +326,7 @@ describe("relation_schema", {
       expect_rs_subset_reassignment_success <- function(rs, indices, value) {
         res <- rs
         res[indices] <- value
-        is_valid_relation_schema(res)
+        expect_valid_relation_schema(res)
         switch(
           class(indices),
           character = {
@@ -427,7 +427,7 @@ describe("relation_schema", {
       expect_rs_subset_single_reassignment_success <- function(rs, ind, value) {
         res <- rs
         res[[ind]] <- value
-        is_valid_relation_schema(res)
+        expect_valid_relation_schema(res)
         switch(
           class(ind),
           character = {
@@ -511,7 +511,7 @@ describe("relation_schema", {
       expect_rs_subset_single_exact_reassignment_success <- function(rs, ind, value) {
         res <- rs
         eval(parse(text = paste0("res$", ind, " <- value")))
-        is_valid_relation_schema(res)
+        expect_valid_relation_schema(res)
         if (ind %in% names(rs)) {
           negind <- setdiff(names(res), ind)
           expect_identical(res[negind], rs[negind])
@@ -542,7 +542,7 @@ describe("relation_schema", {
   it("is made unique to a valid relation schema", {
     forall(
       gen.relation_schema(letters[1:6], 0, 8),
-      unique %>>% is_valid_relation_schema
+      unique %>>% expect_valid_relation_schema
     )
   })
   it("is made unique with no duplicate schemas", {
@@ -560,7 +560,7 @@ describe("relation_schema", {
     forall(
       gen.relation_schema(letters[1:6], from = 0, to = 4) |>
         gen.list(from = 1, to = 3),
-      c %>>% is_valid_relation_schema,
+      c %>>% expect_valid_relation_schema,
       curry = TRUE
     )
   })
@@ -644,7 +644,7 @@ describe("relation_schema", {
       if (sum(vapply(keys(rs), identical, logical(1), list(character()))) <= 1)
         discard()
       res <- merge_empty_keys(rs)
-      is_valid_relation_schema(rs)
+      expect_valid_relation_schema(rs)
       expect_lte(
         sum(vapply(keys(res), identical, logical(1), list(character()))),
         1L

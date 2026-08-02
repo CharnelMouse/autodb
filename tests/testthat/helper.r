@@ -7,7 +7,7 @@ expect_errorless <- function(object) {
   )
 }
 
-is_valid_functional_dependency <- function(x) {
+expect_valid_functional_dependency <- function(x) {
   expect_s3_class(x, "functional_dependency")
   attrs <- attrs_order(x)
   expect_true(all(lengths(unclass(x)) == 2L))
@@ -27,19 +27,19 @@ is_valid_functional_dependency <- function(x) {
   )))
 }
 
-is_valid_minimal_functional_dependency <- function(x) {
-  is_valid_functional_dependency(x)
+expect_valid_minimal_functional_dependency <- function(x) {
+  expect_valid_functional_dependency(x)
   expect_true(all(outer(x, x, "<=") == diag(length(x))))
 }
 
-is_valid_key_set <- function(x) {
+expect_valid_key_set <- function(x) {
   expect_identical(class(x), "list")
   expect_true(all(vapply(x, \(y) class(y)[[1]], character(1)) == "character"))
   expect_gt(length(x), 0) # every relation has at least one key
   expect_true(all(outer(x, x, Vectorize(\(y, z) all(is.element(y, z)))) == diag(length(x))))
 }
 
-is_valid_relation_schema <- function(x, unique = FALSE, single_empty_key = FALSE) {
+expect_valid_relation_schema <- function(x, unique = FALSE, single_empty_key = FALSE) {
   expect_s3_class(x, "relation_schema")
   expect_true(is.character(names(x)))
   expect_true(!anyDuplicated(names(x)))
@@ -94,7 +94,7 @@ is_valid_relation_schema <- function(x, unique = FALSE, single_empty_key = FALSE
   }
 }
 
-is_valid_references <- function(
+expect_valid_references <- function(
   x,
   same_attr_name = FALSE,
   single_key_pairs = FALSE
@@ -201,53 +201,78 @@ is_valid_references <- function(
   invisible(act$val)
 }
 
-is_valid_database_schema <- function(
+expect_valid_database_schema <- function(
   x,
   unique = FALSE,
   single_empty_key = FALSE,
   same_attr_name = FALSE,
   single_key_pairs = FALSE
 ) {
-  is_valid_relation_schema(x, unique, single_empty_key)
+  expect_valid_relation_schema(x, unique, single_empty_key)
   expect_s3_class(x, "database_schema")
-  is_valid_references(x, same_attr_name, single_key_pairs)
+  expect_valid_references(x, same_attr_name, single_key_pairs)
 }
 
-is_valid_relation <- function(x, unique = FALSE, single_empty_key = FALSE) {
-  expect_s3_class(x, "relation")
+strexpect_valid_relation <- function(x, unique = FALSE, single_empty_key = FALSE) {
+  if (!inherits(x, "relation"))
+    return(fail(paste("x is not a relation; classes are", toString(class(x)))))
 
-  expect_true(is.character(names(x)))
-  expect_true(!anyDuplicated(names(x)))
-  expect_true(all(nchar(names(x)) > 0L))
+  msg <- character()
+
+  if (!is.character(names(x))) {
+    msg <- c(msg, paste("names are not character:", class(names(x))))
+  }else{
+    if (anyDuplicated(names(x)))
+      msg <- c(msg, paste("there are duplicate names in", toString(names(x))))
+    if (any(nchar(names(x)) == 0L))
+      msg <- c(msg, "there are length-zero names")
+  }
 
   rel_keys <- keys(x)
   rel_key_els <- lapply(rel_keys, \(ks) unique(unlist(ks)))
   rel_attrs <- attrs(x)
+
   key_attrs_first <- mapply(
     \(ks, as) identical(as[seq_along(ks)], ks),
     rel_key_els,
     rel_attrs
   )
-  expect_true(all(key_attrs_first))
+  if (!all(key_attrs_first))
+    msg <- c(msg, "there are relations with their key attrs not given first")
+
+  if (!all(vapply(
+    rel_keys,
+    \(ks) all(vapply(ks, \(k) !is.unsorted(match(k, attrs_order(x))), logical(1))),
+    logical(1)
+  )))
+    msg <- c(msg, "there are relation keys with attributes not in order")
+
   nonprime_attrs <- Map(
     \(ks, as) as[-seq_along(ks)],
     rel_key_els,
     rel_attrs
   )
-  expect_true(all(vapply(
-    rel_keys,
-    \(ks) all(vapply(ks, \(k) !is.unsorted(match(k, attrs_order(x))), logical(1))),
-    logical(1)
-  )))
-  expect_true(all(vapply(
+  if (!all(vapply(
     nonprime_attrs,
     \(as) all(vapply(as, \(a) !is.unsorted(match(a, attrs_order(x))), logical(1))),
     logical(1)
   )))
+    msg <- c(msg, "there are relations with non-key attributes not in order")
+
   expect_true(all(vapply(rel_keys, Negate(anyDuplicated), logical(1))))
-  if (single_empty_key)
-    expect_lte(sum(vapply(rel_keys, identical, logical(1), list(character()))), 1L)
-  expect_true(all(mapply(
+  if (!all(vapply(rel_keys, Negate(anyDuplicated), logical(1))))
+    msg <- c(msg, "there are duplicate keys")
+
+  if (
+    single_empty_key &&
+    sum(vapply(rel_keys, identical, logical(1), list(character()))) > 1
+  )
+    msg <- c(
+      msg,
+      "single_empty_key = TRUE, and there are multiple relations with an empty key"
+    )
+
+  if (!all(mapply(
     \(recs, ks) all(vapply(
       ks,
       \(k) !df_anyDuplicated(recs[, k, drop = FALSE]),
@@ -256,8 +281,15 @@ is_valid_relation <- function(x, unique = FALSE, single_empty_key = FALSE) {
     records(x),
     rel_keys
   )))
+    msg <- c(
+      msg,
+      "there are violated keys"
+    )
+
   if (unique) {
-    expect_true(!anyDuplicated(x))
+    if (anyDuplicated(x))
+      msg <- c(msg, "unique = TRUE and there are duplicate relations")
+
     implied_fds <- functional_dependency(
       unlist(
         Map(
@@ -274,22 +306,33 @@ is_valid_relation <- function(x, unique = FALSE, single_empty_key = FALSE) {
       ),
       attrs_order(x)
     )
-    expect_true(!anyDuplicated(implied_fds))
+    if (anyDuplicated(implied_fds))
+      msg <- c(msg, "there are duplicate implied FDs")
   }
+
+  msg
 }
 
-is_valid_database <- function(
+expect_valid_relation <- function(x, unique = FALSE, single_empty_key = FALSE) {
+  msg <- strexpect_valid_relation(x, unique, single_empty_key)
+  if (length(msg) == 0)
+    succeed()
+  else
+    fail(paste(msg, collapse = "\n"))
+}
+
+expect_valid_database <- function(
   x,
   unique = FALSE,
   single_empty_key = FALSE,
   same_attr_name = FALSE,
   single_key_pairs = FALSE
 ) {
-  is_valid_relation(x, unique, single_empty_key)
+  expect_valid_relation(x, unique, single_empty_key)
   expect_s3_class(x, "database")
 
   fks <- references(x)
-  is_valid_references(x, same_attr_name, single_key_pairs)
+  expect_valid_references(x, same_attr_name, single_key_pairs)
   recs <- records(x)
   for (fk in fks) {
     expect_true(identical(

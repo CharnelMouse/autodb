@@ -181,19 +181,19 @@ describe("database_schema", {
           gen.sample_resampleable(c(FALSE, TRUE), of = length(lst[[2]]))
         )),
       \(san, ds, i) {
-        is_valid_database_schema(ds[i], same_attr_name = san)
+        expect_valid_database_schema(ds[i], same_attr_name = san)
 
         inum <- which(i)
-        is_valid_database_schema(ds[inum], same_attr_name = san)
+        expect_valid_database_schema(ds[inum], same_attr_name = san)
         expect_identical(ds[i], ds[inum])
 
         ineg <- -setdiff(seq_along(ds), inum)
         if (!all(i)) {
-          is_valid_database_schema(ds[ineg], same_attr_name = san)
+          expect_valid_database_schema(ds[ineg], same_attr_name = san)
           expect_identical(ds[i], ds[ineg])
         }
 
-        is_valid_database_schema(ds[names(ds)[i]], same_attr_name = san)
+        expect_valid_database_schema(ds[names(ds)[i]], same_attr_name = san)
         expect_identical(ds[i], ds[names(ds)[i]])
 
         expect_length(ds[i], sum(i))
@@ -212,19 +212,19 @@ describe("database_schema", {
           gen.element(seq_along(ds))
         )),
       \(ds, inum) {
-        is_valid_database_schema(ds[[inum]])
+        expect_valid_database_schema(ds[[inum]])
         expect_identical(ds[inum], ds[[inum]])
 
         ineg <- -setdiff(seq_along(ds), inum)
         if (length(ineg) == 1) {
-          is_valid_database_schema(ds[[ineg]])
+          expect_valid_database_schema(ds[[ineg]])
           expect_identical(ds[inum], ds[[ineg]])
         }
 
-        is_valid_database_schema(ds[[names(ds)[[inum]]]])
+        expect_valid_database_schema(ds[[names(ds)[[inum]]]])
         expect_identical(ds[inum], ds[[names(ds)[[inum]]]])
 
-        is_valid_database_schema(eval(rlang::expr(`$`(ds, !!names(ds)[[inum]]))))
+        expect_valid_database_schema(eval(rlang::expr(`$`(ds, !!names(ds)[[inum]]))))
         expect_identical(ds[inum], eval(rlang::expr(`$`(ds, !!names(ds)[[inum]]))))
 
         ints <- stats::setNames(seq_along(ds), names(ds))
@@ -254,7 +254,7 @@ describe("database_schema", {
           )
         )),
       \(ds, indices) {
-        is_valid_database_schema(ds[indices])
+        expect_valid_database_schema(ds[indices])
       },
       curry = TRUE
     )
@@ -388,7 +388,7 @@ describe("database_schema", {
       expect_ds_subset_reassignment_success <- function(ds, indices, value) {
         res <- ds
         res[indices] <- value
-        is_valid_database_schema(res)
+        expect_valid_database_schema(res)
         switch(
           class(indices),
           character = {
@@ -493,7 +493,7 @@ describe("database_schema", {
       expect_ds_subset_single_reassignment_success <- function(ds, ind, value) {
         res <- ds
         res[[ind]] <- value
-        is_valid_database_schema(res)
+        expect_valid_database_schema(res)
         switch(
           class(ind),
           character = {
@@ -577,7 +577,7 @@ describe("database_schema", {
       expect_ds_subset_single_exact_reassignment_success <- function(ds, ind, value) {
         res <- ds
         eval(parse(text = paste0("res$", ind, " <- value")))
-        is_valid_database_schema(res)
+        expect_valid_database_schema(res)
         if (ind %in% names(ds)) {
           negind <- setdiff(names(res), ind)
           expect_identical(res[negind], ds[negind])
@@ -615,7 +615,7 @@ describe("database_schema", {
           )
         }),
       \(san, ds) {
-        unique(ds) |> is_valid_database_schema(unique = TRUE, same_attr_name = san)
+        unique(ds) |> expect_valid_database_schema(unique = TRUE, same_attr_name = san)
       },
       curry = TRUE
     )
@@ -696,7 +696,7 @@ describe("database_schema", {
           gen.database_schema(letters[1:6], 0, 8, same_attr_name = san) |>
             gen.list(from = 1, to = 3)
         )),
-      \(san, dss) do.call(c, dss) |> is_valid_database_schema(same_attr_name = san),
+      \(san, dss) do.call(c, dss) |> expect_valid_database_schema(same_attr_name = san),
       curry = TRUE
     )
   })
@@ -859,7 +859,7 @@ describe("database_schema", {
       if (sum(vapply(keys(ds), identical, logical(1), list(character()))) <= 1)
         discard()
       res <- merge_empty_keys(ds)
-      is_valid_database_schema(ds)
+      expect_valid_database_schema(ds)
       expect_lte(
         sum(vapply(keys(res), identical, logical(1), list(character()))),
         1L

@@ -383,7 +383,7 @@ describe("database", {
         res <- try(names(records(db)[[n]]) <- nm, silent = TRUE)
         expect_true(
           class(res)[[1]] == "try-error" ||
-            class(try(is_valid_database(db), silent = TRUE))[[1]] != "try-error"
+            class(try(expect_valid_database(db), silent = TRUE))[[1]] != "try-error"
         )
       },
       curry = TRUE
@@ -414,19 +414,19 @@ describe("database", {
           gen.sample_resampleable(c(FALSE, TRUE), of = length(lst[[3]]))
         )),
       \(san, skp, db, i) {
-        is_valid_database(db[i], same_attr_name = san, single_key_pairs = skp)
+        expect_valid_database(db[i], same_attr_name = san, single_key_pairs = skp)
 
         inum <- which(i)
-        is_valid_database(db[inum], same_attr_name = san, single_key_pairs = skp)
+        expect_valid_database(db[inum], same_attr_name = san, single_key_pairs = skp)
         expect_identical(db[i], db[inum])
 
         ineg <- -setdiff(seq_along(db), inum)
         if (!all(i)) {
-          is_valid_database(db[ineg], same_attr_name = san, single_key_pairs = skp)
+          expect_valid_database(db[ineg], same_attr_name = san, single_key_pairs = skp)
           expect_identical(db[i], db[ineg])
         }
 
-        is_valid_database(db[names(db)[i]], same_attr_name = san, single_key_pairs = skp)
+        expect_valid_database(db[names(db)[i]], same_attr_name = san, single_key_pairs = skp)
         expect_identical(db[i], db[names(db)[i]])
 
         expect_length(db[i], sum(i))
@@ -445,19 +445,19 @@ describe("database", {
           gen.element(seq_along(db))
         )),
       \(db, inum) {
-        is_valid_database(db[[inum]])
+        expect_valid_database(db[[inum]])
         expect_identical(db[inum], db[[inum]])
 
         ineg <- -setdiff(seq_along(db), inum)
         if (length(ineg) == 1) {
-          is_valid_database(db[[ineg]])
+          expect_valid_database(db[[ineg]])
           expect_identical(db[inum], db[[ineg]])
         }
 
-        is_valid_database(db[[names(db)[[inum]]]])
+        expect_valid_database(db[[names(db)[[inum]]]])
         expect_identical(db[inum], db[[names(db)[[inum]]]])
 
-        is_valid_database(eval(rlang::expr(`$`(db, !!names(db)[[inum]]))))
+        expect_valid_database(eval(rlang::expr(`$`(db, !!names(db)[[inum]]))))
         expect_identical(db[inum], eval(rlang::expr(`$`(db, !!names(db)[[inum]]))))
 
         ints <- stats::setNames(seq_along(db), names(db))
@@ -487,7 +487,7 @@ describe("database", {
           )
         )),
       \(db, indices) {
-        is_valid_database(db[indices])
+        expect_valid_database(db[indices])
       },
       curry = TRUE
     )
@@ -622,7 +622,7 @@ describe("database", {
       expect_db_subset_reassignment_success <- function(db, indices, value) {
         res <- db
         res[indices] <- value
-        is_valid_database(res)
+        expect_valid_database(res)
         switch(
           class(indices),
           character = {
@@ -727,7 +727,7 @@ describe("database", {
       expect_db_subset_single_reassignment_success <- function(db, ind, value) {
         res <- db
         res[[ind]] <- value
-        is_valid_database(res)
+        expect_valid_database(res)
         switch(
           class(ind),
           character = {
@@ -811,7 +811,7 @@ describe("database", {
       expect_db_subset_single_exact_reassignment_success <- function(db, ind, value) {
         res <- db
         eval(parse(text = paste0("res$", ind, " <- value")))
-        is_valid_database(res)
+        expect_valid_database(res)
         if (ind %in% names(db)) {
           negind <- setdiff(names(res), ind)
           expect_identical(res[negind], db[negind])
@@ -849,7 +849,7 @@ describe("database", {
           )
         }),
       \(san, db) {
-        unique(db) |> is_valid_database(unique = TRUE, same_attr_name = san)
+        unique(db) |> expect_valid_database(unique = TRUE, same_attr_name = san)
       },
       curry = TRUE
     )
@@ -934,7 +934,7 @@ describe("database", {
           gen.database(letters[1:6], 0, 8, same_attr_name = san) |>
             gen.list(from = 1, to = 3)
         )),
-      \(san, dss) do.call(c, dss) |> is_valid_database(same_attr_name = san),
+      \(san, dss) do.call(c, dss) |> expect_valid_database(same_attr_name = san),
       curry = TRUE
     )
   })

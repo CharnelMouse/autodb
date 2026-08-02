@@ -204,7 +204,7 @@ describe("relation", {
         res <- try(names(records(rel)[[n]]) <- nm, silent = TRUE)
         expect_true(
           class(res)[[1]] == "try-error" ||
-            is.null(try(is_valid_relation(rel), silent = TRUE))
+            length(strexpect_valid_relation(rel)) == 0
         )
       },
       curry = TRUE
@@ -274,19 +274,19 @@ describe("relation", {
           gen.sample_resampleable(c(FALSE, TRUE), of = length(rel))
         )),
       \(rel, i) {
-        is_valid_relation(rel[i])
+        expect_valid_relation(rel[i])
 
         inum <- which(i)
-        is_valid_relation(rel[inum])
+        expect_valid_relation(rel[inum])
         expect_identical(rel[i], rel[inum])
 
         ineg <- -setdiff(seq_along(rel), inum)
         if (!all(i)) {
-          is_valid_relation(rel[ineg])
+          expect_valid_relation(rel[ineg])
           expect_identical(rel[i], rel[ineg])
         }
 
-        is_valid_relation(rel[names(rel)[i]])
+        expect_valid_relation(rel[names(rel)[i]])
         expect_identical(rel[i], rel[names(rel)[i]])
 
         expect_length(rel[i], sum(i))
@@ -305,19 +305,19 @@ describe("relation", {
           gen.element(seq_along(rel))
         )),
       \(rel, inum) {
-        is_valid_relation(rel[[inum]])
+        expect_valid_relation(rel[[inum]])
         expect_identical(rel[inum], rel[[inum]])
 
         ineg <- -setdiff(seq_along(rel), inum)
         if (length(ineg) == 1) {
-          is_valid_relation(rel[[ineg]])
+          expect_valid_relation(rel[[ineg]])
           expect_identical(rel[inum], rel[[ineg]])
         }
 
-        is_valid_relation(rel[[names(rel)[[inum]]]])
+        expect_valid_relation(rel[[names(rel)[[inum]]]])
         expect_identical(rel[inum], rel[[names(rel)[[inum]]]])
 
-        is_valid_relation(eval(rlang::expr(`$`(rel, !!names(rel)[[inum]]))))
+        expect_valid_relation(eval(rlang::expr(`$`(rel, !!names(rel)[[inum]]))))
         expect_identical(rel[inum], eval(rlang::expr(`$`(rel, !!names(rel)[[inum]]))))
 
         ints <- stats::setNames(seq_along(rel), names(rel))
@@ -347,7 +347,7 @@ describe("relation", {
           )
         )),
       \(rel, indices) {
-        is_valid_relation(rel[indices])
+        expect_valid_relation(rel[indices])
       },
       curry = TRUE
     )
@@ -418,7 +418,7 @@ describe("relation", {
       expect_rel_subset_reassignment_success <- function(rel, indices, value) {
         res <- rel
         res[indices] <- value
-        is_valid_relation(res)
+        expect_valid_relation(res)
         switch(
           class(indices),
           character = {
@@ -519,7 +519,7 @@ describe("relation", {
       expect_rel_subset_single_reassignment_success <- function(rel, ind, value) {
         res <- rel
         res[[ind]] <- value
-        is_valid_relation(res)
+        expect_valid_relation(res)
         switch(
           class(ind),
           character = {
@@ -607,7 +607,7 @@ describe("relation", {
       ) {
         res <- rel
         eval(parse(text = paste0("res$", ind, " <- value")))
-        is_valid_relation(res)
+        expect_valid_relation(res)
         if (ind %in% names(rel)) {
           negind <- setdiff(names(res), ind)
           expect_identical(res[negind], rel[negind])
@@ -638,7 +638,7 @@ describe("relation", {
   it("is made unique to a valid relation", {
     forall(
       gen.relation(letters[1:6], 0, 8),
-      unique %>>% is_valid_relation
+      unique %>>% expect_valid_relation
     )
   })
   it("is made unique with no duplicate schemas", {
@@ -666,7 +666,7 @@ describe("relation", {
     forall(
       gen.relation(letters[1:6], from = 0, to = 4) |>
         gen.list(from = 1, to = 3),
-      c %>>% with_args(is_valid_relation, single_empty_key = FALSE),
+      c %>>% with_args(expect_valid_relation, single_empty_key = FALSE),
       curry = TRUE
     )
   })

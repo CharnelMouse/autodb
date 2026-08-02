@@ -11,7 +11,7 @@ describe("decompose", {
         fds <- discover(x, digits = digits)
         schema <- normalise(fds)
         db <- decompose(x, schema, digits = digits, check = check)
-        is_valid_database(db)
+        expect_valid_database(db)
       },
       curry = TRUE
     )

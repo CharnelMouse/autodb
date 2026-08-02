@@ -3,7 +3,7 @@ describe("normalise", {
     # table_dum and table_dee
     empty_fds <- functional_dependency(list(), attrs_order = character())
     empty_schema <- normalise(empty_fds)
-    is_valid_database_schema(
+    expect_valid_database_schema(
       empty_schema,
       same_attr_name = TRUE,
       single_key_pairs = FALSE
@@ -18,7 +18,7 @@ describe("normalise", {
       ),
       \(fds, sng, el, ra) {
         normalise(fds, single_ref = sng, ensure_lossless = el, remove_avoidable = ra) |>
-          is_valid_database_schema(
+          expect_valid_database_schema(
             same_attr_name = TRUE,
             single_key_pairs = sng
           )

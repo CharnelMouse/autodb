@@ -481,15 +481,15 @@ describe("discover", {
   it("gives a minimal functional dependency set", {
     forall(
       gen_df(6, 7),
-      terminates_then(is_valid_minimal_functional_dependency, 1, method = "DFD")
+      terminates_then(expect_valid_minimal_functional_dependency, 1, method = "DFD")
     )
     forall(
       gen_df(6, 7),
-      terminates_then(is_valid_minimal_functional_dependency, 1, method = "FDHitsSep")
+      terminates_then(expect_valid_minimal_functional_dependency, 1, method = "FDHitsSep")
     )
     forall(
       gen_df(6, 7),
-      terminates_then(is_valid_minimal_functional_dependency, 1, method = "FDHitsJoint")
+      terminates_then(expect_valid_minimal_functional_dependency, 1, method = "FDHitsJoint")
     )
   })
   it("gives satisfied functional dependencies", {

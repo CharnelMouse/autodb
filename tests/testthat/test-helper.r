@@ -49,10 +49,10 @@ describe("gen.float_coincide", {
 
 describe("gen_flat_deps_fixed_names", {
   it("generates valid", {
-    forall(gen_flat_deps_fixed_names(7, 20, to = 20L), is_valid_functional_dependency)
+    forall(gen_flat_deps_fixed_names(7, 20, to = 20L), expect_valid_functional_dependency)
   })
   test_that("generates valid", {
-    forall(gen_flat_deps(7, 20, to = 20L), is_valid_functional_dependency)
+    forall(gen_flat_deps(7, 20, to = 20L), expect_valid_functional_dependency)
   })
 })
 
@@ -64,7 +64,7 @@ describe("gen.relation_schema", {
           sek,
           gen.relation_schema(letters[1:6], 0, 8, single_empty_key = sek)
         )),
-      \(sek, rs) is_valid_relation_schema(rs, single_empty_key = sek),
+      \(sek, rs) expect_valid_relation_schema(rs, single_empty_key = sek),
       curry = TRUE
     )
   })
@@ -90,7 +90,7 @@ describe("gen.relation_schema_empty_keys", {
             })
         }),
       \(from, me, rs) {
-        is_valid_relation_schema(rs)
+        expect_valid_relation_schema(rs)
         expect_gte(
           sum(vapply(keys(rs), identical, logical(1), list(character()))),
           me
@@ -119,7 +119,7 @@ describe("gen.database_schema", {
             single_key_pairs = skp
           )
         ))),
-      \(sek, san, skp, ds) is_valid_database_schema(
+      \(sek, san, skp, ds) expect_valid_database_schema(
         ds,
         single_empty_key = sek,
         same_attr_name = san,
@@ -160,7 +160,7 @@ describe("gen.database_schema_empty_keys", {
           c(list(san, skp), lst)
         })),
       \(san, skp, me, ds) {
-        is_valid_database_schema(
+        expect_valid_database_schema(
           ds,
           same_attr_name = san,
           single_key_pairs = skp
@@ -183,7 +183,7 @@ describe("gen.relation", {
           gen.pure(sek),
           gen.relation(letters[1:4], 6, 7, single_empty_key = sek)
         )),
-      \(sek, r) is_valid_relation(r, single_empty_key = sek),
+      \(sek, r) expect_valid_relation(r, single_empty_key = sek),
       curry = TRUE
     )
   })
@@ -207,7 +207,7 @@ describe("gen.database", {
             single_key_pairs = skp
           )
         ))),
-      \(sek, san, skp, ds) is_valid_database(
+      \(sek, san, skp, ds) expect_valid_database(
         ds,
         single_empty_key = sek,
         same_attr_name = san,

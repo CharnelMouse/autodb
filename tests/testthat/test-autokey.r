@@ -2,7 +2,7 @@ describe("autokey", {
   it("returns valid single relations", {
     forall(
       gen_df(6, 7),
-      autokey %>>% is_valid_relation
+      autokey %>>% expect_valid_relation
     )
     forall(
       gen_df(6, 7),

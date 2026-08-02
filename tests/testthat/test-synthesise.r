@@ -37,17 +37,17 @@ describe("synthesise", {
     )
     deps |>
       (apply_both(
-        synthesise %>>% is_valid_relation_schema,
+        synthesise %>>% expect_valid_relation_schema,
         with_args(synthesise, remove_avoidable = TRUE) %>>%
-          is_valid_relation_schema
+          expect_valid_relation_schema
       ))()
 
     forall(
       gen_flat_deps(7, 20, to = 20L),
       apply_both(
-        synthesise %>>% is_valid_relation_schema,
+        synthesise %>>% expect_valid_relation_schema,
         with_args(synthesise, remove_avoidable = TRUE) %>>%
-          is_valid_relation_schema
+          expect_valid_relation_schema
       )
     )
   })

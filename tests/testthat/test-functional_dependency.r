@@ -90,15 +90,15 @@ describe("functional_dependency", {
           gen.sample_resampleable(c(FALSE, TRUE), of = length(fd))
         )),
       \(fd, i) {
-        is_valid_functional_dependency(fd[i])
+        expect_valid_functional_dependency(fd[i])
 
         inum <- which(i)
-        is_valid_functional_dependency(fd[inum])
+        expect_valid_functional_dependency(fd[inum])
         expect_identical(fd[i], fd[inum])
 
         ineg <- -setdiff(seq_along(fd), inum)
         if (!all(i)) {
-          is_valid_functional_dependency(fd[ineg])
+          expect_valid_functional_dependency(fd[ineg])
           expect_identical(fd[i], fd[ineg])
         }
 
@@ -117,12 +117,12 @@ describe("functional_dependency", {
           gen.element(seq_along(fd))
         )),
       \(fd, inum) {
-        is_valid_functional_dependency(fd[[inum]])
+        expect_valid_functional_dependency(fd[[inum]])
         expect_identical(fd[inum], fd[[inum]])
 
         ineg <- -setdiff(seq_along(fd), inum)
         if (length(ineg) == 1) {
-          is_valid_functional_dependency(fd[[ineg]])
+          expect_valid_functional_dependency(fd[[ineg]])
           expect_identical(fd[inum], fd[[ineg]])
         }
 
