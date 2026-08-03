@@ -224,8 +224,10 @@ nested <- data.frame(key = 1:4, nullable = c(1:3, NA))
 ## matrices are reported with their column count and contained type
 ## matrix rows only count as missing if the entire row is missing
 nested$matrix <- matrix(c(1:2, NA, NA, 5:7, NA, 9:11, NA), ncol = 3)
-## lists aren't checked for missing values, because it's unclear what should count
+## lists and data frames aren't checked for missing values, because it's
+## unclear what should count
 nested$list <- list(1L, 2:3, NULL, NA)
+nested$df <- data.frame(a = c(1:3, NA), b = c(1:2, NA, NA))
 ## lists are reported with any common element length/type
 nested$uniform_list <- list(1:2, 3:4, 5:6, 7:8)
 ## container type information can be nested
@@ -249,6 +251,7 @@ cat(txt_nested)
 #>     <TR><TD PORT="TO_nullable">nullable</TD><TD PORT="FROM_nullable">integer (1 NA)</TD></TR>
 #>     <TR><TD PORT="TO_matrix">matrix</TD><TD PORT="FROM_matrix">matrix[3]&lt;integer&gt; (1 NA)</TD></TR>
 #>     <TR><TD PORT="TO_list">list</TD><TD PORT="FROM_list">list</TD></TR>
+#>     <TR><TD PORT="TO_df">df</TD><TD PORT="FROM_df">data.frame[2]</TD></TR>
 #>     <TR><TD PORT="TO_uniform_list">uniform_list</TD><TD PORT="FROM_uniform_list">list&lt;integer[2]&gt;</TD></TR>
 #>     <TR><TD PORT="TO_matrix_list">matrix_list</TD><TD PORT="FROM_matrix_list">list&lt;matrix[2, 2]&gt;</TD></TR>
 #>     <TR><TD PORT="TO_nested_list">nested_list</TD><TD PORT="FROM_nested_list">list&lt;list[3]&lt;integer[2]&gt;&gt;</TD></TR>
@@ -258,5 +261,5 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) {
   DiagrammeR::grViz(txt_nested)
 }
 
-{"x":{"diagram":"digraph \"data\" {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"data\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">data (4 rows)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_key\">key<\/TD><TD PORT=\"FROM_key\">integer<\/TD><\/TR>\n    <TR><TD PORT=\"TO_nullable\">nullable<\/TD><TD PORT=\"FROM_nullable\">integer (1 NA)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_matrix\">matrix<\/TD><TD PORT=\"FROM_matrix\">matrix[3]&lt;integer&gt; (1 NA)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_list\">list<\/TD><TD PORT=\"FROM_list\">list<\/TD><\/TR>\n    <TR><TD PORT=\"TO_uniform_list\">uniform_list<\/TD><TD PORT=\"FROM_uniform_list\">list&lt;integer[2]&gt;<\/TD><\/TR>\n    <TR><TD PORT=\"TO_matrix_list\">matrix_list<\/TD><TD PORT=\"FROM_matrix_list\">list&lt;matrix[2, 2]&gt;<\/TD><\/TR>\n    <TR><TD PORT=\"TO_nested_list\">nested_list<\/TD><TD PORT=\"FROM_nested_list\">list&lt;list[3]&lt;integer[2]&gt;&gt;<\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}
+{"x":{"diagram":"digraph \"data\" {\n  rankdir = \"LR\"\n  node [shape=plaintext];\n\n  \"data\" [label = <\n    <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\" CELLPADDING=\"4\">\n    <TR><TD COLSPAN=\"2\">data (4 rows)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_key\">key<\/TD><TD PORT=\"FROM_key\">integer<\/TD><\/TR>\n    <TR><TD PORT=\"TO_nullable\">nullable<\/TD><TD PORT=\"FROM_nullable\">integer (1 NA)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_matrix\">matrix<\/TD><TD PORT=\"FROM_matrix\">matrix[3]&lt;integer&gt; (1 NA)<\/TD><\/TR>\n    <TR><TD PORT=\"TO_list\">list<\/TD><TD PORT=\"FROM_list\">list<\/TD><\/TR>\n    <TR><TD PORT=\"TO_df\">df<\/TD><TD PORT=\"FROM_df\">data.frame[2]<\/TD><\/TR>\n    <TR><TD PORT=\"TO_uniform_list\">uniform_list<\/TD><TD PORT=\"FROM_uniform_list\">list&lt;integer[2]&gt;<\/TD><\/TR>\n    <TR><TD PORT=\"TO_matrix_list\">matrix_list<\/TD><TD PORT=\"FROM_matrix_list\">list&lt;matrix[2, 2]&gt;<\/TD><\/TR>\n    <TR><TD PORT=\"TO_nested_list\">nested_list<\/TD><TD PORT=\"FROM_nested_list\">list&lt;list[3]&lt;integer[2]&gt;&gt;<\/TD><\/TR>\n    <\/TABLE>>];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}
 ```

@@ -19,6 +19,8 @@
     is useful on its own.
 - Added `add_lookup` to easily add a lookup relation for attributes that
   don’t have one.
+- Added a `rep` method for the relational classes (`relation_schema` and
+  `relation`, and `database_schema` and `database` by inheritance).
 
 ### Functionality improvements
 
