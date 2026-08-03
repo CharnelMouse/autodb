@@ -919,18 +919,7 @@ gen.relation_from_schema <- function(
   variant = c("data.frame", "tibble")
 ) {
   variant <- match.arg(variant)
-  atomic <- TRUE
-  asable_classes <- c(
-    "logical",
-    "integer",
-    "numeric",
-    "character",
-    "factor",
-    if (!atomic) "list",
-    if (!atomic) "matrix",
-    if (!atomic) "data.frame"
-  )
-  used_classes <- gen.element(asable_classes) |>
+  used_classes <- gen.df_colclass(atomic = TRUE) |>
     gen.c(of = length(attrs_order(rs))) |>
     gen.with(as.character) |>
     gen.with(with_args(stats::setNames, nm = (attrs_order(rs))))
