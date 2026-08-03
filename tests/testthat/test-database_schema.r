@@ -940,6 +940,20 @@ describe("database_schema", {
     )
   })
 
+  it("can be repeated", {
+    rs <- relation_schema(
+      list(
+        a = list(c("a", "b"), list("a")),
+        b = list(c("b", "c"), list("b"))
+      ),
+      letters[1:4]
+    )
+    ds <- database_schema(rs, list(list("a", "b", "b", "b")))
+    expect_identical(rep(ds, 2), ds[c(1:2, 1:2)])
+    expect_identical(rep(ds, c(2, 1)), ds[c(1, 1, 2)])
+    expect_identical(rep(ds, each = 2), ds[c(1, 1, 2, 2)])
+  })
+
   it("can have its attributes renamed", {
     forall(
       gen.database_schema(letters[1:6], 1, 8),

@@ -10,6 +10,7 @@
   * Remaining inequality implementations (`<`, `<=`, `>`, `>=`).
   * `remove_extraneous` removes redundant dependencies and redundant determinant attributes. This is used as a step in `synthesise`, but is useful on its own.
 * Added `add_lookup` to easily add a lookup relation for attributes that don't have one.
+* Added a `rep` method for the relational classes (`relation_schema` and `relation`, and `database_schema` and `database` by inheritance).
 
 ## Functionality improvements
 

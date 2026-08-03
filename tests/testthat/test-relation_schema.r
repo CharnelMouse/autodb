@@ -687,6 +687,19 @@ describe("relation_schema", {
     )
   })
 
+  it("can be repeated", {
+    rs <- relation_schema(
+      list(
+        a = list(c("a", "b"), list("a")),
+        b = list(c("b", "c"), list("b"))
+      ),
+      letters[1:4]
+    )
+    expect_identical(rep(rs, 2), c(rs, rs))
+    expect_identical(rep(rs, c(2, 1)), rs[c(1, 1, 2)])
+    expect_identical(rep(rs, each = 2), rs[c(1, 1, 2, 2)])
+  })
+
   it("can have its attributes renamed", {
     forall(
       gen.relation_schema(letters[1:6], 1, 8),

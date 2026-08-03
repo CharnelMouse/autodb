@@ -767,3 +767,9 @@ value_sets <- function(x, as) {
   )
   value_sets
 }
+
+#' @exportS3Method
+rep.relation <- function(x, ...) {
+  vals <- rep(seq_along(x), ...)
+  x[vals]
+}

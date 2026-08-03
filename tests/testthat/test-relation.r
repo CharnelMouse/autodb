@@ -774,6 +774,21 @@ describe("relation", {
     )
   })
 
+  it("can be repeated", {
+    rs <- relation_schema(
+      list(
+        a = list(c("a", "b"), list("a")),
+        b = list(c("b", "c"), list("b"))
+      ),
+      letters[1:4]
+    )
+    rel <- create(rs)
+    rel <- insert(rel, data.frame(a = 1:4, b = c(1:3, 3L), c = c(1L, 1L, 2L, 2L)))
+    expect_identical(rep(rel, 2), c(rel, rel))
+    expect_identical(rep(rel, c(2, 1)), rel[c(1, 1, 2)])
+    expect_identical(rep(rel, each = 2), rel[c(1, 1, 2, 2)])
+  })
+
   it("can have its attributes renamed", {
     forall(
       gen.relation(letters[1:6], 1, 8),

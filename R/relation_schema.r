@@ -494,3 +494,9 @@ add_lookup.relation_schema <- function(x, as, ...) {
     )
   )
 }
+
+#' @exportS3Method
+rep.relation_schema <- function(x, ...) {
+  vals <- rep(seq_along(x), ...)
+  x[vals]
+}
