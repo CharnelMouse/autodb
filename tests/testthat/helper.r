@@ -391,7 +391,7 @@ expect_valid_relation <- function(x, unique = FALSE, single_empty_key = FALSE) {
     fail(paste(msg, collapse = "\n"))
 }
 
-expect_valid_database <- function(
+strexpect_valid_database <- function(
   x,
   unique = FALSE,
   single_empty_key = FALSE,
@@ -399,7 +399,7 @@ expect_valid_database <- function(
   single_key_pairs = FALSE
 ) {
   if (!inherits(x, "database"))
-    return(fail(paste("x is not a database: classes are", toString(class(x)))))
+    return(paste("x is not a database; classes are", toString(class(x))))
 
   msg <- strexpect_valid_relation(x, unique, single_empty_key)
 
@@ -444,6 +444,23 @@ expect_valid_database <- function(
   children <- names(fk_parent_sets)
   nonchildren <- setdiff(names(x), children)
 
+  msg
+}
+
+expect_valid_database <- function(
+  x,
+  unique = FALSE,
+  single_empty_key = FALSE,
+  same_attr_name = FALSE,
+  single_key_pairs = FALSE
+) {
+  msg <- strexpect_valid_database(
+    x,
+    unique,
+    single_empty_key,
+    same_attr_name,
+    single_key_pairs
+  )
   if (length(msg) == 0)
     succeed()
   else
