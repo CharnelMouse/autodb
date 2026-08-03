@@ -328,27 +328,56 @@ expect_valid_database <- function(
   same_attr_name = FALSE,
   single_key_pairs = FALSE
 ) {
-  expect_valid_relation(x, unique, single_empty_key)
-  expect_s3_class(x, "database")
+  if (!inherits(x, "database"))
+    return(fail(paste("x is not a database: classes are", toString(class(x)))))
+
+  msg <- strexpect_valid_relation(x, unique, single_empty_key)
 
   fks <- references(x)
-  expect_valid_references(x, same_attr_name, single_key_pairs)
+  valid_reftest <- try(
+    expect_valid_references(x, same_attr_name, single_key_pairs),
+    silent = TRUE
+  )
+  if (class(valid_reftest)[[1]] == "try-error")
+    msg <- c(
+      msg,
+      attr(x, "condition")$message
+    )
+
   recs <- records(x)
-  for (fk in fks) {
-    expect_true(identical(
-      nrow(records(x)[[fk[[1]]]]),
-      nrow(df_join(
-        recs[[fk[[1]]]][, fk[[2]], drop = FALSE],
-        recs[[fk[[3]]]][, fk[[4]], drop = FALSE],
-        by.x = fk[[2]],
-        by.y = fk[[4]]
-      ))))
+  for (n in seq_along(fks)) {
+    fk <- fks[[n]]
+    child_nrow <- nrow(records(x)[[fk[[1]]]])
+    join_nrow <- nrow(df_join(
+      recs[[fk[[1]]]][, fk[[2]], drop = FALSE],
+      recs[[fk[[3]]]][, fk[[4]], drop = FALSE],
+      by.x = fk[[2]],
+      by.y = fk[[4]]
+    ))
+    if (!identical(child_nrow, join_nrow))
+      msg <- c(
+        msg,
+        paste(
+          "foreign key",
+          n,
+          "has differing child/join record counts:",
+          child_nrow,
+          "vs",
+          join_nrow
+        )
+      )
   }
+
   fk_children <- vapply(fks, "[[", character(1), 1L)
   fk_parents <- vapply(fks, "[[", character(1), 3L)
   fk_parent_sets <- split(fk_parents, fk_children)
   children <- names(fk_parent_sets)
   nonchildren <- setdiff(names(x), children)
+
+  if (length(msg) == 0)
+    succeed()
+  else
+    fail(paste(msg, collapse = "\n"))
 }
 
 expect_identical_unordered_table <- function(new, original) {
