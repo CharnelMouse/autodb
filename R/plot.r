@@ -95,8 +95,10 @@
 #' ## matrices are reported with their column count and contained type
 #' ## matrix rows only count as missing if the entire row is missing
 #' nested$matrix <- matrix(c(1:2, NA, NA, 5:7, NA, 9:11, NA), ncol = 3)
-#' ## lists aren't checked for missing values, because it's unclear what should count
+#' ## lists and data frames aren't checked for missing values, because it's
+#' ## unclear what should count
 #' nested$list <- list(1L, 2:3, NULL, NA)
+#' nested$df <- data.frame(a = c(1:3, NA), b = c(1:2, NA, NA))
 #' ## lists are reported with any common element length/type
 #' nested$uniform_list <- list(1:2, 3:4, 5:6, 7:8)
 #' ## container type information can be nested
@@ -206,8 +208,10 @@ gv <- function(x, name = NA_character_, ...) {
 #' ## matrices are reported with their column count and contained type
 #' ## matrix rows only count as missing if the entire row is missing
 #' nested$matrix <- matrix(c(1:2, NA, NA, 5:7, NA, 9:11, NA), ncol = 3)
-#' ## lists aren't checked for missing values, because it's unclear what should count
+#' ## lists and data frames aren't checked for missing values, because it's
+#' ## unclear what should count
 #' nested$list <- list(1L, 2:3, NULL, NA)
+#' nested$df <- data.frame(a = c(1:3, NA), b = c(1:2, NA, NA))
 #' ## lists are reported with any common element length/type
 #' nested$uniform_list <- list(1:2, 3:4, 5:6, 7:8)
 #' ## container type information can be nested
