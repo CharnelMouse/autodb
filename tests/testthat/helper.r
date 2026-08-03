@@ -94,111 +94,180 @@ expect_valid_relation_schema <- function(x, unique = FALSE, single_empty_key = F
   }
 }
 
-expect_valid_references <- function(
+strexpect_valid_references <- function(
   x,
   same_attr_name = FALSE,
   single_key_pairs = FALSE
 ) {
-  act <- quasi_label(rlang::enquo(x), arg = "x")
+  msg <- character()
 
   references <- references(x)
-  attrs <- attrs(x)
   if (length(references) == 0L)
-    return(invisible(act$val))
+    return(msg)
+
+  attrs <- attrs(x)
+  lab <- rlang::quo_get_expr(rlang::enquo(x))
 
   # former condition is temporary until references are properly grouped
   if (single_key_pairs && anyDuplicated(references))
-    fail(sprintf("%s has duplicate references", act$lab))
-  for (fk in references) {
-    if (!is(fk, "list"))
-      fail(sprintf(
-        "%s has non-list references",
-        act$lab
-      ))
-    if (length(fk) != 4L)
-      fail(sprintf(
-        "%s has non-length-four references",
-        act$lab
-      ))
-    if (!is.character(fk[[1]]))
-      fail(sprintf(
-        "%s has non-character reference child names",
-        act$lab
-      ))
-    if (!is.character(fk[[2]]))
-      fail(sprintf(
-        "%s has non-character reference child attributes",
-        act$lab
-      ))
-    if (!is.character(fk[[3]]))
-      fail(sprintf(
-        "%s has non-character reference parent names",
-        act$lab
-      ))
-    if (!is.character(fk[[4]]))
-      fail(sprintf(
-        "%s has non-character reference parent attributes",
-        act$lab
-      ))
-    if (!all(is.element(unlist(fk[c(1L, 3L)]), names(attrs))))
-      fail(sprintf(
-        "%s has references over non-present relation names",
-        act$lab
-      ))
-    if (fk[[1]] == fk[[3]]) # no self-references, relax this?
-      fail(sprintf(
-        "%s has self-references in references",
-        act$lab
-      ))
-    if (same_attr_name && !identical(fk[[2]], fk[[4]]))
-      fail(sprintf(
-        "%s has non-matching attribute names in references",
-        act$lab
-      ))
-    if (anyDuplicated(fk[[2]]))
-      fail(sprintf(
-        "%s has references with non-unique child attribute names",
-        act$lab
-      ))
-    if (anyDuplicated(fk[[4]]))
-      fail(sprintf(
-        "%s has references with non-unique parent attribute names",
-        act$lab
-      ))
-    if (length(fk[[2]]) == 0L || length(fk[[4]]) == 0L)
-      fail(sprintf(
-        "%s has references with zero-length attribute sets",
-        act$lab
-      ))
-    if (length(fk[[2]]) != length(fk[[4]]))
-      fail(sprintf(
-        "%s has references with different attribute set lengths",
-        act$lab
-      ))
-    if (!all(is.element(fk[[2]], attrs[[fk[[1]]]])))
-      fail(sprintf(
-        "%s has invalid child attribute names in references",
-        act$lab
-      ))
-    if (!all(is.element(fk[[4]], attrs[[fk[[3]]]])))
-      fail(sprintf(
-        "%s has invalid parent attribute names in references",
-        act$lab
-      ))
+    msg <- c(msg, paste(lab, "has duplicate references"))
+
+  fks_are_lists <- vapply(references, inherits, logical(1), "list")
+  if (any(!fks_are_lists))
+    msg <- c(msg, paste(lab, "has non-list references"))
+
+  fks_are_length_four <- lengths(references) == 4
+  if (any(!fks_are_length_four))
+    msg <- c(msg, paste(lab, "has non-length-four references"))
+
+  formed_refs <- references[fks_are_lists & fks_are_length_four]
+
+  formed_child_names_char <- vapply(
+    formed_refs,
+    \(x) is.character(x[[1]]),
+    logical(1)
+  )
+  formed_child_names_scalar <- vapply(
+    formed_refs,
+    \(x) length(x[[1]]) == 1,
+    logical(1)
+  )
+
+  formed_parent_names_char <- vapply(
+    formed_refs,
+    \(x) is.character(x[[3]]),
+    logical(1)
+  )
+  formed_parent_names_scalar <- vapply(
+    formed_refs,
+    \(x) length(x[[3]]) == 1,
+    logical(1)
+  )
+
+  formed_child_attrs_char <- vapply(
+    formed_refs,
+    \(x) is.character(x[[2]]),
+    logical(1)
+  )
+  formed_parent_attrs_char <- vapply(
+    formed_refs,
+    \(x) is.character(x[[4]]),
+    logical(1)
+  )
+  formed_attrs_length_match <- vapply(
+    formed_refs,
+    \(x) length(x[[2]]) == length(x[[4]]),
+    logical(1)
+  )
+
+  if (any(!formed_child_names_char))
+    msg <- c(msg, paste(lab, "has non-character reference child names"))
+  if (any(!formed_child_attrs_char))
+    msg <- c(msg, paste(lab, "has non-character reference child attributes"))
+  if (any(!formed_parent_names_char))
+    msg <- c(msg, paste(lab, "has non-character reference parent names"))
+  if (any(!formed_parent_attrs_char))
+    msg <- c(msg, paste(lab, "has non-character reference parent attributes"))
+
+  if (any(!formed_child_names_scalar))
+    msg <- c(msg, paste(lab, "has non-length-one reference child names"))
+  if (any(!formed_parent_names_scalar))
+    msg <- c(msg, paste(lab, "has non-length-one reference parent names"))
+  if (any(!formed_attrs_length_match))
+    msg <- c(msg, paste(lab, "has non-matching child/parent attribute set lengths"))
+
+  elformed_refs <- formed_refs[
+    formed_child_names_char & formed_parent_names_char &
+      formed_child_attrs_char & formed_parent_attrs_char &
+      formed_child_names_scalar & formed_parent_names_scalar &
+      formed_attrs_length_match
+  ]
+
+  relnames_exist <- vapply(
+    elformed_refs,
+    \(ref) all(c(ref[[1]], ref[[3]]) %in% names(x)),
+    logical(1)
+  )
+  if (any(!relnames_exist))
+    msg <- c(msg, paste(lab, "has references over non-present relation names"))
+
+  # this could be relaxed
+  nonself_reference <- vapply(elformed_refs, \(ref) ref[[1]] != ref[[3]], logical(1))
+  if (any(!nonself_reference))
+    msg <- c(msg, paste(lab, "has self-references in references"))
+
+  if (same_attr_name) {
+    same_attr_names <- vapply(
+      elformed_refs,
+      \(ref) identical(ref[[2]], ref[[4]]),
+      logical(1)
+    )
+    if (any(!same_attr_names))
+      msg <- c(msg, paste(lab, "has non-matching attribute names in references"))
   }
+
+  unique_child_attrs <- vapply(
+    elformed_refs,
+    \(ref) !anyDuplicated(ref[[2]]),
+    logical(1)
+  )
+  if (any(!unique_child_attrs))
+    msg <- c(msg, paste(lab, "has references with non-unique child attribute names"))
+
+  unique_parent_attrs <- vapply(
+    elformed_refs,
+    \(ref) !anyDuplicated(ref[[2]]),
+    logical(1)
+  )
+  if (any(!unique_parent_attrs))
+    msg <- c(msg, paste(lab, "has references with non-unique parent attribute names"))
+
+  nonempty_attr_sets <- vapply(
+    elformed_refs,
+    \(ref) all(lengths(ref[c(2, 4)]) > 0),
+    logical(1)
+  )
+  if (any(!nonempty_attr_sets))
+    msg <- c(msg, paste(lab, "has references with zero-length attribute sets"))
+
+  child_attrs_exist <- vapply(
+    elformed_refs,
+    \(ref) all(ref[[2]] %in% attrs[[ref[[1]]]]),
+    logical(1)
+  )
+  if (any(!child_attrs_exist))
+    msg <- c(msg, paste(lab, "has invalid child attribute names in references"))
+
+  parent_attrs_exist <- vapply(
+    elformed_refs,
+    \(ref) all(ref[[2]] %in% attrs[[ref[[1]]]]),
+    logical(1)
+  )
+  if (any(!parent_attrs_exist))
+    msg <- c(msg, paste(lab, "has invalid parent attribute names in references"))
+
   if (single_key_pairs) {
     relnames_df <- as.data.frame(do.call(
       rbind,
       lapply(references, \(r) unlist(r[c(1L, 3L)]))
     ))
     if (anyDuplicated(relnames_df))
-      fail(sprintf(
-        "%s has reference pairs with multiple keys",
-        act$lab
-      ))
+      msg <- c(msg, paste(lab, "has reference pairs with multiple keys"))
   }
 
-  invisible(act$val)
+  msg
+}
+
+expect_valid_references <- function(
+  x,
+  same_attr_name = FALSE,
+  single_key_pairs = FALSE
+) {
+  msg <- strexpect_valid_references(x, same_attr_name, single_key_pairs)
+  if (length(msg) == 0)
+    succeed()
+  else
+    fail(paste(msg, collapse = "\n"))
 }
 
 expect_valid_database_schema <- function(
@@ -208,14 +277,15 @@ expect_valid_database_schema <- function(
   same_attr_name = FALSE,
   single_key_pairs = FALSE
 ) {
+  if (!inherits(x, "database_schema"))
+    return(fail(paste("x is not a relation; classes are", toString(class(x)))))
   expect_valid_relation_schema(x, unique, single_empty_key)
-  expect_s3_class(x, "database_schema")
   expect_valid_references(x, same_attr_name, single_key_pairs)
 }
 
 strexpect_valid_relation <- function(x, unique = FALSE, single_empty_key = FALSE) {
   if (!inherits(x, "relation"))
-    return(fail(paste("x is not a relation; classes are", toString(class(x)))))
+    return(paste("x is not a relation; classes are", toString(class(x))))
 
   msg <- character()
 
