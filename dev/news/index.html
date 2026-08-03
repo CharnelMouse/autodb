@@ -58,13 +58,16 @@
 <code>autokey</code> is like <code>autodb</code>, but just adds keys to the data frame (returning a length-one <code>relation</code> object).</li>
 </ul></li>
 <li>Added methods for <code>functional_dependency</code> objects:
-<ul><li>There is now a <code>rep</code> method. This also allows the use of <code>outer</code>, e.g. for comparison with <code>==</code>.</li>
+<ul><li>A <code>rep</code> method, which also allows the use of <code>outer</code>, e.g. for comparison with <code>==</code>.</li>
 <li>Remaining inequality implementations (<code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>).</li>
 <li>
 <code>remove_extraneous</code> removes redundant dependencies and redundant determinant attributes. This is used as a step in <code>synthesise</code>, but is useful on its own.</li>
 </ul></li>
-<li>Added <code>add_lookup</code> to easily add a lookup relation for attributes that don’t have one.</li>
-<li>Added a <code>rep</code> method for the relational classes (<code>relation_schema</code> and <code>relation</code>, and <code>database_schema</code> and <code>database</code> by inheritance).</li>
+<li>Added methods for relational classes:
+<ul><li>
+<code>add_lookup</code> adds a lookup relation for given attributes that don’t have one, in terms of both key values and references.</li>
+<li>A <code>rep</code> method for the relational classes (<code>relation_schema</code>, <code>relation</code>, <code>database_schema</code>, <code>database</code>). This also allows the use of <code>outer</code>.</li>
+</ul></li>
 </ul></div>
 <div class="section level3">
 <h3 id="functionality-improvements-development-version">Functionality improvements<a class="anchor" aria-label="anchor" href="#functionality-improvements-development-version"></a></h3>

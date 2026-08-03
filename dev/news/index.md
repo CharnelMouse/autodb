@@ -11,16 +11,18 @@
   - `autokey` is like `autodb`, but just adds keys to the data frame
     (returning a length-one `relation` object).
 - Added methods for `functional_dependency` objects:
-  - There is now a `rep` method. This also allows the use of `outer`,
-    e.g. for comparison with `==`.
+  - A `rep` method, which also allows the use of `outer`, e.g. for
+    comparison with `==`.
   - Remaining inequality implementations (`<`, `<=`, `>`, `>=`).
   - `remove_extraneous` removes redundant dependencies and redundant
     determinant attributes. This is used as a step in `synthesise`, but
     is useful on its own.
-- Added `add_lookup` to easily add a lookup relation for attributes that
-  don’t have one.
-- Added a `rep` method for the relational classes (`relation_schema` and
-  `relation`, and `database_schema` and `database` by inheritance).
+- Added methods for relational classes:
+  - `add_lookup` adds a lookup relation for given attributes that don’t
+    have one, in terms of both key values and references.
+  - A `rep` method for the relational classes (`relation_schema`,
+    `relation`, `database_schema`, `database`). This also allows the use
+    of `outer`.
 
 ### Functionality improvements
 
