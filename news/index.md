@@ -1,5 +1,76 @@
 # Changelog
 
+## autodb 3.3.0
+
+### New functions
+
+- Added functions for key discovery:
+  - `discover_keys` is like `discover`, but searches for keys rather
+    than functional dependencies. This scales better with column count
+    than FD search.
+  - `autokey` is like `autodb`, but just adds keys to the data frame
+    (returning a length-one `relation` object).
+- Added methods for `functional_dependency` objects:
+  - A `rep` method, which also allows the use of `outer`, e.g. for
+    comparison with `==`.
+  - Remaining inequality implementations (`<`, `<=`, `>`, `>=`).
+  - `remove_extraneous` removes redundant dependencies and redundant
+    determinant attributes. This is used as a step in `synthesise`, but
+    is useful on its own.
+- Added methods for relational classes:
+  - `add_lookup` adds a lookup relation for given attributes that don’t
+    have one, in terms of both key values and references.
+  - A `rep` method for the relational classes (`relation_schema`,
+    `relation`, `database_schema`, `database`). This also allows the use
+    of `outer`.
+
+### Functionality improvements
+
+- Added support for some non-primitive columns to allow usage of output
+  from the jsonlite package:
+  - Added support for data with list columns. `duplicate`, `unique` etc.
+    consider data frame rows different if they only differ by `NA` value
+    classes in list columns. Previously, `discover` considered them to
+    be equal, so a data frame with list columns could violate its own
+    schema. This is now fixed, in exchange for a small performance hit
+    when there are list columns.
+  - Added support for data with matrix columns. Similarly to lists,
+    `duplicate` etc. account for matrices properly, rather than trying
+    to treat them as vectors.
+  - Added support for data with data.frame columns. Similarly to lists,
+    `duplicate` etc. account for data.frames properly, rather than
+    trying to treat them as vectors.
+- Improved data class presentation in `gv` and `d2` methods for classes
+  containing data:
+  - Data classes are supplemented by non-zero missing value counts.
+  - Non-primitive columns, as listed above, can have nested information
+    when elements have common size or element class.
+- Functional dependencies are printed more consistently:
+  - `print.functional_dependency` and
+    `as.character.functional_dependency` print the determinant in
+    braces, to match printing for references.
+  - Functional dependency violations in `decompose` are reported with
+    the same arrow alignment as `print.functional_dependency` and
+    `as.character.functional_dependency`.
+
+### Performance improvements
+
+- `insert.database` only does reference violation checks for affected
+  references.
+- Removed integrity checks for concatenating relations or databases
+  together, for performance: since the only change is some renaming,
+  concatenating valid relations/databases shouldn’t result in any
+  violations anyway.
+- The `skip_bijections` argument for `discover` now works for all
+  methods, rather than just DFD. It is also present in the new
+  `discover_keys` function.
+
+### Other changes
+
+- `rejoin` no longer sorts the rows after merging, since some
+  non-primitive column types are now supported, and these are not
+  generically sortable.
+
 ## autodb 3.2.4
 
 CRAN release: 2025-11-17

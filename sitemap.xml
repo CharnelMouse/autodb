@@ -4,16 +4,19 @@
 <url><loc>https://charnelmouse.github.io/autodb/articles/autodb.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/articles/index.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/articles/limits.html</loc></url>
+<url><loc>https://charnelmouse.github.io/autodb/articles/nest.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/articles/nudge.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/articles/null.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/articles/plans.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/authors.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/index.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/news/index.html</loc></url>
+<url><loc>https://charnelmouse.github.io/autodb/reference/add_lookup.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/attrs.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/attrs_order.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/autodb-package.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/autodb.html</loc></url>
+<url><loc>https://charnelmouse.github.io/autodb/reference/autokey.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/autoref.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/create.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/d2.data.frame.html</loc></url>
@@ -31,6 +34,7 @@
 <url><loc>https://charnelmouse.github.io/autodb/reference/df_equiv.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/df_rbind.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/discover.html</loc></url>
+<url><loc>https://charnelmouse.github.io/autodb/reference/discover_keys.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/functional_dependency.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/gv.data.frame.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/gv.database.html</loc></url>
@@ -53,6 +57,7 @@
 <url><loc>https://charnelmouse.github.io/autodb/reference/rejoin.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/relation.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/relation_schema.html</loc></url>
+<url><loc>https://charnelmouse.github.io/autodb/reference/remove_extraneous.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/rename_attrs.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/subrelations.html</loc></url>
 <url><loc>https://charnelmouse.github.io/autodb/reference/subschemas.html</loc></url>

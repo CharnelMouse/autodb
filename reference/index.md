@@ -2,6 +2,8 @@
 
 ## All functions
 
+- [`add_lookup()`](https://charnelmouse.github.io/autodb/reference/add_lookup.md)
+  : Add attribute lookup relations
 - [`attrs()`](https://charnelmouse.github.io/autodb/reference/attrs.md)
   [`` `attrs<-`() ``](https://charnelmouse.github.io/autodb/reference/attrs.md)
   : Relational data attributes
@@ -10,6 +12,8 @@
   : Relational data attribute order
 - [`autodb()`](https://charnelmouse.github.io/autodb/reference/autodb.md)
   : Create a normalised database from a data frame
+- [`autokey()`](https://charnelmouse.github.io/autodb/reference/autokey.md)
+  : Create a relation from a data frame
 - [`autoref()`](https://charnelmouse.github.io/autodb/reference/autoref.md)
   : Add foreign key references to a normalised database
 - [`create()`](https://charnelmouse.github.io/autodb/reference/create.md)
@@ -49,6 +53,8 @@
   : Combine R Objects by Rows or Columns
 - [`discover()`](https://charnelmouse.github.io/autodb/reference/discover.md)
   : Dependency discovery with DFD
+- [`discover_keys()`](https://charnelmouse.github.io/autodb/reference/discover_keys.md)
+  : Key discovery with MCSS
 - [`functional_dependency()`](https://charnelmouse.github.io/autodb/reference/functional_dependency.md)
   : Functional dependency vectors
 - [`gv()`](https://charnelmouse.github.io/autodb/reference/gv.md) :
@@ -94,6 +100,8 @@
   : Relation vectors
 - [`relation_schema()`](https://charnelmouse.github.io/autodb/reference/relation_schema.md)
   : Relation schema vectors
+- [`remove_extraneous()`](https://charnelmouse.github.io/autodb/reference/remove_extraneous.md)
+  : Remove extraneous components from functional dependencies
 - [`rename_attrs()`](https://charnelmouse.github.io/autodb/reference/rename_attrs.md)
   : Rename relational data attributes
 - [`subrelations()`](https://charnelmouse.github.io/autodb/reference/subrelations.md)

@@ -8,16 +8,16 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/CharnelMouse/autodb/blob/v3.2.4/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/CharnelMouse/autodb/blob/master/DESCRIPTION)
 
-Webster M (2025). *autodb: Automatic Database Normalisation for Data
-Frames*. R package version 3.2.4,
+Webster M (2026). *autodb: Automatic Database Normalisation for Data
+Frames*. R package version 3.3.0,
 <https://charnelmouse.github.io/autodb/>.
 
     @Manual{,
       title = {autodb: Automatic Database Normalisation for Data Frames},
       author = {Mark Webster},
-      year = {2025},
-      note = {R package version 3.2.4},
+      year = {2026},
+      note = {R package version 3.3.0},
       url = {https://charnelmouse.github.io/autodb/},
     }

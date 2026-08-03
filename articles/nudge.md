@@ -1,6 +1,7 @@
 # A larger example: the nudge dataset
 
 ``` r
+
 library(autodb)
 ```
 
@@ -12,6 +13,7 @@ library(autodb)
     ##     decompose
 
 ``` r
+
 if (requireNamespace("DiagrammeR", quietly = TRUE)) {
   show <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
   maybe_plot <- function(x) DiagrammeR::grViz(gv(x), width = "100%")
@@ -24,6 +26,7 @@ if (requireNamespace("DiagrammeR", quietly = TRUE)) {
 Included in the package is a 447-by-25 data frame called `nudge`:
 
 ``` r
+
 knitr::kable(data.frame(
   attribute = names(nudge),
   class = vapply(nudge, \(x) class(x)[[1]], character(1)),
@@ -72,6 +75,7 @@ results in a relatively large search time for a data set of this size,
 but it still only takes a few seconds.
 
 ``` r
+
 nudge_deps_big <- discover(nudge)
 nudge_schema_big <- normalise(nudge_deps_big, remove_avoidable = TRUE)
 nudge_db_big <- decompose(nudge, nudge_schema_big)
@@ -81,6 +85,7 @@ However, the resulting schema is hard to make anything out of, with more
 relations than we’d want to go through manually:
 
 ``` r
+
 length(nudge_schema_big)
 ```
 
@@ -90,6 +95,7 @@ There are a few reasons for this, but the main one is the sheer number
 of functional dependencies discovered:
 
 ``` r
+
 length(nudge_deps_big)
 ```
 
@@ -111,6 +117,7 @@ containing only those relations, and relations that they reference,
 either directly or indirectly.
 
 ``` r
+
 nudge_reduced_big <- reduce(nudge_db_big)
 ```
 
@@ -125,6 +132,7 @@ for an example of non-spurious tables not being connected. However,
 In this case, the reduced database is still too large to easily review:
 
 ``` r
+
 length(nudge_reduced_big)
 ```
 
@@ -136,6 +144,7 @@ attributes involved in the determinants.
 For example, we can also see how large the determinants are:
 
 ``` r
+
 table(lengths(detset(nudge_deps_big)))
 ```
 
@@ -151,6 +160,7 @@ some hard size limit, though.
 We can also see how often each attribute appears in a determinant:
 
 ``` r
+
 sort(table(unlist(detset(nudge_deps_big))), decreasing = TRUE)
 ```
 
@@ -178,6 +188,7 @@ We can be more specific, and see how often each attributes appears in a
 determinant of a given size:
 
 ``` r
+
 sort_by_rowSums <- function(x, ...) x[order(rowSums(x), ...), , drop = FALSE]
 level_table <- function(x, levels) table(factor(x, levels))
 attrs_table <- function(x) level_table(unlist(x), names(nudge))
@@ -226,6 +237,7 @@ count determinant appearances by the attribute’s class, we find that
 they often appear in determinants:
 
 ``` r
+
 attr_classes <- vapply(nudge, \(x) class(x)[[1]], character(1))
 class_table <- function(x) {
   level_table(attr_classes[unlist(x)], sort(unique(attr_classes)))
@@ -246,6 +258,7 @@ This suggests that a simple first step is to remove any FD with a float
 in the determinant. We can write this as a filter vector:
 
 ``` r
+
 det_nofloat <- vapply(
   detset(nudge_deps_big),
   \(x) all(attr_classes[x] != "numeric"),
@@ -262,6 +275,7 @@ This removes a lot!
 If we use the filtered set of FDs, we still get a large schema:
 
 ``` r
+
 length(normalise(nudge_deps_big[det_nofloat]))
 ```
 
@@ -271,11 +285,13 @@ However, if we reduce the resulting database, we get something much more
 manageable:
 
 ``` r
+
 nudge_schema_filtered <- normalise(nudge_deps_big[det_nofloat])
 nudge_db_filtered <- reduce(decompose(nudge, nudge_schema_filtered))
 ```
 
 ``` r
+
 show(nudge_db_filtered)
 ```
 
@@ -283,6 +299,7 @@ Let’s look at the resulting relations, in two sets. Here’s the left-hand
 set:
 
 ``` r
+
 subsample <- c(
   "es_id",
   "study_id",
@@ -293,6 +310,7 @@ subsample <- c(
 ```
 
 ``` r
+
 show(nudge_db_filtered[subsample])
 ```
 
@@ -313,6 +331,7 @@ that this is the nature of the relationship. Indeed, we can find a case
 where it’s false:
 
 ``` r
+
 knitr::kable(
   subset(
     nudge,
@@ -323,10 +342,10 @@ knitr::kable(
 )
 ```
 
-| reference                | study_id | es_id | n_study | n_comparison | n_control | n_intervention |
-|:-------------------------|---------:|------:|--------:|-------------:|----------:|---------------:|
-| Hedlin & Sunstein (2016) |      137 |   180 |    1037 |         1037 |       345 |            346 |
-| Hedlin & Sunstein (2016) |      137 |   181 |    1037 |         1037 |       345 |            346 |
+| reference | study_id | es_id | n_study | n_comparison | n_control | n_intervention |
+|:---|---:|---:|---:|---:|---:|---:|
+| Hedlin & Sunstein (2016) | 137 | 180 | 1037 | 1037 | 345 | 346 |
+| Hedlin & Sunstein (2016) | 137 | 181 | 1037 | 1037 | 345 | 346 |
 
 It turns out to be difficult to identify which results in the relevant
 paper these are referring to, since the presentation of the results is
@@ -342,12 +361,14 @@ same can’t be said of the other set, which should represent the
 publication-level data:
 
 ``` r
+
 show(nudge_db_filtered[setdiff(names(nudge_db_filtered), subsample)])
 ```
 
 There is a lot going on here, so let’s look at the last two:
 
 ``` r
+
 show(nudge_db_filtered[c("title", "reference")])
 ```
 
@@ -365,6 +386,7 @@ relation to find the duplicates, with all the attributes needed for
 context:
 
 ``` r
+
 duplicates <- function(x) unique(x[duplicated(x)])
 subset_duplicates <- function(x, attr) {
   x[x[[attr]] %in% duplicates(x[[attr]]), , drop = FALSE]
@@ -372,23 +394,25 @@ subset_duplicates <- function(x, attr) {
 ```
 
 ``` r
+
 nudge_title_relation <- records(nudge_db_filtered)$title
 knitr::kable(subset_duplicates(nudge_title_relation, "publication_id"))
 ```
 
-|     | title                                                                      | publication_id | reference            | year |
-|:----|:---------------------------------------------------------------------------|---------------:|:---------------------|-----:|
-| 44  | Enhanced active choice: A new method to motivate behavior change           |             95 | Keller et al. (2011) | 2011 |
-| 130 | Nudging product choices: The effect of position change on snack bar choice |             95 | Keller et al. (2015) | 2015 |
+|  | title | publication_id | reference | year |
+|:---|:---|---:|:---|---:|
+| 44 | Enhanced active choice: A new method to motivate behavior change | 95 | Keller et al. (2011) | 2011 |
+| 130 | Nudging product choices: The effect of position change on snack bar choice | 95 | Keller et al. (2015) | 2015 |
 
 ``` r
+
 knitr::kable(subset_duplicates(nudge_title_relation, "reference"))
 ```
 
-|     | title                                                                                          | publication_id | reference   | year |
-|:----|:-----------------------------------------------------------------------------------------------|---------------:|:------------|-----:|
-| 214 | Nudge vs superbugs: A behavioural economics trial to reduce the overprescribing of antibiotics |             18 | BETA (2018) | 2018 |
-| 399 | Energy labels that make cents                                                                  |             19 | BETA (2018) | 2018 |
+|  | title | publication_id | reference | year |
+|:---|:---|---:|:---|---:|
+| 214 | Nudge vs superbugs: A behavioural economics trial to reduce the overprescribing of antibiotics | 18 | BETA (2018) | 2018 |
+| 399 | Energy labels that make cents | 19 | BETA (2018) | 2018 |
 
 The publications with the same ID have the same first author in their
 references; this looks like a simple data entry error.
@@ -420,6 +444,7 @@ In this example, `publication_id` and `reference` are synthetic
 variables, so we can easily fix the data ourselves:
 
 ``` r
+
 nudge_fixed <- within(nudge, {
   publication_id[publication_id == 95 & year == 2015] <- max(publication_id) + 1L
   reference[publication_id == 19] <- "BETA (2018a)"
@@ -432,6 +457,7 @@ determinants, instead of removing them ourselves. This prunes them from
 the search space, speeding up the search.
 
 ``` r
+
 db_fixed <- autodb(
   nudge_fixed,
   exclude_class = "numeric"
@@ -442,6 +468,7 @@ length(db_fixed)
     ## [1] 170
 
 ``` r
+
 show(reduce(db_fixed))
 ```
 
@@ -458,6 +485,7 @@ filter the FDs again, we can do this using another filtering argument
 for `discover`/`autodb`, `detset_limit`:
 
 ``` r
+
 db_final <- autodb(
   nudge_fixed,
   exclude_class = "numeric",
@@ -471,6 +499,7 @@ length(db_final)
 The database is now small enough to not need to reduce it:
 
 ``` r
+
 show(db_final)
 ```
 
@@ -478,6 +507,7 @@ However, the relations not referred to by the effect relation look
 spurious too, so we can reduce the database to remove them too:
 
 ``` r
+
 show(reduce(db_final))
 ```
 
@@ -504,6 +534,7 @@ do, we get a schema that looks reasonable for data of this sort in
 general, apart from the mentioned issue with the effect sample sizes:
 
 ``` r
+
 show(reduce(autodb(
   nudge_fixed,
   exclude = c("type_experiment", "n_study"),
@@ -521,12 +552,14 @@ relations. This section is about why this is a bad idea.
 This is the database we had:
 
 ``` r
+
 show(nudge_db_filtered)
 ```
 
 What happens if we remove the offending relations from the schema?
 
 ``` r
+
 nudge_schema_relfiltered <- nudge_schema_filtered[
   vapply(
     keys(nudge_schema_filtered),
@@ -538,6 +571,7 @@ nudge_schema_relfiltered <- nudge_schema_filtered[
 ```
 
 ``` r
+
 show(nudge_schema_relfiltered)
 ```
 
@@ -550,6 +584,7 @@ entirely fix the problem, since, for example, no other relation contains
 a key for the `title` relation:
 
 ``` r
+
 show(autoref(nudge_schema_relfiltered))
 ```
 
@@ -570,6 +605,7 @@ do, but we could decide that any such cases are spurious, and we don’t
 want to spend time on them.
 
 ``` r
+
 hlev <- c(
   publication_id = 3,
   study_id = 2,
@@ -609,6 +645,7 @@ hfilter <- function(fds, hlev) {
 Filtered result for the original data:
 
 ``` r
+
 nudge |>
   discover(exclude_class = "numeric", detset_limit = 2) |>
   hfilter(hlev) |>
@@ -621,6 +658,7 @@ nudge |>
 Filtered result for the fixed data:
 
 ``` r
+
 nudge_fixed |>
   discover(exclude_class = "numeric", detset_limit = 2) |>
   hfilter(hlev) |>

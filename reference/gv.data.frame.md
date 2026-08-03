@@ -7,7 +7,7 @@ frame.
 
 ``` r
 # S3 method for class 'data.frame'
-gv(x, name = NA_character_, ...)
+gv(x, name = NA_character_, nest_level = Inf, ...)
 ```
 
 ## Arguments
@@ -21,6 +21,12 @@ gv(x, name = NA_character_, ...)
   a character scalar, giving the name of the record, if any. The name
   must be non-empty, since it is also used to name the single table in
   the plot. Defaults to `NA`: if left missing, it is set to "data".
+
+- nest_level:
+
+  an integer, giving the amount of nesting allowed when giving the class
+  of a list column. Since lists can hold anything in R, this allows
+  showing common element classes and lengths.
 
 - ...:
 

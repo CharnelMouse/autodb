@@ -9,6 +9,7 @@ cleaning. (Usage to design your actual database for you is not advised.)
 Install the stable released version from CRAN with:
 
 ``` r
+
 install.packages("autodb")
 ```
 
@@ -16,6 +17,7 @@ Install the unstable development version from
 [GitHub](https://github.com/) with:
 
 ``` r
+
 # install.packages("devtools")
 devtools::install_github("CharnelMouse/autodb")
 ```
@@ -25,6 +27,7 @@ devtools::install_github("CharnelMouse/autodb")
 Turning a simple data frame into a database:
 
 ``` r
+
 library(autodb)
 #> 
 #> Attaching package: 'autodb'
@@ -60,6 +63,7 @@ Using the `exclude` argument to forbid certain variables from appearing
 in keys:
 
 ``` r
+
 summary(CO2)
 #>      Plant             Type         Treatment       conc          uptake     
 #>  Qn1    : 7   Quebec     :42   nonchilled:42   Min.   :  95   Min.   : 7.70  
@@ -90,6 +94,7 @@ DiagrammeR::grViz(graphviz_text2_noexclude)
 ![](reference/figures/README-exclude_example-1.png)
 
 ``` r
+
 db2 <- autodb(CO2, exclude = "uptake")
 db2
 #> database with 2 relations

@@ -7,7 +7,7 @@ relation.
 
 ``` r
 # S3 method for class 'relation'
-gv(x, name = NA_character_, ...)
+gv(x, name = NA_character_, nest_level = Inf, ...)
 ```
 
 ## Arguments
@@ -20,6 +20,12 @@ gv(x, name = NA_character_, ...)
 - name:
 
   a character scalar, giving the name of the schema, if any.
+
+- nest_level:
+
+  an integer, giving the amount of nesting allowed when giving the class
+  of a list column. Since lists can hold anything in R, this allows
+  showing common element classes and lengths.
 
 - ...:
 
