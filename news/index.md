@@ -2,6 +2,8 @@
 
 ## autodb 3.3.0
 
+CRAN release: 2026-08-03
+
 ### New functions
 
 - Added functions for key discovery:
