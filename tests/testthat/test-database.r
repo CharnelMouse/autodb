@@ -1136,10 +1136,22 @@ describe("database", {
 
   it("is composed of its records(), keys(), names(), attrs_order(), and references()", {
     forall(
-      gen.database(letters[1:6], 0, 8, same_attr_name = FALSE),
-      \(db) expect_identical(
-        database(
-          relation(
+      gen.database(letters[1:6], 0, 8, same_attr_name = FALSE) |>
+        gen.with(\(db) {
+          list(
+            db = db,
+            recs = records(db),
+            refs = references(db),
+            classes = lapply(records(db), tuple_classes)
+          )
+        }),
+      \(db, recs, refs, classes) {
+        msg <- strexpect_valid_database(db)
+        if (length(msg) > 0)
+          return(fail(paste(c("invalid database:", msg), collapse = "\n")))
+
+        db2_nocheck <- database_nocheck(
+          relation_nocheck(
             setNames(
               Map(
                 list %>>% with_args(setNames, c("df", "keys")),
@@ -1151,9 +1163,37 @@ describe("database", {
             attrs_order(db)
           ),
           references = references(db)
-        ),
-        db
-      )
+        )
+        msg <- strexpect_valid_database(db2_nocheck)
+        if (length(msg) > 0)
+          return(fail(paste(c("invalid database:", msg), collapse = "\n")))
+
+        db2 <- try(
+          database(
+            relation(
+              setNames(
+                Map(
+                  list %>>% with_args(setNames, c("df", "keys")),
+                  records(db),
+                  keys(db)
+                ),
+                names(db)
+              ),
+              attrs_order(db)
+            ),
+            references = references(db)
+          ),
+          silent = TRUE
+        )
+        if (class(db2)[[1]] == "try-error")
+          return(fail(paste(
+            "failure on checked database construction:",
+            attr(db2, "condition")$message
+          )))
+
+        expect_identical(db2, db)
+      },
+      curry = TRUE
     )
   })
   it("is composed of its subrelations() and references()", {

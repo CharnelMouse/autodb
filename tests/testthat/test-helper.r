@@ -195,10 +195,10 @@ describe("gen.database", {
       gen.element(c(FALSE, TRUE)) |>
         gen.list(of = 3) |>
         gen.and_then(uncurry(\(sek, san, skp) list(
-          gen.pure(sek),
-          gen.pure(san),
-          gen.pure(skp),
-          gen.database(
+          single_empty_key = gen.pure(sek),
+          same_attr_name = gen.pure(san),
+          single_key_pairs = gen.pure(skp),
+          x = gen.database(
             letters[1:7],
             from = 0,
             to = 6,
@@ -207,13 +207,9 @@ describe("gen.database", {
             single_key_pairs = skp
           )
         ))),
-      \(sek, san, skp, ds) expect_valid_database(
-        ds,
-        single_empty_key = sek,
-        same_attr_name = san,
-        single_key_pairs = skp
-      ),
-      curry = TRUE
+      expect_valid_database,
+      curry = TRUE,
+      tests = 100*getOption("hedgehog.tests", 100)
     )
   })
 })
@@ -268,6 +264,45 @@ describe("remove_insertion_key_violations", {
         )))
       },
       curry = TRUE
+    )
+  })
+})
+
+describe("remove_reference_violations", {
+  it("removes violations", {
+    forall(
+      gen.element(c(FALSE, TRUE)) |>
+        gen.list(of = 3) |>
+        gen.and_then(uncurry(\(sek, san, skp) {
+          gen.database_schema(
+            letters[1:6],
+            0,
+            8,
+            single_empty_key = sek,
+            same_attr_name = san,
+            single_key_pairs = skp
+          ) |>
+            gen.and_then(\(ds) list(
+              single_empty_key = gen.pure(sek),
+              same_attr_name = gen.pure(san),
+              single_key_pairs = gen.pure(skp),
+              rels = gen.relation_from_schema(ds),
+              schema = gen.pure(ds)
+            ))
+        })),
+      \(rels, schema, single_empty_key, same_attr_name, single_key_pairs) {
+        refs <- references(schema)
+        trimmed <- remove_reference_violations(rels, refs)
+        db <- database_nocheck(trimmed, refs)
+        expect_valid_database(
+          db,
+          single_empty_key = single_empty_key,
+          same_attr_name = same_attr_name,
+          single_key_pairs = single_key_pairs
+        )
+      },
+      curry = TRUE,
+      tests = 100*getOption("hedgehog.tests", 100)
     )
   })
 })

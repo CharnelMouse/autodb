@@ -287,12 +287,27 @@ reference_errors <- function(records, references) {
   references[vapply(
     references,
     \(relat) {
-      referrer <- df_records(records[[relat[[1]]]][, relat[[2]], drop = FALSE])
-      referee <- df_records(records[[relat[[3]]]][, relat[[4]], drop = FALSE])
-      !all(is.element(referrer, referee))
+      referrer <- records[[relat[[1]]]][, relat[[2]], drop = FALSE]
+      referee <- records[[relat[[3]]]][, relat[[4]], drop = FALSE]
+      any(row_violates_reference(referrer, referee))
     },
     logical(1)
   )]
+}
+
+row_violates_reference <- function(referrer, referee) {
+  # takes only the attributes used in the reference, in matching order
+
+  # need to convert factors into (character) values before comparing
+  # child and parent record values, otherwise they are compared using
+  # their integer representation, rather than the value that
+  # merge and df_join use
+  referrer[] <- lapply(referrer, \(x) if (is.factor(x)) as.character(x) else x)
+  referee[] <- lapply(referee, \(x) if (is.factor(x)) as.character(x) else x)
+
+  referrer <- df_records(referrer)
+  referee <- df_records(referee)
+  !is.element(referrer, referee)
 }
 
 #' @export

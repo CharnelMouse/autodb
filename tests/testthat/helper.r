@@ -417,14 +417,20 @@ strexpect_valid_database <- function(
   recs <- records(x)
   for (n in seq_along(fks)) {
     fk <- fks[[n]]
-    child_nrow <- nrow(recs[[fk[[1]]]])
-    parent_nrow <- nrow(recs[[fk[[3]]]])
-    join_nrow <- nrow(df_join(
-      recs[[fk[[1]]]][, fk[[2]], drop = FALSE],
-      recs[[fk[[3]]]][, fk[[4]], drop = FALSE],
+    joined_child <- df_unique(recs[[fk[[1]]]][, fk[[2]], drop = FALSE])
+    joined_parent <- recs[[fk[[3]]]][, fk[[4]], drop = FALSE]
+    child_nrow <- nrow(joined_child)
+    parent_nrow <- nrow(joined_parent)
+    join <- df_join(
+      joined_child,
+      joined_parent,
       by.x = fk[[2]],
       by.y = fk[[4]]
-    ))
+    )
+    # not removing duplicates causes issues when a factor is merged with
+    # a non-factor, since multiple NA instances can appear
+    join <- unique(join)
+    join_nrow <- nrow(join)
     if (!identical(child_nrow, join_nrow))
       msg <- c(
         msg,
@@ -438,7 +444,40 @@ strexpect_valid_database <- function(
           parent_nrow,
           "records join to give",
           join_nrow
+        ),
+        if (
+          all(vapply(joined_child, is.atomic, logical(1))) &&
+          child_nrow < 10 &&
+          parent_nrow < 10
         )
+          c(
+            paste(
+              "child:",
+              tuple_classes(joined_child),
+              toString(vapply(
+                df_records(joined_child),
+                tuple_string,
+                character(1)
+              ))
+            ),
+            paste(
+              "parent:",
+              tuple_classes(joined_parent),
+              toString(vapply(
+                df_records(joined_parent),
+                tuple_string,
+                character(1)
+              ))
+            ),
+            paste(
+              "join:",
+              toString(vapply(
+                df_records(join),
+                tuple_string,
+                character(1)
+              ))
+            )
+          )
       )
   }
 
@@ -449,6 +488,43 @@ strexpect_valid_database <- function(
   nonchildren <- setdiff(names(x), children)
 
   msg
+}
+
+tuple_classes <- function(x) {
+  paste0(
+    "<",
+    toString(vapply(
+      x,
+      \(y) {
+        cl <- class(y)[[1]]
+        if (is.factor(y))
+          paste0(
+            cl,
+            "[",
+            toString(levels(y)),
+            "]"
+          )
+        else
+          cl
+      },
+      character(1)
+    )),
+    ">"
+  )
+}
+
+tuple_string <- function(x) {
+  paste0(
+    "{",
+    toString(lapply(
+      x,
+      \(y) if (is.factor(y))
+        paste0(as.integer(y), ":", as.character(y))
+      else
+        y
+    )),
+    "}"
+  )
 }
 
 expect_valid_database <- function(
@@ -1047,19 +1123,22 @@ remove_violated_references <- function(references, relation) {
     \(rel) {
       child <- recs[[rel[[1]]]][, rel[[2]], drop = FALSE]
       parent <- recs[[rel[[3]]]][, rel[[4]], drop = FALSE]
+      child[] <- lapply(child, \(x) if (is.factor(x)) as.character(x) else x)
+      parent[] <- lapply(parent, \(x) if (is.factor(x)) as.character(x) else x)
+      both <- try(df_rbind(child, parent))
+      if (class(both)[[1]] == "try-error")
+        return(FALSE)
+      child <- both[seq_len(nrow(child)), , drop = FALSE]
+      parent <- both[setdiff(seq_len(nrow(both)), seq_len(nrow(child))), , drop = FALSE]
       identical(
-        vapply(child, \(x) class(x)[[1]], character(1)),
-        vapply(parent, \(x) class(x)[[1]], character(1))
-      ) &&
-        identical(
-          nrow(child),
-          nrow(df_join(
-            child,
-            parent,
-            by.x = rel[[2]],
-            by.y = rel[[4]]
-          ))
-        )
+        nrow(child),
+        nrow(df_join(
+          child,
+          parent,
+          by.x = rel[[2]],
+          by.y = rel[[4]]
+        ))
+      )
     },
     logical(1)
   )]
@@ -1257,7 +1336,7 @@ remove_reference_violations <- function(relation, references) {
         parent_keys <- keys(relation)[[parent_name]]
         stopifnot(is.element(list(ref[[4]]), parent_keys))
         parent_records <- df_records(parent)
-        valid <- is.element(child_records, parent_records)
+        valid <- !row_violates_reference(child, parent)
         recs[[child_name]] <- recs[[child_name]][valid, , drop = FALSE]
         if (!all(valid))
           change <- TRUE
