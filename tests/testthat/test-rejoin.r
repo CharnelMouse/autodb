@@ -196,4 +196,37 @@ describe("rejoin", {
     expect_silent(y <- rejoin(db))
     expect_true(df_equiv(y, x, digits = NA))
   })
+  it("is invariant to database relation order under universal relation assumption", {
+    forall(
+      gen.choice(0, 10) |>
+        gen.list(of = 2) |>
+        gen.and_then(uncurry(\(rows, cols) {
+          df <- gen_df(rows, cols, remove_dup_rows = TRUE)
+          gen.and_then(
+            df,
+            \(df) {
+              db <- gen.pure(df) |>
+                gen.with(with_args(autodb, ensure_lossless = TRUE))
+              list(
+                df = gen.pure(df),
+                db = db,
+                permutation = db |>
+                  gen.and_then(\(x) gen.sample.int(length(x)))
+              )
+            }
+          )
+        })),
+      \(df, db, permutation) {
+        rj <- try(rejoin(db))
+        if (class(rj)[[1]] == "try-error")
+          return(fail(paste("rejoin failed:", attr(rj, "condition")$message)))
+
+        rj2 <- try(rejoin(db[permutation]))
+        if (class(rj)[[1]] == "try-error")
+          return(fail(paste("rejoin failed:", attr(rj, "condition")$message)))
+        expect_true(df_equiv(rj, rj2))
+      },
+      curry = TRUE
+    )
+  })
 })
