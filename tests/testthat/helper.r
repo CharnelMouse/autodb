@@ -417,7 +417,8 @@ strexpect_valid_database <- function(
   recs <- records(x)
   for (n in seq_along(fks)) {
     fk <- fks[[n]]
-    child_nrow <- nrow(records(x)[[fk[[1]]]])
+    child_nrow <- nrow(recs[[fk[[1]]]])
+    parent_nrow <- nrow(recs[[fk[[3]]]])
     join_nrow <- nrow(df_join(
       recs[[fk[[1]]]][, fk[[2]], drop = FALSE],
       recs[[fk[[3]]]][, fk[[4]], drop = FALSE],
@@ -430,9 +431,12 @@ strexpect_valid_database <- function(
         paste(
           "foreign key",
           n,
+          paste0(fk[[1]], ".{", toString(fk[[2]]), "} -> ", fk[[3]], ".{", toString(fk[[4]]), "}"),
           "has differing child/join record counts:",
           child_nrow,
-          "vs",
+          "and",
+          parent_nrow,
+          "records join to give",
           join_nrow
         )
       )
