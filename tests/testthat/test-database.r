@@ -391,6 +391,70 @@ describe("database", {
   })
 
   it("is subsetted to a valid database schema, obeys usual subsetting rules...", {
+    expect_subsets_match <- function(san, skp, db, i) {
+      dbi <- db[i]
+      valid_db <- strexpect_valid_database(
+        dbi,
+        same_attr_name = san,
+        single_key_pairs = skp
+      )
+      if (length(valid_db) > 0)
+        return(fail(paste(valid_db, collapse = "\n")))
+
+      inum <- which(i)
+      ineg <- -setdiff(seq_along(db), inum)
+      inames <- names(db)[i]
+      ints <- stats::setNames(seq_along(db), names(db))
+
+      dbinum <- db[which(i)]
+      dbineg <- db[ineg]
+      dbinames <- db[inames]
+      dbints <- db[ints[i]]
+      dbintsneg <- db[ints[ineg]]
+      dbnameints <- db[names(db)[ints[i]]]
+
+      msg <- character()
+
+      if (length(dbi) != sum(i))
+        msg <- c(
+          msg,
+          paste0("db[i] length ", length(dbi), " expected ", sum(i))
+        )
+
+      if (!identical(dbi, dbinum))
+        msg <- c(
+          msg,
+          "db[which(i)] not identical to db[i]"
+        )
+
+      if (any(!i) && !identical(dbi, dbineg))
+        msg <- c(
+          msg,
+          "db[-setdiff(seq_along(db), which(i))] not identical to db[i]"
+        )
+      if (!identical(db[i], dbinames))
+        msg <- c(
+          msg,
+          "db[names(db)[i]] not identical to db[i]"
+        )
+      if (!identical(dbi, dbints))
+        msg <- c(msg, "db[seq_along(db)[i]] not identical to db[i]")
+      if (any(!i) && !identical(dbi, dbintsneg))
+        msg <- c(
+          msg,
+          "db[seq_along(db)[setdiff(seq_along(db), which(i))]] not identical to db[i]"
+        )
+      if (!identical(dbi, dbnameints))
+        msg <- c(
+          msg,
+          "db[names(db)[setNames(seq_along(db)[i], names(db))]] not identical to db[i]"
+        )
+
+      if (length(msg) == 0)
+        succeed()
+      else
+        fail(paste(msg, collapse = "\n"))
+    }
     forall(
       gen.element(c(FALSE, TRUE)) |>
         gen.list(of = 2) |>
@@ -408,34 +472,12 @@ describe("database", {
           )
         })) |>
         gen.and_then(\(lst) list(
-          gen.pure(lst[[1]]),
-          gen.pure(lst[[2]]),
-          gen.pure(lst[[3]]),
-          gen.sample_resampleable(c(FALSE, TRUE), of = length(lst[[3]]))
+          san = gen.pure(lst[[1]]),
+          skp = gen.pure(lst[[2]]),
+          db = gen.pure(lst[[3]]),
+          i = gen.sample_resampleable(c(FALSE, TRUE), of = length(lst[[3]]))
         )),
-      \(san, skp, db, i) {
-        expect_valid_database(db[i], same_attr_name = san, single_key_pairs = skp)
-
-        inum <- which(i)
-        expect_valid_database(db[inum], same_attr_name = san, single_key_pairs = skp)
-        expect_identical(db[i], db[inum])
-
-        ineg <- -setdiff(seq_along(db), inum)
-        if (!all(i)) {
-          expect_valid_database(db[ineg], same_attr_name = san, single_key_pairs = skp)
-          expect_identical(db[i], db[ineg])
-        }
-
-        expect_valid_database(db[names(db)[i]], same_attr_name = san, single_key_pairs = skp)
-        expect_identical(db[i], db[names(db)[i]])
-
-        expect_length(db[i], sum(i))
-
-        ints <- stats::setNames(seq_along(db), names(db))
-        expect_identical(db[i], db[ints[i]])
-        expect_identical(db[ineg], db[ints[ineg]])
-        expect_identical(db[names(db)[i]], db[names(db)[ints[i]]])
-      },
+      expect_subsets_match,
       curry = TRUE
     )
     forall(
