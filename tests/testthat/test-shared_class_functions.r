@@ -1561,7 +1561,7 @@ describe("add_lookup", {
           msg <- character()
 
           as <- unique(as)
-          y <- try(add_lookup(x, as), silent = TRUE)
+          y <- try(add_lookup(x, as, digits = NA), silent = TRUE)
           if (class(y)[[1]] == "try-error") {
             if (inherits(x, "database"))
               discard()
@@ -1591,7 +1591,7 @@ describe("add_lookup", {
             msg <- c(msg, "original references affected")
 
           # idempotent: equivalence fine, but identical means no extra work
-          z <- try(add_lookup(y, as), silent = TRUE)
+          z <- try(add_lookup(y, as, digits = NA), silent = TRUE)
           if (class(z)[[1]] == "try-error") {
             return(fail(paste(
               "unexpected error on second application:",
