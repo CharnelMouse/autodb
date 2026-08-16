@@ -1,5 +1,16 @@
 # Changelog
 
+## autodb 3.3.1
+
+Patch to fix testing issues.
+
+### Fixes
+
+- database() declared some constructed databases to be invalid when they
+  aren’t. This involved foreign key references where a factor references
+  a non-factor whose values are not in the former’s levels, and the
+  former has NA values.
+
 ## autodb 3.3.0
 
 CRAN release: 2026-08-03
