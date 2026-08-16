@@ -76,6 +76,8 @@ df_join <- function(x, y, by = intersect(names(x), names(y)), by.x = by, by.y = 
     )
     for (n in lists) {
       vals <- c(vx[[n]], vy[[n]])
+      # lookup_indices() results in, e.g., NA and NA_integer being treated
+      # as different; this is different behaviour to merge.
       inds <- lookup_indices(vals)
       vx[[n]] <- inds[seq_len(nrow(x))]
       vy[[n]] <- inds[nrow(x) + seq_len(nrow(y))]

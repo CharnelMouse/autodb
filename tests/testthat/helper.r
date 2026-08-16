@@ -498,14 +498,20 @@ tuple_classes <- function(x) {
       \(y) {
         cl <- class(y)[[1]]
         if (is.factor(y))
-          paste0(
+          return(paste0(
             cl,
             "[",
             toString(levels(y)),
             "]"
-          )
-        else
-          cl
+          ))
+        if (inherits(y, "list"))
+          return(paste0(
+            cl,
+            "[",
+            tuple_classes(y),
+            "]"
+          ))
+        cl
       },
       character(1)
     )),

@@ -9,12 +9,12 @@ describe("df_join", {
       )
     )
   })
-  it("merges tables with matching names/classes and 1D columns in the same way as merge()", {
+  it("merges tables with matching names/classes and 1D non-list columns in the same way as merge()", {
     forall(
       gen.element(0:5) |>
         gen.and_then(\(n) {
           list(
-            gen.element(c("logical", "integer", "numeric", "character", "factor", "list")) |>
+            gen.element(c("logical", "integer", "numeric", "character", "factor")) |>
               gen.c(of = n),
             gen_attr_names(n, 9)
           )
@@ -28,20 +28,66 @@ describe("df_join", {
           ) |>
             gen.and_then(uncurry(gen.df_fixed_ranges)) |>
             gen.list(of = 2)
-        })),
-      fand(
-        bi(
-          with_args(df_equiv, digits = NA),
-          uncurry(df_join),
-          uncurry(with_args(merge, sort = FALSE))
-        ),
-        bi(
-          with_args(df_equiv, digits = NA),
-          uncurry(with_args(df_join, all = TRUE)),
-          uncurry(with_args(merge, sort = FALSE, all = TRUE))
-        )
-      ) %>>%
-        expect_true
+        })) |>
+        gen.with(\(x) {
+          list(
+            dfs = x,
+            classes = lapply(x, tuple_classes)
+          )
+        }),
+      \(dfs, classes) {
+        x <- dfs[[1]]
+        y <- dfs[[2]]
+
+        msg <- character()
+
+        join1 <- df_join(x, y)
+        merge1 <- merge(x, y, sort = FALSE)
+        if (!df_equiv(
+          join1,
+          merge1,
+          digits = NA
+        ))
+          msg <- c(
+            msg,
+            "df_join/merge differ for all = FALSE",
+            paste(
+              "df_join:",
+              toString(vapply(df_records(join1), tuple_string, character(1)))
+            ),
+            paste(
+              "merge  :",
+              toString(vapply(df_records(merge1), tuple_string, character(1)))
+            )
+          )
+
+        join2 <- df_join(x, y, all = TRUE)
+        merge2 <- merge(x, y, sort = FALSE, all = TRUE)
+        if (!df_equiv(
+          join2,
+          merge2,
+          digits = NA
+        ))
+          msg <- c(
+            msg,
+            "df_join/merge differ for all = TRUE:",
+            paste(
+              "df_join:",
+              toString(vapply(df_records(join2), tuple_string, character(1)))
+            ),
+            paste(
+              "merge  :",
+              toString(vapply(df_records(merge2), tuple_string, character(1)))
+            )
+          )
+
+        if (length(msg) == 0)
+          succeed()
+        else
+          fail(paste(msg, collapse = "\n"))
+      },
+      curry = TRUE,
+      tests = 100*getOption("hedgehog.tests", 100)
     )
   })
   it("merges correctly by compound keys containing matrix columns", {
@@ -81,6 +127,12 @@ describe("df_join", {
   it("doesn't match NAs of different classes in list columns", {
     x <- data.frame(a = 1:2)[, FALSE, drop = FALSE]
     x$a <- list(NA_integer_, NA_real_)
+    expect_true(!df_anyDuplicated(x))
+    expect_true(!df_anyDuplicated(df_join(x, x)))
+  })
+  it("doesn't match FALSE with 'FALSE' in list columns", {
+    x <- data.frame(a = 1:2)[, FALSE, drop = FALSE]
+    x$a <- list(FALSE, "FALSE")
     expect_true(!df_anyDuplicated(x))
     expect_true(!df_anyDuplicated(df_join(x, x)))
   })
