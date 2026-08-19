@@ -40,7 +40,7 @@ in no rounding. By default, this uses \code{getOption("digits")}, similarly
 to \code{\link{format}}. See the "Floating-point variables" section below
 for why this rounding is necessary for consistent results across different
 machines. See the note in \code{\link{print.default}} about \code{digits >=
-  16}.}
+16}.}
 
 \item{exclude}{a character vector, containing names of attributes to not
 consider as members of determinant sets. If names are given that aren't

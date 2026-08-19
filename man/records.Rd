@@ -16,7 +16,7 @@ records(x, ...) <- value
 \item{...}{further arguments passed on to methods.}
 
 \item{value}{A list of data frames of the same length as \code{records(x,
-  ...)}, where each data frame has the same column names as that which it
+...)}, where each data frame has the same column names as that which it
 will replace, in the same order.}
 }
 \value{

@@ -31,7 +31,7 @@ this uses \code{getOption("digits")}, similarly to \code{\link{format}}.
 See the "Floating-point variables" section for \code{\link{discover}} for
 why this rounding is necessary for consistent results across different
 machines. See the note in \code{\link{print.default}} about \code{digits >=
-  16}.}
+16}.}
 
 \item{progress}{a logical, for whether to display progress to the user during
 dependency search in \code{\link{discover}}.}

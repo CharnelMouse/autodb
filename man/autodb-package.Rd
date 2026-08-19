@@ -26,5 +26,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Mark Webster \email{markwebster204@yahoo.co.uk} (\href{https://orcid.org/0000-0002-3351-0686}{ORCID})
 
+Authors:
+\itemize{
+  \item Mark Webster \email{markwebster204@yahoo.co.uk} (\href{https://orcid.org/0000-0002-3351-0686}{ORCID})
+}
+
 }
 \keyword{internal}

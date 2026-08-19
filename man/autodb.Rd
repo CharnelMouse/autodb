@@ -35,7 +35,7 @@ schema. A value of \code{NA} results in no rounding. By default, this uses
 "Floating-point variables" section for \code{\link{discover}} for why this
 rounding is necessary for consistent results across different machines. See
 the note in \code{\link{print.default}} about \code{digits >=
-  16}.}
+16}.}
 
 \item{single_ref}{a logical, FALSE by default. If TRUE, then only one
 reference between each relation pair is kept when generating foreign key
