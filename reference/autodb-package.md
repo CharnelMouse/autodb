@@ -25,3 +25,8 @@ Useful links:
 
 **Maintainer**: Mark Webster <markwebster204@yahoo.co.uk>
 ([ORCID](https://orcid.org/0000-0002-3351-0686))
+
+Authors:
+
+- Mark Webster <markwebster204@yahoo.co.uk>
+  ([ORCID](https://orcid.org/0000-0002-3351-0686))
