@@ -4,5 +4,10 @@ options(
   warnPartialMatchDollar = TRUE,
   warnPartialMatchAttr = TRUE
 )
-if (!isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false"))))
+env <- Sys.getenv("NOT CRAN")
+on_cran <- if (identical(env, "")) {
+  !interactive()
+}else
+  !isTRUE(as.logical(env))
+if (on_cran)
   options(hedgehog.tests = 20)
