@@ -8,7 +8,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/CharnelMouse/autodb/blob/master/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/CharnelMouse/autodb/blob/v3.3.1/DESCRIPTION)
 
 Webster M (2026). *autodb: Automatic Database Normalisation for Data
 Frames*. R package version 3.3.1,

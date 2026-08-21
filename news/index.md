@@ -2,6 +2,8 @@
 
 ## autodb 3.3.1
 
+CRAN release: 2026-08-21
+
 Patch to fix testing issues.
 
 ### Fixes
