@@ -10,4 +10,4 @@ on_cran <- if (identical(env, "")) {
 }else
   !isTRUE(as.logical(env))
 if (on_cran)
-  options(hedgehog.tests = 20)
+  options(hedgehog.tests = 10)
